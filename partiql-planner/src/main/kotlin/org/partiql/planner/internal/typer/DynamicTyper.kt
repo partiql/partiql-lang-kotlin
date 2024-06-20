@@ -1,44 +1,41 @@
-@file:OptIn(PartiQLValueExperimental::class)
-
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.types.StaticType
+import org.partiql.planner.internal.typer.PlanTyper.Companion.anyOf
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.types.PType
+import org.partiql.types.PType.Kind
 import org.partiql.value.MissingValue
-import org.partiql.value.NullValue
+import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BAG
-import org.partiql.value.PartiQLValueType.BINARY
-import org.partiql.value.PartiQLValueType.BLOB
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.BYTE
-import org.partiql.value.PartiQLValueType.CHAR
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
-import org.partiql.value.PartiQLValueType.FLOAT32
-import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT16
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.INTERVAL
-import org.partiql.value.PartiQLValueType.LIST
-import org.partiql.value.PartiQLValueType.SEXP
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.STRUCT
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.PartiQLValueType.TIME
-import org.partiql.value.PartiQLValueType.TIMESTAMP
+import org.partiql.value.bagValue
+import org.partiql.value.blobValue
+import org.partiql.value.boolValue
+import org.partiql.value.charValue
+import org.partiql.value.clobValue
+import org.partiql.value.dateValue
+import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.float64Value
+import org.partiql.value.int16Value
+import org.partiql.value.int32Value
+import org.partiql.value.int64Value
+import org.partiql.value.int8Value
+import org.partiql.value.intValue
+import org.partiql.value.listValue
+import org.partiql.value.missingValue
+import org.partiql.value.nullValue
+import org.partiql.value.sexpValue
+import org.partiql.value.stringValue
+import org.partiql.value.structValue
+import org.partiql.value.symbolValue
+import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
 
 /**
  * Graph of super types for quick lookup because we don't have a tree.
  */
-internal typealias SuperGraph = Array<Array<PartiQLValueType?>>
+internal typealias SuperGraph = Array<Array<Kind?>>
 
 /**
  * For lack of a better name, this is the "dynamic typer" which implements the typing rules of SQL-99 9.3.
@@ -50,30 +47,38 @@ internal typealias SuperGraph = Array<Array<PartiQLValueType?>>
  *  To calculate the type of an "aggregation" create a new instance and "accumulate" each possible type.
  *  This is a pain with StaticType...
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class DynamicTyper {
 
-    private var supertype: PartiQLValueType? = null
-    private var args = mutableListOf<PartiQLValueType>()
-
-    private val types = mutableSetOf<StaticType>()
+    private var supertype: CompilerType? = null
+    private var args = mutableListOf<Rex>()
+    private val types = mutableListOf<CompilerType>()
 
     /**
      * Adds the [rex]'s [Rex.type] to the typing accumulator (if the [rex] is not a literal NULL/MISSING).
      */
     fun accumulate(rex: Rex) {
-        when (rex.isLiteralAbsent()) {
-            true -> accumulateUnknown()
-            false -> accumulate(rex.type)
+        when {
+            rex.isLiteralNull() || rex.isLiteralMissing() -> accumulateUnknown(rex)
+            else -> accumulateConcrete(rex)
         }
     }
 
     /**
-     * Checks for literal NULL or MISSING.
+     * Checks for literal NULL
      */
-    private fun Rex.isLiteralAbsent(): Boolean {
+    @OptIn(PartiQLValueExperimental::class)
+    private fun Rex.isLiteralNull(): Boolean {
         val op = this.op
-        return op is Rex.Op.Lit && (op.value is MissingValue || op.value is NullValue)
+        return op is Rex.Op.Lit && op.value.isNull
+    }
+
+    /**
+     * Checks for literal MISSING
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    private fun Rex.isLiteralMissing(): Boolean {
+        val op = this.op
+        return op is Rex.Op.Lit && op.value is MissingValue
     }
 
     /**
@@ -81,69 +86,58 @@ internal class DynamicTyper {
      * inferred. This function ignores literal null/missing values, yet adds their indices to know how to return the
      * mapping.
      */
-    private fun accumulateUnknown() {
-        args.add(ANY)
+    private fun accumulateUnknown(rex: Rex) {
+        args.add(rex)
     }
 
     /**
      * This adds non-absent types (aka not NULL / MISSING literals) to the typing accumulator.
      * @param type
      */
-    private fun accumulate(type: StaticType) {
-        val flatType = type.flatten()
-        if (flatType == StaticType.ANY) {
-            types.add(flatType)
-            args.add(ANY)
-            calculate(ANY)
-            return
-        }
-        val allTypes = flatType.allTypes
-        when (allTypes.size) {
-            0 -> {
-                error("This should not have happened.")
-            }
-            1 -> {
-                // Had single type
-                val single = allTypes.first()
-                val singleRuntime = single.toRuntimeType()
-                types.add(single)
-                args.add(singleRuntime)
-                calculate(singleRuntime)
-            }
-            else -> {
-                // Had a union; use ANY runtime
-                types.addAll(allTypes)
-                args.add(ANY)
-                calculate(ANY)
-            }
-        }
+    private fun accumulateConcrete(rex: Rex) {
+        types.add(rex.type)
+        args.add(rex)
+        calculate(rex.type)
     }
 
     /**
-     * Returns a pair of the return StaticType and the coercion.
+     * Returns a pair of the return type and the coercions.
      *
      * If the list is null, then no mapping is required.
      *
      * @return
      */
-    fun mapping(): Pair<StaticType, List<Pair<PartiQLValueType, PartiQLValueType>>?> {
+    @OptIn(PartiQLValueExperimental::class)
+    fun mapping(): Pair<CompilerType, List<Mapping?>?> {
+        val s = supertype ?: return CompilerType(PType.typeDynamic()) to null
+        val superTypeBase = s.kind
         // If at top supertype, then return union of all accumulated types
-        if (supertype == ANY) {
-            return StaticType.unionOf(types).flatten() to null
+        if (superTypeBase == Kind.DYNAMIC) {
+            return anyOf(types)!!.toCType() to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
-        if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {
-            return StaticType.unionOf(types) to null
+        if (superTypeBase in setOf(Kind.ROW, Kind.STRUCT, Kind.BAG, Kind.LIST, Kind.SEXP)) {
+            return anyOf(types)!!.toCType() to null
         }
         // If not initialized, then return null, missing, or null|missing.
-        val s = supertype ?: return StaticType.ANY to null
         // Otherwise, return the supertype along with the coercion mapping
-        val type = s.toStaticType()
-        val mapping = args.map { it to s }
-        return type to mapping
+        val mapping = args.map {
+            when {
+                it.isLiteralNull() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(nullValue(s.kind))))
+                it.isLiteralMissing() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(missingValue())))
+                it.type == s -> Mapping.Coercion(s)
+                else -> null
+            }
+        }
+        return s to mapping
     }
 
-    private fun calculate(type: PartiQLValueType) {
+    internal sealed interface Mapping {
+        class Replacement(val replacement: Rex) : Mapping
+        class Coercion(val target: CompilerType) : Mapping
+    }
+
+    private fun calculate(type: CompilerType) {
         val s = supertype
         // Initialize
         if (s == null) {
@@ -151,16 +145,14 @@ internal class DynamicTyper {
             return
         }
         // Don't bother calculating the new supertype, we've already hit `dynamic`.
-        if (s == ANY) return
+        if (s.kind == Kind.DYNAMIC) return
         // Lookup and set the new minimum common supertype
         supertype = when {
-            type == ANY -> type
+            type.kind == Kind.DYNAMIC -> type
             s == type -> return // skip
-            else -> graph[s][type] ?: ANY // lookup, if missing then go to top.
+            else -> graph[s.kind.ordinal][type.kind.ordinal]?.toPType() ?: CompilerType(PType.typeDynamic()) // lookup, if missing then go to top.
         }
     }
-
-    private operator fun <T> Array<T>.get(t: PartiQLValueType): T = get(t.ordinal)
 
     /**
      * !! IMPORTANT !!
@@ -170,16 +162,14 @@ internal class DynamicTyper {
      */
     companion object {
 
-        private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
+        @JvmStatic
+        private val N = Kind.values().size
 
         @JvmStatic
-        private val N = PartiQLValueType.values().size
-
-        @JvmStatic
-        private fun edges(vararg edges: Pair<PartiQLValueType, PartiQLValueType>): Array<PartiQLValueType?> {
-            val arr = arrayOfNulls<PartiQLValueType?>(N)
+        private fun edges(vararg edges: Pair<Kind, Kind>): Array<Kind?> {
+            val arr = arrayOfNulls<Kind?>(N)
             for (type in edges) {
-                arr[type.first] = type.second
+                arr[type.first.ordinal] = type.second
             }
             return arr
         }
@@ -192,180 +182,258 @@ internal class DynamicTyper {
          */
         @JvmStatic
         internal val graph: SuperGraph = run {
-            val graph = arrayOfNulls<Array<PartiQLValueType?>>(N)
-            for (type in PartiQLValueType.values()) {
+            val graph = arrayOfNulls<Array<Kind?>>(N)
+            for (type in Kind.values()) {
                 // initialize all with empty edges
-                graph[type] = arrayOfNulls(N)
+                graph[type.ordinal] = arrayOfNulls(N)
             }
-            graph[ANY] = edges()
-            graph[BOOL] = edges(
-                BOOL to BOOL
+            graph[Kind.DYNAMIC.ordinal] = edges()
+            graph[Kind.BOOL.ordinal] = edges(
+                Kind.BOOL to Kind.BOOL
             )
-            graph[INT8] = edges(
-                INT8 to INT8,
-                INT16 to INT16,
-                INT32 to INT32,
-                INT64 to INT64,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[Kind.TINYINT.ordinal] = edges(
+                Kind.TINYINT to Kind.TINYINT,
+                Kind.SMALLINT to Kind.SMALLINT,
+                Kind.INT to Kind.INT,
+                Kind.BIGINT to Kind.BIGINT,
+                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.DECIMAL to Kind.DECIMAL,
+                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.REAL to Kind.REAL,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[INT16] = edges(
-                INT8 to INT16,
-                INT16 to INT16,
-                INT32 to INT32,
-                INT64 to INT64,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[Kind.SMALLINT.ordinal] = edges(
+                Kind.TINYINT to Kind.SMALLINT,
+                Kind.SMALLINT to Kind.SMALLINT,
+                Kind.INT to Kind.INT,
+                Kind.BIGINT to Kind.BIGINT,
+                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.DECIMAL to Kind.DECIMAL,
+                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.REAL to Kind.REAL,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[INT32] = edges(
-                INT8 to INT32,
-                INT16 to INT32,
-                INT32 to INT32,
-                INT64 to INT64,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[Kind.INT.ordinal] = edges(
+                Kind.TINYINT to Kind.INT,
+                Kind.SMALLINT to Kind.INT,
+                Kind.INT to Kind.INT,
+                Kind.BIGINT to Kind.BIGINT,
+                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.DECIMAL to Kind.DECIMAL,
+                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.REAL to Kind.REAL,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[INT64] = edges(
-                INT8 to INT64,
-                INT16 to INT64,
-                INT32 to INT64,
-                INT64 to INT64,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[Kind.BIGINT.ordinal] = edges(
+                Kind.TINYINT to Kind.BIGINT,
+                Kind.SMALLINT to Kind.BIGINT,
+                Kind.INT to Kind.BIGINT,
+                Kind.BIGINT to Kind.BIGINT,
+                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.DECIMAL to Kind.DECIMAL,
+                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.REAL to Kind.REAL,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[INT] = edges(
-                INT8 to INT,
-                INT16 to INT,
-                INT32 to INT,
-                INT64 to INT,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[Kind.INT_ARBITRARY.ordinal] = edges(
+                Kind.TINYINT to Kind.INT_ARBITRARY,
+                Kind.SMALLINT to Kind.INT_ARBITRARY,
+                Kind.INT to Kind.INT_ARBITRARY,
+                Kind.BIGINT to Kind.INT_ARBITRARY,
+                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.DECIMAL to Kind.DECIMAL,
+                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.REAL to Kind.REAL,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[DECIMAL] = edges(
-                INT8 to DECIMAL,
-                INT16 to DECIMAL,
-                INT32 to DECIMAL,
-                INT64 to DECIMAL,
-                INT to DECIMAL,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[Kind.DECIMAL.ordinal] = edges(
+                Kind.TINYINT to Kind.DECIMAL,
+                Kind.SMALLINT to Kind.DECIMAL,
+                Kind.INT to Kind.DECIMAL,
+                Kind.BIGINT to Kind.DECIMAL,
+                Kind.INT_ARBITRARY to Kind.DECIMAL,
+                Kind.DECIMAL to Kind.DECIMAL,
+                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.REAL to Kind.REAL,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[DECIMAL_ARBITRARY] = edges(
-                INT8 to DECIMAL_ARBITRARY,
-                INT16 to DECIMAL_ARBITRARY,
-                INT32 to DECIMAL_ARBITRARY,
-                INT64 to DECIMAL_ARBITRARY,
-                INT to DECIMAL_ARBITRARY,
-                DECIMAL to DECIMAL_ARBITRARY,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[Kind.DECIMAL_ARBITRARY.ordinal] = edges(
+                Kind.TINYINT to Kind.DECIMAL_ARBITRARY,
+                Kind.SMALLINT to Kind.DECIMAL_ARBITRARY,
+                Kind.INT to Kind.DECIMAL_ARBITRARY,
+                Kind.BIGINT to Kind.DECIMAL_ARBITRARY,
+                Kind.INT_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.DECIMAL to Kind.DECIMAL_ARBITRARY,
+                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.REAL to Kind.REAL,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[FLOAT32] = edges(
-                INT8 to FLOAT32,
-                INT16 to FLOAT32,
-                INT32 to FLOAT32,
-                INT64 to FLOAT32,
-                INT to FLOAT32,
-                DECIMAL to FLOAT32,
-                DECIMAL_ARBITRARY to FLOAT32,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[Kind.REAL.ordinal] = edges(
+                Kind.TINYINT to Kind.REAL,
+                Kind.SMALLINT to Kind.REAL,
+                Kind.INT to Kind.REAL,
+                Kind.BIGINT to Kind.REAL,
+                Kind.INT_ARBITRARY to Kind.REAL,
+                Kind.DECIMAL to Kind.REAL,
+                Kind.DECIMAL_ARBITRARY to Kind.REAL,
+                Kind.REAL to Kind.REAL,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[FLOAT64] = edges(
-                INT8 to FLOAT64,
-                INT16 to FLOAT64,
-                INT32 to FLOAT64,
-                INT64 to FLOAT64,
-                INT to FLOAT64,
-                DECIMAL to FLOAT64,
-                DECIMAL_ARBITRARY to FLOAT64,
-                FLOAT32 to FLOAT64,
-                FLOAT64 to FLOAT64,
+            graph[Kind.DOUBLE_PRECISION.ordinal] = edges(
+                Kind.TINYINT to Kind.DOUBLE_PRECISION,
+                Kind.SMALLINT to Kind.DOUBLE_PRECISION,
+                Kind.INT to Kind.DOUBLE_PRECISION,
+                Kind.BIGINT to Kind.DOUBLE_PRECISION,
+                Kind.INT_ARBITRARY to Kind.DOUBLE_PRECISION,
+                Kind.DECIMAL to Kind.DOUBLE_PRECISION,
+                Kind.DECIMAL_ARBITRARY to Kind.DOUBLE_PRECISION,
+                Kind.REAL to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
             )
-            graph[CHAR] = edges(
-                CHAR to CHAR,
-                STRING to STRING,
-                SYMBOL to STRING,
-                CLOB to CLOB,
+            graph[Kind.CHAR.ordinal] = edges(
+                Kind.CHAR to Kind.CHAR,
+                Kind.STRING to Kind.STRING,
+                Kind.VARCHAR to Kind.STRING,
+                Kind.SYMBOL to Kind.STRING,
+                Kind.CLOB to Kind.CLOB,
             )
-            graph[STRING] = edges(
-                CHAR to STRING,
-                STRING to STRING,
-                SYMBOL to STRING,
-                CLOB to CLOB,
+            graph[Kind.STRING.ordinal] = edges(
+                Kind.CHAR to Kind.STRING,
+                Kind.STRING to Kind.STRING,
+                Kind.VARCHAR to Kind.STRING,
+                Kind.SYMBOL to Kind.STRING,
+                Kind.CLOB to Kind.CLOB,
             )
-            graph[SYMBOL] = edges(
-                CHAR to SYMBOL,
-                STRING to STRING,
-                SYMBOL to SYMBOL,
-                CLOB to CLOB,
+            graph[Kind.VARCHAR.ordinal] = edges(
+                Kind.CHAR to Kind.VARCHAR,
+                Kind.STRING to Kind.STRING,
+                Kind.VARCHAR to Kind.VARCHAR,
+                Kind.SYMBOL to Kind.STRING,
+                Kind.CLOB to Kind.CLOB,
             )
-            graph[BINARY] = edges(
-                BINARY to BINARY,
+            graph[Kind.SYMBOL.ordinal] = edges(
+                Kind.CHAR to Kind.SYMBOL,
+                Kind.STRING to Kind.STRING,
+                Kind.VARCHAR to Kind.STRING,
+                Kind.SYMBOL to Kind.SYMBOL,
+                Kind.CLOB to Kind.CLOB,
             )
-            graph[BYTE] = edges(
-                BYTE to BYTE,
-                BLOB to BLOB,
+            graph[Kind.BLOB.ordinal] = edges(
+                Kind.BLOB to Kind.BLOB,
             )
-            graph[BLOB] = edges(
-                BYTE to BLOB,
-                BLOB to BLOB,
+            graph[Kind.DATE.ordinal] = edges(
+                Kind.DATE to Kind.DATE,
             )
-            graph[DATE] = edges(
-                DATE to DATE,
+            graph[Kind.CLOB.ordinal] = edges(
+                Kind.CHAR to Kind.CLOB,
+                Kind.STRING to Kind.CLOB,
+                Kind.VARCHAR to Kind.CLOB,
+                Kind.SYMBOL to Kind.CLOB,
+                Kind.CLOB to Kind.CLOB,
             )
-            graph[CLOB] = edges(
-                CHAR to CLOB,
-                STRING to CLOB,
-                SYMBOL to CLOB,
-                CLOB to CLOB,
+            graph[Kind.TIME_WITHOUT_TZ.ordinal] = edges(
+                Kind.TIME_WITHOUT_TZ to Kind.TIME_WITHOUT_TZ,
             )
-            graph[TIME] = edges(
-                TIME to TIME,
+            graph[Kind.TIME_WITH_TZ.ordinal] = edges(
+                Kind.TIME_WITH_TZ to Kind.TIME_WITH_TZ,
             )
-            graph[TIMESTAMP] = edges(
-                TIMESTAMP to TIMESTAMP,
+            graph[Kind.TIMESTAMP_WITHOUT_TZ.ordinal] = edges(
+                Kind.TIMESTAMP_WITHOUT_TZ to Kind.TIMESTAMP_WITHOUT_TZ,
             )
-            graph[INTERVAL] = edges(
-                INTERVAL to INTERVAL,
+            graph[Kind.TIMESTAMP_WITH_TZ.ordinal] = edges(
+                Kind.TIMESTAMP_WITH_TZ to Kind.TIMESTAMP_WITH_TZ,
             )
-            graph[LIST] = edges(
-                LIST to LIST,
-                SEXP to SEXP,
-                BAG to BAG,
+            graph[Kind.LIST.ordinal] = edges(
+                Kind.LIST to Kind.LIST,
+                Kind.SEXP to Kind.SEXP,
+                Kind.BAG to Kind.BAG,
             )
-            graph[SEXP] = edges(
-                LIST to SEXP,
-                SEXP to SEXP,
-                BAG to BAG,
+            graph[Kind.SEXP.ordinal] = edges(
+                Kind.LIST to Kind.SEXP,
+                Kind.SEXP to Kind.SEXP,
+                Kind.BAG to Kind.BAG,
             )
-            graph[BAG] = edges(
-                LIST to BAG,
-                SEXP to BAG,
-                BAG to BAG,
+            graph[Kind.BAG.ordinal] = edges(
+                Kind.LIST to Kind.BAG,
+                Kind.SEXP to Kind.BAG,
+                Kind.BAG to Kind.BAG,
             )
-            graph[STRUCT] = edges(
-                STRUCT to STRUCT,
+            graph[Kind.STRUCT.ordinal] = edges(
+                Kind.STRUCT to Kind.STRUCT,
+            )
+            graph[Kind.ROW.ordinal] = edges(
+                Kind.ROW to Kind.ROW,
             )
             graph.requireNoNulls()
+        }
+
+        /**
+         * TODO: We need to update the logic of this whole file. We are currently limited by not using parameters
+         *  of types.
+         */
+        private fun Kind.toPType(): CompilerType = when (this) {
+            Kind.BOOL -> PType.typeBool()
+            Kind.DYNAMIC -> PType.typeDynamic()
+            Kind.TINYINT -> PType.typeTinyInt()
+            Kind.SMALLINT -> PType.typeSmallInt()
+            Kind.INT -> PType.typeInt()
+            Kind.BIGINT -> PType.typeBigInt()
+            Kind.INT_ARBITRARY -> PType.typeIntArbitrary()
+            Kind.DECIMAL -> PType.typeDecimalArbitrary() // TODO: To be updated.
+            Kind.DECIMAL_ARBITRARY -> PType.typeDecimalArbitrary()
+            Kind.REAL -> PType.typeReal()
+            Kind.DOUBLE_PRECISION -> PType.typeDoublePrecision()
+            Kind.CHAR -> PType.typeChar(255) // TODO: To be updated
+            Kind.VARCHAR -> PType.typeVarChar(255) // TODO: To be updated
+            Kind.STRING -> PType.typeString()
+            Kind.SYMBOL -> PType.typeSymbol()
+            Kind.BLOB -> PType.typeBlob(Int.MAX_VALUE) // TODO: To be updated
+            Kind.CLOB -> PType.typeClob(Int.MAX_VALUE) // TODO: To be updated
+            Kind.DATE -> PType.typeDate()
+            Kind.TIME_WITH_TZ -> PType.typeTimeWithTZ(6) // TODO: To be updated
+            Kind.TIME_WITHOUT_TZ -> PType.typeTimeWithoutTZ(6) // TODO: To be updated
+            Kind.TIMESTAMP_WITH_TZ -> PType.typeTimestampWithTZ(6) // TODO: To be updated
+            Kind.TIMESTAMP_WITHOUT_TZ -> PType.typeTimestampWithoutTZ(6) // TODO: To be updated
+            Kind.BAG -> PType.typeBag() // TODO: To be updated
+            Kind.LIST -> PType.typeList() // TODO: To be updated
+            Kind.ROW -> PType.typeRow(emptyList()) // TODO: To be updated
+            Kind.SEXP -> PType.typeSexp() // TODO: To be updated
+            Kind.STRUCT -> PType.typeStruct() // TODO: To be updated
+            Kind.UNKNOWN -> PType.typeUnknown() // TODO: To be updated
+        }.toCType()
+
+        @OptIn(PartiQLValueExperimental::class)
+        private fun nullValue(kind: Kind): PartiQLValue {
+            return when (kind) {
+                Kind.DYNAMIC -> nullValue()
+                Kind.BOOL -> boolValue(null)
+                Kind.TINYINT -> int8Value(null)
+                Kind.SMALLINT -> int16Value(null)
+                Kind.INT -> int32Value(null)
+                Kind.BIGINT -> int64Value(null)
+                Kind.INT_ARBITRARY -> intValue(null)
+                Kind.DECIMAL -> decimalValue(null)
+                Kind.DECIMAL_ARBITRARY -> decimalValue(null)
+                Kind.REAL -> float32Value(null)
+                Kind.DOUBLE_PRECISION -> float64Value(null)
+                Kind.CHAR -> charValue(null)
+                Kind.VARCHAR -> TODO("No implementation of VAR CHAR")
+                Kind.STRING -> stringValue(null)
+                Kind.SYMBOL -> symbolValue(null)
+                Kind.BLOB -> blobValue(null)
+                Kind.CLOB -> clobValue(null)
+                Kind.DATE -> dateValue(null)
+                Kind.TIME_WITH_TZ,
+                Kind.TIME_WITHOUT_TZ -> timeValue(null)
+                Kind.TIMESTAMP_WITH_TZ,
+                Kind.TIMESTAMP_WITHOUT_TZ -> timestampValue(null)
+                Kind.BAG -> bagValue<PartiQLValue>(null)
+                Kind.LIST -> listValue<PartiQLValue>(null)
+                Kind.ROW -> structValue<PartiQLValue>(null)
+                Kind.SEXP -> sexpValue<PartiQLValue>(null)
+                Kind.STRUCT -> structValue<PartiQLValue>()
+                Kind.UNKNOWN -> nullValue()
+            }
         }
     }
 }

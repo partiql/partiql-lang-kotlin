@@ -12,6 +12,7 @@ import org.partiql.plan.relOpExcludeTypeCollWildcard
 import org.partiql.plan.relOpExcludeTypeStructKey
 import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -44,7 +45,7 @@ internal class RelExclude(
         input.close()
     }
 
-    private fun excludeStruct(
+    private fun excludeFields(
         structValue: Datum,
         exclusions: List<Rel.Op.Exclude.Step>
     ): Datum {
@@ -107,20 +108,18 @@ internal class RelExclude(
      * Returns a [PartiQLValue] created from an iterable of [coll]. Requires [type] to be a collection type
      * (i.e. [PartiQLValueType.LIST], [PartiQLValueType.BAG], or [PartiQLValueType.SEXP]).
      */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun newCollValue(type: PartiQLValueType, coll: Iterable<Datum>): Datum {
-        return when (type) {
-            PartiQLValueType.LIST -> Datum.listValue(coll)
-            PartiQLValueType.BAG -> Datum.bagValue(coll)
-            PartiQLValueType.SEXP -> Datum.sexpValue(coll)
+    private fun newCollValue(type: PType, coll: Iterable<Datum>): Datum {
+        return when (type.kind) {
+            PType.Kind.LIST -> Datum.listValue(coll)
+            PType.Kind.BAG -> Datum.bagValue(coll)
+            PType.Kind.SEXP -> Datum.sexpValue(coll)
             else -> error("Collection type required")
         }
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun excludeCollection(
         coll: Iterable<Datum>,
-        type: PartiQLValueType,
+        type: PType,
         exclusions: List<Rel.Op.Exclude.Step>
     ): Datum {
         val indexesToRemove = mutableSetOf<Int>()
@@ -155,7 +154,7 @@ internal class RelExclude(
             } else {
                 // deeper level exclusions
                 var value = element
-                if (type == PartiQLValueType.LIST || type == PartiQLValueType.SEXP) {
+                if (type.kind == PType.Kind.LIST || type.kind == PType.Kind.SEXP) {
                     // apply collection index exclusions at deeper levels for lists and sexps
                     val collIndex = relOpExcludeTypeCollIndex(index)
                     branches[collIndex]?.let {
@@ -173,11 +172,10 @@ internal class RelExclude(
         return newCollValue(type, finalColl)
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun excludeValue(initialPartiQLValue: Datum, exclusions: List<Rel.Op.Exclude.Step>): Datum {
-        return when (initialPartiQLValue.type) {
-            PartiQLValueType.STRUCT -> excludeStruct(initialPartiQLValue, exclusions)
-            PartiQLValueType.BAG, PartiQLValueType.LIST, PartiQLValueType.SEXP -> excludeCollection(
+        return when (initialPartiQLValue.type.kind) {
+            PType.Kind.ROW, PType.Kind.STRUCT -> excludeFields(initialPartiQLValue, exclusions)
+            PType.Kind.BAG, PType.Kind.LIST, PType.Kind.SEXP -> excludeCollection(
                 initialPartiQLValue,
                 initialPartiQLValue.type,
                 exclusions

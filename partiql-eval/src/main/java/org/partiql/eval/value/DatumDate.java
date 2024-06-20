@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 /**
  * This shall always be package-private (internal).
@@ -10,6 +10,8 @@ class DatumDate implements Datum {
 
     @NotNull
     private final org.partiql.value.datetime.Date _value;
+
+    private static final PType _type = PType.typeDate();
 
     DatumDate(@NotNull org.partiql.value.datetime.Date value) {
         _value = value;
@@ -28,7 +30,7 @@ class DatumDate implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.DATE;
+    public PType getType() {
+        return _type;
     }
 }

@@ -17,6 +17,8 @@ package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
+import com.amazon.ionelement.api.IonElement
+import com.amazon.ionelement.api.ionString
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.shell.info
 import org.partiql.lang.eval.EvaluationSession
@@ -24,7 +26,7 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.local.toIon
+import org.partiql.types.PType
 import picocli.CommandLine
 import java.io.PrintStream
 import java.nio.file.Paths
@@ -91,5 +93,9 @@ object Debug {
         }
 
         return "OK"
+    }
+
+    private fun PType.toIon(): IonElement {
+        return ionString(this.toString())
     }
 }

@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 /**
  * This shall always be package-private (internal).
@@ -21,7 +21,7 @@ class DatumInterval implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.INTERVAL;
+    public PType getType() {
+        throw new UnsupportedOperationException("NOT YET IMPLEMENTED");
     }
 }

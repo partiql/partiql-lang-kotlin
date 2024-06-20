@@ -1,5 +1,6 @@
 package org.partiql.spi.fn
 
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -13,12 +14,23 @@ import org.partiql.value.PartiQLValueType
 @OptIn(PartiQLValueExperimental::class)
 public class AggSignature(
     @JvmField public val name: String,
-    @JvmField public val returns: PartiQLValueType,
+    @JvmField public val returns: PType,
     @JvmField public val parameters: List<FnParameter>,
     @JvmField public val description: String? = null,
     @JvmField public val isNullable: Boolean = true,
     @JvmField public val isDecomposable: Boolean = true,
 ) {
+
+    public constructor(
+        name: String,
+        returns: PartiQLValueType,
+        parameters: List<FnParameter>,
+        description: String? = null,
+        isNullable: Boolean = true,
+        isDecomposable: Boolean = true,
+    ) : this(
+        name, PType.fromPartiQLValueType(returns), parameters, description, isNullable, isDecomposable
+    )
 
     /**
      * Symbolic name of this operator of the form NAME__INPUTS__RETURNS
@@ -26,9 +38,9 @@ public class AggSignature(
     public val specific: String = buildString {
         append(name.uppercase())
         append("__")
-        append(parameters.joinToString("_") { it.type.name })
+        append(parameters.joinToString("_") { it.type.toString() })
         append("__")
-        append(returns.name)
+        append(returns)
     }
 
     /**

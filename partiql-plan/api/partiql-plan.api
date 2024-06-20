@@ -68,14 +68,14 @@ public final class org/partiql/plan/Catalog$Item$Fn$Companion {
 public final class org/partiql/plan/Catalog$Item$Value : org/partiql/plan/Catalog$Item {
 	public static final field Companion Lorg/partiql/plan/Catalog$Item$Value$Companion;
 	public final field path Ljava/util/List;
-	public final field type Lorg/partiql/types/StaticType;
-	public fun <init> (Ljava/util/List;Lorg/partiql/types/StaticType;)V
+	public final field type Lorg/partiql/types/PType;
+	public fun <init> (Ljava/util/List;Lorg/partiql/types/PType;)V
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/plan/builder/CatalogItemValueBuilder;
 	public final fun component1 ()Ljava/util/List;
-	public final fun component2 ()Lorg/partiql/types/StaticType;
-	public final fun copy (Ljava/util/List;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Catalog$Item$Value;
-	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog$Item$Value;Ljava/util/List;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Value;
+	public final fun component2 ()Lorg/partiql/types/PType;
+	public final fun copy (Ljava/util/List;Lorg/partiql/types/PType;)Lorg/partiql/plan/Catalog$Item$Value;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog$Item$Value;Ljava/util/List;Lorg/partiql/types/PType;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Value;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -164,14 +164,14 @@ public final class org/partiql/plan/Plan {
 	public static final fun catalog (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Catalog;
 	public static final fun catalogItemAgg (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Agg;
 	public static final fun catalogItemFn (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Fn;
-	public static final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Catalog$Item$Value;
+	public static final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/PType;)Lorg/partiql/plan/Catalog$Item$Value;
 	public static final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)Lorg/partiql/plan/Identifier$Qualified;
 	public static final fun identifierSymbol (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;)Lorg/partiql/plan/Identifier$Symbol;
 	public static final fun partiQLPlan (Ljava/util/List;Lorg/partiql/plan/Statement;)Lorg/partiql/plan/PartiQLPlan;
 	public static final fun ref (II)Lorg/partiql/plan/Ref;
-	public static final fun refCast (Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Z)Lorg/partiql/plan/Ref$Cast;
+	public static final fun refCast (Lorg/partiql/types/PType;Lorg/partiql/types/PType;Z)Lorg/partiql/plan/Ref$Cast;
 	public static final fun rel (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;)Lorg/partiql/plan/Rel;
-	public static final fun relBinding (Ljava/lang/String;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Rel$Binding;
+	public static final fun relBinding (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/plan/Rel$Binding;
 	public static final fun relOpAggregate (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Aggregate;
 	public static final fun relOpAggregateCall (Lorg/partiql/plan/Ref;Lorg/partiql/plan/Rel$Op$Aggregate$Call$SetQuantifier;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Aggregate$Call;
 	public static final fun relOpDistinct (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Distinct;
@@ -198,7 +198,7 @@ public final class org/partiql/plan/Plan {
 	public static final fun relOpSortSpec (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;)Lorg/partiql/plan/Rel$Op$Sort$Spec;
 	public static final fun relOpUnpivot (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Unpivot;
 	public static final fun relType (Ljava/util/List;Ljava/util/Set;)Lorg/partiql/plan/Rel$Type;
-	public static final fun rex (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;)Lorg/partiql/plan/Rex;
+	public static final fun rex (Lorg/partiql/types/PType;Lorg/partiql/plan/Rex$Op;)Lorg/partiql/plan/Rex;
 	public static final fun rexOpCallDynamic (Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Dynamic;
 	public static final fun rexOpCallDynamicCandidate (Lorg/partiql/plan/Ref;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;
 	public static final fun rexOpCallStatic (Lorg/partiql/plan/Ref;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Static;
@@ -251,17 +251,17 @@ public final class org/partiql/plan/Ref : org/partiql/plan/PlanNode {
 
 public final class org/partiql/plan/Ref$Cast : org/partiql/plan/PlanNode {
 	public static final field Companion Lorg/partiql/plan/Ref$Cast$Companion;
-	public final field input Lorg/partiql/value/PartiQLValueType;
+	public final field input Lorg/partiql/types/PType;
 	public final field isNullable Z
-	public final field target Lorg/partiql/value/PartiQLValueType;
-	public fun <init> (Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Z)V
+	public final field target Lorg/partiql/types/PType;
+	public fun <init> (Lorg/partiql/types/PType;Lorg/partiql/types/PType;Z)V
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/plan/builder/RefCastBuilder;
-	public final fun component1 ()Lorg/partiql/value/PartiQLValueType;
-	public final fun component2 ()Lorg/partiql/value/PartiQLValueType;
+	public final fun component1 ()Lorg/partiql/types/PType;
+	public final fun component2 ()Lorg/partiql/types/PType;
 	public final fun component3 ()Z
-	public final fun copy (Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Z)Lorg/partiql/plan/Ref$Cast;
-	public static synthetic fun copy$default (Lorg/partiql/plan/Ref$Cast;Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;ZILjava/lang/Object;)Lorg/partiql/plan/Ref$Cast;
+	public final fun copy (Lorg/partiql/types/PType;Lorg/partiql/types/PType;Z)Lorg/partiql/plan/Ref$Cast;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Ref$Cast;Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZILjava/lang/Object;)Lorg/partiql/plan/Ref$Cast;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -296,14 +296,14 @@ public final class org/partiql/plan/Rel : org/partiql/plan/PlanNode {
 public final class org/partiql/plan/Rel$Binding : org/partiql/plan/PlanNode {
 	public static final field Companion Lorg/partiql/plan/Rel$Binding$Companion;
 	public final field name Ljava/lang/String;
-	public final field type Lorg/partiql/types/StaticType;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;)V
+	public final field type Lorg/partiql/types/PType;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;)V
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/plan/builder/RelBindingBuilder;
 	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Lorg/partiql/types/StaticType;
-	public final fun copy (Ljava/lang/String;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Rel$Binding;
-	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Binding;Ljava/lang/String;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Binding;
+	public final fun component2 ()Lorg/partiql/types/PType;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/plan/Rel$Binding;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Binding;Ljava/lang/String;Lorg/partiql/types/PType;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Binding;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -924,14 +924,14 @@ public final class org/partiql/plan/Rel$Type$Companion {
 public final class org/partiql/plan/Rex : org/partiql/plan/PlanNode {
 	public static final field Companion Lorg/partiql/plan/Rex$Companion;
 	public final field op Lorg/partiql/plan/Rex$Op;
-	public final field type Lorg/partiql/types/StaticType;
-	public fun <init> (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;)V
+	public final field type Lorg/partiql/types/PType;
+	public fun <init> (Lorg/partiql/types/PType;Lorg/partiql/plan/Rex$Op;)V
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/plan/builder/RexBuilder;
-	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component1 ()Lorg/partiql/types/PType;
 	public final fun component2 ()Lorg/partiql/plan/Rex$Op;
-	public final fun copy (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;)Lorg/partiql/plan/Rex;
-	public static synthetic fun copy$default (Lorg/partiql/plan/Rex;Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;ILjava/lang/Object;)Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/types/PType;Lorg/partiql/plan/Rex$Op;)Lorg/partiql/plan/Rex;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex;Lorg/partiql/types/PType;Lorg/partiql/plan/Rex$Op;ILjava/lang/Object;)Lorg/partiql/plan/Rex;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -1500,15 +1500,15 @@ public final class org/partiql/plan/builder/CatalogItemFnBuilder {
 
 public final class org/partiql/plan/builder/CatalogItemValueBuilder {
 	public fun <init> ()V
-	public fun <init> (Ljava/util/List;Lorg/partiql/types/StaticType;)V
-	public synthetic fun <init> (Ljava/util/List;Lorg/partiql/types/StaticType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Lorg/partiql/types/PType;)V
+	public synthetic fun <init> (Ljava/util/List;Lorg/partiql/types/PType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/plan/Catalog$Item$Value;
 	public final fun getPath ()Ljava/util/List;
-	public final fun getType ()Lorg/partiql/types/StaticType;
+	public final fun getType ()Lorg/partiql/types/PType;
 	public final fun path (Ljava/util/List;)Lorg/partiql/plan/builder/CatalogItemValueBuilder;
 	public final fun setPath (Ljava/util/List;)V
-	public final fun setType (Lorg/partiql/types/StaticType;)V
-	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/CatalogItemValueBuilder;
+	public final fun setType (Lorg/partiql/types/PType;)V
+	public final fun type (Lorg/partiql/types/PType;)Lorg/partiql/plan/builder/CatalogItemValueBuilder;
 }
 
 public final class org/partiql/plan/builder/IdentifierQualifiedBuilder {
@@ -1558,8 +1558,8 @@ public final class org/partiql/plan/builder/PlanBuilder {
 	public static synthetic fun catalogItemAgg$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Agg;
 	public final fun catalogItemFn (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Fn;
 	public static synthetic fun catalogItemFn$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Fn;
-	public final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Value;
-	public static synthetic fun catalogItemValue$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Value;
+	public final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Value;
+	public static synthetic fun catalogItemValue$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Value;
 	public final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Identifier$Qualified;
 	public static synthetic fun identifierQualified$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Identifier$Qualified;
 	public final fun identifierSymbol (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Identifier$Symbol;
@@ -1568,12 +1568,12 @@ public final class org/partiql/plan/builder/PlanBuilder {
 	public static synthetic fun partiQLPlan$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/plan/Statement;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/PartiQLPlan;
 	public final fun ref (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Ref;
 	public static synthetic fun ref$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Ref;
-	public final fun refCast (Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Ref$Cast;
-	public static synthetic fun refCast$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Ref$Cast;
+	public final fun refCast (Lorg/partiql/types/PType;Lorg/partiql/types/PType;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Ref$Cast;
+	public static synthetic fun refCast$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/types/PType;Lorg/partiql/types/PType;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Ref$Cast;
 	public final fun rel (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel;
 	public static synthetic fun rel$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel;
-	public final fun relBinding (Ljava/lang/String;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Binding;
-	public static synthetic fun relBinding$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Binding;
+	public final fun relBinding (Ljava/lang/String;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Binding;
+	public static synthetic fun relBinding$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Binding;
 	public final fun relOpAggregate (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Aggregate;
 	public static synthetic fun relOpAggregate$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Aggregate;
 	public final fun relOpAggregateCall (Lorg/partiql/plan/Ref;Lorg/partiql/plan/Rel$Op$Aggregate$Call$SetQuantifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Aggregate$Call;
@@ -1626,8 +1626,8 @@ public final class org/partiql/plan/builder/PlanBuilder {
 	public static synthetic fun relOpUnpivot$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Unpivot;
 	public final fun relType (Ljava/util/List;Ljava/util/Set;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Type;
 	public static synthetic fun relType$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/util/Set;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Type;
-	public final fun rex (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex;
-	public static synthetic fun rex$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex;
+	public final fun rex (Lorg/partiql/types/PType;Lorg/partiql/plan/Rex$Op;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex;
+	public static synthetic fun rex$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/types/PType;Lorg/partiql/plan/Rex$Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex;
 	public final fun rexOpCallDynamic (Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Call$Dynamic;
 	public static synthetic fun rexOpCallDynamic$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Call$Dynamic;
 	public final fun rexOpCallDynamicCandidate (Lorg/partiql/plan/Ref;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;
@@ -1697,31 +1697,31 @@ public final class org/partiql/plan/builder/RefBuilder {
 
 public final class org/partiql/plan/builder/RefCastBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Ljava/lang/Boolean;)V
-	public synthetic fun <init> (Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/types/PType;Lorg/partiql/types/PType;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Lorg/partiql/types/PType;Lorg/partiql/types/PType;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/plan/Ref$Cast;
-	public final fun getInput ()Lorg/partiql/value/PartiQLValueType;
-	public final fun getTarget ()Lorg/partiql/value/PartiQLValueType;
-	public final fun input (Lorg/partiql/value/PartiQLValueType;)Lorg/partiql/plan/builder/RefCastBuilder;
+	public final fun getInput ()Lorg/partiql/types/PType;
+	public final fun getTarget ()Lorg/partiql/types/PType;
+	public final fun input (Lorg/partiql/types/PType;)Lorg/partiql/plan/builder/RefCastBuilder;
 	public final fun isNullable ()Ljava/lang/Boolean;
 	public final fun isNullable (Ljava/lang/Boolean;)Lorg/partiql/plan/builder/RefCastBuilder;
-	public final fun setInput (Lorg/partiql/value/PartiQLValueType;)V
+	public final fun setInput (Lorg/partiql/types/PType;)V
 	public final fun setNullable (Ljava/lang/Boolean;)V
-	public final fun setTarget (Lorg/partiql/value/PartiQLValueType;)V
-	public final fun target (Lorg/partiql/value/PartiQLValueType;)Lorg/partiql/plan/builder/RefCastBuilder;
+	public final fun setTarget (Lorg/partiql/types/PType;)V
+	public final fun target (Lorg/partiql/types/PType;)Lorg/partiql/plan/builder/RefCastBuilder;
 }
 
 public final class org/partiql/plan/builder/RelBindingBuilder {
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/plan/Rel$Binding;
 	public final fun getName ()Ljava/lang/String;
-	public final fun getType ()Lorg/partiql/types/StaticType;
+	public final fun getType ()Lorg/partiql/types/PType;
 	public final fun name (Ljava/lang/String;)Lorg/partiql/plan/builder/RelBindingBuilder;
 	public final fun setName (Ljava/lang/String;)V
-	public final fun setType (Lorg/partiql/types/StaticType;)V
-	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/RelBindingBuilder;
+	public final fun setType (Lorg/partiql/types/PType;)V
+	public final fun type (Lorg/partiql/types/PType;)Lorg/partiql/plan/builder/RelBindingBuilder;
 }
 
 public final class org/partiql/plan/builder/RelBuilder {
@@ -2061,15 +2061,15 @@ public final class org/partiql/plan/builder/RelTypeBuilder {
 
 public final class org/partiql/plan/builder/RexBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;)V
-	public synthetic fun <init> (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/types/PType;Lorg/partiql/plan/Rex$Op;)V
+	public synthetic fun <init> (Lorg/partiql/types/PType;Lorg/partiql/plan/Rex$Op;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/plan/Rex;
 	public final fun getOp ()Lorg/partiql/plan/Rex$Op;
-	public final fun getType ()Lorg/partiql/types/StaticType;
+	public final fun getType ()Lorg/partiql/types/PType;
 	public final fun op (Lorg/partiql/plan/Rex$Op;)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun setOp (Lorg/partiql/plan/Rex$Op;)V
-	public final fun setType (Lorg/partiql/types/StaticType;)V
-	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/RexBuilder;
+	public final fun setType (Lorg/partiql/types/PType;)V
+	public final fun type (Lorg/partiql/types/PType;)Lorg/partiql/plan/builder/RexBuilder;
 }
 
 public final class org/partiql/plan/builder/RexOpCallDynamicBuilder {

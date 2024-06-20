@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +19,8 @@ class DatumStruct implements Datum {
 
     @NotNull
     private final Map<String, List<Datum>> _delegateNormalized;
+
+    private final static PType _type = PType.typeStruct();
 
     DatumStruct(@NotNull Iterable<Field> fields) {
         _delegate = new HashMap<>();
@@ -70,7 +72,7 @@ class DatumStruct implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.STRUCT;
+    public PType getType() {
+        return _type;
     }
 }

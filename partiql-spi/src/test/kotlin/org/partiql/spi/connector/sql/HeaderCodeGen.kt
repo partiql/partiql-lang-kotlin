@@ -168,9 +168,9 @@ class HeaderCodeGen {
     @OptIn(FnExperimental::class)
     private fun toParams(clazz: String, fn: FnSignature): Array<out Any?> {
         val snake = fn.name
-        val returns = fn.returns.name
+        val returns = fn.returns.toString()
         val parameters = fn.parameters.mapIndexed { i, p ->
-            "FnParameter(\"${p.name}\", ${p.type.name})"
+            "FnParameter(\"${p.name}\", ${p.type})"
         }.joinToString(",\n", postfix = ",")
         return arrayOf(clazz, snake, returns, parameters, fn.isNullCall, fn.isNullable, snake)
     }
@@ -178,10 +178,10 @@ class HeaderCodeGen {
     @OptIn(FnExperimental::class)
     private fun toParams(clazz: String, agg: AggSignature): Array<out Any?> {
         val snake = agg.name
-        val returns = agg.returns.name
+        val returns = agg.returns.toString()
         var parameters = ""
         for (p in agg.parameters) {
-            parameters += "FnParameter(\"${p.name}\", ${p.type.name}),\n"
+            parameters += "FnParameter(\"${p.name}\", ${p.type}),\n"
         }
         return arrayOf(clazz, snake, returns, parameters, agg.isNullable, agg.isDecomposable, snake)
     }

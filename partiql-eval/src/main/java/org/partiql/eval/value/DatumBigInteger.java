@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 import java.math.BigInteger;
 
@@ -12,6 +12,8 @@ class DatumBigInteger implements Datum {
 
     @NotNull
     private final BigInteger _value;
+
+    private final static PType _type = PType.typeIntArbitrary();
 
     DatumBigInteger(@NotNull BigInteger value) {
         _value = value;
@@ -25,7 +27,7 @@ class DatumBigInteger implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.INT;
+    public PType getType() {
+        return _type;
     }
 }

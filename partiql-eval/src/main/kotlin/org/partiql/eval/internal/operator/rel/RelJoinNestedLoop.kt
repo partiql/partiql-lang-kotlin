@@ -7,8 +7,7 @@ import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.eval.value.Field
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.types.PType
 
 internal abstract class RelJoinNestedLoop : RelPeeking() {
 
@@ -31,7 +30,6 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
 
     abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun peek(): Record? {
         if (lhsRecord == null) {
             return null
@@ -79,10 +77,9 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
         }
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun Datum.padNull(): Datum {
-        return when (this.type) {
-            PartiQLValueType.STRUCT -> {
+        return when (this.type.kind) {
+            PType.Kind.STRUCT, PType.Kind.ROW -> {
                 val newFields = IteratorSupplier { this.fields }.map {
                     Field.of(it.name, Datum.nullValue())
                 }

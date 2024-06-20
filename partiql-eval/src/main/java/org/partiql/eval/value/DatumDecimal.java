@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 import java.math.BigDecimal;
 
@@ -9,8 +9,8 @@ import java.math.BigDecimal;
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PartiQLValueType#DECIMAL},
- * {@link PartiQLValueType#DECIMAL_ARBITRARY}
+ * {@link PType.Kind#DECIMAL},
+ * {@link PType.Kind#DECIMAL_ARBITRARY}
  */
 class DatumDecimal implements Datum {
 
@@ -18,10 +18,9 @@ class DatumDecimal implements Datum {
     private final BigDecimal _value;
 
     @NotNull
-    private final PartiQLValueType _type;
+    private final PType _type;
 
-    DatumDecimal(@NotNull BigDecimal value, @NotNull PartiQLValueType type) {
-        assert(type == PartiQLValueType.DECIMAL || type == PartiQLValueType.DECIMAL_ARBITRARY);
+    DatumDecimal(@NotNull BigDecimal value, @NotNull PType type) {
         _value = value;
         _type = type;
     }
@@ -34,7 +33,7 @@ class DatumDecimal implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
+    public PType getType() {
         return _type;
     }
 }

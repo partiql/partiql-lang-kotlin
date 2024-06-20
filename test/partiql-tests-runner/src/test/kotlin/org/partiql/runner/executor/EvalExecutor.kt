@@ -25,6 +25,7 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorSession
+import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -156,7 +157,7 @@ class EvalExecutor(
          * @return
          */
         private fun infer(env: StructElement): Connector {
-            val map = mutableMapOf<String, StaticType>()
+            val map = mutableMapOf<String, PType>()
             env.fields.forEach {
                 map[it.name] = inferEnv(it.value)
             }
@@ -165,7 +166,7 @@ class EvalExecutor(
             return MemoryConnector(catalog)
         }
 
-        private fun inferEnv(env: AnyElement): StaticType {
+        private fun inferEnv(env: AnyElement): PType {
             val catalog = MemoryCatalog.PartiQL().name("conformance_test").build()
             val connector = MemoryConnector(catalog)
             val session = PartiQLPlanner.Session(

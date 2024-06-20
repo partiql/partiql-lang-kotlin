@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 /**
  * This shall always be package-private (internal).
@@ -11,8 +11,12 @@ class DatumChars implements Datum {
     @NotNull
     private final String _value;
 
-    DatumChars(@NotNull String value) {
+    @NotNull
+    private final PType _type;
+
+    DatumChars(@NotNull String value, int length) {
         _value = value;
+        _type = PType.typeChar(length);
     }
 
     @Override
@@ -23,7 +27,7 @@ class DatumChars implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.CHAR;
+    public PType getType() {
+        return _type;
     }
 }

@@ -4,10 +4,8 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.RecordValueIterator
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal class RelScanPermissive(
     private val expr: Operator.Expr
 ) : Operator.Relation {
@@ -16,8 +14,8 @@ internal class RelScanPermissive(
 
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Record.empty))
-        records = when (r.type) {
-            PartiQLValueType.BAG, PartiQLValueType.LIST, PartiQLValueType.SEXP -> RecordValueIterator(r.iterator())
+        records = when (r.type.kind) {
+            PType.Kind.BAG, PType.Kind.LIST, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
             else -> iterator { yield(Record.of(r)) }
         }
     }

@@ -19,6 +19,8 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
+import org.partiql.types.PType
+import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import java.util.Random
@@ -26,7 +28,10 @@ import java.util.stream.Stream
 
 abstract class PartiQLTyperTestBase {
     sealed class TestResult {
-        data class Success(val expectedType: StaticType) : TestResult() {
+        data class Success(val expectedType: PType) : TestResult() {
+
+            constructor(expectedType: StaticType) : this(PType.fromStaticType(expectedType))
+
             override fun toString(): String = "Success_$expectedType"
         }
 
@@ -127,9 +132,9 @@ abstract class PartiQLTyperTestBase {
                             val result = testingPipeline(statement, testName, metadata, pc)
                             val root = (result.plan.statement as Statement.Query).root
                             val actualType = root.type
-                            assert(actualType == StaticType.ANY) {
+                            assert(actualType.kind == Kind.DYNAMIC) {
                                 buildString {
-                                    this.appendLine(" expected Type is : ANY")
+                                    this.appendLine("expected Type is : DYNAMIC")
                                     this.appendLine("actual Type is : $actualType")
                                     PlanPrinter.append(this, result.plan)
                                 }

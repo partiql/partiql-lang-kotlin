@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 /**
  * This shall always be package-private (internal).
@@ -9,6 +9,8 @@ import org.partiql.value.PartiQLValueType;
 class DatumFloat implements Datum {
 
     private final float _value;
+
+    private final static PType _type = PType.typeReal();
 
     DatumFloat(float value) {
         _value = value;
@@ -21,7 +23,7 @@ class DatumFloat implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.FLOAT32;
+    public PType getType() {
+        return _type;
     }
 }

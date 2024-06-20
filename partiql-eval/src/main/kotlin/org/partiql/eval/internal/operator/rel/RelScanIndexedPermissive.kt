@@ -4,10 +4,8 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal class RelScanIndexedPermissive(
     private val expr: Operator.Expr
 ) : Operator.Relation {
@@ -19,12 +17,12 @@ internal class RelScanIndexedPermissive(
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Record.empty))
         index = 0
-        iterator = when (r.type) {
-            PartiQLValueType.BAG -> {
+        iterator = when (r.type.kind) {
+            PType.Kind.BAG -> {
                 isIndexable = false
                 r.iterator()
             }
-            PartiQLValueType.LIST, PartiQLValueType.SEXP -> r.iterator()
+            PType.Kind.LIST, PType.Kind.SEXP -> r.iterator()
             else -> {
                 isIndexable = false
                 iterator { yield(r) }

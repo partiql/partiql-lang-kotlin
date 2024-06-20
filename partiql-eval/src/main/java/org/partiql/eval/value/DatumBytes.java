@@ -1,15 +1,14 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 /**
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PartiQLValueType#BINARY},
- * {@link PartiQLValueType#BLOB},
- * {@link PartiQLValueType#CLOB}
+ * {@link PType.Kind#BLOB},
+ * {@link PType.Kind#CLOB}
  */
 class DatumBytes implements Datum {
 
@@ -17,10 +16,9 @@ class DatumBytes implements Datum {
     private final byte[] _value;
 
     @NotNull
-    private final PartiQLValueType _type;
+    private final PType _type;
 
-    DatumBytes(@NotNull byte[] value, @NotNull PartiQLValueType type) {
-        assert(type == PartiQLValueType.BINARY || type == PartiQLValueType.BLOB || type == PartiQLValueType.CLOB);
+    DatumBytes(@NotNull byte[] value, @NotNull PType type) {
         _value = value;
         _type = type;
     }
@@ -33,7 +31,7 @@ class DatumBytes implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
+    public PType getType() {
         return _type;
     }
 }

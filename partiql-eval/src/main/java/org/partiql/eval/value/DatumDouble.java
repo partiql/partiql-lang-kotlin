@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 /**
  * This shall always be package-private (internal).
@@ -9,6 +9,7 @@ import org.partiql.value.PartiQLValueType;
 class DatumDouble implements Datum {
 
     private final double _value;
+    private final static PType _type = PType.typeDoublePrecision();
 
     DatumDouble(double value) {
         _value = value;
@@ -21,7 +22,7 @@ class DatumDouble implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.FLOAT64;
+    public PType getType() {
+        return _type;
     }
 }

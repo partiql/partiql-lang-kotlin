@@ -7,14 +7,18 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
+import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import kotlin.test.assertEquals
 
 internal class PlannerErrorReportingTests {
     val catalogName = "mode_test"
@@ -83,8 +87,15 @@ internal class PlannerErrorReportingTests {
         val query: String,
         val isSignal: Boolean,
         val assertion: (List<Problem>) -> List<() -> Boolean>,
-        val expectedType: StaticType = StaticType.ANY
-    )
+        val expectedType: CompilerType
+    ) {
+        constructor(
+            query: String,
+            isSignal: Boolean,
+            assertion: (List<Problem>) -> List<() -> Boolean>,
+            expectedType: StaticType = StaticType.ANY
+        ) : this(query, isSignal, assertion, PType.fromStaticType(expectedType).toCType())
+    }
 
     companion object {
         fun closedStruct(vararg field: StructType.Field): StructType =
@@ -115,12 +126,14 @@ internal class PlannerErrorReportingTests {
             TestCase(
                 "MISSING",
                 false,
-                assertOnProblemCount(0, 0)
+                assertOnProblemCount(0, 0),
+                expectedType = PType.typeUnknown().toCType()
             ),
             TestCase(
                 "MISSING",
                 true,
-                assertOnProblemCount(0, 0)
+                assertOnProblemCount(0, 0),
+                expectedType = PType.typeUnknown().toCType()
             ),
             // Unresolved variable always signals (10.1.3)
             TestCase(
@@ -133,7 +146,8 @@ internal class PlannerErrorReportingTests {
             TestCase(
                 "1 + MISSING",
                 false,
-                assertOnProblemCount(1, 0)
+                assertOnProblemCount(1, 0),
+                expectedType = PType.typeInt().toCType()
             ),
             // This will be a non-resolved function error.
             // As plus does not contain a function that match argument type with
@@ -142,7 +156,8 @@ internal class PlannerErrorReportingTests {
             TestCase(
                 "1 + MISSING",
                 true,
-                assertOnProblemCount(0, 1)
+                assertOnProblemCount(0, 1),
+                expectedType = PType.typeInt().toCType()
             ),
             // Attempting to do path navigation(symbol) on missing(which is not tuple)
             //  returns missing in quite mode, and error out in signal mode
@@ -263,14 +278,14 @@ internal class PlannerErrorReportingTests {
             TestCase(
                 "1 + not_a_function(1)",
                 false,
-                assertOnProblemCount(0, 1),
-                StaticType.unionOf(StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.FLOAT, StaticType.DECIMAL),
+                assertOnProblemCount(1, 1),
+                StaticType.INT4,
             ),
             TestCase(
                 "1 + not_a_function(1)",
                 true,
-                assertOnProblemCount(0, 1),
-                StaticType.unionOf(StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.FLOAT, StaticType.DECIMAL),
+                assertOnProblemCount(0, 2),
+                StaticType.INT4,
             ),
 
             TestCase(
@@ -395,7 +410,7 @@ internal class PlannerErrorReportingTests {
             plan, problems,
             *tc.assertion(problems).toTypedArray()
         )
-        tc.expectedType.assertStaticTypeEqual((plan.statement as org.partiql.plan.Statement.Query).root.type)
+        assertEquals(tc.expectedType, (plan.statement as org.partiql.plan.Statement.Query).root.type)
     }
 
     @ParameterizedTest

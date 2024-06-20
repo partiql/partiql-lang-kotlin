@@ -1,10 +1,12 @@
 package org.partiql.planner.internal.typer
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.refObj
 import org.partiql.planner.internal.ir.rex
@@ -16,29 +18,27 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.LocalConnector
-import org.partiql.types.StaticType
-import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.DECIMAL
-import org.partiql.types.StaticType.Companion.FLOAT
-import org.partiql.types.StaticType.Companion.INT2
-import org.partiql.types.StaticType.Companion.INT4
-import org.partiql.types.StaticType.Companion.STRING
-import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
 import org.partiql.value.stringValue
 import java.util.Random
 import kotlin.io.path.toPath
-import kotlin.test.assertEquals
 
 class PlanTyperTest {
 
     companion object {
 
         private val root = this::class.java.getResource("/catalogs/default/pql")!!.toURI().toPath()
+
+        private val ANY = PType.typeDynamic().toCType()
+        private val STRING = PType.typeString().toCType()
+        private val INT4 = PType.typeInt().toCType()
+        private val DOUBLE_PRECISION = PType.typeDoublePrecision().toCType()
+        private val DECIMAL = PType.typeDecimalArbitrary().toCType()
 
         @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1 = rex(
@@ -63,30 +63,16 @@ class PlanTyperTest {
             )
         )
 
-        private val LITERAL_STRUCT_1_FIRST_KEY_TYPE = StructType(
-            fields = mapOf(
-                "sEcoNd_KEY" to INT4
-            ),
-            contentClosed = true,
-            constraints = setOf(
-                TupleConstraint.UniqueAttrs(true),
-                TupleConstraint.Open(false)
-            )
-        )
+        private val LITERAL_STRUCT_1_FIRST_KEY_TYPE = PType.typeRow(
+            listOf(CompilerType.Field("sEcoNd_KEY", INT4)),
+        ).toCType()
 
         @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1_TYPED: Rex
             get() {
-                val topLevelStruct = StructType(
-                    fields = mapOf(
-                        "FiRsT_KeY" to LITERAL_STRUCT_1_FIRST_KEY_TYPE
-                    ),
-                    contentClosed = true,
-                    constraints = setOf(
-                        TupleConstraint.UniqueAttrs(true),
-                        TupleConstraint.Open(false)
-                    )
-                )
+                val topLevelStruct = PType.typeRow(
+                    listOf(CompilerType.Field("FiRsT_KeY", LITERAL_STRUCT_1_FIRST_KEY_TYPE)),
+                ).toCType()
                 return rex(
                     type = topLevelStruct,
                     rexOpStruct(
@@ -110,65 +96,25 @@ class PlanTyperTest {
                 )
             }
 
-        private val ORDERED_DUPLICATES_STRUCT = StructType(
-            fields = listOf(
-                StructType.Field("definition", StaticType.STRING),
-                StructType.Field("definition", StaticType.FLOAT),
-                StructType.Field("DEFINITION", StaticType.DECIMAL),
+        private val ORDERED_DUPLICATES_STRUCT = PType.typeRow(
+            listOf(
+                CompilerType.Field("definition", STRING),
+                CompilerType.Field("definition", DOUBLE_PRECISION),
+                CompilerType.Field("DEFINITION", DECIMAL),
             ),
-            contentClosed = true,
-            constraints = setOf(
-                TupleConstraint.Open(false),
-                TupleConstraint.Ordered
-            )
-        )
+        ).toCType()
 
-        private val DUPLICATES_STRUCT = StructType(
-            fields = listOf(
-                StructType.Field("definition", StaticType.STRING),
-                StructType.Field("definition", StaticType.FLOAT),
-                StructType.Field("DEFINITION", StaticType.DECIMAL),
+        private val DUPLICATES_STRUCT = PType.typeRow(
+            listOf(
+                CompilerType.Field("definition", STRING),
+                CompilerType.Field("definition", DOUBLE_PRECISION),
+                CompilerType.Field("DEFINITION", DECIMAL),
             ),
-            contentClosed = true,
-            constraints = setOf(
-                TupleConstraint.Open(false)
-            )
-        )
+        ).toCType()
 
-        private val CLOSED_UNION_DUPLICATES_STRUCT = StaticType.unionOf(
-            StructType(
-                fields = listOf(
-                    StructType.Field("definition", StaticType.STRING),
-                    StructType.Field("definition", StaticType.FLOAT),
-                    StructType.Field("DEFINITION", StaticType.DECIMAL),
-                ),
-                contentClosed = true,
-                constraints = setOf(
-                    TupleConstraint.Open(false)
-                )
-            ),
-            StructType(
-                fields = listOf(
-                    StructType.Field("definition", StaticType.INT2),
-                    StructType.Field("definition", StaticType.INT4),
-                    StructType.Field("DEFINITION", StaticType.INT8),
-                ),
-                contentClosed = true,
-                constraints = setOf(
-                    TupleConstraint.Open(false),
-                    TupleConstraint.Ordered
-                )
-            ),
-        )
+        private val CLOSED_UNION_DUPLICATES_STRUCT = ANY
 
-        private val OPEN_DUPLICATES_STRUCT = StructType(
-            fields = listOf(
-                StructType.Field("definition", StaticType.STRING),
-                StructType.Field("definition", StaticType.FLOAT),
-                StructType.Field("DEFINITION", StaticType.DECIMAL),
-            ),
-            contentClosed = false
-        )
+        private val OPEN_DUPLICATES_STRUCT = PType.typeStruct().toCType()
 
         private fun getTyper(): PlanTyperWrapper {
             ProblemCollector()
@@ -217,6 +163,7 @@ class PlanTyperTest {
     }
 
     @Test
+    @Disabled("PartiQL doesn't have the concept of ordered structs (yet)")
     fun testOrderedDuplicates() {
         val wrapper = getTyper()
         val typer = wrapper.typer
@@ -235,6 +182,7 @@ class PlanTyperTest {
     }
 
     @Test
+    @Disabled("PartiQL doesn't have the concept of ordered structs (yet)")
     fun testOrderedDuplicatesWithSensitivity() {
         val wrapper = getTyper()
         val typer = wrapper.typer
@@ -261,7 +209,7 @@ class PlanTyperTest {
                 path = listOf("main", "closed_duplicates_struct"),
             ).pathSymbol(
                 "DEFINITION",
-                StaticType.unionOf(STRING, FLOAT, DECIMAL)
+                PType.typeDynamic().toCType()
             )
         )
 
@@ -296,7 +244,7 @@ class PlanTyperTest {
                 path = listOf("main", "closed_duplicates_struct"),
             ).pathKey(
                 "definition",
-                StaticType.unionOf(StaticType.STRING, StaticType.FLOAT)
+                PType.typeDynamic().toCType()
             )
         )
 
@@ -331,7 +279,7 @@ class PlanTyperTest {
                 path = listOf("main", "closed_union_duplicates_struct"),
             ).pathSymbol(
                 "definition",
-                StaticType.unionOf(STRING, FLOAT, DECIMAL, INT2)
+                PType.typeDynamic().toCType()
             )
         )
 
@@ -350,7 +298,7 @@ class PlanTyperTest {
                 path = listOf("main", "closed_union_duplicates_struct"),
             ).pathKey(
                 "definition",
-                StaticType.unionOf(STRING, FLOAT, INT2)
+                PType.typeDynamic().toCType()
             )
         )
 
@@ -361,11 +309,11 @@ class PlanTyperTest {
     @OptIn(PartiQLValueExperimental::class)
     private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
 
-    private fun Rex.pathKey(key: String, type: StaticType = ANY): Rex = Rex(type, rexOpPathKey(this, rexString(key)))
+    private fun Rex.pathKey(key: String, type: CompilerType = ANY): Rex = Rex(type, rexOpPathKey(this, rexString(key)))
 
-    private fun Rex.pathSymbol(key: String, type: StaticType = ANY): Rex = Rex(type, rexOpPathSymbol(this, key))
+    private fun Rex.pathSymbol(key: String, type: CompilerType = ANY): Rex = Rex(type, rexOpPathSymbol(this, key))
 
-    private fun unresolvedSensitiveVar(name: String, type: StaticType = ANY): Rex {
+    private fun unresolvedSensitiveVar(name: String, type: CompilerType = ANY): Rex {
         return rex(
             type,
             rexOpVarUnresolved(
@@ -375,10 +323,19 @@ class PlanTyperTest {
         )
     }
 
-    private fun global(type: StaticType, path: List<String>): Rex {
+    private fun global(type: CompilerType, path: List<String>): Rex {
         return rex(
             type,
             rexOpVarGlobal(refObj(catalog = "pql", path = path, type))
         )
+    }
+
+    private fun assertEquals(expected: Statement, actual: Statement) {
+        return assert(expected == actual) {
+            buildString {
+                appendLine("Expected : $expected")
+                appendLine("Actual   : $actual")
+            }
+        }
     }
 }

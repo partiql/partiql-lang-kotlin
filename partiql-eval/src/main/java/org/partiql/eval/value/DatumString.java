@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 
 /**
  * This shall always be package-private (internal).
@@ -12,10 +12,9 @@ class DatumString implements Datum {
     private final String _value;
 
     @NotNull
-    private final PartiQLValueType _type;
+    private final PType _type;
 
-    DatumString(@NotNull String value, @NotNull PartiQLValueType type) {
-        assert(type == PartiQLValueType.STRING || type == PartiQLValueType.SYMBOL);
+    DatumString(@NotNull String value, @NotNull PType type) {
         _value = value;
         _type = type;
     }
@@ -28,7 +27,7 @@ class DatumString implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
+    public PType getType() {
         return _type;
     }
 }
