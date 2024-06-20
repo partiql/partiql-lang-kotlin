@@ -7,7 +7,7 @@ import org.partiql.eval.value.Datum
  *
  * TODO consider a `done()` method for short-circuiting.
  */
-internal interface Accumulator {
+interface Accumulator {
 
     /**
      * Apply args to the accumulator.

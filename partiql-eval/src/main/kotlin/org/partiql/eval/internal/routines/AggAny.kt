@@ -7,10 +7,10 @@ import org.partiql.eval.internal.Accumulator
 import org.partiql.eval.internal.Aggregation
 import org.partiql.eval.internal.routines.internal.isAbsent
 import org.partiql.eval.value.Datum
-import org.partiql.value.PartiQLValueType
+import org.partiql.types.PType
 
 /**
- * Note that SOME is normalized to ANY.
+ * Note that SOME(v) is normalized to ANY(v).
  */
 internal object AGG_ANY__BOOL__BOOL : Aggregation {
 
@@ -32,7 +32,7 @@ internal object AGG_ANY__BOOL__BOOL : Aggregation {
         }
 
         override fun value(): Datum = when (result) {
-            null -> Datum.nullValue(PartiQLValueType.BOOL)
+            null -> Datum.nullValue(PType.typeBool())
             else -> Datum.boolValue(result!!)
         }
     }

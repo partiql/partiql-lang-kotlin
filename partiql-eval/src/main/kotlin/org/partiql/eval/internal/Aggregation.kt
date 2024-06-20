@@ -1,13 +1,14 @@
 package org.partiql.eval.internal
 
-interface Aggregation {
-
-    public fun getKey(): String
+/**
+ *
+ */
+internal fun interface Aggregation {
 
     /**
      * Instantiates a stateful accumulator for this aggregation function.
      *
      * @return
      */
-    public fun accumulator(): Accumulator
+    fun accumulator(): Accumulator
 }

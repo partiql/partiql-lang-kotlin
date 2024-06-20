@@ -7,8 +7,8 @@ import org.partiql.types.CollectionType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.SexpType
-import org.partiql.types.StaticType
-import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.CompilerType
+import org.partiql.types.CompilerType.Companion.MISSING
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 
@@ -25,12 +25,12 @@ internal object SqlTyper {
     /**
      * TODO hardcoded for now; shouldn't be needed with PType.
      */
-    private val factory = StaticTypes
+    private val factory = CompilerTypes
 
     /**
      * Compute a FROM Clause return type.
      */
-    fun getScanType(type: StaticType): StaticType = when (type) {
+    fun getScanType(type: CompilerType): CompilerType = when (type) {
         is BagType -> type.elementType
         is ListType -> type.elementType
         is AnyType -> factory.dynamic()
@@ -41,7 +41,7 @@ internal object SqlTyper {
     /**
      * Compute an UNPIVOT Clause return type.
      */
-    fun getUnpivotType(type: StaticType): StaticType {
+    fun getUnpivotType(type: CompilerType): CompilerType {
         val variants = type.allTypes.map { variant ->
             if (variant !is StructType) {
                 return variant
@@ -58,15 +58,15 @@ internal object SqlTyper {
     /**
      * Compute the return type for a Rex.Op.Path.Index
      */
-    fun getPathIndexType(rootT: StaticType, keyT: StaticType): StaticType {
+    fun getPathIndexType(rootT: CompilerType, keyT: CompilerType): CompilerType {
         val elementTypes = rootT.allTypes.map { type ->
             if (type !is ListType && type !is SexpType) {
-                return@map StaticType.MISSING
+                return@map CompilerType.MISSING
             }
             (type as CollectionType).elementType
         }.toSet()
         if (elementTypes.all { it is MissingType }) {
-            return StaticType.MISSING
+            return CompilerType.MISSING
         }
         return factory.dynamic(elementTypes)
     }
@@ -74,7 +74,7 @@ internal object SqlTyper {
     /**
      * Compute the return type for a Rex.Op.Path.Key
      */
-    fun getPathKeyType(rootT: StaticType, keyT: StaticType): StaticType {
+    fun getPathKeyType(rootT: CompilerType, keyT: CompilerType): CompilerType {
         TODO()
     }
 

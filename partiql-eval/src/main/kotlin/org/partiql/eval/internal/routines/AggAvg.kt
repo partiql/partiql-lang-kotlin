@@ -5,29 +5,15 @@ package org.partiql.eval.internal.routines
 
 import org.partiql.eval.internal.Aggregation
 
-// internal class AccumulatorAvg(
-//     private val targetType: PartiQLValueType = PartiQLValueType.DYNAMIC
-// ) : Accumulator() {
-//
-//     var sum: Number = 0.0
-//     var count: Long = 0L
-//
-//     override fun nextValue(value: Datum) {
-//         checkIsNumberType(funcName = "AVG", value = value)
-//         this.sum += value.numberValue()
-//         this.count += 1L
-//     }
-//
-//     override fun value(): Datum = when (count) {
-//         0L -> nullToTargetType(targetType)
-//         else -> (sum / bigDecimalOf(count)).toTargetType(targetType)
-//     }
-// }
+internal class AggAvg {
 
-internal object AGG_AVG__TINYINT__TINYINT : Aggregation {
+    const val
 
-    override fun getKey(): String = "AGG_AVG__TINYINT___TINYINT"
+}
 
+internal
+
+internal val AGG_AVG__TINYINT__TINYINT : Aggregation("AGG_AVG__TINYINT___TINYINT") {
     override fun accumulator() = TODO("Accumulator not implemented")
 }
 

@@ -6,240 +6,240 @@ import org.partiql.value.PartiQLValueType
 /**
  * Facade for instantiating types; we can drop T once the switch from StaticType to PType is complete.
  */
-internal interface SqlTypes<T> {
+internal object SqlTypes {
 
     /**
      * Create a type from the enum.
      */
-    fun create(type: PartiQLValueType): T
+    fun create(type: PartiQLValueType): PType
 
     /**
      * Create a type form the enum with the given arguments.
      */
-    fun create(type: PartiQLValueType, vararg args: Any): T
+    fun create(type: PartiQLValueType, vararg args: Any): PType
 
     /**
      * The `dynamic` type.
      */
-    fun dynamic(): T
+    fun dynamic(): PType
 
     /**
      * The `dynamic` type with known variants.
      */
-    fun dynamic(variants: Set<T>): T
+    fun dynamic(variants: Set<T>): PType
 
     /**
      * The `dynamic` type with known variants.
      */
-    fun dynamic(variants: List<T>): T = dynamic(variants.toSet())
+    fun dynamic(variants: List<T>): PType = dynamic(variants.toSet())
 
     /**
      * The `dynamic` type with known variants.
      */
-    fun dynamic(vararg variants: T): T = dynamic(variants.toSet())
+    fun dynamic(vararg variants: PType): PType = dynamic(variants.toSet())
 
     /**
      * Boolean type.
      */
-    fun bool(): T
+    fun bool(): PType
 
     /**
      * Signed 8-bit integer.
      *
-     * Aliases: TINYINT, INT1.
+     * Aliases: PTypeINYINT, INT1.
      */
-    fun tinyint(): T
+    fun tinyint(): PType
 
     /**
      * Signed 16-bit integer.
      *
      * Aliases: SMALLINT, INT2.
      */
-    fun smallint(): T
+    fun smallint(): PType
 
     /**
      * Signed 32-bit integer.
      *
      * Aliases: INTEGER, INT, INT4.
      */
-    fun int(): T
+    fun int(): PType
 
     /**
      * Signed 64-bit integer.
      *
      * Aliases: BIGINT, INT8.
      */
-    fun bigint(): T
+    fun bigint(): PType
 
     /**
      * Exact numeric type with arbitrary precision and scale zero (0).
      *
      * Aliases: NUMERIC.
      */
-    fun numeric(): T
+    fun numeric(): PType
 
     /**
      * Exact numeric type with the given decimal precision and scale zero (0).
      *
      * Aliases: NUMERIC(p), DECIMAL(p).
      */
-    fun decimal(precision: Int): T
+    fun decimal(precision: Int): PType
 
     /**
      * Numeric value with the given decimal precision and scale.
      *
      * Aliases: NUMERIC(p, s), DECIMAL(p, s).
      */
-    fun decimal(precision: Int, scale: Int): T
+    fun decimal(precision: Int, scale: Int): PType
 
     /**
      * Exact numeric type with arbitrary precision and scale.
      *
      * Aliases: DECIMAL.
      */
-    fun decimal(): T
+    fun decimal(): PType
 
     /**
      * Approximate numeric type with binary precision equal to or greater than the given precision.
      *
      * Aliases: FLOAT(p).
      */
-    fun float(precision: Int): T
+    fun float(precision: Int): PType
 
     /**
      * Approximate numeric type for the IEEE-754 32-bit floating point.
      *
      * Aliases: REAL, FLOAT4.
      */
-    fun real(): T
+    fun real(): PType
 
     /**
      * Approximate numeric type for the IEEE-754 64-bit floating point.
      *
      * Aliases: DOUBLE, DOUBLE PRECISION, FLOAT8.
      */
-    fun double(): T
+    fun double(): PType
 
     /**
      * Unicode codepoint sequence with fixed length.
      *
      * Aliases: CHAR.
      */
-    fun char(length: Int): T
+    fun char(length: Int): PType
 
     /**
      * Unicode codepoint sequence with arbitrary length.
      *
      * Aliases: VARCHAR, STRING.
      */
-    fun varchar(): T
+    fun varchar(): PType
 
     /**
      * Unicode codepoint sequence with max length.
      *
      * Aliases: VARCHAR(N).
      */
-    fun varchar(length: Int): T
+    fun varchar(length: Int): PType
 
     /**
      * TODO
      */
-    fun date(): T
+    fun date(): PType
 
     /**
      * TODO
      */
-    fun time(): T
+    fun time(): PType
 
     /**
      * TODO
      */
-    fun time(precision: Int): T
+    fun time(precision: Int): PType
 
     /**
      * TODO
      */
-    fun timestamp(): T
+    fun timestamp(): PType
 
     /**
      *
      */
-    fun timestamp(precision: Int): T
+    fun timestamp(precision: Int): PType
 
     /**
      * Aliases: CLOB
      */
-    fun clob(): T
+    fun clob(): PType
 
     /**
      * Aliases: BLOB
      */
-    fun blob(): T
+    fun blob(): PType
 
     /**
      * Variable-length, ordered collection of elements with type DYNAMIC.
      *
      * Aliases: ARRAY, LIST
      */
-    fun array(): T
+    fun array(): PType
 
     /**
      * Variable-length, ordered collection of elements with the given type.
      *
-     * Aliases: T ARRAY, ARRAY<T>.
+     * Aliases: PType ARRAY, ARRAY<T>.
      */
-    fun array(element: T): T
+    fun array(element: PType): PType
 
     /**
      * Fixed-length, ordered collection of elements with the given type.
      *
-     * Aliases: T ARRAY[N], ARRAY<T>[N].
+     * Aliases: PType ARRAY[N], ARRAY<T>[N].
      */
-    fun array(element: T, size: Int): T
+    fun array(element: PType, size: Int): PType
 
     /**
      * Variable-length, unordered collection of elements with type DYNAMIC.
      *
      * Aliases: BAG
      */
-    fun bag(): T
+    fun bag(): PType
 
     /**
      * Variable-length, unordered collection of elements with the given type.
      *
-     * Aliases: T BAG, BAG<T>.
+     * Aliases: PType BAG, BAG<T>.
      */
-    fun bag(element: T): T
+    fun bag(element: PType): PType
 
     /**
      * Fixed-length, unordered collection of elements with the given type.
      *
-     * Aliases: T BAG[N], BAG<T>[N].
+     * Aliases: PType BAG[N], BAG<T>[N].
      */
-    fun bag(element: T, size: Int): T
+    fun bag(element: PType, size: Int): PType
 
     /**
      * Ordered collection of name-value pairs with some known fields; always open.
      */
-    fun row(attributes: List<Pair<String, T>>): T
+    fun row(attributes: List<Pair<String, T>>): PType
 
     /**
      * Ordered collection of name-value pairs with some known fields; always open.
      */
-    fun row(vararg attributes: Pair<String, T>): T = row(attributes.toList())
+    fun row(vararg attributes: Pair<String, T>): PType = row(attributes.toList())
 
     /**
      * Unordered collection of name-value pairs; always open.
      */
-    fun struct(): T
+    fun struct(): PType
 
     /**
      * Unordered collection of name-value pairs with some known fields; always open.
      */
-    fun struct(attributes: Collection<Pair<String, T>>): T
+    fun struct(attributes: Collection<Pair<String, T>>): PType
 
     /**
      * Unordered collection of name-value pairs with some known fields; always open.
      */
-    fun struct(vararg attributes: Pair<String, T>): T = row(attributes.toList())
+    fun struct(vararg attributes: Pair<String, T>): PType = row(attributes.toList())
 }

@@ -3,27 +3,30 @@
 
 package org.partiql.eval.internal.routines
 
+import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.Datum
-import org.partiql.value.PType.Kind.DYNAMIC
-import org.partiql.value.PType.Kind.BOOL
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.boolValue
 
-
-internal object Fn_IS_NULL__DYNAMIC__BOOL : Routine {
+@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+internal object Fn_IS_NULL__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_null",
         returns = BOOL,
-        parameters = listOf(FnParameter("value", DYNAMIC)),
+        parameters = listOf(FnParameter("value", ANY)),
         isNullable = false,
         isNullCall = false,
         isMissable = false,
-        isMissingCall = false,
+        isMissingCall = true,
     )
 
-    override fun invoke(args: Array<Datum>): Datum {
+    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return boolValue(args[0].isNull)
     }
 }
