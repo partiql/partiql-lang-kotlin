@@ -259,7 +259,9 @@ internal object ConstraintResolver {
         internal fun Identifier.Symbol.normalize() =
             when (this.caseSensitivity) {
                 Identifier.CaseSensitivity.SENSITIVE -> this.symbol
-                Identifier.CaseSensitivity.INSENSITIVE -> this.symbol.uppercase()
+                // TODO: should partiql case normalize the identifier?
+                //  Lowercase for now to follow Postgres
+                Identifier.CaseSensitivity.INSENSITIVE -> this.symbol.lowercase()
             }
     }
 }

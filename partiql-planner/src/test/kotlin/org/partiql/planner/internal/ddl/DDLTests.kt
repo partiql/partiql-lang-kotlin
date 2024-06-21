@@ -69,8 +69,8 @@ class DDLTests {
         val expected = BagType(
             StructType(
                 fields = listOf(
-                    StructType.Field("A", StaticType.INT2),
-                    StructType.Field("B", StaticType.INT2.asNullable()),
+                    StructType.Field("a", StaticType.INT2),
+                    StructType.Field("b", StaticType.INT2.asNullable()),
                 ),
                 contentClosed = true,
                 primaryKeyFields = emptyList(),
@@ -80,7 +80,7 @@ class DDLTests {
                 )
             ),
             metas = mapOf(),
-            constraints = setOf(CollectionConstraint.PrimaryKey(setOf("A")))
+            constraints = setOf(CollectionConstraint.PrimaryKey(setOf("a")))
         )
         assertEquals(expected, staticType)
     }

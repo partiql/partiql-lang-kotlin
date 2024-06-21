@@ -189,7 +189,7 @@ internal class DDLTestBase {
                 emptyList(),
                 false, null,
             ),
-            StructType.Field("A", StaticType.unionOf(StaticType.INT4, StaticType.NULL))
+            StructType.Field("a", StaticType.unionOf(StaticType.INT4, StaticType.NULL))
         )
 
         val FIELD_B_INT4 = Pair(
@@ -198,7 +198,7 @@ internal class DDLTestBase {
                 emptyList(),
                 false, null,
             ),
-            StructType.Field("B", StaticType.unionOf(StaticType.INT4, StaticType.NULL))
+            StructType.Field("b", StaticType.unionOf(StaticType.INT4, StaticType.NULL))
         )
 
         val FIELD_C_VARCHAR10 = Pair(
@@ -207,7 +207,7 @@ internal class DDLTestBase {
                 emptyList(),
                 false, null,
             ),
-            StructType.Field("C", StaticType.unionOf(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10))), StaticType.NULL))
+            StructType.Field("c", StaticType.unionOf(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10))), StaticType.NULL))
         )
 
         val CONSTR_NAME_ZERO = "\$_${tableName}_0"
@@ -268,7 +268,7 @@ internal class DDLTestBase {
                     FIELD_A_INT4.first,
                     collectionConstraint = listOf(tuplePk("\$_tbl_0", listOf("a")))
                 ),
-                table(StructType.Field("A", StaticType.INT4), tableConstraint = setOf(CollectionConstraint.PrimaryKey(setOf("A")))),
+                table(StructType.Field("a", StaticType.INT4), tableConstraint = setOf(CollectionConstraint.PrimaryKey(setOf("a")))),
             ),
 
             TestCase.success(
@@ -280,7 +280,7 @@ internal class DDLTestBase {
                     emptyList()
                 ),
                 tableInternal(FIELD_A_INT4.first.asOptional()),
-                table(StructType.Field("A", StaticType.INT4.asNullable().asOptional())),
+                table(StructType.Field("a", StaticType.INT4.asNullable().asOptional())),
             ),
 
             TestCase.failedResolution(
@@ -308,7 +308,7 @@ internal class DDLTestBase {
                     emptyList()
                 ),
                 tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(CONSTR_NAME_ZERO)),)),
-                table(StructType.Field("A", StaticType.INT4))
+                table(StructType.Field("a", StaticType.INT4))
             ),
 
             TestCase.success(
@@ -320,7 +320,7 @@ internal class DDLTestBase {
                     emptyList()
                 ),
                 tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(CONSTR_NAME_ZERO))).asOptional()),
-                table(StructType.Field("A", StaticType.INT4.asOptional()))
+                table(StructType.Field("a", StaticType.INT4.asOptional()))
             ),
 
             TestCase.success(
@@ -349,7 +349,7 @@ internal class DDLTestBase {
                     emptyList()
                 ),
                 tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("a_not_null")),)),
-                table(StructType.Field("A", StaticType.INT4))
+                table(StructType.Field("a", StaticType.INT4))
             ),
 
             // Attribute Level check:
@@ -481,9 +481,9 @@ internal class DDLTestBase {
                     collectionConstraint = listOf(tuplePk("\$_tbl_0", listOf("a", "b")))
                 ),
                 table(
-                    StructType.Field("A", StaticType.INT4),
-                    StructType.Field("B", StaticType.INT4),
-                    tableConstraint = setOf(CollectionConstraint.PrimaryKey(setOf("A", "B")))
+                    StructType.Field("a", StaticType.INT4),
+                    StructType.Field("b", StaticType.INT4),
+                    tableConstraint = setOf(CollectionConstraint.PrimaryKey(setOf("a", "b")))
                 )
             ),
 
@@ -621,7 +621,7 @@ internal class DDLTestBase {
                 ),
                 table(
                     StructType.Field(
-                        "NESTED",
+                        "nested",
                         StaticType.unionOf(
                             struct(FIELD_A_INT4.second), StaticType.NULL
                         )
@@ -666,9 +666,9 @@ internal class DDLTestBase {
                 ),
                 table(
                     StructType.Field(
-                        "NESTED",
+                        "nested",
                         StaticType.unionOf(
-                            struct(StructType.Field("A", StaticType.INT4)), StaticType.NULL
+                            struct(StructType.Field("a", StaticType.INT4)), StaticType.NULL
                         )
                     )
                 )
@@ -711,9 +711,9 @@ internal class DDLTestBase {
                 ),
                 table(
                     StructType.Field(
-                        "NESTED",
+                        "nested",
                         StaticType.unionOf(
-                            struct(StructType.Field("A", StaticType.INT4.asNullable().asOptional())), StaticType.NULL
+                            struct(StructType.Field("a", StaticType.INT4.asNullable().asOptional())), StaticType.NULL
                         )
                     )
                 )
@@ -756,7 +756,7 @@ internal class DDLTestBase {
                 ),
                 table(
                     StructType.Field(
-                        "NESTED",
+                        "nested",
                         struct(FIELD_A_INT4.second.withMeta(COMMENT_META)).asNullable()
                     )
                 )
@@ -828,7 +828,7 @@ internal class DDLTestBase {
                 ),
                 table(
                     StructType.Field(
-                        "NESTED",
+                        "nested",
                         StaticType.unionOf(
                             struct(FIELD_A_INT4.second), StaticType.NULL
                         )
@@ -906,7 +906,7 @@ internal class DDLTestBase {
                     structConstraints = emptyList()
                 ),
                 table(
-                    StructType.Field("A", ListType(StaticType.INT4.asNullable()).asNullable()),
+                    StructType.Field("a", ListType(StaticType.INT4.asNullable()).asNullable()),
                     structMeta = emptyMap()
                 )
             ),
@@ -933,7 +933,7 @@ internal class DDLTestBase {
                 ),
             ),
 
-            TestCase.failedConversion(
+            TestCase.success(
                 """
                     CREATE TABLE tbl (
                         a LIST<LIST<INT4>> 
@@ -962,7 +962,7 @@ internal class DDLTestBase {
                     structConstraints = emptyList()
                 ),
                 table(
-                    StructType.Field("A", ListType(ListType(StaticType.INT4.asNullable()).asNullable()).asNullable()),
+                    StructType.Field("a", ListType(ListType(StaticType.INT4.asNullable()).asNullable()).asNullable()),
                     structMeta = emptyMap()
                 )
             ),
@@ -1015,7 +1015,7 @@ internal class DDLTestBase {
                 ),
                 table(
                     StructType.Field(
-                        "TBL2",
+                        "tbl2",
                         BagType(
                             struct(FIELD_A_INT4.second).asNullable()
                         ).asNullable()
@@ -1072,12 +1072,12 @@ internal class DDLTestBase {
                 ),
                 table(
                     StructType.Field(
-                        "TBL2",
+                        "tbl2",
                         BagType(
                             // notice hre the struct itself is not nullable.
-                            struct(StructType.Field("A", StaticType.INT4)),
+                            struct(StructType.Field("a", StaticType.INT4)),
                             emptyMap(),
-                            setOf(CollectionConstraint.PrimaryKey(setOf("A")))
+                            setOf(CollectionConstraint.PrimaryKey(setOf("a")))
                         ).asNullable()
                     ),
                 )
