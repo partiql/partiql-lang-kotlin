@@ -88,12 +88,31 @@ class DDLTests {
     @Test
     fun sanity2() {
         val query = """
-            CREATE TABLE andes.myProvider.Tbl_v2 (
+            CREATE TABLE foo.bar.Tbl_v2 (
                 "COLUMN_ONE" INT2 CHECK("COLUMN_ONE" > 0) COMMENT 'Comment one',
                 "COLUMN_TWO" CHAR(15) COMMENT 'Comment two',
                 "COLUMN_THREE" TIMESTAMP(0) COMMENT 'Comment three'
             );
         """.trimIndent()
+        val ast = parser.parse(query).root
+        val plan = planner
+            .plan(ast, plannerSession) {}
+            .plan
+        val res = buildString {
+            PlanPrinter.append(this, plan)
+        }
+        println(res)
+    }
+
+    @Test
+    fun sanity3() {
+        val query = """
+            CREATE TABLE foo.bar.my_table_V1 (
+                ATTR1 VARCHAR(3),
+                PRIMARY KEY (attr1)
+            )
+        """.trimIndent()
+
         val ast = parser.parse(query).root
         val plan = planner
             .plan(ast, plannerSession) {}

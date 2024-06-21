@@ -219,7 +219,7 @@ internal object ConstraintResolver {
         }
 
         override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx): StaticType {
-            val isPK = ctx.primaryKey.contains(node.name)
+            val isPK = ctx.primaryKey.any { it.isEquivalentTo(node.name) }
 
             if (node.isOptional && isPK) throw IllegalArgumentException("Primary key attribute cannot be optional")
 
@@ -263,5 +263,10 @@ internal object ConstraintResolver {
                 //  Lowercase for now to follow Postgres
                 Identifier.CaseSensitivity.INSENSITIVE -> this.symbol.lowercase()
             }
+
+        private fun Identifier.Symbol.isEquivalentTo(other: Identifier.Symbol): Boolean = when (caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other.symbol)
+            Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other.symbol, ignoreCase = true)
+        }
     }
 }
