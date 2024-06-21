@@ -265,7 +265,10 @@ internal object ConstraintResolver {
             }
 
         private fun Identifier.Symbol.isEquivalentTo(other: Identifier.Symbol): Boolean = when (caseSensitivity) {
-            Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other.symbol)
+            Identifier.CaseSensitivity.SENSITIVE -> when (other.caseSensitivity) {
+                Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other.symbol)
+                Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other.symbol, ignoreCase = true)
+            }
             Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other.symbol, ignoreCase = true)
         }
     }

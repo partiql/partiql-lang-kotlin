@@ -122,4 +122,42 @@ class DDLTests {
         }
         println(res)
     }
+
+    @Test
+    fun sanity4() {
+        val query = """
+            CREATE TABLE foo.bar.my_table_V1 (
+                ATTR1 VARCHAR(3),
+                PRIMARY KEY ("attr1")
+            )
+        """.trimIndent()
+
+        val ast = parser.parse(query).root
+        val plan = planner
+            .plan(ast, plannerSession) {}
+            .plan
+        val res = buildString {
+            PlanPrinter.append(this, plan)
+        }
+        println(res)
+    }
+
+    @Test
+    fun sanity5() {
+        val query = """
+            CREATE TABLE foo.bar.my_table_V1 (
+                "ATTR1" VARCHAR(3),
+                PRIMARY KEY ("ATTR1")
+            )
+        """.trimIndent()
+
+        val ast = parser.parse(query).root
+        val plan = planner
+            .plan(ast, plannerSession) {}
+            .plan
+        val res = buildString {
+            PlanPrinter.append(this, plan)
+        }
+        println(res)
+    }
 }
