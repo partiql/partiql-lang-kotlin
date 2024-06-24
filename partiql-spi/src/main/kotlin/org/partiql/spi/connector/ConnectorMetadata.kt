@@ -15,7 +15,7 @@
 package org.partiql.spi.connector
 
 import org.partiql.spi.BindingPath
-import org.partiql.spi.fn.FnExperimental
+import org.partiql.types.StaticType
 
 /**
  * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
@@ -23,36 +23,24 @@ import org.partiql.spi.fn.FnExperimental
 public interface ConnectorMetadata {
 
     /**
-     * Given a [BindingPath], returns a [ConnectorHandle] that corresponds to the longest-available requested path.
+     * Returns the descriptor of an object. If the handle is unable to produce a [StaticType], implementers should
+     * return null.
+     */
+    public fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType?
+
+    /**
+     * Given a [BindingPath], returns a [ConnectorObjectHandle] that corresponds to the longest-available requested path.
      * For example, given an object named "Object" located within Catalog "AWS" and Namespace "a".b"."c", a user could
-     * call [getObject] with the [path] of "a"."b"."c"."Object". The returned [ConnectorHandle] will contain
+     * call [getObjectHandle] with the [path] of "a"."b"."c"."Object". The returned [ConnectorObjectHandle] will contain
      * the object representation and the matching path: "a"."b"."c"."Object"
      *
      * As another example, consider an object within a Namespace that may be a Struct with nested attributes. A user could
-     * call [getObject] with the [path] of "a"."b"."c"."Object"."x". In the Namespace, only object "Object" exists.
-     * Therefore, this method will return a [ConnectorHandle] with the "Object" representation and the matching
-     * path: "a"."b"."c"."Object". The returned [ConnectorHandle.path] must be correct for correct
+     * call [getObjectHandle] with the [path] of "a"."b"."c"."Object"."x". In the Namespace, only object "Object" exists.
+     * Therefore, this method will return a [ConnectorObjectHandle] with the "Object" representation and the matching
+     * path: "a"."b"."c"."Object". The returned [ConnectorObjectHandle.absolutePath] must be correct for correct
      * evaluation.
      *
      * If the [path] does not correspond to an existing [ConnectorObject], implementers should return null.
      */
-    public fun getObject(path: BindingPath): ConnectorHandle.Obj?
-
-    /**
-     * Returns all function signatures matching the given path.
-     *
-     * @param path
-     * @return
-     */
-    @FnExperimental
-    public fun getFunction(path: BindingPath): ConnectorHandle.Fn?
-
-    /**
-     * Returns all aggregation function signatures matching the given name.
-     *
-     * @param path
-     * @return
-     */
-    @FnExperimental
-    public fun getAggregation(path: BindingPath): ConnectorHandle.Agg?
+    public fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorObjectHandle?
 }
