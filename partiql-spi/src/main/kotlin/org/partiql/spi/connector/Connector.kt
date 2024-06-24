@@ -15,45 +15,20 @@
 package org.partiql.spi.connector
 
 import com.amazon.ionelement.api.StructElement
-import org.partiql.spi.fn.FnExperimental
 
 /**
- * A [Connector] is used by the PartiQL compiler and engine to implement a catalog.
+ * A mechanism by which PartiQL can access a Catalog.
  */
 public interface Connector {
 
     /**
-     * Returns a [ConnectorMetadata] for the given [ConnectorSession].
-     *
-     * The [ConnectorMetadata] is responsible for accessing catalog metadata.
+     * Returns a [ConnectorMetadata] for the given [ConnectorSession]. The [ConnectorMetadata] is responsible
+     * for accessing catalog metadata.
      *
      * @param session
      * @return
      */
     public fun getMetadata(session: ConnectorSession): ConnectorMetadata
-
-    /**
-     * Returns a [ConnectorBindings] which the engine uses to load values.
-     *
-     * @return
-     */
-    public fun getBindings(): ConnectorBindings
-
-    /**
-     * Returns a [ConnectorFnProvider] which the engine uses to load function implementations.
-     *
-     * @return
-     */
-    @FnExperimental
-    public fun getFunctions(): ConnectorFnProvider
-
-    /**
-     * Returns a [ConnectorAggProvider] which the engine uses to load aggregation function implementations.
-     *
-     * @return
-     */
-    @FnExperimental
-    public fun getAggregations(): ConnectorAggProvider
 
     /**
      * A Plugin leverages a [Factory] to produce a [Connector] which is used for catalog metadata and data access.
