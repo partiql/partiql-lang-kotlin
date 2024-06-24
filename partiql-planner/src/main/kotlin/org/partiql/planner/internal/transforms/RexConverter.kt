@@ -24,7 +24,6 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
-import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -72,18 +71,17 @@ import org.partiql.value.stringValue
  */
 internal object RexConverter {
 
-    internal fun apply(expr: Expr, context: Env): Rex = ToRex.visitExprCoerce(expr, context)
+    internal fun apply(expr: Expr): Rex = ToRex.visitExprCoerce(expr, Unit)
 
-    internal fun applyRel(expr: Expr, context: Env): Rex = expr.accept(ToRex, context)
+    internal fun applyRel(expr: Expr): Rex = expr.accept(ToRex, Unit)
 
     @OptIn(PartiQLValueExperimental::class)
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    private object ToRex : AstBaseVisitor<Rex, Env>() {
+    private object ToRex : AstBaseVisitor<Rex, Unit>() {
 
-        override fun defaultReturn(node: AstNode, context: Env): Rex =
+        override fun defaultReturn(node: AstNode, ctx: Unit): Rex =
             throw IllegalArgumentException("unsupported rex $node")
 
-        override fun visitExprLit(node: Expr.Lit, context: Env): Rex {
+        override fun visitExprLit(node: Expr.Lit, ctx: Unit): Rex {
             val type = CompilerType(
                 _delegate = PType.fromPartiQLValueType(node.value.type),
                 isNullValue = node.value.isNull,
@@ -93,7 +91,7 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        override fun visitExprIon(node: Expr.Ion, ctx: Env): Rex {
+        override fun visitExprIon(node: Expr.Ion, ctx: Unit): Rex {
             val value =
                 PartiQLValueIonReaderBuilder
                     .standard().build(node.value).read()
@@ -118,8 +116,8 @@ internal object RexConverter {
          * @param ctx
          * @return
          */
-        internal fun visitExprCoerce(node: Expr, ctx: Env, coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR): Rex {
-            val rex = super.visitExpr(node, ctx)
+        internal fun visitExprCoerce(node: Expr, ctx: Unit, coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR): Rex {
+            val rex = super.visitExpr(node, Unit)
             return when (isSqlSelect(node)) {
                 true -> {
                     val select = rex.op as Rex.Op.Select
@@ -136,7 +134,7 @@ internal object RexConverter {
             }
         }
 
-        override fun visitExprVar(node: Expr.Var, context: Env): Rex {
+        override fun visitExprVar(node: Expr.Var, ctx: Unit): Rex {
             val type = (ANY)
             val identifier = AstToPlan.convert(node.identifier)
             val scope = when (node.scope) {
@@ -147,10 +145,10 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        override fun visitExprUnary(node: Expr.Unary, context: Env): Rex {
+        override fun visitExprUnary(node: Expr.Unary, ctx: Unit): Rex {
             val type = (ANY)
             // Args
-            val arg = visitExprCoerce(node.expr, context)
+            val arg = visitExprCoerce(node.expr, ctx)
             val args = listOf(arg)
             // Fn
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
@@ -158,7 +156,7 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        override fun visitExprBinary(node: Expr.Binary, context: Env): Rex {
+        override fun visitExprBinary(node: Expr.Binary, ctx: Unit): Rex {
             val type = (ANY)
             val args = when (node.op) {
                 Expr.Binary.Op.LT, Expr.Binary.Op.GT,
@@ -167,28 +165,28 @@ internal object RexConverter {
                     when {
                         // Example: [1, 2] < (SELECT a, b FROM t)
                         isLiteralArray(node.lhs) && isSqlSelect(node.rhs) -> {
-                            val lhs = visitExprCoerce(node.lhs, context)
-                            val rhs = visitExprCoerce(node.rhs, context, Rex.Op.Subquery.Coercion.ROW)
+                            val lhs = visitExprCoerce(node.lhs, ctx)
+                            val rhs = visitExprCoerce(node.rhs, ctx, Rex.Op.Subquery.Coercion.ROW)
                             listOf(lhs, rhs)
                         }
                         // Example: (SELECT a, b FROM t) < [1, 2]
                         isSqlSelect(node.lhs) && isLiteralArray(node.rhs) -> {
-                            val lhs = visitExprCoerce(node.lhs, context, Rex.Op.Subquery.Coercion.ROW)
-                            val rhs = visitExprCoerce(node.rhs, context)
+                            val lhs = visitExprCoerce(node.lhs, ctx, Rex.Op.Subquery.Coercion.ROW)
+                            val rhs = visitExprCoerce(node.rhs, ctx)
                             listOf(lhs, rhs)
                         }
                         // Example: 1 < 2
                         else -> {
-                            val lhs = visitExprCoerce(node.lhs, context)
-                            val rhs = visitExprCoerce(node.rhs, context)
+                            val lhs = visitExprCoerce(node.lhs, ctx)
+                            val rhs = visitExprCoerce(node.rhs, ctx)
                             listOf(lhs, rhs)
                         }
                     }
                 }
                 // Example: 1 + 2
                 else -> {
-                    val lhs = visitExprCoerce(node.lhs, context)
-                    val rhs = visitExprCoerce(node.rhs, context)
+                    val lhs = visitExprCoerce(node.lhs, ctx)
+                    val rhs = visitExprCoerce(node.rhs, ctx)
                     listOf(lhs, rhs)
                 }
             }
@@ -230,9 +228,9 @@ internal object RexConverter {
             return identifierQualified(newRoot, firstSteps + followingSteps)
         }
 
-        override fun visitExprPath(node: Expr.Path, context: Env): Rex {
+        override fun visitExprPath(node: Expr.Path, ctx: Unit): Rex {
             // Args
-            val root = visitExprCoerce(node.root, context)
+            val root = visitExprCoerce(node.root, ctx)
 
             // Attempt to create qualified identifier
             val (newRoot, newSteps) = when (val op = root.op) {
@@ -272,7 +270,7 @@ internal object RexConverter {
             val pathNavi = newSteps.fold(newRoot) { current, step ->
                 val path = when (step) {
                     is Expr.Path.Step.Index -> {
-                        val key = visitExprCoerce(step.key, context)
+                        val key = visitExprCoerce(step.key, ctx)
                         val op = when (val astKey = step.key) {
                             is Expr.Lit -> when (astKey.value) {
                                 is StringValue -> rexOpPathKey(current, key)
@@ -328,7 +326,7 @@ internal object RexConverter {
                     // The (k_i) indicate the possible key binding produced by unpivot.
                     // We calculate the var ref on the fly.
                     is Expr.Path.Step.Unpivot -> {
-                        // Unpivot produces two binding, in this context we want the value,
+                        // Unpivot produces two binding, in this ctx we want the value,
                         // which always going to be the second binding
                         val op = rexOpVarLocal(1, varRefIndex + 1)
                         varRefIndex += 2
@@ -411,32 +409,32 @@ internal object RexConverter {
 
         private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
 
-        override fun visitExprCall(node: Expr.Call, context: Env): Rex {
+        override fun visitExprCall(node: Expr.Call, ctx: Unit): Rex {
             val type = (ANY)
             // Fn
             val id = AstToPlan.convert(node.function)
             if (id is Identifier.Symbol && id.symbol.equals("TUPLEUNION", ignoreCase = true)) {
-                return visitExprCallTupleUnion(node, context)
+                return visitExprCallTupleUnion(node, ctx)
             }
             // Args
-            val args = node.args.map { visitExprCoerce(it, context) }
+            val args = node.args.map { visitExprCoerce(it, ctx) }
             // Rex
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
 
-        private fun visitExprCallTupleUnion(node: Expr.Call, context: Env): Rex {
+        private fun visitExprCallTupleUnion(node: Expr.Call, ctx: Unit): Rex {
             val type = (STRUCT)
-            val args = node.args.map { visitExprCoerce(it, context) }.toMutableList()
+            val args = node.args.map { visitExprCoerce(it, ctx) }.toMutableList()
             val op = rexOpTupleUnion(args)
             return rex(type, op)
         }
 
-        override fun visitExprCase(node: Expr.Case, context: Env) = plan {
+        override fun visitExprCase(node: Expr.Case, ctx: Unit) = plan {
             val type = (ANY)
             val rex = when (node.expr) {
                 null -> null
-                else -> visitExprCoerce(node.expr!!, context) // match `rex
+                else -> visitExprCoerce(node.expr!!, ctx) // match `rex
             }
 
             // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
@@ -450,20 +448,20 @@ internal object RexConverter {
             }
 
             val branches = node.branches.map {
-                val branchCondition = visitExprCoerce(it.condition, context)
-                val branchRex = visitExprCoerce(it.expr, context)
+                val branchCondition = visitExprCoerce(it.condition, ctx)
+                val branchRex = visitExprCoerce(it.expr, ctx)
                 createBranch(branchCondition, branchRex)
             }.toMutableList()
 
             val defaultRex = when (val default = node.default) {
                 null -> rex(type = ANY, op = rexOpLit(value = nullValue()))
-                else -> visitExprCoerce(default, context)
+                else -> visitExprCoerce(default, ctx)
             }
             val op = rexOpCase(branches = branches, default = defaultRex)
             rex(type, op)
         }
 
-        override fun visitExprCollection(node: Expr.Collection, context: Env): Rex {
+        override fun visitExprCollection(node: Expr.Collection, ctx: Unit): Rex {
             val type = when (node.type) {
                 Expr.Collection.Type.BAG -> BAG
                 Expr.Collection.Type.ARRAY -> LIST
@@ -471,16 +469,16 @@ internal object RexConverter {
                 Expr.Collection.Type.LIST -> LIST
                 Expr.Collection.Type.SEXP -> SEXP
             }
-            val values = node.values.map { visitExprCoerce(it, context) }
+            val values = node.values.map { visitExprCoerce(it, ctx) }
             val op = rexOpCollection(values)
             return rex(type, op)
         }
 
-        override fun visitExprStruct(node: Expr.Struct, context: Env): Rex {
+        override fun visitExprStruct(node: Expr.Struct, ctx: Unit): Rex {
             val type = (STRUCT)
             val fields = node.fields.map {
-                val k = visitExprCoerce(it.name, context)
-                val v = visitExprCoerce(it.value, context)
+                val k = visitExprCoerce(it.name, ctx)
+                val v = visitExprCoerce(it.value, ctx)
                 rexOpStructField(k, v)
             }
             val op = rexOpStruct(fields)
@@ -492,7 +490,7 @@ internal object RexConverter {
         /**
          * <arg0> NOT? LIKE <arg1> ( ESCAPE <arg2>)?
          */
-        override fun visitExprLike(node: Expr.Like, ctx: Env): Rex {
+        override fun visitExprLike(node: Expr.Like, ctx: Unit): Rex {
             val type = BOOL
             // Args
             val arg0 = visitExprCoerce(node.value, ctx)
@@ -513,7 +511,7 @@ internal object RexConverter {
         /**
          * <arg0> NOT? BETWEEN <arg1> AND <arg2>
          */
-        override fun visitExprBetween(node: Expr.Between, ctx: Env): Rex = plan {
+        override fun visitExprBetween(node: Expr.Between, ctx: Unit): Rex = plan {
             val type = BOOL
             // Args
             val arg0 = visitExprCoerce(node.value, ctx)
@@ -540,7 +538,7 @@ internal object RexConverter {
          * Otherwise, T in C is unknown.
          *
          */
-        override fun visitExprInCollection(node: Expr.InCollection, ctx: Env): Rex {
+        override fun visitExprInCollection(node: Expr.InCollection, ctx: Unit): Rex {
             val type = BOOL
             // Args
             val arg0 = visitExprCoerce(node.lhs, ctx)
@@ -558,7 +556,7 @@ internal object RexConverter {
         /**
          * <arg0> IS <NOT>? <type>
          */
-        override fun visitExprIsType(node: Expr.IsType, ctx: Env): Rex {
+        override fun visitExprIsType(node: Expr.IsType, ctx: Unit): Rex {
             val type = BOOL
             // arg
             val arg0 = visitExprCoerce(node.value, ctx)
@@ -612,7 +610,7 @@ internal object RexConverter {
             return rex(type, call)
         }
 
-        override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Env): Rex {
+        override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Unit): Rex {
             val type = ANY
             val args = node.args.map { arg ->
                 visitExprCoerce(arg, ctx)
@@ -621,7 +619,7 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        override fun visitExprNullIf(node: Expr.NullIf, ctx: Env): Rex {
+        override fun visitExprNullIf(node: Expr.NullIf, ctx: Unit): Rex {
             val type = ANY
             val value = visitExprCoerce(node.value, ctx)
             val nullifier = visitExprCoerce(node.nullifier, ctx)
@@ -632,7 +630,7 @@ internal object RexConverter {
         /**
          * SUBSTRING(<arg0> (FROM <arg1> (FOR <arg2>)?)? )
          */
-        override fun visitExprSubstring(node: Expr.Substring, ctx: Env): Rex {
+        override fun visitExprSubstring(node: Expr.Substring, ctx: Unit): Rex {
             val type = ANY
             // Args
             val arg0 = visitExprCoerce(node.value, ctx)
@@ -649,7 +647,7 @@ internal object RexConverter {
         /**
          * POSITION(<arg0> IN <arg1>)
          */
-        override fun visitExprPosition(node: Expr.Position, ctx: Env): Rex {
+        override fun visitExprPosition(node: Expr.Position, ctx: Unit): Rex {
             val type = ANY
             // Args
             val arg0 = visitExprCoerce(node.lhs, ctx)
@@ -662,7 +660,7 @@ internal object RexConverter {
         /**
          * TRIM([LEADING|TRAILING|BOTH]? (<arg1> FROM)? <arg0>)
          */
-        override fun visitExprTrim(node: Expr.Trim, ctx: Env): Rex {
+        override fun visitExprTrim(node: Expr.Trim, ctx: Unit): Rex {
             val type = STRING
             // Args
             val arg0 = visitExprCoerce(node.value, ctx)
@@ -704,7 +702,7 @@ internal object RexConverter {
          * RS is the second <character value expression>,
          * SL is the <string length> if specified, otherwise it is char_length(RS).
          */
-        override fun visitExprOverlay(node: Expr.Overlay, ctx: Env): Rex {
+        override fun visitExprOverlay(node: Expr.Overlay, ctx: Unit): Rex {
             val cv = visitExprCoerce(node.value, ctx)
             val sp = visitExprCoerce(node.start, ctx)
             val rs = visitExprCoerce(node.overlay, ctx)
@@ -729,12 +727,12 @@ internal object RexConverter {
             )
         }
 
-        override fun visitExprExtract(node: Expr.Extract, ctx: Env): Rex {
+        override fun visitExprExtract(node: Expr.Extract, ctx: Unit): Rex {
             val call = call("extract_${node.field.name.lowercase()}", visitExprCoerce(node.source, ctx))
             return rex(ANY, call)
         }
 
-        override fun visitExprCast(node: Expr.Cast, ctx: Env): Rex {
+        override fun visitExprCast(node: Expr.Cast, ctx: Unit): Rex {
             val type = visitType(node.asType)
             val arg = visitExprCoerce(node.value, ctx)
             return rex(ANY, rexOpCastUnresolved(type, arg))
@@ -796,15 +794,15 @@ internal object RexConverter {
             }.toCType()
         }
 
-        override fun visitExprCanCast(node: Expr.CanCast, ctx: Env): Rex {
+        override fun visitExprCanCast(node: Expr.CanCast, ctx: Unit): Rex {
             TODO("PartiQL Special Form CAN_CAST")
         }
 
-        override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, ctx: Env): Rex {
+        override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, ctx: Unit): Rex {
             TODO("PartiQL Special Form CAN_LOSSLESS_CAST")
         }
 
-        override fun visitExprDateAdd(node: Expr.DateAdd, ctx: Env): Rex {
+        override fun visitExprDateAdd(node: Expr.DateAdd, ctx: Unit): Rex {
             val type = TIMESTAMP
             // Args
             val arg0 = visitExprCoerce(node.lhs, ctx)
@@ -818,7 +816,7 @@ internal object RexConverter {
             return rex(type, call)
         }
 
-        override fun visitExprDateDiff(node: Expr.DateDiff, ctx: Env): Rex {
+        override fun visitExprDateDiff(node: Expr.DateDiff, ctx: Unit): Rex {
             val type = TIMESTAMP
             // Args
             val arg0 = visitExprCoerce(node.lhs, ctx)
@@ -832,16 +830,16 @@ internal object RexConverter {
             return rex(type, call)
         }
 
-        override fun visitExprSessionAttribute(node: Expr.SessionAttribute, ctx: Env): Rex {
+        override fun visitExprSessionAttribute(node: Expr.SessionAttribute, ctx: Unit): Rex {
             val type = ANY
             val fn = node.attribute.name.lowercase()
             val call = call(fn)
             return rex(type, call)
         }
 
-        override fun visitExprSFW(node: Expr.SFW, context: Env): Rex = RelConverter.apply(node, context)
+        override fun visitExprSFW(node: Expr.SFW, ctx: Unit): Rex = RelConverter.apply(node)
 
-        override fun visitExprBagOp(node: Expr.BagOp, ctx: Env): Rex {
+        override fun visitExprBagOp(node: Expr.BagOp, ctx: Unit): Rex {
             val lhs = Rel(
                 type = Rel.Type(listOf(Rel.Binding("_0", ANY)), props = emptySet()),
                 op = Rel.Op.Scan(visitExpr(node.lhs, ctx))

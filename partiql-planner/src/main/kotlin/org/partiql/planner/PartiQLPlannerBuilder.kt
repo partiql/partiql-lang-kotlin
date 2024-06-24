@@ -1,7 +1,10 @@
 package org.partiql.planner
 
-import org.partiql.planner.internal.PartiQLPlannerDefault
 import org.partiql.planner.internal.PlannerFlag
+import org.partiql.planner.internal.SqlPlanner
+import org.partiql.planner.metadata.Namespace
+import org.partiql.planner.metadata.Routine
+import org.partiql.planner.metadata.System
 import org.partiql.spi.connector.ConnectorMetadata
 
 /**
@@ -19,12 +22,26 @@ public class PartiQLPlannerBuilder {
 
     private val passes: MutableList<PartiQLPlannerPass> = mutableListOf()
 
+    private val system: System = object : System {
+        override fun getCatalog(name: String): Namespace? {
+            TODO("Not yet implemented")
+        }
+
+        override fun listCatalogs(): Collection<String> {
+            TODO("Not yet implemented")
+        }
+
+        override fun getRoutines(name: String): List<Routine> {
+            TODO("Not yet implemented")
+        }
+    }
+
     /**
      * Build the builder, return an implementation of a [PartiQLPlanner].
      *
      * @return
      */
-    public fun build(): PartiQLPlanner = PartiQLPlannerDefault(passes, flags)
+    public fun build(): PartiQLPlanner = SqlPlanner(system, flags)
 
     /**
      * Java style method for adding a planner pass to this planner builder.

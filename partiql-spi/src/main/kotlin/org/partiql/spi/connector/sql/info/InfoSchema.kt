@@ -1,7 +1,5 @@
 package org.partiql.spi.connector.sql.info
 
-import org.partiql.spi.connector.sql.PartiQLExts
-import org.partiql.spi.connector.sql.SqlBuiltins
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
@@ -32,10 +30,10 @@ public class InfoSchema @OptIn(FnExperimental::class) constructor(
         @JvmStatic
         public fun default(): InfoSchema {
             val functions = Index.fnBuilder()
-                .addAll(SqlBuiltins.builtins)
+                // .addAll(SqlBuiltins.builtins)
                 .build()
             val aggregations = Index.aggBuilder()
-                .addAll(SqlBuiltins.aggregations)
+                // .addAll(SqlBuiltins.aggregations)
                 .build()
             return InfoSchema(functions, aggregations)
         }
@@ -43,10 +41,10 @@ public class InfoSchema @OptIn(FnExperimental::class) constructor(
         @OptIn(FnExperimental::class)
         public fun ext(): InfoSchema {
             val functions = Index.fnBuilder()
-                .addAll(SqlBuiltins.builtins + PartiQLExts.builtins)
+                // .addAll(SqlBuiltins.builtins + PartiQLExts.builtins)
                 .build()
             val aggregations = Index.aggBuilder()
-                .addAll(SqlBuiltins.aggregations)
+                // .addAll(SqlBuiltins.aggregations)
                 .build()
             return InfoSchema(functions, aggregations)
         }

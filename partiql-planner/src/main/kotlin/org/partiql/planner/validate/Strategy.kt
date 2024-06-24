@@ -1,4 +1,4 @@
-package org.partiql.planner.intern.validate
+package org.partiql.planner.validate
 
 /**
  * Variable resolution strategies — https://partiql.org/assets/PartiQL-Specification.pdf#page=35
