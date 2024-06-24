@@ -18,7 +18,7 @@ import com.amazon.ionelement.api.StructElement
 import org.partiql.eval.bindings.Bindings
 
 /**
- * A mechanism by which PartiQL can access bindings and metadata for a namespace (catalog).
+ * A mechanism by which PartiQL can access bindings and catalog metadata.
  */
 public interface Connector {
 
