@@ -25,21 +25,21 @@ internal class Symbols private constructor() {
         @JvmStatic
         fun create(routine: Routine): String {
             val prefix = when (routine) {
-                is Routine.Aggregation -> "AGG"
-                is Routine.Operator -> "OP"
-                is Routine.Scalar -> "FN"
+                is Routine.Aggregation -> "agg"
+                is Routine.Operator -> "op"
+                is Routine.Scalar -> "fn"
             }
             val name = routine.getName().uppercase()
             val params = routine.getParameters().joinToString("__") { it.type.specific() }
-            return "${prefix}___${name}___${params}"
+            return "$prefix:$name:$params"
         }
 
         private fun PType.Kind.specific(): String = when (this) {
-            PType.Kind.INT_ARBITRARY -> "NUMERIC"
-            PType.Kind.DECIMAL_ARBITRARY -> "DECIMAL"
-            PType.Kind.DOUBLE_PRECISION -> "DOUBLE"
-            PType.Kind.ROW -> "STRUCT"
-            else -> name.uppercase()
+            PType.Kind.INT_ARBITRARY -> "numeric"
+            PType.Kind.DECIMAL_ARBITRARY -> "decimal"
+            PType.Kind.DOUBLE_PRECISION -> "double"
+            PType.Kind.ROW -> "struct"
+            else -> name.lowercase()
         }
     }
 

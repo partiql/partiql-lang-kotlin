@@ -18,6 +18,7 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.exclude.ExcludeRepr
 import org.partiql.planner.internal.fn.FnValidator
 import org.partiql.planner.internal.ir.Identifier
@@ -41,6 +42,7 @@ import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpNullif
@@ -54,6 +56,7 @@ import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.planner.internal.transforms.Symbols
 import org.partiql.planner.internal.utils.PlanUtils
+import org.partiql.planner.metadata.Routine
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -83,6 +86,7 @@ internal class PlanTyper(private val env: Env) {
         val root = statement.root.type(emptyList(), emptyList(), Scope.GLOBAL)
         return statementQuery(root)
     }
+
     internal companion object {
         fun PType.static(): CompilerType = CompilerType(this)
 
@@ -328,8 +332,14 @@ internal class PlanTyper(private val env: Env) {
             // Compute Schema
             val size = max(lhs.type.schema.size, rhs.type.schema.size)
             val schema = List(size) {
-                val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", CompilerType(PType.typeDynamic(), isMissingValue = true))
-                val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", CompilerType(PType.typeDynamic(), isMissingValue = true))
+                val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding(
+                    "_$it",
+                    CompilerType(PType.typeDynamic(), isMissingValue = true)
+                )
+                val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding(
+                    "_$it",
+                    CompilerType(PType.typeDynamic(), isMissingValue = true)
+                )
                 val bindingName = when (lhsBinding.name == rhsBinding.name) {
                     true -> lhsBinding.name
                     false -> "_$it"
@@ -369,11 +379,17 @@ internal class PlanTyper(private val env: Env) {
         }
 
         private fun createRelErrForSetOpMismatchSizes(): Rel {
-            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same number of bindings."))
+            return Rel(
+                Rel.Type(emptyList(), emptySet()),
+                Rel.Op.Err("LHS and RHS of SET OP do not have the same number of bindings.")
+            )
         }
 
         private fun createRelErrForSetOpMismatchTypes(): Rel {
-            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same type."))
+            return Rel(
+                Rel.Type(emptyList(), emptySet()),
+                Rel.Op.Err("LHS and RHS of SET OP do not have the same type.")
+            )
         }
 
         override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?): Rel {
@@ -604,8 +620,8 @@ internal class PlanTyper(private val env: Env) {
                 Rex.Op.Var.Scope.LOCAL -> Scope.LOCAL
             }
             val resolvedVar = when (scope) {
-                Scope.LOCAL -> locals.resolve(path) ?: env.resolveObj(path)
-                Scope.GLOBAL -> env.resolveObj(path) ?: locals.resolve(path)
+                Scope.LOCAL -> locals.resolve(path) ?: env.resolve(path)
+                Scope.GLOBAL -> env.resolve(path) ?: locals.resolve(path)
             }
             if (resolvedVar == null) {
                 val id = PlanUtils.externalize(node.identifier)
@@ -733,14 +749,20 @@ internal class PlanTyper(private val env: Env) {
                 return ProblemGenerator.missingRex(
                     Rex.Op.Path.Symbol(root, node.key),
                     ProblemGenerator.undefinedVariable(
-                        org.partiql.plan.Identifier.Symbol(node.key, org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE),
+                        org.partiql.plan.Identifier.Symbol(
+                            node.key,
+                            org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE
+                        ),
                         inScopeVariables
                     )
                 )
             }
             return when (field.first.caseSensitivity) {
                 Identifier.CaseSensitivity.INSENSITIVE -> Rex(field.second, Rex.Op.Path.Symbol(root, node.key))
-                Identifier.CaseSensitivity.SENSITIVE -> Rex(field.second, Rex.Op.Path.Key(root, rexString(field.first.symbol)))
+                Identifier.CaseSensitivity.SENSITIVE -> Rex(
+                    field.second,
+                    Rex.Op.Path.Key(root, rexString(field.first.symbol))
+                )
             }
         }
 
@@ -768,7 +790,10 @@ internal class PlanTyper(private val env: Env) {
          */
         private fun CompilerType.getSymbol(field: String): Pair<Identifier.Symbol, CompilerType>? {
             if (this.kind == Kind.STRUCT) {
-                return Identifier.Symbol(field, Identifier.CaseSensitivity.INSENSITIVE) to CompilerType(PType.typeDynamic())
+                return Identifier.Symbol(
+                    field,
+                    Identifier.CaseSensitivity.INSENSITIVE
+                ) to CompilerType(PType.typeDynamic())
             }
             val fields = this.fields!!.mapNotNull {
                 when (it.name.equals(field, true)) {
@@ -786,11 +811,17 @@ internal class PlanTyper(private val env: Env) {
 
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: CompilerType?): Rex {
             val arg = visitRex(node.arg, null)
-            val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.errorRex(
-                node.copy(node.target, arg),
-                ProblemGenerator.undefinedFunction(listOf(arg.type), "CAST(<arg> AS ${node.target})")
-            )
-            return visitRexOpCastResolved(cast, null)
+            val cast = CastTable.partiql.get(arg.type, node.target)
+            if (cast == null) {
+                return ProblemGenerator.errorRex(
+                    node.copy(
+                        target = node.target,
+                        arg = arg,
+                    ),
+                    ProblemGenerator.undefinedFunction(listOf(arg.type), "CAST(<arg> AS ${node.target})")
+                )
+            }
+            return visitRexOpCastResolved(rexOpCastResolved(cast, arg), null)
         }
 
         override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: CompilerType?): Rex {
@@ -805,8 +836,8 @@ internal class PlanTyper(private val env: Env) {
             if (path !is Identifier.Symbol) {
                 error("PartiQL does not support qualified routine invocation.")
             }
-            val cnf = path.symbol.lowercase() // convert to case-normal form
-            val rex = env.resolveFn(cnf, args)
+            val variants = env.getRoutines(path).filterIsInstance<Routine.Scalar>()
+            val rex = RoutineTyper.typeScalar(variants, args)
             if (rex == null) {
                 return ProblemGenerator.errorRex(
                     causes = args.map { it.op },
@@ -904,7 +935,8 @@ internal class PlanTyper(private val env: Env) {
                 for (i in newBranches.indices) {
                     when (val function = mapping[i]) {
                         null -> continue
-                        else -> newBranches[i] = newBranches[i].copy(rex = replaceCaseBranch(newBranches[i].rex, type, function))
+                        else -> newBranches[i] =
+                            newBranches[i].copy(rex = replaceCaseBranch(newBranches[i].rex, type, function))
                     }
                 }
                 // Rewrite default
@@ -927,7 +959,7 @@ internal class PlanTyper(private val env: Env) {
         private fun replaceCaseBranch(originalRex: Rex, outputType: CompilerType, function: DynamicTyper.Mapping): Rex {
             return when (function) {
                 is DynamicTyper.Mapping.Coercion -> {
-                    val cast = env.resolveCast(originalRex, function.target)!!
+                    val cast = env.getCast(originalRex, function.target)!!
                     Rex(outputType, cast)
                 }
                 is DynamicTyper.Mapping.Replacement -> {
@@ -1282,7 +1314,13 @@ internal class PlanTyper(private val env: Env) {
             val args = node.args.map { visitRex(it, null) }
             val argsResolved = Rel.Op.Aggregate.Call.Unresolved(node.name, node.setQuantifier, args)
             // Resolve the function
-            val call = env.resolveAgg(node.name, node.setQuantifier, args) ?: return argsResolved to CompilerType(PType.typeDynamic())
+            val setq = node.setQuantifier
+            val path = Identifier.Symbol(node.name, Identifier.CaseSensitivity.INSENSITIVE)
+            val variants = env.getRoutines(path).filterIsInstance<Routine.Aggregation>()
+            val call = RoutineTyper.typeAggregation(variants, setq, args)
+            if (call == null) {
+                return argsResolved to CompilerType(PType.typeDynamic())
+            }
             val symbol = Symbols.create(call.agg.signature)
             val returnType = FnValidator.validate(symbol, args.map { it.type })
             return call to CompilerType(returnType)
