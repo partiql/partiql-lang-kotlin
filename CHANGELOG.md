@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
 
 ### Changed
 - **Behavioral change**: The `INTEGER/INT` type is now an alias to the `INT4` type. Previously the INTEGER type was
