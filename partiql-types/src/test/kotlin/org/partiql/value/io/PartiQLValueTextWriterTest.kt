@@ -362,13 +362,22 @@ class PartiQLValueTextWriterTest {
                 value = symbolValue(null),
                 expected = "null",
             ),
+            case(
+                value = dateValue(null),
+                expected = "null",
+            ),
+            case(
+                value = timeValue(null),
+                expected = "null",
+            ),
+            case(
+                value = timestampValue(null),
+                expected = "null",
+            ),
             // TODO CLOB
             // TODO BINARY
             // TODO BYTE
             // TODO BLOB
-            // TODO DATE
-            // TODO TIME
-            // TODO TIMESTAMP
             // TODO INTERVAL
         )
 
