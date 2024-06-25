@@ -1,11 +1,7 @@
-package org.partiql.planner.internal
+package org.partiql.planner.internal.fn
 
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnParameter
-import org.partiql.spi.fn.FnSignature
-import org.partiql.types.PType
+import org.partiql.planner.metadata.Routine
 import org.partiql.types.PType.Kind
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Function precedence comparator; this is not formally specified.
@@ -13,18 +9,19 @@ import org.partiql.value.PartiQLValueExperimental
  *  1. Fewest args first
  *  2. Parameters are compared left-to-right
  */
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object FnComparator : Comparator<FnSignature> {
+internal object FnComparator : Comparator<Routine.Scalar> {
 
-    override fun compare(fn1: FnSignature, fn2: FnSignature): Int {
+    override fun compare(fn1: Routine.Scalar, fn2: Routine.Scalar): Int {
         // Compare number of arguments
-        if (fn1.parameters.size != fn2.parameters.size) {
-            return fn1.parameters.size - fn2.parameters.size
+        val params1 = fn1.getParameters()
+        val params2 = fn2.getParameters()
+        if (params1.size != params2.size) {
+            return params1.size - params2.size
         }
         // Compare operand type precedence
-        for (i in fn1.parameters.indices) {
-            val p1 = fn1.parameters[i]
-            val p2 = fn2.parameters[i]
+        for (i in params1.indices) {
+            val p1 = params1[i]
+            val p2 = params2[i]
             val comparison = p1.compareTo(p2)
             if (comparison != 0) return comparison
         }
@@ -32,13 +29,13 @@ internal object FnComparator : Comparator<FnSignature> {
         return 0
     }
 
-    private fun FnParameter.compareTo(other: FnParameter): Int =
+    private fun Routine.Parameter.compareTo(other: Routine.Parameter): Int =
         comparePrecedence(this.type, other.type)
 
-    private fun comparePrecedence(t1: PType, t2: PType): Int {
+    private fun comparePrecedence(t1: Kind, t2: Kind): Int {
         if (t1 == t2) return 0
-        val p1 = precedence[t1.kind]!!
-        val p2 = precedence[t2.kind]!!
+        val p1 = precedence[t1]!!
+        val p2 = precedence[t2]!!
         return p1 - p2
     }
 

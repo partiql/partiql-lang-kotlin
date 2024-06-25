@@ -6,7 +6,8 @@ import org.partiql.plan.catalogItemAgg
 import org.partiql.plan.catalogItemFn
 import org.partiql.plan.catalogItemValue
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.spi.fn.FnExperimental
+import org.partiql.planner.metadata.Routine
+import org.partiql.types.PType
 import org.partiql.plan.Ref as CatalogRef
 
 /**
@@ -20,6 +21,26 @@ internal class Symbols private constructor() {
 
         @JvmStatic
         fun empty() = Symbols()
+
+        @JvmStatic
+        fun create(routine: Routine): String {
+            val prefix = when (routine) {
+                is Routine.Aggregation -> "AGG"
+                is Routine.Operator -> "OP"
+                is Routine.Scalar -> "FN"
+            }
+            val name = routine.getName().uppercase()
+            val params = routine.getParameters().joinToString("__") { it.type.specific() }
+            return "${prefix}___${name}___${params}"
+        }
+
+        private fun PType.Kind.specific(): String = when (this) {
+            PType.Kind.INT_ARBITRARY -> "NUMERIC"
+            PType.Kind.DECIMAL_ARBITRARY -> "DECIMAL"
+            PType.Kind.DOUBLE_PRECISION -> "DOUBLE"
+            PType.Kind.ROW -> "STRUCT"
+            else -> name.uppercase()
+        }
     }
 
     fun build(): List<Catalog> {
@@ -31,16 +52,14 @@ internal class Symbols private constructor() {
         item = catalogItemValue(ref.path, ref.type),
     )
 
-    @OptIn(FnExperimental::class)
     fun insert(ref: Ref.Fn): CatalogRef = insert(
         catalog = ref.catalog,
-        item = catalogItemFn(ref.path, ref.signature.specific),
+        item = catalogItemFn(ref.path, create(ref.signature)),
     )
 
-    @OptIn(FnExperimental::class)
     fun insert(ref: Ref.Agg): CatalogRef = insert(
         catalog = ref.catalog,
-        item = catalogItemAgg(ref.path, ref.signature.specific),
+        item = catalogItemAgg(ref.path, create(ref.signature)),
     )
 
     private fun insert(catalog: String, item: Catalog.Item): CatalogRef {

@@ -4,7 +4,7 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PartiQLPlan
-import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.planner.metadata.Namespace
 import java.time.Instant
 
 /**
@@ -47,7 +47,7 @@ public interface PartiQLPlanner {
         public val userId: String,
         public val currentCatalog: String,
         public val currentDirectory: List<String> = emptyList(),
-        public val catalogs: Map<String, ConnectorMetadata> = emptyMap(),
+        public val catalogs: Map<String, Namespace> = emptyMap(),
         public val instant: Instant = Instant.now(),
     )
     public companion object {

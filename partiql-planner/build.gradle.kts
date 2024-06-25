@@ -27,15 +27,12 @@ dependencies {
     api(project(":partiql-plan"))
     api(project(":partiql-types"))
     implementation(project(":partiql-ast"))
-    implementation(project(":partiql-spi"))
     implementation(Deps.dotlin)
     implementation(Deps.ionElement)
     // Test
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
-    // Test Fixtures
-    testFixturesImplementation(project(":partiql-spi"))
 }
 
 tasks.register("generateResourcePath") {
@@ -94,7 +91,6 @@ tasks.register<Exec>("codegen") {
         "--poems", "builder",
         "--poems", "util",
         "--opt-in", "org.partiql.value.PartiQLValueExperimental",
-        "--opt-in", "org.partiql.spi.fn.FnExperimental",
         "./src/main/resources/partiql_plan_internal.ion"
     )
 }

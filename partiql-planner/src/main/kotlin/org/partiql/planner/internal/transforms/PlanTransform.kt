@@ -78,7 +78,6 @@ internal class PlanTransform(
          */
         override fun visitRefAgg(node: Ref.Agg, ctx: Unit) = symbols.insert(node)
 
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitRefCast(node: Ref.Cast, ctx: Unit) =
             org.partiql.plan.refCast(node.input, node.target, node.isNullable)
 

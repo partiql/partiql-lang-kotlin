@@ -3,29 +3,16 @@ package org.partiql.planner.internal
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
+import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.refAgg
-import org.partiql.planner.internal.ir.refFn
-import org.partiql.planner.internal.ir.refObj
-import org.partiql.planner.internal.ir.relOpAggregateCallResolved
-import org.partiql.planner.internal.ir.rex
-import org.partiql.planner.internal.ir.rexOpCallDynamic
-import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCastResolved
-import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
-import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.fn.AggSignature
-import org.partiql.spi.fn.FnExperimental
+import org.partiql.planner.metadata.Namespace
+import org.partiql.planner.metadata.Routine
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -37,131 +24,114 @@ import org.partiql.value.PartiQLValueExperimental
  *
  * @property session
  */
-internal class Env(private val session: PartiQLPlanner.Session) {
+internal class Env(
+    private val namespace: Namespace,
+    private val session: PartiQLPlanner.Session,
+) {
 
     /**
-     * Current catalog [ConnectorMetadata]. Error if missing from the session.
-     */
-    private val catalog: ConnectorMetadata = session.catalogs[session.currentCatalog]
-        ?: error("Session is missing ConnectorMetadata for current catalog ${session.currentCatalog}")
-
-    /**
-     * A [PathResolver] for looking up objects given both unqualified and qualified names.
-     */
-    private val objects: PathResolverObj = PathResolverObj(catalog, session)
-
-    /**
-     * A [PathResolver] for looking up functions given both unqualified and qualified names.
-     */
-    private val fns: PathResolverFn = PathResolverFn(catalog, session)
-
-    /**
-     * A [PathResolver] for aggregation function lookup.
-     */
-    private val aggs: PathResolverAgg = PathResolverAgg(catalog, session)
-
-    /**
-     * This function looks up a global [BindingPath], returning a global reference expression.
+     * This function looks up a global [Name], returning a global reference expression.
      *
      * Convert any remaining binding names (tail) to a path expression.
      *
      * @param path
      * @return
      */
-    fun resolveObj(path: BindingPath): Rex? {
-        val item = objects.lookup(path) ?: return null
-        // Create an internal typed reference
-        val ref = refObj(
-            catalog = item.catalog,
-            path = item.handle.path.steps,
-            type = CompilerType(item.handle.entity.getPType()),
-        )
-        // Rewrite as a path expression.
-        val root = rex(ref.type, rexOpVarGlobal(ref))
-        val depth = calculateMatched(path, item.input, ref.path)
-        val tail = path.steps.drop(depth)
-        return if (tail.isEmpty()) root else root.toPath(tail)
+    fun resolveObj(path: Identifier): Rex? {
+        // val item = objects.lookup(path) ?: return null
+        // // Create an internal typed reference
+        // val ref = refObj(
+        //     catalog = item.catalog,
+        //     path = item.handle.path.steps,
+        //     type = CompilerType(item.handle.entity.getPType()),
+        // )
+        // // Rewrite as a path expression.
+        // val root = rex(ref.type, rexOpVarGlobal(ref))
+        // val depth = calculateMatched(path, item.input, ref.path)
+        // val tail = path.steps.drop(depth)
+        // return if (tail.isEmpty()) root else root.toPath(tail)
+        return null
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
-        val item = fns.lookup(path) ?: return null
-        // Invoke FnResolver to determine if we made a match
-        val variants = item.handle.entity.getVariants()
-        val match = FnResolver.resolve(variants, args.map { it.type })
-        // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
-        if (match == null) {
-            val candidates = variants.map { fnSignature ->
-                rexOpCallDynamicCandidate(
-                    fn = refFn(
-                        item.catalog,
-                        path = item.handle.path.steps,
-                        signature = fnSignature
-                    ),
-                    coercions = emptyList()
-                )
-            }
-            return ProblemGenerator.missingRex(
-                rexOpCallDynamic(args, candidates),
-                ProblemGenerator.incompatibleTypesForOp(path.normalized.joinToString("."), args.map { it.type })
-            )
-        }
-        return when (match) {
-            is FnMatch.Dynamic -> {
-                val candidates = match.candidates.map {
-                    // Create an internal typed reference for every candidate
-                    rexOpCallDynamicCandidate(
-                        fn = refFn(
-                            catalog = item.catalog,
-                            path = item.handle.path.steps,
-                            signature = it.signature,
-                        ),
-                        coercions = it.mapping.toList(),
-                    )
-                }
-                // Rewrite as a dynamic call to be typed by PlanTyper
-                Rex(CompilerType(PType.typeDynamic()), Rex.Op.Call.Dynamic(args, candidates))
-            }
-            is FnMatch.Static -> {
-                // Create an internal typed reference
-                val ref = refFn(
-                    catalog = item.catalog,
-                    path = item.handle.path.steps,
-                    signature = match.signature,
-                )
-                // Apply the coercions as explicit casts
-                val coercions: List<Rex> = args.mapIndexed { i, arg ->
-                    when (val cast = match.mapping[i]) {
-                        null -> arg
-                        else -> Rex(CompilerType(PType.typeDynamic()), Rex.Op.Cast.Resolved(cast, arg))
-                    }
-                }
-                // Rewrite as a static call to be typed by PlanTyper
-                Rex(CompilerType(PType.typeDynamic()), Rex.Op.Call.Static(ref, coercions))
-            }
-        }
+    fun resolveFn(name: String, args: List<Rex>): Rex? {
+        // val variants = builtins.getFunctions(name)
+        // val match = FnResolver.resolve(variants, args.map { it.type })
+        // // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
+        // if (match == null) {
+        //     val candidates = variants.map { fnSignature ->
+        //         rexOpCallDynamicCandidate(
+        //             fn = refFn(
+        //                 item.catalog,
+        //                 path = item.handle.path.steps,
+        //                 signature = fnSignature
+        //             ),
+        //             coercions = emptyList()
+        //         )
+        //     }
+        //     return ProblemGenerator.missingRex(
+        //         rexOpCallDynamic(args, candidates),
+        //         ProblemGenerator.incompatibleTypesForOp(name, args.map { it.type })
+        //     )
+        // }
+        // return when (match) {
+        //     is FnMatch.Dynamic -> {
+        //         val candidates = match.candidates.map {
+        //             // Create an internal typed reference for every candidate
+        //             rexOpCallDynamicCandidate(
+        //                 fn = refFn(
+        //                     catalog = item.catalog,
+        //                     path = item.handle.path.steps,
+        //                     signature = it.signature,
+        //                 ),
+        //                 coercions = it.mapping.toList(),
+        //             )
+        //         }
+        //         // Rewrite as a dynamic call to be typed by PlanTyper
+        //         Rex(CompilerType(PType.typeDynamic()), Rex.Op.Call.Dynamic(args, candidates))
+        //     }
+        //     is FnMatch.Static -> {
+        //         // Create an internal typed reference
+        //         val ref = refFn(
+        //             catalog = item.catalog,
+        //             path = item.handle.path.steps,
+        //             signature = match.signature,
+        //         )
+        //         // Apply the coercions as explicit casts
+        //         val coercions: List<Rex> = args.mapIndexed { i, arg ->
+        //             when (val cast = match.mapping[i]) {
+        //                 null -> arg
+        //                 else -> Rex(CompilerType(PType.typeDynamic()), Rex.Op.Cast.Resolved(cast, arg))
+        //             }
+        //         }
+        //         // Rewrite as a static call to be typed by PlanTyper
+        //         Rex(CompilerType(PType.typeDynamic()), Rex.Op.Call.Static(ref, coercions))
+        //     }
+        // }
+        return null
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
-        // TODO: Eventually, do we want to support sensitive lookup? With a path?
-        val path = BindingPath(listOf(BindingName(name, BindingCase.INSENSITIVE)))
-        val item = aggs.lookup(path) ?: return null
-        val candidates = item.handle.entity.getVariants()
-        val parameters = args.mapIndexed { i, arg -> arg.type }
-        val match = match(candidates, parameters) ?: return null
-        val agg = match.first
-        val mapping = match.second
-        // Create an internal typed reference
-        val ref = refAgg(item.catalog, item.handle.path.steps, agg)
-        // Apply the coercions as explicit casts
-        val coercions: List<Rex> = args.mapIndexed { i, arg ->
-            when (val cast = mapping[i]) {
-                null -> arg
-                else -> rex(cast.target, rexOpCastResolved(cast, arg))
-            }
-        }
-        return relOpAggregateCallResolved(ref, setQuantifier, coercions)
+    fun resolveAgg(
+        name: String,
+        setQuantifier: Rel.Op.Aggregate.SetQuantifier,
+        args: List<Rex>,
+    ): Rel.Op.Aggregate.Call.Resolved? {
+        // // TODO: Eventually, do we want to support sensitive lookup? With a path?
+        // val variants = builtins.getAggregations(name)
+        // val parameters = args.mapIndexed { i, arg -> arg.type }
+        // val match = match(variants, parameters) ?: return null
+        // val agg = match.first
+        // val mapping = match.second
+        // // Create an internal typed reference
+        // val ref = refAgg(item.catalog, item.handle.path.steps, agg)
+        // // Apply the coercions as explicit casts
+        // val coercions: List<Rex> = args.mapIndexed { i, arg ->
+        //     when (val cast = mapping[i]) {
+        //         null -> arg
+        //         else -> rex(cast.target, rexOpCastResolved(cast, arg))
+        //     }
+        // }
+        // return relOpAggregateCallResolved(ref, setQuantifier, coercions)
+        return null
     }
 
     fun resolveCast(input: Rex, target: CompilerType): Rex.Op.Cast.Resolved? {
@@ -175,7 +145,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     // -----------------------
 
     /**
-     * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
+     * Logic for determining how many Identifier.Symbols were “matched” by the ConnectorMetadata
      *
      * Assume:
      * - steps_matched = user_input_path_size - path_steps_not_found_size
@@ -208,15 +178,17 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      * database environment.
      */
     private fun calculateMatched(
-        userInputPath: BindingPath,
-        pathSentToConnector: BindingPath,
+        userInputPath: Identifier.Qualified,
+        pathSentToConnector: Identifier.Qualified,
         actualAbsolutePath: List<String>,
     ): Int {
         return userInputPath.steps.size + actualAbsolutePath.size - pathSentToConnector.steps.size
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun match(candidates: List<AggSignature>, args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+    private fun match(
+        candidates: List<Routine.Aggregation>,
+        args: List<PType>,
+    ): Pair<Routine.Aggregation, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
             if (candidate.matches(args)) {
@@ -224,7 +196,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
             }
         }
         // 2. Look for best match.
-        var match: Pair<AggSignature, Array<Ref.Cast?>>? = null
+        var match: Pair<Routine.Aggregation, Array<Ref.Cast?>>? = null
         for (candidate in candidates) {
             val m = candidate.match(args) ?: continue
             // TODO AggMatch comparison
@@ -241,12 +213,12 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun AggSignature.matches(args: List<PType>): Boolean {
+    private fun Routine.Aggregation.matches(args: List<PType>): Boolean {
+        val parameters = getParameters()
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.type.kind != Kind.DYNAMIC && a != p.type) return false
+            if (p.type != Kind.DYNAMIC && a.kind != p.type) return false
         }
         return true
     }
@@ -257,19 +229,19 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      * @param args
      * @return
      */
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun AggSignature.match(args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+    private fun Routine.Aggregation.match(args: List<PType>): Pair<Routine.Aggregation, Array<Ref.Cast?>>? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
+        val parameters = getParameters()
         for (i in args.indices) {
             val arg = args[i]
             val p = parameters[i]
             when {
                 // 1. Exact match
-                arg == p.type -> continue
+                arg.kind == p.type -> continue
                 // 2. Match ANY, no coercion needed
-                p.type.kind == Kind.DYNAMIC -> continue
+                p.type == Kind.DYNAMIC -> continue
                 // 3. Check for a coercion
-                else -> when (val coercion = Coercions.get(arg, p.type)) {
+                else -> when (val coercion = Coercions.get(arg, PType.fromKind(p.type))) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion
                 }

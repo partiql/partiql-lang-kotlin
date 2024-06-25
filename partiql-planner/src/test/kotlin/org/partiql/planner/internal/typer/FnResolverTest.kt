@@ -2,8 +2,8 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import org.partiql.planner.internal.FnMatch
-import org.partiql.planner.internal.FnResolver
+import org.partiql.planner.internal.fn.FnMatch
+import org.partiql.planner.internal.fn.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter

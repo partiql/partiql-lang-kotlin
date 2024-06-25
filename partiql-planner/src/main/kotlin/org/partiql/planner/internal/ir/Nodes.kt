@@ -1,6 +1,5 @@
 @file:OptIn(
     PartiQLValueExperimental::class,
-    FnExperimental::class,
 )
 
 package org.partiql.planner.`internal`.ir
@@ -55,6 +54,7 @@ import org.partiql.planner.internal.ir.builder.RexOpCoalesceBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
+import org.partiql.planner.internal.ir.builder.RexOpMissingBuilder
 import org.partiql.planner.internal.ir.builder.RexOpNullifBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
@@ -71,20 +71,11 @@ import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.planner.internal.typer.CompilerType
-import org.partiql.spi.fn.AggSignature
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnSignature
+import org.partiql.planner.metadata.Routine.Aggregation
+import org.partiql.planner.metadata.Routine.Scalar
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import kotlin.Boolean
-import kotlin.Char
-import kotlin.Int
-import kotlin.OptIn
-import kotlin.String
-import kotlin.collections.List
 import kotlin.collections.Set
-import kotlin.jvm.JvmField
-import kotlin.jvm.JvmStatic
 import kotlin.random.Random
 
 internal abstract class PlanNode {
@@ -138,7 +129,7 @@ internal sealed class Ref : PlanNode() {
     internal data class Fn(
         @JvmField internal val catalog: String,
         @JvmField internal val path: List<String>,
-        @JvmField internal val signature: FnSignature,
+        @JvmField internal val signature: Scalar,
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
@@ -153,7 +144,7 @@ internal sealed class Ref : PlanNode() {
     internal data class Agg(
         @JvmField internal val catalog: String,
         @JvmField internal val path: List<String>,
-        @JvmField internal val signature: AggSignature,
+        @JvmField internal val signature: Aggregation,
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
@@ -818,7 +809,7 @@ internal data class Rex(
 
             internal companion object {
                 @JvmStatic
-                internal fun builder(): RexOpErrBuilder = RexOpErrBuilder()
+                internal fun builder(): RexOpMissingBuilder = RexOpMissingBuilder()
             }
         }
     }

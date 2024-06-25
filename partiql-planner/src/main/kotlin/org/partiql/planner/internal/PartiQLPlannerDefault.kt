@@ -8,6 +8,7 @@ import org.partiql.planner.PartiQLPlannerPass
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
+import org.partiql.planner.metadata.Namespace
 
 /**
  * Default PartiQL logical query planner.
@@ -24,7 +25,9 @@ internal class PartiQLPlannerDefault(
     ): PartiQLPlanner.Result {
 
         // 0. Initialize the planning environment
-        val env = Env(session)
+        val namespace: Namespace = session.catalogs[session.currentCatalog]
+            ?: error("Session is missing ConnectorMetadata for current catalog ${session.currentCatalog}")
+        val env = Env(namespace, session)
 
         // 1. Normalize
         val ast = statement.normalize()
