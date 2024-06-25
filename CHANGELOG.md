@@ -26,6 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
 
 ### Changed
 - **Behavioral change**: The planner now does NOT support the NullType and MissingType variants of StaticType. The logic
