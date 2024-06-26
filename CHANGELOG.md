@@ -53,6 +53,25 @@ Thank you to all who have contributed!
 - partiql-plan: adds warning not to implement `PlanVisitor` interface directly. Please extend `PlanBaseVisitor` instead.
 
 ### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [0.14.5]
+
+### Added
+- partiql-ast: adds warning not to implement `AstVisitor` interface directly. Please extend `AstBaseVisitor` instead.
+- partiql-plan: adds warning not to implement `PlanVisitor` interface directly. Please extend `PlanBaseVisitor` instead.
+
+### Changed
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
 - Change modeling of `COALESCE` and `NULLIF` to dedicated nodes in logical plan
 - Function resolution logic: Now the function resolver would match all possible candidate (based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence.
