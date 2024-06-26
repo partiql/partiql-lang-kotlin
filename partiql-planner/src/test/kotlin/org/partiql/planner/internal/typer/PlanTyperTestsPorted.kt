@@ -38,6 +38,7 @@ import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -326,7 +327,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "cast decimal string",
                 query = "CAST('1' AS DECIMAL)",
-                expected = StaticType.DECIMAL,
+                expected = unionOf(StaticType.DECIMAL, MISSING),
             ),
             SuccessTestCase(
                 name = "cast decimal(1) string",

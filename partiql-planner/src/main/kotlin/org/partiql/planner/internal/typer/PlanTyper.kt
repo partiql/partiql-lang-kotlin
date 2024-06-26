@@ -97,11 +97,7 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.BoolValue
-<<<<<<< HEAD
-=======
 import org.partiql.value.Int32Value
-import org.partiql.value.MissingValue
->>>>>>> a02ecdee (Adds support for parameterized decimal cast (#1483))
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
