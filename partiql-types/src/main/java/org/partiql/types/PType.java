@@ -753,6 +753,64 @@ public interface PType {
         }
     }
 
+    static PType fromKind(@NotNull Kind kind) {
+        switch (kind) {
+            case DYNAMIC:
+                return typeDynamic();
+            case BOOL:
+                return typeBool();
+            case TINYINT:
+                return typeTinyInt();
+            case SMALLINT:
+                return typeSmallInt();
+            case INT:
+                return typeInt();
+            case BIGINT:
+                return typeBigInt();
+            case INT_ARBITRARY:
+                return typeIntArbitrary();
+            case DECIMAL:
+            case DECIMAL_ARBITRARY:
+                return typeDecimalArbitrary();
+            case REAL:
+                return typeReal();
+            case DOUBLE_PRECISION:
+                return typeDoublePrecision();
+            case CHAR:
+                return typeChar(Integer.MAX_VALUE);
+            case VARCHAR:
+                return typeVarChar(Integer.MAX_VALUE);
+            case STRING:
+                return typeString();
+            case SYMBOL:
+                return typeSymbol();
+            case CLOB:
+                return typeClob(Integer.MAX_VALUE);
+            case BLOB:
+                return typeBlob(Integer.MAX_VALUE);
+            case DATE:
+                return typeDate();
+            case TIME_WITH_TZ:
+            case TIME_WITHOUT_TZ:
+            case TIMESTAMP_WITH_TZ:
+            case TIMESTAMP_WITHOUT_TZ:
+                throw new IllegalStateException();
+            case BAG:
+                return typeBag();
+            case LIST:
+                return typeList();
+            case ROW:
+                throw new IllegalStateException();
+            case SEXP:
+                return typeSexp();
+            case STRUCT:
+                return typeStruct();
+            case UNKNOWN:
+            default:
+                throw new IllegalStateException();
+        }
+    }
+
     /**
      * @return a corresponding PType from a {@link StaticType}
      * @deprecated this API is experimental and is subject to modification/deletion without prior notice. This is

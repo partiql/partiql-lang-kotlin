@@ -9,6 +9,7 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.planner.metadata.Namespace
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PlanNodeEquivalentVisitor
@@ -16,11 +17,6 @@ import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryObject
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -71,11 +67,6 @@ class PlanTest {
         )
     )
 
-    val connectorSession = object : ConnectorSession {
-        override fun getQueryId(): String = "query-id"
-        override fun getUserId(): String = "user-id"
-    }
-
     val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
         val session = PartiQLPlanner.Session(
             queryId = test.key.toString(),
@@ -94,7 +85,7 @@ class PlanTest {
         planner.plan(ast, session, problemCollector)
     }
 
-    fun buildMetadata(catalogName: String): ConnectorMetadata {
+    fun buildMetadata(catalogName: String): Namespace {
         val catalog = MemoryCatalog.PartiQL().name(catalogName).build()
         // Insert binding
         val name = BindingPath(

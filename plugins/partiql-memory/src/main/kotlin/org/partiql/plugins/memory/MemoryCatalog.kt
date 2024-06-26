@@ -31,10 +31,7 @@ import org.partiql.spi.fn.FnExperimental
  *
  * @property name
  */
-public class MemoryCatalog(public val name: String, public val infoSchema: InfoSchema) {
-
-    @OptIn(FnExperimental::class)
-    public fun getFunctions(): ConnectorFnProvider = SqlFnProvider(infoSchema.functions)
+public class MemoryCatalog {
 
     private val root: Tree.Dir = Tree.Dir(name)
 

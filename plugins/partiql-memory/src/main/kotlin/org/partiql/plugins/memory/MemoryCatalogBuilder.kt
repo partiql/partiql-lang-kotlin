@@ -35,12 +35,9 @@ import org.partiql.value.io.PartiQLValueIonReaderBuilder
 public class MemoryCatalogBuilder {
 
     private var _name: String? = null
-    private var _info: InfoSchema? = null
     private var _items: MutableList<Pair<BindingPath, MemoryObject>> = mutableListOf()
 
     public fun name(name: String): MemoryCatalogBuilder = this.apply { this._name = name }
-
-    public fun info(info: InfoSchema): MemoryCatalogBuilder = this.apply { this._info = info }
 
     /**
      * This is a simple `dot` delimited utility for adding type definitions.
@@ -50,7 +47,6 @@ public class MemoryCatalogBuilder {
      * @param name
      * @param type
      */
-    @OptIn(PartiQLValueExperimental::class)
     @JvmOverloads
     public fun define(name: String, type: StaticType = StaticType.ANY, value: IonElement? = null): MemoryCatalogBuilder = this.apply {
         val path = BindingPath(name.split(".").map { BindingName(it, BindingCase.SENSITIVE) })
@@ -61,19 +57,8 @@ public class MemoryCatalogBuilder {
         _items.add(path to obj)
     }
 
-    @OptIn(FnExperimental::class)
     public fun build(): MemoryCatalog {
         val name = _name ?: error("MemoryCatalog must have a name")
-        val info = _info ?: InfoSchema(
-            object : Index<Fn> {
-                override fun get(path: List<String>): List<Fn> = emptyList()
-                override fun get(path: ConnectorPath, specific: String): Fn? = null
-            },
-            object : Index<Agg> {
-                override fun get(path: List<String>): List<Agg> = emptyList()
-                override fun get(path: ConnectorPath, specific: String): Agg? = null
-            }
-        )
         val catalog = MemoryCatalog(name, info)
         for (item in _items) { catalog.insert(item.first, item.second) }
         return catalog

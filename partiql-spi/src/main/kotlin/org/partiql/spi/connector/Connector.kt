@@ -15,6 +15,7 @@
 package org.partiql.spi.connector
 
 import com.amazon.ionelement.api.StructElement
+import org.partiql.planner.metadata.Namespace
 
 /**
  * A mechanism by which PartiQL can access a Catalog.
@@ -22,13 +23,14 @@ import com.amazon.ionelement.api.StructElement
 public interface Connector {
 
     /**
-     * Returns a [ConnectorMetadata] for the given [ConnectorSession]. The [ConnectorMetadata] is responsible
-     * for accessing catalog metadata.
-     *
-     * @param session
-     * @return
+     * TODO
      */
-    public fun getMetadata(session: ConnectorSession): ConnectorMetadata
+    public fun getBindings(): String
+
+    /**
+     * Returns the root namespace of this catalog.
+     */
+    public fun getNamespace(): Namespace
 
     /**
      * A Plugin leverages a [Factory] to produce a [Connector] which is used for catalog metadata and data access.

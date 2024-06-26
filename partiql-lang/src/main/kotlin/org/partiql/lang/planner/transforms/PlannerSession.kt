@@ -25,7 +25,7 @@ import java.time.Instant
  * @param userId a unique identifier for a user. This will be passed to [ConnectorSession] during planning.
  * @param currentCatalog the current catalog of the session
  * @param currentDirectory the current "namespace" within the Catalog. This will aid in building
- * [org.partiql.spi.connector.ConnectorObjectPath]'s for unresolved variables.
+ * [org.partiql.spi.connector.ConnectorPath]'s for unresolved variables.
  * @param catalogConfig a map where each key represents a catalog's name, and each value represents the configuration
  *  ([StructElement]) for the corresponding [org.partiql.spi.connector.Connector]. The [StructElement] has a single mandatory
  *  key-value pair, with the key being [org.partiql.spi.connector.Constants.CONFIG_KEY_CONNECTOR_NAME] and the value
