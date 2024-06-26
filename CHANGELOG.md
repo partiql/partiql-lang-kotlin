@@ -23,10 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [Unreleased]
+## [0.14.6]
 
 ### Added
 - Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
+- Shades ANTLR dependency to avoid dependency conflicts.
 
 ### Changed
 - **Behavioral change**: The `INTEGER/INT` type is now an alias to the `INT4` type. Previously the INTEGER type was
@@ -38,6 +39,8 @@ org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 ### Deprecated
 
 ### Fixed
+- Fixed classpath conflict for IsStaticTypeMeta
+- Fixes ANTLR parser grammar file naming.
 
 ### Removed
 
@@ -46,24 +49,9 @@ org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 ### Contributors
 Thank you to all who have contributed!
 
-## [0.14.5]
-
-### Added
-- partiql-ast: adds warning not to implement `AstVisitor` interface directly. Please extend `AstBaseVisitor` instead.
-- partiql-plan: adds warning not to implement `PlanVisitor` interface directly. Please extend `PlanBaseVisitor` instead.
-
-### Changed
-
-### Deprecated
-
-### Fixed
-
-### Removed
-
-### Security
-
-### Contributors
-Thank you to all who have contributed!
+- @rchowell
+- @alancai98
+- @johnedquinn
 
 ## [0.14.5]
 
