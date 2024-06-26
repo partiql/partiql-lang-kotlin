@@ -13,6 +13,9 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.charValue
+import org.partiql.value.dateValue
+import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.datetime.TimeZone
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -28,6 +31,8 @@ import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
 import org.partiql.value.symbolValue
+import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.math.BigDecimal
@@ -37,7 +42,6 @@ import java.math.BigInteger
  * Basic text writing test.
  *
  * TODOs
- *  - Dates and times
  *  - String/Symbol escapes
  */
 class PartiQLValueTextWriterTest {
@@ -173,13 +177,62 @@ class PartiQLValueTextWriterTest {
                 value = symbolValue("f.x"),
                 expected = "f.x",
             ),
+            case(
+                value = dateValue(DateTimeValue.date(1, 2, 3)),
+                expected = "DATE '0001-02-03'",
+            ),
+            case(
+                value = dateValue(DateTimeValue.date(2020, 2, 3)),
+                expected = "DATE '2020-02-03'",
+            ),
+            case(
+                value = timeValue(DateTimeValue.time(1, 2, 3)),
+                expected = "TIME '01:02:03'",
+            ),
+            case(
+                value = timeValue(DateTimeValue.time(1, 2, BigDecimal.valueOf(3.456))),
+                expected = "TIME '01:02:03.456'",
+            ),
+            case(
+                value = timeValue(DateTimeValue.time(1, 2, BigDecimal.valueOf(3.456), TimeZone.UnknownTimeZone)),
+                expected = "TIME '01:02:03.456-00:00'",
+            ),
+            case(
+                value = timeValue(DateTimeValue.time(1, 2, BigDecimal.valueOf(3.456), TimeZone.UtcOffset.of(0))),
+                expected = "TIME '01:02:03.456+00:00'",
+            ),
+            case(
+                value = timeValue(DateTimeValue.time(1, 2, BigDecimal.valueOf(3.456), TimeZone.UtcOffset.of(+30))),
+                expected = "TIME '01:02:03.456+00:30'",
+            ),
+            case(
+                value = timeValue(DateTimeValue.time(1, 2, BigDecimal.valueOf(3.456), TimeZone.UtcOffset.of(-30))),
+                expected = "TIME '01:02:03.456-00:30'",
+            ),
+            case(
+                value = timestampValue(DateTimeValue.timestamp(1, 2, 3, 4, 5, BigDecimal.valueOf(6.78))),
+                expected = "TIMESTAMP '0001-02-03 04:05:06.78'",
+            ),
+            case(
+                value = timestampValue(DateTimeValue.timestamp(1, 2, 3, 4, 5, BigDecimal.valueOf(6.78), TimeZone.UnknownTimeZone)),
+                expected = "TIMESTAMP '0001-02-03 04:05:06.78-00:00'",
+            ),
+            case(
+                value = timestampValue(DateTimeValue.timestamp(1, 2, 3, 4, 5, BigDecimal.valueOf(6.78), TimeZone.UtcOffset.of(0))),
+                expected = "TIMESTAMP '0001-02-03 04:05:06.78+00:00'",
+            ),
+            case(
+                value = timestampValue(DateTimeValue.timestamp(1, 2, 3, 4, 5, BigDecimal.valueOf(6.78), TimeZone.UtcOffset.of(+30))),
+                expected = "TIMESTAMP '0001-02-03 04:05:06.78+00:30'",
+            ),
+            case(
+                value = timestampValue(DateTimeValue.timestamp(1, 2, 3, 4, 5, BigDecimal.valueOf(6.78), TimeZone.UtcOffset.of(-30))),
+                expected = "TIMESTAMP '0001-02-03 04:05:06.78-00:30'",
+            ),
             // TODO CLOB
             // TODO BINARY
             // TODO BYTE
             // TODO BLOB
-            // TODO DATE
-            // TODO TIME
-            // TODO TIMESTAMP
             // TODO INTERVAL
         )
 
@@ -309,13 +362,22 @@ class PartiQLValueTextWriterTest {
                 value = symbolValue(null),
                 expected = "null",
             ),
+            case(
+                value = dateValue(null),
+                expected = "null",
+            ),
+            case(
+                value = timeValue(null),
+                expected = "null",
+            ),
+            case(
+                value = timestampValue(null),
+                expected = "null",
+            ),
             // TODO CLOB
             // TODO BINARY
             // TODO BYTE
             // TODO BLOB
-            // TODO DATE
-            // TODO TIME
-            // TODO TIMESTAMP
             // TODO INTERVAL
         )
 

@@ -387,7 +387,36 @@ internal class FnResolver(private val header: Header) {
      *
      * But what about parameterized types? Are the parameters dropped in casts, or do parameters become arguments?
      */
-    private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
+    private fun castName(type: PartiQLValueType): String = when (type) {
+        ANY -> "cast_any" // TODO remove, only added for backwards compatibility in next release.
+        BOOL -> "cast_bool"
+        INT8 -> "cast_int8"
+        INT16 -> "cast_int16"
+        INT32 -> "cast_int32"
+        INT64 -> "cast_int64"
+        INT -> "cast_int"
+        DECIMAL -> "cast_decimal"
+        DECIMAL_ARBITRARY -> "cast_decimal"
+        FLOAT32 -> "cast_float32"
+        FLOAT64 -> "cast_float64"
+        CHAR -> "cast_char"
+        STRING -> "cast_string"
+        SYMBOL -> "cast_symbol"
+        BINARY -> "cast_binary"
+        BYTE -> "cast_byte"
+        BLOB -> "cast_blob"
+        CLOB -> "cast_clob"
+        DATE -> "cast_date"
+        TIME -> "cast_time"
+        TIMESTAMP -> "cast_timestamp"
+        INTERVAL -> "cast_interval"
+        BAG -> "cast_bag"
+        LIST -> "cast_list"
+        SEXP -> "cast_sexp"
+        STRUCT -> "cast_struct"
+        PartiQLValueType.NULL -> "cast_null" // TODO remove, only added for backwards compatibility in next release.
+        PartiQLValueType.MISSING -> "cast_missing" // TODO remove, only added for backwards compatibility in next release.
+    }
 
     internal fun cast(operand: PartiQLValueType, target: PartiQLValueType) =
         FunctionSignature.Scalar(

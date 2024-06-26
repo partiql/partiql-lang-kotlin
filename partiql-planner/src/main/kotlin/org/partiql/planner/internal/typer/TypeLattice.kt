@@ -334,6 +334,8 @@ internal class TypeLattice private constructor(
                 INT32 to unsafe(),
                 INT64 to unsafe(),
                 INT to unsafe(),
+                DECIMAL to unsafe(),
+                DECIMAL_ARBITRARY to unsafe(),
                 STRING to coercion(),
                 SYMBOL to explicit(),
                 CLOB to coercion(),

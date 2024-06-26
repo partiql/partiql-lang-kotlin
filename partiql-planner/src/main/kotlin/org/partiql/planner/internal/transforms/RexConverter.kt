@@ -106,7 +106,11 @@ internal object RexConverter {
          * @param ctx
          * @return
          */
-        private fun visitExprCoerce(node: Expr, ctx: Env, coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR): Rex {
+        private fun visitExprCoerce(
+            node: Expr,
+            ctx: Env,
+            coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR,
+        ): Rex {
             val rex = super.visitExpr(node, ctx)
             return when (rex.op is Rex.Op.Select) {
                 true -> rex(StaticType.ANY, rexOpSubquery(rex.op, coercion))
@@ -195,7 +199,10 @@ internal object RexConverter {
                     when (identifierSteps.size) {
                         0 -> root to node.steps
                         else -> {
-                            val newRoot = rex(StaticType.ANY, rexOpVarUnresolved(mergeIdentifiers(op.identifier, identifierSteps), op.scope))
+                            val newRoot = rex(
+                                StaticType.ANY,
+                                rexOpVarUnresolved(mergeIdentifiers(op.identifier, identifierSteps), op.scope)
+                            )
                             val newSteps = node.steps.subList(identifierSteps.size, node.steps.size)
                             newRoot to newSteps
                         }
@@ -226,7 +233,10 @@ internal object RexConverter {
                         is Expr.Path.Step.Symbol -> {
                             val identifier = AstToPlan.convert(step.symbol)
                             when (identifier.caseSensitivity) {
-                                Identifier.CaseSensitivity.SENSITIVE -> rexOpPathKey(current, rexString(identifier.symbol))
+                                Identifier.CaseSensitivity.SENSITIVE -> rexOpPathKey(
+                                    current,
+                                    rexString(identifier.symbol)
+                                )
                                 Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathSymbol(current, identifier.symbol)
                             }
                         }
@@ -523,7 +533,7 @@ internal object RexConverter {
             TODO("SQL Special Form EXTRACT")
         }
 
-        // TODO: Ignoring type parameter now
+        // TODO: Ignoring type parameters (EXCEPT DECIMAL) now
         override fun visitExprCast(node: Expr.Cast, ctx: Env): Rex {
             val type = node.asType
             val arg0 = visitExprCoerce(node.value, ctx)
@@ -539,7 +549,17 @@ internal object RexConverter {
                 is Type.Real -> TODO("Static Type does not have REAL type")
                 is Type.Float32 -> TODO("Static Type does not have FLOAT32 type")
                 is Type.Float64 -> rex(StaticType.FLOAT, call("cast_float64", arg0))
-                is Type.Decimal -> rex(StaticType.DECIMAL, call("cast_decimal", arg0))
+                is Type.Decimal -> {
+                    if (type.precision != null) {
+                        // CONSTRAINED — cast_decimal(arg, precision, scale)
+                        val p = rex(StaticType.INT4, rexOpLit(int32Value(type.precision)))
+                        val s = rex(StaticType.INT4, rexOpLit(int32Value(type.scale ?: 0)))
+                        rex(StaticType.DECIMAL, call("cast_decimal", arg0, p, s))
+                    } else {
+                        // UNCONSTRAINED — cast_decimal(arg)
+                        rex(StaticType.DECIMAL, call("cast_decimal", arg0))
+                    }
+                }
                 is Type.Numeric -> rex(StaticType.DECIMAL, call("cast_numeric", arg0))
                 is Type.Char -> rex(StaticType.CHAR, call("cast_char", arg0))
                 is Type.Varchar -> rex(StaticType.STRING, call("cast_varchar", arg0))

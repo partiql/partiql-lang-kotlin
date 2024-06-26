@@ -23,15 +23,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [Unreleased]
+## [0.14.6]
 
 ### Added
+- Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
+- Shades ANTLR dependency to avoid dependency conflicts.
 
 ### Changed
+- **Behavioral change**: The `INTEGER/INT` type is now an alias to the `INT4` type. Previously the INTEGER type was
+unconstrained which is not SQL-conformant and is causing issues in integrating with other systems. This release makes
+INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
+integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
+org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 
 ### Deprecated
 
 ### Fixed
+- Fixed classpath conflict for IsStaticTypeMeta
+- Fixes ANTLR parser grammar file naming.
 
 ### Removed
 
@@ -39,6 +48,10 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+
+- @rchowell
+- @alancai98
+- @johnedquinn
 
 ## [0.14.5]
 
