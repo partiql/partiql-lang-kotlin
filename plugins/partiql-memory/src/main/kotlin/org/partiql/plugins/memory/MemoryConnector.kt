@@ -22,24 +22,29 @@ import org.partiql.spi.connector.Connector
 /**
  * This is a plugin used for testing and is not a versioned API per semver.
  */
-public class MemoryConnector : Connector {
+public class MemoryConnector private constructor(
+    private val namespace: MemoryNamespace,
+) : Connector {
 
-    override fun getBindings(): String {
-        TODO("Not yet implemented")
-    }
+    /**
+     * TODO once the planner work is done, then I can switch the eval dependency.
+     */
+    override fun getBindings(): String = "TODO!"
 
-    override fun getNamespace(): Namespace {
-        TODO("Not yet implemented")
-    }
+    /**
+     * Returns the catalog root namespace.
+     */
+    override fun getNamespace(): Namespace = namespace
 
+    /**
+     * For use with ServiceLoader to instantiate a connector from an Ion config.
+     */
     internal class Factory : Connector.Factory {
 
         override val name: String = "memory"
 
         override fun create(catalogName: String, config: StructElement?): MemoryConnector {
-            val catalog = catalogs.firstOrNull { it.name == catalogName }
-                ?: error("Catalog $catalogName is not registered in the MemoryPlugin")
-            return MemoryConnector(catalog)
+            TODO("Instantiation of a MemoryConnector via the factory is currently not supported")
         }
     }
 }

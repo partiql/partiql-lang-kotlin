@@ -2,7 +2,6 @@ package org.partiql.plugins.memory
 
 import org.partiql.planner.metadata.Namespace
 import org.partiql.planner.metadata.Table
-import org.partiql.types.PType
 
 /**
  * Namespace implementation.
@@ -12,7 +11,6 @@ public class MemoryNamespace private constructor(
     private val tables: Map<String, Table>,
     private val namespaces: Map<String, Namespace>,
 ) : Namespace {
-
     override fun getName(): String = name
     override fun getTable(name: String): Table? = tables[name]
     override fun getNamespace(name: String): Namespace? = namespaces[name]
@@ -21,14 +19,14 @@ public class MemoryNamespace private constructor(
     public class Builder internal constructor() {
 
         private var name: String? = null
-        private var tables: MutableMap<String, Table> = mutableMapOf()
+        private var tables: MutableMap<String, MemoryTable> = mutableMapOf()
         private var namespaces: MutableMap<String, Namespace> = mutableMapOf()
 
         public fun name(name: String): Builder = apply { this.name = name }
 
-        public fun define(name: String, type: PType): Builder = apply { tables[name] = MemoryTable.of(type) }
+        public fun defineTable(name: String, table: MemoryTable): Builder = apply { tables[name] = table }
 
-        public fun define(namespace: Namespace): Builder = apply { namespaces[namespace.getName()] = namespace }
+        public fun defineNamespace(namespace: MemoryNamespace): Builder = apply { namespaces[namespace.getName()] = namespace }
 
         public fun build(): MemoryNamespace = MemoryNamespace(name!!, tables, namespaces)
     }
