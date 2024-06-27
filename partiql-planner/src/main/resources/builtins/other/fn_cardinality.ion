@@ -1,0 +1,14 @@
+{
+  name: cardinality,
+  type: fn,
+  description:'''
+    Placeholder for `cardinality` description
+  ''',
+  properties: [],
+  impls: [
+    (fn container::bag -> int),
+    (fn container::list -> int),
+    (fn container::sexp -> int),
+    (fn container::struct -> int)
+  ]
+}

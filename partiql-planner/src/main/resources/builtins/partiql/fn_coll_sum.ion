@@ -1,0 +1,12 @@
+{
+  name: coll_sum,
+  type: fn,
+  description:'''
+    Placeholder for `coll_sum` description
+  ''',
+  properties: [],
+  impls: [
+    (fn value::bag -> dynamic),
+    (fn value::list -> dynamic)
+  ]
+}

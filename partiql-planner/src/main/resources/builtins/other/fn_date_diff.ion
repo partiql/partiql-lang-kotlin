@@ -1,0 +1,16 @@
+{
+  name: date_diff,
+  type: fn,
+  description:'''
+    Placeholder for `date_diff` description
+  ''',
+  properties: [],
+  impls: [
+    (fn part::string interval::int datetime::date -> date),
+    (fn part::string interval::int datetime::time -> time),
+    (fn part::string interval::int datetime::timestamp -> timestamp),
+    (fn part::string interval::interval datetime::date -> date),
+    (fn part::string interval::interval datetime::time -> time),
+    (fn part::string interval::interval datetime::timestamp -> timestamp),
+  ]
+}

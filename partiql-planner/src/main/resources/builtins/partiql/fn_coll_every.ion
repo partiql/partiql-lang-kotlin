@@ -1,0 +1,12 @@
+{
+  name: coll_every,
+  type: fn,
+  description:'''
+    Placeholder for `coll_every` description
+  ''',
+  properties: [],
+  impls: [
+    (fn collection::bag -> bool),
+    (fn collection::list -> bool),
+  ]
+}

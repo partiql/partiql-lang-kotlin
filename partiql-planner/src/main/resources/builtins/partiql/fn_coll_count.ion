@@ -1,0 +1,12 @@
+{
+  name: coll_count,
+  type: fn,
+  description:'''
+    Placeholder for `coll_count` description
+  ''',
+  properties: [],
+  impls: [
+    (fn collection::bag -> dynamic),
+    (fn collection::list -> dynamic),
+  ]
+}

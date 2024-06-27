@@ -1,0 +1,11 @@
+{
+  name: any,
+  type: agg,
+  description:'''
+    Placeholder for `any` description
+  ''',
+  properties: [],
+  impls: [
+    (agg value::bool -> bool),
+  ]
+}
