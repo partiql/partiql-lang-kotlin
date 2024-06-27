@@ -20,6 +20,8 @@ plugins {
 
 dependencies {
     api(Deps.ionElement)
+    api(project(":partiql-eval"))
+    api(project(":partiql-planner"))
     api(project(":partiql-types"))
     testImplementation(Deps.kasechange)
 }
