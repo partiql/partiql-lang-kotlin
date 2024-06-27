@@ -17,7 +17,7 @@ package org.partiql.spi.connector
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.emptyIonStruct
 import org.partiql.eval.bindings.Bindings
-import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.metadata.Metadata
 
 /**
  * A mechanism by which PartiQL can access bindings and catalog metadata.
@@ -30,9 +30,9 @@ public interface Connector {
     public fun getBindings(): Bindings
 
     /**
-     * Returns a [Catalog] which the planner uses to load catalog metadata.
+     * Returns the root namespace of this catalog.
      */
-    public fun getCatalog(): Catalog
+    public fun getMetadata(): org.partiql.planner.catalog.Catalog
 
     /**
      * A Plugin leverages a [Factory] to produce a [Connector] which is used for binding and metadata access.

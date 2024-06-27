@@ -2,16 +2,15 @@ package org.partiql.plugins.memory
 
 import org.partiql.eval.bindings.Binding
 import org.partiql.eval.value.Datum
-import org.partiql.planner.catalog.Table
+import org.partiql.planner.metadata.Table
 import org.partiql.types.PType
 
 public class MemoryTable private constructor(
-    private val name: String,
     private val type: PType,
     private val datum: Datum,
 ) : Table, Binding {
 
-    override fun getName(): String = name
+    override fun getKind(): Table.Kind = Table.Kind.TABLE
     override fun getSchema(): PType = type
     override fun getDatum(): Datum = datum
 
@@ -21,8 +20,7 @@ public class MemoryTable private constructor(
          * Create an empty table with dynamic schema.
          */
         @JvmStatic
-        public fun empty(name: String): MemoryTable = MemoryTable(
-            name = name,
+        public fun empty(): MemoryTable = MemoryTable(
             type = PType.typeDynamic(),
             datum = Datum.nullValue(),
         )
@@ -31,8 +29,7 @@ public class MemoryTable private constructor(
          * Create an empty table with known schema.
          */
         @JvmStatic
-        public fun empty(name: String, schema: PType): MemoryTable = MemoryTable(
-            name = name,
+        public fun empty(schema: PType): MemoryTable = MemoryTable(
             type = schema,
             datum = Datum.nullValue(),
         )
@@ -41,8 +38,7 @@ public class MemoryTable private constructor(
          * Create a table from a Datum with dynamic schema.
          */
         @JvmStatic
-        public fun of(name: String, value: Datum): MemoryTable = MemoryTable(
-            name = name,
+        public fun of(value: Datum): MemoryTable = MemoryTable(
             type = PType.typeDynamic(),
             datum = value,
         )
@@ -51,8 +47,7 @@ public class MemoryTable private constructor(
          * Create a table from a Datum with known schema.
          */
         @JvmStatic
-        public fun of(name: String, value: Datum, schema: PType): MemoryTable = MemoryTable(
-            name = name,
+        public fun of(value: Datum, schema: PType): MemoryTable = MemoryTable(
             type = schema,
             datum = value,
         )
