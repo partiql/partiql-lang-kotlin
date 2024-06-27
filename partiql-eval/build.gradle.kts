@@ -24,7 +24,6 @@ dependencies {
     api(project(":partiql-ast"))
     api(project(":partiql-plan"))
     api(project(":partiql-planner"))
-    api(project(":partiql-spi"))
     api(project(":partiql-types"))
     // Test
     testImplementation(project(":lib:isl"))
