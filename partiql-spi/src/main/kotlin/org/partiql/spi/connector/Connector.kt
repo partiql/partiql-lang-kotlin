@@ -15,7 +15,9 @@
 package org.partiql.spi.connector
 
 import com.amazon.ionelement.api.StructElement
+import com.amazon.ionelement.api.emptyIonStruct
 import org.partiql.eval.bindings.Bindings
+import org.partiql.planner.metadata.Metadata
 
 /**
  * A mechanism by which PartiQL can access bindings and metadata for a namespace (catalog).
@@ -30,7 +32,7 @@ public interface Connector {
     /**
      * Returns the root namespace of this catalog.
      */
-    public fun getMetadata(): org.partiql.planner.metadata.Metadata
+    public fun getMetadata(): Metadata
 
     /**
      * A Plugin leverages a [Factory] to produce a [Connector] which is used for binding and metadata access.
@@ -48,6 +50,6 @@ public interface Connector {
          * @param config
          * @return
          */
-        public fun create(config: StructElement? = null): Connector
+        public fun create(config: StructElement = emptyIonStruct()): Connector
     }
 }
