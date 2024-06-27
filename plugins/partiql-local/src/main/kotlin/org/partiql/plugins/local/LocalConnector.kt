@@ -15,18 +15,13 @@
 package org.partiql.plugins.local
 
 import com.amazon.ionelement.api.StructElement
-import org.partiql.spi.BindingPath
+import org.partiql.eval.bindings.Bindings
+import org.partiql.planner.metadata.Metadata
+import org.partiql.planner.metadata.Namespace
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.ConnectorAggProvider
-import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorFnProvider
-import org.partiql.spi.connector.ConnectorHandle
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorPath
-import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.fn.FnExperimental
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.isDirectory
 import kotlin.io.path.notExists
 
 /**
@@ -40,88 +35,33 @@ import kotlin.io.path.notExists
  *   root: "/Users/me/some/root/directory"
  * }
  * ```
- *
- * @property catalogRoot    Catalog root path
- * @property catalogName    Catalog name
- * @property config         Catalog configuration
  */
-public class LocalConnector(
-    private val catalogRoot: Path,
-    private val catalogName: String,
-    private val config: StructElement,
-) : Connector {
+public class LocalConnector(private val root: Path) : Connector {
 
     public companion object {
         public const val CONNECTOR_NAME: String = "local"
         public const val ROOT_KEY: String = "root"
     }
 
-    private val metadata = Metadata(catalogRoot)
+    override fun getBindings(): Bindings = LocalBindings
 
-    // not yet defined in SPI
-    public fun listObjects(): List<BindingPath> = metadata.listObjects()
-
-    override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
-
-    override fun getBindings(): ConnectorBindings {
-        TODO("Not yet implemented")
-    }
-
-    @FnExperimental
-    override fun getFunctions(): ConnectorFnProvider {
-        TODO("Not yet implemented")
-    }
-
-    @FnExperimental
-    override fun getAggregations(): ConnectorAggProvider {
-        TODO("Not yet implemented")
+    override fun getMetadata(): Metadata = object : Metadata {
+        override fun getNamespace(): Namespace = LocalNamespace(root)
     }
 
     internal class Factory : Connector.Factory {
 
-        private val default: Path = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
-
         override val name: String = CONNECTOR_NAME
 
-        override fun create(catalogName: String, config: StructElement?): Connector {
-            assert(config != null) { "Local plugin requires non-null config" }
-            val root = config!!.getOptional(ROOT_KEY)?.stringValueOrNull?.let { Paths.get(it) }
-            val catalogRoot = root ?: default
-            if (catalogRoot.notExists()) {
-                error("Invalid catalog `$catalogRoot`")
+        override fun create(config: StructElement): Connector {
+            val root = config.getOptional(ROOT_KEY)?.stringValueOrNull?.let { Paths.get(it) }
+            if (root == null) {
+                error("Root cannot be null")
             }
-            return LocalConnector(catalogRoot, catalogName, config)
+            if (root.notExists() || !root.isDirectory()) {
+                error("Invalid catalog `$root`")
+            }
+            return LocalConnector(root)
         }
-    }
-
-    public class Metadata(root: Path) : ConnectorMetadata {
-
-        /**
-         * TODO watch root for changes and rebuild catalog if needed.
-         */
-        // private val watcher = FileSystems.getDefault().newWatchService()
-
-        /**
-         * Cached catalog
-         */
-        private var catalog = LocalCatalog.load(root)
-
-        override fun getObject(path: BindingPath): ConnectorHandle.Obj? {
-            val value = catalog.lookup(path) ?: return null
-            return ConnectorHandle.Obj(
-                path = ConnectorPath(value.path),
-                entity = value,
-            )
-        }
-
-        @FnExperimental
-        override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {
-            TODO("Not yet implemented")
-        }
-
-        @FnExperimental
-        override fun getAggregation(path: BindingPath): ConnectorHandle.Agg? = null
-
-        internal fun listObjects(): List<BindingPath> = catalog.listObjects()
     }
 }
