@@ -15,7 +15,9 @@
 package org.partiql.spi.connector
 
 import com.amazon.ionelement.api.StructElement
+import com.amazon.ionelement.api.emptyIonStruct
 import org.partiql.eval.bindings.Bindings
+import org.partiql.planner.metadata.Metadata
 
 /**
  * A mechanism by which PartiQL can access bindings and catalog metadata.
@@ -48,6 +50,6 @@ public interface Connector {
          * @param config
          * @return
          */
-        public fun create(config: StructElement? = null): Connector
+        public fun create(config: StructElement = emptyIonStruct()): Connector
     }
 }

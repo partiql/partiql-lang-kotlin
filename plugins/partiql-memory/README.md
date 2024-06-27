@@ -1,36 +1,19 @@
-# PartiQL In-Memory Plugin
+# PartiQL Memory Plugin
 
-This is a PartiQL plugin for in-memory DB. The primary purpose of this plugin is for testing. 
+This is a plugin for defining namespaces and tables in memory.
 
-## Provider
-
-The plugin is backed by a catalog provider. This enables use to easily modify a catalog for testing. 
+## Usage
 
 ```kotlin
-val provider = MemoryCatalog.Provider()
-provider[catalogName] = MemoryCatalog.of(
-    t1 to StaticType.INT2,
-    ...
-)
-```
+// define the data and types.
+val catalog = MemoryCatalog.builder()
+    .name("hello")
+    .defineTable("pi", MemoryTable(
+        type = PType.typeFloat32(),
+        data = ionFloat(3.14),
+    ))
+    .build()
 
-## Catalog path
-
-The in-memory connector can handle arbitrary depth catalog path: 
-
-```kotlin
-val provider = MemoryCatalog.Provider()
-provider[catalogName] = MemoryCatalog.of(
-    "schema.tbl" to StaticType.INT2,
-)
-```
-
-The full path is `catalogName.schema.tbl`
-
-The lookup logic is identical to localPlugin. 
-
-```
-|_ catalogName
-   |_ schema 
-     |_ tbl.ion
+// create a connector to be used in a session
+val connector = MemoryConnector.from(catalog)
 ```
