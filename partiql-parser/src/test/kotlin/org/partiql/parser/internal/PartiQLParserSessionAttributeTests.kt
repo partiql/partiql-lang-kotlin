@@ -3,8 +3,8 @@ package org.partiql.parser.internal
 import org.junit.jupiter.api.Test
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
-import org.partiql.ast.exprBinary
 import org.partiql.ast.exprLit
+import org.partiql.ast.exprOperator
 import org.partiql.ast.exprSessionAttribute
 import org.partiql.ast.statementQuery
 import org.partiql.value.PartiQLValueExperimental
@@ -46,8 +46,8 @@ class PartiQLParserSessionAttributeTests {
     fun currentUserEquals() = assertExpression(
         "1 = current_user",
         query {
-            exprBinary(
-                op = Expr.Binary.Op.EQ,
+            exprOperator(
+                symbol = "=",
                 lhs = exprLit(int32Value(1)),
                 rhs = exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
             )

@@ -337,7 +337,6 @@ BANG: '!';
 LT_EQ: '<=';
 GT_EQ: '>=';
 EQ: '=';
-CONCAT: '||';
 ANGLE_LEFT: '<';
 ANGLE_RIGHT: '>';
 BRACKET_LEFT: '[';
@@ -351,6 +350,34 @@ COLON: ':';
 COLON_SEMI: ';';
 QUESTION_MARK: '?';
 PERIOD: '.';
+HASH: '#';
+
+// Operators w/ special characters
+// Similar to postgresql's supported operator creation -- https://www.postgresql.org/docs/16/sql-createoperator.html
+OPERATOR
+    // may not end with + or -
+    : OpBasic+ OpBasicEnd
+    // must include at least one of OpSpecial to end w/ anything
+    | (OpBasic | OpSpecial)* OpSpecial (OpBasic | OpSpecial)*
+    ;
+
+fragment OpBasic
+    : [+*=] // TODO support `<` and `>`?
+    // comments are not matched
+    | '-' {_input.LA(1) != '-'}?
+    | '/' {_input.LA(1) != '*'}?
+    ;
+
+fragment OpBasicEnd
+    : [*/=] // TODO support `<` and `>`?
+    ;
+fragment OpSpecial
+    : [~@#%^?]  // TODO support backtick (`)?
+    // graph patterns are not matched
+    | '|' {_input.LA(1) != '!'}?
+    | '!' {_input.LA(1) != '%'}?
+    | '&' {_input.LA(1) != '%'}?
+    ;
 
 /**
  *

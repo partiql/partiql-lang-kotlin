@@ -228,65 +228,62 @@ class SqlDialectTest {
         @JvmStatic
         fun exprOperators() = listOf(
             expect("NOT (NULL)") {
-                exprUnary {
-                    op = Expr.Unary.Op.NOT
-                    expr = NULL
+                exprNot {
+                    value = NULL
                 }
             },
             expect("+(NULL)") {
-                exprUnary {
-                    op = Expr.Unary.Op.POS
-                    expr = NULL
+                exprOperator {
+                    symbol = "+"
+                    rhs = NULL
                 }
             },
             expect("-(NULL)") {
-                exprUnary {
-                    op = Expr.Unary.Op.NEG
-                    expr = NULL
+                exprOperator {
+                    symbol = "-"
+                    rhs = NULL
                 }
             },
             expect("NOT (NOT (NULL))") {
-                exprUnary {
-                    op = Expr.Unary.Op.NOT
-                    expr = exprUnary {
-                        op = Expr.Unary.Op.NOT
-                        expr = NULL
+                exprNot {
+                    value = exprNot {
+                        value = NULL
                     }
                 }
             },
             expect("+(+(NULL))") {
-                exprUnary {
-                    op = Expr.Unary.Op.POS
-                    expr = exprUnary {
-                        op = Expr.Unary.Op.POS
-                        expr = NULL
+                exprOperator {
+                    symbol = "+"
+                    rhs = exprOperator {
+                        symbol = "+"
+                        rhs = NULL
                     }
                 }
             },
             expect("-(-(NULL))") {
-                exprUnary {
-                    op = Expr.Unary.Op.NEG
-                    expr = exprUnary {
-                        op = Expr.Unary.Op.NEG
-                        expr = NULL
+                exprOperator {
+                    symbol = "-"
+                    rhs = exprOperator {
+                        symbol = "-"
+                        rhs = NULL
                     }
                 }
             },
             expect("+(-(+(NULL)))") {
-                exprUnary {
-                    op = Expr.Unary.Op.POS
-                    expr = exprUnary {
-                        op = Expr.Unary.Op.NEG
-                        expr = exprUnary {
-                            op = Expr.Unary.Op.POS
-                            expr = NULL
+                exprOperator {
+                    symbol = "+"
+                    rhs = exprOperator {
+                        symbol = "-"
+                        rhs = exprOperator {
+                            symbol = "+"
+                            rhs = NULL
                         }
                     }
                 }
             },
             expect("NULL + NULL") {
-                exprBinary {
-                    op = Expr.Binary.Op.PLUS
+                exprOperator {
+                    symbol = "+"
                     lhs = NULL
                     rhs = NULL
                 }
@@ -538,8 +535,8 @@ class SqlDialectTest {
                         scope = Expr.Var.Scope.DEFAULT
                     }
                     steps += exprPathStepIndex(
-                        exprBinary {
-                            op = Expr.Binary.Op.PLUS
+                        exprOperator {
+                            symbol = "+"
                             lhs = exprLit(int32Value(1))
                             rhs = exprVar {
                                 identifier = id("a")
@@ -1738,8 +1735,8 @@ class SqlDialectTest {
         @JvmStatic
         private fun subqueryCases() = listOf(
             expect("1 = (SELECT a FROM T)") {
-                exprBinary {
-                    op = Expr.Binary.Op.EQ
+                exprOperator {
+                    symbol = "="
                     lhs = exprLit(int32Value(1))
                     rhs = exprSFW {
                         select = select("a")
@@ -1748,8 +1745,8 @@ class SqlDialectTest {
                 }
             },
             expect("(1, 2) = (SELECT a FROM T)") {
-                exprBinary {
-                    op = Expr.Binary.Op.EQ
+                exprOperator {
+                    symbol = "="
                     lhs = exprCollection {
                         type = Expr.Collection.Type.LIST
                         values += exprLit(int32Value(1))
