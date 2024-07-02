@@ -286,27 +286,26 @@ class ToLegacyAstTest {
         @JvmStatic
         fun operators() = listOf(
             expect("(not (lit null))") {
-                exprUnary {
-                    op = Expr.Unary.Op.NOT
-                    expr = NULL
+                exprNot {
+                    value = NULL
                 }
             },
             expect("(pos (lit null))") {
-                exprUnary {
-                    op = Expr.Unary.Op.POS
-                    expr = NULL
+                exprOperator {
+                    symbol = "+"
+                    rhs = NULL
                 }
             },
             expect("(neg (lit null))") {
-                exprUnary {
-                    op = Expr.Unary.Op.NEG
-                    expr = NULL
+                exprOperator {
+                    symbol = "-"
+                    rhs = NULL
                 }
             },
             // we don't really need to test _all_ binary operators
             expect("(plus (lit null) (lit null))") {
-                exprBinary {
-                    op = Expr.Binary.Op.PLUS
+                exprOperator {
+                    symbol = "+"
                     lhs = NULL
                     rhs = NULL
                 }

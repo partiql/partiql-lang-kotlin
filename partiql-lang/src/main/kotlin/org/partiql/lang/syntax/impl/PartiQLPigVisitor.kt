@@ -33,6 +33,7 @@ import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.loadSingleElement
+import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
@@ -62,6 +63,7 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
 import org.partiql.parser.internal.antlr.PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
+import org.partiql.parser.internal.antlr.PartiQLTokens
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.TimeZone
@@ -116,6 +118,7 @@ import java.time.format.DateTimeParseException
  * There could be clever ways of exploiting this, to avoid the dispatch via `visit()`.
  */
 internal class PartiQLPigVisitor(
+    private val tokens: CommonTokenStream,
     val customTypes: List<CustomType> = listOf(),
     private val parameterIndexes: Map<Int, Int> = mapOf(),
 ) :
@@ -1118,13 +1121,22 @@ internal class PartiQLPigVisitor(
 
     override fun visitNot(ctx: PartiQLParser.NotContext) = visitUnaryOperation(ctx.rhs, ctx.op, null)
 
-    override fun visitMathOp00(ctx: PartiQLParser.MathOp00Context): PartiqlAst.PartiqlAstNode =
-        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
+    private fun emptyListIfNull(ctx: ParserRuleContext?) = if (ctx == null) {
+        emptyList<Token>()
+    } else {
+        listOf(ctx.start)
+    }
 
-    override fun visitMathOp01(ctx: PartiQLParser.MathOp01Context): PartiqlAst.PartiqlAstNode =
-        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
+    override fun visitMathOp00(ctx: PartiQLParser.MathOp00Context): PartiqlAst.PartiqlAstNode =
+        visitBinaryOperation(ctx.lhs, ctx.rhs, emptyListIfNull(ctx.op), ctx.parent)
+
+    override fun visitMathOp01(ctx: PartiQLParser.MathOp01Context) =
+        visitUnaryOperation(ctx.rhs, ctx.op?.start, ctx.parent)
 
     override fun visitMathOp02(ctx: PartiQLParser.MathOp02Context): PartiqlAst.PartiqlAstNode =
+        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
+
+    override fun visitMathOp03(ctx: PartiQLParser.MathOp03Context): PartiqlAst.PartiqlAstNode =
         visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
 
     override fun visitValueExpr(ctx: PartiQLParser.ValueExprContext) =
@@ -1507,6 +1519,12 @@ internal class PartiQLPigVisitor(
      */
 
     override fun visitBag(ctx: PartiQLParser.BagContext) = PartiqlAst.build {
+        // Prohibit hidden characters between angle brackets
+        val startTokenIndex = ctx.start.tokenIndex
+        val endTokenIndex = ctx.stop.tokenIndex
+        if (tokens.getHiddenTokensToRight(startTokenIndex, PartiQLTokens.HIDDEN) != null || tokens.getHiddenTokensToLeft(endTokenIndex, PartiQLTokens.HIDDEN) != null) {
+            throw ParserException("Invalid bag expression", ErrorCode.PARSE_INVALID_QUERY)
+        }
         val exprList = ctx.expr().map { visitExpr(it) }
         bag(exprList, ctx.ANGLE_LEFT(0).getSourceMetaContainer())
     }
@@ -1776,25 +1794,24 @@ internal class PartiQLPigVisitor(
         if (parent != null) return@build visit(parent) as PartiqlAst.Expr
         val args = listOf(lhs!!, rhs!!).map { visit(it) as PartiqlAst.Expr }
         val metas = op.getSourceMetaContainer()
-        when (op.first().type) {
-            PartiQLParser.AND -> and(args, metas)
-            PartiQLParser.OR -> or(args, metas)
-            PartiQLParser.ASTERISK -> times(args, metas)
-            PartiQLParser.SLASH_FORWARD -> divide(args, metas)
-            PartiQLParser.PLUS -> plus(args, metas)
-            PartiQLParser.MINUS -> minus(args, metas)
-            PartiQLParser.PERCENT -> modulo(args, metas)
-            PartiQLParser.CONCAT -> concat(args, metas)
-            PartiQLParser.ANGLE_LEFT -> {
-                if (op.size > 1) ne(args, metas)
-                else lt(args, metas)
-            }
-            PartiQLParser.LT_EQ -> lte(args, metas)
-            PartiQLParser.ANGLE_RIGHT -> gt(args, metas)
-            PartiQLParser.GT_EQ -> gte(args, metas)
-            PartiQLParser.BANG -> ne(args, metas)
-            PartiQLParser.EQ -> eq(args, metas)
-            PartiQLParser.AMPERSAND -> bitwiseAnd(args, metas)
+        val stringOp = op.joinToString("") { it.text.lowercase() }
+        when (stringOp) {
+            "and" -> and(args, metas)
+            "or" -> or(args, metas)
+            "*" -> times(args, metas)
+            "/" -> divide(args, metas)
+            "+" -> plus(args, metas)
+            "-" -> minus(args, metas)
+            "%" -> modulo(args, metas)
+            "||" -> concat(args, metas)
+            "<" -> lt(args, metas)
+            "<>" -> ne(args, metas)
+            "<=" -> lte(args, metas)
+            ">" -> gt(args, metas)
+            ">=" -> gte(args, metas)
+            "!=" -> ne(args, metas)
+            "=" -> eq(args, metas)
+            "&" -> bitwiseAnd(args, metas)
             else -> throw ParserException("Unknown binary operator", ErrorCode.PARSE_INVALID_QUERY)
         }
     }

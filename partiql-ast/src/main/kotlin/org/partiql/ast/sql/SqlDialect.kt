@@ -229,41 +229,44 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         return head concat r("`$value`")
     }
 
-    override fun visitExprUnary(node: Expr.Unary, head: SqlBlock): SqlBlock {
-        val op = when (node.op) {
-            Expr.Unary.Op.NOT -> "NOT ("
-            Expr.Unary.Op.POS -> "+("
-            Expr.Unary.Op.NEG -> "-("
+    override fun visitExprOperator(node: Expr.Operator, head: SqlBlock): SqlBlock {
+        val lhs = node.lhs
+        return if (lhs != null) {
+            var h = head
+            h = visitExprWrapped(node.lhs, h)
+            h = h concat r(" ${node.symbol} ")
+            h = visitExprWrapped(node.rhs, h)
+            h
+        } else {
+            var h = head
+            h = h concat r(node.symbol + "(")
+            h = visitExprWrapped(node.rhs, h)
+            h = h concat r(")")
+            return h
         }
+    }
+
+    override fun visitExprAnd(node: Expr.And, head: SqlBlock): SqlBlock {
         var h = head
-        h = h concat r(op)
-        h = visitExprWrapped(node.expr, h)
-        h = h concat r(")")
+        h = visitExprWrapped(node.lhs, h)
+        h = h concat r(" AND ")
+        h = visitExprWrapped(node.rhs, h)
         return h
     }
 
-    override fun visitExprBinary(node: Expr.Binary, head: SqlBlock): SqlBlock {
-        val op = when (node.op) {
-            Expr.Binary.Op.PLUS -> "+"
-            Expr.Binary.Op.MINUS -> "-"
-            Expr.Binary.Op.TIMES -> "*"
-            Expr.Binary.Op.DIVIDE -> "/"
-            Expr.Binary.Op.MODULO -> "%"
-            Expr.Binary.Op.CONCAT -> "||"
-            Expr.Binary.Op.AND -> "AND"
-            Expr.Binary.Op.OR -> "OR"
-            Expr.Binary.Op.EQ -> "="
-            Expr.Binary.Op.NE -> "<>"
-            Expr.Binary.Op.GT -> ">"
-            Expr.Binary.Op.GTE -> ">="
-            Expr.Binary.Op.LT -> "<"
-            Expr.Binary.Op.LTE -> "<="
-            Expr.Binary.Op.BITWISE_AND -> "&"
-        }
+    override fun visitExprOr(node: Expr.Or, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExprWrapped(node.lhs, h)
-        h = h concat r(" $op ")
+        h = h concat r(" OR ")
         h = visitExprWrapped(node.rhs, h)
+        return h
+    }
+
+    override fun visitExprNot(node: Expr.Not, head: SqlBlock): SqlBlock {
+        var h = head
+        h = h concat r("NOT (")
+        h = visitExprWrapped(node.value, h)
+        h = h concat r(")")
         return h
     }
 
