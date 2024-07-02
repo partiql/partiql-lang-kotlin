@@ -95,7 +95,7 @@ internal class PartiQLPigParser(val customTypes: List<CustomType> = listOf()) : 
         val tokenStream = createTokenStream(queryStream)
         val parser = parserInit(tokenStream)
         val tree = parser.root()
-        val visitor = PartiQLPigVisitor(customTypes, tokenStream.parameterIndexes)
+        val visitor = PartiQLPigVisitor(tokenStream, customTypes, tokenStream.parameterIndexes)
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 

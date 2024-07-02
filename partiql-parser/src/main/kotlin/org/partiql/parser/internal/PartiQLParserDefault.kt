@@ -425,6 +425,7 @@ internal class PartiQLParserDefault : PartiQLParser {
      */
     @OptIn(PartiQLValueExperimental::class)
     private class Visitor(
+        private val tokens: CommonTokenStream,
         private val locations: SourceLocations.Mutable,
         private val parameters: Map<Int, Int> = mapOf(),
     ) : PartiQLParserBaseVisitor<AstNode>() {
@@ -442,7 +443,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 tree: GeneratedParser.RootContext,
             ): PartiQLParser.Result {
                 val locations = SourceLocations.Mutable()
-                val visitor = Visitor(locations, tokens.parameterIndexes)
+                val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
                 val root = visitor.visitAs<AstNode>(tree) as Statement
                 return PartiQLParser.Result(
                     source = source,
@@ -2022,6 +2023,12 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitBag(ctx: GeneratedParser.BagContext) = translate(ctx) {
+            // Prohibit hidden characters between angle brackets
+            val startTokenIndex = ctx.start.tokenIndex
+            val endTokenIndex = ctx.stop.tokenIndex
+            if (tokens.getHiddenTokensToRight(startTokenIndex, GeneratedLexer.HIDDEN) != null || tokens.getHiddenTokensToLeft(endTokenIndex, GeneratedLexer.HIDDEN) != null) {
+                throw error(ctx, "Invalid bag expression")
+            }
             val expressions = visitOrEmpty<Expr>(ctx.expr())
             exprCollection(Expr.Collection.Type.BAG, expressions)
         }

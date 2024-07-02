@@ -5019,4 +5019,38 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             lit(ionInt(1))
         )
     }
+
+    // regression tests for bag constructor angle bracket
+    @Test
+    fun testBagConstructor() = assertExpression("<<<<1>>>>") {
+        bag(
+            bag(
+                lit(ionInt(1))
+            )
+        )
+    }
+
+    @Test
+    fun testSpacesInBagConstructor() = checkInputThrowingParserException(
+        "< < < < 1 > > > >",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 1L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.ANGLE_LEFT.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("<")
+        )
+    )
+
+    @Test
+    fun testCommentsInBagConstructor() = checkInputThrowingParserException(
+        "</* some comment */<<<1>>>>",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 1L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.ANGLE_LEFT.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("<")
+        )
+    )
 }

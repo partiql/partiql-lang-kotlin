@@ -33,6 +33,7 @@ import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.loadSingleElement
+import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
@@ -62,6 +63,7 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
 import org.partiql.parser.internal.antlr.PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
+import org.partiql.parser.internal.antlr.PartiQLTokens
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.TimeZone
@@ -116,6 +118,7 @@ import java.time.format.DateTimeParseException
  * There could be clever ways of exploiting this, to avoid the dispatch via `visit()`.
  */
 internal class PartiQLPigVisitor(
+    private val tokens: CommonTokenStream,
     val customTypes: List<CustomType> = listOf(),
     private val parameterIndexes: Map<Int, Int> = mapOf(),
 ) :
@@ -1507,6 +1510,12 @@ internal class PartiQLPigVisitor(
      */
 
     override fun visitBag(ctx: PartiQLParser.BagContext) = PartiqlAst.build {
+        // Prohibit hidden characters between angle brackets
+        val startTokenIndex = ctx.start.tokenIndex
+        val endTokenIndex = ctx.stop.tokenIndex
+        if (tokens.getHiddenTokensToRight(startTokenIndex, PartiQLTokens.HIDDEN) != null || tokens.getHiddenTokensToLeft(endTokenIndex, PartiQLTokens.HIDDEN) != null) {
+            throw ParserException("Invalid bag expression", ErrorCode.PARSE_INVALID_QUERY)
+        }
         val exprList = ctx.expr().map { visitExpr(it) }
         bag(exprList, ctx.ANGLE_LEFT(0).getSourceMetaContainer())
     }
