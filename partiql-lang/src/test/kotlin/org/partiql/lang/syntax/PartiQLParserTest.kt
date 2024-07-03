@@ -5033,7 +5033,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun testSpacesInBagConstructor() = checkInputThrowingParserException(
         "< < < < 1 > > > >",
-        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        ErrorCode.PARSE_UNEXPECTED_TOKEN, // partiql-ast parser ErrorCode
         expectErrorContextValues = mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 1L,
@@ -5045,7 +5045,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun testCommentsInBagConstructor() = checkInputThrowingParserException(
         "</* some comment */<<<1>>>>",
-        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        ErrorCode.PARSE_UNEXPECTED_TOKEN, // partiql-ast parser ErrorCode
         expectErrorContextValues = mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 1L,

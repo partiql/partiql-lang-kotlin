@@ -152,7 +152,6 @@ abstract class PartiQLParserTestBase : TestBase() {
         input: String,
         errorCode: ErrorCode,
         expectErrorContextValues: Map<Property, Any>,
-        targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT),
         assertContext: Boolean = true,
     ): Unit = forEachTarget {
         softAssert {
@@ -160,7 +159,8 @@ abstract class PartiQLParserTestBase : TestBase() {
                 parser.parseAstStatement(input)
                 fail("Expected ParserException but there was no Exception")
             } catch (ex: ParserException) {
-                // split parser target does not use ErrorCode
+                // NOTE: only perform error code and error context checks for `ParserTarget.EXPERIMENTAL` (partiql-ast
+                // parser).
                 if (assertContext && (this@forEachTarget == ParserTarget.EXPERIMENTAL)) {
                     checkErrorAndErrorContext(errorCode, ex, expectErrorContextValues)
                 }
