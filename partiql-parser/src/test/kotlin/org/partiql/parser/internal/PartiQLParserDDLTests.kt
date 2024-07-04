@@ -18,8 +18,8 @@ import org.partiql.ast.constraintDefinitionNotNull
 import org.partiql.ast.constraintDefinitionUnique
 import org.partiql.ast.ddlOpCreateTable
 import org.partiql.ast.ddlOpDropTable
-import org.partiql.ast.exprBinary
 import org.partiql.ast.exprLit
+import org.partiql.ast.exprOperator
 import org.partiql.ast.exprVar
 import org.partiql.ast.identifierQualified
 import org.partiql.ast.identifierSymbol
@@ -219,8 +219,8 @@ class PartiQLParserDDLTests {
                                     constraint(
                                         null,
                                         constraintDefinitionCheck(
-                                            exprBinary(
-                                                Expr.Binary.Op.GT,
+                                            exprOperator(
+                                                ">",
                                                 exprVar(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE), Expr.Var.Scope.DEFAULT),
                                                 exprLit(int32Value(0))
                                             )
@@ -311,8 +311,8 @@ class PartiQLParserDDLTests {
                             constraint(
                                 null,
                                 constraintDefinitionCheck(
-                                    exprBinary(
-                                        Expr.Binary.Op.GT,
+                                    exprOperator(
+                                        ">",
                                         exprVar(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE), Expr.Var.Scope.DEFAULT),
                                         exprLit(int32Value(0))
                                     )
