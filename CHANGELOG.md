@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [0.14.6]
+## [0.15.0]
 
 ### Added
 - Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
@@ -35,6 +35,8 @@ unconstrained which is not SQL-conformant and is causing issues in integrating w
 INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
 integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
 org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
+- **Breaking change**: cherry-picks the partiql-plan modeling of set operators from
+[#1430](https://github.com/partiql/partiql-lang-kotlin/pull/1430)
 
 ### Deprecated
 
@@ -1082,7 +1084,9 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.5...v0.15.0
+[0.14.5]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...v0.14.5
 [0.14.4]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.3...v0.14.4
 [0.14.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.2...v0.14.3
 [0.14.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.1...v0.14.2
