@@ -4,7 +4,7 @@ import java.util.Spliterator
 import java.util.function.Consumer
 
 /**
- * A reference to a namespace within a catalog; case-preserved.
+ * A reference to a namespace within a catalog.
  *
  * Related
  *  - Iceberg — https://github.com/apache/iceberg/blob/main/api/src/main/java/org/apache/iceberg/catalog/Namespace.java
@@ -49,33 +49,28 @@ public class Namespace private constructor(
         if (other == null || javaClass != other.javaClass) {
             return false
         }
-        return levels.contentEquals((other as Namespace).levels)
+        val namespace = other as Namespace
+        return levels.contentEquals(namespace.levels)
     }
 
-    /**
-     * The hashCode() is case-sensitive — java.util.Arrays.hashCode
-     */
     public override fun hashCode(): Int {
         return levels.contentHashCode()
     }
 
-    /**
-     * Return the SQL identifier representation of this namespace.
-     */
     public override fun toString(): String {
-        return Identifier.of(*levels).toString()
+        return levels.joinToString(".")
     }
 
     public companion object {
 
-        private val ROOT = Namespace(emptyArray())
+        private val EMPTY = Namespace(emptyArray())
 
-        public fun root(): Namespace = ROOT
+        public fun empty(): Namespace = EMPTY
 
         @JvmStatic
         public fun of(vararg levels: String): Namespace {
             if (levels.isEmpty()) {
-                return root()
+                return empty()
             }
             return Namespace(arrayOf(*levels))
         }
@@ -83,7 +78,7 @@ public class Namespace private constructor(
         @JvmStatic
         public fun of(levels: Collection<String>): Namespace {
             if (levels.isEmpty()) {
-                return root()
+                return empty()
             }
             return Namespace(levels.toTypedArray())
         }

@@ -25,7 +25,7 @@ public interface Catalog {
     /**
      * List top-level tables.
      */
-    public fun listTables(): Collection<Name> = emptyList()
+    public fun listTables(): Collection<Name> = listTables(Namespace.empty())
 
     /**
      * List all tables under this namespace.
@@ -37,7 +37,7 @@ public interface Catalog {
     /**
      * List top-level namespaces from the catalog.
      */
-    public fun listNamespaces(): Collection<Namespace> = emptyList()
+    public fun listNamespaces(): Collection<Namespace> = listNamespaces(Namespace.empty())
 
     /**
      * List all child namespaces from the namespace.
