@@ -81,10 +81,10 @@ public class MemoryConnector private constructor(
         override fun getName(): String = name
 
         override fun getTable(name: Name): Table? {
-            if (name.getLength() > 1) {
+            if (name.hasNamespace()) {
                 error("MemoryCatalog does not support namespaces")
             }
-            return tables[name[0]]
+            return tables[name.getName()]
         }
 
         override fun listTables(): Collection<Name> {

@@ -16,8 +16,7 @@ package org.partiql.plugins.local
 
 import com.amazon.ionelement.api.StructElement
 import org.partiql.eval.bindings.Bindings
-import org.partiql.planner.metadata.Metadata
-import org.partiql.planner.metadata.Namespace
+import org.partiql.planner.catalog.Catalog
 import org.partiql.spi.connector.Connector
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -36,18 +35,39 @@ import kotlin.io.path.notExists
  * }
  * ```
  */
-public class LocalConnector(private val root: Path) : Connector {
+public class LocalConnector private constructor(
+    private val name: String,
+    private val root: Path,
+) : Connector {
+
+    private val catalog = LocalCatalog(name, root)
 
     public companion object {
+
         public const val CONNECTOR_NAME: String = "local"
+
         public const val ROOT_KEY: String = "root"
+
+        @JvmStatic
+        public fun builder(): Builder = Builder()
+
+        public class Builder internal constructor() {
+
+            private var name: String? = null
+
+            private var root: Path? = null
+
+            public fun name(name: String): Builder = apply { this.name = name }
+
+            public fun root(root: Path): Builder = apply { this.root = root }
+
+            public fun build(): LocalConnector = LocalConnector(name!!, root!!)
+        }
     }
 
     override fun getBindings(): Bindings = LocalBindings
 
-    override fun getMetadata(): Metadata = object : Metadata {
-        override fun getNamespace(): Namespace = LocalNamespace(root)
-    }
+    override fun getCatalog(): Catalog = catalog
 
     internal class Factory : Connector.Factory {
 
@@ -61,7 +81,7 @@ public class LocalConnector(private val root: Path) : Connector {
             if (root.notExists() || !root.isDirectory()) {
                 error("Invalid catalog `$root`")
             }
-            return LocalConnector(root)
+            return LocalConnector("default", root)
         }
     }
 }
