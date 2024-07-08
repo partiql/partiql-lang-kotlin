@@ -16,37 +16,35 @@ public interface Catalog {
 
     /**
      * Get a table by name.
+     *
+     * @param name  The case-sensitive [Table] name.
+     * @return The [Table] or null if not found.
      */
-    public fun getTable(session: Session, name: Name): Table? = null
-
-    /**
-     * Get a table by identifier; note that identifiers may be case-insensitive.
-     */
-    public fun getTable(session: Session, identifier: Identifier): Table? = null
+    public fun getTable(name: Name): Table? = null
 
     /**
      * List top-level tables.
      */
-    public fun listTables(session: Session): Collection<Name> = listTables(session, Namespace.root())
+    public fun listTables(): Collection<Name> = emptyList()
 
     /**
      * List all tables under this namespace.
      *
      * @param namespace
      */
-    public fun listTables(session: Session, namespace: Namespace): Collection<Name> = emptyList()
+    public fun listTables(namespace: Namespace): Collection<Name> = emptyList()
 
     /**
      * List top-level namespaces from the catalog.
      */
-    public fun listNamespaces(session: Session): Collection<Namespace> = listNamespaces(session, Namespace.root())
+    public fun listNamespaces(): Collection<Namespace> = emptyList()
 
     /**
      * List all child namespaces from the namespace.
      *
      * @param namespace
      */
-    public fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> = emptyList()
+    public fun listNamespaces(namespace: Namespace): Collection<Namespace> = emptyList()
 
     /**
      * Get a routine's variants by name.
@@ -54,5 +52,5 @@ public interface Catalog {
      * @param name  The case-sensitive [Routine] name.
      * @return A collection of all [Routine]s in the current namespace with this name.
      */
-    public fun getRoutines(session: Session, name: Name): Collection<Routine> = emptyList()
+    public fun getRoutines(name: Name): Collection<Routine> = emptyList()
 }
