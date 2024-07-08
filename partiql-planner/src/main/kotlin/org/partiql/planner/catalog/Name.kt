@@ -1,12 +1,10 @@
-package org.partiql.planner.metadata
+package org.partiql.planner.catalog
 
 import java.util.Spliterator
 import java.util.function.Consumer
 
 /**
  * Thin wrapper over a list of strings.
- *
- * @property steps
  */
 public data class Name(public val steps: List<String>) : Iterable<String> {
 

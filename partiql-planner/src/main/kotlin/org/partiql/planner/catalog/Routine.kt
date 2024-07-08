@@ -1,4 +1,4 @@
-package org.partiql.planner.metadata
+package org.partiql.planner.catalog
 
 import org.partiql.types.PType
 
@@ -8,7 +8,7 @@ import org.partiql.types.PType
 public sealed interface Routine {
 
     /**
-     * The function name. Required.
+     * The routine name. Required.
      */
     public fun getName(): String
 

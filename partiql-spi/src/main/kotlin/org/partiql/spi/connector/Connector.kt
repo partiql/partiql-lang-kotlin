@@ -30,7 +30,7 @@ public interface Connector {
     /**
      * Returns the root namespace of this catalog.
      */
-    public fun getMetadata(): org.partiql.planner.metadata.Metadata
+    public fun getMetadata(): org.partiql.planner.catalog.Catalog
 
     /**
      * A Plugin leverages a [Factory] to produce a [Connector] which is used for binding and metadata access.
