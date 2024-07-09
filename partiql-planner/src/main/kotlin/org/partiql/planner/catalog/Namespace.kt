@@ -63,14 +63,14 @@ public class Namespace private constructor(
 
     public companion object {
 
-        private val EMPTY = Namespace(emptyArray())
+        private val ROOT = Namespace(emptyArray())
 
-        public fun empty(): Namespace = EMPTY
+        public fun root(): Namespace = ROOT
 
         @JvmStatic
         public fun of(vararg levels: String): Namespace {
             if (levels.isEmpty()) {
-                return empty()
+                return root()
             }
             return Namespace(arrayOf(*levels))
         }
@@ -78,7 +78,7 @@ public class Namespace private constructor(
         @JvmStatic
         public fun of(levels: Collection<String>): Namespace {
             if (levels.isEmpty()) {
-                return empty()
+                return root()
             }
             return Namespace(levels.toTypedArray())
         }

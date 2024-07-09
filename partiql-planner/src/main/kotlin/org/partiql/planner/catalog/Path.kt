@@ -6,7 +6,9 @@ import java.util.function.Consumer
 /**
  * The routine resolution path, accessible via PATH.
  */
-public class Path private constructor(private val namespaces: List<Namespace>) : Iterable<Namespace> {
+public class Path private constructor(
+    private val namespaces: List<Namespace>,
+) : Iterable<Namespace> {
 
     public companion object {
 
@@ -38,5 +40,5 @@ public class Path private constructor(private val namespaces: List<Namespace>) :
         return namespaces.spliterator()
     }
 
-    override fun toString(): String = "PATH = (${namespaces.joinToString()})"
+    override fun toString(): String = "PATH: (${namespaces.joinToString()})"
 }

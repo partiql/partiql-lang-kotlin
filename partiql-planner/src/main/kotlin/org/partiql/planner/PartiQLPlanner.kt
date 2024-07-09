@@ -4,8 +4,7 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PartiQLPlan
-import org.partiql.spi.connector.ConnectorMetadata
-import java.time.Instant
+import org.partiql.planner.catalog.Session
 
 /**
  * PartiQLPlanner is responsible for transforming an AST into PartiQL's logical query plan.
@@ -32,24 +31,6 @@ public interface PartiQLPlanner {
         public val problems: List<Problem>,
     )
 
-    /**
-     * From [org.partiql.lang.planner.transforms]
-     *
-     * @property queryId
-     * @property userId
-     * @property currentCatalog
-     * @property currentDirectory
-     * @property catalogs
-     * @property instant
-     */
-    public class Session(
-        public val queryId: String,
-        public val userId: String,
-        public val currentCatalog: String,
-        public val currentDirectory: List<String> = emptyList(),
-        public val catalogs: Map<String, ConnectorMetadata> = emptyMap(),
-        public val instant: Instant = Instant.now(),
-    )
     public companion object {
 
         @JvmStatic
