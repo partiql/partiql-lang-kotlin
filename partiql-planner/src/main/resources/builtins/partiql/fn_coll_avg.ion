@@ -1,0 +1,12 @@
+{
+  name: coll_avg,
+  type: fn,
+  description:'''
+    Placeholder for `coll_avg` description
+  ''',
+  properties: [],
+  impls: [
+    (fn collection::bag -> dynamic),
+    (fn collection::list -> dynamic),
+  ]
+}

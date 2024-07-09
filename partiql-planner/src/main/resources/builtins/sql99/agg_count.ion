@@ -1,0 +1,12 @@
+{
+  name: count,
+  type: agg,
+  description:'''
+    Placeholder for `count` description
+  ''',
+  properties: [],
+  impls: [
+    (agg -> int), // COUNT(*)
+    (agg value::dynamic -> int),
+  ]
+}

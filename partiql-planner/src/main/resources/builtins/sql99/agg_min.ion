@@ -1,0 +1,18 @@
+{
+  name: min,
+  type: agg,
+  description:'''
+    Placeholder for `min` description
+  ''',
+  properties: [],
+  impls: [
+    (agg value::tinyint -> tinyint),
+    (agg value::smallint -> smallint),
+    (agg value::int -> int),
+    (agg value::bigint -> bigint),
+    (agg value::numeric -> numeric),
+    (agg value::decimal -> decimal),
+    (agg value::real -> real),
+    (agg value::double -> double),
+  ]
+}
