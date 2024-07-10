@@ -23,6 +23,17 @@ dependencies {
     implementation(Deps.kotlinxCollections)
 }
 
+tasks.shadowJar {
+    configurations = listOf(project.configurations.shadow.get())
+}
+
+// Workaround for https://github.com/johnrengelman/shadow/issues/651
+components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
+    c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
+        skip()
+    }
+}
+
 publish {
     artifactId = "partiql-types"
     name = "PartiQL Types"
