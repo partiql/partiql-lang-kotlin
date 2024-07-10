@@ -298,21 +298,14 @@ internal class PlanTyper(
         }
 
         /**
-         * @return whether each type of the [lhs] is equal to its counterpart on the [rhs]
+         * @return whether each type of the [lhs] is comparable to its counterpart on the [rhs]
          * @param lhs should be typed already
          * @param rhs should be typed already
          */
         private fun setOpSchemaTypesMatch(lhs: Rel, rhs: Rel): Boolean {
             // TODO: [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md)
-            //  states that the types must be "comparable". The below code ONLY makes sure that types need to be
-            //  the same. In the future, we need to add support for checking comparable types.
-            for (i in 0..lhs.type.schema.lastIndex) {
-                val lhsBindingType = lhs.type.schema[i].type
-                val rhsBindingType = rhs.type.schema[i].type
-                if (lhsBindingType != rhsBindingType) {
-                    return false
-                }
-            }
+            //  states that the types must be "comparable". For now, we will always return true. In the future, we need
+            //  to add support for checking comparable types.
             return true
         }
 
