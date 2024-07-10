@@ -413,13 +413,13 @@ internal object RelConverter {
             val lhs = input
             val rhs = visitExprSFW(setOp.operand, nil)
             val quantifier = when (setOp.type.setq) {
-                SetQuantifier.ALL -> Rel.Op.Set.Quantifier.ALL
-                null, SetQuantifier.DISTINCT -> Rel.Op.Set.Quantifier.DISTINCT
+                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
             }
             val op = when (setOp.type.type) {
-                SetOp.Type.UNION -> Rel.Op.Set.Union(quantifier, lhs, rhs, false)
-                SetOp.Type.EXCEPT -> Rel.Op.Set.Except(quantifier, lhs, rhs, false)
-                SetOp.Type.INTERSECT -> Rel.Op.Set.Intersect(quantifier, lhs, rhs, false)
+                SetOp.Type.UNION -> Rel.Op.Union(quantifier, lhs, rhs, false)
+                SetOp.Type.EXCEPT -> Rel.Op.Except(quantifier, lhs, rhs, false)
+                SetOp.Type.INTERSECT -> Rel.Op.Intersect(quantifier, lhs, rhs, false)
             }
             return rel(type, op)
         }

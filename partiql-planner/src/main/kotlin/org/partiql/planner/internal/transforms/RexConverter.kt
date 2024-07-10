@@ -644,14 +644,14 @@ internal object RexConverter {
                 op = Rel.Op.Scan(visitExpr(node.rhs, ctx))
             )
             val quantifier = when (node.type.setq) {
-                SetQuantifier.ALL -> Rel.Op.Set.Quantifier.ALL
-                null, SetQuantifier.DISTINCT -> Rel.Op.Set.Quantifier.DISTINCT
+                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
             }
             val isOuter = node.outer == true
             val op = when (node.type.type) {
-                SetOp.Type.UNION -> Rel.Op.Set.Union(quantifier, lhs, rhs, isOuter)
-                SetOp.Type.EXCEPT -> Rel.Op.Set.Except(quantifier, lhs, rhs, isOuter)
-                SetOp.Type.INTERSECT -> Rel.Op.Set.Intersect(quantifier, lhs, rhs, isOuter)
+                SetOp.Type.UNION -> Rel.Op.Union(quantifier, lhs, rhs, isOuter)
+                SetOp.Type.EXCEPT -> Rel.Op.Except(quantifier, lhs, rhs, isOuter)
+                SetOp.Type.INTERSECT -> Rel.Op.Intersect(quantifier, lhs, rhs, isOuter)
             }
             val rel = Rel(
                 type = Rel.Type(listOf(Rel.Binding("_0", StaticType.ANY)), props = emptySet()),

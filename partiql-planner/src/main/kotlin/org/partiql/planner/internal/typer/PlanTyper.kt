@@ -242,7 +242,7 @@ internal class PlanTyper(
             return rel(type, op)
         }
 
-        override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: Rel.Type?): Rel {
+        override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility
@@ -257,7 +257,7 @@ internal class PlanTyper(
             return Rel(type, node.copy(lhs = lhs, rhs = rhs))
         }
 
-        override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: Rel.Type?): Rel {
+        override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility
@@ -272,7 +272,7 @@ internal class PlanTyper(
             return Rel(type, node.copy(lhs = lhs, rhs = rhs))
         }
 
-        override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: Rel.Type?): Rel {
+        override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility

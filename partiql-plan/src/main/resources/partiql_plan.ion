@@ -73,6 +73,12 @@ identifier::[
   ],
 ]
 
+// [ ALL | DISTINCT ]
+set_quantifier::[
+  ALL,
+  DISTINCT,
+]
+
 // Rex
 rex::{
   type: static_type,
@@ -240,29 +246,23 @@ rel::{
       ],
     },
 
-    set::[
-      union::{
-        quantifier: quantifier,
-        lhs: rel,
-        rhs: rel,
-      },
+    union::{
+      setq: set_quantifier,
+      lhs: rel,
+      rhs: rel,
+    },
 
-      intersect::{
-        quantifier: quantifier,
-        lhs: rel,
-        rhs: rel,
-      },
+    intersect::{
+      setq: set_quantifier,
+      lhs: rel,
+      rhs: rel,
+    },
 
-      except::{
-        quantifier: quantifier,
-        lhs: rel,
-        rhs: rel,
-      },
-
-      _::[
-        quantifier::[ ALL, DISTINCT ],
-      ]
-    ],
+    except::{
+      setq: set_quantifier,
+      lhs: rel,
+      rhs: rel,
+    },
 
     limit::{
       input:  rel,
