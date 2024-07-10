@@ -28,6 +28,17 @@ dependencies {
     implementation(Deps.jgenhtml)
 }
 
+tasks.shadowJar {
+    configurations = listOf(project.configurations.shadow.get())
+}
+
+// Workaround for https://github.com/johnrengelman/shadow/issues/651
+components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
+    c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
+        skip()
+    }
+}
+
 // Need to add this as we have both Java and Kotlin sources. Dokka already handles multi-language projects. If
 // Javadoc is enabled, we end up overwriting index.html (causing compilation errors).
 tasks.withType<Javadoc>() {
