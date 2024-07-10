@@ -67,11 +67,20 @@ public class Namespace private constructor(
 
         public fun empty(): Namespace = EMPTY
 
+        @JvmStatic
         public fun of(vararg levels: String): Namespace {
             if (levels.isEmpty()) {
                 return empty()
             }
             return Namespace(arrayOf(*levels))
+        }
+
+        @JvmStatic
+        public fun of(levels: Collection<String>): Namespace {
+            if (levels.isEmpty()) {
+                return empty()
+            }
+            return Namespace(levels.toTypedArray())
         }
     }
 }

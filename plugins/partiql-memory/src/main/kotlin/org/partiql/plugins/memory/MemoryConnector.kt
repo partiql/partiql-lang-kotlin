@@ -16,45 +16,79 @@
 package org.partiql.plugins.memory
 
 import com.amazon.ionelement.api.StructElement
+import org.partiql.eval.bindings.Binding
+import org.partiql.eval.bindings.Bindings
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Table
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorFnProvider
-import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.connector.sql.SqlConnector
-import org.partiql.spi.connector.sql.SqlMetadata
-import org.partiql.spi.fn.FnExperimental
 
 /**
  * This is a plugin used for testing and is not a versioned API per semver.
  */
-public class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector() {
+public class MemoryConnector private constructor(
+    private val name: String,
+    private val tables: Map<String, MemoryTable>,
+) : Connector {
 
-    private val bindings = MemoryBindings(catalog)
+    override fun getBindings(): Bindings = bindings
 
-    override fun getBindings(): ConnectorBindings = bindings
+    override fun getCatalog(): Catalog = catalog
 
-    override fun getMetadata(session: ConnectorSession): SqlMetadata = MemoryMetadata(catalog, session, catalog.infoSchema)
-
-    @OptIn(FnExperimental::class)
-    override fun getFunctions(): ConnectorFnProvider = catalog.getFunctions()
-
-    internal class Factory(private val catalogs: List<MemoryCatalog>) : Connector.Factory {
+    /**
+     * For use with ServiceLoader to instantiate a connector from an Ion config.
+     */
+    internal class Factory : Connector.Factory {
 
         override val name: String = "memory"
 
-        override fun create(catalogName: String, config: StructElement?): MemoryConnector {
-            val catalog = catalogs.firstOrNull { it.name == catalogName }
-                ?: error("Catalog $catalogName is not registered in the MemoryPlugin")
-            return MemoryConnector(catalog)
+        override fun create(config: StructElement): Connector {
+            TODO("Instantiation of a MemoryConnector via the factory is currently not supported")
         }
     }
 
     public companion object {
 
-        /**
-         * A connector whose catalogs holds no binding and all SQL-92 function and PartiQL-Builtin
-         */
         @JvmStatic
-        public fun partiQL(): MemoryConnector = MemoryConnector(MemoryCatalog.PartiQL().name("default").build())
+        public fun builder(): Builder = Builder()
+
+        public class Builder internal constructor() {
+
+            private var name: String? = null
+            private var tables: MutableMap<String, MemoryTable> = mutableMapOf()
+
+            public fun name(name: String): Builder = apply { this.name = name }
+
+            public fun createTable(table: MemoryTable): Builder = apply { tables[table.getName()] = table }
+
+            public fun build(): MemoryConnector = MemoryConnector(name!!, tables)
+        }
+    }
+
+    /**
+     * Implement [Bindings] over the tables map.
+     */
+    private val bindings = object : Bindings {
+        override fun getBindings(name: String): Bindings? = null
+        override fun getBinding(name: String): Binding? = tables[name]
+    }
+
+    /**
+     * Implement [Catalog] over the tables map.
+     */
+    private val catalog = object : Catalog {
+
+        override fun getName(): String = name
+
+        override fun getTable(name: Name): Table? {
+            if (name.hasNamespace()) {
+                error("MemoryCatalog does not support namespaces")
+            }
+            return tables[name.getName()]
+        }
+
+        override fun listTables(): Collection<Name> {
+            return tables.keys.map { Name.of(it) }
+        }
     }
 }

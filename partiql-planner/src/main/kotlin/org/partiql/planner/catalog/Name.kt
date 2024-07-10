@@ -1,24 +1,28 @@
 package org.partiql.planner.catalog
 
-import java.util.Spliterator
-import java.util.function.Consumer
-
 /**
  * Thin wrapper over a list of strings.
  */
-public data class Name(public val steps: List<String>) : Iterable<String> {
+public data class Name(
+    private val namespace: Namespace,
+    private val name: String,
+) {
+
+    public fun getNamespace(): Namespace = namespace
+
+    public fun hasNamespace(): Boolean = !namespace.isEmpty()
+
+    public fun getName(): String = name
 
     public companion object {
 
         @JvmStatic
-        public fun of(vararg steps: String): Name = Name(steps.toList())
+        public fun of(vararg names: String): Name {
+            assert(names.size > 1) { "Cannot create an empty" }
+            return Name(
+                namespace = Namespace.of(*names.drop(1).toTypedArray()),
+                name = names.last(),
+            )
+        }
     }
-
-    public operator fun get(index: Int): String = steps[index]
-
-    override fun forEach(action: Consumer<in String>?): Unit = steps.forEach(action)
-
-    override fun iterator(): Iterator<String> = steps.iterator()
-
-    override fun spliterator(): Spliterator<String> = steps.spliterator()
 }

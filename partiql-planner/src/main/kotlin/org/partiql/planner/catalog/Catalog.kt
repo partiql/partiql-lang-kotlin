@@ -25,32 +25,32 @@ public interface Catalog {
     /**
      * List top-level tables.
      */
-    public fun listTables(): Name? = null
+    public fun listTables(): Collection<Name> = listTables(Namespace.empty())
 
     /**
      * List all tables under this namespace.
      *
      * @param namespace
      */
-    public fun listTables(namespace: Namespace): List<Name> = emptyList()
+    public fun listTables(namespace: Namespace): Collection<Name> = emptyList()
 
     /**
      * List top-level namespaces from the catalog.
      */
-    public fun listNamespaces(): Collection<Namespace> = emptyList()
+    public fun listNamespaces(): Collection<Namespace> = listNamespaces(Namespace.empty())
 
     /**
      * List all child namespaces from the namespace.
      *
      * @param namespace
      */
-    public fun listNamespaces(namespace: Namespace)
+    public fun listNamespaces(namespace: Namespace): Collection<Namespace> = emptyList()
 
     /**
-     * Get a function's variants by name.
+     * Get a routine's variants by name.
      *
      * @param name  The case-sensitive [Routine] name.
      * @return A collection of all [Routine]s in the current namespace with this name.
      */
-    public fun getFunctions(name: Name): Collection<Routine> = emptyList()
+    public fun getRoutines(name: Name): Collection<Routine> = emptyList()
 }

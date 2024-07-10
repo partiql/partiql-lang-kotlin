@@ -18,7 +18,6 @@ package org.partiql.plugins.memory
 import org.partiql.spi.Plugin
 import org.partiql.spi.connector.Connector
 
-public class MemoryPlugin(catalogs: List<MemoryCatalog>) : Plugin {
-
-    override val factory: Connector.Factory = MemoryConnector.Factory(catalogs)
+public object MemoryPlugin : Plugin {
+    override val factory: Connector.Factory = MemoryConnector.Factory()
 }
