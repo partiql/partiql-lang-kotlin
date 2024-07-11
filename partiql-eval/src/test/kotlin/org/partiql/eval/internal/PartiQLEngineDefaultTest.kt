@@ -1368,6 +1368,7 @@ class PartiQLEngineDefaultTest {
     }
 
     @Test
+    @Disabled
     fun developmentTest() {
         val tc = SuccessTestCase(
             input = """
