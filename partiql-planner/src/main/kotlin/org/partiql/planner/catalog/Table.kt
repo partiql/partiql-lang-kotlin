@@ -10,7 +10,7 @@ public interface Table {
     /**
      * The table's name.
      */
-    public fun getName(): String
+    public fun getName(): Name
 
     /**
      * The table's schema.
