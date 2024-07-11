@@ -1,10 +1,9 @@
 imports::{
   kotlin: [
+    identifier::'org.partiql.planner.catalog.Identifier',
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
-    fn_signature::'org.partiql.spi.fn.FnSignature',
-    agg_signature::'org.partiql.spi.fn.AggSignature',
     problem::'org.partiql.errors.Problem'
   ],
 }
@@ -18,23 +17,9 @@ parti_q_l_plan::{
 // When transforming to the public plan we produce a symbol table,
 // replacing each internal ref with a pointer ref to the public plan's catalog list.
 
-ref::[
-  obj::{
-    catalog: string,
-    path: list::[string],
-    type: static_type,
-  },
-  fn::{
-    catalog: string,
-    path: list::[string],
-    signature: fn_signature,
-  },
-  agg::{
-    catalog: string,
-    path: list::[string],
-    signature: agg_signature,
-  },
-  _::[
+ref::{
+  name: string, // TEMPORARY
+  _: [
     cast::{
       input: partiql_value_type,
       target: partiql_value_type,
@@ -46,7 +31,7 @@ ref::[
       isNullable: bool
     }
   ]
-]
+}
 
 // Statements
 
@@ -54,25 +39,6 @@ statement::[
   query::{
     root: rex,
   },
-]
-
-// Identifiers
-
-identifier::[
-  symbol::{
-    symbol:           string,
-    case_sensitivity: case_sensitivity,
-  },
-  qualified::{
-    root:   symbol,
-    steps:  list::[symbol],
-  },
-  _::[
-    case_sensitivity::[
-      SENSITIVE,
-      INSENSITIVE,
-    ],
-  ],
 ]
 
 // Rex
@@ -92,7 +58,7 @@ rex::{
       },
       // Refers to a value in the database environment.
       global::{
-        ref: '.ref.obj',
+        ref: ref,
       },
       unresolved::{
         identifier: identifier,
@@ -136,7 +102,7 @@ rex::{
       },
 
       static::{
-        fn: '.ref.fn',
+        fn: ref,
         args: list::[rex],
       },
 
@@ -150,7 +116,7 @@ rex::{
         candidates: list::[candidate],
         _: [
           candidate::{
-            fn: '.ref.fn',
+            fn: ref,
             coercions: list::[optional::'.ref.cast'],
           }
         ]
@@ -368,7 +334,7 @@ rel::{
             args: list::[rex],
           },
           resolved::{
-            agg:  '.ref.agg',
+            agg:  ref,
             set_quantifier: set_quantifier,
             args: list::[rex],
           },
@@ -382,7 +348,7 @@ rel::{
       paths: list::[path],
       _: [
         path::{
-          root: '.rex.op',
+          root: ref,
           steps: list::[step],
         },
         step::{

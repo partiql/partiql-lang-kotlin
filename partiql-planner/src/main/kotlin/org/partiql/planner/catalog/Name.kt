@@ -1,22 +1,22 @@
 package org.partiql.planner.catalog
 
-import org.partiql.ast.Identifier
-import org.partiql.ast.sql.sql
-
 /**
  * A reference to a named object in a catalog.
  */
 public class Name(
     private val namespace: Namespace,
-    private val name: Identifier.Symbol,
+    private val name: Identifier,
 ) {
 
     public fun getNamespace(): Namespace = namespace
 
     public fun hasNamespace(): Boolean = !namespace.isEmpty()
 
-    public fun getName(): String = name.symbol
+    public fun getName(): Identifier = name
 
+    /**
+     * Compares two names including their namespaces and symbols.
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true
@@ -33,18 +33,18 @@ public class Name(
     override fun hashCode(): Int {
         var result = 1
         result = 31 * result + namespace.hashCode()
-        result = 31 * result + name.symbol.hashCode()
+        result = 31 * result + name.hashCode()
         return result
     }
 
     /**
-     * Return the SQL identifier representation of this name.
+     * Return the SQL name representation of this name.
      */
     override fun toString(): String {
         return if (namespace.isEmpty()) {
-            name.sql()
+            name.toString()
         } else {
-            "${namespace}.${name.sql()}"
+            "$namespace.$name"
         }
     }
 
@@ -56,63 +56,46 @@ public class Name(
      * @return
      */
     public fun matches(other: Name, ignoreCase: Boolean = false): Boolean {
-        if (ignoreCase && !matches(name, other.name)) {
+        if (ignoreCase && !(this.name.matches(other.name))) {
             return false
-        } else if (name.symbol != other.name.symbol) {
+        } else if (name != other.name) {
             return false
         }
         return this.namespace.matches(other.namespace, ignoreCase)
     }
 
-    // TODO de-duplicate or define on Identifier class
-    private fun matches(lhs: Identifier.Symbol, rhs: Identifier.Symbol): Boolean {
-        val ignoreCase = (
-            lhs.caseSensitivity == Identifier.CaseSensitivity.INSENSITIVE ||
-                rhs.caseSensitivity == Identifier.CaseSensitivity.INSENSITIVE
-            )
-        return lhs.symbol.equals(rhs.symbol, ignoreCase)
-    }
-
     public companion object {
 
+        /**
+         * Construct a name from a string.
+         */
         @JvmStatic
         public fun of(vararg names: String): Name = of(names.toList())
 
+        /**
+         * Construct a name from a collection of strings.
+         */
         @JvmStatic
         public fun of(names: Collection<String>): Name {
             assert(names.size > 1) { "Cannot create an empty name" }
             val namespace = Namespace.of(names.drop(1))
-            val name = Identifier.Symbol(names.last(), Identifier.CaseSensitivity.SENSITIVE)
+            val name = Identifier.delimited(names.last())
             return Name(namespace, name)
         }
 
         @JvmStatic
-        public fun of(identifier: Identifier): Name = when (identifier) {
-            is Identifier.Qualified -> of(identifier)
-            is Identifier.Symbol -> of(identifier)
-        }
-
-        @JvmStatic
-        public fun of(identifier: Identifier.Symbol): Name {
+        public fun of(name: Identifier): Name {
             return Name(
                 namespace = Namespace.root(),
-                name = identifier
+                name = name
             )
         }
 
         @JvmStatic
-        public fun of(identifier: Identifier.Qualified): Name {
-            val identifiers = mutableListOf<Identifier.Symbol>()
-            identifiers.add(identifier.root)
-            identifiers.addAll(identifier.steps)
-            return of(identifiers)
-        }
-
-        @JvmStatic
-        public fun of(identifiers: Collection<Identifier.Symbol>): Name {
-            assert(identifiers.size > 1) { "Cannot create an empty name" }
-            val namespace = Namespace.of(identifiers.drop(1))
-            val name = identifiers.last()
+        public fun of(names: Collection<Identifier>): Name {
+            assert(names.size > 1) { "Cannot create an empty name" }
+            val namespace = Namespace.of(names.drop(1))
+            val name = names.last()
             return Name(namespace, name)
         }
     }

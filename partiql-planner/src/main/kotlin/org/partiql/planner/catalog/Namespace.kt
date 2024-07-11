@@ -1,7 +1,5 @@
 package org.partiql.planner.catalog
 
-import org.partiql.ast.Identifier
-import org.partiql.ast.sql.sql
 import java.util.Spliterator
 import java.util.function.Consumer
 
@@ -13,10 +11,10 @@ import java.util.function.Consumer
  *  - Calcite — https://github.com/apache/calcite/blob/main/core/src/main/java/org/apache/calcite/schema/Schema.java
  */
 public class Namespace private constructor(
-    private val levels: Array<Identifier.Symbol>,
-) : Iterable<Identifier.Symbol> {
+    private val levels: Array<Identifier>,
+) : Iterable<Identifier> {
 
-    public fun getLevels(): Array<Identifier.Symbol> {
+    public fun getLevels(): Array<Identifier> {
         return levels
     }
 
@@ -28,19 +26,19 @@ public class Namespace private constructor(
         return levels.isEmpty()
     }
 
-    public operator fun get(index: Int): Identifier.Symbol {
+    public operator fun get(index: Int): Identifier {
         return levels[index]
     }
 
-    override fun forEach(action: Consumer<in Identifier.Symbol>?) {
+    override fun forEach(action: Consumer<in Identifier>?) {
         levels.toList().forEach(action)
     }
 
-    override fun iterator(): Iterator<Identifier.Symbol> {
+    override fun iterator(): Iterator<Identifier> {
         return levels.iterator()
     }
 
-    override fun spliterator(): Spliterator<Identifier.Symbol> {
+    override fun spliterator(): Spliterator<Identifier> {
         return levels.toList().spliterator()
     }
 
@@ -59,7 +57,9 @@ public class Namespace private constructor(
      */
     public override fun hashCode(): Int {
         var result = 1
-        for (element in levels) result = 31 * result + element.symbol.hashCode()
+        for (level in levels) {
+            result = 31 * result + level.hashCode()
+        }
         return result
     }
 
@@ -67,7 +67,7 @@ public class Namespace private constructor(
      * Return the SQL identifier representation of this namespace.
      */
     public override fun toString(): String {
-        return levels.joinToString(".") { it.sql() }
+        return levels.joinToString(".")
     }
 
     /**
@@ -91,22 +91,13 @@ public class Namespace private constructor(
         for (i in 0 until n) {
             val lhs = levels[i]
             val rhs = other[i]
-            if (ignoreCase && !matches(lhs, rhs)) {
+            if (ignoreCase && !lhs.matches(rhs)) {
                 return false
-            } else if (lhs.symbol != rhs.symbol) {
+            } else if (lhs != rhs) {
                 return false
             }
         }
         return true
-    }
-
-    // TODO de-duplicate or define on Identifier class
-    private fun matches(lhs: Identifier.Symbol, rhs: Identifier.Symbol): Boolean {
-        val ignoreCase = (
-            lhs.caseSensitivity == Identifier.CaseSensitivity.INSENSITIVE ||
-                rhs.caseSensitivity == Identifier.CaseSensitivity.INSENSITIVE
-            )
-        return lhs.symbol.equals(rhs.symbol, ignoreCase)
     }
 
     public companion object {
@@ -123,34 +114,17 @@ public class Namespace private constructor(
             if (levels.isEmpty()) {
                 return root()
             }
-            return Namespace(
-                levels
-                    .map { Identifier.Symbol(it, Identifier.CaseSensitivity.SENSITIVE) }
-                    .toTypedArray()
+            return Namespace(levels.map { Identifier.delimited(it) }.toTypedArray()
             )
         }
 
         @JvmStatic
-        public fun of(identifier: Identifier): Namespace = when (identifier) {
-            is Identifier.Qualified -> of(identifier)
-            is Identifier.Symbol -> of(identifier)
-        }
-
-        @JvmStatic
-        public fun of(identifier: Identifier.Symbol): Namespace {
+        public fun of(identifier: Identifier): Namespace {
             return Namespace(arrayOf(identifier))
         }
 
         @JvmStatic
-        public fun of(identifier: Identifier.Qualified): Namespace {
-            val levels = mutableListOf<Identifier.Symbol>()
-            levels.add(identifier.root)
-            levels.addAll(identifier.steps)
-            return Namespace(levels.toTypedArray())
-        }
-
-        @JvmStatic
-        public fun of(identifiers: Collection<Identifier.Symbol>): Namespace {
+        public fun of(identifiers: Collection<Identifier>): Namespace {
             return Namespace(identifiers.toTypedArray())
         }
     }

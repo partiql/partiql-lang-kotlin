@@ -24,9 +24,9 @@ plugins {
 }
 
 dependencies {
+    api(project(":partiql-ast"))
     api(project(":partiql-plan"))
     api(project(":partiql-types"))
-    implementation(project(":partiql-ast"))
     implementation(Deps.dotlin)
     implementation(Deps.ionElement)
     // Test
@@ -93,7 +93,6 @@ tasks.register<Exec>("codegen") {
         "--poems", "builder",
         "--poems", "util",
         "--opt-in", "org.partiql.value.PartiQLValueExperimental",
-        "--opt-in", "org.partiql.spi.fn.FnExperimental",
         "./src/main/resources/partiql_plan_internal.ion"
     )
 }
@@ -112,14 +111,14 @@ tasks.register<Copy>("copyUtils") {
 //
 // !! IMPORTANT !! — only run manually, as this will overwrite the existing ir/Nodes.kt.
 //
-// tasks.register<Copy>("copyNodes") {
-//     includeEmptyDirs = false
-//     dependsOn("codegen")
-//     filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
-//     from("$buildDir/tmp")
-//     include("**/Nodes.kt")
-//     into("src/main/kotlin")
-// }
+tasks.register<Copy>("copyNodes") {
+    includeEmptyDirs = false
+    dependsOn("codegen")
+    filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
+    from("$buildDir/tmp")
+    include("**/Nodes.kt")
+    into("src/main/kotlin")
+}
 
 tasks.register("generate") {
     dependsOn("codegen", "copyUtils")

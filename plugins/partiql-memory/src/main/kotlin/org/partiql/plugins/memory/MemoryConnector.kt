@@ -20,6 +20,7 @@ import org.partiql.eval.bindings.Binding
 import org.partiql.eval.bindings.Bindings
 import org.partiql.planner.catalog.Catalog
 import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
 import org.partiql.spi.connector.Connector
 
@@ -80,14 +81,14 @@ public class MemoryConnector private constructor(
 
         override fun getName(): String = name
 
-        override fun getTable(name: Name): Table? {
+        override fun getTable(session: Session, name: Name): Table? {
             if (name.hasNamespace()) {
                 error("MemoryCatalog does not support namespaces")
             }
-            return tables[name.getName()]
+            return tables[name.getText()]
         }
 
-        override fun listTables(): Collection<Name> {
+        override fun listTables(session: Session): Collection<Name> {
             return tables.keys.map { Name.of(it) }
         }
     }

@@ -4,6 +4,7 @@ import org.partiql.planner.catalog.Catalog
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Routine
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
@@ -29,24 +30,24 @@ internal class LocalCatalog(
         return name
     }
 
-    override fun getTable(name: Name): Table? {
-        val path = toPath(name.getNamespace()).resolve(name.getName() + EXT)
+    override fun getTable(session: Session, name: Name): Table? {
+        val path = toPath(name.getNamespace()).resolve(name.getText() + EXT)
         if (path.notExists() || !path.isDirectory()) {
             return null
         }
-        return LocalTable(name.getName(), path)
+        return LocalTable(name.getText(), path)
     }
 
-    override fun listTables(namespace: Namespace): Collection<Name> {
+    override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
         val path = toPath(namespace)
         if (path.notExists()) {
             // throw exception?
             return emptyList()
         }
-        return super.listTables(namespace)
+        return super.listTables(session, namespace)
     }
 
-    override fun listNamespaces(namespace: Namespace): Collection<Namespace> {
+    override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
         val path = toPath(namespace)
         if (path.notExists() || path.isDirectory()) {
             // throw exception?
@@ -59,7 +60,7 @@ internal class LocalCatalog(
             .map { toNamespace(it.toPath()) }
     }
 
-    override fun getRoutines(name: Name): Collection<Routine> = emptyList()
+    override fun getRoutines(session: Session, name: Name): Collection<Routine> = emptyList()
 
     private fun toPath(namespace: Namespace): Path {
         var curr = root
