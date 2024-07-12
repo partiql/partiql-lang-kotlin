@@ -35,8 +35,10 @@ unconstrained which is not SQL-conformant and is causing issues in integrating w
 INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
 integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
 org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
-- **Breaking change**: partiql-plan: adds a set quantifier field to set operators `UNION`, `INTERSECT` and `EXCEPT`
+- **Breaking change**: partiql-plan: adds a set quantifier field to SQL set operators `UNION`, `INTERSECT`, and `EXCEPT`
+- partiql-plan: adds a dedicated Rex node for PartiQL bag operators `UNION`, `INTERSECT`, and `EXCEPT`
 - partiql-planner: Adds typing support for set operators
+- partiql-parser: parses non-SFW expressions to be PartiQL `OUTER` bag operators
 
 ### Deprecated
 

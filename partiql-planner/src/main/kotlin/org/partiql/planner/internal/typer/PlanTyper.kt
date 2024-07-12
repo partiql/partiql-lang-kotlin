@@ -249,7 +249,7 @@ internal class PlanTyper(
             if (!setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
-            if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
@@ -264,7 +264,7 @@ internal class PlanTyper(
             if (!setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
-            if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
@@ -279,7 +279,7 @@ internal class PlanTyper(
             if (!setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
-            if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
@@ -291,7 +291,7 @@ internal class PlanTyper(
                     true -> lhsBinding.name
                     false -> "_$it"
                 }
-                Rel.Binding(bindingName, unionOf(lhsBinding.type, rhsBinding.type))
+                Rel.Binding(bindingName, unionOf(lhsBinding.type, rhsBinding.type).flatten())
             }
             val type = Rel.Type(schema, props = emptySet())
             return Rel(type, node.copy(lhs = lhs, rhs = rhs))
@@ -507,6 +507,30 @@ internal class PlanTyper(
     ) : PlanRewriter<StaticType?>() {
 
         override fun visitRex(node: Rex, ctx: StaticType?): Rex = visitRexOp(node.op, node.type) as Rex
+
+        override fun visitRexOpUnion(node: Rex.Op.Union, ctx: StaticType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = unionOf(lhs.type, rhs.type).flatten()
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
+
+        override fun visitRexOpExcept(node: Rex.Op.Except, ctx: StaticType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = unionOf(lhs.type, rhs.type).flatten()
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
+
+        override fun visitRexOpIntersect(node: Rex.Op.Intersect, ctx: StaticType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = unionOf(lhs.type, rhs.type).flatten()
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
 
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex {
             // type comes from RexConverter

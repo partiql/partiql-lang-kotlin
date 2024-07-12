@@ -237,6 +237,24 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: ProblemCallback) =
             org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
 
+        override fun visitRexOpExcept(node: Rex.Op.Except, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Except(
+            lhs = visitRex(node.lhs, ctx),
+            rhs = visitRex(node.rhs, ctx),
+            setq = visitSetQuantifier(node.setq)
+        )
+
+        override fun visitRexOpIntersect(node: Rex.Op.Intersect, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Intersect(
+            lhs = visitRex(node.lhs, ctx),
+            rhs = visitRex(node.rhs, ctx),
+            setq = visitSetQuantifier(node.setq)
+        )
+
+        override fun visitRexOpUnion(node: Rex.Op.Union, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Union(
+            lhs = visitRex(node.lhs, ctx),
+            rhs = visitRex(node.rhs, ctx),
+            setq = visitSetQuantifier(node.setq)
+        )
+
         override fun visitRexOpErr(node: Rex.Op.Err, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Err(node.message)
 
         // RELATION OPERATORS
@@ -300,22 +318,22 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         override fun visitRelOpExcept(node: Rel.Op.Except, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Except(
             lhs = visitRel(node.lhs, ctx),
             rhs = visitRel(node.rhs, ctx),
-            setq = visitRelOpSetQuantifier(node.setq)
+            setq = visitSetQuantifier(node.setq)
         )
 
         override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Intersect(
             lhs = visitRel(node.lhs, ctx),
             rhs = visitRel(node.rhs, ctx),
-            setq = visitRelOpSetQuantifier(node.setq)
+            setq = visitSetQuantifier(node.setq)
         )
 
         override fun visitRelOpUnion(node: Rel.Op.Union, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Union(
             lhs = visitRel(node.lhs, ctx),
             rhs = visitRel(node.rhs, ctx),
-            setq = visitRelOpSetQuantifier(node.setq)
+            setq = visitSetQuantifier(node.setq)
         )
 
-        private fun visitRelOpSetQuantifier(node: SetQuantifier) = when (node) {
+        private fun visitSetQuantifier(node: SetQuantifier) = when (node) {
             SetQuantifier.ALL -> org.partiql.plan.SetQuantifier.ALL
             SetQuantifier.DISTINCT -> org.partiql.plan.SetQuantifier.DISTINCT
         }

@@ -500,7 +500,7 @@ expr::[
     where:    optional::expr,
     group_by: optional::group_by,
     having:   optional::expr,
-    set_op:   optional::{
+    set_op:   optional::{ // TODO modeling of `set_op` needs updated to support left-associative set ops https://github.com/partiql/partiql-lang-kotlin/issues/1507
       type:    '.set_op',
       operand: '.expr.s_f_w',
     },

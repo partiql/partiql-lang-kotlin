@@ -54,7 +54,9 @@ import org.partiql.planner.internal.ir.builder.RexOpCaseBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCoalesceBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
+import org.partiql.planner.internal.ir.builder.RexOpExceptBuilder
 import org.partiql.planner.internal.ir.builder.RexOpGlobalBuilder
+import org.partiql.planner.internal.ir.builder.RexOpIntersectBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
 import org.partiql.planner.internal.ir.builder.RexOpNullifBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
@@ -66,6 +68,7 @@ import org.partiql.planner.internal.ir.builder.RexOpStructBuilder
 import org.partiql.planner.internal.ir.builder.RexOpStructFieldBuilder
 import org.partiql.planner.internal.ir.builder.RexOpSubqueryBuilder
 import org.partiql.planner.internal.ir.builder.RexOpTupleUnionBuilder
+import org.partiql.planner.internal.ir.builder.RexOpUnionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarResolvedBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
@@ -322,6 +325,9 @@ internal data class Rex(
             is Subquery -> visitor.visitRexOpSubquery(this, ctx)
             is Select -> visitor.visitRexOpSelect(this, ctx)
             is TupleUnion -> visitor.visitRexOpTupleUnion(this, ctx)
+            is Union -> visitor.visitRexOpUnion(this, ctx)
+            is Intersect -> visitor.visitRexOpIntersect(this, ctx)
+            is Except -> visitor.visitRexOpExcept(this, ctx)
             is Err -> visitor.visitRexOpErr(this, ctx)
         }
 
@@ -744,6 +750,81 @@ internal data class Rex(
                 internal fun builder(): RexOpTupleUnionBuilder = RexOpTupleUnionBuilder()
             }
         }
+        
+        internal data class Union(
+          @JvmField
+          internal val setq: SetQuantifier,
+          @JvmField
+          internal val lhs: Rex,
+          @JvmField
+          internal val rhs: Rex,
+        ) : Op() {
+          internal override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(lhs)
+            kids.add(rhs)
+            kids.filterNotNull()
+          }
+    
+    
+          internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+              visitor.visitRexOpUnion(this, ctx)
+    
+          internal companion object {
+            @JvmStatic
+            internal fun builder(): RexOpUnionBuilder = RexOpUnionBuilder()
+          }
+        }
+    
+        internal data class Intersect(
+          @JvmField
+          internal val setq: SetQuantifier,
+          @JvmField
+          internal val lhs: Rex,
+          @JvmField
+          internal val rhs: Rex,
+        ) : Op() {
+          internal override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(lhs)
+            kids.add(rhs)
+            kids.filterNotNull()
+          }
+    
+    
+          internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+              visitor.visitRexOpIntersect(this, ctx)
+    
+          internal companion object {
+            @JvmStatic
+            internal fun builder(): RexOpIntersectBuilder = RexOpIntersectBuilder()
+          }
+        }
+    
+        internal data class Except(
+          @JvmField
+          internal val setq: SetQuantifier,
+          @JvmField
+          internal val lhs: Rex,
+          @JvmField
+          internal val rhs: Rex,
+        ) : Op() {
+          internal override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(lhs)
+            kids.add(rhs)
+            kids.filterNotNull()
+          }
+    
+    
+          internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+              visitor.visitRexOpExcept(this, ctx)
+    
+          internal companion object {
+            @JvmStatic
+            internal fun builder(): RexOpExceptBuilder = RexOpExceptBuilder()
+          }
+        }
 
         internal data class Err(
             @JvmField internal val message: String,
@@ -958,8 +1039,6 @@ internal data class Rel(
           internal val lhs: Rel,
           @JvmField
           internal val rhs: Rel,
-          @JvmField
-          internal val isOuter: Boolean,
         ) : Op() {
           internal override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
@@ -985,8 +1064,6 @@ internal data class Rel(
           internal val lhs: Rel,
           @JvmField
           internal val rhs: Rel,
-          @JvmField
-          internal val isOuter: Boolean,
         ) : Op() {
           internal override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
@@ -1012,8 +1089,6 @@ internal data class Rel(
           internal val lhs: Rel,
           @JvmField
           internal val rhs: Rel,
-          @JvmField
-          internal val isOuter: Boolean,
         ) : Op() {
           internal override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()

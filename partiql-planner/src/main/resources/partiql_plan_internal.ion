@@ -216,6 +216,24 @@ rex::{
       args: list::[rex],
     },
 
+    union::{
+      setq: set_quantifier,
+      lhs: rex,
+      rhs: rex,
+    },
+
+    intersect::{
+      setq: set_quantifier,
+      lhs: rex,
+      rhs: rex,
+    },
+
+    except::{
+      setq: set_quantifier,
+      lhs: rex,
+      rhs: rex,
+    },
+
     err::{
       message: string,
     },
@@ -279,21 +297,18 @@ rel::{
       setq: set_quantifier,
       lhs: rel,
       rhs: rel,
-      is_outer: bool,
     },
 
     intersect::{
       setq: set_quantifier,
       lhs: rel,
       rhs: rel,
-      is_outer: bool,
     },
 
     except::{
       setq: set_quantifier,
       lhs: rel,
       rhs: rel,
-      is_outer: bool,
     },
 
     limit::{

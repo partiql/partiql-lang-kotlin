@@ -752,12 +752,33 @@ internal class PartiQLPigVisitor(
      *
      */
 
+    /**
+     * Verifies if all of the [args] are
+     * 1. [PartiqlAst.Expr.Select] or
+     * 2. [PartiqlAst.Expr.BagOp] and is a SQL Set op (i.e. not an `OUTER` bag op)
+     */
+    private fun argsAreSFW(args: List<PartiqlAst.Expr>): Boolean {
+        return args.all { arg ->
+            arg is PartiqlAst.Expr.Select || (arg is PartiqlAst.Expr.BagOp && isOuter(arg.op))
+        }
+    }
+
+    private fun isOuter(op: PartiqlAst.BagOpType): Boolean {
+        return op is PartiqlAst.BagOpType.OuterUnion || op is PartiqlAst.BagOpType.OuterExcept || op is PartiqlAst.BagOpType.OuterIntersect
+    }
+
     override fun visitIntersect(ctx: PartiQLParser.IntersectContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) all() else distinct()
         val (intersect, metas) = when (ctx.OUTER()) {
-            null -> intersect() to ctx.INTERSECT().getSourceMetaContainer()
+            null -> {
+                if (argsAreSFW(listOf(lhs, rhs))) {
+                    intersect() to ctx.INTERSECT().getSourceMetaContainer()
+                } else {
+                    outerIntersect() to ctx.OUTER().getSourceMetaContainer()
+                }
+            }
             else -> outerIntersect() to ctx.OUTER().getSourceMetaContainer()
         }
         bagOp(intersect, quantifier, listOf(lhs, rhs), metas)
@@ -768,7 +789,13 @@ internal class PartiQLPigVisitor(
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) all() else distinct()
         val (except, metas) = when (ctx.OUTER()) {
-            null -> except() to ctx.EXCEPT().getSourceMetaContainer()
+            null -> {
+                if (argsAreSFW(listOf(lhs, rhs))) {
+                    except() to ctx.EXCEPT().getSourceMetaContainer()
+                } else {
+                    outerExcept() to ctx.OUTER().getSourceMetaContainer()
+                }
+            }
             else -> outerExcept() to ctx.OUTER().getSourceMetaContainer()
         }
         bagOp(except, quantifier, listOf(lhs, rhs), metas)
@@ -779,7 +806,13 @@ internal class PartiQLPigVisitor(
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) all() else distinct()
         val (union, metas) = when (ctx.OUTER()) {
-            null -> union() to ctx.UNION().getSourceMetaContainer()
+            null -> {
+                if (argsAreSFW(listOf(lhs, rhs))) {
+                    union() to ctx.UNION().getSourceMetaContainer()
+                } else {
+                    outerUnion() to ctx.OUTER().getSourceMetaContainer()
+                }
+            }
             else -> outerUnion() to ctx.OUTER().getSourceMetaContainer()
         }
         bagOp(union, quantifier, listOf(lhs, rhs), metas)
