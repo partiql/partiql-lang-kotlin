@@ -317,7 +317,6 @@ public interface Datum extends Iterable<Datum> {
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
-    @NotNull
     default Datum get(@NotNull String name) {
         throw new UnsupportedOperationException();
     }
@@ -331,7 +330,6 @@ public interface Datum extends Iterable<Datum> {
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
-    @NotNull
     default Datum getInsensitive(@NotNull String name) {
         throw new UnsupportedOperationException();
     }

@@ -15,10 +15,10 @@ import java.util.Map;
 class DatumStruct implements Datum {
 
     @NotNull
-    private final Map<String, List<Datum>> _delegate;
+    private final HashMap<String, List<Datum>> _delegate;
 
     @NotNull
-    private final Map<String, List<Datum>> _delegateNormalized;
+    private final HashMap<String, List<Datum>> _delegateNormalized;
 
     private final static PType _type = PType.typeStruct();
 
@@ -50,29 +50,47 @@ class DatumStruct implements Datum {
         ).iterator();
     }
 
-    @NotNull
     @Override
     public Datum get(@NotNull String name) {
-        try {
-            return _delegate.get(name).get(0);
-        } catch (IndexOutOfBoundsException ex) {
-            throw new NullPointerException("Could not find struct key: " + name);
+        List<Datum> values = _delegate.get(name);
+        if (values == null) {
+            return null;
         }
+        if (values.isEmpty()) {
+            return null;
+        }
+        return values.get(0);
     }
 
-    @NotNull
     @Override
     public Datum getInsensitive(@NotNull String name) {
-        try {
-            return _delegateNormalized.get(name).get(0);
-        } catch (IndexOutOfBoundsException ex) {
-            throw new NullPointerException("Could not find struct key: " + name);
+        List<Datum> values = _delegateNormalized.get(name.toLowerCase());
+        if (values == null) {
+            return null;
         }
+        if (values.isEmpty()) {
+            return null;
+        }
+        return values.get(0);
     }
 
     @NotNull
     @Override
     public PType getType() {
         return _type;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("struct::{ ");
+        for (Map.Entry<String, List<Datum>> entry : _delegate.entrySet()) {
+            sb.append(entry.getKey());
+            sb.append(": ");
+            sb.append(entry.getValue().toString());
+            sb.append(", ");
+        }
+        sb.append(" }");
+        return sb.toString();
     }
 }

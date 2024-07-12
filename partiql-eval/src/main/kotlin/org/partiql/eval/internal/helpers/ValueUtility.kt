@@ -49,7 +49,6 @@ internal object ValueUtility {
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if the value's type is not a text type (string, symbol, char)
      */
-    @OptIn(PartiQLValueExperimental::class)
     fun Datum.getText(): String {
         return when (this.type.kind) {
             PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
@@ -67,7 +66,6 @@ internal object ValueUtility {
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if type is not an integer type
      */
-    @OptIn(PartiQLValueExperimental::class)
     fun Datum.getBigIntCoerced(): BigInteger {
         return when (this.type.kind) {
             PType.Kind.TINYINT -> this.byte.toInt().toBigInteger()
@@ -90,7 +88,6 @@ internal object ValueUtility {
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if type is not an integer type
      */
-    @OptIn(PartiQLValueExperimental::class)
     fun Datum.getInt32Coerced(): Int {
         return when (this.type.kind) {
             PType.Kind.TINYINT -> this.byte.toInt()

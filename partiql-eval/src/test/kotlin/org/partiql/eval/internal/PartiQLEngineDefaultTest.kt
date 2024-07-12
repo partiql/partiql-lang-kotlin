@@ -9,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
-import org.partiql.eval.internal.PartiQLEngineDefaultTest.SuccessTestCase.Global
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.debug.PlanPrinter
@@ -64,6 +63,11 @@ class PartiQLEngineDefaultTest {
     @MethodSource("aggregationTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun aggregationTests(tc: SuccessTestCase) = tc.assert()
+
+    @ParameterizedTest
+    @MethodSource("joinTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun joinTests(tc: SuccessTestCase) = tc.assert()
 
     @ParameterizedTest
     @MethodSource("globalsTestCases")
@@ -151,6 +155,151 @@ class PartiQLEngineDefaultTest {
                             ]
                         """
                     ),
+                )
+            ),
+        )
+
+        @JvmStatic
+        fun joinTestCases() = listOf(
+            // LEFT OUTER JOIN -- Easy
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE [lhs, rhs]
+                    FROM << 0, 1, 2 >> lhs
+                    LEFT OUTER JOIN << 0, 2, 3 >> rhs
+                    ON lhs = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    listValue(int32Value(0), int32Value(0)),
+                    listValue(int32Value(1), int32Value(null)),
+                    listValue(int32Value(2), int32Value(2)),
+                )
+            ),
+            // LEFT OUTER JOIN -- RHS Empty
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE [lhs, rhs]
+                    FROM
+                        << 0, 1, 2 >> lhs
+                    LEFT OUTER JOIN (
+                        SELECT VALUE n
+                        FROM << 0, 2, 3 >> AS n
+                        WHERE n > 100
+                    ) rhs
+                    ON lhs = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    listValue(int32Value(0), int32Value(null)),
+                    listValue(int32Value(1), int32Value(null)),
+                    listValue(int32Value(2), int32Value(null)),
+                )
+            ),
+            // LEFT OUTER JOIN -- LHS Empty
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE [lhs, rhs]
+                    FROM <<>> lhs
+                    LEFT OUTER JOIN << 0, 2, 3>> rhs
+                    ON lhs = rhs
+                """.trimIndent(),
+                expected = bagValue<PartiQLValue>()
+            ),
+            // LEFT OUTER JOIN -- No Matches
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE [lhs, rhs]
+                    FROM << 0, 1, 2 >> lhs
+                    LEFT OUTER JOIN << 3, 4, 5 >> rhs
+                    ON lhs = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    listValue(int32Value(0), int32Value(null)),
+                    listValue(int32Value(1), int32Value(null)),
+                    listValue(int32Value(2), int32Value(null)),
+                )
+            ),
+            // RIGHT OUTER JOIN -- Easy
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE [lhs, rhs]
+                    FROM << 0, 1, 2 >> lhs
+                    RIGHT OUTER JOIN << 0, 2, 3 >> rhs
+                    ON lhs = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    listValue(int32Value(0), int32Value(0)),
+                    listValue(int32Value(2), int32Value(2)),
+                    listValue(int32Value(null), int32Value(3)),
+                )
+            ),
+            // RIGHT OUTER JOIN -- RHS Empty
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE [lhs, rhs]
+                    FROM << 0, 1, 2 >> lhs
+                    RIGHT OUTER JOIN <<>> rhs
+                    ON lhs = rhs
+                """.trimIndent(),
+                expected = bagValue<PartiQLValue>()
+            ),
+            // RIGHT OUTER JOIN -- LHS Empty
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE [lhs, rhs]
+                    FROM (
+                        SELECT VALUE n
+                        FROM << 0, 1, 2 >> AS n
+                        WHERE n > 100
+                    ) lhs RIGHT OUTER JOIN
+                        << 0, 2, 3>> rhs
+                    ON lhs = rhs
+                """.trimIndent(),
+                expected = bagValue<PartiQLValue>(
+                    listValue(int32Value(null), int32Value(0)),
+                    listValue(int32Value(null), int32Value(2)),
+                    listValue(int32Value(null), int32Value(3)),
+                )
+            ),
+            // RIGHT OUTER JOIN -- No Matches
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE [lhs, rhs]
+                    FROM << 0, 1, 2 >> lhs
+                    RIGHT OUTER JOIN << 3, 4, 5 >> rhs
+                    ON lhs = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    listValue(int32Value(null), int32Value(3)),
+                    listValue(int32Value(null), int32Value(4)),
+                    listValue(int32Value(null), int32Value(5)),
+                )
+            ),
+            // LEFT OUTER JOIN -- LATERAL
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    LEFT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(2),
+                    int32Value(12),
+                    int32Value(22),
+                )
+            ),
+            // INNER JOIN -- LATERAL
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    INNER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(2),
+                    int32Value(12),
+                    int32Value(22),
                 )
             ),
         )
@@ -517,7 +666,8 @@ class PartiQLEngineDefaultTest {
             ),
             SuccessTestCase(
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t LEFT JOIN << { 'b': 2 } >> s ON false;",
-                expected = bagValue(structValue("a" to int32Value(1), "b" to nullValue()))
+                expected = bagValue(structValue("a" to int32Value(1), "b" to nullValue())),
+                mode = PartiQLEngine.Mode.STRICT
             ),
             SuccessTestCase(
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;",
