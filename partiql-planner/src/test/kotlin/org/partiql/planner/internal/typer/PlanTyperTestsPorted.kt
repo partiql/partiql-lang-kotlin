@@ -130,7 +130,10 @@ internal class PlanTyperTestsPorted {
     companion object {
 
         private val parser = PartiQLParser.default()
-        private val planner = PartiQLPlanner.builder().signalMode().build()
+        private val planner = PartiQLPlanner
+            .builder()
+            .signalMode()
+            .build()
 
         private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
             val message = buildString {

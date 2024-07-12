@@ -56,6 +56,8 @@ public interface PartiQLPlanner {
         public fun builder(): PartiQLPlannerBuilder = PartiQLPlannerBuilder()
 
         @JvmStatic
-        public fun default(): PartiQLPlanner = PartiQLPlannerBuilder().build()
+        public fun default(): PartiQLPlanner =
+            PartiQLPlannerBuilder()
+                .build()
     }
 }
