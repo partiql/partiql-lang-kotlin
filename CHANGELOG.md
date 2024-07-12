@@ -39,6 +39,7 @@ org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 - partiql-plan: adds a dedicated Rex node for PartiQL bag operators `UNION`, `INTERSECT`, and `EXCEPT`
 - partiql-planner: Adds typing support for set operators
 - partiql-parser: parses non-SFW expressions to be PartiQL `OUTER` bag operators
+- partiql-ast: fixes missing parens from `bag_op` when printing using `SqlDialect`
 
 ### Deprecated
 

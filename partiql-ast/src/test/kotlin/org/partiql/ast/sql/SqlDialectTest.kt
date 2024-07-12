@@ -986,6 +986,120 @@ class SqlDialectTest {
                     rhs = v("y")
                 }
             },
+            expect("(x UNION y) UNION z") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.UNION
+                        setq = null
+                    }
+                    outer = false
+                    lhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("x")
+                        rhs = v("y")
+                    }
+                    rhs = v("z")
+                }
+            },
+            expect("x UNION (y UNION z)") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.UNION
+                        setq = null
+                    }
+                    outer = false
+                    lhs = v("x")
+                    rhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("y")
+                        rhs = v("z")
+                    }
+                }
+            },
+            expect("(x EXCEPT y) EXCEPT z") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.EXCEPT
+                        setq = null
+                    }
+                    outer = false
+                    lhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.EXCEPT
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("x")
+                        rhs = v("y")
+                    }
+                    rhs = v("z")
+                }
+            },
+            expect("x EXCEPT (y EXCEPT z)") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.EXCEPT
+                        setq = null
+                    }
+                    outer = false
+                    lhs = v("x")
+                    rhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.EXCEPT
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("y")
+                        rhs = v("z")
+                    }
+                }
+            },
+            expect("(x INTERSECT y) INTERSECT z") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.INTERSECT
+                        setq = null
+                    }
+                    outer = false
+                    lhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.INTERSECT
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("x")
+                        rhs = v("y")
+                    }
+                    rhs = v("z")
+                }
+            },
+            expect("x INTERSECT (y INTERSECT z)") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.INTERSECT
+                        setq = null
+                    }
+                    outer = false
+                    lhs = v("x")
+                    rhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.INTERSECT
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("y")
+                        rhs = v("z")
+                    }
+                }
+            },
         )
 
         @JvmStatic
