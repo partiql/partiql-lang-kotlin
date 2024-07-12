@@ -18,7 +18,7 @@ statement::[
     insert::{
       target:       identifier,
       values:       expr,
-      as_alias:     optional::'.identifier.symbol',
+      as_alias:     optional::binder,
       on_conflict:  optional::on_conflict,
     },
 
@@ -34,14 +34,14 @@ statement::[
     upsert::{
       target:   identifier,
       values:   expr,
-      as_alias: optional::'.identifier.symbol',
+      as_alias: optional::binder,
     },
 
     // REPLACE INTO <target> [AS <alias>] <values>
     replace::{
       target:   identifier,
       values:   expr,
-      as_alias: optional::'.identifier.symbol',
+      as_alias: optional::binder,
     },
 
     // UPDATE <target> SET <set clause list> WHERE <expr>
@@ -65,8 +65,8 @@ statement::[
     delete::{
       target: {
         path:     path,
-        as_alias: optional::'.identifier.symbol',
-        at_alias: optional::'.identifier.symbol',
+        as_alias: optional::binder,
+        at_alias: optional::binder,
         by_alias: optional::'.identifier.symbol',
       },
       where:      optional::expr,
@@ -84,7 +84,7 @@ statement::[
           insert::{
             target:       identifier,
             values:       expr,
-            as_alias:     optional::'.identifier.symbol',
+            as_alias:     optional::binder,
             on_conflict:  optional::on_conflict,
           },
           insert_legacy::{
@@ -233,7 +233,7 @@ type::[
     fields: list::[field],
     _ : [
       field :: {
-        name: '.identifier.symbol',
+        name: binder,
         type: '.type',
         // This could be a boolean flag since we only support NOT NULL constraint
         // for struct subfield. But modeling this to be a list of constraints
@@ -273,6 +273,17 @@ identifier::[
     ],
   ],
 ]
+
+// identifier for lvalue
+// binder can not be qualified.
+// it exists for eaiser visitor implementation and maintainence
+binder::{
+  symbol: string,
+  case_sensitivity: [
+    SENSITIVE,
+    INSENSITIVE,
+  ],
+}
 
 // Path Literals
 //  - Much like qualified identifier but allowing bracket notation '[' <int> | <string> ']'
@@ -585,7 +596,7 @@ select::[
     _: [
       item::[
         all::{ expr: expr },                                                  // <expr>.*
-        expression::{ expr: expr, as_alias: optional::'.identifier.symbol' }  // <expr> [as <identifier>]
+        expression::{ expr: expr, as_alias: optional::binder }  // <expr> [as <identifier>]
       ],
     ],
   },
@@ -626,8 +637,8 @@ from::[
   value::{
     expr:     expr,
     type:     [ SCAN, UNPIVOT ],
-    as_alias: optional::'.identifier.symbol',
-    at_alias: optional::'.identifier.symbol',
+    as_alias: optional::binder,
+    at_alias: optional::binder,
     by_alias: optional::'.identifier.symbol',
   },
 
@@ -656,7 +667,7 @@ let::{
   _: [
     binding::{
       expr:     expr,
-      as_alias: '.identifier.symbol',
+      as_alias: binder,
     },
   ],
 }
@@ -665,11 +676,11 @@ let::{
 group_by::{
   strategy: [ FULL, PARTIAL ],
   keys:     list::[key],
-  as_alias: optional::'.identifier.symbol',
+  as_alias: optional::binder,
   _: [
     key::{
       expr:     expr,
-      as_alias: optional::'.identifier.symbol',
+      as_alias: optional::binder,
     },
   ],
 }

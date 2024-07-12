@@ -12,20 +12,21 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.astPasses
 
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Statement
 import org.partiql.ast.groupByKey
-import org.partiql.ast.helpers.toBinder
+import org.partiql.ast.normalize.AstPass
 import org.partiql.ast.util.AstRewriter
+import org.partiql.planner.internal.utils.toBinder
 
 /**
  * Adds a unique binder to each group key.
  */
-object NormalizeGroupBy : AstPass {
+internal object NormalizeGroupBy : AstPass {
 
     override fun apply(statement: Statement) = Visitor.visitStatement(statement, 0) as Statement
 

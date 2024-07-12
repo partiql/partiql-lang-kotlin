@@ -1,15 +1,18 @@
 package org.partiql.planner.internal.transforms
 
 import org.junit.jupiter.api.Test
+import org.partiql.ast.Binder
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.Identifier
 import org.partiql.ast.Select
+import org.partiql.ast.binder
 import org.partiql.ast.builder.ast
 import org.partiql.ast.exprLit
 import org.partiql.ast.exprVar
 import org.partiql.ast.identifierSymbol
 import org.partiql.ast.selectProjectItemExpression
+import org.partiql.planner.internal.astPasses.NormalizeSelect
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
 import org.partiql.value.stringValue
@@ -167,12 +170,12 @@ class NormalizeSelectTest {
 
     private fun varItem(symbol: String, asAlias: String? = null) = selectProjectItemExpression(
         expr = variable(symbol),
-        asAlias = asAlias?.let { identifierSymbol(asAlias, Identifier.CaseSensitivity.INSENSITIVE) }
+        asAlias = asAlias?.let { binder(asAlias, Binder.CaseSensitivity.INSENSITIVE) }
     )
 
     private fun litItem(value: Int, asAlias: String? = null) = selectProjectItemExpression(
         expr = lit(value),
-        asAlias = asAlias?.let { identifierSymbol(asAlias, Identifier.CaseSensitivity.INSENSITIVE) }
+        asAlias = asAlias?.let { binder(asAlias, Binder.CaseSensitivity.INSENSITIVE) }
     )
 
     @OptIn(PartiQLValueExperimental::class)

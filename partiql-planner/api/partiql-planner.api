@@ -46,3 +46,7 @@ public abstract interface class org/partiql/planner/PartiQLPlannerPass {
 	public abstract fun apply (Lorg/partiql/plan/PartiQLPlan;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PartiQLPlan;
 }
 
+public final class org/partiql/planner/internal/utils/ToBinderKt {
+	public static final fun toBinder (Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function0;)Lorg/partiql/ast/Binder;
+}
+

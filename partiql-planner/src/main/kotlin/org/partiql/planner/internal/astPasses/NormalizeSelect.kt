@@ -12,13 +12,15 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.planner.internal.transforms
+package org.partiql.planner.internal.astPasses
 
+import org.partiql.ast.Binder
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Select
+import org.partiql.ast.binder
 import org.partiql.ast.exprCall
 import org.partiql.ast.exprCase
 import org.partiql.ast.exprCaseBranch
@@ -27,13 +29,13 @@ import org.partiql.ast.exprLit
 import org.partiql.ast.exprStruct
 import org.partiql.ast.exprStructField
 import org.partiql.ast.exprVar
-import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.identifierSymbol
 import org.partiql.ast.selectProject
 import org.partiql.ast.selectProjectItemExpression
 import org.partiql.ast.selectValue
 import org.partiql.ast.typeStruct
 import org.partiql.ast.util.AstRewriter
+import org.partiql.planner.internal.utils.toBinder
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.stringValue
 
@@ -333,10 +335,12 @@ internal object NormalizeSelect {
         // t -> t AS t
         private fun String.simple(): Select.Project.Item.Expression {
             val expr = exprVar(id(this), Expr.Var.Scope.DEFAULT)
-            val alias = id(this)
+            val alias = binder(this)
             return selectProjectItemExpression(expr, alias)
         }
 
         private fun id(symbol: String) = identifierSymbol(symbol, Identifier.CaseSensitivity.INSENSITIVE)
+
+        private fun binder(symbol: String) = binder(symbol, Binder.CaseSensitivity.INSENSITIVE)
     }
 }

@@ -1,10 +1,10 @@
 package org.partiql.planner.internal
 
 import org.partiql.ast.Statement
-import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
+import org.partiql.planner.internal.astPasses.normalize
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper

@@ -12,14 +12,14 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.astPasses
 
 import org.partiql.ast.Statement
 
 /**
  * AST normalization
  */
-public fun Statement.normalize(): Statement {
+internal fun Statement.normalize(): Statement {
     // could be a fold, but this is nice for setting breakpoints
     var ast = this
     ast = NormalizeFromSource.apply(ast)

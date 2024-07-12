@@ -12,15 +12,16 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.astPasses
 
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.Statement
 import org.partiql.ast.fromJoin
-import org.partiql.ast.helpers.toBinder
+import org.partiql.ast.normalize.AstPass
 import org.partiql.ast.util.AstRewriter
+import org.partiql.planner.internal.utils.toBinder
 
 /**
  * Assign aliases to any FROM source which does not have one.
