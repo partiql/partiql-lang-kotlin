@@ -8,9 +8,11 @@ import org.partiql.value.util.isZero
 
 @OptIn(PartiQLValueExperimental::class)
 internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) : Comparator<PartiQLValue> {
-    private val EQUAL = 0
-    private val LESS = -1
-    private val GREATER = 1
+    companion object {
+        private const val EQUAL = 0
+        private const val LESS = -1
+        private const val GREATER = 1
+    }
 
     private fun PartiQLValue.isNullOrMissing(): Boolean = this is NullValue || this is MissingValue || this.isNull
     private fun PartiQLValue.isLob(): Boolean = this is BlobValue || this is ClobValue

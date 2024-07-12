@@ -365,7 +365,6 @@ internal object SqlBuiltins {
         Fn_NEG__FLOAT32__FLOAT32,
         Fn_NEG__FLOAT64__FLOAT64,
         Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
-        Fn_NOT__MISSING__BOOL,
         Fn_NOT__BOOL__BOOL,
         Fn_OR__BOOL_BOOL__BOOL,
         Fn_OCTET_LENGTH__STRING__INT32,

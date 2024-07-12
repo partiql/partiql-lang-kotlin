@@ -437,7 +437,7 @@ internal class PlanTyper(private val env: Env) {
             // Rewrite LHS and RHS
             val lhs = visitRel(node.lhs, ctx)
             val stack = when (node.type) {
-                Rel.Op.Join.Type.INNER, Rel.Op.Join.Type.LEFT -> outer + listOf(TypeEnv(lhs.type.schema, outer))
+                Rel.Op.Join.Type.INNER, Rel.Op.Join.Type.LEFT -> outer + listOf(TypeEnv(env, lhs.type.schema, outer))
                 Rel.Op.Join.Type.FULL, Rel.Op.Join.Type.RIGHT -> outer
             }
             val rhs = RelTyper(stack, Scope.GLOBAL).visitRel(node.rhs, ctx)
@@ -447,7 +447,7 @@ internal class PlanTyper(private val env: Env) {
             val type = relType(schema, ctx!!.props)
 
             // Type the condition on the output schema
-            val condition = node.rex.type(TypeEnv(type.schema, outer))
+            val condition = node.rex.type(TypeEnv(env, type.schema, outer))
 
             val op = relOpJoin(lhs, rhs, condition, node.type)
             return rel(type, op)
@@ -500,7 +500,7 @@ internal class PlanTyper(private val env: Env) {
                 val resolvedRoot = when (val root = path.root) {
                     is Rex.Op.Var.Unresolved -> {
                         // resolve `root` to local binding
-                        val locals = TypeEnv(input.type.schema, outer)
+                        val locals = TypeEnv(env, input.type.schema, outer)
                         val path = root.identifier.toBindingPath()
                         val resolved = locals.resolve(path)
                         if (resolved == null) {
@@ -540,7 +540,7 @@ internal class PlanTyper(private val env: Env) {
             val input = visitRel(node.input, ctx)
 
             // type the calls and groups
-            val typer = RexTyper(TypeEnv(input.type.schema, outer), Scope.LOCAL)
+            val typer = RexTyper(TypeEnv(env, input.type.schema, outer), Scope.LOCAL)
 
             // typing of aggregate calls is slightly more complicated because they are not expressions.
             val calls = node.calls.mapIndexed { i, call ->
@@ -610,8 +610,8 @@ internal class PlanTyper(private val env: Env) {
                 Rex.Op.Var.Scope.LOCAL -> Scope.LOCAL
             }
             val resolvedVar = when (scope) {
-                Scope.LOCAL -> locals.resolve(path) ?: env.resolveObj(path)
-                Scope.GLOBAL -> env.resolveObj(path) ?: locals.resolve(path)
+                Scope.LOCAL -> locals.resolve(path, TypeEnv.LookupStrategy.LOCALS_FIRST)
+                Scope.GLOBAL -> locals.resolve(path, TypeEnv.LookupStrategy.GLOBALS_FIRST)
             }
             if (resolvedVar == null) {
                 val id = PlanUtils.externalize(node.identifier)
@@ -1065,7 +1065,7 @@ internal class PlanTyper(private val env: Env) {
         override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: CompilerType?): Rex {
             val stack = locals.outer + listOf(locals)
             val rel = node.rel.type(stack)
-            val typeEnv = TypeEnv(rel.type.schema, stack)
+            val typeEnv = TypeEnv(env, rel.type.schema, stack)
             val typer = RexTyper(typeEnv, Scope.LOCAL)
             val key = typer.visitRex(node.key, null)
             val value = typer.visitRex(node.value, null)
@@ -1075,7 +1075,7 @@ internal class PlanTyper(private val env: Env) {
 
         override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: CompilerType?): Rex {
             val rel = node.rel.type(locals.outer + listOf(locals))
-            val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
+            val newTypeEnv = TypeEnv(env, schema = rel.type.schema, outer = locals.outer + listOf(locals))
             val constructor = node.constructor.type(newTypeEnv)
             val subquery = rexOpSubquery(constructor, rel, node.coercion)
             return when (node.coercion) {
@@ -1122,7 +1122,7 @@ internal class PlanTyper(private val env: Env) {
         // TODO: Should we support the ROW type?
         override fun visitRexOpSelect(node: Rex.Op.Select, ctx: CompilerType?): Rex {
             val rel = node.rel.type(locals.outer + listOf(locals))
-            val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
+            val newTypeEnv = TypeEnv(env, schema = rel.type.schema, outer = locals.outer + listOf(locals))
             val constructor = node.constructor.type(newTypeEnv)
             val type = when (rel.isOrdered()) {
                 true -> PType.typeList(constructor.type)
@@ -1299,7 +1299,7 @@ internal class PlanTyper(private val env: Env) {
      * This types the [Rex] given the input record ([input]) and [stack] of [TypeEnv] (representing the outer scopes).
      */
     private fun Rex.type(input: List<Rel.Binding>, stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL) =
-        RexTyper(TypeEnv(input, stack), strategy).visitRex(this, this.type)
+        RexTyper(TypeEnv(env, input, stack), strategy).visitRex(this, this.type)
 
     /**
      * This types the [Rex] given a [TypeEnv]. We use the [TypeEnv.schema] as the input schema and the [TypeEnv.outer]

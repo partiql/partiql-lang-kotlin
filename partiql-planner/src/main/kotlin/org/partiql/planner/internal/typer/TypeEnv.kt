@@ -1,5 +1,6 @@
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rex
@@ -22,9 +23,15 @@ import org.partiql.value.stringValue
  * @property outer refers to the outer variable scopes that we have access to.
  */
 internal data class TypeEnv(
+    private val globals: Env,
     public val schema: List<Rel.Binding>,
     public val outer: List<TypeEnv>
 ) {
+
+    enum class LookupStrategy {
+        LOCALS_FIRST,
+        GLOBALS_FIRST
+    }
 
     internal fun getScope(depth: Int): TypeEnv {
         return when (depth) {
@@ -34,24 +41,48 @@ internal data class TypeEnv(
     }
 
     /**
-     * We resolve a local with the following rules. See, PartiQL Specification p.35.
-     *
-     *  1) Check if the path root unambiguously matches a local binding name, set as root.
-     *  2) Check if the path root unambiguously matches a local binding struct value field.
-     *
+     * Search Algorithm (LOCALS_FIRST):
+     * 1. Match Binding Name
+     *   - Match Locals
+     *   - Match Globals
+     * 2. Match Nested Field
+     *   - Match Locals
+     * Search Algorithm (GLOBALS_FIRST):
+     * 1. Match Binding Name
+     *   - Match Globals
+     *   - Match Locals
+     * 2. Match Nested Field
+     *   - Match Locals
+     */
+    fun resolve(path: BindingPath, strategy: LookupStrategy = LookupStrategy.LOCALS_FIRST): Rex? {
+        return when (strategy) {
+            LookupStrategy.LOCALS_FIRST -> resolveLocalName(path) ?: globals.resolveObj(path) ?: resolveLocalField(path)
+            LookupStrategy.GLOBALS_FIRST -> globals.resolveObj(path) ?: resolveLocalName(path) ?: resolveLocalField(path)
+        }
+    }
+
+    /**
+     * Attempts to resolve using just the local binding name.
+     */
+    private fun resolveLocalName(path: BindingPath): Rex? {
+        val head: BindingName = path.steps[0]
+        val tail: List<BindingName> = path.steps.drop(1)
+        val r = matchRoot(head) ?: return null
+        // Convert any remaining binding names (tail) to an untyped path expression.
+        return if (tail.isEmpty()) r else r.toPath(tail)
+    }
+
+    /**
+     * Check if the path root unambiguously matches a local binding struct value field.
      * Convert any remaining binding names (tail) to a path expression.
      *
      * @param path
      * @return
      */
-    fun resolve(path: BindingPath): Rex? {
+    private fun resolveLocalField(path: BindingPath): Rex? {
         val head: BindingName = path.steps[0]
-        var tail: List<BindingName> = path.steps.drop(1)
-        var r = matchRoot(head)
-        if (r == null) {
-            r = matchStruct(head) ?: return null
-            tail = path.steps
-        }
+        val r = matchStruct(head) ?: return null
+        val tail = path.steps
         // Convert any remaining binding names (tail) to an untyped path expression.
         return if (tail.isEmpty()) r else r.toPath(tail)
     }
