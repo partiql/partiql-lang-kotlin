@@ -965,6 +965,50 @@ internal class PlanTyperTestsPorted {
                     ProblemGenerator.undefinedVariable(insensitive("a"), setOf("t1", "t2"))
                 )
             ),
+            SuccessTestCase(
+                name = "LEFT JOIN (Lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    LEFT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = BagType(INT4)
+            ),
+            SuccessTestCase(
+                name = "INNER JOIN (Lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    INNER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = BagType(INT4)
+            ),
+            ErrorTestCase(
+                name = "RIGHT JOIN (Doesn't support lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    RIGHT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                problemHandler = assertProblemExists(
+                    ProblemGenerator.undefinedVariable(insensitive("lhs"), setOf())
+                )
+            ),
+            ErrorTestCase(
+                name = "FULL JOIN (Doesn't support lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    FULL OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                problemHandler = assertProblemExists(
+                    ProblemGenerator.undefinedVariable(insensitive("lhs"), setOf())
+                )
+            ),
         )
 
         @JvmStatic

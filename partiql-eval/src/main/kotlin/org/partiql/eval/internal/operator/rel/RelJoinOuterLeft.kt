@@ -8,6 +8,13 @@ import org.partiql.eval.value.Datum
 import org.partiql.plan.Rel
 import org.partiql.value.PartiQLValueExperimental
 
+/**
+ * Left Outer Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true. For all
+ * records from the [lhs] that do not evaluate to true, these are also returned along with a NULL record from the [rhs].
+ *
+ * Note: This is currently the lateral version of the left outer join. In the future, the two implementations
+ * (lateral vs non-lateral) may be separated for performance improvements.
+ */
 internal class RelJoinOuterLeft(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,

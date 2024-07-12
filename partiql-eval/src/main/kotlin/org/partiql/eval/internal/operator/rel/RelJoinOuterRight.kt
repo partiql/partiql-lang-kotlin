@@ -7,6 +7,12 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.plan.Rel
 
+/**
+ * Right Outer Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true. For all
+ * records from the [rhs] that do not evaluate to true, these are also returned along with a NULL record from the [lhs].
+ *
+ * Right Outer Join cannot be lateral according to PartiQL Specification Section 5.5.
+ */
 internal class RelJoinOuterRight(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,

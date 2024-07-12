@@ -436,7 +436,10 @@ internal class PlanTyper(private val env: Env) {
         override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Rel.Type?): Rel {
             // Rewrite LHS and RHS
             val lhs = visitRel(node.lhs, ctx)
-            val stack = outer + listOf(TypeEnv(lhs.type.schema, outer))
+            val stack = when (node.type) {
+                Rel.Op.Join.Type.INNER, Rel.Op.Join.Type.LEFT -> outer + listOf(TypeEnv(lhs.type.schema, outer))
+                Rel.Op.Join.Type.FULL, Rel.Op.Join.Type.RIGHT -> outer
+            }
             val rhs = RelTyper(stack, Scope.GLOBAL).visitRel(node.rhs, ctx)
 
             // Calculate output schema given JOIN type

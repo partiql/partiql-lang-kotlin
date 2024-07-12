@@ -7,6 +7,13 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.plan.Rel
 
+/**
+ * Full Outer Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true. For all
+ * records from the [lhs] that do not evaluate to true, these are also returned along with a NULL record from the [rhs].
+ * For all records from the [rhs] that do not evaluate to true, these are also returned along with a NULL record from the [lhs].
+ *
+ * Full Outer Join cannot be lateral according to PartiQL Specification Section 5.5.
+ */
 internal class RelJoinOuterFull(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,

@@ -6,6 +6,12 @@ import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValueExperimental
 
+/**
+ * Inner Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true.
+ *
+ * Note: This is currently the lateral version of the inner join. In the future, the two implementations
+ * (lateral vs non-lateral) may be separated for performance improvements.
+ */
 internal class RelJoinInner(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,

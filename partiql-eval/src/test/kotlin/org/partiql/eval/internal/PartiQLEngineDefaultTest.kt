@@ -9,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
-import org.partiql.eval.internal.PartiQLEngineDefaultTest.SuccessTestCase.Global
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.debug.PlanPrinter
@@ -273,6 +272,34 @@ class PartiQLEngineDefaultTest {
                     listValue(int32Value(null), int32Value(3)),
                     listValue(int32Value(null), int32Value(4)),
                     listValue(int32Value(null), int32Value(5)),
+                )
+            ),
+            // LEFT OUTER JOIN -- LATERAL
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    LEFT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(2),
+                    int32Value(12),
+                    int32Value(22),
+                )
+            ),
+            // INNER JOIN -- LATERAL
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    INNER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(2),
+                    int32Value(12),
+                    int32Value(22),
                 )
             ),
         )
