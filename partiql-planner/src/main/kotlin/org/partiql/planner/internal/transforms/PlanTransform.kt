@@ -10,6 +10,7 @@ import org.partiql.plan.rexOpCast
 import org.partiql.plan.rexOpErr
 import org.partiql.plan.statementDDL
 import org.partiql.plan.tableProperty
+import org.partiql.planner.internal.BooleanFlag
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.DdlOp
@@ -36,7 +37,7 @@ import org.partiql.value.PartiQLValueExperimental
 internal class PlanTransform(
     flags: Set<PlannerFlag>
 ) {
-    private val signalMode = flags.contains(PlannerFlag.SIGNAL_MODE)
+    private val signalMode = flags.contains(BooleanFlag.SIGNAL_MODE)
 
     fun transform(node: PartiQLPlan, onProblem: ProblemCallback): org.partiql.plan.PartiQLPlan {
         val symbols = Symbols.empty()

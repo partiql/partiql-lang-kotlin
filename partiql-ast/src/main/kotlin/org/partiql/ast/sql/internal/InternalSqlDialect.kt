@@ -15,6 +15,7 @@
 package org.partiql.ast.sql.internal
 
 import org.partiql.ast.AstNode
+import org.partiql.ast.Binder
 import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
@@ -29,6 +30,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
 import org.partiql.ast.Type
+import org.partiql.ast.sql.sql
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
@@ -91,6 +93,8 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         val path = node.steps.fold(node.root.sql()) { p, step -> p + "." + step.sql() }
         return tail concat path
     }
+
+    override fun visitBinder(node: Binder, tail: InternalSqlBlock): InternalSqlBlock = tail concat node.sql()
 
     override fun visitPath(node: Path, tail: InternalSqlBlock): InternalSqlBlock {
         val path = node.steps.fold(node.root.sql()) { p, step ->
@@ -844,5 +848,10 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
     private fun Identifier.Symbol.sql() = when (caseSensitivity) {
         Identifier.CaseSensitivity.SENSITIVE -> "\"$symbol\""
         Identifier.CaseSensitivity.INSENSITIVE -> symbol // verbatim ..
+    }
+
+    private fun Binder.sql() = when (isRegular) {
+        true -> symbol
+        false -> "\"$symbol\""
     }
 }

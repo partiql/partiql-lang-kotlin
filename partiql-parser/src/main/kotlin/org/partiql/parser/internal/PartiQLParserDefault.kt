@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.ast.AstNode
+import org.partiql.ast.Binder
 import org.partiql.ast.Constraint
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.DdlOp
@@ -53,6 +54,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
 import org.partiql.ast.Type
+import org.partiql.ast.binder
 import org.partiql.ast.constraint
 import org.partiql.ast.constraintDefinitionCheck
 import org.partiql.ast.constraintDefinitionNotNull
@@ -569,6 +571,11 @@ internal class PartiQLParserDefault : PartiQLParser {
                 else -> throw error(ctx, "Invalid symbol reference.")
             }
 
+        private fun Identifier.Symbol.asBinder() = when (this.caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> binder(this.symbol, false)
+            Identifier.CaseSensitivity.INSENSITIVE -> binder(this.symbol, true)
+        }
+
         override fun visitIdentifierQuoted(ctx: GeneratedParser.IdentifierQuotedContext): Identifier.Symbol = translate(ctx) {
             identifierSymbol(
                 ctx.IDENTIFIER_QUOTED().getStringValue(),
@@ -875,7 +882,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitInsertStatement(ctx: GeneratedParser.InsertStatementContext) = translate(ctx) {
             val target = visitSymbolPrimitive(ctx.symbolPrimitive())
             val values = visitExpr(ctx.value)
-            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
+            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())?.asBinder()
             val onConflict = ctx.onConflict()?.let { visitOnConflictClause(it) }
             statementDMLInsert(target, values, asAlias, onConflict)
         }
@@ -883,14 +890,14 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitReplaceCommand(ctx: GeneratedParser.ReplaceCommandContext) = translate(ctx) {
             val target = visitSymbolPrimitive(ctx.symbolPrimitive())
             val values = visitExpr(ctx.value)
-            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
+            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())?.asBinder()
             statementDMLReplace(target, values, asAlias)
         }
 
         override fun visitUpsertCommand(ctx: GeneratedParser.UpsertCommandContext) = translate(ctx) {
             val target = visitSymbolPrimitive(ctx.symbolPrimitive())
             val values = visitExpr(ctx.value)
-            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
+            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())?.asBinder()
             statementDMLUpsert(target, values, asAlias)
         }
 
@@ -1069,7 +1076,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitProjectionItem(ctx: GeneratedParser.ProjectionItemContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val alias = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it) }
+            val alias = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).asBinder() }
             if (expr is Expr.Path) {
                 convertPathToProjectionItem(ctx, expr, alias)
             } else {
@@ -1113,7 +1120,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLetBinding(ctx: GeneratedParser.LetBindingContext) = translate(ctx) {
             val expr = visitAs<Expr>(ctx.expr())
-            val alias = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val alias = visitSymbolPrimitive(ctx.symbolPrimitive()).asBinder()
             letBinding(expr, alias)
         }
 
@@ -1154,13 +1161,13 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitGroupClause(ctx: GeneratedParser.GroupClauseContext) = translate(ctx) {
             val strategy = if (ctx.PARTIAL() != null) GroupBy.Strategy.PARTIAL else GroupBy.Strategy.FULL
             val keys = visitOrEmpty<GroupBy.Key>(ctx.groupKey())
-            val alias = ctx.groupAlias()?.symbolPrimitive()?.let { visitSymbolPrimitive(it) }
+            val alias = ctx.groupAlias()?.symbolPrimitive()?.let { visitSymbolPrimitive(it).asBinder() }
             groupBy(strategy, keys, alias)
         }
 
         override fun visitGroupKey(ctx: GeneratedParser.GroupKeyContext) = translate(ctx) {
             val expr = visitAs<Expr>(ctx.key)
-            val alias = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it) }
+            val alias = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).asBinder() }
             groupByKey(expr, alias)
         }
 
@@ -1463,17 +1470,17 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTableBaseRefClauses(ctx: GeneratedParser.TableBaseRefClausesContext) = translate(ctx) {
             val expr = visitAs<Expr>(ctx.source)
-            val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
-            val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
-            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
+            val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
+            val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
+            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             fromValue(expr, From.Value.Type.SCAN, asAlias, atAlias, byAlias)
         }
 
         override fun visitTableBaseRefMatch(ctx: GeneratedParser.TableBaseRefMatchContext) = translate(ctx) {
             val expr = visitAs<Expr>(ctx.source)
-            val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
-            val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
-            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
+            val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
+            val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
+            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             fromValue(expr, From.Value.Type.SCAN, asAlias, atAlias, byAlias)
         }
 
@@ -1483,9 +1490,9 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitFromClauseSimpleExplicit(ctx: GeneratedParser.FromClauseSimpleExplicitContext) =
             translate(ctx) {
                 val path = visitPathSimple(ctx.pathSimple())
-                val asAlias = ctx.asIdent()?.let { visitAsIdent(it) }
-                val atAlias = ctx.atIdent()?.let { visitAtIdent(it) }
-                val byAlias = ctx.byIdent()?.let { visitByIdent(it) }
+                val asAlias = ctx.asIdent()?.let { visitAsIdent(it).asBinder() }
+                val atAlias = ctx.atIdent()?.let { visitAtIdent(it).asBinder() }
+                val byAlias = ctx.byIdent()?.let { visitByIdent(it).asBinder() }
                 statementDMLDeleteTarget(path, asAlias, atAlias, byAlias)
             }
 
@@ -1495,15 +1502,15 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitFromClauseSimpleImplicit(ctx: GeneratedParser.FromClauseSimpleImplicitContext) =
             translate(ctx) {
                 val path = visitPathSimple(ctx.pathSimple())
-                val asAlias = visitSymbolPrimitive(ctx.symbolPrimitive())
+                val asAlias = visitSymbolPrimitive(ctx.symbolPrimitive()).asBinder()
                 statementDMLDeleteTarget(path, asAlias, null, null)
             }
 
         override fun visitTableUnpivot(ctx: GeneratedParser.TableUnpivotContext) = translate(ctx) {
             val expr = visitAs<Expr>(ctx.expr())
-            val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
-            val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
-            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
+            val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
+            val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
+            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             fromValue(expr, From.Value.Type.UNPIVOT, asAlias, atAlias, byAlias)
         }
 
@@ -1549,7 +1556,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTableBaseRefSymbol(ctx: GeneratedParser.TableBaseRefSymbolContext) = translate(ctx) {
             val expr = visitAs<Expr>(ctx.source)
-            val asAlias = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val asAlias = visitSymbolPrimitive(ctx.symbolPrimitive()).asBinder()
             fromValue(expr, From.Value.Type.SCAN, asAlias, null, null)
         }
 
@@ -2251,7 +2258,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTypeStruct(ctx: GeneratedParser.TypeStructContext) = translate(ctx) {
             val fields = ctx.structField().map { structFieldCtx ->
-                val name = visitSymbolPrimitive(structFieldCtx.columnName().symbolPrimitive())
+                val name = visitSymbolPrimitive(structFieldCtx.columnName().symbolPrimitive()).asBinder()
                 val type = visitAs<Type>(structFieldCtx.type())
                     .also { isValidTypeDeclarationOrThrow(it, structFieldCtx.type()) }
 
@@ -2361,7 +2368,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          *      SELECT foo.*.bar FROM foo
          * ```
          */
-        protected fun convertPathToProjectionItem(ctx: ParserRuleContext, path: Expr.Path, alias: Identifier.Symbol?) =
+        protected fun convertPathToProjectionItem(ctx: ParserRuleContext, path: Expr.Path, alias: Binder?) =
             translate(ctx) {
                 val steps = mutableListOf<Expr.Path.Step>()
                 var containsIndex = false

@@ -24,6 +24,7 @@ import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
+import org.partiql.ast.binder
 import org.partiql.ast.builder.AstBuilder
 import org.partiql.ast.builder.ast
 import org.partiql.ast.exprLit
@@ -127,6 +128,8 @@ class ToLegacyAstTest {
 
         // Shortcut to construct a "legacy-compatible" simple identifier
         private fun id(name: String) = identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
+
+        private fun bindName(name: String) = binder(name, true)
 
         @JvmStatic
         fun literals() = listOf(
@@ -422,7 +425,7 @@ class ToLegacyAstTest {
             fail("The legacy AST does not support field declaration in struct type") {
                 typeStruct {
                     fields += org.partiql.ast.typeStructField(
-                        org.partiql.ast.identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                        org.partiql.ast.binder("a", true),
                         typeInt2(),
                         emptyList(),
                         false,
@@ -549,7 +552,7 @@ class ToLegacyAstTest {
                     }
                     items += selectProjectItemExpression {
                         expr = exprLit(int32Value(1))
-                        asAlias = id("x")
+                        asAlias = bindName("x")
                     }
                 }
             },
@@ -579,9 +582,9 @@ class ToLegacyAstTest {
                 fromValue {
                     expr = NULL
                     type = From.Value.Type.SCAN
-                    asAlias = id("a")
-                    atAlias = id("b")
-                    byAlias = id("c")
+                    asAlias = bindName("a")
+                    atAlias = bindName("b")
+                    byAlias = bindName("c")
                 }
             },
             expect("(unpivot (lit null) null null null)") {
@@ -594,9 +597,9 @@ class ToLegacyAstTest {
                 fromValue {
                     expr = NULL
                     type = From.Value.Type.UNPIVOT
-                    asAlias = id("a")
-                    atAlias = id("b")
-                    byAlias = id("c")
+                    asAlias = bindName("a")
+                    atAlias = bindName("b")
+                    byAlias = bindName("c")
                 }
             },
             expect(
@@ -647,7 +650,7 @@ class ToLegacyAstTest {
                 let {
                     bindings += letBinding {
                         expr = NULL
-                        asAlias = id("x")
+                        asAlias = bindName("x")
                     }
                 }
             },
@@ -665,7 +668,7 @@ class ToLegacyAstTest {
                 groupBy {
                     strategy = GroupBy.Strategy.FULL
                     keys += groupByKey(exprLit(stringValue("a")), null)
-                    keys += groupByKey(exprLit(stringValue("b")), id("x"))
+                    keys += groupByKey(exprLit(stringValue("b")), bindName("x"))
                 }
             },
             expect(
@@ -682,8 +685,8 @@ class ToLegacyAstTest {
                 groupBy {
                     strategy = GroupBy.Strategy.PARTIAL
                     keys += groupByKey(exprLit(stringValue("a")), null)
-                    keys += groupByKey(exprLit(stringValue("b")), id("x"))
-                    asAlias = id("as")
+                    keys += groupByKey(exprLit(stringValue("b")), bindName("x"))
+                    asAlias = bindName("as")
                 }
             },
             expect(

@@ -37,6 +37,7 @@ public final class org/partiql/planner/PartiQLPlannerBuilder {
 	public final fun addPass (Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun addPasses ([Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
+	public final fun caseNormalize (Ljava/lang/String;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun catalogs ([Lkotlin/Pair;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun passes (Ljava/util/List;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun signalMode ()Lorg/partiql/planner/PartiQLPlannerBuilder;
@@ -44,5 +45,9 @@ public final class org/partiql/planner/PartiQLPlannerBuilder {
 
 public abstract interface class org/partiql/planner/PartiQLPlannerPass {
 	public abstract fun apply (Lorg/partiql/plan/PartiQLPlan;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PartiQLPlan;
+}
+
+public final class org/partiql/planner/internal/utils/ToBinderKt {
+	public static final fun toBinder (Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function0;)Lorg/partiql/ast/Binder;
 }
 

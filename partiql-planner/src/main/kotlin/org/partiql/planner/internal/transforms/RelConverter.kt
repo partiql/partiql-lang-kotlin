@@ -35,6 +35,7 @@ import org.partiql.ast.identifierSymbol
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.astPasses.NormalizeSelect
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rel
@@ -70,6 +71,9 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.types.StaticType
+import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.planner.internal.utils.toBinder
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
@@ -572,17 +576,17 @@ internal object RelConverter {
         // private fun convertGroupAs(name: String, from: From): Binding {
         //     val fields = from.bindings().map { n ->
         //         Plan.field(
-        //             name = Plan.rexLit(ionString(n), StaticType.STRING),
-        //             value = Plan.rexId(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED, type = StaticType.STRUCT)
+        //             name = Plan.rexLit(ionString(n), STRING),
+        //             value = Plan.rexId(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED, type = STRUCT)
         //         )
         //     }
         //     return Plan.binding(
         //         name = name,
         //         value = Plan.rexAgg(
         //             id = "group_as",
-        //             args = listOf(Plan.rexTuple(fields, StaticType.STRUCT)),
+        //             args = listOf(Plan.rexTuple(fields, STRUCT)),
         //             modifier = Rex.Agg.Modifier.ALL,
-        //             type = StaticType.STRUCT
+        //             type = STRUCT
         //         )
         //     )
         // }
