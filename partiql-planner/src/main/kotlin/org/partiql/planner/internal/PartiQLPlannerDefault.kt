@@ -27,7 +27,7 @@ internal class PartiQLPlannerDefault(
         val env = Env(session)
 
         // 1. Normalize
-        val ast = statement.normalize()
+        val ast = statement.normalize(flags)
 
         // 2. AST to Rel/Rex
         val root = AstToPlan.apply(ast, env)

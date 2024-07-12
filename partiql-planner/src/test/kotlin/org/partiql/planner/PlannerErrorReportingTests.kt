@@ -398,8 +398,8 @@ internal class PlannerErrorReportingTests {
 
     private fun runTestCase(tc: TestCase) {
         val planner = when (tc.isSignal) {
-            true -> PartiQLPlanner.builder().signalMode().build()
-            else -> PartiQLPlanner.builder().build()
+            true -> PartiQLPlanner.builder().signalMode().casePreserve().lookUpBehavior("INSENSITIVE").build()
+            else -> PartiQLPlanner.builder().casePreserve().lookUpBehavior("INSENSITIVE").build()
         }
         val pc = ProblemCollector()
         val res = planner.plan(statement(tc.query), session, pc)

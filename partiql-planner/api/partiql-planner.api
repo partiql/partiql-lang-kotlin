@@ -37,7 +37,9 @@ public final class org/partiql/planner/PartiQLPlannerBuilder {
 	public final fun addPass (Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun addPasses ([Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
+	public final fun casePreserve ()Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun catalogs ([Lkotlin/Pair;)Lorg/partiql/planner/PartiQLPlannerBuilder;
+	public final fun lookUpBehavior (Ljava/lang/String;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun passes (Ljava/util/List;)Lorg/partiql/planner/PartiQLPlannerBuilder;
 	public final fun signalMode ()Lorg/partiql/planner/PartiQLPlannerBuilder;
 }

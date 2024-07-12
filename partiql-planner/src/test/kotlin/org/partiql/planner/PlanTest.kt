@@ -88,8 +88,8 @@ class PlanTest {
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
         val planner = when (isSignalMode) {
-            true -> PartiQLPlanner.builder().signalMode().build()
-            else -> PartiQLPlanner.builder().build()
+            true -> PartiQLPlanner.builder().signalMode().casePreserve().lookUpBehavior("INSENSITIVE").build()
+            else -> PartiQLPlanner.builder().casePreserve().lookUpBehavior("INSENSITIVE").build()
         }
         planner.plan(ast, session, problemCollector)
     }

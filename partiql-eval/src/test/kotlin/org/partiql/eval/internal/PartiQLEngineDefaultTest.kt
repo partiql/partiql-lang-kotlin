@@ -1084,7 +1084,7 @@ class PartiQLEngineDefaultTest {
     ) {
 
         private val engine = PartiQLEngine.builder().build()
-        private val planner = PartiQLPlannerBuilder().build()
+        private val planner = PartiQLPlannerBuilder().casePreserve().lookUpBehavior("INSENSITIVE").build()
         private val parser = PartiQLParser.default()
         private val loader = createIonElementLoader()
 
@@ -1156,7 +1156,7 @@ class PartiQLEngineDefaultTest {
     ) {
 
         private val engine = PartiQLEngine.builder().build()
-        private val planner = PartiQLPlannerBuilder().build()
+        private val planner = PartiQLPlannerBuilder().casePreserve().lookUpBehavior("INSENSITIVE").build()
         private val parser = PartiQLParser.default()
 
         internal fun assert() {

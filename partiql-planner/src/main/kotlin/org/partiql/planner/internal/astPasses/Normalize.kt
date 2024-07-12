@@ -15,14 +15,20 @@
 package org.partiql.planner.internal.astPasses
 
 import org.partiql.ast.Statement
+import org.partiql.planner.internal.BooleanFlag
+import org.partiql.planner.internal.PlannerFlag
+import org.partiql.planner.internal.RValue
 
 /**
  * AST normalization
  */
-internal fun Statement.normalize(): Statement {
+internal fun Statement.normalize(flags: Set<PlannerFlag>): Statement {
     // could be a fold, but this is nice for setting breakpoints
     var ast = this
     ast = NormalizeFromSource.apply(ast)
     ast = NormalizeGroupBy.apply(ast)
+    val casePreservation = flags.any { it == BooleanFlag.CASE_PRESERVATION }
+    val rValue = flags.first { it is RValue } as RValue
+    ast = NormalizeIdentifier(casePreservation, rValue).apply(ast)
     return ast
 }

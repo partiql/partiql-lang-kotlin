@@ -1,7 +1,9 @@
 package org.partiql.planner
 
+import org.partiql.planner.internal.BooleanFlag
 import org.partiql.planner.internal.PartiQLPlannerDefault
 import org.partiql.planner.internal.PlannerFlag
+import org.partiql.planner.internal.RValue
 import org.partiql.spi.connector.ConnectorMetadata
 
 /**
@@ -50,7 +52,24 @@ public class PartiQLPlannerBuilder {
      * Java style method for setting the planner to signal mode
      */
     public fun signalMode(): PartiQLPlannerBuilder = this.apply {
-        this.flags.add(PlannerFlag.SIGNAL_MODE)
+        this.flags.add(BooleanFlag.SIGNAL_MODE)
+    }
+
+    public fun casePreserve(): PartiQLPlannerBuilder = this.apply {
+        this.flags.add(BooleanFlag.CASE_PRESERVATION)
+    }
+
+    public fun lookUpBehavior(behavior: String): PartiQLPlannerBuilder = this.apply {
+        this.flags.removeAll(
+            this.flags.filterIsInstance<RValue>().toSet()
+        )
+        when (behavior.uppercase()) {
+            "FOLDING_UP" -> this.flags.add(RValue.FOLDING_UP)
+            "FOLDING_DOWN" -> this.flags.add(RValue.FOLDING_DOWN)
+            "SENSITIVE" -> this.flags.add(RValue.SENSITIVE)
+            "INSENSITIVE" -> this.flags.add(RValue.INSENSITIVE)
+            else -> error("Illegal flag, expect one of ${RValue.values()}")
+        }
     }
 
     /**
