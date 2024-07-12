@@ -193,6 +193,7 @@ rex::{
       args: list::[rex],
     },
 
+    // PartiQL bag ops
     union::{
       setq: set_quantifier,
       lhs: rex,
@@ -264,6 +265,7 @@ rel::{
       ],
     },
 
+    // SQL set ops
     union::{
       setq: set_quantifier,
       lhs: rel,
