@@ -374,6 +374,8 @@ fragment OpBasicEnd
 fragment OpSpecial
     : [~@#%^?]  // TODO support backtick (`)?
     // graph patterns are not matched
+    // TODO make GPML MATCH patterns a separate lexical mode (https://github.com/partiql/partiql-lang-kotlin/issues/1512)
+    //  Creating a separate lexical mode will allow us to get rid of the following semantic predicates.
     | '|' {_input.LA(1) != '!'}?
     | '!' {_input.LA(1) != '%'}?
     | '&' {_input.LA(1) != '%'}?

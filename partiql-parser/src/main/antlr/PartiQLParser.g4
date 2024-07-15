@@ -622,6 +622,8 @@ comparisonOp
 otherOp
     : OPERATOR
     | AMPERSAND
+    // TODO introduce a separate lexical mode for GPML MATCH expressions (https://github.com/partiql/partiql-lang-kotlin/issues/1512)
+    //  This will eliminiate the need for this `AMPERSAND` parse branch.
     ;
 
 // TODO : Opreator precedence of `otherOp` may change in the future.
