@@ -2,6 +2,7 @@ package org.partiql.plugins.memory
 
 import org.partiql.eval.bindings.Binding
 import org.partiql.eval.value.Datum
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Table
 import org.partiql.types.PType
 
@@ -11,7 +12,7 @@ public class MemoryTable private constructor(
     private val datum: Datum,
 ) : Table, Binding {
 
-    override fun getName(): String = name
+    override fun getName(): Name = Name.of(name)
     override fun getSchema(): PType = type
     override fun getDatum(): Datum = datum
 

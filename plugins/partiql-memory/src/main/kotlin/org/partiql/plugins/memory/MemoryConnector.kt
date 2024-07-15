@@ -85,7 +85,7 @@ public class MemoryConnector private constructor(
             if (name.hasNamespace()) {
                 error("MemoryCatalog does not support namespaces")
             }
-            return tables[name.getText()]
+            return tables[name.getName()]
         }
 
         override fun listTables(session: Session): Collection<Name> {

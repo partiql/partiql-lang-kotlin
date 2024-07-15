@@ -18,6 +18,7 @@ import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.eval.bindings.Binding
 import org.partiql.eval.value.Datum
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Table
 import org.partiql.types.PType
 import org.partiql.types.StaticType
@@ -29,7 +30,7 @@ import kotlin.io.path.reader
  * Associate a resolved path with a [StaticType]
  */
 internal class LocalTable(
-    private val name: String,
+    private val name: Name,
     private val path: Path,
 ) : Table, Binding {
 
@@ -37,9 +38,7 @@ internal class LocalTable(
         assert(!path.isDirectory()) { "LocalTable path must be a file." }
     }
 
-    override fun getName(): String {
-        return name
-    }
+    override fun getName(): Name = name
 
     override fun getSchema(): PType {
         val reader = IonReaderBuilder.standard().build(path.reader())

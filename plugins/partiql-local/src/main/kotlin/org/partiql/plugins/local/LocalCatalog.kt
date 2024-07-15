@@ -31,11 +31,11 @@ internal class LocalCatalog(
     }
 
     override fun getTable(session: Session, name: Name): Table? {
-        val path = toPath(name.getNamespace()).resolve(name.getText() + EXT)
+        val path = toPath(name.getNamespace()).resolve(name.getName() + EXT)
         if (path.notExists() || !path.isDirectory()) {
             return null
         }
-        return LocalTable(name.getText(), path)
+        return LocalTable(name, path)
     }
 
     override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
