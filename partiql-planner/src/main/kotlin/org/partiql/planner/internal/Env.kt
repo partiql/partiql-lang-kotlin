@@ -16,7 +16,7 @@ import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
-import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
+import org.partiql.planner.internal.typer.Scope.Companion.toPath
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath

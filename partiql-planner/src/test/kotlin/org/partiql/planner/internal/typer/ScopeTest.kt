@@ -19,7 +19,7 @@ import org.partiql.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
-internal class TypeEnvTest {
+internal class ScopeTest {
 
     companion object {
 
@@ -59,15 +59,17 @@ internal class TypeEnvTest {
                     )
                 )
             ),
-            listOf(
-                relBinding("A", struct("B" to PType.typeBool().toCType())),
-                relBinding("a", struct("b" to PType.typeBool().toCType())),
-                relBinding("X", struct(open = true)),
-                relBinding("x", struct("Y" to PType.typeBool().toCType(), open = false)), // We currently don't allow for partial schema structs
-                relBinding("y", struct(open = true)),
-                relBinding("T", struct("x" to PType.typeBool().toCType(), "x" to PType.typeBool().toCType())),
-            ),
-            outer = emptyList()
+            Scope(
+                listOf(
+                    relBinding("A", struct("B" to PType.typeBool().toCType())),
+                    relBinding("a", struct("b" to PType.typeBool().toCType())),
+                    relBinding("X", struct(open = true)),
+                    relBinding("x", struct("Y" to PType.typeBool().toCType(), open = false)), // We currently don't allow for partial schema structs
+                    relBinding("y", struct(open = true)),
+                    relBinding("T", struct("x" to PType.typeBool().toCType(), "x" to PType.typeBool().toCType())),
+                ),
+                outer = emptyList()
+            )
         )
 
         private fun struct(vararg fields: Pair<String, CompilerType>, open: Boolean = false): CompilerType {
