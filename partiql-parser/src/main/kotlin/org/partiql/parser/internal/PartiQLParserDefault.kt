@@ -209,14 +209,7 @@ import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
-import org.partiql.value.DecimalValue
-import org.partiql.value.Float32Value
-import org.partiql.value.Float64Value
-import org.partiql.value.Int16Value
-import org.partiql.value.Int32Value
-import org.partiql.value.Int64Value
-import org.partiql.value.Int8Value
-import org.partiql.value.IntValue
+import org.partiql.parser.internal.util.NumberUtils.negate
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
@@ -225,12 +218,8 @@ import org.partiql.value.dateValue
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.decimalValue
-import org.partiql.value.float32Value
-import org.partiql.value.float64Value
-import org.partiql.value.int16Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
-import org.partiql.value.int8Value
 import org.partiql.value.intValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -1529,20 +1518,6 @@ internal class PartiQLParserDefault : PartiQLParser {
                 op == Expr.Unary.Op.NEG && v is NumericValue<*> -> exprLit(v.negate())
                 else -> exprUnary(op, exprLit(v))
             }
-        }
-
-        /**
-         * We might consider a `negate` method on the NumericValue but this is fine for now and is private.
-         */
-        private fun NumericValue<*>.negate(): NumericValue<*> = when (this) {
-            is DecimalValue -> decimalValue(value?.negate())
-            is Float32Value -> float32Value(value?.let { it * -1 })
-            is Float64Value -> float64Value(value?.let { it * -1 })
-            is Int8Value -> int8Value(value?.let { (it.toInt() * -1).toByte() })
-            is Int16Value -> int16Value(value?.let { (it.toInt() * -1).toShort() })
-            is Int32Value -> int32Value(value?.let { it * -1 })
-            is Int64Value -> int64Value(value?.let { it * -1 })
-            is IntValue -> intValue(value?.negate())
         }
 
         private fun convertBinaryExpr(lhs: ParserRuleContext, rhs: ParserRuleContext, op: Expr.Binary.Op): Expr {
