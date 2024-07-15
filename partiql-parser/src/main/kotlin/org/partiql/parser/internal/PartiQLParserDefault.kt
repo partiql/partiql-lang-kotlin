@@ -1113,6 +1113,17 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
+        /**
+         * Verifies if all of the [args] are
+         * 1. [Expr.SFW] or
+         * 2. [Expr.BagOp] and is a SQL Set op (i.e. [Expr.BagOp.outer] != true)
+         */
+        private fun argsAreSFW(args: List<Expr>): Boolean {
+            return args.all { arg ->
+                arg is Expr.SFW || (arg is Expr.BagOp && arg.outer != true)
+            }
+        }
+
         override fun visitIntersect(ctx: GeneratedParser.IntersectContext) = translate(ctx) {
             val setq = when {
                 ctx.ALL() != null -> SetQuantifier.ALL
@@ -1123,7 +1134,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val lhs = visitAs<Expr>(ctx.lhs)
             val rhs = visitAs<Expr>(ctx.rhs)
             val outer = ctx.OUTER() != null
-            exprBagOp(op, lhs, rhs, outer)
+            exprBagOp(op, lhs, rhs, outer || !argsAreSFW(listOf(lhs, rhs)))
         }
 
         override fun visitExcept(ctx: GeneratedParser.ExceptContext) = translate(ctx) {
@@ -1136,7 +1147,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val lhs = visitAs<Expr>(ctx.lhs)
             val rhs = visitAs<Expr>(ctx.rhs)
             val outer = ctx.OUTER() != null
-            exprBagOp(op, lhs, rhs, outer)
+            exprBagOp(op, lhs, rhs, outer || !argsAreSFW(listOf(lhs, rhs)))
         }
 
         override fun visitUnion(ctx: GeneratedParser.UnionContext) = translate(ctx) {
@@ -1149,7 +1160,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val lhs = visitAs<Expr>(ctx.lhs)
             val rhs = visitAs<Expr>(ctx.rhs)
             val outer = ctx.OUTER() != null
-            exprBagOp(op, lhs, rhs, outer)
+            exprBagOp(op, lhs, rhs, outer || !argsAreSFW(listOf(lhs, rhs)))
         }
 
         /**

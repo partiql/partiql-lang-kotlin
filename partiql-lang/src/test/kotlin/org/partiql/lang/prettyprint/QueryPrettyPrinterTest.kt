@@ -465,22 +465,22 @@ class QueryPrettyPrinterTest {
 
     @Test
     fun union1() {
-        checkPrettyPrintQuery("a UNION b", "a UNION b")
+        checkPrettyPrintQuery("a UNION b", "a OUTER UNION b")
     }
 
     @Test
     fun union2() {
-        checkPrettyPrintQuery("a UNION ALL b", "a UNION ALL b")
+        checkPrettyPrintQuery("a UNION ALL b", "a OUTER UNION ALL b")
     }
 
     @Test
     fun except() {
-        checkPrettyPrintQuery("a EXCEPT b", "a EXCEPT b")
+        checkPrettyPrintQuery("a EXCEPT b", "a OUTER EXCEPT b")
     }
 
     @Test
     fun intersect() {
-        checkPrettyPrintQuery("a INTERSECT b", "a INTERSECT b")
+        checkPrettyPrintQuery("a INTERSECT b", "a OUTER INTERSECT b")
     }
 
     @Test
@@ -822,7 +822,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "(SELECT a FROM b) UNION (SELECT c FROM d) UNION (SELECT e FROM f)",
             """
-                ((SELECT a FROM b) UNION (SELECT c FROM d)) UNION (SELECT e FROM f)
+                ((SELECT a FROM b) UNION (SELECT c FROM d)) OUTER UNION (SELECT e FROM f)
             """.trimIndent()
         )
     }
@@ -832,7 +832,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "(SELECT a FROM b) UNION c",
             """
-                (SELECT a FROM b) UNION c
+                (SELECT a FROM b) OUTER UNION c
             """.trimIndent()
         )
     }
@@ -873,7 +873,7 @@ class QueryPrettyPrinterTest {
             "CASE (SELECT name FROM t) WHEN (SELECT a FROM b) UNION c THEN 1 WHEN (SELECT c FROM d) THEN 2 ELSE (SELECT e FROM f) END",
             """
                 CASE (SELECT name FROM t)
-                    WHEN (SELECT a FROM b) UNION c THEN 1
+                    WHEN (SELECT a FROM b) OUTER UNION c THEN 1
                     WHEN (SELECT c FROM d) THEN 2
                     ELSE (SELECT e FROM f)
                 END

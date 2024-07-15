@@ -19,6 +19,8 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
+import org.partiql.ast.SetOp
+import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
@@ -41,7 +43,9 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
+import org.partiql.planner.internal.ir.rexOpVarResolved
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
+import org.partiql.planner.internal.transforms.RelConverter.nil
 import org.partiql.planner.internal.typer.toNonNullStaticType
 import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.types.StaticType
@@ -630,6 +634,40 @@ internal object RexConverter {
         }
 
         override fun visitExprSFW(node: Expr.SFW, context: Env): Rex = RelConverter.apply(node, context)
+
+        override fun visitExprBagOp(node: Expr.BagOp, ctx: Env): Rex {
+            if (node.outer == true) {
+                // PartiQL bag op; create bag op rex
+                val lhs = visitExpr(node.lhs, ctx)
+                val rhs = visitExpr(node.rhs, ctx)
+                val setq = when (node.type.setq) {
+                    SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                    null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+                }
+                val op = when (node.type.type) {
+                    SetOp.Type.UNION -> Rex.Op.Union(setq, lhs, rhs)
+                    SetOp.Type.EXCEPT -> Rex.Op.Except(setq, lhs, rhs)
+                    SetOp.Type.INTERSECT -> Rex.Op.Intersect(setq, lhs, rhs)
+                }
+                return Rex(
+                    type = StaticType.ANY,
+                    op = op
+                )
+            } else {
+                // SQL set op; create set op rel
+                val rel = node.accept(RelConverter.ToRel(ctx), nil)
+                return Rex(
+                    type = StaticType.ANY,
+                    op = Rex.Op.Select(
+                        constructor = Rex(
+                            StaticType.ANY,
+                            rexOpVarResolved(0)
+                        ),
+                        rel = rel
+                    )
+                )
+            }
+        }
 
         // Helpers
 

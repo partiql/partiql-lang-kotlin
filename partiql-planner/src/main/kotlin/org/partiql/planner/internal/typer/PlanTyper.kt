@@ -103,6 +103,7 @@ import org.partiql.value.TextValue
 import org.partiql.value.boolValue
 import org.partiql.value.missingValue
 import org.partiql.value.stringValue
+import kotlin.math.max
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -241,16 +242,88 @@ internal class PlanTyper(
             return rel(type, op)
         }
 
-        override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Union")
+        override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Rel.Type?): Rel {
+            val lhs = visitRel(node.lhs, node.lhs.type)
+            val rhs = visitRel(node.rhs, node.rhs.type)
+            // Check for Compatibility
+            if (!setOpSchemaSizesMatch(lhs, rhs)) {
+                return createRelErrForSetOpMismatchSizes()
+            }
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
+                return createRelErrForSetOpMismatchTypes()
+            }
+            // Compute Schema
+            val type = Rel.Type(lhs.type.schema, props = emptySet())
+            return Rel(type, node.copy(lhs = lhs, rhs = rhs))
         }
 
         override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Intersect")
+            val lhs = visitRel(node.lhs, node.lhs.type)
+            val rhs = visitRel(node.rhs, node.rhs.type)
+            // Check for Compatibility
+            if (!setOpSchemaSizesMatch(lhs, rhs)) {
+                return createRelErrForSetOpMismatchSizes()
+            }
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
+                return createRelErrForSetOpMismatchTypes()
+            }
+            // Compute Schema
+            val type = Rel.Type(lhs.type.schema, props = emptySet())
+            return Rel(type, node.copy(lhs = lhs, rhs = rhs))
         }
 
-        override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Except")
+        override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
+            val lhs = visitRel(node.lhs, node.lhs.type)
+            val rhs = visitRel(node.rhs, node.rhs.type)
+            // Check for Compatibility
+            if (!setOpSchemaSizesMatch(lhs, rhs)) {
+                return createRelErrForSetOpMismatchSizes()
+            }
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
+                return createRelErrForSetOpMismatchTypes()
+            }
+            // Compute Schema
+            val size = max(lhs.type.schema.size, rhs.type.schema.size)
+            val schema = List(size) {
+                val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", MISSING)
+                val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", MISSING)
+                val bindingName = when (lhsBinding.name == rhsBinding.name) {
+                    true -> lhsBinding.name
+                    false -> "_$it"
+                }
+                Rel.Binding(bindingName, unionOf(lhsBinding.type, rhsBinding.type).flatten())
+            }
+            val type = Rel.Type(schema, props = emptySet())
+            return Rel(type, node.copy(lhs = lhs, rhs = rhs))
+        }
+
+        /**
+         * @return whether each type of the [lhs] is comparable to its counterpart on the [rhs]
+         * @param lhs should be typed already
+         * @param rhs should be typed already
+         */
+        private fun setOpSchemaTypesMatch(lhs: Rel, rhs: Rel): Boolean {
+            // TODO: [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md)
+            //  states that the types must be "comparable". For now, we will always return true. In the future, we need
+            //  to add support for checking comparable types.
+            return true
+        }
+
+        /**
+         * @return whether the [lhs] and [rhs] schemas are of equal size
+         * @param lhs should be typed already
+         * @param rhs should be typed already
+         */
+        private fun setOpSchemaSizesMatch(lhs: Rel, rhs: Rel): Boolean {
+            return lhs.type.schema.size == rhs.type.schema.size
+        }
+
+        private fun createRelErrForSetOpMismatchSizes(): Rel {
+            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same number of bindings."))
+        }
+
+        private fun createRelErrForSetOpMismatchTypes(): Rel {
+            return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same type."))
         }
 
         override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?): Rel {
@@ -434,6 +507,30 @@ internal class PlanTyper(
     ) : PlanRewriter<StaticType?>() {
 
         override fun visitRex(node: Rex, ctx: StaticType?): Rex = visitRexOp(node.op, node.type) as Rex
+
+        override fun visitRexOpUnion(node: Rex.Op.Union, ctx: StaticType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = unionOf(lhs.type, rhs.type).flatten()
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
+
+        override fun visitRexOpExcept(node: Rex.Op.Except, ctx: StaticType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = unionOf(lhs.type, rhs.type).flatten()
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
+
+        override fun visitRexOpIntersect(node: Rex.Op.Intersect, ctx: StaticType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = unionOf(lhs.type, rhs.type).flatten()
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
 
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex {
             // type comes from RexConverter

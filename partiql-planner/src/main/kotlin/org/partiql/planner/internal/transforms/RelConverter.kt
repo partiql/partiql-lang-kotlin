@@ -40,7 +40,6 @@ import org.partiql.planner.internal.ir.relOpAggregate
 import org.partiql.planner.internal.ir.relOpAggregateCall
 import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
-import org.partiql.planner.internal.ir.relOpExcept
 import org.partiql.planner.internal.ir.relOpExclude
 import org.partiql.planner.internal.ir.relOpExcludeItem
 import org.partiql.planner.internal.ir.relOpExcludeStepCollIndex
@@ -48,7 +47,6 @@ import org.partiql.planner.internal.ir.relOpExcludeStepCollWildcard
 import org.partiql.planner.internal.ir.relOpExcludeStepStructField
 import org.partiql.planner.internal.ir.relOpExcludeStepStructWildcard
 import org.partiql.planner.internal.ir.relOpFilter
-import org.partiql.planner.internal.ir.relOpIntersect
 import org.partiql.planner.internal.ir.relOpJoin
 import org.partiql.planner.internal.ir.relOpLimit
 import org.partiql.planner.internal.ir.relOpOffset
@@ -57,7 +55,6 @@ import org.partiql.planner.internal.ir.relOpScan
 import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpSortSpec
-import org.partiql.planner.internal.ir.relOpUnion
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
@@ -75,7 +72,7 @@ import org.partiql.value.boolValue
 internal object RelConverter {
 
     // IGNORE — so we don't have to non-null assert on operator inputs
-    private val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
+    internal val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
 
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
@@ -123,7 +120,7 @@ internal object RelConverter {
     private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
-    private class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
+    internal class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
 
         override fun defaultReturn(node: AstNode, input: Rel): Rel =
             throw IllegalArgumentException("unsupported rel $node")
@@ -161,6 +158,35 @@ internal object RelConverter {
                 is Select.Pivot -> rel // Skip PIVOT
             }
             return rel
+        }
+
+        // Create a SQL set op
+        override fun visitExprBagOp(node: Expr.BagOp, ctx: Rel): Rel {
+            // Assumes parser correctly only allows Expr.SFW or other Expr.BagOps with Expr.SFW arguments when
+            // converting to the SQL set op
+            assert(node.lhs is Expr.SFW || node.lhs is Expr.BagOp) {
+                "Expect LHS of bag op to be a Expr.SFW or a Expr.BagOp. " +
+                    "However, it is ${node.lhs}."
+            }
+            assert(node.rhs is Expr.SFW || node.rhs is Expr.BagOp) {
+                "Expect RHS of bag op to be a Expr.SFW or a Expr.BagOp. " +
+                    "However, it is ${node.lhs}."
+            }
+            val setq = when (node.type.setq) {
+                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+            }
+            val lhsRel = visitExpr(node.lhs, ctx)
+            val rhsRel = visitExpr(node.rhs, ctx)
+            val op = when (node.type.type) {
+                SetOp.Type.UNION -> Rel.Op.Union(setq, lhsRel, rhsRel)
+                SetOp.Type.EXCEPT -> Rel.Op.Except(setq, lhsRel, rhsRel)
+                SetOp.Type.INTERSECT -> Rel.Op.Intersect(setq, lhsRel, rhsRel)
+            }
+            return Rel(
+                type = nil.type,
+                op = op
+            )
         }
 
         /**
@@ -407,9 +433,6 @@ internal object RelConverter {
 
         /**
          * Append SQL set operator if present
-         *
-         * TODO combine/compare schemas
-         * TODO set quantifier
          */
         private fun convertSetOp(input: Rel, setOp: Expr.SFW.SetOp?): Rel {
             if (setOp == null) {
@@ -418,10 +441,14 @@ internal object RelConverter {
             val type = input.type.copy(props = emptySet())
             val lhs = input
             val rhs = visitExprSFW(setOp.operand, nil)
+            val quantifier = when (setOp.type.setq) {
+                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+            }
             val op = when (setOp.type.type) {
-                SetOp.Type.UNION -> relOpUnion(lhs, rhs)
-                SetOp.Type.INTERSECT -> relOpIntersect(lhs, rhs)
-                SetOp.Type.EXCEPT -> relOpExcept(lhs, rhs)
+                SetOp.Type.UNION -> Rel.Op.Union(quantifier, lhs, rhs)
+                SetOp.Type.EXCEPT -> Rel.Op.Except(quantifier, lhs, rhs)
+                SetOp.Type.INTERSECT -> Rel.Op.Intersect(quantifier, lhs, rhs)
             }
             return rel(type, op)
         }

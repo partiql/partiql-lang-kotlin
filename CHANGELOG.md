@@ -35,6 +35,11 @@ unconstrained which is not SQL-conformant and is causing issues in integrating w
 INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
 integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
 org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
+- **Breaking change**: partiql-plan: adds a set quantifier field to SQL set operators `UNION`, `INTERSECT`, and `EXCEPT`
+- partiql-plan: adds a dedicated Rex node for PartiQL bag operators `UNION`, `INTERSECT`, and `EXCEPT`
+- partiql-planner: Adds typing support for set operators
+- partiql-parser: parses non-SFW expressions to be PartiQL `OUTER` bag operators
+- partiql-ast: fixes missing parens from `bag_op` when printing using `SqlDialect`
 
 ### Deprecated
 
@@ -1082,7 +1087,9 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.6...HEAD
+[0.14.6]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.5...v0.14.6
+[0.14.5]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...v0.14.5
 [0.14.4]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.3...v0.14.4
 [0.14.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.2...v0.14.3
 [0.14.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.1...v0.14.2
