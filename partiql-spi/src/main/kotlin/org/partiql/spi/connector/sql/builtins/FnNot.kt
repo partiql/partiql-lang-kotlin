@@ -11,7 +11,6 @@ import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.boolValue
 import org.partiql.value.check
 
@@ -31,23 +30,5 @@ internal object Fn_NOT__BOOL__BOOL : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<BoolValue>().value!!
         return boolValue(value.not())
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_NOT__MISSING__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "not",
-        returns = BOOL,
-        parameters = listOf(FnParameter("value", MISSING)),
-        isNullable = true,
-        isNullCall = true,
-        isMissable = false,
-        isMissingCall = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(null)
     }
 }

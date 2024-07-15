@@ -3,6 +3,7 @@ package org.partiql.planner.internal
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.PType.Kind
@@ -144,10 +145,14 @@ internal object FnResolver {
                     exactInputTypes++
                     continue
                 }
-                // 2. Match ANY, no coercion needed
-                // TODO: Rewrite args in this scenario
-                arg.kind == Kind.UNKNOWN || p.type.kind == Kind.DYNAMIC || arg.kind == Kind.DYNAMIC -> continue
-                // 3. Check for a coercion
+                // 2. Match ANY parameter, no coercion needed
+                p.type.kind == Kind.DYNAMIC -> continue
+                arg.kind == Kind.UNKNOWN -> continue
+                // 3. Allow for ANY arguments
+                arg.kind == Kind.DYNAMIC -> {
+                    mapping[i] = Ref.Cast(arg, p.type.toCType(), Ref.Cast.Safety.UNSAFE, true)
+                }
+                // 4. Check for a coercion
                 else -> when (val coercion = Coercions.get(arg, p.type)) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion

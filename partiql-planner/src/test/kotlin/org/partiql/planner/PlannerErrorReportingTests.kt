@@ -18,6 +18,7 @@ import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import java.lang.AssertionError
 import kotlin.test.assertEquals
 
 internal class PlannerErrorReportingTests {
@@ -61,38 +62,39 @@ internal class PlannerErrorReportingTests {
         parser.parse(query).root
     }
 
-    fun assertProblem(
+    private fun assertProblem(
         plan: org.partiql.plan.PlanNode,
         problems: List<Problem>,
-        vararg block: () -> Boolean
+        block: (List<Problem>) -> Unit
     ) {
-        block.forEachIndexed { index, function ->
-            assert(function.invoke()) {
-                buildString {
-                    this.appendLine("assertion #${index + 1} failed")
+        try {
+            block.invoke(problems)
+        } catch (e: Throwable) {
+            val str = buildString {
+                this.appendLine("Assertion failed")
 
-                    this.appendLine("--------Plan---------")
-                    PlanPrinter.append(this, plan)
+                this.appendLine("--------Plan---------")
+                PlanPrinter.append(this, plan)
 
-                    this.appendLine("----------Problems---------")
-                    problems.forEach {
-                        this.appendLine(it.toString())
-                    }
+                this.appendLine("----------Problems---------")
+                problems.forEach {
+                    this.appendLine(it.toString())
                 }
             }
+            throw AssertionError(str, e)
         }
     }
 
     data class TestCase(
         val query: String,
         val isSignal: Boolean,
-        val assertion: (List<Problem>) -> List<() -> Boolean>,
+        val assertion: (List<Problem>) -> Unit,
         val expectedType: CompilerType
     ) {
         constructor(
             query: String,
             isSignal: Boolean,
-            assertion: (List<Problem>) -> List<() -> Boolean>,
+            assertion: (List<Problem>) -> Unit,
             expectedType: StaticType = StaticType.ANY
         ) : this(query, isSignal, assertion, PType.fromStaticType(expectedType).toCType())
     }
@@ -110,11 +112,9 @@ internal class PlannerErrorReportingTests {
                 )
             )
 
-        private fun assertOnProblemCount(warningCount: Int, errorCount: Int): (List<Problem>) -> List<() -> Boolean> = { problems ->
-            listOf(
-                { problems.filter { it.details.severity == ProblemSeverity.WARNING }.size == warningCount },
-                { problems.filter { it.details.severity == ProblemSeverity.ERROR }.size == errorCount },
-            )
+        private fun assertOnProblemCount(warningCount: Int, errorCount: Int): (List<Problem>) -> Unit = { problems ->
+            assertEquals(warningCount, problems.filter { it.details.severity == ProblemSeverity.WARNING }.size, "Number of warnings is wrong.")
+            assertEquals(errorCount, problems.filter { it.details.severity == ProblemSeverity.ERROR }.size, "Number of errors is wrong.")
         }
 
         /**
@@ -278,13 +278,13 @@ internal class PlannerErrorReportingTests {
             TestCase(
                 "1 + not_a_function(1)",
                 false,
-                assertOnProblemCount(1, 1),
+                assertOnProblemCount(0, 1),
                 StaticType.INT4,
             ),
             TestCase(
                 "1 + not_a_function(1)",
                 true,
-                assertOnProblemCount(0, 2),
+                assertOnProblemCount(0, 1),
                 StaticType.INT4,
             ),
 
@@ -408,7 +408,7 @@ internal class PlannerErrorReportingTests {
 
         assertProblem(
             plan, problems,
-            *tc.assertion(problems).toTypedArray()
+            tc.assertion
         )
         assertEquals(tc.expectedType, (plan.statement as org.partiql.plan.Statement.Query).root.type)
     }
@@ -420,28 +420,4 @@ internal class PlannerErrorReportingTests {
     @ParameterizedTest
     @MethodSource("testContinuation")
     fun testContinuation(tc: TestCase) = runTestCase(tc)
-
-    private fun StaticType.assertStaticTypeEqual(other: StaticType) {
-        val thisAll = this.allTypes.toSet()
-        val otherAll = other.allTypes.toSet()
-        val diff = (thisAll - otherAll) + (otherAll - thisAll)
-        assert(diff.isEmpty()) {
-            buildString {
-                this.appendLine("expected: ")
-                thisAll.forEach {
-                    this.append("$it, ")
-                }
-                this.appendLine()
-                this.appendLine("actual")
-                otherAll.forEach {
-                    this.append("$it, ")
-                }
-                this.appendLine()
-                this.appendLine("diff")
-                diff.forEach {
-                    this.append("$it, ")
-                }
-            }
-        }
-    }
 }

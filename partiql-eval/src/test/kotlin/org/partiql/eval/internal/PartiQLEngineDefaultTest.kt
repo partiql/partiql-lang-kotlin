@@ -1311,7 +1311,16 @@ class PartiQLEngineDefaultTest {
 
         internal fun assert() {
             val permissiveResult = run(mode = PartiQLEngine.Mode.PERMISSIVE)
-            assert(expectedPermissive == permissiveResult.first) {
+            val assertionCondition = try {
+                expectedPermissive == permissiveResult.first
+            } catch (t: Throwable) {
+                val str = buildString {
+                    appendLine("Test Name: $name")
+                    PlanPrinter.append(this, permissiveResult.second)
+                }
+                throw RuntimeException(str, t)
+            }
+            assert(assertionCondition) {
                 comparisonString(expectedPermissive, permissiveResult.first, permissiveResult.second)
             }
             var error: Throwable? = null
@@ -1344,7 +1353,13 @@ class PartiQLEngineDefaultTest {
             val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
             when (val result = engine.execute(prepared)) {
                 is PartiQLResult.Value -> return result.value to plan.plan
-                is PartiQLResult.Error -> throw result.cause
+                is PartiQLResult.Error -> {
+                    val str = buildString {
+                        appendLine("Execution resulted in an unexpected error. Plan:")
+                        PlanPrinter.append(this, plan.plan)
+                    }
+                    throw RuntimeException(str, result.cause)
+                }
             }
         }
 
@@ -1368,51 +1383,26 @@ class PartiQLEngineDefaultTest {
     }
 
     @Test
+    @Disabled
     fun developmentTest() {
         val tc = SuccessTestCase(
             input = """
-                    SELECT *
-                    EXCLUDE
-                        t.a.b.c[*].field_x
-                    FROM [{
-                        'a': {
-                            'b': {
-                                'c': [
-                                    {                    -- c[0]; field_x to be removed
-                                        'field_x': 0, 
-                                        'field_y': 0
-                                    },
-                                    {                    -- c[1]; field_x to be removed
-                                        'field_x': 1,
-                                        'field_y': 1
-                                    },
-                                    {                    -- c[2]; field_x to be removed
-                                        'field_x': 2,
-                                        'field_y': 2
-                                    }
-                                ]
-                            }
-                        }
-                    }] AS t
-            """.trimIndent(),
-            expected = bagValue(
-                structValue(
-                    "a" to structValue(
-                        "b" to structValue(
-                            "c" to listValue(
-                                structValue(
-                                    "field_y" to int32Value(0)
-                                ),
-                                structValue(
-                                    "field_y" to int32Value(1)
-                                ),
-                                structValue(
-                                    "field_y" to int32Value(2)
-                                )
-                            )
-                        )
-                    )
-                )
+                SELECT VALUE
+                    CASE x + 1
+                        WHEN NULL THEN 'shouldnt be null'
+                        WHEN MISSING THEN 'shouldnt be missing'
+                        WHEN i THEN 'ONE'
+                        WHEN f THEN 'TWO'
+                        WHEN d THEN 'THREE'
+                        ELSE '?'
+                    END
+                FROM << i, f, d, null, missing >> AS x
+            """,
+            expected = boolValue(true),
+            globals = listOf(
+                SuccessTestCase.Global("i", "1"),
+                SuccessTestCase.Global("f", "2e0"),
+                SuccessTestCase.Global("d", "3.")
             )
         )
         tc.assert()

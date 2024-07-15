@@ -64,6 +64,7 @@ import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.stringValue
+import java.lang.reflect.Type
 import kotlin.math.max
 
 /**
@@ -82,7 +83,7 @@ internal class PlanTyper(private val env: Env) {
             throw IllegalArgumentException("PartiQLPlanner only supports Query statements")
         }
         // root TypeEnv has no bindings
-        val root = statement.root.type(emptyList(), emptyList(), Scope.GLOBAL)
+        val root = statement.root.type(emptyList(), emptyList(), Strategy.GLOBAL)
         return statementQuery(root)
     }
     internal companion object {
@@ -189,8 +190,8 @@ internal class PlanTyper(private val env: Env) {
      * @property strategy
      */
     private inner class RelTyper(
-        private val outer: List<TypeEnv>,
-        private val strategy: Scope,
+        private val outer: List<Scope>,
+        private val strategy: Strategy,
     ) : PlanRewriter<Rel.Type?>() {
 
         override fun visitRel(node: Rel, ctx: Rel.Type?) = visitRelOp(node.op, node.type) as Rel
@@ -200,7 +201,7 @@ internal class PlanTyper(private val env: Env) {
          */
         override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
+            val rex = node.rex.type(emptyList(), outer, Strategy.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
             val type = ctx!!.copyWithSchema(listOf(valueT))
@@ -214,7 +215,7 @@ internal class PlanTyper(private val env: Env) {
          */
         override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
+            val rex = node.rex.type(emptyList(), outer, Strategy.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
             val indexT = PType.typeBigInt()
@@ -228,7 +229,7 @@ internal class PlanTyper(private val env: Env) {
          * TODO handle NULL|STRUCT type
          */
         override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel {
-            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
+            val rex = node.rex.type(emptyList(), outer, Strategy.GLOBAL)
             val op = relOpUnpivot(rex)
             val kType = PType.typeString()
 
@@ -383,7 +384,7 @@ internal class PlanTyper(private val env: Env) {
             val input = visitRel(node.input, ctx)
             // type limit expression using outer scope with global resolution
             // TODO: Assert expression doesn't contain locals or upvalues.
-            val limit = node.limit.type(input.type.schema, outer, Scope.GLOBAL)
+            val limit = node.limit.type(input.type.schema, outer, Strategy.GLOBAL)
             // check types
             if (limit.type.isNumeric().not()) {
                 val err = ProblemGenerator.missingRex(
@@ -403,7 +404,7 @@ internal class PlanTyper(private val env: Env) {
             val input = visitRel(node.input, ctx)
             // type offset expression using outer scope with global resolution
             // TODO: Assert expression doesn't contain locals or upvalues.
-            val offset = node.offset.type(input.type.schema, outer, Scope.GLOBAL)
+            val offset = node.offset.type(input.type.schema, outer, Strategy.GLOBAL)
             // check types
             if (offset.type.isNumeric().not()) {
                 val err = ProblemGenerator.missingRex(
@@ -437,17 +438,18 @@ internal class PlanTyper(private val env: Env) {
             // Rewrite LHS and RHS
             val lhs = visitRel(node.lhs, ctx)
             val stack = when (node.type) {
-                Rel.Op.Join.Type.INNER, Rel.Op.Join.Type.LEFT -> outer + listOf(TypeEnv(lhs.type.schema, outer))
+                Rel.Op.Join.Type.INNER, Rel.Op.Join.Type.LEFT -> outer + listOf(Scope(lhs.type.schema, outer))
                 Rel.Op.Join.Type.FULL, Rel.Op.Join.Type.RIGHT -> outer
             }
-            val rhs = RelTyper(stack, Scope.GLOBAL).visitRel(node.rhs, ctx)
+            val rhs = RelTyper(stack, Strategy.GLOBAL).visitRel(node.rhs, ctx)
 
             // Calculate output schema given JOIN type
             val schema = lhs.type.schema + rhs.type.schema
             val type = relType(schema, ctx!!.props)
 
             // Type the condition on the output schema
-            val condition = node.rex.type(TypeEnv(type.schema, outer))
+            val typeEnv = TypeEnv(env, Scope(type.schema, outer))
+            val condition = node.rex.type(typeEnv)
 
             val op = relOpJoin(lhs, rhs, condition, node.type)
             return rel(type, op)
@@ -500,9 +502,10 @@ internal class PlanTyper(private val env: Env) {
                 val resolvedRoot = when (val root = path.root) {
                     is Rex.Op.Var.Unresolved -> {
                         // resolve `root` to local binding
-                        val locals = TypeEnv(input.type.schema, outer)
+                        val locals = Scope(input.type.schema, outer)
+                        val typeEnv = TypeEnv(env, locals)
                         val path = root.identifier.toBindingPath()
-                        val resolved = locals.resolve(path)
+                        val resolved = typeEnv.resolve(path)
                         if (resolved == null) {
                             ProblemGenerator.missingRex(
                                 emptyList(),
@@ -540,7 +543,8 @@ internal class PlanTyper(private val env: Env) {
             val input = visitRel(node.input, ctx)
 
             // type the calls and groups
-            val typer = RexTyper(TypeEnv(input.type.schema, outer), Scope.LOCAL)
+            val typeEnv = TypeEnv(env, Scope(input.type.schema, outer))
+            val typer = RexTyper(typeEnv, Strategy.LOCAL)
 
             // typing of aggregate calls is slightly more complicated because they are not expressions.
             val calls = node.calls.mapIndexed { i, call ->
@@ -574,12 +578,12 @@ internal class PlanTyper(private val env: Env) {
      *
      * We should consider making the PType? parameter non-nullable.
      *
-     * @property locals TypeEnv in which this rex tree is evaluated.
+     * @property typeEnv TypeEnv in which this rex tree is evaluated.
      */
     @OptIn(PartiQLValueExperimental::class)
     private inner class RexTyper(
-        private val locals: TypeEnv,
-        private val strategy: Scope,
+        private val typeEnv: TypeEnv,
+        private val strategy: Strategy,
     ) : PlanRewriter<CompilerType?>() {
 
         override fun visitRex(node: Rex, ctx: CompilerType?): Rex = visitRexOp(node.op, node.type) as Rex
@@ -590,9 +594,9 @@ internal class PlanTyper(private val env: Env) {
         }
 
         override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: CompilerType?): Rex {
-            val scope = locals.getScope(node.depth)
+            val scope = typeEnv.locals.getScope(node.depth)
             assert(node.ref < scope.schema.size) {
-                "Invalid resolved variable (var ${node.ref}, stack frame ${node.depth}) in env: $locals"
+                "Invalid resolved variable (var ${node.ref}, stack frame ${node.depth}) in env: $typeEnv"
             }
             val type = scope.schema.getOrNull(node.ref)?.type ?: error("Can't find locals value.")
             return rex(type, node)
@@ -605,17 +609,14 @@ internal class PlanTyper(private val env: Env) {
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: CompilerType?): Rex {
             val path = node.identifier.toBindingPath()
-            val scope = when (node.scope) {
+            val strategy = when (node.scope) {
                 Rex.Op.Var.Scope.DEFAULT -> strategy
-                Rex.Op.Var.Scope.LOCAL -> Scope.LOCAL
+                Rex.Op.Var.Scope.LOCAL -> Strategy.LOCAL
             }
-            val resolvedVar = when (scope) {
-                Scope.LOCAL -> locals.resolve(path) ?: env.resolveObj(path)
-                Scope.GLOBAL -> env.resolveObj(path) ?: locals.resolve(path)
-            }
+            val resolvedVar = typeEnv.resolve(path, strategy)
             if (resolvedVar == null) {
                 val id = PlanUtils.externalize(node.identifier)
-                val inScopeVariables = locals.schema.map { it.name }.toSet()
+                val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
                 val err = ProblemGenerator.errorRex(
                     causes = emptyList(),
                     problem = ProblemGenerator.undefinedVariable(id, inScopeVariables)
@@ -735,7 +736,7 @@ internal class PlanTyper(private val env: Env) {
 
             // Find Type
             val field = root.type.getSymbol(node.key) ?: run {
-                val inScopeVariables = locals.schema.map { it.name }.toSet()
+                val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
                 return ProblemGenerator.missingRex(
                     Rex.Op.Path.Symbol(root, node.key),
                     ProblemGenerator.undefinedVariable(
@@ -1063,10 +1064,11 @@ internal class PlanTyper(private val env: Env) {
         }
 
         override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: CompilerType?): Rex {
-            val stack = locals.outer + listOf(locals)
+            val stack = typeEnv.locals.outer + listOf(typeEnv.locals)
             val rel = node.rel.type(stack)
-            val typeEnv = TypeEnv(rel.type.schema, stack)
-            val typer = RexTyper(typeEnv, Scope.LOCAL)
+            val scope = Scope(rel.type.schema, stack)
+            val typeEnv = TypeEnv(env, scope)
+            val typer = RexTyper(typeEnv, Strategy.LOCAL)
             val key = typer.visitRex(node.key, null)
             val value = typer.visitRex(node.value, null)
             val op = rexOpPivot(key, value, rel)
@@ -1074,9 +1076,10 @@ internal class PlanTyper(private val env: Env) {
         }
 
         override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: CompilerType?): Rex {
-            val rel = node.rel.type(locals.outer + listOf(locals))
-            val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
-            val constructor = node.constructor.type(newTypeEnv)
+            val rel = node.rel.type(typeEnv.locals.outer + listOf(typeEnv.locals))
+            val newScope = Scope(schema = rel.type.schema, outer = typeEnv.locals.outer + listOf(typeEnv.locals))
+            val typeEnv = TypeEnv(env, newScope)
+            val constructor = node.constructor.type(typeEnv)
             val subquery = rexOpSubquery(constructor, rel, node.coercion)
             return when (node.coercion) {
                 Rex.Op.Subquery.Coercion.SCALAR -> visitRexOpSubqueryScalar(subquery, constructor.type)
@@ -1121,9 +1124,10 @@ internal class PlanTyper(private val env: Env) {
 
         // TODO: Should we support the ROW type?
         override fun visitRexOpSelect(node: Rex.Op.Select, ctx: CompilerType?): Rex {
-            val rel = node.rel.type(locals.outer + listOf(locals))
-            val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
-            val constructor = node.constructor.type(newTypeEnv)
+            val rel = node.rel.type(typeEnv.locals.outer + listOf(typeEnv.locals))
+            val newScope = Scope(schema = rel.type.schema, outer = typeEnv.locals.outer + listOf(typeEnv.locals))
+            val typeEnv = TypeEnv(env, newScope)
+            val constructor = node.constructor.type(typeEnv)
             val type = when (rel.isOrdered()) {
                 true -> PType.typeList(constructor.type)
                 false -> PType.typeBag(constructor.type)
@@ -1292,20 +1296,20 @@ internal class PlanTyper(private val env: Env) {
 
     // HELPERS
 
-    private fun Rel.type(stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL): Rel =
+    private fun Rel.type(stack: List<Scope>, strategy: Strategy = Strategy.LOCAL): Rel =
         RelTyper(stack, strategy).visitRel(this, null)
 
     /**
-     * This types the [Rex] given the input record ([input]) and [stack] of [TypeEnv] (representing the outer scopes).
+     * This types the [Rex] given the input record ([input]) and [stack] of [Scope] (representing the outer scopes).
      */
-    private fun Rex.type(input: List<Rel.Binding>, stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL) =
-        RexTyper(TypeEnv(input, stack), strategy).visitRex(this, this.type)
+    private fun Rex.type(input: List<Rel.Binding>, stack: List<Scope>, strategy: Strategy = Strategy.LOCAL) =
+        RexTyper(TypeEnv(env, Scope(input, stack)), strategy).visitRex(this, this.type)
 
     /**
-     * This types the [Rex] given a [TypeEnv]. We use the [TypeEnv.schema] as the input schema and the [TypeEnv.outer]
+     * This types the [Rex] given a [Scope]. We use the [Scope.schema] as the input schema and the [Scope.outer]
      * as the outer scopes/
      */
-    private fun Rex.type(typeEnv: TypeEnv, strategy: Scope = Scope.LOCAL) =
+    private fun Rex.type(typeEnv: TypeEnv, strategy: Strategy = Strategy.LOCAL) =
         RexTyper(typeEnv, strategy).visitRex(this, this.type)
 
     /**
