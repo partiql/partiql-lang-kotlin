@@ -1121,13 +1121,22 @@ internal class PartiQLPigVisitor(
 
     override fun visitNot(ctx: PartiQLParser.NotContext) = visitUnaryOperation(ctx.rhs, ctx.op, null)
 
-    override fun visitMathOp00(ctx: PartiQLParser.MathOp00Context): PartiqlAst.PartiqlAstNode =
-        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
+    private fun emptyListIfNull(ctx: ParserRuleContext?) = if (ctx == null) {
+        emptyList<Token>()
+    } else {
+        listOf(ctx.start)
+    }
 
-    override fun visitMathOp01(ctx: PartiQLParser.MathOp01Context): PartiqlAst.PartiqlAstNode =
-        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
+    override fun visitMathOp00(ctx: PartiQLParser.MathOp00Context): PartiqlAst.PartiqlAstNode =
+        visitBinaryOperation(ctx.lhs, ctx.rhs, emptyListIfNull(ctx.op), ctx.parent)
+
+    override fun visitMathOp01(ctx: PartiQLParser.MathOp01Context) =
+        visitUnaryOperation(ctx.rhs, ctx.op?.start, ctx.parent)
 
     override fun visitMathOp02(ctx: PartiQLParser.MathOp02Context): PartiqlAst.PartiqlAstNode =
+        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
+
+    override fun visitMathOp03(ctx: PartiQLParser.MathOp03Context): PartiqlAst.PartiqlAstNode =
         visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
 
     override fun visitValueExpr(ctx: PartiQLParser.ValueExprContext) =
@@ -1785,25 +1794,30 @@ internal class PartiQLPigVisitor(
         if (parent != null) return@build visit(parent) as PartiqlAst.Expr
         val args = listOf(lhs!!, rhs!!).map { visit(it) as PartiqlAst.Expr }
         val metas = op.getSourceMetaContainer()
-        when (op.first().type) {
-            PartiQLParser.AND -> and(args, metas)
-            PartiQLParser.OR -> or(args, metas)
-            PartiQLParser.ASTERISK -> times(args, metas)
-            PartiQLParser.SLASH_FORWARD -> divide(args, metas)
-            PartiQLParser.PLUS -> plus(args, metas)
-            PartiQLParser.MINUS -> minus(args, metas)
-            PartiQLParser.PERCENT -> modulo(args, metas)
-            PartiQLParser.CONCAT -> concat(args, metas)
-            PartiQLParser.ANGLE_LEFT -> {
-                if (op.size > 1) ne(args, metas)
-                else lt(args, metas)
-            }
-            PartiQLParser.LT_EQ -> lte(args, metas)
-            PartiQLParser.ANGLE_RIGHT -> gt(args, metas)
-            PartiQLParser.GT_EQ -> gte(args, metas)
-            PartiQLParser.BANG -> ne(args, metas)
-            PartiQLParser.EQ -> eq(args, metas)
-            PartiQLParser.AMPERSAND -> bitwiseAnd(args, metas)
+        val start = op.first().tokenIndex
+        val stop = op.last().tokenIndex
+        val tokensInRange = tokens.get(start, stop)
+        if (tokensInRange.any { it.channel == PartiQLTokens.HIDDEN }) {
+            throw ParserException("Invalid whitespace or comment in operator", ErrorCode.PARSE_INVALID_QUERY)
+        }
+        val stringOp = op.joinToString("") { it.text.lowercase() }
+        when (stringOp) {
+            "and" -> and(args, metas)
+            "or" -> or(args, metas)
+            "*" -> times(args, metas)
+            "/" -> divide(args, metas)
+            "+" -> plus(args, metas)
+            "-" -> minus(args, metas)
+            "%" -> modulo(args, metas)
+            "||" -> concat(args, metas)
+            "<" -> lt(args, metas)
+            "<>" -> ne(args, metas)
+            "<=" -> lte(args, metas)
+            ">" -> gt(args, metas)
+            ">=" -> gte(args, metas)
+            "!=" -> ne(args, metas)
+            "=" -> eq(args, metas)
+            "&" -> bitwiseAnd(args, metas)
             else -> throw ParserException("Unknown binary operator", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
@@ -1843,7 +1857,6 @@ internal class PartiQLPigVisitor(
                         else -> neg(arg, metas)
                     }
                 }
-
                 PartiQLParser.NOT -> not(arg, metas)
                 else -> throw ParserException("Unknown unary operator", ErrorCode.PARSE_INVALID_QUERY)
             }

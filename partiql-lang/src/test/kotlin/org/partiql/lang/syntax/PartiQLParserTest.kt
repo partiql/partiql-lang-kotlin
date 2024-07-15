@@ -5053,4 +5053,69 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             Property.TOKEN_VALUE to ION.newSymbol("<")
         )
     )
+
+    // regression tests for neq operator
+    @Test
+    fun testNeqOp() = assertExpression("1 <> 2") {
+        ne(
+            lit(ionInt(1)),
+            lit(ionInt(2))
+        )
+    }
+
+    @Test
+    fun testNeqOpAlt() = assertExpression("1 != 2") {
+        ne(
+            lit(ionInt(1)),
+            lit(ionInt(2))
+        )
+    }
+
+    @Test
+    fun testSpacesInNeq() = checkInputThrowingParserException(
+        "1 < > 2",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN, // partiql-ast parser ErrorCode
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 3L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.ANGLE_LEFT.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("<")
+        )
+    )
+
+    @Test
+    fun testSpacesInNeqAlt() = checkInputThrowingParserException(
+        "1 ! = 2",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN, // partiql-ast parser ErrorCode
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 3L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.BANG.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("!")
+        )
+    )
+
+    @Test
+    fun testCommentsInNeq() = checkInputThrowingParserException(
+        "1 </* some comment*/> 2",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN, // partiql-ast parser ErrorCode
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 3L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.ANGLE_LEFT.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("<")
+        )
+    )
+
+    @Test
+    fun testCommentsInNeqAlt() = checkInputThrowingParserException(
+        "1 !/* some comment*/= 2",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN, // partiql-ast parser ErrorCode
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 3L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.BANG.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("!")
+        )
+    )
 }

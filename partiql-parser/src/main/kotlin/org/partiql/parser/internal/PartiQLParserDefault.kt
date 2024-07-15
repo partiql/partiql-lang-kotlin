@@ -68,9 +68,9 @@ import org.partiql.ast.excludeStepCollIndex
 import org.partiql.ast.excludeStepCollWildcard
 import org.partiql.ast.excludeStepStructField
 import org.partiql.ast.excludeStepStructWildcard
+import org.partiql.ast.exprAnd
 import org.partiql.ast.exprBagOp
 import org.partiql.ast.exprBetween
-import org.partiql.ast.exprBinary
 import org.partiql.ast.exprCall
 import org.partiql.ast.exprCanCast
 import org.partiql.ast.exprCanLosslessCast
@@ -88,7 +88,10 @@ import org.partiql.ast.exprIsType
 import org.partiql.ast.exprLike
 import org.partiql.ast.exprLit
 import org.partiql.ast.exprMatch
+import org.partiql.ast.exprNot
 import org.partiql.ast.exprNullIf
+import org.partiql.ast.exprOperator
+import org.partiql.ast.exprOr
 import org.partiql.ast.exprOverlay
 import org.partiql.ast.exprParameter
 import org.partiql.ast.exprPath
@@ -103,7 +106,6 @@ import org.partiql.ast.exprStruct
 import org.partiql.ast.exprStructField
 import org.partiql.ast.exprSubstring
 import org.partiql.ast.exprTrim
-import org.partiql.ast.exprUnary
 import org.partiql.ast.exprVar
 import org.partiql.ast.exprWindow
 import org.partiql.ast.exprWindowOver
@@ -1565,83 +1567,75 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitOr(ctx: GeneratedParser.OrContext) = translate(ctx) {
-            convertBinaryExpr(ctx.lhs, ctx.rhs, Expr.Binary.Op.OR)
+            val l = visit(ctx.lhs) as Expr
+            val r = visit(ctx.rhs) as Expr
+            exprOr(l, r)
         }
 
         override fun visitAnd(ctx: GeneratedParser.AndContext) = translate(ctx) {
-            convertBinaryExpr(ctx.lhs, ctx.rhs, Expr.Binary.Op.AND)
+            val l = visit(ctx.lhs) as Expr
+            val r = visit(ctx.rhs) as Expr
+            exprAnd(l, r)
         }
 
         override fun visitNot(ctx: GeneratedParser.NotContext) = translate(ctx) {
             val expr = visit(ctx.exprNot()) as Expr
-            exprUnary(Expr.Unary.Op.NOT, expr)
+            exprNot(expr)
+        }
+
+        private fun checkForInvalidTokens(op: ParserRuleContext) {
+            val start = op.start.tokenIndex
+            val stop = op.stop.tokenIndex
+            val tokensInRange = tokens.get(start, stop)
+            if (tokensInRange.any { it.channel == GeneratedLexer.HIDDEN }) {
+                throw error(op, "Invalid whitespace or comment in operator")
+            }
+        }
+
+        private fun convertToOperator(value: ParserRuleContext, op: ParserRuleContext): Expr {
+            checkForInvalidTokens(op)
+            return convertToOperator(value, op.text)
+        }
+
+        private fun convertToOperator(value: ParserRuleContext, op: String): Expr {
+            val v = visit(value) as Expr
+            return exprOperator(op, null, v)
+        }
+
+        private fun convertToOperator(lhs: ParserRuleContext, rhs: ParserRuleContext, op: ParserRuleContext): Expr {
+            checkForInvalidTokens(op)
+            return convertToOperator(lhs, rhs, op.text)
+        }
+
+        private fun convertToOperator(lhs: ParserRuleContext, rhs: ParserRuleContext, op: String): Expr {
+            val l = visit(lhs) as Expr
+            val r = visit(rhs) as Expr
+            return exprOperator(op, l, r)
         }
 
         override fun visitMathOp00(ctx: GeneratedParser.MathOp00Context) = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
-            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryMathOp(ctx.op))
+            convertToOperator(ctx.lhs, ctx.rhs, ctx.op)
         }
 
         override fun visitMathOp01(ctx: GeneratedParser.MathOp01Context) = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
-            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryMathOp(ctx.op))
+            convertToOperator(ctx.rhs, ctx.op)
         }
 
         override fun visitMathOp02(ctx: GeneratedParser.MathOp02Context) = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
-            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryMathOp(ctx.op))
+            convertToOperator(ctx.lhs, ctx.rhs, ctx.op.text)
+        }
+
+        override fun visitMathOp03(ctx: GeneratedParser.MathOp03Context) = translate(ctx) {
+            if (ctx.parent != null) return@translate visit(ctx.parent)
+            convertToOperator(ctx.lhs, ctx.rhs, ctx.op.text)
         }
 
         override fun visitValueExpr(ctx: GeneratedParser.ValueExprContext) = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
-            val expr = visit(ctx.rhs) as Expr
-            exprUnary(convertUnaryOp(ctx.sign), expr)
-        }
-
-        private fun convertBinaryExpr(lhs: ParserRuleContext, rhs: ParserRuleContext, op: Expr.Binary.Op): Expr {
-            val l = visit(lhs) as Expr
-            val r = visit(rhs) as Expr
-            return exprBinary(op, l, r)
-        }
-
-        private fun convertBinaryOp(ctx: GeneratedParser.ComparisonOpContext) = when (ctx.start.type) {
-            GeneratedParser.AMPERSAND -> Expr.Binary.Op.BITWISE_AND
-            GeneratedParser.AND -> Expr.Binary.Op.AND
-            GeneratedParser.OR -> Expr.Binary.Op.OR
-            GeneratedParser.ASTERISK -> Expr.Binary.Op.TIMES
-            GeneratedParser.SLASH_FORWARD -> Expr.Binary.Op.DIVIDE
-            GeneratedParser.PLUS -> Expr.Binary.Op.PLUS
-            GeneratedParser.MINUS -> Expr.Binary.Op.MINUS
-            GeneratedParser.PERCENT -> Expr.Binary.Op.MODULO
-            GeneratedParser.CONCAT -> Expr.Binary.Op.CONCAT
-            GeneratedParser.ANGLE_LEFT -> {
-                if (ctx.stop.type == GeneratedParser.ANGLE_RIGHT) Expr.Binary.Op.NE
-                else Expr.Binary.Op.LT
-            }
-            GeneratedParser.LT_EQ -> Expr.Binary.Op.LTE
-            GeneratedParser.ANGLE_RIGHT -> Expr.Binary.Op.GT
-            GeneratedParser.GT_EQ -> Expr.Binary.Op.GTE
-            GeneratedParser.BANG -> Expr.Binary.Op.NE
-            GeneratedParser.EQ -> Expr.Binary.Op.EQ
-            else -> throw error(ctx.start, "Invalid binary operator")
-        }
-
-        private fun convertBinaryMathOp(token: Token) = when (token.type) {
-            GeneratedParser.AMPERSAND -> Expr.Binary.Op.BITWISE_AND
-            GeneratedParser.CONCAT -> Expr.Binary.Op.CONCAT
-            GeneratedParser.PLUS -> Expr.Binary.Op.PLUS
-            GeneratedParser.MINUS -> Expr.Binary.Op.MINUS
-            GeneratedParser.PERCENT -> Expr.Binary.Op.MODULO
-            GeneratedParser.ASTERISK -> Expr.Binary.Op.TIMES
-            GeneratedParser.SLASH_FORWARD -> Expr.Binary.Op.DIVIDE
-            else -> throw error(token, "Invalid binary operator")
-        }
-
-        private fun convertUnaryOp(token: Token) = when (token.type) {
-            GeneratedParser.PLUS -> Expr.Unary.Op.POS
-            GeneratedParser.MINUS -> Expr.Unary.Op.NEG
-            GeneratedParser.NOT -> Expr.Unary.Op.NOT
-            else -> throw error(token, "Invalid unary operator")
+            convertToOperator(ctx.rhs, ctx.sign.text)
         }
 
         /**
@@ -1651,8 +1645,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitPredicateComparison(ctx: GeneratedParser.PredicateComparisonContext) = translate(ctx) {
-            val op = convertBinaryOp(ctx.op)
-            convertBinaryExpr(ctx.lhs, ctx.rhs, op)
+            convertToOperator(ctx.lhs, ctx.rhs, ctx.op)
         }
 
         /**
@@ -1859,7 +1852,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             when (val funcName = ctx.qualifiedName()) {
                 is GeneratedParser.QualifiedNameContext -> {
                     when (funcName.name.start.type) {
-                        GeneratedParser.MOD -> exprBinary(Expr.Binary.Op.MODULO, args[0], args[1])
+                        GeneratedParser.MOD -> exprOperator("%", args[0], args[1])
                         GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH -> {
                             val path = ctx.qualifiedName().qualifier.map { visitSymbolPrimitive(it) }
                             val name = identifierSymbol("char_length", Identifier.CaseSensitivity.INSENSITIVE)

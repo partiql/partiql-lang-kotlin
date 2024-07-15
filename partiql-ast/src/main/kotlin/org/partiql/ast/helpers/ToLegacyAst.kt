@@ -336,70 +336,86 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         return aggregates.contains(this)
     }
 
-    override fun visitExprUnary(node: Expr.Unary, ctx: Ctx) = translate(node) { metas ->
-        val arg = visitExpr(node.expr, ctx)
-        when (node.op) {
-            Expr.Unary.Op.NOT -> not(arg, metas)
-            Expr.Unary.Op.POS -> {
-                when {
-                    arg !is PartiqlAst.Expr.Lit -> pos(arg)
-                    arg.value is IntElement -> arg
-                    arg.value is FloatElement -> arg
-                    arg.value is DecimalElement -> arg
-                    else -> pos(arg)
+    override fun visitExprOperator(node: Expr.Operator, ctx: Ctx) = translate(node) { metas ->
+        val lhs = node.lhs?.let { visitExpr(it, ctx) }
+        val rhs = visitExpr(node.rhs, ctx)
+        if (lhs == null) {
+            when (node.symbol) {
+                "+" -> {
+                    when {
+                        rhs !is PartiqlAst.Expr.Lit -> pos(rhs)
+                        rhs.value is IntElement -> rhs
+                        rhs.value is FloatElement -> rhs
+                        rhs.value is DecimalElement -> rhs
+                        else -> pos(rhs)
+                    }
                 }
-            }
-            Expr.Unary.Op.NEG -> {
-                when {
-                    arg !is PartiqlAst.Expr.Lit -> neg(arg, metas)
-                    arg.value is IntElement -> {
-                        val intValue = when (arg.value.integerSize) {
-                            IntElementSize.LONG -> ionInt(-arg.value.longValue)
-                            IntElementSize.BIG_INTEGER -> when (arg.value.bigIntegerValue) {
-                                Long.MAX_VALUE.toBigInteger() + (1L).toBigInteger() -> ionInt(Long.MIN_VALUE)
-                                else -> ionInt(arg.value.bigIntegerValue * BigInteger.valueOf(-1L))
+                "-" -> {
+                    when {
+                        rhs !is PartiqlAst.Expr.Lit -> neg(rhs, metas)
+                        rhs.value is IntElement -> {
+                            val intValue = when (rhs.value.integerSize) {
+                                IntElementSize.LONG -> ionInt(-rhs.value.longValue)
+                                IntElementSize.BIG_INTEGER -> when (rhs.value.bigIntegerValue) {
+                                    Long.MAX_VALUE.toBigInteger() + (1L).toBigInteger() -> ionInt(Long.MIN_VALUE)
+                                    else -> ionInt(rhs.value.bigIntegerValue * BigInteger.valueOf(-1L))
+                                }
                             }
+                            rhs.copy(
+                                value = intValue.asAnyElement(),
+                                metas = metas,
+                            )
                         }
-                        arg.copy(
-                            value = intValue.asAnyElement(),
+                        rhs.value is FloatElement -> rhs.copy(
+                            value = ionFloat(-(rhs.value.doubleValue)).asAnyElement(),
                             metas = metas,
                         )
+                        rhs.value is DecimalElement -> rhs.copy(
+                            value = ionDecimal(Decimal.valueOf(-(rhs.value.decimalValue))).asAnyElement(),
+                            metas = metas,
+                        )
+                        else -> neg(rhs, metas)
                     }
-                    arg.value is FloatElement -> arg.copy(
-                        value = ionFloat(-(arg.value.doubleValue)).asAnyElement(),
-                        metas = metas,
-                    )
-                    arg.value is DecimalElement -> arg.copy(
-                        value = ionDecimal(Decimal.valueOf(-(arg.value.decimalValue))).asAnyElement(),
-                        metas = metas,
-                    )
-                    else -> neg(arg, metas)
                 }
+                else -> error("unsupported unary expr operator $node")
+            }
+        } else {
+            val operands = listOf(lhs, rhs)
+            when (node.symbol) {
+                "+" -> plus(operands, metas)
+                "-" -> minus(operands, metas)
+                "*" -> times(operands, metas)
+                "/" -> divide(operands, metas)
+                "%" -> modulo(operands, metas)
+                "||" -> concat(operands, metas)
+                "=" -> eq(operands, metas)
+                "<>" -> ne(operands, metas)
+                "!=" -> ne(operands, metas)
+                ">" -> gt(operands, metas)
+                ">=" -> gte(operands, metas)
+                "<" -> lt(operands, metas)
+                "<=" -> lte(operands, metas)
+                "&" -> bitwiseAnd(operands, metas)
+                else -> error("unsupported binary expr operator $node")
             }
         }
     }
 
-    override fun visitExprBinary(node: Expr.Binary, ctx: Ctx) = translate(node) { metas ->
+    override fun visitExprAnd(node: Expr.And, ctx: Ctx) = translate(node) { metas ->
         val lhs = visitExpr(node.lhs, ctx)
         val rhs = visitExpr(node.rhs, ctx)
-        val operands = listOf(lhs, rhs)
-        when (node.op) {
-            Expr.Binary.Op.PLUS -> plus(operands, metas)
-            Expr.Binary.Op.MINUS -> minus(operands, metas)
-            Expr.Binary.Op.TIMES -> times(operands, metas)
-            Expr.Binary.Op.DIVIDE -> divide(operands, metas)
-            Expr.Binary.Op.MODULO -> modulo(operands, metas)
-            Expr.Binary.Op.CONCAT -> concat(operands, metas)
-            Expr.Binary.Op.AND -> and(operands, metas)
-            Expr.Binary.Op.OR -> or(operands, metas)
-            Expr.Binary.Op.EQ -> eq(operands, metas)
-            Expr.Binary.Op.NE -> ne(operands, metas)
-            Expr.Binary.Op.GT -> gt(operands, metas)
-            Expr.Binary.Op.GTE -> gte(operands, metas)
-            Expr.Binary.Op.LT -> lt(operands, metas)
-            Expr.Binary.Op.LTE -> lte(operands, metas)
-            Expr.Binary.Op.BITWISE_AND -> bitwiseAnd(operands, metas)
-        }
+        and(lhs, rhs)
+    }
+
+    override fun visitExprOr(node: Expr.Or, ctx: Ctx) = translate(node) { metas ->
+        val lhs = visitExpr(node.lhs, ctx)
+        val rhs = visitExpr(node.rhs, ctx)
+        or(lhs, rhs)
+    }
+
+    override fun visitExprNot(node: Expr.Not, ctx: Ctx) = translate(node) { metas ->
+        val rhs = visitExpr(node.value, ctx)
+        not(rhs)
     }
 
     override fun visitExprPath(node: Expr.Path, ctx: Ctx) = translate(node) { metas ->

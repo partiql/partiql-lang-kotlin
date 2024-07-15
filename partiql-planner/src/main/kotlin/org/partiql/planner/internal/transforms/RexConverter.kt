@@ -147,63 +147,129 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        override fun visitExprUnary(node: Expr.Unary, context: Env): Rex {
+        private fun resolveUnaryOp(symbol: String, rhs: Expr, context: Env): Rex {
             val type = (ANY)
             // Args
-            val arg = visitExprCoerce(node.expr, context)
+            val arg = visitExprCoerce(rhs, context)
             val args = listOf(arg)
             // Fn
-            val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+            val name = when (symbol) {
+                // TODO move hard-coded operator resolution into SPI
+                "+" -> "pos"
+                "-" -> "neg"
+                else -> error("unsupported unary op $symbol")
+            }
+            val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
 
-        override fun visitExprBinary(node: Expr.Binary, context: Env): Rex {
+        private fun resolveBinaryOp(lhs: Expr, symbol: String, rhs: Expr, context: Env): Rex {
             val type = (ANY)
-            val args = when (node.op) {
-                Expr.Binary.Op.LT, Expr.Binary.Op.GT,
-                Expr.Binary.Op.LTE, Expr.Binary.Op.GTE,
-                Expr.Binary.Op.EQ, Expr.Binary.Op.NE -> {
+            val args = when (symbol) {
+                "<", ">",
+                "<=", ">=",
+                "=", "<>", "!=" -> {
                     when {
                         // Example: [1, 2] < (SELECT a, b FROM t)
-                        isLiteralArray(node.lhs) && isSqlSelect(node.rhs) -> {
-                            val lhs = visitExprCoerce(node.lhs, context)
-                            val rhs = visitExprCoerce(node.rhs, context, Rex.Op.Subquery.Coercion.ROW)
-                            listOf(lhs, rhs)
+                        isLiteralArray(lhs) && isSqlSelect(rhs) -> {
+                            val l = visitExprCoerce(lhs, context)
+                            val r = visitExprCoerce(rhs, context, Rex.Op.Subquery.Coercion.ROW)
+                            listOf(l, r)
                         }
                         // Example: (SELECT a, b FROM t) < [1, 2]
-                        isSqlSelect(node.lhs) && isLiteralArray(node.rhs) -> {
-                            val lhs = visitExprCoerce(node.lhs, context, Rex.Op.Subquery.Coercion.ROW)
-                            val rhs = visitExprCoerce(node.rhs, context)
-                            listOf(lhs, rhs)
+                        isSqlSelect(lhs) && isLiteralArray(rhs) -> {
+                            val l = visitExprCoerce(lhs, context, Rex.Op.Subquery.Coercion.ROW)
+                            val r = visitExprCoerce(rhs, context)
+                            listOf(l, r)
                         }
                         // Example: 1 < 2
                         else -> {
-                            val lhs = visitExprCoerce(node.lhs, context)
-                            val rhs = visitExprCoerce(node.rhs, context)
-                            listOf(lhs, rhs)
+                            val l = visitExprCoerce(lhs, context)
+                            val r = visitExprCoerce(rhs, context)
+                            listOf(l, r)
                         }
                     }
                 }
                 // Example: 1 + 2
                 else -> {
-                    val lhs = visitExprCoerce(node.lhs, context)
-                    val rhs = visitExprCoerce(node.rhs, context)
-                    listOf(lhs, rhs)
+                    val l = visitExprCoerce(lhs, context)
+                    val r = visitExprCoerce(rhs, context)
+                    listOf(l, r)
                 }
             }
-            // Wrap if a NOT if necessary
-            return when (node.op) {
-                Expr.Binary.Op.NE -> {
+            // Wrap if a NOT, if necessary
+            return when (symbol) {
+                "<>", "!=" -> {
                     val op = negate(call("eq", *args.toTypedArray()))
                     rex(type, op)
                 }
                 else -> {
-                    val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+                    val name = when (symbol) {
+                        // TODO eventually move hard-coded operator resolution into SPI
+                        "<" -> "lt"
+                        ">" -> "gt"
+                        "<=" -> "lte"
+                        ">=" -> "gte"
+                        "=" -> "eq"
+                        "||" -> "concat"
+                        "+" -> "plus"
+                        "-" -> "minus"
+                        "*" -> "times"
+                        "/" -> "divide"
+                        "%" -> "modulo"
+                        "&" -> "bitwise_and"
+                        else -> error("unsupported binary op $symbol")
+                    }
+                    val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
                     val op = rexOpCallUnresolved(id, args)
                     rex(type, op)
                 }
             }
+        }
+
+        override fun visitExprOperator(node: Expr.Operator, ctx: Env): Rex {
+            val lhs = node.lhs
+            return if (lhs != null) {
+                resolveBinaryOp(lhs, node.symbol, node.rhs, ctx)
+            } else {
+                resolveUnaryOp(node.symbol, node.rhs, ctx)
+            }
+        }
+
+        override fun visitExprNot(node: Expr.Not, ctx: Env): Rex {
+            val type = (ANY)
+            // Args
+            val arg = visitExprCoerce(node.value, ctx)
+            val args = listOf(arg)
+            // Fn
+            val id = identifierSymbol("not".lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+            val op = rexOpCallUnresolved(id, args)
+            return rex(type, op)
+        }
+
+        override fun visitExprAnd(node: Expr.And, ctx: Env): Rex {
+            val type = (ANY)
+            val l = visitExprCoerce(node.lhs, ctx)
+            val r = visitExprCoerce(node.rhs, ctx)
+            val args = listOf(l, r)
+
+            // Wrap if a NOT, if necessary
+            val id = identifierSymbol("and".lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+            val op = rexOpCallUnresolved(id, args)
+            return rex(type, op)
+        }
+
+        override fun visitExprOr(node: Expr.Or, ctx: Env): Rex {
+            val type = (ANY)
+            val l = visitExprCoerce(node.lhs, ctx)
+            val r = visitExprCoerce(node.rhs, ctx)
+            val args = listOf(l, r)
+
+            // Wrap if a NOT, if necessary
+            val id = identifierSymbol("or".lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+            val op = rexOpCallUnresolved(id, args)
+            return rex(type, op)
         }
 
         private fun isLiteralArray(node: Expr): Boolean = node is Expr.Collection && (node.type == Expr.Collection.Type.ARRAY || node.type == Expr.Collection.Type.LIST)
@@ -440,7 +506,7 @@ internal object RexConverter {
             }
 
             // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
-            val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+            val id = identifierSymbol("eq", Identifier.CaseSensitivity.SENSITIVE)
             val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
                 val updatedCondition = when (rex) {
                     null -> condition
@@ -879,8 +945,7 @@ internal object RexConverter {
         // Helpers
 
         private fun negate(call: Rex.Op.Call): Rex.Op.Call {
-            val name = Expr.Unary.Op.NOT.name
-            val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+            val id = identifierSymbol("not", Identifier.CaseSensitivity.SENSITIVE)
             // wrap
             val arg = rex(BOOL, call)
             // rewrite call

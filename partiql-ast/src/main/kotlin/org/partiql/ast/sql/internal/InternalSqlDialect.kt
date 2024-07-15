@@ -255,41 +255,44 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         return tail concat "`$value`"
     }
 
-    override fun visitExprUnary(node: Expr.Unary, tail: InternalSqlBlock): InternalSqlBlock {
-        val op = when (node.op) {
-            Expr.Unary.Op.NOT -> "NOT ("
-            Expr.Unary.Op.POS -> "+("
-            Expr.Unary.Op.NEG -> "-("
+    override fun visitExprOperator(node: Expr.Operator, tail: InternalSqlBlock): InternalSqlBlock {
+        val lhs = node.lhs
+        return if (lhs != null) {
+            var t = tail
+            t = visitExprWrapped(node.lhs, t)
+            t = t concat " ${node.symbol} "
+            t = visitExprWrapped(node.rhs, t)
+            t
+        } else {
+            var t = tail
+            t = t concat node.symbol + "("
+            t = visitExprWrapped(node.rhs, t)
+            t = t concat ")"
+            return t
         }
+    }
+
+    override fun visitExprAnd(node: Expr.And, tail: InternalSqlBlock): InternalSqlBlock {
         var t = tail
-        t = t concat op
-        t = visitExprWrapped(node.expr, t)
-        t = t concat ")"
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat " AND "
+        t = visitExprWrapped(node.rhs, t)
         return t
     }
 
-    override fun visitExprBinary(node: Expr.Binary, tail: InternalSqlBlock): InternalSqlBlock {
-        val op = when (node.op) {
-            Expr.Binary.Op.PLUS -> "+"
-            Expr.Binary.Op.MINUS -> "-"
-            Expr.Binary.Op.TIMES -> "*"
-            Expr.Binary.Op.DIVIDE -> "/"
-            Expr.Binary.Op.MODULO -> "%"
-            Expr.Binary.Op.CONCAT -> "||"
-            Expr.Binary.Op.AND -> "AND"
-            Expr.Binary.Op.OR -> "OR"
-            Expr.Binary.Op.EQ -> "="
-            Expr.Binary.Op.NE -> "<>"
-            Expr.Binary.Op.GT -> ">"
-            Expr.Binary.Op.GTE -> ">="
-            Expr.Binary.Op.LT -> "<"
-            Expr.Binary.Op.LTE -> "<="
-            Expr.Binary.Op.BITWISE_AND -> "&"
-        }
+    override fun visitExprOr(node: Expr.Or, tail: InternalSqlBlock): InternalSqlBlock {
         var t = tail
         t = visitExprWrapped(node.lhs, t)
-        t = t concat " $op "
+        t = t concat " OR "
         t = visitExprWrapped(node.rhs, t)
+        return t
+    }
+
+    override fun visitExprNot(node: Expr.Not, tail: InternalSqlBlock): InternalSqlBlock {
+        var t = tail
+        t = t concat "NOT ("
+        t = visitExprWrapped(node.value, t)
+        t = t concat ")"
         return t
     }
 
