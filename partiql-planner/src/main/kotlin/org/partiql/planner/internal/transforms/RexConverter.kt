@@ -466,8 +466,75 @@ internal object RexConverter {
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
             // Rex
+            if (node.setq != null) {
+                if (isCollAgg(node)) {
+                    return callToCollAgg(id, node.setq!!, args)
+                } else {
+                    error("Currently, only COLL_<AGG> may use set quantifiers.")
+                }
+            }
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
+        }
+
+        /**
+         * @return whether call is `COLL_<AGG>`.
+         */
+        private fun isCollAgg(node: Expr.Call): Boolean {
+            val id = node.function as? org.partiql.ast.Identifier.Symbol ?: return false
+            return id.symbol.lowercase().startsWith("coll_")
+        }
+
+        /**
+         * Converts inputs to `COLL_<AGG>` when DISTINCT is used.
+         *
+         * Converts AST `COLL_MAX(DISTINCT x)` to PLAN:
+         * ```
+         * Call (COLL_MAX(Var(0)))
+         * - Select (Var(0))
+         *   - Distinct (Var(0))
+         *     - Scan (x)
+         * ```
+         *
+         * For the case where there is no set quantifier (or, if ALL is specified), i.e. `COLL_MAX(x)` or
+         * `COLL_MAX(ALL x)`, the plan is equivalent to `COLL_MAX(x)`.
+         */
+        private fun callToCollAgg(id: Identifier, setQuantifier: SetQuantifier, args: List<Rex>): Rex {
+            if (args.size != 1) {
+                error("Aggregate calls currently only support single arguments. Received ${args.size} arguments.")
+            }
+            if (setQuantifier == SetQuantifier.ALL) {
+                return Rex(ANY, Rex.Op.Call.Unresolved(id, args))
+            }
+            val input = Rel(
+                type = Rel.Type(
+                    schema = listOf(Rel.Binding(name = "_input", type = ANY)),
+                    props = emptySet()
+                ),
+                op = Rel.Op.Scan(rex = args[0])
+            )
+            val distinct = Rel(
+                type = Rel.Type(
+                    schema = listOf(Rel.Binding(name = "_input", type = BOOL)),
+                    props = emptySet()
+                ),
+                op = Rel.Op.Distinct(input)
+            )
+            val rex = Rex(
+                type = ANY,
+                op = Rex.Op.Select(
+                    constructor = Rex(
+                        type = PType.typeDynamic().toCType(),
+                        op = Rex.Op.Var.Unresolved(
+                            identifier = Identifier.Symbol("_input", Identifier.CaseSensitivity.SENSITIVE),
+                            scope = Rex.Op.Var.Scope.LOCAL
+                        )
+                    ),
+                    rel = distinct
+                )
+            )
+            val op = Rex.Op.Call.Unresolved(id, listOf(rex))
+            return Rex(ANY, op)
         }
 
         private fun visitExprCallTupleUnion(node: Expr.Call, context: Env): Rex {
