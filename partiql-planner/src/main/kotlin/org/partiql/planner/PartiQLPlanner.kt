@@ -4,6 +4,7 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PartiQLPlan
+import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.PartiQLPlannerDefault
 import org.partiql.planner.internal.PlannerFlag
@@ -36,7 +37,7 @@ public interface PartiQLPlanner {
     public companion object {
 
         @JvmStatic
-        public fun builder(): PartiQLPlannerBuilder = PartiQLPlannerBuilder()
+        public fun builder(): Builder = Builder()
 
         @JvmStatic
         public fun default(): PartiQLPlanner = Builder().build()
@@ -45,13 +46,22 @@ public interface PartiQLPlanner {
     public class Builder {
 
         private val flags: MutableSet<PlannerFlag> = mutableSetOf()
+        private var catalogs: Catalogs? = null
 
         /**
          * Build the builder, return an implementation of a [PartiQLPlanner].
          *
          * @return
          */
-        public fun build(): PartiQLPlanner = PartiQLPlannerDefault(flags)
+        public fun build(): PartiQLPlanner {
+            assert(catalogs != null) { "The `catalogs` field cannot be null, set with .catalgos(...)"}
+            return PartiQLPlannerDefault(catalogs!!, flags)
+        }
+
+        /**
+         * Adds a catalog provider to this planner builder.
+         */
+        public fun catalogs(catalogs: Catalogs): Builder = this.apply { this.catalogs = catalogs }
 
         /**
          * Java style method for setting the planner to signal mode

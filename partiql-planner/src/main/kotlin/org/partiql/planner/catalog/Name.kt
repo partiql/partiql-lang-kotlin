@@ -5,15 +5,23 @@ package org.partiql.planner.catalog
  */
 public class Name(
     private val namespace: Namespace,
-    private val name: Identifier,
+    private val name: String,
 ) {
 
+    /**
+     * Returns the unqualified name part.
+     */
+    public fun getName(): String = name
+
+    /**
+     * Returns the name's namespace.
+     */
     public fun getNamespace(): Namespace = namespace
 
+    /**
+     * Returns true if the namespace is non-empty.
+     */
     public fun hasNamespace(): Boolean = !namespace.isEmpty()
-
-    public fun getName(): Identifier = name
-
     /**
      * Compares two names including their namespaces and symbols.
      */
@@ -24,7 +32,8 @@ public class Name(
         if (other == null || javaClass != other.javaClass) {
             return false
         }
-        return matches(other as Name, ignoreCase = false)
+        other as Name
+        return (this.name == other.name) && (this.namespace == other.namespace)
     }
 
     /**
@@ -38,30 +47,13 @@ public class Name(
     }
 
     /**
-     * Return the SQL name representation of this name.
+     * Return the SQL name representation of this name — all parts delimited.
      */
     override fun toString(): String {
-        return if (namespace.isEmpty()) {
-            name.toString()
-        } else {
-            "$namespace.$name"
-        }
-    }
-
-    /**
-     * Compares one name to another, possibly ignoring case.
-     *
-     * @param other         The other name to match against.
-     * @param ignoreCase    If false, the compare all levels case-sensitively (exact-case match).
-     * @return
-     */
-    public fun matches(other: Name, ignoreCase: Boolean = false): Boolean {
-        if (ignoreCase && !(this.name.matches(other.name))) {
-            return false
-        } else if (name != other.name) {
-            return false
-        }
-        return this.namespace.matches(other.namespace, ignoreCase)
+        val parts = mutableListOf<String>()
+        parts.addAll(namespace.getLevels())
+        parts.add(name)
+        return Identifier.delimited(parts).toString()
     }
 
     public companion object {
@@ -77,22 +69,6 @@ public class Name(
          */
         @JvmStatic
         public fun of(names: Collection<String>): Name {
-            assert(names.size > 1) { "Cannot create an empty name" }
-            val namespace = Namespace.of(names.drop(1))
-            val name = Identifier.delimited(names.last())
-            return Name(namespace, name)
-        }
-
-        @JvmStatic
-        public fun of(name: Identifier): Name {
-            return Name(
-                namespace = Namespace.root(),
-                name = name
-            )
-        }
-
-        @JvmStatic
-        public fun of(names: Collection<Identifier>): Name {
             assert(names.size > 1) { "Cannot create an empty name" }
             val namespace = Namespace.of(names.drop(1))
             val name = names.last()

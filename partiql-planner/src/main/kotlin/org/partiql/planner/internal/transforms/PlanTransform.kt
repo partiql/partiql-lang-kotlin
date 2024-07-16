@@ -12,6 +12,7 @@ import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
+import org.partiql.planner.internal.ir.ref
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.value.PartiQLValueExperimental
 
@@ -143,7 +144,8 @@ internal class PlanTransform(
         }
 
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): org.partiql.plan.Rex.Op {
-            val fn = visitRef(node.fn, ctx)
+            val ref = ref(node.fn.getName())
+            val fn = visitRef(ref, ctx)
             val args = node.args.map { visitRex(it, ctx) }
             return org.partiql.plan.rexOpCallStatic(fn, args)
         }
@@ -161,7 +163,8 @@ internal class PlanTransform(
         }
 
         override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: Unit): PlanNode {
-            val fn = visitRef(node.fn, ctx)
+            val ref = ref(node.fn.getName())
+            val fn = visitRef(ref, ctx)
             val coercions = node.coercions.map { it?.let { visitRefCast(it, ctx) } }
             return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, coercions)
         }
@@ -364,7 +367,8 @@ internal class PlanTransform(
             }
 
             override fun visitRelOpAggregateCallResolved(node: Rel.Op.Aggregate.Call.Resolved, ctx: Unit): PlanNode {
-                val agg = visitRef(node.agg, ctx)
+                val ref = ref(node.agg.getName())
+                val agg = visitRef(ref, ctx)
                 val args = node.args.map { visitRex(it, ctx) }
                 val setQuantifier = when (node.setQuantifier) {
                     Rel.Op.Aggregate.SetQuantifier.ALL -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.ALL

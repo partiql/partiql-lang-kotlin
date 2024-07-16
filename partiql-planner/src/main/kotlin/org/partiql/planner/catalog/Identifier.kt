@@ -230,10 +230,10 @@ public class Identifier private constructor(
         }
 
         @JvmStatic
-        public fun of(vararg parts: String): Identifier = of(parts.toList())
+        public fun delimited(vararg parts: String): Identifier = delimited(parts.toList())
 
         @JvmStatic
-        public fun of(parts: Collection<String>): Identifier {
+        public fun delimited(parts: Collection<String>): Identifier {
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }

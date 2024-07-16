@@ -4,7 +4,7 @@ import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
@@ -14,7 +14,7 @@ import org.partiql.planner.internal.typer.PlanTyper
  * Default PartiQL logical query planner.
  */
 internal class PartiQLPlannerDefault(
-    private val catalog: Catalog,
+    private val catalogs: Catalogs,
     private val flags: Set<PlannerFlag>
 ) : PartiQLPlanner {
 
@@ -25,7 +25,7 @@ internal class PartiQLPlannerDefault(
     ): PartiQLPlanner.Result {
 
         // 0. Initialize the planning environment
-        val env = Env(catalog, session)
+        val env = Env(catalogs, session)
 
         // 1. Normalize
         val ast = statement.normalize()

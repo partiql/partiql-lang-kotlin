@@ -16,7 +16,6 @@
 
 package org.partiql.planner.internal.typer
 
-import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.exclude.ExcludeRepr
@@ -796,17 +795,17 @@ internal class PlanTyper(private val env: Env) {
             }
 
             // Check if any arg is always missing
-            val argIsAlwaysMissing = args.any { it.type.isMissingValue }
-            if (node.fn.signature.isMissingCall && argIsAlwaysMissing) {
+            val hasMissingArg = args.any { it.type.isMissingValue }
+            if (hasMissingArg) {
                 return ProblemGenerator.missingRex(
                     node,
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments."),
-                    CompilerType(node.fn.signature.returns, isMissingValue = true)
+                    CompilerType(node.fn.getReturnType(), isMissingValue = true)
                 )
             }
 
             // Infer fn return type
-            return rex(CompilerType(node.fn.signature.returns), Rex.Op.Call.Static(node.fn, args))
+            return rex(CompilerType(node.fn.getReturnType()), Rex.Op.Call.Static(node.fn, args))
         }
 
         /**
@@ -817,9 +816,7 @@ internal class PlanTyper(private val env: Env) {
          * @return
          */
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: CompilerType?): Rex {
-            val types = node.candidates.map { candidate ->
-                val kind = candidate.fn.getReturnType()
-            }.toMutableSet()
+            val types = node.candidates.map { candidate -> candidate.fn.getReturnType().toCType() }.toMutableSet()
             // TODO: Should this always be DYNAMIC?
             return Rex(type = CompilerType.anyOf(types), op = node)
         }
@@ -1159,7 +1156,7 @@ internal class PlanTyper(private val env: Env) {
             if (firstBranchCondition !is Rex.Op.Call.Static) {
                 return null
             }
-            if (!firstBranchCondition.fn.signature.name.equals("is_struct", ignoreCase = true)) {
+            if (!firstBranchCondition.fn.getName().equals("is_struct", ignoreCase = true)) {
                 return null
             }
             val firstBranchResultType = firstBranch.rex.type

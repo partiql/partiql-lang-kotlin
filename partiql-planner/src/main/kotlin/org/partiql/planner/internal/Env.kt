@@ -1,6 +1,7 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
@@ -19,7 +20,7 @@ import org.partiql.planner.internal.typer.CompilerType
  * @property session
  */
 internal class Env(
-    private val catalog: Catalog,
+    private val catalogs: Catalogs,
     private val session: Session,
 ) {
 

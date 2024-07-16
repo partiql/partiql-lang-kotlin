@@ -20,7 +20,7 @@ public sealed interface Routine {
     /**
      * The function return type. Required.
      */
-    public fun getReturnType(): PType.Kind
+    public fun getReturnType(): PType
 
     /**
      * Represents an SQL row-value expression call.
@@ -79,12 +79,12 @@ public sealed interface Routine {
         public fun scalar(
             name: String,
             parameters: Collection<Parameter>,
-            returnType: PType.Kind,
+            returnType: PType,
             properties: Properties = DEFAULT_PROPERTIES,
         ): Scalar = object : Scalar {
             override fun getName(): String = name
             override fun getParameters(): Array<Parameter> = parameters.toTypedArray()
-            override fun getReturnType(): PType.Kind = returnType
+            override fun getReturnType(): PType = returnType
             override fun getProperties(): Properties = properties
         }
     }
