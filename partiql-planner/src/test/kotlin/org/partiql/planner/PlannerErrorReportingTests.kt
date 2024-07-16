@@ -7,12 +7,13 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Namespace
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.spi.connector.ConnectorSession
+import org.partiql.types.Field
 import org.partiql.types.BagType
 import org.partiql.types.PType
 import org.partiql.types.StaticType
@@ -21,39 +22,25 @@ import org.partiql.types.TupleConstraint
 import kotlin.test.assertEquals
 
 internal class PlannerErrorReportingTests {
+
     val catalogName = "mode_test"
     val userId = "test-user"
     val queryId = "query"
 
-    val catalog = MemoryCatalog
-        .PartiQL()
+    val catalog = Catalog
+        .builder()
         .name(catalogName)
-        .define("missing_binding", StaticType.ANY)
-        .define("atomic", StaticType.INT2)
-        .define("collection_no_missing_atomic", BagType(StaticType.INT2))
-        .define("collection_contain_missing_atomic", BagType(StaticType.INT2))
-        .define("struct_no_missing", closedStruct(StructType.Field("f1", StaticType.INT2)))
-        .define(
-            "struct_with_missing",
-            closedStruct(
-                StructType.Field("f1", StaticType.INT2),
-            )
-        )
+        .createTable("missing_binding", PType.typeDynamic())
+        .createTable("atomic", PType.typeSmallInt())
+        .createTable("collection_no_missing_atomic", PType.typeBag(PType.typeSmallInt()))
+        .createTable("collection_contain_missing_atomic",PType.typeBag(PType.typeSmallInt()))
+        .createTable("struct_no_missing", PType.typeRow(listOf(Field.of("f1", PType.typeSmallInt()))))
+        .createTable("struct_with_missing", PType.typeRow(listOf(Field.of("f1", PType.typeSmallInt()))))
         .build()
 
-    val metadata = MemoryConnector(catalog).getMetadata(
-        object : ConnectorSession {
-            override fun getQueryId(): String = "q"
-            override fun getUserId(): String = "s"
-        }
-    )
-
-    val session = PartiQLPlanner.Session(
-        queryId = queryId,
-        userId = userId,
-        currentCatalog = catalogName,
-        catalogs = mapOf(catalogName to metadata),
-    )
+    val session = Session.builder()
+        .namespace(Namespace.of(catalogName))
+        .build()
 
     val parser = PartiQLParserBuilder().build()
 
@@ -398,7 +385,7 @@ internal class PlannerErrorReportingTests {
 
     private fun runTestCase(tc: TestCase) {
         val planner = when (tc.isSignal) {
-            true -> PartiQLPlanner.builder().signalMode().build()
+            true -> PartiQLPlanner.builder().signal().build()
             else -> PartiQLPlanner.builder().build()
         }
         val pc = ProblemCollector()

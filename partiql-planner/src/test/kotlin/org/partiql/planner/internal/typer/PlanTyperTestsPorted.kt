@@ -19,39 +19,32 @@ import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Catalogs
+import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Namespace
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
+import org.partiql.planner.plugins.local.toStaticType
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.local.toStaticType
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.plugins.memory.MemoryObject
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.PType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.DECIMAL
-import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.INT8
-import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.STRUCT
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import org.partiql.value.PartiQLValueExperimental
 import java.util.stream.Stream
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
@@ -108,7 +101,16 @@ internal class PlanTyperTestsPorted {
                 note: String? = null,
                 expected: StaticType? = null,
                 problemHandler: ProblemHandler? = null,
-            ) : this(name, key, query, catalog, catalogPath, note, expected?.let { PType.fromStaticType(it).toCType() }, problemHandler)
+            ) : this(
+                name,
+                key,
+                query,
+                catalog,
+                catalogPath,
+                note,
+                expected?.let { PType.fromStaticType(it).toCType() },
+                problemHandler
+            )
 
             override fun toString(): String = "$name : ${query ?: key}"
         }
@@ -130,7 +132,10 @@ internal class PlanTyperTestsPorted {
     companion object {
 
         private val parser = PartiQLParser.default()
-        private val planner = PartiQLPlanner.builder().signalMode().build()
+        private val planner = PartiQLPlanner.builder()
+            .catalogs(loadCatalogs())
+            .signal()
+            .build()
 
         private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
             val message = buildString {
@@ -146,11 +151,6 @@ internal class PlanTyperTestsPorted {
                 true -> assertTrue(message) { problems.any { it.details == problem.details } }
                 false -> assertTrue(message) { problems.any { it == problem } }
             }
-        }
-
-        val session = object : ConnectorSession {
-            override fun getQueryId(): String = "query-id"
-            override fun getUserId(): String = "user-id"
         }
 
         private fun id(vararg parts: Identifier.Symbol): Identifier {
@@ -170,10 +170,10 @@ internal class PlanTyperTestsPorted {
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
          */
-        @OptIn(PartiQLValueExperimental::class)
-        val catalogs: List<Pair<String, ConnectorMetadata>> by lazy {
+        private fun loadCatalogs(): Catalogs {
+            // Make a map from catalog name to tables.
             val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
-            val map = mutableMapOf<String, MutableList<Pair<BindingPath, StaticType>>>()
+            val map = mutableMapOf<String, MutableList<Pair<Name, PType>>>()
             inputStream.reader().readLines().forEach { path ->
                 if (path.startsWith("catalogs/default")) {
                     val schema = this::class.java.getResourceAsStream("/$path")!!
@@ -181,30 +181,32 @@ internal class PlanTyperTestsPorted {
                     val staticType = ion.toStaticType()
                     val steps = path.substring(0, path.length - 4).split('/').drop(2) // drop the catalogs/default
                     val catalogName = steps.first()
-                    val bindingSteps = steps
-                        .drop(1)
-                        .map { BindingName(it, BindingCase.INSENSITIVE) }
-                    val bindingPath = BindingPath(bindingSteps)
+                    // args
+                    val name = Name.of(steps.drop(1))
+                    val ptype = PType.fromStaticType(staticType)
                     if (map.containsKey(catalogName)) {
-                        map[catalogName]!!.add(bindingPath to staticType)
+                        map[catalogName]!!.add(name to ptype)
                     } else {
-                        map[catalogName] = mutableListOf(bindingPath to staticType)
+                        map[catalogName] = mutableListOf(name to ptype)
                     }
                 }
             }
-            map.entries.map { (catalogName, bindings) ->
-                val catalog = MemoryCatalog.PartiQL().name(catalogName).build()
-                val connector = MemoryConnector(catalog)
-                for (binding in bindings) {
-                    val path = binding.first
-                    val obj = MemoryObject(binding.second)
-                    catalog.insert(path, obj)
-                }
-                catalogName to connector.getMetadata(session)
+            // Make a catalogs map
+            val catalogs = Catalogs.builder()
+            for ((catalogName, tables) in map) {
+                val catalog = Catalog.builder()
+                    .name(catalogName)
+                    .apply {
+                        for ((name, schema) in tables) {
+                            createTable(name, schema)
+                        }
+                    }
+                    .build()
+                catalogs.add(catalog)
             }
+            // finalize
+            return catalogs.build()
         }
-
-        private const val USER_ID = "TEST_USER"
 
         private fun key(name: String) = PartiQLTest.Key("schema_inferencer", name)
 
@@ -290,14 +292,6 @@ internal class PlanTyperTestsPorted {
                     TupleConstraint.Ordered
                 )
             )
-
-        private fun insensitiveId(symbol: String) = BindingPath(listOf(BindingName(symbol, BindingCase.INSENSITIVE)))
-
-        private fun sensitiveId(symbol: String) = BindingPath(listOf(BindingName(symbol, BindingCase.SENSITIVE)))
-
-        private fun idQualified(vararg symbol: Pair<String, BindingCase>) = symbol.map {
-            BindingName(it.first, it.second)
-        }.let { BindingPath(it) }
 
         //
         // Parameterized Test Source
@@ -2619,7 +2613,15 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-28"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB),
+                expected = unionOf(
+                    StaticType.INT2,
+                    StaticType.INT4,
+                    StaticType.INT8,
+                    StaticType.INT,
+                    StaticType.DECIMAL,
+                    StaticType.STRING,
+                    StaticType.CLOB
+                ),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-29"),
@@ -2734,7 +2736,13 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-16"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL)
+                expected = unionOf(
+                    StaticType.INT2,
+                    StaticType.INT4,
+                    StaticType.INT8,
+                    StaticType.INT,
+                    StaticType.DECIMAL
+                )
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-17"),
@@ -2841,7 +2849,14 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-15"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING)
+                expected = unionOf(
+                    StaticType.INT2,
+                    StaticType.INT4,
+                    StaticType.INT8,
+                    StaticType.INT,
+                    StaticType.DECIMAL,
+                    StaticType.STRING
+                )
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-16"),
@@ -3702,7 +3717,7 @@ internal class PlanTyperTestsPorted {
     //
     private fun infer(
         query: String,
-        session: PartiQLPlanner.Session,
+        session: Session,
         problemCollector: ProblemCollector,
     ): PartiQLPlan {
         val ast = parser.parse(query).root
@@ -3716,14 +3731,9 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: SuccessTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
-        )
-
+        val session = Session.builder()
+            .namespace(Namespace.of(listOf(tc.catalog) + tc.catalogPath))
+            .build()
         val hasQuery = tc.query != null
         val hasKey = tc.key != null
         if (hasQuery == hasKey) {
@@ -3757,13 +3767,9 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: ErrorTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
-        )
+        val session = Session.builder()
+            .namespace(Namespace.of(listOf(tc.catalog) + tc.catalogPath))
+            .build()
         val collector = ProblemCollector()
 
         val hasQuery = tc.query != null
@@ -3803,13 +3809,9 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: ThrowingExceptionTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
-        )
+        val session = Session.builder()
+            .namespace(Namespace.of(listOf(tc.catalog) + tc.catalogPath))
+            .build()
         val collector = ProblemCollector()
         val exception = assertThrows<Throwable> {
             infer(tc.query, session, collector)

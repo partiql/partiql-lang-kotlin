@@ -29,7 +29,7 @@ import org.partiql.spi.connector.Connector
  */
 public class MemoryConnector private constructor(
     private val name: String,
-    private val tables: Map<String, MemoryTable>,
+    private val tables: Map<Name, MemoryTable>,
 ) : Connector {
 
     override fun getBindings(): Bindings = bindings
@@ -56,7 +56,7 @@ public class MemoryConnector private constructor(
         public class Builder internal constructor() {
 
             private var name: String? = null
-            private var tables: MutableMap<String, MemoryTable> = mutableMapOf()
+            private var tables: MutableMap<Name, MemoryTable> = mutableMapOf()
 
             public fun name(name: String): Builder = apply { this.name = name }
 
@@ -71,7 +71,7 @@ public class MemoryConnector private constructor(
      */
     private val bindings = object : Bindings {
         override fun getBindings(name: String): Bindings? = null
-        override fun getBinding(name: String): Binding? = tables[name]
+        override fun getBinding(name: String): Binding? = tables[Name.of(name)]
     }
 
     /**
@@ -85,11 +85,11 @@ public class MemoryConnector private constructor(
             if (name.hasNamespace()) {
                 error("MemoryCatalog does not support namespaces")
             }
-            return tables[name.getName()]
+            return tables[name]
         }
 
         override fun listTables(session: Session): Collection<Name> {
-            return tables.keys.map { Name.of(it) }
+            return tables.keys.map { it }
         }
     }
 }

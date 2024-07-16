@@ -20,8 +20,10 @@ import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.spi.connector.ConnectorSession
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Catalogs
+import org.partiql.planner.catalog.Namespace
+import org.partiql.planner.catalog.Session
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -29,13 +31,12 @@ class SubsumptionTest {
 
     companion object {
 
-        private val planner = PartiQLPlanner.default()
         private val parser = PartiQLParser.default()
-        private val session = object : ConnectorSession {
-            override fun getQueryId(): String = "query-id"
-            override fun getUserId(): String = "user-id"
-        }
-        private val connector = MemoryConnector.partiQL()
+        private val catalog = Catalog.builder().name("default").build()
+        private val planner = PartiQLPlanner
+            .builder()
+            .catalogs(Catalogs.of(catalog))
+            .build()
     }
 
     private fun getExcludeClause(statement: Statement): Rel.Op.Exclude {
@@ -47,12 +48,9 @@ class SubsumptionTest {
     private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
         val text = "SELECT * EXCLUDE ${tc.excludeExprStr} FROM <<>> AS s, <<>> AS t;"
         val statement = parser.parse(text).root
-        val session = PartiQLPlanner.Session(
-            queryId = "query-id", userId = "user-id", currentCatalog = "default",
-            catalogs = mapOf(
-                "default" to connector.getMetadata(session),
-            )
-        )
+        val session = Session.builder()
+            .namespace(Namespace.of("default"))
+            .build()
         val plan = planner.plan(statement, session).plan
         val excludeClause = getExcludeClause(plan.statement).paths
         assertEquals(tc.expectedExcludeExprs, excludeClause)

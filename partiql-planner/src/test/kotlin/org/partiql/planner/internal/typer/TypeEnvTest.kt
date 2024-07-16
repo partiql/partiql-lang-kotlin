@@ -4,12 +4,10 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
 import org.partiql.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -101,13 +99,13 @@ internal class TypeEnvTest {
         assertEquals(expected, root.ref)
     }
 
-    private fun String.path(): BindingPath {
+    private fun String.path(): Identifier {
         val steps = trim().split(".").map {
             when (it.startsWith("\"")) {
-                true -> BindingName(it.drop(1).dropLast(1), BindingCase.SENSITIVE)
-                else -> BindingName(it, BindingCase.INSENSITIVE)
+                true -> Identifier.Part.delimited(it.drop(1).dropLast(1)) // strip "
+                else -> Identifier.Part.regular(it)
             }
         }
-        return BindingPath(steps)
+        return Identifier.of(steps)
     }
 }

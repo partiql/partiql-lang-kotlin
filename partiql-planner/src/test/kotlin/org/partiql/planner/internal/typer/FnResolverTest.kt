@@ -2,35 +2,30 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import org.partiql.planner.catalog.Routine
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnParameter
-import org.partiql.spi.fn.FnSignature
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * As far as testing is concerned, we can stub out all value related things.
  * We may be able to pretty-print with string equals to also simplify things.
  * Only the "types" of expressions matter, we ignore the underlying ops.
  */
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 class FnResolverTest {
 
     @Test
     fun sanity() {
         // 1 + 1.0 -> 2.0
         val variants = listOf(
-            FnSignature(
+            Routine.scalar(
                 name = "plus",
-                returns = PartiQLValueType.FLOAT64,
                 parameters = listOf(
-                    FnParameter("arg-0", PartiQLValueType.FLOAT64),
-                    FnParameter("arg-1", PartiQLValueType.FLOAT64),
+                    Routine.Parameter("arg-0", PType.Kind.DOUBLE_PRECISION),
+                    Routine.Parameter("arg-1", PType.Kind.DOUBLE_PRECISION),
                 ),
+                returnType = PType.typeDoublePrecision(),
             )
         )
         val args = listOf(PType.typeInt().toCType(), PType.typeDoublePrecision().toCType())
@@ -42,14 +37,14 @@ class FnResolverTest {
     @Test
     fun split() {
         val variants = listOf(
-            FnSignature(
+            Routine.scalar(
                 name = "split",
-                returns = PartiQLValueType.LIST,
                 parameters = listOf(
-                    FnParameter("value", PartiQLValueType.STRING),
-                    FnParameter("delimiter", PartiQLValueType.STRING),
+                    Routine.Parameter("value", PType.Kind.STRING),
+                    Routine.Parameter("delimiter", PType.Kind.STRING),
                 ),
-                isNullable = false,
+                returnType = PType.typeList(),
+                // isNullable = false,
             )
         )
         val args = listOf(PType.typeString().toCType(), PType.typeString().toCType())
@@ -63,7 +58,7 @@ class FnResolverTest {
         abstract fun assert()
 
         class Success(
-            private val variants: List<FnSignature>,
+            private val variants: List<Routine.Scalar>,
             private val inputs: List<CompilerType>,
             private val expectedImplicitCast: List<Boolean>,
         ) : Case() {

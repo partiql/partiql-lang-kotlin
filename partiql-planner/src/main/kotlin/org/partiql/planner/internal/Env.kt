@@ -1,6 +1,5 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.catalog.Catalog
 import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Session

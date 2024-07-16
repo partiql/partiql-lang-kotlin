@@ -153,7 +153,7 @@ public class Identifier private constructor(
          */
         public fun isRegular(): Boolean = regular
 
-    /**
+        /**
          * Compares this identifier part to a string.
          */
         public fun matches(other: String): Boolean {

@@ -7,23 +7,17 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Catalogs
+import org.partiql.planner.catalog.Namespace
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.plugins.memory.MemoryObject
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
-import org.partiql.value.PartiQLValueExperimental
-import java.util.Random
 import java.util.stream.Stream
 
 abstract class PartiQLTyperTestBase {
@@ -40,50 +34,36 @@ abstract class PartiQLTyperTestBase {
         }
     }
 
-    companion object {
-
-        public val parser = PartiQLParser.default()
-        public val planner = PartiQLPlanner.default()
-
-        internal val session: ((String, ConnectorMetadata) -> PartiQLPlanner.Session) = { catalog, metadata ->
-            PartiQLPlanner.Session(
-                queryId = Random().nextInt().toString(),
-                userId = "test-user",
-                currentCatalog = catalog,
-                catalogs = mapOf(
-                    catalog to metadata
-                ),
-            )
-        }
-
-        internal val connectorSession = object : ConnectorSession {
-            override fun getQueryId(): String = "test"
-            override fun getUserId(): String = "test"
-        }
-    }
-
     val inputs = PartiQLTestProvider().apply { load() }
 
-    val testingPipeline: ((String, String, ConnectorMetadata, ProblemCallback) -> PartiQLPlanner.Result) = { query, catalog, metadata, collector ->
+    val testingPipeline: ((String, Catalog, ProblemCallback) -> PartiQLPlanner.Result) = { query, catalog, collector ->
+        val parser = PartiQLParser.default()
         val ast = parser.parse(query).root
-        planner.plan(ast, session(catalog, metadata), collector)
+        val planner = PartiQLPlanner.builder()
+            .catalogs(Catalogs.of(catalog))
+            .build()
+        val session = Session.builder()
+            .namespace(Namespace.of(catalog.getName()))
+            .build()
+        planner.plan(ast, session, collector)
     }
 
     /**
      * Build a ConnectorMetadata instance from the list of types.
      */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun buildMetadata(catalog: String, types: List<StaticType>): ConnectorMetadata {
-        val cat = MemoryCatalog.PartiQL().name(catalog).build()
-        val connector = MemoryConnector(cat)
-
-        // define all bindings
-        types.forEachIndexed { i, t ->
-            val binding = BindingPath(listOf(BindingName("t${i + 1}", BindingCase.SENSITIVE)))
-            val obj = MemoryObject(t)
-            cat.insert(binding, obj)
-        }
-        return connector.getMetadata(connectorSession)
+    private fun buildCatalog(catalog: String, types: List<StaticType>): Catalog {
+        return Catalog.builder()
+            .name(catalog)
+            .apply {
+                // define all bindings
+                types.forEachIndexed { i, t ->
+                    createTable(
+                        name = "t${i + 1}",
+                        schema = PType.fromStaticType(t)
+                    )
+                }
+            }
+            .build()
     }
 
     fun testGen(
@@ -97,14 +77,14 @@ abstract class PartiQLTyperTestBase {
             val children = argsMap.flatMap { (key, value) ->
                 value.mapIndexed { index: Int, types: List<StaticType> ->
                     val testName = "${testCategory}_${key}_$index"
-                    val metadata = buildMetadata(testName, types)
+                    val catalog = buildCatalog(testName, types)
                     val displayName = "$group | $testName | $types"
                     val statement = test.statement
                     // Assert
                     DynamicTest.dynamicTest(displayName) {
                         val pc = ProblemCollector()
                         if (key is TestResult.Success) {
-                            val result = testingPipeline(statement, testName, metadata, pc)
+                            val result = testingPipeline(statement, catalog, pc)
                             val root = (result.plan.statement as Statement.Query).root
                             val actualType = root.type
                             assert(actualType == key.expectedType) {
@@ -129,7 +109,7 @@ abstract class PartiQLTyperTestBase {
                                 }
                             }
                         } else {
-                            val result = testingPipeline(statement, testName, metadata, pc)
+                            val result = testingPipeline(statement, catalog, pc)
                             val root = (result.plan.statement as Statement.Query).root
                             val actualType = root.type
                             assert(actualType.kind == Kind.DYNAMIC) {

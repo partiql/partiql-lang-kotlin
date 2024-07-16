@@ -38,9 +38,6 @@ public interface PartiQLPlanner {
 
         @JvmStatic
         public fun builder(): Builder = Builder()
-
-        @JvmStatic
-        public fun default(): PartiQLPlanner = Builder().build()
     }
 
     public class Builder {
@@ -54,20 +51,27 @@ public interface PartiQLPlanner {
          * @return
          */
         public fun build(): PartiQLPlanner {
-            assert(catalogs != null) { "The `catalogs` field cannot be null, set with .catalgos(...)"}
+            assert(catalogs != null) { "The `catalogs` field cannot be null, set with .catalogs(...)" }
             return PartiQLPlannerDefault(catalogs!!, flags)
         }
 
         /**
          * Adds a catalog provider to this planner builder.
          */
-        public fun catalogs(catalogs: Catalogs): Builder = this.apply { this.catalogs = catalogs }
+        public fun catalogs(catalogs: Catalogs): Builder {
+            this.catalogs = catalogs
+            return this
+        }
 
         /**
          * Java style method for setting the planner to signal mode
          */
-        public fun signalMode(): Builder = this.apply {
-            this.flags.add(PlannerFlag.SIGNAL_MODE)
+        public fun signal(signal: Boolean = true): Builder = this.apply {
+            if (signal) {
+                this.flags.add(PlannerFlag.SIGNAL_MODE)
+            } else {
+                this.flags.remove(PlannerFlag.SIGNAL_MODE)
+            }
         }
     }
 }

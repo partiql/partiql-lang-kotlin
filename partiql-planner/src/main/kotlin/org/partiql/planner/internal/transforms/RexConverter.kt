@@ -219,7 +219,6 @@ internal object RexConverter {
             val (newRoot, newSteps) = when (val op = root.op) {
                 is Rex.Op.Var.Unresolved -> {
 
-
                     // convert consecutive symbol path steps to the root identifier
                     var i = 0
                     val parts = mutableListOf<Identifier.Part>()

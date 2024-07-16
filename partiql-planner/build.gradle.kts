@@ -31,10 +31,6 @@ dependencies {
     implementation(Deps.ionElement)
     // Test
     testImplementation(project(":partiql-parser"))
-    testImplementation(project(":plugins:partiql-local"))
-    testImplementation(project(":plugins:partiql-memory"))
-    // Test Fixtures
-    testFixturesImplementation(project(":partiql-spi"))
 }
 
 tasks.register("generateResourcePath") {

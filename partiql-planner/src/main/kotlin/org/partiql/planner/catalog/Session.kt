@@ -5,20 +5,6 @@ package org.partiql.planner.catalog
  */
 public interface Session {
 
-    public companion object {
-
-        private val EMPTY = object : Session {
-            override fun getIdentity(): String = "unknown"
-            override fun getNamespace(): Namespace = Namespace.root()
-        }
-
-        @JvmStatic
-        public fun empty(): Session = EMPTY
-
-        @JvmStatic
-        public fun builder(): Builder = Builder()
-    }
-
     /**
      * Returns the caller identity as a string; accessible via CURRENT_USER.
      */
@@ -42,7 +28,22 @@ public interface Session {
     public fun getProperties(): Map<String, String> = emptyMap()
 
     /**
-     * Java-style session builder.
+     * Factory methods and builder.
+     */
+    public companion object {
+
+        @JvmStatic
+        public fun empty(): Session = object : Session {
+            override fun getIdentity(): String = "unknown"
+            override fun getNamespace(): Namespace = Namespace.root()
+        }
+
+        @JvmStatic
+        public fun builder(): Builder = Builder()
+    }
+
+    /**
+     * Java-style builder for a default [Session] implementation.
      */
     public class Builder {
 
@@ -50,11 +51,20 @@ public interface Session {
         private var namespace: Namespace = Namespace.root()
         private var properties: MutableMap<String, String> = mutableMapOf()
 
-        public fun identity(identity: String): Builder = this.apply { this.identity = identity }
+        public fun identity(identity: String): Builder {
+            this.identity = identity
+            return this
+        }
 
-        public fun namespace(namespace: Namespace): Builder = this.apply { this.namespace = namespace }
+        public fun namespace(namespace: Namespace): Builder {
+            this.namespace = namespace
+            return this
+        }
 
-        public fun property(name: String, value: String): Builder = this.apply { this.properties[name] = value }
+        public fun property(name: String, value: String): Builder {
+            this.properties[name] = value
+            return this
+        }
 
         public fun build(): Session = object : Session {
             override fun getIdentity(): String = identity
