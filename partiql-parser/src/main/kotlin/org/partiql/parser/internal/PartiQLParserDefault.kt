@@ -209,6 +209,7 @@ import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
+import org.partiql.parser.internal.util.NumberUtils.negate
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
@@ -569,17 +570,18 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitQualifiedName(ctx: org.partiql.parser.antlr.PartiQLParser.QualifiedNameContext) = translate(ctx) {
-            val qualifier = ctx.qualifier.map { visitSymbolPrimitive(it) }
-            val name = visitSymbolPrimitive(ctx.name)
-            if (qualifier.isEmpty()) {
-                name
-            } else {
-                val root = qualifier.first()
-                val steps = qualifier.drop(1) + listOf(name)
-                identifierQualified(root, steps)
+        override fun visitQualifiedName(ctx: org.partiql.parser.antlr.PartiQLParser.QualifiedNameContext) =
+            translate(ctx) {
+                val qualifier = ctx.qualifier.map { visitSymbolPrimitive(it) }
+                val name = visitSymbolPrimitive(ctx.name)
+                if (qualifier.isEmpty()) {
+                    name
+                } else {
+                    val root = qualifier.first()
+                    val steps = qualifier.drop(1) + listOf(name)
+                    identifierQualified(root, steps)
+                }
             }
-        }
 
         /**
          *
@@ -1488,9 +1490,34 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitValueExpr(ctx: GeneratedParser.ValueExprContext) = translate(ctx) {
-            if (ctx.parent != null) return@translate visit(ctx.parent)
-            val expr = visit(ctx.rhs) as Expr
-            exprUnary(convertUnaryOp(ctx.sign), expr)
+            // expression
+            if (ctx.parent != null) {
+                return@translate visit(ctx.parent)
+            }
+            // unary expression
+            val op = when (ctx.sign.type) {
+                GeneratedParser.NOT -> Expr.Unary.Op.NOT
+                GeneratedParser.PLUS -> Expr.Unary.Op.POS
+                GeneratedParser.MINUS -> Expr.Unary.Op.NEG
+                else -> throw error(ctx.sign, "Invalid unary operator")
+            }
+            // If argument is not a literal, then return the op.
+            val arg = visit(ctx.rhs) as Expr
+            return when (arg) {
+                is Expr.Lit -> arg.negate(op)
+                // TODO should we unwrap and negate Ion values for -`-1`? I don't think so..
+                is Expr.Ion -> exprUnary(op, arg)
+                else -> exprUnary(op, arg)
+            }
+        }
+
+        private fun Expr.Lit.negate(op: Expr.Unary.Op): Expr {
+            val v = this.value
+            return when {
+                op == Expr.Unary.Op.POS && v is NumericValue<*> -> exprLit(v)
+                op == Expr.Unary.Op.NEG && v is NumericValue<*> -> exprLit(v.negate())
+                else -> exprUnary(op, exprLit(v))
+            }
         }
 
         private fun convertBinaryExpr(lhs: ParserRuleContext, rhs: ParserRuleContext, op: Expr.Binary.Op): Expr {

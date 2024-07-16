@@ -3,14 +3,9 @@
 package org.partiql.ast.helpers
 
 import com.amazon.ion.Decimal
-import com.amazon.ionelement.api.DecimalElement
-import com.amazon.ionelement.api.FloatElement
-import com.amazon.ionelement.api.IntElement
-import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionDecimal
-import com.amazon.ionelement.api.ionFloat
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
@@ -48,7 +43,6 @@ import org.partiql.value.TimestampValue
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.toIon
 import java.math.BigDecimal
-import java.math.BigInteger
 
 /**
  * Translates an [AstNode] tree to the legacy PIG AST.
@@ -322,42 +316,8 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val arg = visitExpr(node.expr, ctx)
         when (node.op) {
             Expr.Unary.Op.NOT -> not(arg, metas)
-            Expr.Unary.Op.POS -> {
-                when {
-                    arg !is PartiqlAst.Expr.Lit -> pos(arg)
-                    arg.value is IntElement -> arg
-                    arg.value is FloatElement -> arg
-                    arg.value is DecimalElement -> arg
-                    else -> pos(arg)
-                }
-            }
-            Expr.Unary.Op.NEG -> {
-                when {
-                    arg !is PartiqlAst.Expr.Lit -> neg(arg, metas)
-                    arg.value is IntElement -> {
-                        val intValue = when (arg.value.integerSize) {
-                            IntElementSize.LONG -> ionInt(-arg.value.longValue)
-                            IntElementSize.BIG_INTEGER -> when (arg.value.bigIntegerValue) {
-                                Long.MAX_VALUE.toBigInteger() + (1L).toBigInteger() -> ionInt(Long.MIN_VALUE)
-                                else -> ionInt(arg.value.bigIntegerValue * BigInteger.valueOf(-1L))
-                            }
-                        }
-                        arg.copy(
-                            value = intValue.asAnyElement(),
-                            metas = metas,
-                        )
-                    }
-                    arg.value is FloatElement -> arg.copy(
-                        value = ionFloat(-(arg.value.doubleValue)).asAnyElement(),
-                        metas = metas,
-                    )
-                    arg.value is DecimalElement -> arg.copy(
-                        value = ionDecimal(Decimal.valueOf(-(arg.value.decimalValue))).asAnyElement(),
-                        metas = metas,
-                    )
-                    else -> neg(arg, metas)
-                }
-            }
+            Expr.Unary.Op.POS -> pos(arg, metas)
+            Expr.Unary.Op.NEG -> neg(arg, metas)
         }
     }
 
