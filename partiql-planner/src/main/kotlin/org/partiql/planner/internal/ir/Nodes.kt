@@ -14,7 +14,6 @@ import kotlin.jvm.JvmStatic
 import kotlin.random.Random
 import org.partiql.`value`.PartiQLValue
 import org.partiql.`value`.PartiQLValueExperimental
-import org.partiql.ast.Identifier
 import org.partiql.errors.Problem
 import org.partiql.planner.`internal`.ir.builder.PartiQlPlanBuilder
 import org.partiql.planner.`internal`.ir.builder.RefBuilder
@@ -78,6 +77,8 @@ import org.partiql.planner.`internal`.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.`internal`.ir.builder.StatementQueryBuilder
 import org.partiql.planner.`internal`.ir.visitor.PlanVisitor
 import org.partiql.planner.`internal`.typer.CompilerType
+import org.partiql.planner.catalog.Identifier
+import org.partiql.planner.catalog.Routine
 
 internal abstract class PlanNode {
   @JvmField
@@ -453,13 +454,12 @@ internal data class Rex(
 
       internal data class Static(
         @JvmField
-        internal val fn: Ref,
+        internal val fn: Routine,
         @JvmField
         internal val args: List<Rex>,
       ) : Call() {
         public override val children: List<PlanNode> by lazy {
           val kids = mutableListOf<PlanNode?>()
-          kids.add(fn)
           kids.addAll(args)
           kids.filterNotNull()
         }
@@ -493,13 +493,12 @@ internal data class Rex(
 
         internal data class Candidate(
           @JvmField
-          internal val fn: Ref,
+          internal val fn: Routine,
           @JvmField
           internal val coercions: List<Ref.Cast?>,
         ) : PlanNode() {
           public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
-            kids.add(fn)
             kids.addAll(coercions)
             kids.filterNotNull()
           }
@@ -1303,7 +1302,7 @@ internal data class Rel(
 
         internal data class Resolved(
           @JvmField
-          internal val agg: Ref,
+          internal val agg: Routine,
           @JvmField
           internal val setQuantifier: SetQuantifier,
           @JvmField
@@ -1311,7 +1310,6 @@ internal data class Rel(
         ) : Call() {
           public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
-            kids.add(agg)
             kids.addAll(args)
             kids.filterNotNull()
           }
@@ -1353,7 +1351,7 @@ internal data class Rel(
 
       internal data class Path(
         @JvmField
-        internal val root: Ref,
+        internal val root: Rex.Op,
         @JvmField
         internal val steps: List<Step>,
       ) : PlanNode() {
@@ -1419,6 +1417,23 @@ internal data class Rel(
             @JvmStatic
             internal fun builder(): RelOpExcludeTypeStructSymbolBuilder =
                 RelOpExcludeTypeStructSymbolBuilder()
+          }
+
+          // Explicitly override `equals` and `hashcode` for case-insensitivity
+          override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as StructSymbol
+
+            if (!symbol.equals(other.symbol, ignoreCase = true)) return false
+            if (children != other.children) return false
+
+            return true
+          }
+
+          override fun hashCode(): Int {
+            return symbol.lowercase().hashCode()
           }
         }
 

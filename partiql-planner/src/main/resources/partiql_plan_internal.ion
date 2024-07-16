@@ -1,6 +1,7 @@
 imports::{
   kotlin: [
     identifier::'org.partiql.planner.catalog.Identifier',
+    routine::'org.partiql.planner.catalog.Routine',
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
@@ -102,7 +103,7 @@ rex::{
       },
 
       static::{
-        fn: ref,
+        fn: routine,
         args: list::[rex],
       },
 
@@ -116,7 +117,7 @@ rex::{
         candidates: list::[candidate],
         _: [
           candidate::{
-            fn: ref,
+            fn: routine,
             coercions: list::[optional::'.ref.cast'],
           }
         ]
@@ -334,7 +335,7 @@ rel::{
             args: list::[rex],
           },
           resolved::{
-            agg:  ref,
+            agg: routine,
             set_quantifier: set_quantifier,
             args: list::[rex],
           },
@@ -348,7 +349,7 @@ rel::{
       paths: list::[path],
       _: [
         path::{
-          root: ref,
+          root: '.rex.op',
           steps: list::[step],
         },
         step::{

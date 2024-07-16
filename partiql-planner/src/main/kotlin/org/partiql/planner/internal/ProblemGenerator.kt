@@ -13,7 +13,7 @@ import org.partiql.planner.internal.ir.rexOpMissing
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.types.PType
 import org.partiql.types.StaticType
-import org.partiql.planner.internal.ir.Identifier as InternalIdentifier
+import org.partiql.planner.catalog.Identifier as InternalIdentifier
 
 /**
  * Used to report problems during planning phase.
@@ -53,23 +53,15 @@ internal object ProblemGenerator {
     fun errorRex(trace: Rex.Op, problem: Problem): Rex =
         rex(CompilerType(PType.typeDynamic(), isMissingValue = true), rexOpErr(problem, listOf(trace)))
 
-    private fun InternalIdentifier.debug(): String = when (this) {
-        is InternalIdentifier.Qualified -> (listOf(root.debug()) + steps.map { it.debug() }).joinToString(".")
-        is InternalIdentifier.Symbol -> when (caseSensitivity) {
-            InternalIdentifier.CaseSensitivity.SENSITIVE -> "\"$symbol\""
-            InternalIdentifier.CaseSensitivity.INSENSITIVE -> symbol
-        }
-    }
-
     fun undefinedFunction(identifier: InternalIdentifier, args: List<StaticType>, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UnknownFunction(identifier.debug(), args.map { PType.fromStaticType(it) }))
+        problem(location, PlanningProblemDetails.UnknownFunction(identifier.toString(), args.map { PType.fromStaticType(it) }))
 
     fun undefinedFunction(
         args: List<PType>,
-        identifier: org.partiql.planner.internal.ir.Identifier,
+        identifier: InternalIdentifier,
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION
     ): Problem =
-        problem(location, PlanningProblemDetails.UnknownFunction(identifier.debug(), args))
+        problem(location, PlanningProblemDetails.UnknownFunction(identifier.toString(), args))
 
     fun undefinedFunction(identifier: String, args: List<StaticType>, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
         problem(location, PlanningProblemDetails.UnknownFunction(identifier, args.map { PType.fromStaticType(it) }))
@@ -91,7 +83,7 @@ internal object ProblemGenerator {
         problem(location, PlanningProblemDetails.IncompatibleTypesForOp(actualTypes, operator))
 
     fun unresolvedExcludedExprRoot(root: InternalIdentifier, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UnresolvedExcludeExprRoot(root.debug()))
+        problem(location, PlanningProblemDetails.UnresolvedExcludeExprRoot(root.toString()))
 
     fun unresolvedExcludedExprRoot(root: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
         problem(location, PlanningProblemDetails.UnresolvedExcludeExprRoot(root))

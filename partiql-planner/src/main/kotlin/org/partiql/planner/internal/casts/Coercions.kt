@@ -13,6 +13,13 @@ import org.partiql.types.PType.Kind
  */
 internal object Coercions {
 
+    /**
+     * TODO all coercion APIs are based on kind, we don't need a full PType here.
+     */
+    fun get(input: PType.Kind, target: PType.Kind): Ref.Cast? {
+        TODO("coercion from kind")
+    }
+
     fun get(input: PType, target: PType): Ref.Cast? {
         return getCoercion(input, target)
     }

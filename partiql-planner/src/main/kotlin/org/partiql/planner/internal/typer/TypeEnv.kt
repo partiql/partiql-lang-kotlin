@@ -1,5 +1,6 @@
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rex
@@ -7,9 +8,6 @@ import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
@@ -44,13 +42,14 @@ internal data class TypeEnv(
      * @param path
      * @return
      */
-    fun resolve(path: BindingPath): Rex? {
-        val head: BindingName = path.steps[0]
-        var tail: List<BindingName> = path.steps.drop(1)
+    fun resolve(path: Identifier): Rex? {
+        val parts = path.getParts()
+        val head: Identifier.Part = parts[0]
+        var tail: List<Identifier.Part> = parts.drop(1)
         var r = matchRoot(head)
         if (r == null) {
             r = matchStruct(head) ?: return null
-            tail = path.steps
+            tail = parts
         }
         // Convert any remaining binding names (tail) to an untyped path expression.
         return if (tail.isEmpty()) r else r.toPath(tail)
@@ -69,7 +68,7 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun matchRoot(name: BindingName, depth: Int = 0): Rex? {
+    private fun matchRoot(name: Identifier.Part, depth: Int = 0): Rex? {
         var r: Rex? = null
         for (i in schema.indices) {
             val local = schema[i]
@@ -94,7 +93,7 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun matchStruct(name: BindingName, depth: Int = 0): Rex? {
+    private fun matchStruct(name: Identifier.Part, depth: Int = 0): Rex? {
         var c: Rex? = null
         var known = false
         for (i in schema.indices) {
@@ -131,7 +130,7 @@ internal data class TypeEnv(
     }
 
     /**
-     * Searches for the [BindingName] within the given [StaticType].
+     * Searches for the [Identifier.Part] within the given [StaticType].
      *
      * Returns
      *  - true  iff known to contain key
@@ -141,7 +140,7 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun CompilerType.containsKey(name: BindingName): Boolean? {
+    private fun CompilerType.containsKey(name: Identifier.Part): Boolean? {
         return when (this.kind) {
             Kind.ROW -> this.fields!!.any { name.matches(it.name) }
             Kind.STRUCT -> null
@@ -153,20 +152,20 @@ internal data class TypeEnv(
     companion object {
 
         /**
-         * Converts a list of [BindingName] to a path expression.
+         * Converts a list of [Identifier.Part] to a path expression.
          *
          *  1) Case SENSITIVE identifiers become string literal key lookups.
          *  2) Case INSENSITIVE identifiers become symbol lookups.
          *
-         * @param steps
+         * @param parts
          * @return
          */
         @JvmStatic
         @OptIn(PartiQLValueExperimental::class)
-        internal fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
-            val op = when (step.case) {
-                BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(CompilerType(PType.typeString()), rexOpLit(stringValue(step.name))))
-                BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
+        internal fun Rex.toPath(parts: List<Identifier.Part>): Rex = parts.fold(this) { curr, part ->
+            val op = when (part.isRegular()) {
+                true -> rexOpPathSymbol(curr, part.getText())
+                else -> rexOpPathKey(curr, rex(CompilerType(PType.typeString()), rexOpLit(stringValue(part.getText()))))
             }
             rex(CompilerType(PType.typeDynamic()), op)
         }

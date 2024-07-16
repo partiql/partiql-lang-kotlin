@@ -7,7 +7,6 @@ import org.partiql.plan.rexOpCast
 import org.partiql.plan.rexOpErr
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
-import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
@@ -61,24 +60,10 @@ internal class PlanTransform(
             error("Not implemented")
         }
 
-        override fun visitRef(node: Ref, ctx: Unit) = super.visitRef(node, ctx) as org.partiql.plan.Ref
+        override fun visitRef(node: Ref, ctx: Unit): org.partiql.plan.Ref {
+            TODO("Catalog ref not implemented")
+        }
 
-        /**
-         * Insert into symbol table, returning the public reference.
-         */
-        override fun visitRefObj(node: Ref.Obj, ctx: Unit) = symbols.insert(node)
-
-        /**
-         * Insert into symbol table, returning the public reference.
-         */
-        override fun visitRefFn(node: Ref.Fn, ctx: Unit) = symbols.insert(node)
-
-        /**
-         * Insert into symbol table, returning the public reference.
-         */
-        override fun visitRefAgg(node: Ref.Agg, ctx: Unit) = symbols.insert(node)
-
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitRefCast(node: Ref.Cast, ctx: Unit) =
             org.partiql.plan.refCast(node.input, node.target, node.isNullable)
 
@@ -89,23 +74,6 @@ internal class PlanTransform(
             val root = visitRex(node.root, ctx)
             return org.partiql.plan.Statement.Query(root)
         }
-
-        override fun visitIdentifier(node: Identifier, ctx: Unit) =
-            super.visitIdentifier(node, ctx) as org.partiql.plan.Identifier
-
-        override fun visitIdentifierSymbol(node: Identifier.Symbol, ctx: Unit) = org.partiql.plan.Identifier.Symbol(
-            symbol = node.symbol,
-            caseSensitivity = when (node.caseSensitivity) {
-                Identifier.CaseSensitivity.SENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.SENSITIVE
-                Identifier.CaseSensitivity.INSENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE
-            }
-        )
-
-        override fun visitIdentifierQualified(node: Identifier.Qualified, ctx: Unit) =
-            org.partiql.plan.Identifier.Qualified(
-                root = visitIdentifierSymbol(node.root, ctx),
-                steps = node.steps.map { visitIdentifierSymbol(it, ctx) }
-            )
 
         // EXPRESSIONS
 

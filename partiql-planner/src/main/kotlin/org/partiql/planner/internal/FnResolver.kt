@@ -1,10 +1,9 @@
 package org.partiql.planner.internal
 
+import org.partiql.planner.catalog.Routine
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.CompilerType
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnSignature
 import org.partiql.types.PType.Kind
 
 /**
@@ -22,7 +21,6 @@ import org.partiql.types.PType.Kind
  *
  * Reference https://www.postgresql.org/docs/current/typeconv-func.html
  */
-@OptIn(FnExperimental::class)
 internal object FnResolver {
 
     /**
@@ -34,9 +32,9 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    fun resolve(variants: List<FnSignature>, args: List<CompilerType>): FnMatch? {
+    fun resolve(variants: List<Routine>, args: List<CompilerType>): FnMatch? {
         val candidates = variants
-            .filter { it.parameters.size == args.size }
+            .filter { it.getParameters().size == args.size }
             .ifEmpty { return null }
 
         // 1. Look for exact match
@@ -64,9 +62,9 @@ internal object FnResolver {
         // 5. If there are DYNAMIC nodes, return all candidates
         var isDynamic = false
         for (match in matches) {
-            val params = match.match.signature.parameters
+            val params = match.match.signature.getParameters()
             for (index in params.indices) {
-                if ((args[index].kind == Kind.DYNAMIC) && params[index].type.kind != Kind.DYNAMIC) {
+                if ((args[index].kind == Kind.DYNAMIC) && params[index].type != Kind.DYNAMIC) {
                     isDynamic = true
                 }
             }
@@ -87,7 +85,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<FnSignature>, args: List<CompilerType>): List<MatchResult> {
+    private fun match(candidates: List<Routine>, args: List<CompilerType>): List<MatchResult> {
         val matches = mutableSetOf<MatchResult>()
         for (candidate in candidates) {
             val m = candidate.match(args) ?: continue
@@ -117,9 +115,10 @@ internal object FnResolver {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun FnSignature.matchesExactly(args: List<CompilerType>): Boolean {
+    private fun Routine.matchesExactly(args: List<CompilerType>): Boolean {
+        val parameters = getParameters()
         for (i in args.indices) {
-            val a = args[i]
+            val a = args[i].kind
             val p = parameters[i]
             if (a != p.type) return false
         }
@@ -132,23 +131,24 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun FnSignature.match(args: List<CompilerType>): MatchResult? {
+    private fun Routine.match(args: List<CompilerType>): MatchResult? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
+        val parameters = getParameters()
         var exactInputTypes: Int = 0
         for (i in args.indices) {
             val arg = args[i]
             val p = parameters[i]
             when {
                 // 1. Exact match
-                arg == p.type -> {
+                arg.kind == p.type -> {
                     exactInputTypes++
                     continue
                 }
                 // 2. Match ANY, no coercion needed
                 // TODO: Rewrite args in this scenario
-                arg.kind == Kind.UNKNOWN || p.type.kind == Kind.DYNAMIC || arg.kind == Kind.DYNAMIC -> continue
+                arg.kind == Kind.UNKNOWN || p.type == Kind.DYNAMIC || arg.kind == Kind.DYNAMIC -> continue
                 // 3. Check for a coercion
-                else -> when (val coercion = Coercions.get(arg, p.type)) {
+                else -> when (val coercion = Coercions.get(arg.kind, p.type)) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion
                 }

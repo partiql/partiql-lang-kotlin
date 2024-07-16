@@ -16,10 +16,10 @@
 
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.exclude.ExcludeRepr
-import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -52,10 +52,6 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.planner.internal.utils.PlanUtils
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -86,6 +82,7 @@ internal class PlanTyper(private val env: Env) {
         return statementQuery(root)
     }
     internal companion object {
+
         fun PType.static(): CompilerType = CompilerType(this)
 
         fun anyOf(types: Collection<PType>): PType? {
@@ -166,20 +163,6 @@ internal class PlanTyper(private val env: Env) {
         fun PType.toCType(): CompilerType = CompilerType(this)
 
         fun List<PType>.toCType(): List<CompilerType> = this.map { it.toCType() }
-
-        fun CompilerType.isNumeric(): Boolean {
-            return this.kind in setOf(
-                Kind.INT,
-                Kind.INT_ARBITRARY,
-                Kind.BIGINT,
-                Kind.TINYINT,
-                Kind.SMALLINT,
-                Kind.REAL,
-                Kind.DOUBLE_PRECISION,
-                Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY
-            )
-        }
     }
 
     /**
@@ -498,8 +481,7 @@ internal class PlanTyper(private val env: Env) {
                     is Rex.Op.Var.Unresolved -> {
                         // resolve `root` to local binding
                         val locals = TypeEnv(input.type.schema, outer)
-                        val path = root.identifier.toBindingPath()
-                        val resolved = locals.resolve(path)
+                        val resolved = locals.resolve(root.identifier)
                         if (resolved == null) {
                             ProblemGenerator.missingRex(
                                 emptyList(),
@@ -601,14 +583,14 @@ internal class PlanTyper(private val env: Env) {
         }
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: CompilerType?): Rex {
-            val path = node.identifier.toBindingPath()
+            val path = node.identifier
             val scope = when (node.scope) {
                 Rex.Op.Var.Scope.DEFAULT -> strategy
                 Rex.Op.Var.Scope.LOCAL -> Scope.LOCAL
             }
             val resolvedVar = when (scope) {
-                Scope.LOCAL -> locals.resolve(path) ?: env.resolveObj(path)
-                Scope.GLOBAL -> env.resolveObj(path) ?: locals.resolve(path)
+                Scope.LOCAL -> locals.resolve(path) ?: env.getTable(path)
+                Scope.GLOBAL -> env.getTable(path) ?: locals.resolve(path)
             }
             if (resolvedVar == null) {
                 val id = PlanUtils.externalize(node.identifier)
@@ -622,7 +604,10 @@ internal class PlanTyper(private val env: Env) {
             return visitRex(resolvedVar, null)
         }
 
-        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: CompilerType?): Rex = rex(node.ref.type, node)
+        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: CompilerType?): Rex {
+            TODO("typing of RexOpVarGlobal")
+            // rex(node.ref.type, node)
+        }
 
         /**
          * TODO: Create a function signature for the Rex.Op.Path.Index to get automatic coercions.
@@ -741,9 +726,9 @@ internal class PlanTyper(private val env: Env) {
                     )
                 )
             }
-            return when (field.first.caseSensitivity) {
-                Identifier.CaseSensitivity.INSENSITIVE -> Rex(field.second, Rex.Op.Path.Symbol(root, node.key))
-                Identifier.CaseSensitivity.SENSITIVE -> Rex(field.second, Rex.Op.Path.Key(root, rexString(field.first.symbol)))
+            return when (field.first.isRegular()) {
+                true -> Rex(field.second, Rex.Op.Path.Symbol(root, node.key))
+                else -> Rex(field.second, Rex.Op.Path.Key(root, rexString(field.first.getText())))
             }
         }
 
@@ -765,28 +750,6 @@ internal class PlanTyper(private val env: Env) {
 
         private fun rexString(str: String) = rex(CompilerType(PType.typeString()), Rex.Op.Lit(stringValue(str)))
 
-        /**
-         * Assumes that the type is either a struct or row.
-         * @return null when the field definitely does not exist; dynamic when the type cannot be determined
-         */
-        private fun CompilerType.getSymbol(field: String): Pair<Identifier.Symbol, CompilerType>? {
-            if (this.kind == Kind.STRUCT) {
-                return Identifier.Symbol(field, Identifier.CaseSensitivity.INSENSITIVE) to CompilerType(PType.typeDynamic())
-            }
-            val fields = this.fields!!.mapNotNull {
-                when (it.name.equals(field, true)) {
-                    true -> it.name to it.type
-                    false -> null
-                }
-            }.ifEmpty { return null }
-            val type = anyOf(fields.map { it.second }) ?: PType.typeDynamic()
-            val ids = fields.map { it.first }.toSet()
-            return when (ids.size > 1) {
-                true -> Identifier.Symbol(field, Identifier.CaseSensitivity.INSENSITIVE) to type.toCType()
-                false -> Identifier.Symbol(ids.first(), Identifier.CaseSensitivity.SENSITIVE) to type.toCType()
-            }
-        }
-
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: CompilerType?): Rex {
             val arg = visitRex(node.arg, null)
             val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.errorRex(
@@ -804,8 +767,7 @@ internal class PlanTyper(private val env: Env) {
             // Type the arguments
             val args = node.args.map { visitRex(it, null) }
             // Attempt to resolve in the environment
-            val path = node.identifier.toBindingPath()
-            val rex = env.resolveFn(path, args)
+            val rex = env.getRoutine(node.identifier, args)
             if (rex == null) {
                 return ProblemGenerator.errorRex(
                     causes = args.map { it.op },
@@ -823,7 +785,6 @@ internal class PlanTyper(private val env: Env) {
          * @param ctx
          * @return
          */
-        @OptIn(FnExperimental::class)
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: CompilerType?): Rex {
             // Apply the coercions as explicit casts
             val args: List<Rex> = node.args.map {
@@ -855,11 +816,12 @@ internal class PlanTyper(private val env: Env) {
          * @param ctx
          * @return
          */
-        @OptIn(FnExperimental::class)
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: CompilerType?): Rex {
-            val types = node.candidates.map { candidate -> candidate.fn.signature.returns }.toMutableSet()
+            val types = node.candidates.map { candidate ->
+                val kind = candidate.fn.getReturnType()
+            }.toMutableSet()
             // TODO: Should this always be DYNAMIC?
-            return Rex(type = CompilerType(anyOf(types) ?: PType.typeDynamic()), op = node)
+            return Rex(type = CompilerType.anyOf(types), op = node)
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: CompilerType?): Rex {
@@ -1184,7 +1146,6 @@ internal class PlanTyper(private val env: Env) {
             return Rex(type.toCType(), Rex.Op.Struct(fields))
         }
 
-        @OptIn(FnExperimental::class)
         private fun replaceGeneratedTupleUnionArg(node: Rex): Rex? {
             if (node.op is Rex.Op.Struct && node.type.kind == Kind.ROW) {
                 return node
@@ -1275,15 +1236,15 @@ internal class PlanTyper(private val env: Env) {
          *     Let TX be the single-column table that is the result of applying the <value expression>
          *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
          */
-        @OptIn(FnExperimental::class)
         fun resolveAgg(node: Rel.Op.Aggregate.Call.Unresolved): Pair<Rel.Op.Aggregate.Call, CompilerType> {
             // Type the arguments
             val args = node.args.map { visitRex(it, null) }
             val argsResolved = Rel.Op.Aggregate.Call.Unresolved(node.name, node.setQuantifier, args)
-
             // Resolve the function
-            val call = env.resolveAgg(node.name, node.setQuantifier, args) ?: return argsResolved to CompilerType(PType.typeDynamic())
-            return call to CompilerType(call.agg.signature.returns)
+            TODO("resolveAgg not implemented")
+            // val path = Identifier.delimited(node.name.lowercase())
+            // val call = env.getRoutine(path, node.setQuantifier, args) ?: return argsResolved to CompilerType(PType.typeDynamic())
+            // return call to CompilerType(call.agg.signature.returns)
         }
     }
 
@@ -1322,28 +1283,7 @@ internal class PlanTyper(private val env: Env) {
         return this.copy(schema = schema.mapIndexed { i, binding -> binding.copy(type = types[i]) })
     }
 
-    private fun Identifier.toBindingPath() = when (this) {
-        is Identifier.Qualified -> this.toBindingPath()
-        is Identifier.Symbol -> BindingPath(listOf(this.toBindingName()))
-    }
-
-    private fun Identifier.Qualified.toBindingPath() =
-        BindingPath(steps = listOf(this.root.toBindingName()) + steps.map { it.toBindingName() })
-
-    private fun Identifier.Symbol.toBindingName() = BindingName(
-        name = symbol,
-        case = when (caseSensitivity) {
-            Identifier.CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
-            Identifier.CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
-        }
-    )
-
     private fun Rel.isOrdered(): Boolean = type.props.contains(Rel.Prop.ORDERED)
-
-    /**
-     * Produce a union type from all the
-     */
-    private fun List<Rex>.toUnionType(): PType = anyOf(map { it.type }.toSet()) ?: PType.typeDynamic()
 
     private fun getElementTypeForFromSource(fromSourceType: CompilerType): CompilerType = when (fromSourceType.kind) {
         Kind.DYNAMIC -> CompilerType(PType.typeDynamic())
@@ -1356,9 +1296,10 @@ internal class PlanTyper(private val env: Env) {
         val output = input.map {
             when (val root = item.root) {
                 is Rex.Op.Var.Unresolved -> {
-                    when (val id = root.identifier) {
-                        is Identifier.Symbol -> {
-                            if (id.isEquivalentTo(it.name)) {
+                    when (root.identifier.hasQualifier()) {
+                        true -> it
+                        else -> {
+                            if (root.identifier.matches(it.name)) {
                                 // recompute the PType of this binding after applying the exclusions
                                 val type = it.type.exclude(item.steps, lastStepOptional = false)
                                 it.copy(type = type)
@@ -1366,7 +1307,6 @@ internal class PlanTyper(private val env: Env) {
                                 it
                             }
                         }
-                        is Identifier.Qualified -> it
                     }
                 }
                 is Rex.Op.Var.Local, is Rex.Op.Var.Global -> it
@@ -1374,10 +1314,5 @@ internal class PlanTyper(private val env: Env) {
             }
         }
         return output
-    }
-
-    private fun Identifier.Symbol.isEquivalentTo(other: String): Boolean = when (caseSensitivity) {
-        Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
-        Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
     }
 }

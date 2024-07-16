@@ -2,11 +2,7 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.plan.Catalog
 import org.partiql.plan.builder.CatalogBuilder
-import org.partiql.plan.catalogItemAgg
-import org.partiql.plan.catalogItemFn
-import org.partiql.plan.catalogItemValue
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.spi.fn.FnExperimental
 import org.partiql.plan.Ref as CatalogRef
 
 /**
@@ -26,22 +22,9 @@ internal class Symbols private constructor() {
         return catalogs.map { it.build() }
     }
 
-    fun insert(ref: Ref.Obj): CatalogRef = insert(
-        catalog = ref.catalog,
-        item = catalogItemValue(ref.path, ref.type),
-    )
-
-    @OptIn(FnExperimental::class)
-    fun insert(ref: Ref.Fn): CatalogRef = insert(
-        catalog = ref.catalog,
-        item = catalogItemFn(ref.path, ref.signature.specific),
-    )
-
-    @OptIn(FnExperimental::class)
-    fun insert(ref: Ref.Agg): CatalogRef = insert(
-        catalog = ref.catalog,
-        item = catalogItemAgg(ref.path, ref.signature.specific),
-    )
+    fun insert(ref: Ref): CatalogRef {
+        TODO("Catalog not implemented")
+    }
 
     private fun insert(catalog: String, item: Catalog.Item): CatalogRef {
         val i = upsert(catalog)

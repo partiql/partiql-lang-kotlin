@@ -24,13 +24,11 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
+import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.builder.plan
-import org.partiql.planner.internal.ir.identifierQualified
-import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpJoin
@@ -153,7 +151,7 @@ internal object RexConverter {
             val arg = visitExprCoerce(node.expr, context)
             val args = listOf(arg)
             // Fn
-            val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+            val id = Identifier.delimited(node.op.name.lowercase())
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
@@ -199,7 +197,7 @@ internal object RexConverter {
                     rex(type, op)
                 }
                 else -> {
-                    val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+                    val id = Identifier.delimited(node.op.name.lowercase())
                     val op = rexOpCallUnresolved(id, args)
                     rex(type, op)
                 }
@@ -213,23 +211,6 @@ internal object RexConverter {
                 node.select is Select.Project || node.select is Select.Star
                 )
 
-        private fun mergeIdentifiers(root: Identifier, steps: List<Identifier>): Identifier {
-            if (steps.isEmpty()) {
-                return root
-            }
-            val (newRoot, firstSteps) = when (root) {
-                is Identifier.Symbol -> root to emptyList()
-                is Identifier.Qualified -> root.root to root.steps
-            }
-            val followingSteps = steps.flatMap { step ->
-                when (step) {
-                    is Identifier.Symbol -> listOf(step)
-                    is Identifier.Qualified -> listOf(step.root) + step.steps
-                }
-            }
-            return identifierQualified(newRoot, firstSteps + followingSteps)
-        }
-
         override fun visitExprPath(node: Expr.Path, context: Env): Rex {
             // Args
             val root = visitExprCoerce(node.root, context)
@@ -237,26 +218,22 @@ internal object RexConverter {
             // Attempt to create qualified identifier
             val (newRoot, newSteps) = when (val op = root.op) {
                 is Rex.Op.Var.Unresolved -> {
-                    val identifierSteps = mutableListOf<Identifier>()
-                    run {
-                        node.steps.forEach { step ->
-                            if (step !is Expr.Path.Step.Symbol) {
-                                return@run
-                            }
-                            identifierSteps.add(AstToPlan.convert(step.symbol))
+
+
+                    // convert consecutive symbol path steps to the root identifier
+                    var i = 0
+                    val parts = mutableListOf<Identifier.Part>()
+                    parts.addAll(op.identifier.getParts())
+                    for (step in node.steps) {
+                        if (step !is Expr.Path.Step.Symbol) {
+                            break
                         }
+                        parts.add(AstToPlan.part(step.symbol))
+                        i += 1
                     }
-                    when (identifierSteps.size) {
-                        0 -> root to node.steps
-                        else -> {
-                            val newRoot = rex(
-                                ANY,
-                                rexOpVarUnresolved(mergeIdentifiers(op.identifier, identifierSteps), op.scope)
-                            )
-                            val newSteps = node.steps.subList(identifierSteps.size, node.steps.size)
-                            newRoot to newSteps
-                        }
-                    }
+                    val newRoot = rex(ANY, rexOpVarUnresolved(Identifier.of(parts), op.scope))
+                    val newSteps = node.steps.subList(i, node.steps.size)
+                    newRoot to newSteps
                 }
                 else -> root to node.steps
             }
@@ -290,16 +267,16 @@ internal object RexConverter {
                     }
 
                     is Expr.Path.Step.Symbol -> {
-                        val identifier = AstToPlan.convert(step.symbol)
-                        val op = when (identifier.caseSensitivity) {
-                            Identifier.CaseSensitivity.SENSITIVE -> rexOpPathKey(
-                                current,
-                                rexString(identifier.symbol)
-                            )
-
-                            Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathSymbol(current, identifier.symbol)
+                        when (step.symbol.caseSensitivity) {
+                            org.partiql.ast.Identifier.CaseSensitivity.SENSITIVE -> {
+                                // case-sensitive path step becomes a key lookup
+                                rexOpPathKey(current, rexString(step.symbol.symbol))
+                            }
+                            org.partiql.ast.Identifier.CaseSensitivity.INSENSITIVE -> {
+                                // case-insensitive path step becomes a symbol lookup
+                                rexOpPathSymbol(current, step.symbol.symbol)
+                            }
                         }
-                        op
                     }
 
                     // Unpivot and Wildcard steps trigger the rewrite
@@ -415,7 +392,7 @@ internal object RexConverter {
             val type = (ANY)
             // Fn
             val id = AstToPlan.convert(node.function)
-            if (id is Identifier.Symbol && id.symbol.equals("TUPLEUNION", ignoreCase = true)) {
+            if (id.matches("TUPLEUNION")) {
                 return visitExprCallTupleUnion(node, context)
             }
             // Args
@@ -440,7 +417,7 @@ internal object RexConverter {
             }
 
             // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
-            val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+            val id = Identifier.delimited(Expr.Binary.Op.EQ.name.lowercase())
             val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
                 val updatedCondition = when (rex) {
                     null -> condition
@@ -869,7 +846,7 @@ internal object RexConverter {
                 op = Rex.Op.Select(
                     constructor = Rex(
                         ANY,
-                        Rex.Op.Var.Unresolved(Identifier.Symbol("_0", Identifier.CaseSensitivity.SENSITIVE), Rex.Op.Var.Scope.LOCAL)
+                        Rex.Op.Var.Unresolved(Identifier.delimited("_0"), Rex.Op.Var.Scope.LOCAL)
                     ),
                     rel = rel
                 )
@@ -880,7 +857,7 @@ internal object RexConverter {
 
         private fun negate(call: Rex.Op.Call): Rex.Op.Call {
             val name = Expr.Unary.Op.NOT.name
-            val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+            val id = Identifier.delimited(name.lowercase())
             // wrap
             val arg = rex(BOOL, call)
             // rewrite call
@@ -892,7 +869,7 @@ internal object RexConverter {
          * The purpose of having such hidden function is to prevent usage of generated function name in query text.
          */
         private fun call(name: String, vararg args: Rex): Rex.Op.Call {
-            val id = identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
+            val id = Identifier.regular(name)
             return rexOpCallUnresolved(id, args.toList())
         }
 
