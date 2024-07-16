@@ -13,9 +13,9 @@ public interface Catalogs {
     /**
      * Returns a catalog by name (single identifier).
      */
-    public fun get(identifier: Identifier): Catalog? {
+    public fun get(name: String, ignoreCase: Boolean = false): Catalog? {
         val default = default()
-        return if (identifier.matches(default.getName())) {
+        return if (name.equals(default.getName(), ignoreCase = true)) {
             default
         } else {
             null

@@ -18,11 +18,13 @@ public interface Catalog {
 
     /**
      * Get a table by name.
-     *
-     * @param name  The case-sensitive [Table] name.
-     * @return The [Table] or null if not found.
      */
     public fun getTable(session: Session, name: Name): Table? = null
+
+    /**
+     * Get a table by identifier.
+     */
+    public fun getTable(session: Session, identifier: Identifier): Table? = null
 
     /**
      * List top-level tables.
@@ -107,17 +109,17 @@ public interface Catalog {
 
                 override fun getTable(session: Session, identifier: Identifier): Table? {
                     if (identifier.hasQualifier()) {
-                        return null
+                        error("Catalog does not support qualified table names")
                     }
                     var match: Table? = null
                     val id = identifier.getIdentifier()
                     for (table in tables.values) {
                         if (id.matches(table.getName())) {
-                           if (match == null)  {
-                               match = table
-                           } else {
-                               error("Ambiguous table name: $name")
-                           }
+                            if (match == null) {
+                                match = table
+                            } else {
+                                error("Ambiguous table name: $name")
+                            }
                         }
                     }
                     return match
@@ -129,7 +131,7 @@ public interface Catalog {
 
                 override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
                     if (!namespace.isEmpty()) {
-                       return emptyList()
+                        return emptyList()
                     }
                     return tables.values.map { Name.of(it.getName()) }
                 }

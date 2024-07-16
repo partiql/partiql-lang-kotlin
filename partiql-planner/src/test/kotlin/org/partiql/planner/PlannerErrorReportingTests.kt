@@ -13,8 +13,8 @@ import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.types.Field
 import org.partiql.types.BagType
+import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -33,7 +33,7 @@ internal class PlannerErrorReportingTests {
         .createTable("missing_binding", PType.typeDynamic())
         .createTable("atomic", PType.typeSmallInt())
         .createTable("collection_no_missing_atomic", PType.typeBag(PType.typeSmallInt()))
-        .createTable("collection_contain_missing_atomic",PType.typeBag(PType.typeSmallInt()))
+        .createTable("collection_contain_missing_atomic", PType.typeBag(PType.typeSmallInt()))
         .createTable("struct_no_missing", PType.typeRow(listOf(Field.of("f1", PType.typeSmallInt()))))
         .createTable("struct_with_missing", PType.typeRow(listOf(Field.of("f1", PType.typeSmallInt()))))
         .build()

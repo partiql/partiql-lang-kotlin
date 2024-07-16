@@ -1,17 +1,23 @@
 public abstract interface class org/partiql/planner/PartiQLPlanner {
 	public static final field Companion Lorg/partiql/planner/PartiQLPlanner$Companion;
-	public static fun builder ()Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public static fun default ()Lorg/partiql/planner/PartiQLPlanner;
-	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/planner/PartiQLPlanner$Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public static fun builder ()Lorg/partiql/planner/PartiQLPlanner$Builder;
+	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/planner/catalog/Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/planner/PartiQLPlanner$Result;
+}
+
+public final class org/partiql/planner/PartiQLPlanner$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
+	public final fun catalogs (Lorg/partiql/planner/catalog/Catalogs;)Lorg/partiql/planner/PartiQLPlanner$Builder;
+	public final fun signal (Z)Lorg/partiql/planner/PartiQLPlanner$Builder;
+	public static synthetic fun signal$default (Lorg/partiql/planner/PartiQLPlanner$Builder;ZILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Builder;
 }
 
 public final class org/partiql/planner/PartiQLPlanner$Companion {
-	public final fun builder ()Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun default ()Lorg/partiql/planner/PartiQLPlanner;
+	public final fun builder ()Lorg/partiql/planner/PartiQLPlanner$Builder;
 }
 
 public final class org/partiql/planner/PartiQLPlanner$DefaultImpls {
-	public static synthetic fun plan$default (Lorg/partiql/planner/PartiQLPlanner;Lorg/partiql/ast/Statement;Lorg/partiql/planner/PartiQLPlanner$Session;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public static synthetic fun plan$default (Lorg/partiql/planner/PartiQLPlanner;Lorg/partiql/ast/Statement;Lorg/partiql/planner/catalog/Session;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Result;
 }
 
 public final class org/partiql/planner/PartiQLPlanner$Result {
@@ -20,29 +26,302 @@ public final class org/partiql/planner/PartiQLPlanner$Result {
 	public final fun getProblems ()Ljava/util/List;
 }
 
-public final class org/partiql/planner/PartiQLPlanner$Session {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getCatalogs ()Ljava/util/Map;
-	public final fun getCurrentCatalog ()Ljava/lang/String;
-	public final fun getCurrentDirectory ()Ljava/util/List;
-	public final fun getInstant ()Ljava/time/Instant;
-	public final fun getQueryId ()Ljava/lang/String;
-	public final fun getUserId ()Ljava/lang/String;
+public abstract interface class org/partiql/planner/catalog/Catalog {
+	public static final field Companion Lorg/partiql/planner/catalog/Catalog$Companion;
+	public static fun builder ()Lorg/partiql/planner/catalog/Catalog$Builder;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getRoutines (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Ljava/util/Collection;
+	public abstract fun getTable (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Table;
+	public abstract fun getTable (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Lorg/partiql/planner/catalog/Table;
+	public abstract fun listNamespaces (Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
+	public abstract fun listNamespaces (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Namespace;)Ljava/util/Collection;
+	public abstract fun listTables (Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
+	public abstract fun listTables (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Namespace;)Ljava/util/Collection;
 }
 
-public final class org/partiql/planner/PartiQLPlannerBuilder {
+public final class org/partiql/planner/catalog/Catalog$Builder {
 	public fun <init> ()V
-	public final fun addCatalog (Ljava/lang/String;Lorg/partiql/spi/connector/ConnectorMetadata;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun addPass (Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun addPasses ([Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
-	public final fun catalogs ([Lkotlin/Pair;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun passes (Ljava/util/List;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun signalMode ()Lorg/partiql/planner/PartiQLPlannerBuilder;
+	public final fun build ()Lorg/partiql/planner/catalog/Catalog;
+	public final fun createTable (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Catalog$Builder;
+	public final fun createTable (Lorg/partiql/planner/catalog/Name;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Catalog$Builder;
+	public final fun name (Ljava/lang/String;)Lorg/partiql/planner/catalog/Catalog$Builder;
 }
 
-public abstract interface class org/partiql/planner/PartiQLPlannerPass {
-	public abstract fun apply (Lorg/partiql/plan/PartiQLPlan;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PartiQLPlan;
+public final class org/partiql/planner/catalog/Catalog$Companion {
+	public final fun builder ()Lorg/partiql/planner/catalog/Catalog$Builder;
+}
+
+public final class org/partiql/planner/catalog/Catalog$DefaultImpls {
+	public static fun getRoutines (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Ljava/util/Collection;
+	public static fun getTable (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Table;
+	public static fun getTable (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Lorg/partiql/planner/catalog/Table;
+	public static fun listNamespaces (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
+	public static fun listNamespaces (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Namespace;)Ljava/util/Collection;
+	public static fun listTables (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
+	public static fun listTables (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Namespace;)Ljava/util/Collection;
+}
+
+public abstract interface class org/partiql/planner/catalog/Catalogs {
+	public static final field Companion Lorg/partiql/planner/catalog/Catalogs$Companion;
+	public static fun builder ()Lorg/partiql/planner/catalog/Catalogs$Builder;
+	public abstract fun default ()Lorg/partiql/planner/catalog/Catalog;
+	public abstract fun get (Ljava/lang/String;Z)Lorg/partiql/planner/catalog/Catalog;
+	public abstract fun list ()Ljava/util/Collection;
+	public static fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Catalogs;
+	public static fun of ([Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/catalog/Catalogs;
+}
+
+public final class org/partiql/planner/catalog/Catalogs$Builder {
+	public fun <init> ()V
+	public final fun add (Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/catalog/Catalogs$Builder;
+	public final fun build ()Lorg/partiql/planner/catalog/Catalogs;
+	public final fun default (Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/catalog/Catalogs$Builder;
+}
+
+public final class org/partiql/planner/catalog/Catalogs$Companion {
+	public final fun builder ()Lorg/partiql/planner/catalog/Catalogs$Builder;
+	public final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Catalogs;
+	public final fun of ([Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/catalog/Catalogs;
+}
+
+public final class org/partiql/planner/catalog/Catalogs$DefaultImpls {
+	public static fun get (Lorg/partiql/planner/catalog/Catalogs;Ljava/lang/String;Z)Lorg/partiql/planner/catalog/Catalog;
+	public static synthetic fun get$default (Lorg/partiql/planner/catalog/Catalogs;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/planner/catalog/Catalog;
+	public static fun list (Lorg/partiql/planner/catalog/Catalogs;)Ljava/util/Collection;
+}
+
+public final class org/partiql/planner/catalog/Identifier : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
+	public static final field Companion Lorg/partiql/planner/catalog/Identifier$Companion;
+	public synthetic fun <init> ([Lorg/partiql/planner/catalog/Identifier$Part;Lorg/partiql/planner/catalog/Identifier$Part;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun delimited (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
+	public static final fun delimited (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Identifier;
+	public static final fun delimited ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun forEach (Ljava/util/function/Consumer;)V
+	public final fun getIdentifier ()Lorg/partiql/planner/catalog/Identifier$Part;
+	public final fun getParts ()Ljava/util/List;
+	public final fun getQualifier ()[Lorg/partiql/planner/catalog/Identifier$Part;
+	public final fun hasQualifier ()Z
+	public fun hashCode ()I
+	public fun iterator ()Ljava/util/Iterator;
+	public final fun matches (Ljava/lang/String;Z)Z
+	public final fun matches (Lorg/partiql/planner/catalog/Identifier;Z)Z
+	public static synthetic fun matches$default (Lorg/partiql/planner/catalog/Identifier;Ljava/lang/String;ZILjava/lang/Object;)Z
+	public static synthetic fun matches$default (Lorg/partiql/planner/catalog/Identifier;Lorg/partiql/planner/catalog/Identifier;ZILjava/lang/Object;)Z
+	public static final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Identifier;
+	public static final fun of (Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
+	public static final fun of ([Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
+	public static final fun regular (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
+	public fun spliterator ()Ljava/util/Spliterator;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/catalog/Identifier$Companion {
+	public final fun delimited (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
+	public final fun delimited (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Identifier;
+	public final fun delimited ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
+	public final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Identifier;
+	public final fun of (Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
+	public final fun of ([Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
+	public final fun regular (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
+}
+
+public final class org/partiql/planner/catalog/Identifier$Part {
+	public static final field Companion Lorg/partiql/planner/catalog/Identifier$Part$Companion;
+	public synthetic fun <init> (Ljava/lang/String;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun delimited (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier$Part;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isRegular ()Z
+	public final fun matches (Ljava/lang/String;)Z
+	public final fun matches (Lorg/partiql/planner/catalog/Identifier$Part;)Z
+	public static final fun regular (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier$Part;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/catalog/Identifier$Part$Companion {
+	public final fun delimited (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier$Part;
+	public final fun regular (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier$Part;
+}
+
+public final class org/partiql/planner/catalog/Name {
+	public static final field Companion Lorg/partiql/planner/catalog/Name$Companion;
+	public fun <init> (Lorg/partiql/planner/catalog/Namespace;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getNamespace ()Lorg/partiql/planner/catalog/Namespace;
+	public final fun hasNamespace ()Z
+	public fun hashCode ()I
+	public static final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Name;
+	public static final fun of ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Name;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/catalog/Name$Companion {
+	public final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Name;
+	public final fun of ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Name;
+}
+
+public final class org/partiql/planner/catalog/Namespace : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
+	public static final field Companion Lorg/partiql/planner/catalog/Namespace$Companion;
+	public synthetic fun <init> ([Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun forEach (Ljava/util/function/Consumer;)V
+	public final fun get (I)Ljava/lang/String;
+	public final fun getLength ()I
+	public final fun getLevels ()[Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isEmpty ()Z
+	public fun iterator ()Ljava/util/Iterator;
+	public static final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Namespace;
+	public static final fun of ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Namespace;
+	public fun spliterator ()Ljava/util/Spliterator;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/catalog/Namespace$Companion {
+	public final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Namespace;
+	public final fun of ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Namespace;
+	public final fun root ()Lorg/partiql/planner/catalog/Namespace;
+}
+
+public final class org/partiql/planner/catalog/Path : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
+	public static final field Companion Lorg/partiql/planner/catalog/Path$Companion;
+	public synthetic fun <init> (Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun forEach (Ljava/util/function/Consumer;)V
+	public final fun get (I)Lorg/partiql/planner/catalog/Namespace;
+	public final fun getLength ()I
+	public final fun isEmpty ()Z
+	public fun iterator ()Ljava/util/Iterator;
+	public static final fun of ([Lorg/partiql/planner/catalog/Namespace;)Lorg/partiql/planner/catalog/Path;
+	public fun spliterator ()Ljava/util/Spliterator;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/catalog/Path$Companion {
+	public final fun of ([Lorg/partiql/planner/catalog/Namespace;)Lorg/partiql/planner/catalog/Path;
+}
+
+public abstract interface class org/partiql/planner/catalog/Routine {
+	public static final field Companion Lorg/partiql/planner/catalog/Routine$Companion;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getParameters ()[Lorg/partiql/planner/catalog/Routine$Parameter;
+	public abstract fun getReturnType ()Lorg/partiql/types/PType;
+}
+
+public abstract interface class org/partiql/planner/catalog/Routine$Aggregation : org/partiql/planner/catalog/Routine {
+}
+
+public final class org/partiql/planner/catalog/Routine$Aggregation$DefaultImpls {
+	public static fun getParameters (Lorg/partiql/planner/catalog/Routine$Aggregation;)[Lorg/partiql/planner/catalog/Routine$Parameter;
+}
+
+public final class org/partiql/planner/catalog/Routine$Companion {
+	public final fun scalar (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Routine$Scalar;
+	public final fun scalar (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType;Lorg/partiql/planner/catalog/Routine$Properties;)Lorg/partiql/planner/catalog/Routine$Scalar;
+	public static synthetic fun scalar$default (Lorg/partiql/planner/catalog/Routine$Companion;Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType;Lorg/partiql/planner/catalog/Routine$Properties;ILjava/lang/Object;)Lorg/partiql/planner/catalog/Routine$Scalar;
+}
+
+public final class org/partiql/planner/catalog/Routine$DefaultImpls {
+	public static fun getParameters (Lorg/partiql/planner/catalog/Routine;)[Lorg/partiql/planner/catalog/Routine$Parameter;
+}
+
+public abstract interface class org/partiql/planner/catalog/Routine$Operator : org/partiql/planner/catalog/Routine {
+	public abstract fun getLHS ()Lorg/partiql/types/PType$Kind;
+	public abstract fun getRHS ()Lorg/partiql/types/PType$Kind;
+	public abstract fun getSymbol ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/catalog/Routine$Operator$DefaultImpls {
+	public static fun getParameters (Lorg/partiql/planner/catalog/Routine$Operator;)[Lorg/partiql/planner/catalog/Routine$Parameter;
+}
+
+public final class org/partiql/planner/catalog/Routine$Parameter {
+	public final field name Ljava/lang/String;
+	public final field type Lorg/partiql/types/PType$Kind;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType$Kind;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/types/PType$Kind;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Routine$Parameter;
+	public static synthetic fun copy$default (Lorg/partiql/planner/catalog/Routine$Parameter;Ljava/lang/String;Lorg/partiql/types/PType$Kind;ILjava/lang/Object;)Lorg/partiql/planner/catalog/Routine$Parameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/catalog/Routine$Properties {
+	public final field isNullCall Z
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lorg/partiql/planner/catalog/Routine$Properties;
+	public static synthetic fun copy$default (Lorg/partiql/planner/catalog/Routine$Properties;ZILjava/lang/Object;)Lorg/partiql/planner/catalog/Routine$Properties;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/planner/catalog/Routine$Scalar : org/partiql/planner/catalog/Routine {
+	public abstract fun getProperties ()Lorg/partiql/planner/catalog/Routine$Properties;
+}
+
+public final class org/partiql/planner/catalog/Routine$Scalar$DefaultImpls {
+	public static fun getParameters (Lorg/partiql/planner/catalog/Routine$Scalar;)[Lorg/partiql/planner/catalog/Routine$Parameter;
+	public static fun getProperties (Lorg/partiql/planner/catalog/Routine$Scalar;)Lorg/partiql/planner/catalog/Routine$Properties;
+}
+
+public abstract interface class org/partiql/planner/catalog/Session {
+	public static final field Companion Lorg/partiql/planner/catalog/Session$Companion;
+	public static fun builder ()Lorg/partiql/planner/catalog/Session$Builder;
+	public static fun empty ()Lorg/partiql/planner/catalog/Session;
+	public abstract fun getIdentity ()Ljava/lang/String;
+	public abstract fun getNamespace ()Lorg/partiql/planner/catalog/Namespace;
+	public abstract fun getPath ()Lorg/partiql/planner/catalog/Path;
+	public abstract fun getProperties ()Ljava/util/Map;
+}
+
+public final class org/partiql/planner/catalog/Session$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/planner/catalog/Session;
+	public final fun identity (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
+	public final fun namespace (Lorg/partiql/planner/catalog/Namespace;)Lorg/partiql/planner/catalog/Session$Builder;
+	public final fun property (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
+}
+
+public final class org/partiql/planner/catalog/Session$Companion {
+	public final fun builder ()Lorg/partiql/planner/catalog/Session$Builder;
+	public final fun empty ()Lorg/partiql/planner/catalog/Session;
+}
+
+public final class org/partiql/planner/catalog/Session$DefaultImpls {
+	public static fun getPath (Lorg/partiql/planner/catalog/Session;)Lorg/partiql/planner/catalog/Path;
+	public static fun getProperties (Lorg/partiql/planner/catalog/Session;)Ljava/util/Map;
+}
+
+public abstract interface class org/partiql/planner/catalog/Table {
+	public static final field Companion Lorg/partiql/planner/catalog/Table$Companion;
+	public static fun builder ()Lorg/partiql/planner/catalog/Table$Builder;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getSchema ()Lorg/partiql/types/PType;
+	public static fun of (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
+}
+
+public final class org/partiql/planner/catalog/Table$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/planner/catalog/Table;
+	public final fun name (Ljava/lang/String;)Lorg/partiql/planner/catalog/Table$Builder;
+	public final fun schema (Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table$Builder;
+}
+
+public final class org/partiql/planner/catalog/Table$Companion {
+	public final fun builder ()Lorg/partiql/planner/catalog/Table$Builder;
+	public final fun of (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
+	public static synthetic fun of$default (Lorg/partiql/planner/catalog/Table$Companion;Ljava/lang/String;Lorg/partiql/types/PType;ILjava/lang/Object;)Lorg/partiql/planner/catalog/Table;
+}
+
+public final class org/partiql/planner/catalog/Table$DefaultImpls {
+	public static fun getSchema (Lorg/partiql/planner/catalog/Table;)Lorg/partiql/types/PType;
 }
 
