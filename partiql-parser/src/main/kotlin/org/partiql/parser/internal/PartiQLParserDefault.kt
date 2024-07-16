@@ -1472,7 +1472,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val expr = visitAs<Expr>(ctx.source)
             val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
-            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             fromValue(expr, From.Value.Type.SCAN, asAlias, atAlias, byAlias)
         }
 
@@ -1480,7 +1480,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val expr = visitAs<Expr>(ctx.source)
             val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
-            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             fromValue(expr, From.Value.Type.SCAN, asAlias, atAlias, byAlias)
         }
 
@@ -1492,7 +1492,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 val path = visitPathSimple(ctx.pathSimple())
                 val asAlias = ctx.asIdent()?.let { visitAsIdent(it).asBinder() }
                 val atAlias = ctx.atIdent()?.let { visitAtIdent(it).asBinder() }
-                val byAlias = ctx.byIdent()?.let { visitByIdent(it) }
+                val byAlias = ctx.byIdent()?.let { visitByIdent(it).asBinder() }
                 statementDMLDeleteTarget(path, asAlias, atAlias, byAlias)
             }
 
@@ -1510,7 +1510,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val expr = visitAs<Expr>(ctx.expr())
             val asAlias = ctx.asIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             val atAlias = ctx.atIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
-            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { visitSymbolPrimitive(it.symbolPrimitive()).asBinder() }
             fromValue(expr, From.Value.Type.UNPIVOT, asAlias, atAlias, byAlias)
         }
 

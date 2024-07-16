@@ -1229,7 +1229,7 @@ class SqlDialectTest {
                         type = From.Value.Type.SCAN
                         asAlias = bindName("x")
                         atAlias = bindName("y")
-                        byAlias = id("z")
+                        byAlias = bindName("z")
                     }
                 }
             },
@@ -1271,7 +1271,7 @@ class SqlDialectTest {
                         type = From.Value.Type.UNPIVOT
                         asAlias = bindName("x")
                         atAlias = bindName("y")
-                        byAlias = id("z")
+                        byAlias = bindName("z")
                     }
                 }
             },

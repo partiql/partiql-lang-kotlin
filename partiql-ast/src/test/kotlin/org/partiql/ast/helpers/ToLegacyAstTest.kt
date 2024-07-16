@@ -585,7 +585,7 @@ class ToLegacyAstTest {
                     type = From.Value.Type.SCAN
                     asAlias = bindName("a")
                     atAlias = bindName("b")
-                    byAlias = id("c")
+                    byAlias = bindName("c")
                 }
             },
             expect("(unpivot (lit null) null null null)") {
@@ -600,7 +600,7 @@ class ToLegacyAstTest {
                     type = From.Value.Type.UNPIVOT
                     asAlias = bindName("a")
                     atAlias = bindName("b")
-                    byAlias = id("c")
+                    byAlias = bindName("c")
                 }
             },
             expect(

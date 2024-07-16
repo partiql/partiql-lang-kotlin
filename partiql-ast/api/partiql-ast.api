@@ -58,7 +58,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprWindow (Lorg/partiql/ast/Expr$Window$Function;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr$Window$Over;)Lorg/partiql/ast/Expr$Window;
 	public static final fun exprWindowOver (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/Expr$Window$Over;
 	public static final fun fromJoin (Lorg/partiql/ast/From;Lorg/partiql/ast/From;Lorg/partiql/ast/From$Join$Type;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/From$Join;
-	public static final fun fromValue (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/From$Value;
+	public static final fun fromValue (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;)Lorg/partiql/ast/From$Value;
 	public static final fun graphMatch (Ljava/util/List;Lorg/partiql/ast/GraphMatch$Selector;)Lorg/partiql/ast/GraphMatch;
 	public static final fun graphMatchLabelConj (Lorg/partiql/ast/GraphMatch$Label;Lorg/partiql/ast/GraphMatch$Label;)Lorg/partiql/ast/GraphMatch$Label$Conj;
 	public static final fun graphMatchLabelDisj (Lorg/partiql/ast/GraphMatch$Label;Lorg/partiql/ast/GraphMatch$Label;)Lorg/partiql/ast/GraphMatch$Label$Disj;
@@ -113,7 +113,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun statementDMLBatchLegacyOpRemove (Lorg/partiql/ast/Path;)Lorg/partiql/ast/Statement$DML$BatchLegacy$Op$Remove;
 	public static final fun statementDMLBatchLegacyOpSet (Ljava/util/List;)Lorg/partiql/ast/Statement$DML$BatchLegacy$Op$Set;
 	public static final fun statementDMLDelete (Lorg/partiql/ast/Statement$DML$Delete$Target;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Returning;)Lorg/partiql/ast/Statement$DML$Delete;
-	public static final fun statementDMLDeleteTarget (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/Statement$DML$Delete$Target;
+	public static final fun statementDMLDeleteTarget (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;)Lorg/partiql/ast/Statement$DML$Delete$Target;
 	public static final fun statementDMLInsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Binder;Lorg/partiql/ast/OnConflict;)Lorg/partiql/ast/Statement$DML$Insert;
 	public static final fun statementDMLInsertLegacy (Lorg/partiql/ast/Path;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Statement$DML$InsertLegacy;
 	public static final fun statementDMLRemove (Lorg/partiql/ast/Path;)Lorg/partiql/ast/Statement$DML$Remove;
@@ -1582,19 +1582,19 @@ public final class org/partiql/ast/From$Value : org/partiql/ast/From {
 	public static final field Companion Lorg/partiql/ast/From$Value$Companion;
 	public final field asAlias Lorg/partiql/ast/Binder;
 	public final field atAlias Lorg/partiql/ast/Binder;
-	public final field byAlias Lorg/partiql/ast/Identifier$Symbol;
+	public final field byAlias Lorg/partiql/ast/Binder;
 	public final field expr Lorg/partiql/ast/Expr;
 	public final field type Lorg/partiql/ast/From$Value$Type;
-	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;)V
+	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/FromValueBuilder;
 	public final fun component1 ()Lorg/partiql/ast/Expr;
 	public final fun component2 ()Lorg/partiql/ast/From$Value$Type;
 	public final fun component3 ()Lorg/partiql/ast/Binder;
 	public final fun component4 ()Lorg/partiql/ast/Binder;
-	public final fun component5 ()Lorg/partiql/ast/Identifier$Symbol;
-	public final fun copy (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/From$Value;
-	public static synthetic fun copy$default (Lorg/partiql/ast/From$Value;Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;ILjava/lang/Object;)Lorg/partiql/ast/From$Value;
+	public final fun component5 ()Lorg/partiql/ast/Binder;
+	public final fun copy (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;)Lorg/partiql/ast/From$Value;
+	public static synthetic fun copy$default (Lorg/partiql/ast/From$Value;Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;ILjava/lang/Object;)Lorg/partiql/ast/From$Value;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -2873,17 +2873,17 @@ public final class org/partiql/ast/Statement$DML$Delete$Target : org/partiql/ast
 	public static final field Companion Lorg/partiql/ast/Statement$DML$Delete$Target$Companion;
 	public final field asAlias Lorg/partiql/ast/Binder;
 	public final field atAlias Lorg/partiql/ast/Binder;
-	public final field byAlias Lorg/partiql/ast/Identifier$Symbol;
+	public final field byAlias Lorg/partiql/ast/Binder;
 	public final field path Lorg/partiql/ast/Path;
-	public fun <init> (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;)V
+	public fun <init> (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/StatementDmlDeleteTargetBuilder;
 	public final fun component1 ()Lorg/partiql/ast/Path;
 	public final fun component2 ()Lorg/partiql/ast/Binder;
 	public final fun component3 ()Lorg/partiql/ast/Binder;
-	public final fun component4 ()Lorg/partiql/ast/Identifier$Symbol;
-	public final fun copy (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/Statement$DML$Delete$Target;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Statement$DML$Delete$Target;Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DML$Delete$Target;
+	public final fun component4 ()Lorg/partiql/ast/Binder;
+	public final fun copy (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;)Lorg/partiql/ast/Statement$DML$Delete$Target;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Statement$DML$Delete$Target;Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DML$Delete$Target;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -4123,8 +4123,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun exprWindowOver$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Window$Over;
 	public final fun fromJoin (Lorg/partiql/ast/From;Lorg/partiql/ast/From;Lorg/partiql/ast/From$Join$Type;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/From$Join;
 	public static synthetic fun fromJoin$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/From;Lorg/partiql/ast/From;Lorg/partiql/ast/From$Join$Type;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/From$Join;
-	public final fun fromValue (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/From$Value;
-	public static synthetic fun fromValue$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/From$Value;
+	public final fun fromValue (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/From$Value;
+	public static synthetic fun fromValue$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/From$Value;
 	public final fun graphMatch (Ljava/util/List;Lorg/partiql/ast/GraphMatch$Selector;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/GraphMatch;
 	public static synthetic fun graphMatch$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lorg/partiql/ast/GraphMatch$Selector;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/GraphMatch;
 	public final fun graphMatchLabelConj (Lorg/partiql/ast/GraphMatch$Label;Lorg/partiql/ast/GraphMatch$Label;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/GraphMatch$Label$Conj;
@@ -4233,8 +4233,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun statementDMLBatchLegacyOpSet$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DML$BatchLegacy$Op$Set;
 	public final fun statementDMLDelete (Lorg/partiql/ast/Statement$DML$Delete$Target;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Returning;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DML$Delete;
 	public static synthetic fun statementDMLDelete$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Statement$DML$Delete$Target;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Returning;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DML$Delete;
-	public final fun statementDMLDeleteTarget (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DML$Delete$Target;
-	public static synthetic fun statementDMLDeleteTarget$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DML$Delete$Target;
+	public final fun statementDMLDeleteTarget (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DML$Delete$Target;
+	public static synthetic fun statementDMLDeleteTarget$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DML$Delete$Target;
 	public final fun statementDMLInsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Binder;Lorg/partiql/ast/OnConflict;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DML$Insert;
 	public static synthetic fun statementDMLInsert$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Binder;Lorg/partiql/ast/OnConflict;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DML$Insert;
 	public final fun statementDMLInsertLegacy (Lorg/partiql/ast/Path;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DML$InsertLegacy;
@@ -5125,21 +5125,21 @@ public final class org/partiql/ast/builder/FromJoinBuilder {
 
 public final class org/partiql/ast/builder/FromValueBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/From$Value$Type;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun asAlias (Lorg/partiql/ast/Binder;)Lorg/partiql/ast/builder/FromValueBuilder;
 	public final fun atAlias (Lorg/partiql/ast/Binder;)Lorg/partiql/ast/builder/FromValueBuilder;
 	public final fun build ()Lorg/partiql/ast/From$Value;
-	public final fun byAlias (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/builder/FromValueBuilder;
+	public final fun byAlias (Lorg/partiql/ast/Binder;)Lorg/partiql/ast/builder/FromValueBuilder;
 	public final fun expr (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/FromValueBuilder;
 	public final fun getAsAlias ()Lorg/partiql/ast/Binder;
 	public final fun getAtAlias ()Lorg/partiql/ast/Binder;
-	public final fun getByAlias ()Lorg/partiql/ast/Identifier$Symbol;
+	public final fun getByAlias ()Lorg/partiql/ast/Binder;
 	public final fun getExpr ()Lorg/partiql/ast/Expr;
 	public final fun getType ()Lorg/partiql/ast/From$Value$Type;
 	public final fun setAsAlias (Lorg/partiql/ast/Binder;)V
 	public final fun setAtAlias (Lorg/partiql/ast/Binder;)V
-	public final fun setByAlias (Lorg/partiql/ast/Identifier$Symbol;)V
+	public final fun setByAlias (Lorg/partiql/ast/Binder;)V
 	public final fun setExpr (Lorg/partiql/ast/Expr;)V
 	public final fun setType (Lorg/partiql/ast/From$Value$Type;)V
 	public final fun type (Lorg/partiql/ast/From$Value$Type;)Lorg/partiql/ast/builder/FromValueBuilder;
@@ -5778,20 +5778,20 @@ public final class org/partiql/ast/builder/StatementDmlDeleteBuilder {
 
 public final class org/partiql/ast/builder/StatementDmlDeleteTargetBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Identifier$Symbol;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Path;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Binder;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun asAlias (Lorg/partiql/ast/Binder;)Lorg/partiql/ast/builder/StatementDmlDeleteTargetBuilder;
 	public final fun atAlias (Lorg/partiql/ast/Binder;)Lorg/partiql/ast/builder/StatementDmlDeleteTargetBuilder;
 	public final fun build ()Lorg/partiql/ast/Statement$DML$Delete$Target;
-	public final fun byAlias (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/builder/StatementDmlDeleteTargetBuilder;
+	public final fun byAlias (Lorg/partiql/ast/Binder;)Lorg/partiql/ast/builder/StatementDmlDeleteTargetBuilder;
 	public final fun getAsAlias ()Lorg/partiql/ast/Binder;
 	public final fun getAtAlias ()Lorg/partiql/ast/Binder;
-	public final fun getByAlias ()Lorg/partiql/ast/Identifier$Symbol;
+	public final fun getByAlias ()Lorg/partiql/ast/Binder;
 	public final fun getPath ()Lorg/partiql/ast/Path;
 	public final fun path (Lorg/partiql/ast/Path;)Lorg/partiql/ast/builder/StatementDmlDeleteTargetBuilder;
 	public final fun setAsAlias (Lorg/partiql/ast/Binder;)V
 	public final fun setAtAlias (Lorg/partiql/ast/Binder;)V
-	public final fun setByAlias (Lorg/partiql/ast/Identifier$Symbol;)V
+	public final fun setByAlias (Lorg/partiql/ast/Binder;)V
 	public final fun setPath (Lorg/partiql/ast/Path;)V
 }
 
