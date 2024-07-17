@@ -2,6 +2,8 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.plan.Catalog
 import org.partiql.plan.builder.CatalogBuilder
+import org.partiql.plan.catalogItemValue
+import org.partiql.planner.catalog.Routine
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.plan.Ref as CatalogRef
 
@@ -22,7 +24,12 @@ internal class Symbols private constructor() {
         return catalogs.map { it.build() }
     }
 
-    fun insert(ref: Ref): CatalogRef {
+    fun insert(ref: Ref.Table): CatalogRef = insert(
+        catalog = ref.catalog,
+        item = catalogItemValue(ref.name.getPath(), ref.type),
+    )
+
+    fun insert(routine: Routine): CatalogRef {
         TODO("Catalog not implemented")
     }
 

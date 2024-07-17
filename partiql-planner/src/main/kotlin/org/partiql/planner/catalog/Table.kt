@@ -8,6 +8,16 @@ import org.partiql.types.PType
 public interface Table {
 
     /**
+     * Handle holds both a table and its namespace within its respective catalog.
+     *
+     * Note: This replaces ConnectorObjectHandle from versions < 1.0
+     */
+    public class Handle(
+        public val namespace: Namespace,
+        public val table: Table,
+    )
+
+    /**
      * The table's name.
      */
     public fun getName(): String

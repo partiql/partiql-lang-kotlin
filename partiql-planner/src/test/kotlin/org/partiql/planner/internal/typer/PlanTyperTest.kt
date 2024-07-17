@@ -4,12 +4,13 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Identifier
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
-import org.partiql.planner.internal.ir.ref
+import org.partiql.planner.internal.ir.refTable
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
@@ -319,15 +320,8 @@ class PlanTyperTest {
     }
 
     private fun global(type: CompilerType, path: List<String>): Rex {
-        // return rex(
-        //     type,
-        //     rexOpVarGlobal(refObj(catalog = "pql", path = path, type))
-        // )
-        // TODO!!
-        return rex(
-            type,
-            rexOpVarGlobal(ref("pql.${path.joinToString(".")}"))
-        )
+        val ref = refTable("pql", Name.of(path), type)
+        return rex(type, rexOpVarGlobal(ref))
     }
 
     private fun assertEquals(expected: Statement, actual: Statement) {

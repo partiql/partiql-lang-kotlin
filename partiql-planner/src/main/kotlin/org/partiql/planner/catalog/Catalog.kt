@@ -22,9 +22,27 @@ public interface Catalog {
     public fun getTable(session: Session, name: Name): Table? = null
 
     /**
-     * Get a table by identifier.
+     * Given an [Identifier], returns a [Table.Handle] that corresponds to the longest-available requested path.
+     * 
+     * For example, given a table named "Table" located within Catalog "AWS" and Namespace "a".b"."c", a user could
+     * call [getTableHandle] with the identifier "a"."b"."c"."Table". The returned [Table.Handle] will contain the table
+     * representation and the matching path: "a"."b"."c"."Table"
+     *
+     * As another example, consider a table within a [Namespace] that may be a struct with nested attributes.
+     * A user could call [getTableHandle] with the identifier "a"."b"."c"."Table"."x". In the Namespace, only table
+     * "Table" exists. Therefore, this method will return a [Table.Handle] with the "Table" representation and the
+     * matching path: "a"."b"."c"."Table".
+     *
+     * IMPORTANT: The returned [Table.Handle.namespace] must be correct for correct evaluation.
+     *
+     * If the [Identifier] does not correspond to an existing [Table], implementers should return null.
      */
-    public fun getTable(session: Session, identifier: Identifier): Table? = null
+    public fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? = null
+
+    /**
+     * Creates a table with the given name (possibly in a namespace).
+     */
+    public fun createTable(session: Session, name: Name, schema: PType)
 
     /**
      * List top-level tables.
@@ -57,95 +75,76 @@ public interface Catalog {
     public fun getRoutines(session: Session, name: Name): Collection<Routine> = emptyList()
 
     /**
-     * Factory methods and builder.
+     * Factory methods.
      */
     public companion object {
 
+        /**
+         * Returns a default [Catalog] implementation based upon an in-memory tree.
+         *
+         * @param name The name of the catalog.
+         */
         @JvmStatic
-        public fun builder(): Builder = Builder()
+        public fun standard(name: String): Catalog = Standard(name)
     }
 
     /**
-     * Java-style builder for a default [Catalog] implementation.
-     *
+     * A default [Catalog] implementation based upon an in-memory tree.
      */
-    public class Builder {
+    private class Standard(val name: String) : Catalog {
 
-        private var name: String? = null
-        private var tables = mutableMapOf<String, Table>()
+        private val root: Tree = Tree(null, mutableMapOf())
 
-        public fun name(name: String): Builder {
-            this.name = name
-            return this
+        private class Tree(
+            private val table: Table?,
+            private val children: MutableMap<String, Tree>,
+        ) {
+            fun contains(name: String) = children.contains(name)
+            fun get(name: String): Tree? = children[name]
+            fun getOrPut(name: String): Tree = children.getOrPut(name) { Tree(null, mutableMapOf()) }
         }
 
-        public fun createTable(name: String, schema: PType): Builder {
-            this.tables[name] = Table.of(name, schema)
-            return this
+        override fun getName(): String = name
+
+        override fun getTable(session: Session, name: Name): Table? {
+            return null
         }
 
-        public fun createTable(name: Name, schema: PType): Builder {
-            if (name.hasNamespace()) {
-                error("Table name must not have a namespace: $name")
+        override fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? {
+            if (identifier.hasQualifier()) {
+                error("Catalog does not support qualified table names")
             }
-            this.tables[name.getName()] = Table.of(name.getName(), schema)
-            return this
+            var match: Table? = null
+            val id = identifier.getIdentifier()
+            for (table in tree.values) {
+                if (id.matches(table.getName())) {
+                    if (match == null) {
+                        match = table
+                    } else {
+                        error("Ambiguous table name: $name")
+                    }
+                }
+            }
+            return match
         }
 
-        public fun build(): Catalog {
+        override fun createTable(session: Session, name: Name, schema: PType) {
+            TODO("Not yet implemented")
+        }
 
-            val name = this.name ?: throw IllegalArgumentException("Catalog name must be provided")
+        // TODO
+        override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
+            return emptyList()
+        }
 
-            return object : Catalog {
+        // TODO
+        override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
+            return emptyList()
+        }
 
-                override fun getName(): String = name
-
-                override fun getTable(session: Session, name: Name): Table? {
-                    if (name.hasNamespace()) {
-                        return null
-                    }
-                    return tables[name.getName()]
-                }
-
-                override fun getTable(session: Session, identifier: Identifier): Table? {
-                    if (identifier.hasQualifier()) {
-                        error("Catalog does not support qualified table names")
-                    }
-                    var match: Table? = null
-                    val id = identifier.getIdentifier()
-                    for (table in tables.values) {
-                        if (id.matches(table.getName())) {
-                            if (match == null) {
-                                match = table
-                            } else {
-                                error("Ambiguous table name: $name")
-                            }
-                        }
-                    }
-                    return match
-                }
-
-                override fun listTables(session: Session): Collection<Name> {
-                    return tables.values.map { Name.of(it.getName()) }
-                }
-
-                override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
-                    if (!namespace.isEmpty()) {
-                        return emptyList()
-                    }
-                    return tables.values.map { Name.of(it.getName()) }
-                }
-
-                override fun listNamespaces(session: Session): Collection<Namespace> {
-                    return emptyList()
-                }
-
-                override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
-                    return emptyList()
-                }
-
-                override fun getRoutines(session: Session, name: Name): Collection<Routine> = emptyList()
-            }
+        // TODO
+        override fun getRoutines(session: Session, name: Name): Collection<Routine> {
+            return emptyList()
         }
     }
 }

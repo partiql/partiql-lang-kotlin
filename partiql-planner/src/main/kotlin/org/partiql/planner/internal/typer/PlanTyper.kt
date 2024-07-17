@@ -603,10 +603,7 @@ internal class PlanTyper(private val env: Env) {
             return visitRex(resolvedVar, null)
         }
 
-        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: CompilerType?): Rex {
-            TODO("typing of RexOpVarGlobal")
-            // rex(node.ref.type, node)
-        }
+        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: CompilerType?) = rex(node.table.type, node)
 
         /**
          * TODO: Create a function signature for the Rex.Op.Path.Index to get automatic coercions.

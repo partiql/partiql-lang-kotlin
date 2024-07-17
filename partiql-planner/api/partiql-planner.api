@@ -151,6 +151,7 @@ public final class org/partiql/planner/catalog/Name {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getName ()Ljava/lang/String;
 	public final fun getNamespace ()Lorg/partiql/planner/catalog/Namespace;
+	public final fun getPath ()Ljava/util/List;
 	public final fun hasNamespace ()Z
 	public fun hashCode ()I
 	public static final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Name;

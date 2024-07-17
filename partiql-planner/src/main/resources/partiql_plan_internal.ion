@@ -1,6 +1,9 @@
 imports::{
   kotlin: [
     identifier::'org.partiql.planner.catalog.Identifier',
+    name::'org.partiql.planner.catalog.Name',
+    namespace::'org.partiql.planner.catalog.Namespace',
+    table::'org.partiql.planner.catalog.Table',
     routine::'org.partiql.planner.catalog.Routine',
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
@@ -18,9 +21,13 @@ parti_q_l_plan::{
 // When transforming to the public plan we produce a symbol table,
 // replacing each internal ref with a pointer ref to the public plan's catalog list.
 
-ref::{
-  name: string, // TEMPORARY
-  _: [
+ref::[
+  table::{
+    catalog: string,
+    name: name,
+    type: static_type,
+  },
+  _::[
     cast::{
       input: partiql_value_type,
       target: partiql_value_type,
@@ -32,7 +39,7 @@ ref::{
       isNullable: bool
     }
   ]
-}
+]
 
 // Statements
 
@@ -59,7 +66,7 @@ rex::{
       },
       // Refers to a value in the database environment.
       global::{
-        ref: ref,
+        table: '.ref.table',
       },
       unresolved::{
         identifier: identifier,

@@ -52,6 +52,10 @@ public class Namespace private constructor(
         return levels.contentEquals((other as Namespace).levels)
     }
 
+    public fun concat(vararg levels: String): Namespace {
+        return Namespace(this.levels + levels)
+    }
+
     /**
      * The hashCode() is case-sensitive — java.util.Arrays.hashCode
      */

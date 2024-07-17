@@ -12,7 +12,6 @@ import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
-import org.partiql.planner.internal.ir.ref
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.value.PartiQLValueExperimental
 
@@ -61,10 +60,6 @@ internal class PlanTransform(
             error("Not implemented")
         }
 
-        override fun visitRef(node: Ref, ctx: Unit): org.partiql.plan.Ref {
-            TODO("Catalog ref not implemented")
-        }
-
         override fun visitRefCast(node: Ref.Cast, ctx: Unit) =
             org.partiql.plan.refCast(node.input, node.target, node.isNullable)
 
@@ -96,7 +91,7 @@ internal class PlanTransform(
             error("The Internal Plan Node Rex.Op.Var.Unresolved should be converted to an MISSING Node during type resolution if resolution failed")
 
         override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: Unit) = org.partiql.plan.Rex.Op.Global(
-            ref = visitRef(node.ref, ctx)
+            ref = symbols.insert(node.table)
         )
 
         override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: Unit): org.partiql.plan.Rex.Op.Var {
@@ -144,8 +139,7 @@ internal class PlanTransform(
         }
 
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): org.partiql.plan.Rex.Op {
-            val ref = ref(node.fn.getName())
-            val fn = visitRef(ref, ctx)
+            val fn = symbols.insert(node.fn)
             val args = node.args.map { visitRex(it, ctx) }
             return org.partiql.plan.rexOpCallStatic(fn, args)
         }
@@ -163,8 +157,7 @@ internal class PlanTransform(
         }
 
         override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: Unit): PlanNode {
-            val ref = ref(node.fn.getName())
-            val fn = visitRef(ref, ctx)
+            val fn = symbols.insert(node.fn)
             val coercions = node.coercions.map { it?.let { visitRefCast(it, ctx) } }
             return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, coercions)
         }
@@ -367,8 +360,7 @@ internal class PlanTransform(
             }
 
             override fun visitRelOpAggregateCallResolved(node: Rel.Op.Aggregate.Call.Resolved, ctx: Unit): PlanNode {
-                val ref = ref(node.agg.getName())
-                val agg = visitRef(ref, ctx)
+                val agg = symbols.insert(node.agg)
                 val args = node.args.map { visitRex(it, ctx) }
                 val setQuantifier = when (node.setQuantifier) {
                     Rel.Op.Aggregate.SetQuantifier.ALL -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.ALL

@@ -22,6 +22,17 @@ public class Name(
      * Returns true if the namespace is non-empty.
      */
     public fun hasNamespace(): Boolean = !namespace.isEmpty()
+
+    /**
+     * Returns a list of strings representing the path of this name.
+     */
+    public fun getPath(): List<String> {
+        val parts = mutableListOf<String>()
+        parts.addAll(namespace.getLevels())
+        parts.add(name)
+        return parts
+    }
+
     /**
      * Compares two names including their namespaces and symbols.
      */
@@ -50,10 +61,7 @@ public class Name(
      * Return the SQL name representation of this name — all parts delimited.
      */
     override fun toString(): String {
-        val parts = mutableListOf<String>()
-        parts.addAll(namespace.getLevels())
-        parts.add(name)
-        return Identifier.delimited(parts).toString()
+        return Identifier.delimited(getPath()).toString()
     }
 
     public companion object {
@@ -69,7 +77,7 @@ public class Name(
          */
         @JvmStatic
         public fun of(names: Collection<String>): Name {
-            assert(names.size > 1) { "Cannot create an empty name" }
+            assert(names.size > 0) { "Cannot create an empty name" }
             val namespace = Namespace.of(names.drop(1))
             val name = names.last()
             return Name(namespace, name)

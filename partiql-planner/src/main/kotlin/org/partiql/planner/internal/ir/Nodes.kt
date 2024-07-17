@@ -16,8 +16,8 @@ import org.partiql.`value`.PartiQLValue
 import org.partiql.`value`.PartiQLValueExperimental
 import org.partiql.errors.Problem
 import org.partiql.planner.`internal`.ir.builder.PartiQlPlanBuilder
-import org.partiql.planner.`internal`.ir.builder.RefBuilder
 import org.partiql.planner.`internal`.ir.builder.RefCastBuilder
+import org.partiql.planner.`internal`.ir.builder.RefTableBuilder
 import org.partiql.planner.`internal`.ir.builder.RelBindingBuilder
 import org.partiql.planner.`internal`.ir.builder.RelBuilder
 import org.partiql.planner.`internal`.ir.builder.RelOpAggregateBuilder
@@ -78,6 +78,7 @@ import org.partiql.planner.`internal`.ir.builder.StatementQueryBuilder
 import org.partiql.planner.`internal`.ir.visitor.PlanVisitor
 import org.partiql.planner.`internal`.typer.CompilerType
 import org.partiql.planner.catalog.Identifier
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Routine
 
 internal abstract class PlanNode {
@@ -109,14 +110,29 @@ internal data class PartiQLPlan(
   }
 }
 
-internal data class Ref(
-  @JvmField
-  internal val name: String,
-) : PlanNode() {
-  public override val children: List<PlanNode> = emptyList()
+internal sealed class Ref : PlanNode() {
+  public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+    is Table -> visitor.visitRefTable(this, ctx)
+  }
 
-  public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRef(this,
-      ctx)
+  internal data class Table(
+    @JvmField
+    internal val catalog: String,
+    @JvmField
+    internal val name: Name,
+    @JvmField
+    internal val type: CompilerType,
+  ) : Ref() {
+    public override val children: List<PlanNode> = emptyList()
+
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitRefTable(this, ctx)
+
+    internal companion object {
+      @JvmStatic
+      internal fun builder(): RefTableBuilder = RefTableBuilder()
+    }
+  }
 
   internal data class Cast(
     @JvmField
@@ -143,11 +159,6 @@ internal data class Ref(
       @JvmStatic
       internal fun builder(): RefCastBuilder = RefCastBuilder()
     }
-  }
-
-  internal companion object {
-    @JvmStatic
-    internal fun builder(): RefBuilder = RefBuilder()
   }
 }
 
@@ -259,11 +270,11 @@ internal data class Rex(
 
       internal data class Global(
         @JvmField
-        internal val ref: Ref,
+        internal val table: Ref.Table,
       ) : Var() {
         public override val children: List<PlanNode> by lazy {
           val kids = mutableListOf<PlanNode?>()
-          kids.add(ref)
+          kids.add(table)
           kids.filterNotNull()
         }
 

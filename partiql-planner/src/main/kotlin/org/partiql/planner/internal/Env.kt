@@ -2,10 +2,13 @@ package org.partiql.planner.internal
 
 import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Identifier
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
+import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rexOpCastResolved
+import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 
 /**
@@ -23,18 +26,35 @@ internal class Env(
     private val session: Session,
 ) {
 
+    private val default = catalogs.default()
+
     /**
-     *
-     * TODO handle missing table error.
+     * TODO fallback to matching root for a catalog name if it exists.
      *
      * Convert any remaining binding names (tail) to a path expression.
      */
     fun getTable(identifier: Identifier): Rex? {
-        TODO("Env.getTable not implemented")
+        val table = default.getTableHandle(session, identifier)
+        if (table == null) {
+            // error table not found?
+            return null
+        }
+
+        // search for longest number of path steps.
+
+
+
+        val ref = Ref.Table(
+            catalog = default.getName(),
+            name = Name.of(table.getName()),
+            type = CompilerType(table.getSchema())
+        )
+        return Rex(ref.type, rexOpVarGlobal(ref))
     }
 
     fun getRoutine(identifier: Identifier, args: List<Rex>): Rex? {
-        TODO("Env.getRoutine not implemented")
+        // TODO
+        return null
     }
 
     fun resolveCast(input: Rex, target: CompilerType): Rex.Op.Cast.Resolved? {
