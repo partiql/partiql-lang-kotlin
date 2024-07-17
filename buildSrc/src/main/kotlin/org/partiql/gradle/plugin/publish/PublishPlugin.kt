@@ -162,7 +162,7 @@ abstract class PublishPlugin : Plugin<Project> {
                 }
                 repositories {
                     maven {
-                        url = uri("https://aws.oss.sonatype.org/service/local/staging/deploy/maven2")
+                        url = uri("https://aws.oss.sonatype.org/service/local/")
                         credentials {
                             val ossrhUsername: String by rootProject
                             val ossrhPassword: String by rootProject
