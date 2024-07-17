@@ -4,6 +4,7 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PartiQLPlan
+import org.partiql.planner.catalog.Catalog
 import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.PartiQLPlannerDefault
@@ -43,23 +44,20 @@ public interface PartiQLPlanner {
     public class Builder {
 
         private val flags: MutableSet<PlannerFlag> = mutableSetOf()
-        private var catalogs: Catalogs? = null
+        private var catalogs: Catalogs.Builder = Catalogs.builder()
 
         /**
          * Build the builder, return an implementation of a [PartiQLPlanner].
-         *
-         * @return
          */
         public fun build(): PartiQLPlanner {
-            assert(catalogs != null) { "The `catalogs` field cannot be null, set with .catalogs(...)" }
-            return PartiQLPlannerDefault(catalogs!!, flags)
+            return PartiQLPlannerDefault(catalogs.build(), flags)
         }
 
         /**
-         * Adds a catalog provider to this planner builder.
+         * Adds a catalog to this planner builder.
          */
-        public fun catalogs(catalogs: Catalogs): Builder {
-            this.catalogs = catalogs
+        public fun addCatalog(catalog: Catalog): Builder {
+            catalogs.add(catalog)
             return this
         }
 

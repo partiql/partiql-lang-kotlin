@@ -34,20 +34,15 @@ internal class Env(
      * Convert any remaining binding names (tail) to a path expression.
      */
     fun getTable(identifier: Identifier): Rex? {
-        val table = default.getTableHandle(session, identifier)
-        if (table == null) {
+        val handle = default.getTableHandle(session, identifier)
+        if (handle == null) {
             // error table not found?
             return null
         }
-
-        // search for longest number of path steps.
-
-
-
         val ref = Ref.Table(
             catalog = default.getName(),
-            name = Name.of(table.getName()),
-            type = CompilerType(table.getSchema())
+            name = Name.of(handle.table.getName()),
+            type = CompilerType(handle.table.getSchema())
         )
         return Rex(ref.type, rexOpVarGlobal(ref))
     }

@@ -1,12 +1,15 @@
 package org.partiql.planner.catalog
 
+import java.util.Spliterator
+import java.util.function.Consumer
+
 /**
  * A reference to a named object in a catalog.
  */
 public class Name(
     private val namespace: Namespace,
     private val name: String,
-) {
+) : Iterable<String> {
 
     /**
      * Returns the unqualified name part.
@@ -24,13 +27,25 @@ public class Name(
     public fun hasNamespace(): Boolean = !namespace.isEmpty()
 
     /**
-     * Returns a list of strings representing the path of this name.
+     * Returns an iterator of strings for this name.
      */
-    public fun getPath(): List<String> {
+    private fun getParts(): List<String> {
         val parts = mutableListOf<String>()
         parts.addAll(namespace.getLevels())
         parts.add(name)
         return parts
+    }
+
+    override fun forEach(action: Consumer<in String>?) {
+        getParts().forEach(action)
+    }
+
+    override fun iterator(): Iterator<String> {
+        return getParts().iterator()
+    }
+
+    override fun spliterator(): Spliterator<String> {
+        return getParts().spliterator()
     }
 
     /**
@@ -61,7 +76,7 @@ public class Name(
      * Return the SQL name representation of this name — all parts delimited.
      */
     override fun toString(): String {
-        return Identifier.delimited(getPath()).toString()
+        return Identifier.delimited(getParts()).toString()
     }
 
     public companion object {

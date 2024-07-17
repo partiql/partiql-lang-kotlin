@@ -10,9 +10,9 @@ import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
+import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PlanNodeEquivalentVisitor
@@ -75,14 +75,14 @@ class PlanTest {
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
         val planner = PartiQLPlanner.builder()
-            .catalogs(Catalogs.of(buildCatalog("default")))
+            .addCatalog(buildCatalog("default"))
             .signal(isSignalMode)
             .build()
         planner.plan(ast, session, problemCollector)
     }
 
     private fun buildCatalog(catalogName: String): Catalog {
-        return Catalog.builder()
+        return TestCatalog.builder()
             .name(catalogName)
             .createTable("T", PType.fromStaticType(type))
             .build()

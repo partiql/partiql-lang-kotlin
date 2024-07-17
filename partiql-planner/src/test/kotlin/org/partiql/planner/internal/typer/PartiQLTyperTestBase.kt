@@ -8,10 +8,10 @@ import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.PlanningProblemDetails
+import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
@@ -40,7 +40,7 @@ abstract class PartiQLTyperTestBase {
         val parser = PartiQLParser.default()
         val ast = parser.parse(query).root
         val planner = PartiQLPlanner.builder()
-            .catalogs(Catalogs.of(catalog))
+            .addCatalog(catalog)
             .build()
         val session = Session.builder()
             .namespace(Namespace.of(catalog.getName()))
@@ -52,7 +52,7 @@ abstract class PartiQLTyperTestBase {
      * Build a ConnectorMetadata instance from the list of types.
      */
     private fun buildCatalog(catalog: String, types: List<StaticType>): Catalog {
-        return Catalog.builder()
+        return TestCatalog.builder()
             .name(catalog)
             .apply {
                 // define all bindings

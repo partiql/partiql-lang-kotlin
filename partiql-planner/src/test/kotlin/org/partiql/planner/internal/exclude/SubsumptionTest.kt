@@ -20,10 +20,8 @@ import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Catalogs
-import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
+import org.partiql.planner.internal.TestCatalog
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -32,10 +30,10 @@ class SubsumptionTest {
     companion object {
 
         private val parser = PartiQLParser.default()
-        private val catalog = Catalog.builder().name("default").build()
+        private val catalog = TestCatalog.empty("default")
         private val planner = PartiQLPlanner
             .builder()
-            .catalogs(Catalogs.of(catalog))
+            .addCatalog(catalog)
             .build()
     }
 
@@ -48,9 +46,7 @@ class SubsumptionTest {
     private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
         val text = "SELECT * EXCLUDE ${tc.excludeExprStr} FROM <<>> AS s, <<>> AS t;"
         val statement = parser.parse(text).root
-        val session = Session.builder()
-            .namespace(Namespace.of("default"))
-            .build()
+        val session = Session.empty("default")
         val plan = planner.plan(statement, session).plan
         val excludeClause = getExcludeClause(plan.statement).paths
         assertEquals(tc.expectedExcludeExprs, excludeClause)

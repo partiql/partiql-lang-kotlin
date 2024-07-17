@@ -20,11 +20,11 @@ import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Catalogs
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
@@ -133,7 +133,9 @@ internal class PlanTyperTestsPorted {
 
         private val parser = PartiQLParser.default()
         private val planner = PartiQLPlanner.builder()
-            .catalogs(loadCatalogs())
+            .apply {
+                loadCatalogs().forEach { addCatalog(it) }
+            }
             .signal()
             .build()
 
@@ -170,7 +172,7 @@ internal class PlanTyperTestsPorted {
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
          */
-        private fun loadCatalogs(): Catalogs {
+        private fun loadCatalogs(): List<Catalog> {
             // Make a map from catalog name to tables.
             val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
             val map = mutableMapOf<String, MutableList<Pair<Name, PType>>>()
@@ -191,21 +193,17 @@ internal class PlanTyperTestsPorted {
                     }
                 }
             }
-            // Make a catalogs map
-            val catalogs = Catalogs.builder()
-            for ((catalogName, tables) in map) {
-                val catalog = Catalog.builder()
-                    .name(catalogName)
+            // Make a catalogs list
+            return map.map { (catalog, tables) ->
+                TestCatalog.builder()
+                    .name(catalog)
                     .apply {
                         for ((name, schema) in tables) {
                             createTable(name, schema)
                         }
                     }
                     .build()
-                catalogs.add(catalog)
             }
-            // finalize
-            return catalogs.build()
         }
 
         private fun key(name: String) = PartiQLTest.Key("schema_inferencer", name)

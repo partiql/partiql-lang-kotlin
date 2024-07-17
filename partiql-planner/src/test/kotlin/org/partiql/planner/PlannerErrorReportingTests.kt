@@ -7,9 +7,9 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
-import org.partiql.planner.catalog.Catalog
 import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
+import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
@@ -27,7 +27,7 @@ internal class PlannerErrorReportingTests {
     val userId = "test-user"
     val queryId = "query"
 
-    val catalog = Catalog
+    val catalog = TestCatalog
         .builder()
         .name(catalogName)
         .createTable("missing_binding", PType.typeDynamic())

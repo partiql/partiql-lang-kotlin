@@ -13,8 +13,8 @@ public interface Table {
      * Note: This replaces ConnectorObjectHandle from versions < 1.0
      */
     public class Handle(
-        public val namespace: Namespace,
-        public val table: Table,
+        @JvmField public val namespace: Namespace,
+        @JvmField public val table: Table,
     )
 
     /**

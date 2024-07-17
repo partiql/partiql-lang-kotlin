@@ -11,7 +11,12 @@ public interface Session {
     public fun getIdentity(): String
 
     /**
-     * Returns the current [Namespace]; accessible via the NAMESPACE session variable.
+     * Returns the current [Catalog]; accessible via the CURRENT_CATALOG session variable.
+     */
+    public fun getCatalog(): String
+
+    /**
+     * Returns the current [Namespace]; accessible via the CURRENT_NAMESPACE session variable.
      */
     public fun getNamespace(): Namespace
 
@@ -32,9 +37,13 @@ public interface Session {
      */
     public companion object {
 
+        /**
+         * Returns an empty [Session] with the provided [catalog].
+         */
         @JvmStatic
-        public fun empty(): Session = object : Session {
+        public fun empty(catalog: String): Session = object : Session {
             override fun getIdentity(): String = "unknown"
+            override fun getCatalog(): String = catalog
             override fun getNamespace(): Namespace = Namespace.root()
         }
 
@@ -48,11 +57,17 @@ public interface Session {
     public class Builder {
 
         private var identity: String = "unknown"
+        private var catalog: String? = null
         private var namespace: Namespace = Namespace.root()
         private var properties: MutableMap<String, String> = mutableMapOf()
 
         public fun identity(identity: String): Builder {
             this.identity = identity
+            return this
+        }
+
+        public fun catalog(catalog: String?): Builder {
+            this.catalog = catalog
             return this
         }
 
@@ -68,6 +83,7 @@ public interface Session {
 
         public fun build(): Session = object : Session {
             override fun getIdentity(): String = identity
+            override fun getCatalog(): String = catalog!!
             override fun getNamespace(): Namespace = namespace
         }
     }

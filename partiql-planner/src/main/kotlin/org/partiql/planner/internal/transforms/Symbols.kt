@@ -26,7 +26,7 @@ internal class Symbols private constructor() {
 
     fun insert(ref: Ref.Table): CatalogRef = insert(
         catalog = ref.catalog,
-        item = catalogItemValue(ref.name.getPath(), ref.type),
+        item = catalogItemValue(ref.name.toList(), ref.type),
     )
 
     fun insert(routine: Routine): CatalogRef {

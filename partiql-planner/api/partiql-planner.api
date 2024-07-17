@@ -6,8 +6,8 @@ public abstract interface class org/partiql/planner/PartiQLPlanner {
 
 public final class org/partiql/planner/PartiQLPlanner$Builder {
 	public fun <init> ()V
+	public final fun addCatalog (Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/PartiQLPlanner$Builder;
 	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
-	public final fun catalogs (Lorg/partiql/planner/catalog/Catalogs;)Lorg/partiql/planner/PartiQLPlanner$Builder;
 	public final fun signal (Z)Lorg/partiql/planner/PartiQLPlanner$Builder;
 	public static synthetic fun signal$default (Lorg/partiql/planner/PartiQLPlanner$Builder;ZILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Builder;
 }
@@ -27,34 +27,20 @@ public final class org/partiql/planner/PartiQLPlanner$Result {
 }
 
 public abstract interface class org/partiql/planner/catalog/Catalog {
-	public static final field Companion Lorg/partiql/planner/catalog/Catalog$Companion;
-	public static fun builder ()Lorg/partiql/planner/catalog/Catalog$Builder;
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getRoutines (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Ljava/util/Collection;
-	public abstract fun getTable (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Table;
 	public abstract fun getTable (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Lorg/partiql/planner/catalog/Table;
+	public abstract fun getTableHandle (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Table$Handle;
 	public abstract fun listNamespaces (Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
 	public abstract fun listNamespaces (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Namespace;)Ljava/util/Collection;
 	public abstract fun listTables (Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
 	public abstract fun listTables (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Namespace;)Ljava/util/Collection;
 }
 
-public final class org/partiql/planner/catalog/Catalog$Builder {
-	public fun <init> ()V
-	public final fun build ()Lorg/partiql/planner/catalog/Catalog;
-	public final fun createTable (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Catalog$Builder;
-	public final fun createTable (Lorg/partiql/planner/catalog/Name;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Catalog$Builder;
-	public final fun name (Ljava/lang/String;)Lorg/partiql/planner/catalog/Catalog$Builder;
-}
-
-public final class org/partiql/planner/catalog/Catalog$Companion {
-	public final fun builder ()Lorg/partiql/planner/catalog/Catalog$Builder;
-}
-
 public final class org/partiql/planner/catalog/Catalog$DefaultImpls {
 	public static fun getRoutines (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Ljava/util/Collection;
-	public static fun getTable (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Table;
 	public static fun getTable (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Lorg/partiql/planner/catalog/Table;
+	public static fun getTableHandle (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Table$Handle;
 	public static fun listNamespaces (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
 	public static fun listNamespaces (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Namespace;)Ljava/util/Collection;
 	public static fun listTables (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
@@ -145,17 +131,19 @@ public final class org/partiql/planner/catalog/Identifier$Part$Companion {
 	public final fun regular (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier$Part;
 }
 
-public final class org/partiql/planner/catalog/Name {
+public final class org/partiql/planner/catalog/Name : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
 	public static final field Companion Lorg/partiql/planner/catalog/Name$Companion;
 	public fun <init> (Lorg/partiql/planner/catalog/Namespace;Ljava/lang/String;)V
 	public fun equals (Ljava/lang/Object;)Z
+	public fun forEach (Ljava/util/function/Consumer;)V
 	public final fun getName ()Ljava/lang/String;
 	public final fun getNamespace ()Lorg/partiql/planner/catalog/Namespace;
-	public final fun getPath ()Ljava/util/List;
 	public final fun hasNamespace ()Z
 	public fun hashCode ()I
+	public fun iterator ()Ljava/util/Iterator;
 	public static final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Name;
 	public static final fun of ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Name;
+	public fun spliterator ()Ljava/util/Spliterator;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -167,6 +155,7 @@ public final class org/partiql/planner/catalog/Name$Companion {
 public final class org/partiql/planner/catalog/Namespace : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
 	public static final field Companion Lorg/partiql/planner/catalog/Namespace$Companion;
 	public synthetic fun <init> ([Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun concat ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Namespace;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun forEach (Ljava/util/function/Consumer;)V
 	public final fun get (I)Ljava/lang/String;
@@ -276,7 +265,8 @@ public final class org/partiql/planner/catalog/Routine$Scalar$DefaultImpls {
 public abstract interface class org/partiql/planner/catalog/Session {
 	public static final field Companion Lorg/partiql/planner/catalog/Session$Companion;
 	public static fun builder ()Lorg/partiql/planner/catalog/Session$Builder;
-	public static fun empty ()Lorg/partiql/planner/catalog/Session;
+	public static fun empty (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session;
+	public abstract fun getCatalog ()Ljava/lang/String;
 	public abstract fun getIdentity ()Ljava/lang/String;
 	public abstract fun getNamespace ()Lorg/partiql/planner/catalog/Namespace;
 	public abstract fun getPath ()Lorg/partiql/planner/catalog/Path;
@@ -286,6 +276,7 @@ public abstract interface class org/partiql/planner/catalog/Session {
 public final class org/partiql/planner/catalog/Session$Builder {
 	public fun <init> ()V
 	public final fun build ()Lorg/partiql/planner/catalog/Session;
+	public final fun catalog (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun identity (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun namespace (Lorg/partiql/planner/catalog/Namespace;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun property (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
@@ -293,7 +284,7 @@ public final class org/partiql/planner/catalog/Session$Builder {
 
 public final class org/partiql/planner/catalog/Session$Companion {
 	public final fun builder ()Lorg/partiql/planner/catalog/Session$Builder;
-	public final fun empty ()Lorg/partiql/planner/catalog/Session;
+	public final fun empty (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session;
 }
 
 public final class org/partiql/planner/catalog/Session$DefaultImpls {
@@ -324,5 +315,11 @@ public final class org/partiql/planner/catalog/Table$Companion {
 
 public final class org/partiql/planner/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/planner/catalog/Table;)Lorg/partiql/types/PType;
+}
+
+public final class org/partiql/planner/catalog/Table$Handle {
+	public final field namespace Lorg/partiql/planner/catalog/Namespace;
+	public final field table Lorg/partiql/planner/catalog/Table;
+	public fun <init> (Lorg/partiql/planner/catalog/Namespace;Lorg/partiql/planner/catalog/Table;)V
 }
 
