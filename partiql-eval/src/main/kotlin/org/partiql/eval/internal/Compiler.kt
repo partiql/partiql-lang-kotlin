@@ -372,7 +372,7 @@ internal class Compiler(
 
     override fun visitRexOpCase(node: Rex.Op.Case, ctx: PType?): Operator {
         val branches = node.branches.map { branch ->
-            visitRex(branch.condition, ctx) to visitRex(branch.rex, ctx)
+            visitRex(branch.condition, ctx).modeHandled() to visitRex(branch.rex, ctx)
         }
         val default = visitRex(node.default, ctx)
         return ExprCase(branches, default)
