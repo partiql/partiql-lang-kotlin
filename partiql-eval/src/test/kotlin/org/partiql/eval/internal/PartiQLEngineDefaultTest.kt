@@ -1387,16 +1387,8 @@ class PartiQLEngineDefaultTest {
     fun developmentTest() {
         val tc = SuccessTestCase(
             input = """
-                SELECT VALUE
-                    CASE x + 1
-                        WHEN NULL THEN 'shouldnt be null'
-                        WHEN MISSING THEN 'shouldnt be missing'
-                        WHEN i THEN 'ONE'
-                        WHEN f THEN 'TWO'
-                        WHEN d THEN 'THREE'
-                        ELSE '?'
-                    END
-                FROM << i, f, d, null, missing >> AS x
+                (1 + 3.1 - 2.764 + d) > d
+                -- select fld1 from t2 where fld1=250501 or fld1=250502 or fld1 >= 250505 and fld1 <= 250601 or fld1 between 250501 and 250502
             """,
             expected = boolValue(true),
             globals = listOf(

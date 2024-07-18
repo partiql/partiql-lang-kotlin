@@ -96,7 +96,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             }
             return Datum.of(partiqlValue)
         } catch (e: DataException) {
-            throw TypeCheckException()
+            throw TypeCheckException(cause = e)
         }
     }
 

@@ -16,7 +16,7 @@ internal sealed class FnMatch {
      * @property signature
      * @property mapping
      */
-    data class Static(
+    public data class Static(
         val signature: FnSignature,
         val mapping: Array<Ref.Cast?>,
     ) : FnMatch() {
@@ -52,7 +52,7 @@ internal sealed class FnMatch {
      *
      * @property candidates     Ordered list of potentially applicable functions to dispatch dynamically.
      */
-    data class Dynamic(
+    public data class Dynamic(
         val candidates: List<Static>,
     ) : FnMatch()
 }

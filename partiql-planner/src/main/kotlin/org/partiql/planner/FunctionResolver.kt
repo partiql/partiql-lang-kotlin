@@ -1,11 +1,12 @@
-package org.partiql.planner.internal
+package org.partiql.planner
 
+import org.partiql.plan.Ref
+import org.partiql.planner.internal.FnComparator
 import org.partiql.planner.internal.casts.Coercions
-import org.partiql.planner.internal.ir.Ref
-import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
+import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
 /**
@@ -24,7 +25,7 @@ import org.partiql.types.PType.Kind
  * Reference https://www.postgresql.org/docs/current/typeconv-func.html
  */
 @OptIn(FnExperimental::class)
-internal object FnResolver {
+public object FunctionResolver {
 
     /**
      * Resolution of either a static or dynamic function.
@@ -35,15 +36,16 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    fun resolve(variants: List<FnSignature>, args: List<CompilerType>): FnMatch? {
+    public fun resolve(variants: List<FnSignature>, args: List<PType>): FnMatch? {
         val candidates = variants
-            .filter { it.parameters.size == args.size }
+            .mapIndexed { index, fnSignature -> Candidate(index, fnSignature) }
+            .filter { it.signature.parameters.size == args.size }
             .ifEmpty { return null }
 
         // 1. Look for exact match
         for (candidate in candidates) {
-            if (candidate.matchesExactly(args)) {
-                return FnMatch.Static(candidate, arrayOfNulls(args.size))
+            if (candidate.signature.matchesExactly(args)) {
+                return FnMatch.Static(candidate.index, arrayOfNulls(args.size))
             }
         }
 
@@ -74,6 +76,11 @@ internal object FnResolver {
         return matches.sortedWith(MatchResultComparator).first().match
     }
 
+    private class Candidate(
+        val index: Int,
+        val signature: FnSignature
+    )
+
     /**
      * Resolution of a static function.
      *
@@ -81,7 +88,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<FnSignature>, args: List<CompilerType>): List<MatchResult> {
+    private fun match(candidates: List<Candidate>, args: List<PType>): List<MatchResult> {
         val matches = mutableSetOf<MatchResult>()
         for (candidate in candidates) {
             val m = candidate.match(args) ?: continue
@@ -111,7 +118,7 @@ internal object FnResolver {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun FnSignature.matchesExactly(args: List<CompilerType>): Boolean {
+    private fun FnSignature.matchesExactly(args: List<PType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
@@ -126,12 +133,12 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun FnSignature.match(args: List<CompilerType>): MatchResult? {
+    private fun Candidate.match(args: List<PType>): MatchResult? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         var exactInputTypes: Int = 0
         for (i in args.indices) {
             val arg = args[i]
-            val p = parameters[i]
+            val p = this.signature.parameters[i]
             when {
                 // 1. Exact match
                 arg == p.type -> {
@@ -143,29 +150,69 @@ internal object FnResolver {
                 arg.kind == Kind.UNKNOWN -> continue
                 // 3. Allow for ANY arguments
                 arg.kind == Kind.DYNAMIC -> {
-                    mapping[i] = Ref.Cast(arg, p.type.toCType(), Ref.Cast.Safety.UNSAFE, true)
+                    mapping[i] = Ref.Cast(arg, p.type.toCType(), true)
                 }
                 // 4. Check for a coercion
                 else -> when (val coercion = Coercions.get(arg, p.type)) {
                     null -> return null // short-circuit
-                    else -> mapping[i] = coercion
+                    else -> mapping[i] = coercion.toPublic()
                 }
             }
         }
         return MatchResult(
-            FnMatch.Static(this, mapping),
+            FnMatch.Static(this.index, mapping),
+            this.signature,
             exactInputTypes,
         )
     }
 
     private class MatchResult(
         val match: FnMatch.Static,
+        val signature: FnSignature,
         val numberOfExactInputTypes: Int,
     )
 
     private object MatchResultComparator : Comparator<MatchResult> {
         override fun compare(o1: MatchResult, o2: MatchResult): Int {
-            return FnComparator.reversed().compare(o1.match.signature, o2.match.signature)
+            return FnComparator.reversed().compare(o1.signature, o2.signature)
         }
+    }
+
+    private fun org.partiql.planner.internal.ir.Ref.Cast.toPublic() = Ref.Cast(
+        input = input,
+        target = target,
+        isNullable = isNullable
+    )
+
+    /**
+     * Result of matching an unresolved function.
+     */
+    public sealed class FnMatch {
+
+        /**
+         * Successful match of a static function call.
+         *
+         * @property signature
+         * @property mapping
+         */
+        public data class Static(
+            val index: Int,
+            val mapping: Array<Ref.Cast?>,
+        ) : FnMatch() {
+
+            /**
+             * The number of exact matches. Useful when ranking function matches.
+             */
+            val exact: Int = mapping.count { it != null }
+        }
+
+        /**
+         * This represents dynamic dispatch.
+         *
+         * @property candidates     Ordered list of potentially applicable functions to dispatch dynamically.
+         */
+        public data class Dynamic(
+            val candidates: List<Static>,
+        ) : FnMatch()
     }
 }
