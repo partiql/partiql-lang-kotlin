@@ -58,7 +58,7 @@ class FnResolverTest {
         abstract fun assert()
 
         class Success(
-            private val variants: List<org.partiql.planner.catalog.Routine.Function.Scalar>,
+            private val variants: List<Function.Scalar>,
             private val inputs: List<CompilerType>,
             private val expectedImplicitCast: List<Boolean>,
         ) : Case() {
