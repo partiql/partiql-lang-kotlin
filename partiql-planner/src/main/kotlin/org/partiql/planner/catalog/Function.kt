@@ -3,9 +3,9 @@ package org.partiql.planner.catalog
 import org.partiql.types.PType
 
 /**
- * A [Routine] is a PartiQL-routine callable from an expression context.
+ * A [Function] is a PartiQL-routine callable from an expression context.
  */
-public sealed interface Routine {
+public sealed interface Function {
 
     /**
      * The routine name. Required.
@@ -23,29 +23,46 @@ public sealed interface Routine {
     public fun getReturnType(): PType
 
     /**
-     * Represents an SQL row-value expression call.
+     * !! DO NOT OVERRIDE !!
      */
-    public interface Operator : Routine {
-        public fun getSymbol(): String
-        public fun getLHS(): PType.Kind?
-        public fun getRHS(): PType.Kind
-    }
+    public fun getSpecific(): String
 
     /**
      * Represents an SQL row-value expression call.
      */
-    public interface Scalar : Routine {
+    public interface Scalar : Function {
 
         /**
          * Additional function properties useful for planning. Optional.
          */
         public fun getProperties(): Properties = DEFAULT_PROPERTIES
+
+        /**
+         * !! DO NOT OVERRIDE !!
+         */
+        public override fun getSpecific(): String {
+            val name = getName()
+            val parameters = getParameters().joinToString("__") { it.type.name }
+            val returnType = getReturnType().kind.name
+            return "FN_${name}___${parameters}___${returnType}"
+        }
     }
 
     /**
      * Represents an SQL table-value expression call.
      */
-    public interface Aggregation : Routine
+    public interface Aggregation : Function {
+
+        /**
+         * !! DO NOT OVERRIDE !!
+         */
+        public override fun getSpecific(): String {
+            val name = getName()
+            val parameters = getParameters().joinToString("__") { it.type.name }
+            val returnType = getReturnType().kind.name
+            return "AGG_${name}___${parameters}___${returnType}"
+        }
+    }
 
     /**
      * [Parameter] is a formal argument's definition.

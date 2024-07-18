@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.catalog.Routine
+import org.partiql.planner.catalog.Function
 import org.partiql.planner.internal.ir.Ref
 
 /**
@@ -15,7 +15,7 @@ internal sealed class FnMatch {
      * @property mapping
      */
     data class Static(
-        val signature: Routine,
+        val signature: Function,
         val mapping: Array<Ref.Cast?>,
     ) : FnMatch() {
 

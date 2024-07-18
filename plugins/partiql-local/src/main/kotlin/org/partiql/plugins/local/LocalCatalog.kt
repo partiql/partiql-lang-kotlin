@@ -3,7 +3,7 @@ package org.partiql.plugins.local
 import org.partiql.planner.catalog.Catalog
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
-import org.partiql.planner.catalog.Routine
+import org.partiql.planner.catalog.Function
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
 import java.nio.file.Path
@@ -60,7 +60,7 @@ internal class LocalCatalog(
             .map { toNamespace(it.toPath()) }
     }
 
-    override fun getRoutines(session: Session, name: Name): Collection<Routine> = emptyList()
+    override fun getFunctions(session: Session, name: Name): Collection<Function> = emptyList()
 
     private fun toPath(namespace: Namespace): Path {
         var curr = root

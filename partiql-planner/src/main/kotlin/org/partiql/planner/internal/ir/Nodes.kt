@@ -16,7 +16,9 @@ import org.partiql.`value`.PartiQLValue
 import org.partiql.`value`.PartiQLValueExperimental
 import org.partiql.errors.Problem
 import org.partiql.planner.`internal`.ir.builder.PartiQlPlanBuilder
+import org.partiql.planner.`internal`.ir.builder.RefAggBuilder
 import org.partiql.planner.`internal`.ir.builder.RefCastBuilder
+import org.partiql.planner.`internal`.ir.builder.RefFnBuilder
 import org.partiql.planner.`internal`.ir.builder.RefTableBuilder
 import org.partiql.planner.`internal`.ir.builder.RelBindingBuilder
 import org.partiql.planner.`internal`.ir.builder.RelBuilder
@@ -77,9 +79,10 @@ import org.partiql.planner.`internal`.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.`internal`.ir.builder.StatementQueryBuilder
 import org.partiql.planner.`internal`.ir.visitor.PlanVisitor
 import org.partiql.planner.`internal`.typer.CompilerType
+import org.partiql.planner.catalog.Function.Aggregation
+import org.partiql.planner.catalog.Function.Scalar
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Routine
 
 internal abstract class PlanNode {
   @JvmField
@@ -113,6 +116,8 @@ internal data class PartiQLPlan(
 internal sealed class Ref : PlanNode() {
   public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
     is Table -> visitor.visitRefTable(this, ctx)
+    is Fn -> visitor.visitRefFn(this, ctx)
+    is Agg -> visitor.visitRefAgg(this, ctx)
   }
 
   internal data class Table(
@@ -131,6 +136,44 @@ internal sealed class Ref : PlanNode() {
     internal companion object {
       @JvmStatic
       internal fun builder(): RefTableBuilder = RefTableBuilder()
+    }
+  }
+
+  internal data class Fn(
+    @JvmField
+    internal val catalog: String,
+    @JvmField
+    internal val name: Name,
+    @JvmField
+    internal val signature: Scalar,
+  ) : Ref() {
+    public override val children: List<PlanNode> = emptyList()
+
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitRefFn(this, ctx)
+
+    internal companion object {
+      @JvmStatic
+      internal fun builder(): RefFnBuilder = RefFnBuilder()
+    }
+  }
+
+  internal data class Agg(
+    @JvmField
+    internal val catalog: String,
+    @JvmField
+    internal val name: Name,
+    @JvmField
+    internal val signature: Aggregation,
+  ) : Ref() {
+    public override val children: List<PlanNode> = emptyList()
+
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitRefAgg(this, ctx)
+
+    internal companion object {
+      @JvmStatic
+      internal fun builder(): RefAggBuilder = RefAggBuilder()
     }
   }
 
@@ -270,11 +313,11 @@ internal data class Rex(
 
       internal data class Global(
         @JvmField
-        internal val table: Ref.Table,
+        internal val ref: Ref.Table,
       ) : Var() {
         public override val children: List<PlanNode> by lazy {
           val kids = mutableListOf<PlanNode?>()
-          kids.add(table)
+          kids.add(ref)
           kids.filterNotNull()
         }
 
@@ -465,12 +508,13 @@ internal data class Rex(
 
       internal data class Static(
         @JvmField
-        internal val fn: Routine,
+        internal val fn: Ref.Fn,
         @JvmField
         internal val args: List<Rex>,
       ) : Call() {
         public override val children: List<PlanNode> by lazy {
           val kids = mutableListOf<PlanNode?>()
+          kids.add(fn)
           kids.addAll(args)
           kids.filterNotNull()
         }
@@ -504,12 +548,13 @@ internal data class Rex(
 
         internal data class Candidate(
           @JvmField
-          internal val fn: Routine,
+          internal val fn: Ref.Fn,
           @JvmField
           internal val coercions: List<Ref.Cast?>,
         ) : PlanNode() {
           public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
+            kids.add(fn)
             kids.addAll(coercions)
             kids.filterNotNull()
           }
@@ -1313,7 +1358,7 @@ internal data class Rel(
 
         internal data class Resolved(
           @JvmField
-          internal val agg: Routine,
+          internal val agg: Ref.Agg,
           @JvmField
           internal val setQuantifier: SetQuantifier,
           @JvmField
@@ -1321,6 +1366,7 @@ internal data class Rel(
         ) : Call() {
           public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
+            kids.add(agg)
             kids.addAll(args)
             kids.filterNotNull()
           }

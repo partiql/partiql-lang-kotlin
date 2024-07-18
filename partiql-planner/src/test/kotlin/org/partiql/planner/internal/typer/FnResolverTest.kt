@@ -2,7 +2,7 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import org.partiql.planner.catalog.Routine
+import org.partiql.planner.catalog.Function
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
@@ -19,11 +19,11 @@ class FnResolverTest {
     fun sanity() {
         // 1 + 1.0 -> 2.0
         val variants = listOf(
-            Routine.scalar(
+            Function.scalar(
                 name = "plus",
                 parameters = listOf(
-                    Routine.Parameter("arg-0", PType.Kind.DOUBLE_PRECISION),
-                    Routine.Parameter("arg-1", PType.Kind.DOUBLE_PRECISION),
+                    Function.Parameter("arg-0", PType.Kind.DOUBLE_PRECISION),
+                    Function.Parameter("arg-1", PType.Kind.DOUBLE_PRECISION),
                 ),
                 returnType = PType.typeDoublePrecision(),
             )
@@ -37,11 +37,11 @@ class FnResolverTest {
     @Test
     fun split() {
         val variants = listOf(
-            Routine.scalar(
+            Function.scalar(
                 name = "split",
                 parameters = listOf(
-                    Routine.Parameter("value", PType.Kind.STRING),
-                    Routine.Parameter("delimiter", PType.Kind.STRING),
+                    Function.Parameter("value", PType.Kind.STRING),
+                    Function.Parameter("delimiter", PType.Kind.STRING),
                 ),
                 returnType = PType.typeList(),
                 // isNullable = false,
@@ -58,7 +58,7 @@ class FnResolverTest {
         abstract fun assert()
 
         class Success(
-            private val variants: List<Routine.Scalar>,
+            private val variants: List<org.partiql.planner.catalog.Routine.Function.Scalar>,
             private val inputs: List<CompilerType>,
             private val expectedImplicitCast: List<Boolean>,
         ) : Case() {

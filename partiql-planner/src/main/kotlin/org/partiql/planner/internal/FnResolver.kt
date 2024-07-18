@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.catalog.Routine
+import org.partiql.planner.catalog.Function
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.CompilerType
@@ -32,7 +32,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    fun resolve(variants: List<Routine>, args: List<CompilerType>): FnMatch? {
+    fun resolve(variants: List<Function>, args: List<CompilerType>): FnMatch? {
         val candidates = variants
             .filter { it.getParameters().size == args.size }
             .ifEmpty { return null }
@@ -85,7 +85,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<Routine>, args: List<CompilerType>): List<MatchResult> {
+    private fun match(candidates: List<Function>, args: List<CompilerType>): List<MatchResult> {
         val matches = mutableSetOf<MatchResult>()
         for (candidate in candidates) {
             val m = candidate.match(args) ?: continue
@@ -115,7 +115,7 @@ internal object FnResolver {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun Routine.matchesExactly(args: List<CompilerType>): Boolean {
+    private fun Function.matchesExactly(args: List<CompilerType>): Boolean {
         val parameters = getParameters()
         for (i in args.indices) {
             val a = args[i].kind
@@ -131,7 +131,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun Routine.match(args: List<CompilerType>): MatchResult? {
+    private fun Function.match(args: List<CompilerType>): MatchResult? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         val parameters = getParameters()
         var exactInputTypes: Int = 0

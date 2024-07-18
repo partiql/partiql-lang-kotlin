@@ -1,10 +1,10 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Function
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
-import org.partiql.planner.catalog.Routine
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
 import org.partiql.types.PType
@@ -52,7 +52,7 @@ public class TestCatalog private constructor(
     }
 
     // TODO
-    override fun getRoutines(session: Session, name: Name): Collection<Routine> {
+    override fun getFunctions(session: Session, name: Name): Collection<Function> {
         return emptyList()
     }
 

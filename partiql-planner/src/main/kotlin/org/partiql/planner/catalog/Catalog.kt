@@ -62,8 +62,8 @@ public interface Catalog {
     /**
      * Get a routine's variants by name.
      *
-     * @param name  The case-sensitive [Routine] name.
-     * @return A collection of all [Routine]s in the current namespace with this name.
+     * @param name  The case-sensitive [Function] name.
+     * @return A collection of all [Function]s in the current namespace with this name.
      */
-    public fun getRoutines(session: Session, name: Name): Collection<Routine> = emptyList()
+    public fun getFunctions(session: Session, name: Name): Collection<Function> = emptyList()
 }

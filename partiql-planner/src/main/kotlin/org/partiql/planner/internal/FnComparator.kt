@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.catalog.Routine
+import org.partiql.planner.catalog.Function
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
@@ -10,9 +10,9 @@ import org.partiql.types.PType.Kind
  *  1. Fewest args first
  *  2. Parameters are compared left-to-right
  */
-internal object FnComparator : Comparator<Routine> {
+internal object FnComparator : Comparator<Function> {
 
-    override fun compare(fn1: Routine, fn2: Routine): Int {
+    override fun compare(fn1: Function, fn2: Function): Int {
         // Compare number of arguments
         val p1 = fn1.getParameters()
         val p2 = fn2.getParameters()
@@ -30,7 +30,7 @@ internal object FnComparator : Comparator<Routine> {
         return 0
     }
 
-    private fun Routine.Parameter.compareTo(other: Routine.Parameter): Int =
+    private fun Function.Parameter.compareTo(other: Function.Parameter): Int =
         comparePrecedence(this.type, other.type)
 
     private fun comparePrecedence(t1: PType.Kind, t2: PType.Kind): Int {

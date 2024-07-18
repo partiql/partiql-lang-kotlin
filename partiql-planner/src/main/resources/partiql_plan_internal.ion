@@ -2,12 +2,12 @@ imports::{
   kotlin: [
     identifier::'org.partiql.planner.catalog.Identifier',
     name::'org.partiql.planner.catalog.Name',
-    namespace::'org.partiql.planner.catalog.Namespace',
     table::'org.partiql.planner.catalog.Table',
-    routine::'org.partiql.planner.catalog.Routine',
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
+    fn_signature::'org.partiql.planner.catalog.Function.Scalar',
+    agg_signature::'org.partiql.planner.catalog.Function.Aggregation',
     problem::'org.partiql.errors.Problem'
   ],
 }
@@ -26,6 +26,16 @@ ref::[
     catalog: string,
     name: name,
     type: static_type,
+  },
+  fn::{
+    catalog: string,
+    name: name,
+    signature: fn_signature,
+  },
+  agg::{
+    catalog: string,
+    name: name,
+    signature: agg_signature,
   },
   _::[
     cast::{
@@ -66,7 +76,7 @@ rex::{
       },
       // Refers to a value in the database environment.
       global::{
-        table: '.ref.table',
+        ref: '.ref.table',
       },
       unresolved::{
         identifier: identifier,
@@ -110,7 +120,7 @@ rex::{
       },
 
       static::{
-        fn: routine,
+        fn: '.ref.fn',
         args: list::[rex],
       },
 
@@ -124,7 +134,7 @@ rex::{
         candidates: list::[candidate],
         _: [
           candidate::{
-            fn: routine,
+            fn: '.ref.fn',
             coercions: list::[optional::'.ref.cast'],
           }
         ]
@@ -342,7 +352,7 @@ rel::{
             args: list::[rex],
           },
           resolved::{
-            agg: routine,
+            agg:  '.ref.agg',
             set_quantifier: set_quantifier,
             args: list::[rex],
           },
