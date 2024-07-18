@@ -1,3 +1,36 @@
+public final class org/partiql/planner/FunctionResolver {
+	public static final field INSTANCE Lorg/partiql/planner/FunctionResolver;
+	public final fun resolve (Ljava/util/List;Ljava/util/List;)Lorg/partiql/planner/FunctionResolver$FnMatch;
+}
+
+public abstract class org/partiql/planner/FunctionResolver$FnMatch {
+}
+
+public final class org/partiql/planner/FunctionResolver$FnMatch$Dynamic : org/partiql/planner/FunctionResolver$FnMatch {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/planner/FunctionResolver$FnMatch$Dynamic;
+	public static synthetic fun copy$default (Lorg/partiql/planner/FunctionResolver$FnMatch$Dynamic;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/planner/FunctionResolver$FnMatch$Dynamic;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCandidates ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/FunctionResolver$FnMatch$Static : org/partiql/planner/FunctionResolver$FnMatch {
+	public fun <init> (I[Lorg/partiql/plan/Ref$Cast;)V
+	public final fun component1 ()I
+	public final fun component2 ()[Lorg/partiql/plan/Ref$Cast;
+	public final fun copy (I[Lorg/partiql/plan/Ref$Cast;)Lorg/partiql/planner/FunctionResolver$FnMatch$Static;
+	public static synthetic fun copy$default (Lorg/partiql/planner/FunctionResolver$FnMatch$Static;I[Lorg/partiql/plan/Ref$Cast;ILjava/lang/Object;)Lorg/partiql/planner/FunctionResolver$FnMatch$Static;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExact ()I
+	public final fun getIndex ()I
+	public final fun getMapping ()[Lorg/partiql/plan/Ref$Cast;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract interface class org/partiql/planner/PartiQLPlanner {
 	public static final field Companion Lorg/partiql/planner/PartiQLPlanner$Companion;
 	public static fun builder ()Lorg/partiql/planner/PartiQLPlannerBuilder;

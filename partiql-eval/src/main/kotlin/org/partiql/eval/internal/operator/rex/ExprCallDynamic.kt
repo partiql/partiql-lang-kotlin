@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
@@ -34,7 +35,7 @@ internal class ExprCallDynamic(
             actualArgs[it].toPartiQLValue()
         }
         val actualTypes = actualArgs.map { it.type }
-        val match = FunctionResolver.resolve(candidates, actualTypes) as FunctionResolver.FnMatch.Static
+        val match = FunctionResolver.resolve(candidates, actualTypes) as? FunctionResolver.FnMatch.Static ?: throw TypeCheckException()
         return candidateImpls[match.index].eval(transformedArgs, env)
     }
 
