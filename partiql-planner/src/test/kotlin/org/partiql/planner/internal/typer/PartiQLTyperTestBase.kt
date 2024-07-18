@@ -8,7 +8,6 @@ import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.internal.TestCatalog
@@ -43,7 +42,7 @@ abstract class PartiQLTyperTestBase {
             .addCatalog(catalog)
             .build()
         val session = Session.builder()
-            .namespace(Namespace.of(catalog.getName()))
+            .catalog(catalog.getName())
             .build()
         planner.plan(ast, session, collector)
     }

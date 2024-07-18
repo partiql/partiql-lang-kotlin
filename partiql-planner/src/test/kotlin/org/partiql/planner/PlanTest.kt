@@ -10,6 +10,7 @@ import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.TestCatalog
@@ -70,7 +71,8 @@ class PlanTest {
     private val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
         val session = Session.builder()
             .identity("user_id")
-            .namespace(Namespace.of("default", "SCHEMA"))
+            .catalog("default")
+            .namespace(Namespace.of("SCHEMA"))
             .build()
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
@@ -84,7 +86,7 @@ class PlanTest {
     private fun buildCatalog(catalogName: String): Catalog {
         return TestCatalog.builder()
             .name(catalogName)
-            .createTable("T", PType.fromStaticType(type))
+            .createTable(Name.of("SCHEMA", "T"), PType.fromStaticType(type))
             .build()
     }
 

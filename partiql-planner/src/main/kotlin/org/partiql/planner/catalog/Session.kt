@@ -44,7 +44,7 @@ public interface Session {
         public fun empty(catalog: String): Session = object : Session {
             override fun getIdentity(): String = "unknown"
             override fun getCatalog(): String = catalog
-            override fun getNamespace(): Namespace = Namespace.root()
+            override fun getNamespace(): Namespace = Namespace.empty()
         }
 
         @JvmStatic
@@ -58,7 +58,7 @@ public interface Session {
 
         private var identity: String = "unknown"
         private var catalog: String? = null
-        private var namespace: Namespace = Namespace.root()
+        private var namespace: Namespace = Namespace.empty()
         private var properties: MutableMap<String, String> = mutableMapOf()
 
         public fun identity(identity: String): Builder {
@@ -82,6 +82,11 @@ public interface Session {
         }
 
         public fun build(): Session = object : Session {
+
+            init {
+                require(catalog != null) { "Session catalog must be set" }
+            }
+
             override fun getIdentity(): String = identity
             override fun getCatalog(): String = catalog!!
             override fun getNamespace(): Namespace = namespace

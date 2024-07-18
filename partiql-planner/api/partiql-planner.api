@@ -79,6 +79,8 @@ public final class org/partiql/planner/catalog/Catalogs$DefaultImpls {
 public final class org/partiql/planner/catalog/Identifier : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
 	public static final field Companion Lorg/partiql/planner/catalog/Identifier$Companion;
 	public synthetic fun <init> ([Lorg/partiql/planner/catalog/Identifier$Part;Lorg/partiql/planner/catalog/Identifier$Part;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun append (Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Identifier;
+	public final fun append ([Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
 	public static final fun delimited (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
 	public static final fun delimited (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Identifier;
 	public static final fun delimited ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
@@ -91,11 +93,8 @@ public final class org/partiql/planner/catalog/Identifier : java/lang/Iterable, 
 	public fun hashCode ()I
 	public fun iterator ()Ljava/util/Iterator;
 	public final fun matches (Ljava/lang/String;Z)Z
-	public final fun matches (Lorg/partiql/planner/catalog/Identifier;Z)Z
 	public static synthetic fun matches$default (Lorg/partiql/planner/catalog/Identifier;Ljava/lang/String;ZILjava/lang/Object;)Z
-	public static synthetic fun matches$default (Lorg/partiql/planner/catalog/Identifier;Lorg/partiql/planner/catalog/Identifier;ZILjava/lang/Object;)Z
 	public static final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Identifier;
-	public static final fun of (Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
 	public static final fun of ([Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
 	public static final fun regular (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
 	public fun spliterator ()Ljava/util/Spliterator;
@@ -107,7 +106,6 @@ public final class org/partiql/planner/catalog/Identifier$Companion {
 	public final fun delimited (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Identifier;
 	public final fun delimited ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
 	public final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Identifier;
-	public final fun of (Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
 	public final fun of ([Lorg/partiql/planner/catalog/Identifier$Part;)Lorg/partiql/planner/catalog/Identifier;
 	public final fun regular (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier;
 }
@@ -121,7 +119,6 @@ public final class org/partiql/planner/catalog/Identifier$Part {
 	public fun hashCode ()I
 	public final fun isRegular ()Z
 	public final fun matches (Ljava/lang/String;)Z
-	public final fun matches (Lorg/partiql/planner/catalog/Identifier$Part;)Z
 	public static final fun regular (Ljava/lang/String;)Lorg/partiql/planner/catalog/Identifier$Part;
 	public fun toString ()Ljava/lang/String;
 }
@@ -155,7 +152,8 @@ public final class org/partiql/planner/catalog/Name$Companion {
 public final class org/partiql/planner/catalog/Namespace : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
 	public static final field Companion Lorg/partiql/planner/catalog/Namespace$Companion;
 	public synthetic fun <init> ([Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun concat ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Namespace;
+	public final fun append ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Namespace;
+	public final fun asIdentifier ()Lorg/partiql/planner/catalog/Identifier;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun forEach (Ljava/util/function/Consumer;)V
 	public final fun get (I)Ljava/lang/String;
@@ -171,9 +169,9 @@ public final class org/partiql/planner/catalog/Namespace : java/lang/Iterable, k
 }
 
 public final class org/partiql/planner/catalog/Namespace$Companion {
+	public final fun empty ()Lorg/partiql/planner/catalog/Namespace;
 	public final fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Namespace;
 	public final fun of ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Namespace;
-	public final fun root ()Lorg/partiql/planner/catalog/Namespace;
 }
 
 public final class org/partiql/planner/catalog/Path : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
@@ -318,8 +316,8 @@ public final class org/partiql/planner/catalog/Table$DefaultImpls {
 }
 
 public final class org/partiql/planner/catalog/Table$Handle {
-	public final field namespace Lorg/partiql/planner/catalog/Namespace;
+	public final field name Lorg/partiql/planner/catalog/Name;
 	public final field table Lorg/partiql/planner/catalog/Table;
-	public fun <init> (Lorg/partiql/planner/catalog/Namespace;Lorg/partiql/planner/catalog/Table;)V
+	public fun <init> (Lorg/partiql/planner/catalog/Name;Lorg/partiql/planner/catalog/Table;)V
 }
 

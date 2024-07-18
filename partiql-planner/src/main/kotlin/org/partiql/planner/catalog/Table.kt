@@ -8,12 +8,12 @@ import org.partiql.types.PType
 public interface Table {
 
     /**
-     * Handle holds both a table and its namespace within its respective catalog.
+     * Handle holds both a table and its resolved name within its respective catalog.
      *
      * Note: This replaces ConnectorObjectHandle from versions < 1.0
      */
     public class Handle(
-        @JvmField public val namespace: Namespace,
+        @JvmField public val name: Name,
         @JvmField public val table: Table,
     )
 

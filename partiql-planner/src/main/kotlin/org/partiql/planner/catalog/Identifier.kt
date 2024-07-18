@@ -58,6 +58,20 @@ public class Identifier private constructor(
     }
 
     /**
+     * Returns a new identifier with the given parts appended.
+     */
+    public fun append(other: Identifier): Identifier {
+        return of(this.toList() + other.toList())
+    }
+
+    /**
+     * Returns a new identifier with the given parts appended.
+     */
+    public fun append(vararg parts: Part): Identifier {
+        return of(this.toList() + parts)
+    }
+
+    /**
      * Compares this identifier to string, possibly ignoring case.
      */
     public fun matches(other: String, ignoreCase: Boolean = false): Boolean {
@@ -69,32 +83,6 @@ public class Identifier private constructor(
         } else {
             other == this.identifier.getText()
         }
-    }
-
-    /**
-     * Compares one identifier to another, possibly ignoring case.
-     */
-    public fun matches(other: Identifier, ignoreCase: Boolean = false): Boolean {
-        //
-        if (this.qualifier.size != other.qualifier.size) {
-            return false
-        }
-        // Compare identifier
-        if (ignoreCase && !(this.identifier.matches(other.identifier))) {
-            return false
-        } else if (this.identifier != other.identifier) {
-            return false
-        }
-        for (i in this.qualifier.indices) {
-            val lhs = this.qualifier[i]
-            val rhs = other.qualifier[i]
-            if (ignoreCase && !lhs.matches(rhs)) {
-                return false
-            } else if (lhs != rhs) {
-                return false
-            }
-        }
-        return true
     }
 
     /**
@@ -161,13 +149,6 @@ public class Identifier private constructor(
         }
 
         /**
-         * Compares two identifiers, ignoring case iff at least one identifier is non-delimited.
-         */
-        public fun matches(other: Part): Boolean {
-            return this.text.equals(other.text, ignoreCase = (this.regular || other.regular))
-        }
-
-        /**
          * Compares the case-preserved text of two identifiers — that is case-sensitive equality.
          */
         override fun equals(other: Any?): Boolean {
@@ -191,8 +172,8 @@ public class Identifier private constructor(
          * Return the identifier as a SQL string.
          */
         override fun toString(): String = when (regular) {
-            true -> "\"${text}\""
-            false -> text
+            true -> text
+            false -> "\"${text}\""
         }
 
         public companion object {
@@ -214,9 +195,6 @@ public class Identifier private constructor(
         public fun delimited(text: String): Identifier = Identifier(emptyArray(), Part.delimited(text))
 
         @JvmStatic
-        public fun of(part: Part): Identifier = Identifier(emptyArray(), part)
-
-        @JvmStatic
         public fun of(vararg parts: Part): Identifier = of(parts.toList())
 
         @JvmStatic
@@ -224,7 +202,7 @@ public class Identifier private constructor(
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }
-            val qualifier = parts.drop(1).toTypedArray()
+            val qualifier = parts.take(parts.size - 1).toTypedArray()
             val identifier = parts.last()
             return Identifier(qualifier, identifier)
         }
@@ -237,7 +215,7 @@ public class Identifier private constructor(
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }
-            val qualifier = parts.drop(1).map { Part.delimited(it) }.toTypedArray()
+            val qualifier = parts.take(parts.size - 1).map { Part.delimited(it) }.toTypedArray()
             val identifier = Part.delimited(parts.last())
             return Identifier(qualifier, identifier)
         }

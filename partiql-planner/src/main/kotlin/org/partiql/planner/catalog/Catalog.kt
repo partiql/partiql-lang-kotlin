@@ -40,7 +40,7 @@ public interface Catalog {
     /**
      * List top-level tables.
      */
-    public fun listTables(session: Session): Collection<Name> = listTables(session, Namespace.root())
+    public fun listTables(session: Session): Collection<Name> = listTables(session, Namespace.empty())
 
     /**
      * List all tables under this namespace.
@@ -50,7 +50,7 @@ public interface Catalog {
     /**
      * List top-level namespaces from the catalog.
      */
-    public fun listNamespaces(session: Session): Collection<Namespace> = listNamespaces(session, Namespace.root())
+    public fun listNamespaces(session: Session): Collection<Namespace> = listNamespaces(session, Namespace.empty())
 
     /**
      * List all child namespaces from the namespace.

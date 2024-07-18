@@ -1,6 +1,7 @@
 package org.partiql.planner.plugins.local
 
 import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Routine
@@ -36,6 +37,21 @@ internal class LocalCatalog(
             return null
         }
         return LocalTable(name.getName(), path)
+    }
+
+    override fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? {
+        // TODO case-insensitive
+        val namespace = Namespace.of(identifier.getQualifier().map { it.getText() })
+        val name = identifier.last().getText()
+        // lookup
+        val path = toPath(namespace).resolve(name + EXT)
+        if (path.notExists() || path.isDirectory()) {
+            return null
+        }
+        return Table.Handle(
+            name = Name(namespace, name),
+            table = LocalTable(name, path),
+        )
     }
 
     override fun listTables(session: Session, namespace: Namespace): Collection<Name> {

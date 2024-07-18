@@ -26,6 +26,10 @@ public class Namespace private constructor(
         return levels.isEmpty()
     }
 
+    public fun asIdentifier(): Identifier {
+        return Identifier.delimited(*levels)
+    }
+
     public operator fun get(index: Int): String {
         return levels[index]
     }
@@ -52,7 +56,7 @@ public class Namespace private constructor(
         return levels.contentEquals((other as Namespace).levels)
     }
 
-    public fun concat(vararg levels: String): Namespace {
+    public fun append(vararg levels: String): Namespace {
         return Namespace(this.levels + levels)
     }
 
@@ -67,19 +71,22 @@ public class Namespace private constructor(
      * Return the SQL identifier representation of this namespace.
      */
     public override fun toString(): String {
+        if (isEmpty()) {
+            return ""
+        }
         return Identifier.delimited(*levels).toString()
     }
 
     public companion object {
 
-        private val ROOT = Namespace(emptyArray())
+        private val EMPTY = Namespace(emptyArray())
 
-        public fun root(): Namespace = ROOT
+        public fun empty(): Namespace = EMPTY
 
         @JvmStatic
         public fun of(vararg levels: String): Namespace {
             if (levels.isEmpty()) {
-                return root()
+                return empty()
             }
             return Namespace(arrayOf(*levels))
         }
@@ -87,7 +94,7 @@ public class Namespace private constructor(
         @JvmStatic
         public fun of(levels: Collection<String>): Namespace {
             if (levels.isEmpty()) {
-                return root()
+                return empty()
             }
             return Namespace(levels.toTypedArray())
         }

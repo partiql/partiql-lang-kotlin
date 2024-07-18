@@ -7,7 +7,6 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
-import org.partiql.planner.catalog.Namespace
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.internal.typer.CompilerType
@@ -39,7 +38,7 @@ internal class PlannerErrorReportingTests {
         .build()
 
     val session = Session.builder()
-        .namespace(Namespace.of(catalogName))
+        .catalog(catalogName)
         .build()
 
     val parser = PartiQLParserBuilder().build()
@@ -51,7 +50,7 @@ internal class PlannerErrorReportingTests {
     fun assertProblem(
         plan: org.partiql.plan.PlanNode,
         problems: List<Problem>,
-        vararg block: () -> Boolean
+        vararg block: () -> Boolean,
     ) {
         block.forEachIndexed { index, function ->
             assert(function.invoke()) {
@@ -74,13 +73,13 @@ internal class PlannerErrorReportingTests {
         val query: String,
         val isSignal: Boolean,
         val assertion: (List<Problem>) -> List<() -> Boolean>,
-        val expectedType: CompilerType
+        val expectedType: CompilerType,
     ) {
         constructor(
             query: String,
             isSignal: Boolean,
             assertion: (List<Problem>) -> List<() -> Boolean>,
-            expectedType: StaticType = StaticType.ANY
+            expectedType: StaticType = StaticType.ANY,
         ) : this(query, isSignal, assertion, PType.fromStaticType(expectedType).toCType())
     }
 
@@ -97,12 +96,13 @@ internal class PlannerErrorReportingTests {
                 )
             )
 
-        private fun assertOnProblemCount(warningCount: Int, errorCount: Int): (List<Problem>) -> List<() -> Boolean> = { problems ->
-            listOf(
-                { problems.filter { it.details.severity == ProblemSeverity.WARNING }.size == warningCount },
-                { problems.filter { it.details.severity == ProblemSeverity.ERROR }.size == errorCount },
-            )
-        }
+        private fun assertOnProblemCount(warningCount: Int, errorCount: Int): (List<Problem>) -> List<() -> Boolean> =
+            { problems ->
+                listOf(
+                    { problems.filter { it.details.severity == ProblemSeverity.WARNING }.size == warningCount },
+                    { problems.filter { it.details.severity == ProblemSeverity.ERROR }.size == errorCount },
+                )
+            }
 
         /**
          * Those tests focus on MissingOpBehavior.
@@ -384,10 +384,10 @@ internal class PlannerErrorReportingTests {
     }
 
     private fun runTestCase(tc: TestCase) {
-        val planner = when (tc.isSignal) {
-            true -> PartiQLPlanner.builder().signal().build()
-            else -> PartiQLPlanner.builder().build()
-        }
+        val planner = PartiQLPlanner.builder()
+            .addCatalog(catalog)
+            .signal(tc.isSignal)
+            .build()
         val pc = ProblemCollector()
         val res = planner.plan(statement(tc.query), session, pc)
         val problems = pc.problems

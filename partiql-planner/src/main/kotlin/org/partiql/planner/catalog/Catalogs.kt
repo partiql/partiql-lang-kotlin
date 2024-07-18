@@ -15,7 +15,7 @@ public interface Catalogs {
      */
     public fun get(name: String, ignoreCase: Boolean = false): Catalog? {
         val default = default()
-        return if (name.equals(default.getName(), ignoreCase = true)) {
+        return if (name.equals(default.getName(), ignoreCase)) {
             default
         } else {
             null

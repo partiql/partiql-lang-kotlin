@@ -20,23 +20,25 @@ public class TestCatalog private constructor(
         return null
     }
 
+    /**
+     * TODO this is currently case-sensitive.
+     */
     override fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? {
-        return null
-        // if (identifier.hasQualifier()) {
-        //     error("Catalog does not support qualified table names")
-        // }
-        // var match: Table? = null
-        // val id = identifier.getIdentifier()
-        // for (table in tree.values) {
-        //     if (id.matches(table.getName())) {
-        //         if (match == null) {
-        //             match = table
-        //         } else {
-        //             error("Ambiguous table name: $name")
-        //         }
-        //     }
-        // }
-        // return match
+        val matched = mutableListOf<String>()
+        var curr: Tree = root
+        for (part in identifier) {
+            val text = part.getText()
+            curr = curr.get(text) ?: break
+            matched.add(text)
+        }
+        if (curr.table == null) {
+            return null
+        }
+        // calculate matched
+        return Table.Handle(
+            name = Name.of(matched),
+            table = curr.table!!
+        )
     }
 
     // TODO
@@ -55,30 +57,45 @@ public class TestCatalog private constructor(
     }
 
     private class Tree(
+        @JvmField val name: String,
         @JvmField var table: Table?,
         @JvmField val children: MutableMap<String, Tree>,
     ) {
         fun contains(name: String) = children.contains(name)
         fun get(name: String): Tree? = children[name]
-        fun getOrPut(name: String): Tree = children.getOrPut(name) { Tree(null, mutableMapOf()) }
+        fun getOrPut(name: String): Tree = children.getOrPut(name) { Tree(name, null, mutableMapOf()) }
+    }
+
+    override fun toString(): String = buildString {
+        for (child in root.children.values) {
+            append(toString(child))
+        }
+    }
+
+    private fun toString(tree: Tree, prefix: String? = null): String = buildString {
+        val pre = if (prefix != null) prefix + "." + tree.name else tree.name
+        appendLine(pre)
+        for (child in tree.children.values) {
+            append(toString(child, pre))
+        }
     }
 
     companion object {
 
         @JvmStatic
-        fun empty(name: String): TestCatalog = TestCatalog(name, Tree(null, mutableMapOf()))
+        fun empty(name: String): TestCatalog = TestCatalog(name, Tree(name, null, mutableMapOf()))
 
         @JvmStatic
         fun builder(): Builder = Builder()
     }
 
     /**
-     * Perhaps this will be a
+     * Perhaps this will be moved to Catalog.
      */
-    public class Builder {
+    class Builder {
 
         private var name: String? = null
-        private val root = Tree(null, mutableMapOf())
+        private val root = Tree(".", null, mutableMapOf())
 
         fun name(name: String): Builder {
             this.name = name

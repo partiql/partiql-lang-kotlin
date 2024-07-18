@@ -31,7 +31,7 @@ public class Name(
      */
     private fun getParts(): List<String> {
         val parts = mutableListOf<String>()
-        parts.addAll(namespace.getLevels())
+        parts.addAll(namespace)
         parts.add(name)
         return parts
     }
@@ -93,7 +93,7 @@ public class Name(
         @JvmStatic
         public fun of(names: Collection<String>): Name {
             assert(names.size > 0) { "Cannot create an empty name" }
-            val namespace = Namespace.of(names.drop(1))
+            val namespace = Namespace.of(names.take(names.size - 1))
             val name = names.last()
             return Name(namespace, name)
         }
