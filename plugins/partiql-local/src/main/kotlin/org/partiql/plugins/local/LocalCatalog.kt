@@ -1,9 +1,9 @@
 package org.partiql.plugins.local
 
 import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Function
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
-import org.partiql.planner.catalog.Function
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
 import java.nio.file.Path

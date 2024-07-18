@@ -44,7 +44,7 @@ public sealed interface Function {
             val name = getName()
             val parameters = getParameters().joinToString("__") { it.type.name }
             val returnType = getReturnType().kind.name
-            return "FN_${name}___${parameters}___${returnType}"
+            return "FN_${name}___${parameters}___$returnType"
         }
     }
 
@@ -60,7 +60,7 @@ public sealed interface Function {
             val name = getName()
             val parameters = getParameters().joinToString("__") { it.type.name }
             val returnType = getReturnType().kind.name
-            return "AGG_${name}___${parameters}___${returnType}"
+            return "AGG_${name}___${parameters}___$returnType"
         }
     }
 

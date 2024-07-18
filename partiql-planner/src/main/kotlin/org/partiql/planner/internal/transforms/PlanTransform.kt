@@ -181,272 +181,273 @@ internal class PlanTransform(
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: Unit) = org.partiql.plan.Rex.Op.Case(
             branches = node.branches.map { visitRexOpCaseBranch(it, ctx) }, default = visitRex(node.default, ctx)
-        )
-
-        override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: Unit) = org.partiql.plan.Rex.Op.Nullif(
-            value = visitRex(node.value, ctx),
-            nullifier = visitRex(node.nullifier, ctx),
-        )
-
-        override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: Unit) =
-            org.partiql.plan.Rex.Op.Coalesce(args = node.args.map { visitRex(it, ctx) })
-
-        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: Unit) = org.partiql.plan.Rex.Op.Case.Branch(
-            condition = visitRex(node.condition, ctx), rex = visitRex(node.rex, ctx)
-        )
-
-        override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: Unit) =
-            org.partiql.plan.Rex.Op.Collection(values = node.values.map { visitRex(it, ctx) })
-
-        override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: Unit) =
-            org.partiql.plan.Rex.Op.Struct(fields = node.fields.map { visitRexOpStructField(it, ctx) })
-
-        override fun visitRexOpStructField(node: Rex.Op.Struct.Field, ctx: Unit) = org.partiql.plan.Rex.Op.Struct.Field(
-            k = visitRex(node.k, ctx),
-            v = visitRex(node.v, ctx),
-        )
-
-        override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: Unit) = org.partiql.plan.Rex.Op.Pivot(
-            key = visitRex(node.key, ctx),
-            value = visitRex(node.value, ctx),
-            rel = visitRel(node.rel, ctx),
-        )
-
-        override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: Unit) = org.partiql.plan.Rex.Op.Subquery(
-            constructor = visitRex(node.constructor, ctx),
-            rel = visitRel(node.rel, ctx),
-            coercion = when (node.coercion) {
-                Rex.Op.Subquery.Coercion.SCALAR -> org.partiql.plan.Rex.Op.Subquery.Coercion.SCALAR
-                Rex.Op.Subquery.Coercion.ROW -> org.partiql.plan.Rex.Op.Subquery.Coercion.ROW
-            }
-        )
-
-        override fun visitRexOpSelect(node: Rex.Op.Select, ctx: Unit) = org.partiql.plan.Rex.Op.Select(
-            constructor = visitRex(node.constructor, ctx),
-            rel = visitRel(node.rel, ctx),
-        )
-
-        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Unit) =
-            org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
-
-        override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): PlanNode {
-            // track the error in call back
-            val trace = node.causes.map { visitRexOp(it, ctx) }
-            onProblem(ProblemGenerator.asError(node.problem))
-            return org.partiql.plan.Rex.Op.Err(node.problem.toString(), trace)
-        }
-
-        override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: Unit): PlanNode {
-            // gather problem from subtree.
-            val trace = node.causes.map { visitRexOp(it, ctx) }
-            return when (signalMode) {
-                true -> {
-                    onProblem.invoke(ProblemGenerator.asError(node.problem))
-                    rexOpErr(node.problem.toString(), trace)
-                }
-                false -> {
-                    onProblem.invoke(ProblemGenerator.asWarning(node.problem))
-                    org.partiql.plan.rexOpMissing(node.problem.toString(), trace)
-                }
-            }
-        }
-
-        // RELATION OPERATORS
-
-        override fun visitRel(node: Rel, ctx: Unit) = org.partiql.plan.Rel(
-            type = visitRelType(node.type, ctx),
-            op = visitRelOp(node.op, ctx),
-        )
-
-        override fun visitRelType(node: Rel.Type, ctx: Unit) =
-            org.partiql.plan.Rel.Type(
-                schema = node.schema.map { visitRelBinding(it, ctx) },
-                props = node.props.map {
-                    when (it) {
-                        Rel.Prop.ORDERED -> org.partiql.plan.Rel.Prop.ORDERED
-                    }
-                }.toSet()
-
             )
 
-        override fun visitRelOp(node: Rel.Op, ctx: Unit) = super.visitRelOp(node, ctx) as org.partiql.plan.Rel.Op
+            override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: Unit) = org.partiql.plan.Rex.Op.Nullif(
+                value = visitRex(node.value, ctx),
+                nullifier = visitRex(node.nullifier, ctx),
+            )
 
-        override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Unit) = org.partiql.plan.Rel.Op.Scan(
-            rex = visitRex(node.rex, ctx),
-        )
+            override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: Unit) =
+                org.partiql.plan.Rex.Op.Coalesce(args = node.args.map { visitRex(it, ctx) })
 
-        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Unit) = org.partiql.plan.Rel.Op.ScanIndexed(
-            rex = visitRex(node.rex, ctx),
-        )
+            override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: Unit) = org.partiql.plan.Rex.Op.Case.Branch(
+                condition = visitRex(node.condition, ctx), rex = visitRex(node.rex, ctx)
+            )
 
-        override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Unit) = org.partiql.plan.Rel.Op.Unpivot(
-            rex = visitRex(node.rex, ctx),
-        )
+            override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: Unit) =
+                org.partiql.plan.Rex.Op.Collection(values = node.values.map { visitRex(it, ctx) })
 
-        override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Unit) = org.partiql.plan.Rel.Op.Distinct(
-            input = visitRel(node.input, ctx),
-        )
+            override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: Unit) =
+                org.partiql.plan.Rex.Op.Struct(fields = node.fields.map { visitRexOpStructField(it, ctx) })
 
-        override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Unit) = org.partiql.plan.Rel.Op.Filter(
-            input = visitRel(node.input, ctx),
-            predicate = visitRex(node.predicate, ctx),
-        )
+            override fun visitRexOpStructField(node: Rex.Op.Struct.Field, ctx: Unit) = org.partiql.plan.Rex.Op.Struct.Field(
+                k = visitRex(node.k, ctx),
+                v = visitRex(node.v, ctx),
+            )
 
-        override fun visitRelOpSort(node: Rel.Op.Sort, ctx: Unit) =
-            org.partiql.plan.Rel.Op.Sort(
+            override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: Unit) = org.partiql.plan.Rex.Op.Pivot(
+                key = visitRex(node.key, ctx),
+                value = visitRex(node.value, ctx),
+                rel = visitRel(node.rel, ctx),
+            )
+
+            override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: Unit) = org.partiql.plan.Rex.Op.Subquery(
+                constructor = visitRex(node.constructor, ctx),
+                rel = visitRel(node.rel, ctx),
+                coercion = when (node.coercion) {
+                    Rex.Op.Subquery.Coercion.SCALAR -> org.partiql.plan.Rex.Op.Subquery.Coercion.SCALAR
+                    Rex.Op.Subquery.Coercion.ROW -> org.partiql.plan.Rex.Op.Subquery.Coercion.ROW
+                }
+            )
+
+            override fun visitRexOpSelect(node: Rex.Op.Select, ctx: Unit) = org.partiql.plan.Rex.Op.Select(
+                constructor = visitRex(node.constructor, ctx),
+                rel = visitRel(node.rel, ctx),
+            )
+
+            override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Unit) =
+                org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
+
+            override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): PlanNode {
+                // track the error in call back
+                val trace = node.causes.map { visitRexOp(it, ctx) }
+                onProblem(ProblemGenerator.asError(node.problem))
+                return org.partiql.plan.Rex.Op.Err(node.problem.toString(), trace)
+            }
+
+            override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: Unit): PlanNode {
+                // gather problem from subtree.
+                val trace = node.causes.map { visitRexOp(it, ctx) }
+                return when (signalMode) {
+                    true -> {
+                        onProblem.invoke(ProblemGenerator.asError(node.problem))
+                        rexOpErr(node.problem.toString(), trace)
+                    }
+                    false -> {
+                        onProblem.invoke(ProblemGenerator.asWarning(node.problem))
+                        org.partiql.plan.rexOpMissing(node.problem.toString(), trace)
+                    }
+                }
+            }
+
+            // RELATION OPERATORS
+
+            override fun visitRel(node: Rel, ctx: Unit) = org.partiql.plan.Rel(
+                type = visitRelType(node.type, ctx),
+                op = visitRelOp(node.op, ctx),
+            )
+
+            override fun visitRelType(node: Rel.Type, ctx: Unit) =
+                org.partiql.plan.Rel.Type(
+                    schema = node.schema.map { visitRelBinding(it, ctx) },
+                    props = node.props.map {
+                        when (it) {
+                            Rel.Prop.ORDERED -> org.partiql.plan.Rel.Prop.ORDERED
+                        }
+                    }.toSet()
+
+                )
+
+            override fun visitRelOp(node: Rel.Op, ctx: Unit) = super.visitRelOp(node, ctx) as org.partiql.plan.Rel.Op
+
+            override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Unit) = org.partiql.plan.Rel.Op.Scan(
+                rex = visitRex(node.rex, ctx),
+            )
+
+            override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Unit) = org.partiql.plan.Rel.Op.ScanIndexed(
+                rex = visitRex(node.rex, ctx),
+            )
+
+            override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Unit) = org.partiql.plan.Rel.Op.Unpivot(
+                rex = visitRex(node.rex, ctx),
+            )
+
+            override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Unit) = org.partiql.plan.Rel.Op.Distinct(
                 input = visitRel(node.input, ctx),
-                specs = node.specs.map { visitRelOpSortSpec(it, ctx) }
             )
 
-        override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, ctx: Unit) = org.partiql.plan.Rel.Op.Sort.Spec(
-            rex = visitRex(node.rex, ctx),
-            order = when (node.order) {
-                Rel.Op.Sort.Order.ASC_NULLS_LAST -> org.partiql.plan.Rel.Op.Sort.Order.ASC_NULLS_LAST
-                Rel.Op.Sort.Order.ASC_NULLS_FIRST -> org.partiql.plan.Rel.Op.Sort.Order.ASC_NULLS_FIRST
-                Rel.Op.Sort.Order.DESC_NULLS_LAST -> org.partiql.plan.Rel.Op.Sort.Order.DESC_NULLS_LAST
-                Rel.Op.Sort.Order.DESC_NULLS_FIRST -> org.partiql.plan.Rel.Op.Sort.Order.DESC_NULLS_FIRST
-            }
-        )
+            override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Unit) = org.partiql.plan.Rel.Op.Filter(
+                input = visitRel(node.input, ctx),
+                predicate = visitRex(node.predicate, ctx),
+            )
 
-        override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Except(
-            lhs = visitRel(node.lhs, ctx),
-            rhs = visitRel(node.rhs, ctx),
-            quantifier = visitRelOpSetQuantifier(node.quantifier)
-        )
+            override fun visitRelOpSort(node: Rel.Op.Sort, ctx: Unit) =
+                org.partiql.plan.Rel.Op.Sort(
+                    input = visitRel(node.input, ctx),
+                    specs = node.specs.map { visitRelOpSortSpec(it, ctx) }
+                )
 
-        override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Intersect(
-            lhs = visitRel(node.lhs, ctx),
-            rhs = visitRel(node.rhs, ctx),
-            quantifier = visitRelOpSetQuantifier(node.quantifier)
-        )
-
-        override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Union(
-            lhs = visitRel(node.lhs, ctx),
-            rhs = visitRel(node.rhs, ctx),
-            quantifier = visitRelOpSetQuantifier(node.quantifier)
-        )
-
-        private fun visitRelOpSetQuantifier(node: Rel.Op.Set.Quantifier) = when (node) {
-            Rel.Op.Set.Quantifier.ALL -> org.partiql.plan.Rel.Op.Set.Quantifier.ALL
-            Rel.Op.Set.Quantifier.DISTINCT -> org.partiql.plan.Rel.Op.Set.Quantifier.DISTINCT
-        }
-
-        override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Unit) = org.partiql.plan.Rel.Op.Limit(
-            input = visitRel(node.input, ctx),
-            limit = visitRex(node.limit, ctx),
-        )
-
-        override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: Unit) = org.partiql.plan.Rel.Op.Offset(
-            input = visitRel(node.input, ctx),
-            offset = visitRex(node.offset, ctx),
-        )
-
-        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Unit) = org.partiql.plan.Rel.Op.Project(
-            input = visitRel(node.input, ctx),
-            projections = node.projections.map { visitRex(it, ctx) },
-        )
-
-        override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Unit) = org.partiql.plan.Rel.Op.Join(
-            lhs = visitRel(node.lhs, ctx),
-            rhs = visitRel(node.rhs, ctx),
-            rex = visitRex(node.rex, ctx),
-            type = when (node.type) {
-                Rel.Op.Join.Type.INNER -> org.partiql.plan.Rel.Op.Join.Type.INNER
-                Rel.Op.Join.Type.LEFT -> org.partiql.plan.Rel.Op.Join.Type.LEFT
-                Rel.Op.Join.Type.RIGHT -> org.partiql.plan.Rel.Op.Join.Type.RIGHT
-                Rel.Op.Join.Type.FULL -> org.partiql.plan.Rel.Op.Join.Type.FULL
-            }
-        )
-
-        override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: Unit) = org.partiql.plan.Rel.Op.Aggregate(
-            input = visitRel(node.input, ctx),
-            strategy = when (node.strategy) {
-                Rel.Op.Aggregate.Strategy.FULL -> org.partiql.plan.Rel.Op.Aggregate.Strategy.FULL
-                Rel.Op.Aggregate.Strategy.PARTIAL -> org.partiql.plan.Rel.Op.Aggregate.Strategy.PARTIAL
-            },
-            calls = node.calls.map { visitRelOpAggregateCall(it, ctx) },
-            groups = node.groups.map { visitRex(it, ctx) },
-        )
-
-        override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: Unit) =
-            super.visitRelOpAggregateCall(node, ctx) as org.partiql.plan.Rel.Op.Aggregate.Call
-
-        override fun visitRelOpAggregateCallUnresolved(node: Rel.Op.Aggregate.Call.Unresolved, ctx: Unit): PlanNode {
-            error("Unresolved aggregate call $node")
-        }
-
-        override fun visitRelOpAggregateCallResolved(node: Rel.Op.Aggregate.Call.Resolved, ctx: Unit): PlanNode {
-            val agg = visitRef(node.agg, ctx)
-            val args = node.args.map { visitRex(it, ctx) }
-            val setQuantifier = when (node.setQuantifier) {
-                Rel.Op.Aggregate.SetQuantifier.ALL -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.ALL
-                Rel.Op.Aggregate.SetQuantifier.DISTINCT -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT
-            }
-            return org.partiql.plan.relOpAggregateCall(agg, setQuantifier, args)
-        }
-
-        override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Unit) = org.partiql.plan.Rel.Op.Exclude(
-            input = visitRel(node.input, ctx),
-            paths = node.paths.mapNotNull {
-                val root = when (val root = it.root) {
-                    is Rex.Op.Var.Unresolved -> error("EXCLUDE expression has an unresolvable root") // unresolved in `PlanTyper` results in error
-                    is Rex.Op.Var.Local -> visitRexOpVarLocal(root, ctx)
-                    is Rex.Op.Var.Global -> error("EXCLUDE only disallows values coming from the input record.")
-                    is Rex.Op.Err -> {
-                        // trace error
-                        visitRexOpErr(root, ctx)
-                        // this is: an erroneous exclude path is removed for continuation
-                        return@mapNotNull null
-                    }
-                    is Rex.Op.Missing -> {
-                        // trace missing
-                        visitRexOpMissing(root, ctx)
-                        // this is: an exclude path that always returns missing is removed for continuation
-                        return@mapNotNull null
-                    }
-                    else -> error("Should be converted to an error node")
+            override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, ctx: Unit) = org.partiql.plan.Rel.Op.Sort.Spec(
+                rex = visitRex(node.rex, ctx),
+                order = when (node.order) {
+                    Rel.Op.Sort.Order.ASC_NULLS_LAST -> org.partiql.plan.Rel.Op.Sort.Order.ASC_NULLS_LAST
+                    Rel.Op.Sort.Order.ASC_NULLS_FIRST -> org.partiql.plan.Rel.Op.Sort.Order.ASC_NULLS_FIRST
+                    Rel.Op.Sort.Order.DESC_NULLS_LAST -> org.partiql.plan.Rel.Op.Sort.Order.DESC_NULLS_LAST
+                    Rel.Op.Sort.Order.DESC_NULLS_FIRST -> org.partiql.plan.Rel.Op.Sort.Order.DESC_NULLS_FIRST
                 }
-                org.partiql.plan.Rel.Op.Exclude.Path(
-                    root = root,
-                    steps = it.steps.map { visitRelOpExcludeStep(it, ctx) },
+            )
+
+            override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Except(
+                lhs = visitRel(node.lhs, ctx),
+                rhs = visitRel(node.rhs, ctx),
+                quantifier = visitRelOpSetQuantifier(node.quantifier)
+            )
+
+            override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Intersect(
+                lhs = visitRel(node.lhs, ctx),
+                rhs = visitRel(node.rhs, ctx),
+                quantifier = visitRelOpSetQuantifier(node.quantifier)
+            )
+
+            override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Union(
+                lhs = visitRel(node.lhs, ctx),
+                rhs = visitRel(node.rhs, ctx),
+                quantifier = visitRelOpSetQuantifier(node.quantifier)
+            )
+
+            private fun visitRelOpSetQuantifier(node: Rel.Op.Set.Quantifier) = when (node) {
+                Rel.Op.Set.Quantifier.ALL -> org.partiql.plan.Rel.Op.Set.Quantifier.ALL
+                Rel.Op.Set.Quantifier.DISTINCT -> org.partiql.plan.Rel.Op.Set.Quantifier.DISTINCT
+            }
+
+            override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Unit) = org.partiql.plan.Rel.Op.Limit(
+                input = visitRel(node.input, ctx),
+                limit = visitRex(node.limit, ctx),
+            )
+
+            override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: Unit) = org.partiql.plan.Rel.Op.Offset(
+                input = visitRel(node.input, ctx),
+                offset = visitRex(node.offset, ctx),
+            )
+
+            override fun visitRelOpProject(node: Rel.Op.Project, ctx: Unit) = org.partiql.plan.Rel.Op.Project(
+                input = visitRel(node.input, ctx),
+                projections = node.projections.map { visitRex(it, ctx) },
+            )
+
+            override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Unit) = org.partiql.plan.Rel.Op.Join(
+                lhs = visitRel(node.lhs, ctx),
+                rhs = visitRel(node.rhs, ctx),
+                rex = visitRex(node.rex, ctx),
+                type = when (node.type) {
+                    Rel.Op.Join.Type.INNER -> org.partiql.plan.Rel.Op.Join.Type.INNER
+                    Rel.Op.Join.Type.LEFT -> org.partiql.plan.Rel.Op.Join.Type.LEFT
+                    Rel.Op.Join.Type.RIGHT -> org.partiql.plan.Rel.Op.Join.Type.RIGHT
+                    Rel.Op.Join.Type.FULL -> org.partiql.plan.Rel.Op.Join.Type.FULL
+                }
+            )
+
+            override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: Unit) = org.partiql.plan.Rel.Op.Aggregate(
+                input = visitRel(node.input, ctx),
+                strategy = when (node.strategy) {
+                    Rel.Op.Aggregate.Strategy.FULL -> org.partiql.plan.Rel.Op.Aggregate.Strategy.FULL
+                    Rel.Op.Aggregate.Strategy.PARTIAL -> org.partiql.plan.Rel.Op.Aggregate.Strategy.PARTIAL
+                },
+                calls = node.calls.map { visitRelOpAggregateCall(it, ctx) },
+                groups = node.groups.map { visitRex(it, ctx) },
+            )
+
+            override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: Unit) =
+                super.visitRelOpAggregateCall(node, ctx) as org.partiql.plan.Rel.Op.Aggregate.Call
+
+            override fun visitRelOpAggregateCallUnresolved(node: Rel.Op.Aggregate.Call.Unresolved, ctx: Unit): PlanNode {
+                error("Unresolved aggregate call $node")
+            }
+
+            override fun visitRelOpAggregateCallResolved(node: Rel.Op.Aggregate.Call.Resolved, ctx: Unit): PlanNode {
+                val agg = visitRef(node.agg, ctx)
+                val args = node.args.map { visitRex(it, ctx) }
+                val setQuantifier = when (node.setQuantifier) {
+                    Rel.Op.Aggregate.SetQuantifier.ALL -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.ALL
+                    Rel.Op.Aggregate.SetQuantifier.DISTINCT -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT
+                }
+                return org.partiql.plan.relOpAggregateCall(agg, setQuantifier, args)
+            }
+
+            override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Unit) = org.partiql.plan.Rel.Op.Exclude(
+                input = visitRel(node.input, ctx),
+                paths = node.paths.mapNotNull {
+                    val root = when (val root = it.root) {
+                        is Rex.Op.Var.Unresolved -> error("EXCLUDE expression has an unresolvable root") // unresolved in `PlanTyper` results in error
+                        is Rex.Op.Var.Local -> visitRexOpVarLocal(root, ctx)
+                        is Rex.Op.Var.Global -> error("EXCLUDE only disallows values coming from the input record.")
+                        is Rex.Op.Err -> {
+                            // trace error
+                            visitRexOpErr(root, ctx)
+                            // this is: an erroneous exclude path is removed for continuation
+                            return@mapNotNull null
+                        }
+                        is Rex.Op.Missing -> {
+                            // trace missing
+                            visitRexOpMissing(root, ctx)
+                            // this is: an exclude path that always returns missing is removed for continuation
+                            return@mapNotNull null
+                        }
+                        else -> error("Should be converted to an error node")
+                    }
+                    org.partiql.plan.Rel.Op.Exclude.Path(
+                        root = root,
+                        steps = it.steps.map { visitRelOpExcludeStep(it, ctx) },
+                    )
+                }
+            )
+
+            override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: Unit): org.partiql.plan.Rel.Op.Exclude.Step {
+                return org.partiql.plan.Rel.Op.Exclude.Step(
+                    type = visitRelOpExcludeType(node.type, ctx),
+                    substeps = node.substeps.map { visitRelOpExcludeStep(it, ctx) }
                 )
             }
-        )
 
-        override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: Unit): org.partiql.plan.Rel.Op.Exclude.Step {
-            return org.partiql.plan.Rel.Op.Exclude.Step(
-                type = visitRelOpExcludeType(node.type, ctx),
-                substeps = node.substeps.map { visitRelOpExcludeStep(it, ctx) }
+            override fun visitRelOpExcludeType(node: Rel.Op.Exclude.Type, ctx: Unit) =
+                super.visitRelOpExcludeType(node, ctx) as org.partiql.plan.Rel.Op.Exclude.Type
+
+            override fun visitRelOpExcludeTypeStructSymbol(node: Rel.Op.Exclude.Type.StructSymbol, ctx: Unit) =
+                org.partiql.plan.Rel.Op.Exclude.Type.StructSymbol(symbol = node.symbol)
+
+            override fun visitRelOpExcludeTypeStructKey(node: Rel.Op.Exclude.Type.StructKey, ctx: Unit) =
+                org.partiql.plan.Rel.Op.Exclude.Type.StructKey(key = node.key)
+
+            override fun visitRelOpExcludeTypeCollIndex(node: Rel.Op.Exclude.Type.CollIndex, ctx: Unit) =
+                org.partiql.plan.Rel.Op.Exclude.Type.CollIndex(index = node.index)
+
+            override fun visitRelOpExcludeTypeStructWildcard(
+                node: Rel.Op.Exclude.Type.StructWildcard,
+                ctx: Unit,
+            ) = org.partiql.plan.Rel.Op.Exclude.Type.StructWildcard()
+
+            override fun visitRelOpExcludeTypeCollWildcard(
+                node: Rel.Op.Exclude.Type.CollWildcard,
+                ctx: Unit,
+            ) = org.partiql.plan.Rel.Op.Exclude.Type.CollWildcard()
+
+            override fun visitRelOpErr(node: Rel.Op.Err, ctx: Unit) = org.partiql.plan.Rel.Op.Err(node.message)
+
+            override fun visitRelBinding(node: Rel.Binding, ctx: Unit) = org.partiql.plan.Rel.Binding(
+                name = node.name,
+                type = node.type,
             )
         }
-
-        override fun visitRelOpExcludeType(node: Rel.Op.Exclude.Type, ctx: Unit) =
-            super.visitRelOpExcludeType(node, ctx) as org.partiql.plan.Rel.Op.Exclude.Type
-
-        override fun visitRelOpExcludeTypeStructSymbol(node: Rel.Op.Exclude.Type.StructSymbol, ctx: Unit) =
-            org.partiql.plan.Rel.Op.Exclude.Type.StructSymbol(symbol = node.symbol)
-
-        override fun visitRelOpExcludeTypeStructKey(node: Rel.Op.Exclude.Type.StructKey, ctx: Unit) =
-            org.partiql.plan.Rel.Op.Exclude.Type.StructKey(key = node.key)
-
-        override fun visitRelOpExcludeTypeCollIndex(node: Rel.Op.Exclude.Type.CollIndex, ctx: Unit) =
-            org.partiql.plan.Rel.Op.Exclude.Type.CollIndex(index = node.index)
-
-        override fun visitRelOpExcludeTypeStructWildcard(
-            node: Rel.Op.Exclude.Type.StructWildcard,
-            ctx: Unit,
-        ) = org.partiql.plan.Rel.Op.Exclude.Type.StructWildcard()
-
-        override fun visitRelOpExcludeTypeCollWildcard(
-            node: Rel.Op.Exclude.Type.CollWildcard,
-            ctx: Unit,
-        ) = org.partiql.plan.Rel.Op.Exclude.Type.CollWildcard()
-
-        override fun visitRelOpErr(node: Rel.Op.Err, ctx: Unit) = org.partiql.plan.Rel.Op.Err(node.message)
-
-        override fun visitRelBinding(node: Rel.Binding, ctx: Unit) = org.partiql.plan.Rel.Binding(
-            name = node.name,
-            type = node.type,
-        )
     }
-}
+    
