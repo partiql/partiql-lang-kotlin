@@ -10,10 +10,12 @@ internal object SqlFunctions {
     private val functions = mutableMapOf<String, SqlFunction>()
 
     init {
+        createFunction(SqlAbs)
         createFunction(SqlBetween)
         createFunction(SqlConcat)
-        createFunction(SqlUpper)
         createFunction(SqlLower)
+        createFunction(SqlMod)
+        createFunction(SqlUpper)
     }
 
     fun getFunctions(name: String): Collection<Function.Scalar> = functions[name]?.getVariants() ?: emptyList()
