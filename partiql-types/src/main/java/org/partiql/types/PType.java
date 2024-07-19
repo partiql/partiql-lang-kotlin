@@ -846,4 +846,67 @@ public interface PType {
             throw new IllegalStateException("Unsupported type: " + type);
         }
     }
+
+    @NotNull
+    static PType fromKind(@NotNull Kind kind) {
+        switch (kind) {
+            case DYNAMIC:
+                return PType.typeDynamic();
+            case BOOL:
+                return PType.typeBool();
+            case TINYINT:
+                return PType.typeTinyInt();
+            case SMALLINT:
+                return PType.typeSmallInt();
+            case INT:
+                return PType.typeInt();
+            case BIGINT:
+                return PType.typeBigInt();
+            case INT_ARBITRARY:
+                return PType.typeIntArbitrary();
+            case DECIMAL:
+            case DECIMAL_ARBITRARY:
+                return PType.typeDecimalArbitrary();
+            case REAL:
+                return PType.typeReal();
+            case DOUBLE_PRECISION:
+                return PType.typeDoublePrecision();
+            case CHAR:
+                return PType.typeChar(Integer.MAX_VALUE);
+            case VARCHAR:
+                return PType.typeVarChar(Integer.MAX_VALUE);
+            case STRING:
+                return PType.typeString();
+            case SYMBOL:
+                return PType.typeSymbol();
+            case BLOB:
+                return PType.typeBlob(Integer.MAX_VALUE);
+            case CLOB:
+                return PType.typeClob(Integer.MAX_VALUE);
+            case DATE:
+                return PType.typeDate();
+            case TIME_WITH_TZ:
+                return PType.typeTimeWithTZ(6);
+            case TIME_WITHOUT_TZ:
+                return PType.typeTimeWithoutTZ(6);
+            case TIMESTAMP_WITH_TZ:
+                return PType.typeTimestampWithTZ(6);
+            case TIMESTAMP_WITHOUT_TZ:
+                return PType.typeTimestampWithoutTZ(6);
+            case BAG:
+                return PType.typeBag();
+            case LIST:
+                return PType.typeList();
+            case ROW:
+                throw new IllegalArgumentException("Cannot create a ROW from Kind");
+            case SEXP:
+                return PType.typeSexp();
+            case STRUCT:
+                return PType.typeStruct();
+            case UNKNOWN:
+                return PType.typeUnknown();
+            default:
+                throw new IllegalArgumentException("Unsupported kind: " + kind);
+        }
+    }
 }

@@ -25,7 +25,7 @@ class FnResolverTest {
                     Function.Parameter("arg-0", PType.Kind.DOUBLE_PRECISION),
                     Function.Parameter("arg-1", PType.Kind.DOUBLE_PRECISION),
                 ),
-                returnType = PType.typeDoublePrecision(),
+                returnType = PType.Kind.DOUBLE_PRECISION,
             )
         )
         val args = listOf(PType.typeInt().toCType(), PType.typeDoublePrecision().toCType())
@@ -43,7 +43,7 @@ class FnResolverTest {
                     Function.Parameter("value", PType.Kind.STRING),
                     Function.Parameter("delimiter", PType.Kind.STRING),
                 ),
-                returnType = PType.typeList(),
+                returnType = PType.Kind.DOUBLE_PRECISION,
                 // isNullable = false,
             )
         )

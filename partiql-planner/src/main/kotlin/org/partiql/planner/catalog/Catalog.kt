@@ -1,5 +1,7 @@
 package org.partiql.planner.catalog
 
+import org.partiql.planner.internal.functions.sql.SqlFunctions
+
 /**
  * Catalog interface for access to tables and routines.
  *
@@ -31,7 +33,7 @@ public interface Catalog {
      * "Table" exists. Therefore, this method will return a [Table.Handle] with the "Table" representation and the
      * matching path: "a"."b"."c"."Table".
      *
-     * IMPORTANT: The returned [Table.Handle.namespace] must be correct for correct evaluation.
+     * IMPORTANT: The returned [Table.Handle.name] must be correct for correct evaluation.
      *
      * If the [Identifier] does not correspond to an existing [Table], implementers should return null.
      */
@@ -60,10 +62,12 @@ public interface Catalog {
     public fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> = emptyList()
 
     /**
-     * Get a routine's variants by name.
-     *
-     * @param name  The case-sensitive [Function] name.
-     * @return A collection of all [Function]s in the current namespace with this name.
+     * Get a routine's variants by name; the default implementation is backed by the SQL-99 builtins.
      */
-    public fun getFunctions(session: Session, name: Name): Collection<Function> = emptyList()
+    public fun getFunctions(session: Session, name: Name): Collection<Function> {
+        if (name.hasNamespace()) {
+            error("The default catalog implementation does not supported namespaced functions, found: $name")
+        }
+        return SqlFunctions.getFunctions(name.getName())
+    }
 }

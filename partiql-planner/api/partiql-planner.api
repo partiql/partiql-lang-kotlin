@@ -78,28 +78,34 @@ public final class org/partiql/planner/catalog/Catalogs$DefaultImpls {
 
 public abstract interface class org/partiql/planner/catalog/Function {
 	public static final field Companion Lorg/partiql/planner/catalog/Function$Companion;
+	public static fun aggregation (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Aggregation;
+	public abstract fun computeReturnType (Ljava/util/List;)Lorg/partiql/types/PType;
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getParameters ()[Lorg/partiql/planner/catalog/Function$Parameter;
-	public abstract fun getReturnType ()Lorg/partiql/types/PType;
+	public abstract fun getReturnType ()Lorg/partiql/types/PType$Kind;
 	public abstract fun getSpecific ()Ljava/lang/String;
+	public static fun scalar (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Scalar;
 }
 
 public abstract interface class org/partiql/planner/catalog/Function$Aggregation : org/partiql/planner/catalog/Function {
 	public abstract fun getSpecific ()Ljava/lang/String;
+	public abstract fun isDecomposable ()Z
 }
 
 public final class org/partiql/planner/catalog/Function$Aggregation$DefaultImpls {
+	public static fun computeReturnType (Lorg/partiql/planner/catalog/Function$Aggregation;Ljava/util/List;)Lorg/partiql/types/PType;
 	public static fun getParameters (Lorg/partiql/planner/catalog/Function$Aggregation;)[Lorg/partiql/planner/catalog/Function$Parameter;
 	public static fun getSpecific (Lorg/partiql/planner/catalog/Function$Aggregation;)Ljava/lang/String;
+	public static fun isDecomposable (Lorg/partiql/planner/catalog/Function$Aggregation;)Z
 }
 
 public final class org/partiql/planner/catalog/Function$Companion {
-	public final fun scalar (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Function$Scalar;
-	public final fun scalar (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType;Lorg/partiql/planner/catalog/Function$Properties;)Lorg/partiql/planner/catalog/Function$Scalar;
-	public static synthetic fun scalar$default (Lorg/partiql/planner/catalog/Function$Companion;Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType;Lorg/partiql/planner/catalog/Function$Properties;ILjava/lang/Object;)Lorg/partiql/planner/catalog/Function$Scalar;
+	public final fun aggregation (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Aggregation;
+	public final fun scalar (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Scalar;
 }
 
 public final class org/partiql/planner/catalog/Function$DefaultImpls {
+	public static fun computeReturnType (Lorg/partiql/planner/catalog/Function;Ljava/util/List;)Lorg/partiql/types/PType;
 	public static fun getParameters (Lorg/partiql/planner/catalog/Function;)[Lorg/partiql/planner/catalog/Function$Parameter;
 }
 
@@ -116,28 +122,16 @@ public final class org/partiql/planner/catalog/Function$Parameter {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/planner/catalog/Function$Properties {
-	public final field isNullCall Z
-	public fun <init> ()V
-	public fun <init> (Z)V
-	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Z
-	public final fun copy (Z)Lorg/partiql/planner/catalog/Function$Properties;
-	public static synthetic fun copy$default (Lorg/partiql/planner/catalog/Function$Properties;ZILjava/lang/Object;)Lorg/partiql/planner/catalog/Function$Properties;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class org/partiql/planner/catalog/Function$Scalar : org/partiql/planner/catalog/Function {
-	public abstract fun getProperties ()Lorg/partiql/planner/catalog/Function$Properties;
 	public abstract fun getSpecific ()Ljava/lang/String;
+	public abstract fun isNullCall ()Z
 }
 
 public final class org/partiql/planner/catalog/Function$Scalar$DefaultImpls {
+	public static fun computeReturnType (Lorg/partiql/planner/catalog/Function$Scalar;Ljava/util/List;)Lorg/partiql/types/PType;
 	public static fun getParameters (Lorg/partiql/planner/catalog/Function$Scalar;)[Lorg/partiql/planner/catalog/Function$Parameter;
-	public static fun getProperties (Lorg/partiql/planner/catalog/Function$Scalar;)Lorg/partiql/planner/catalog/Function$Properties;
 	public static fun getSpecific (Lorg/partiql/planner/catalog/Function$Scalar;)Ljava/lang/String;
+	public static fun isNullCall (Lorg/partiql/planner/catalog/Function$Scalar;)Z
 }
 
 public final class org/partiql/planner/catalog/Identifier : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {

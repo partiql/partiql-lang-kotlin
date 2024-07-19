@@ -1,7 +1,6 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Function
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Namespace
@@ -48,11 +47,6 @@ public class TestCatalog private constructor(
 
     // TODO
     override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
-        return emptyList()
-    }
-
-    // TODO
-    override fun getFunctions(session: Session, name: Name): Collection<Function> {
         return emptyList()
     }
 

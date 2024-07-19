@@ -791,18 +791,20 @@ internal class PlanTyper(private val env: Env) {
                 }
             }
 
+            val returnType = PType.fromKind(node.fn.signature.getReturnType())
+
             // Check if any arg is always missing
             val hasMissingArg = args.any { it.type.isMissingValue }
             if (hasMissingArg) {
                 return ProblemGenerator.missingRex(
                     node,
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments."),
-                    CompilerType(node.fn.signature.getReturnType(), isMissingValue = true)
+                    CompilerType(returnType, isMissingValue = true)
                 )
             }
 
             // Infer fn return type
-            return rex(CompilerType(node.fn.signature.getReturnType()), Rex.Op.Call.Static(node.fn, args))
+            return rex(CompilerType(returnType), Rex.Op.Call.Static(node.fn, args))
         }
 
         /**
@@ -813,7 +815,7 @@ internal class PlanTyper(private val env: Env) {
          * @return
          */
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: CompilerType?): Rex {
-            val types = node.candidates.map { candidate -> candidate.fn.signature.getReturnType().toCType() }.toMutableSet()
+            val types = node.candidates.map { candidate -> PType.fromKind(candidate.fn.signature.getReturnType()).toCType() }.toMutableSet()
             // TODO: Should this always be DYNAMIC?
             return Rex(type = CompilerType.anyOf(types), op = node)
         }

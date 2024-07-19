@@ -17,7 +17,7 @@ internal object Coercions {
      * TODO all coercion APIs are based on kind, we don't need a full PType here.
      */
     fun get(input: PType.Kind, target: PType.Kind): Ref.Cast? {
-        TODO("coercion from kind")
+        return get(PType.fromKind(input), PType.fromKind(target))
     }
 
     fun get(input: PType, target: PType): Ref.Cast? {
