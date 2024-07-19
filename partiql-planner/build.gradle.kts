@@ -107,14 +107,14 @@ tasks.register<Copy>("copyUtils") {
 //
 // !! IMPORTANT !! — only run manually, as this will overwrite the existing ir/Nodes.kt.
 //
-tasks.register<Copy>("copyNodes") {
-    includeEmptyDirs = false
-    dependsOn("codegen")
-    filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
-    from("$buildDir/tmp")
-    include("**/Nodes.kt")
-    into("src/main/kotlin")
-}
+// tasks.register<Copy>("copyNodes") {
+//     includeEmptyDirs = false
+//     dependsOn("codegen")
+//     filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
+//     from("$buildDir/tmp")
+//     include("**/Nodes.kt")
+//     into("src/main/kotlin")
+// }
 
 tasks.register("generate") {
     dependsOn("codegen", "copyUtils")

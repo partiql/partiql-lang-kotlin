@@ -1470,6 +1470,23 @@ internal data class Rel(
           public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
               visitor.visitRelOpExcludeTypeStructSymbol(this, ctx)
 
+          // Explicitly override `equals` and `hashcode` for case-insensitivity
+          override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as StructSymbol
+
+            if (!symbol.equals(other.symbol, ignoreCase = true)) return false
+            if (children != other.children) return false
+
+            return true
+          }
+
+          override fun hashCode(): Int {
+            return symbol.lowercase().hashCode()
+          }
+
           internal companion object {
             @JvmStatic
             internal fun builder(): RelOpExcludeTypeStructSymbolBuilder =
