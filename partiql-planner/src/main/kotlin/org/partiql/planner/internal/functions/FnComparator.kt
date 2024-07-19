@@ -1,4 +1,4 @@
-package org.partiql.planner.internal
+package org.partiql.planner.internal.functions
 
 import org.partiql.planner.catalog.Function
 import org.partiql.types.PType

@@ -7,6 +7,8 @@ import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
+import org.partiql.planner.internal.functions.FnMatch
+import org.partiql.planner.internal.functions.FnResolver
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.refFn
@@ -68,19 +70,22 @@ internal class Env(
     /**
      * TODO use session PATH.
      */
-    fun getRoutine(identifier: Identifier, args: List<Rex>): Rex? {
+    fun getFunction(identifier: Identifier, args: List<Rex>): Rex? {
+        // don't allow qualified function invocations for the current version .
+        if (identifier.hasQualifier()) {
+            error("Function resolution with qualifier not supported")
+        }
         // case-normalize lower routine names
-        var catalog = default
+        val catalog = default
         val name = Name.of(identifier.map { it.getText().lowercase() })
         val variants = catalog.getFunctions(session, name)
             .filterIsInstance<Function.Scalar>()
             .toList()
-
-        // debugging
-        for (v in variants) {
-            println(v.getSpecific())
+        // function not found
+        if (variants.isEmpty()) {
+            return null
         }
-
+        // attempt to match
         val match = FnResolver.resolve(variants, args.map { it.type })
         // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {

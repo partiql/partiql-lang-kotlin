@@ -10,6 +10,7 @@ internal object SqlFunctions {
     private val functions = mutableMapOf<String, SqlFunction>()
 
     init {
+        createFunction(SqlBetween)
         createFunction(SqlConcat)
         createFunction(SqlUpper)
         createFunction(SqlLower)

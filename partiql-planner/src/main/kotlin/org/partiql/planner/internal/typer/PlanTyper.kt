@@ -763,7 +763,7 @@ internal class PlanTyper(private val env: Env) {
             // Type the arguments
             val args = node.args.map { visitRex(it, null) }
             // Attempt to resolve in the environment
-            val rex = env.getRoutine(node.identifier, args)
+            val rex = env.getFunction(node.identifier, args)
             if (rex == null) {
                 return ProblemGenerator.errorRex(
                     causes = args.map { it.op },

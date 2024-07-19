@@ -3,8 +3,8 @@ package org.partiql.planner.internal.typer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.partiql.planner.catalog.Function
-import org.partiql.planner.internal.FnMatch
-import org.partiql.planner.internal.FnResolver
+import org.partiql.planner.internal.functions.FnMatch
+import org.partiql.planner.internal.functions.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.types.PType
 
