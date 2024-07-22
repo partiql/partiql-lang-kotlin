@@ -61,6 +61,9 @@ import org.partiql.planner.`internal`.ir.builder.RexOpCastUnresolvedBuilder
 import org.partiql.planner.`internal`.ir.builder.RexOpCoalesceBuilder
 import org.partiql.planner.`internal`.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.`internal`.ir.builder.RexOpErrBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpIsMissingBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpIsNullBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpIsTypeBuilder
 import org.partiql.planner.`internal`.ir.builder.RexOpLitBuilder
 import org.partiql.planner.`internal`.ir.builder.RexOpMissingBuilder
 import org.partiql.planner.`internal`.ir.builder.RexOpNullifBuilder
@@ -256,6 +259,9 @@ internal data class Rex(
       is Call -> visitor.visitRexOpCall(this, ctx)
       is Case -> visitor.visitRexOpCase(this, ctx)
       is Nullif -> visitor.visitRexOpNullif(this, ctx)
+      is IsNull -> visitor.visitRexOpIsNull(this, ctx)
+      is IsMissing -> visitor.visitRexOpIsMissing(this, ctx)
+      is IsType -> visitor.visitRexOpIsType(this, ctx)
       is Coalesce -> visitor.visitRexOpCoalesce(this, ctx)
       is Collection -> visitor.visitRexOpCollection(this, ctx)
       is Struct -> visitor.visitRexOpStruct(this, ctx)
@@ -643,6 +649,68 @@ internal data class Rex(
       internal companion object {
         @JvmStatic
         internal fun builder(): RexOpNullifBuilder = RexOpNullifBuilder()
+      }
+    }
+
+    internal data class IsNull(
+      @JvmField
+      internal val `value`: Rex,
+    ) : Op() {
+      public override val children: List<PlanNode> by lazy {
+        val kids = mutableListOf<PlanNode?>()
+        kids.add(value)
+        kids.filterNotNull()
+      }
+
+
+      public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+          visitor.visitRexOpIsNull(this, ctx)
+
+      internal companion object {
+        @JvmStatic
+        internal fun builder(): RexOpIsNullBuilder = RexOpIsNullBuilder()
+      }
+    }
+
+    internal data class IsMissing(
+      @JvmField
+      internal val `value`: Rex,
+    ) : Op() {
+      public override val children: List<PlanNode> by lazy {
+        val kids = mutableListOf<PlanNode?>()
+        kids.add(value)
+        kids.filterNotNull()
+      }
+
+
+      public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+          visitor.visitRexOpIsMissing(this, ctx)
+
+      internal companion object {
+        @JvmStatic
+        internal fun builder(): RexOpIsMissingBuilder = RexOpIsMissingBuilder()
+      }
+    }
+
+    internal data class IsType(
+      @JvmField
+      internal val `value`: Rex,
+      @JvmField
+      internal val type: CompilerType,
+    ) : Op() {
+      public override val children: List<PlanNode> by lazy {
+        val kids = mutableListOf<PlanNode?>()
+        kids.add(value)
+        kids.filterNotNull()
+      }
+
+
+      public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+          visitor.visitRexOpIsType(this, ctx)
+
+      internal companion object {
+        @JvmStatic
+        internal fun builder(): RexOpIsTypeBuilder = RexOpIsTypeBuilder()
       }
     }
 

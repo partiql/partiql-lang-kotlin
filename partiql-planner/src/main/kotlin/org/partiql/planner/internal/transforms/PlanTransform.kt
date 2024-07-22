@@ -105,7 +105,7 @@ internal class PlanTransform(
             super.visitRexOpVar(node, ctx) as org.partiql.plan.Rex.Op
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: Unit) =
-            error("The Internal Plan Node Rex.Op.Var.Unresolved should be converted to an MISSING Node during type resolution if resolution failed")
+            error("The Internal Plan Node Rex.Op.Var.Unresolved for `${node.identifier}` should be converted to a MISSING Node during type resolution if resolution failed")
 
         override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: Unit) = org.partiql.plan.Rex.Op.Global(
             ref = visitRef(node.ref, ctx)
@@ -171,6 +171,21 @@ internal class PlanTransform(
                 candidates = candidates,
                 args = node.args.map { visitRex(it, ctx) }
             )
+        }
+
+        override fun visitRexOpIsNull(node: Rex.Op.IsNull, ctx: Unit): PlanNode {
+            val value = visitRex(node.value, ctx)
+            return org.partiql.plan.Rex.Op.IsNull(value)
+        }
+
+        override fun visitRexOpIsMissing(node: Rex.Op.IsMissing, ctx: Unit): PlanNode {
+            val value = visitRex(node.value, ctx)
+            return org.partiql.plan.Rex.Op.IsMissing(value)
+        }
+
+        override fun visitRexOpIsType(node: Rex.Op.IsType, ctx: Unit): PlanNode {
+            val value = visitRex(node.value, ctx)
+            return org.partiql.plan.Rex.Op.IsType(value, node.type)
         }
 
         override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: Unit): PlanNode {

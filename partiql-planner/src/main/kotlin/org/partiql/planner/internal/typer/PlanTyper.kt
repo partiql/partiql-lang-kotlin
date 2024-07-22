@@ -937,6 +937,18 @@ internal class PlanTyper(private val env: Env) {
             return rex(type, op)
         }
 
+        override fun visitRexOpIsNull(node: Rex.Op.IsNull, ctx: CompilerType?): Rex {
+            return rex(PType.typeBool().toCType(), node)
+        }
+
+        override fun visitRexOpIsMissing(node: Rex.Op.IsMissing, ctx: CompilerType?): Rex {
+            return rex(PType.typeBool().toCType(), node)
+        }
+
+        override fun visitRexOpIsType(node: Rex.Op.IsType, ctx: CompilerType?): Rex {
+            return rex(PType.typeBool().toCType(), node)
+        }
+
         /**
          * In this context, Boolean means PartiQLValueType Bool, which can be nullable.
          * Hence, we permit Static Type BOOL, Static Type NULL, Static Type Missing here.

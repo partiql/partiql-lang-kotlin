@@ -157,6 +157,19 @@ rex::{
       nullifier: rex
     },
 
+    is_null::{
+      value: rex,
+    },
+
+    is_missing::{
+      value: rex,
+    },
+
+    is_type::{
+      value: rex,
+      type: static_type,
+    },
+
     coalesce::{
       args: list::[rex]
     },
