@@ -624,7 +624,17 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
-            val table = visitQualifiedName(ctx.qualifiedName())
+            val qualifiedName = visitQualifiedName(ctx.qualifiedName())
+            val (qualifier, binder) = when (qualifiedName) {
+                is Identifier.Qualified -> {
+                    if (qualifiedName.steps.size == 1) {
+                        qualifiedName.root to qualifiedName.steps.first().asBinder()
+                    } else {
+                        identifierQualified(qualifiedName.root, qualifiedName.steps.dropLast(1)) to qualifiedName.steps.last().asBinder()
+                    }
+                }
+                is Identifier.Symbol -> null to qualifiedName.asBinder()
+            }
             val definition = ctx.tableDef()?.let { visitTableDef(it) }
             val partitionBy = ctx
                 .tableExtension()
@@ -645,7 +655,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                         tableProperty(key, stringValue(value))
                     } ?: emptyList()
                 }
-            ddlOpCreateTable(table, definition, partitionBy, tblProperties)
+            ddlOpCreateTable(qualifier, binder, definition, partitionBy, tblProperties)
         }
 
         override fun visitCreateIndex(ctx: GeneratedParser.CreateIndexContext) = translate(ctx) {

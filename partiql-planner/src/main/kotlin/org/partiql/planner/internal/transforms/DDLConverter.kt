@@ -20,6 +20,7 @@ import org.partiql.planner.internal.ir.constraintDefinitionNotNull
 import org.partiql.planner.internal.ir.constraintDefinitionNullable
 import org.partiql.planner.internal.ir.constraintDefinitionUnique
 import org.partiql.planner.internal.ir.ddlOpCreateTable
+import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.partitionByAttrList
 import org.partiql.planner.internal.ir.statementDDL
 import org.partiql.planner.internal.ir.tableProperty
@@ -66,7 +67,14 @@ internal object DDLConverter {
             }
 
         override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Ctx): org.partiql.planner.internal.ir.DdlOp.CreateTable {
-            val name = convert(node.name)
+            val prefix = node.prefix?.let { convert(it) }
+            val tableName = convert(node.name)
+            val name = prefix?.let {
+                when (prefix) {
+                    is Identifier.Qualified -> identifierQualified(prefix.root, prefix.steps + tableName)
+                    is Identifier.Symbol -> identifierQualified(prefix, listOf(tableName))
+                }
+            } ?: tableName
             val def = node.definition ?: throw IllegalArgumentException("CREATE TABLE with no table definition is not supported")
             val constraints = def.constraints.map { visitConstraint(it, ctx) }
             // Constraints are stored at the struct level at start, we will arrange constraints later

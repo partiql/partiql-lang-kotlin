@@ -133,7 +133,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Ctx) = translate(node) { metas ->
-        if (node.name !is Identifier.Symbol) {
+        if (node.prefix != null) {
             error("The legacy AST does not support qualified identifiers as table names")
         }
         val tableName = node.name.symbol

@@ -180,7 +180,7 @@ internal class DDLTestBase {
 
         val typer = PlanTyper(env)
 
-        val planner = PartiQLPlannerBuilder().build()
+        val planner = PartiQLPlannerBuilder().caseNormalize("EXACTCASE").build()
 
         // Convenient
         val FIELD_A_INT4 = Pair(

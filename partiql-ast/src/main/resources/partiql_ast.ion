@@ -129,9 +129,12 @@ statement::[
 ]
 
 ddl_op::[
-  // CREATE TABLE <identifier> [<table_def>]
+  // CREATE TABLE [<qualifier>].<table_name> [<table_def>]
+  // In Create table, we can have qualifier in front of table name
+  //  in such cases the qualifier are variable reference and table name are binder
   create_table::{
-    name:       identifier,
+    prefix:     optional::identifier,
+    name:       binder,
     definition: optional::table_definition,
     // This is an expression for backward compatibility
     // For now, we support `PARTITION BY (<id> (, <id>)* ))`

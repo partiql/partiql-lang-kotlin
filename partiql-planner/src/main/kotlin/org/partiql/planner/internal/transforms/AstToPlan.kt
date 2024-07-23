@@ -17,6 +17,7 @@
 package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.AstNode
+import org.partiql.ast.Binder
 import org.partiql.ast.Expr
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
@@ -60,6 +61,11 @@ internal object AstToPlan {
     fun convert(identifier: AstIdentifier): PlanIdentifier = when (identifier) {
         is AstIdentifier.Qualified -> convert(identifier)
         is AstIdentifier.Symbol -> convert(identifier)
+    }
+
+    fun convert(binder: Binder): PlanIdentifier.Symbol = when (binder.isRegular) {
+        true -> identifierSymbol(binder.symbol, PlanIdentifier.CaseSensitivity.INSENSITIVE)
+        false -> identifierSymbol(binder.symbol, PlanIdentifier.CaseSensitivity.SENSITIVE)
     }
 
     fun convert(identifier: AstIdentifier.Qualified): PlanIdentifier.Qualified {

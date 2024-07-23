@@ -30,7 +30,6 @@ import org.partiql.ast.Sort
 import org.partiql.ast.builder.ast
 import org.partiql.ast.exprLit
 import org.partiql.ast.exprVar
-import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.identifierSymbol
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
@@ -70,10 +69,8 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.types.StaticType
-import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.utils.toBinder
-import org.partiql.types.PType
+import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value

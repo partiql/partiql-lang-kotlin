@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 class DDLTests {
 
     private val parser = PartiQLParser.default()
-    private val planner = PartiQLPlanner.default()
+    private val planner = PartiQLPlanner.builder().caseNormalize("EXACTCASE").build()
 
     private val catalogName = "TEST"
     private val catalog = MemoryCatalog.PartiQL().name(catalogName).build()
@@ -76,7 +76,7 @@ class DDLTests {
                 primaryKeyFields = emptyList(),
                 constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
                 metas = mapOf(
-                    "check_constraints" to ionStructOf(field("\$_my_catalog.my_schema.tbl_0", ionString("a <> b"))),
+                    "check_constraints" to ionStructOf(field("\$_\"my_catalog\".\"my_schema\".\"tbl\"_0", ionString("\"a\" <> \"b\""))),
                 )
             ),
             metas = mapOf(),
@@ -108,8 +108,8 @@ class DDLTests {
     fun sanity3() {
         val query = """
             CREATE TABLE foo.bar.my_table_V1 (
-                ATTR1 VARCHAR(3),
-                PRIMARY KEY (attr1)
+                ATTr1 VARCHAR(3),
+                PRIMARY KEY (ATTr1)
             )
         """.trimIndent()
 
@@ -128,7 +128,7 @@ class DDLTests {
         val query = """
             CREATE TABLE foo.bar.my_table_V1 (
                 ATTR1 VARCHAR(3),
-                PRIMARY KEY ("attr1")
+                PRIMARY KEY ("ATTR1")
             )
         """.trimIndent()
 
@@ -159,5 +159,31 @@ class DDLTests {
             PlanPrinter.append(this, plan)
         }
         println(res)
+    }
+
+    @Test
+    fun sanity6() {
+        val query = """
+            CREATE TABLE foo.bar.my_table_V1 (
+                attr1 VARCHAR(3),
+                attr2 INT2,
+                attr3 STRUCT<attr4: INT>,
+                CHECK(attr3.attr4 >= 0)
+            )
+        """.trimIndent()
+
+        val ast = parser.parse(query).root
+        val plan = planner
+            .plan(ast, plannerSession) {}
+            .plan
+        val res = buildString {
+            PlanPrinter.append(this, plan)
+        }
+        println(res)
+
+        val staticType =
+            ((plan.statement as Statement.DDL).op as DdlOp.CreateTable).shape
+
+        println(staticType)
     }
 }

@@ -59,6 +59,7 @@ class PartiQLParserDDLTests {
     fun errorTests(tc: ErrorTestCase) = assertIssue(tc.query)
 
     class SuccessTestProvider : ArgumentsProvider {
+
         @OptIn(PartiQLValueExperimental::class)
         val createTableTests = listOf(
             //
@@ -69,7 +70,8 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with unqualified case insensitive name",
                 "CREATE TABLE foo",
                 ddlOpCreateTable(
-                    identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("foo", true),
                     null,
                     null,
                     emptyList()
@@ -82,7 +84,8 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with unqualified case sensitive name",
                 "CREATE TABLE \"foo\"",
                 ddlOpCreateTable(
-                    identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
+                    null,
+                    binder("foo", false),
                     null,
                     null,
                     emptyList()
@@ -96,9 +99,9 @@ class PartiQLParserDDLTests {
                         identifierSymbol("myCatalog", Identifier.CaseSensitivity.INSENSITIVE),
                         listOf(
                             identifierSymbol("mySchema", Identifier.CaseSensitivity.INSENSITIVE),
-                            identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
                         )
                     ),
+                    binder("foo", true),
                     null,
                     null,
                     emptyList()
@@ -112,9 +115,9 @@ class PartiQLParserDDLTests {
                         identifierSymbol("myCatalog", Identifier.CaseSensitivity.INSENSITIVE),
                         listOf(
                             identifierSymbol("mySchema", Identifier.CaseSensitivity.SENSITIVE),
-                            identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
                         )
                     ),
+                    binder("foo", true),
                     null,
                     null,
                     emptyList()
@@ -132,7 +135,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -158,7 +162,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -184,7 +189,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -210,7 +216,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -247,7 +254,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         emptyList(),
                         listOf(
@@ -276,7 +284,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         emptyList(),
                         listOf(
@@ -305,7 +314,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         emptyList(),
                         listOf(
@@ -334,7 +344,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -363,7 +374,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -409,7 +421,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -462,7 +475,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -490,7 +504,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -515,7 +530,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -552,7 +568,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -590,7 +607,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -619,7 +637,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -645,7 +664,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -681,7 +701,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -718,7 +739,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -744,7 +766,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -780,7 +803,8 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
@@ -816,7 +840,8 @@ class PartiQLParserDDLTests {
                         PARTITION BY (a)
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     null,
                     PartitionBy.AttrList(
                         listOf(
@@ -834,7 +859,8 @@ class PartiQLParserDDLTests {
                         PARTITION BY (a, b)
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     null,
                     PartitionBy.AttrList(
                         listOf(
@@ -854,7 +880,8 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1')
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     null,
                     null,
                     listOf(tableProperty("k1", stringValue("v1")))
@@ -868,7 +895,8 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('K1k' = 'V1v')
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     null,
                     null,
                     listOf(tableProperty("K1k", stringValue("V1v")))
@@ -882,7 +910,8 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1', 'k2' = 'v2')
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     null,
                     null,
                     listOf(
@@ -900,7 +929,8 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1')
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    binder("tbl", true),
                     null,
                     PartitionBy.AttrList(listOf(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),),),
                     listOf(tableProperty("k1", stringValue("v1")),)
