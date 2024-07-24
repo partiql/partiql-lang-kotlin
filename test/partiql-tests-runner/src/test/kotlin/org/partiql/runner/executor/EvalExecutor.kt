@@ -65,6 +65,9 @@ class EvalExecutor(
         if (actual is PartiQLResult.Value && expect is PartiQLResult.Value) {
             return valueComparison(actual.value, expect.value)
         }
+        if (actual is PartiQLResult.Error) {
+            throw actual.cause
+        }
         val errorMessage = buildString {
             appendLine("Cannot compare different types of PartiQLResult.")
             appendLine(" - Expected : $expect")

@@ -34,7 +34,7 @@ internal class ExprCallDynamic(
         val actualTypes = actualArgs.map { it.type }
         candidateIndex.get(actualTypes)?.let {
             val transformedArgs = Array(actualArgs.size) {
-                actualArgs[it].toPartiQLValue()
+                actualArgs[it]
             }
             return it.eval(transformedArgs, env)
         }
@@ -63,15 +63,19 @@ internal class ExprCallDynamic(
          */
         private val nil = { Datum.nullValue(fn.signature.returns) }
 
-        fun eval(originalArgs: Array<PartiQLValue>, env: Environment): Datum {
+        /**
+         * Memoize creation of missing values
+         */
+        private val missing = { Datum.missingValue(fn.signature.returns) }
+
+        fun eval(originalArgs: Array<Datum>, env: Environment): Datum {
             val args = originalArgs.mapIndexed { i, arg ->
-                if (arg.isNull && fn.signature.isNullCall) {
-                    return nil.invoke()
-                }
+                if (arg.isNull && fn.signature.isNullCall) return nil.invoke()
+                if (arg.isMissing && fn.signature.isMissingCall) return missing.invoke()
                 when (val c = coercions[i]) {
                     null -> arg
-                    else -> ExprCast(ExprLiteral(Datum.of(arg)), c).eval(env).toPartiQLValue()
-                }
+                    else -> ExprCast(ExprLiteral(arg), c).eval(env)
+                }.toPartiQLValue()
             }.toTypedArray()
             return Datum.of(fn.invoke(args))
         }
