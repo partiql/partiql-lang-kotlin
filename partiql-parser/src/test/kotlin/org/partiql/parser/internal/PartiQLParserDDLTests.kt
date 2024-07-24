@@ -140,7 +140,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Int2(),
                                 listOf(constraint(null, constraintDefinitionNotNull())),
                                 false,
@@ -167,7 +167,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Int2(),
                                 listOf(constraint(null, constraintDefinitionUnique(null, false))),
                                 false,
@@ -194,7 +194,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Int2(),
                                 listOf(constraint(null, constraintDefinitionUnique(null, true))),
                                 false,
@@ -221,7 +221,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Int2(),
                                 listOf(
                                     constraint(
@@ -349,7 +349,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE),
+                                binder("a", false),
                                 Type.Int2(),
                                 emptyList(),
                                 false,
@@ -379,7 +379,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
@@ -426,7 +426,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
@@ -480,7 +480,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Struct(
                                     emptyList()
                                 ),
@@ -509,7 +509,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Array(Type.Int2()),
                                 emptyList(),
                                 false,
@@ -535,7 +535,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Array(
                                     Type.Struct(
                                         listOf(
@@ -573,7 +573,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Array(
                                     Type.Struct(
                                         listOf(
@@ -612,7 +612,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Array(null),
                                 emptyList(),
                                 false,
@@ -642,7 +642,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Int2(),
                                 emptyList(),
                                 true,
@@ -669,7 +669,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
@@ -706,7 +706,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
@@ -744,7 +744,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Int2(),
                                 emptyList(),
                                 false,
@@ -771,7 +771,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
@@ -808,7 +808,7 @@ class PartiQLParserDDLTests {
                     tableDefinition(
                         listOf(
                             tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                binder("a", true),
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(

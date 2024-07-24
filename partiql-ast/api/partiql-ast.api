@@ -126,7 +126,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun statementExplainTargetDomain (Lorg/partiql/ast/Statement;Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/Statement$Explain$Target$Domain;
 	public static final fun statementQuery (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Statement$Query;
 	public static final fun tableDefinition (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/TableDefinition;
-	public static final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static final fun tableDefinitionAttribute (Lorg/partiql/ast/Binder;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public static final fun tableProperty (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/TableProperty;
 	public static final fun typeAny ()Lorg/partiql/ast/Type$Any;
 	public static final fun typeArray (Lorg/partiql/ast/Type;)Lorg/partiql/ast/Type$Array;
@@ -3154,18 +3154,18 @@ public final class org/partiql/ast/TableDefinition$Attribute : org/partiql/ast/A
 	public final field comment Ljava/lang/String;
 	public final field constraints Ljava/util/List;
 	public final field isOptional Z
-	public final field name Lorg/partiql/ast/Identifier$Symbol;
+	public final field name Lorg/partiql/ast/Binder;
 	public final field type Lorg/partiql/ast/Type;
-	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)V
+	public fun <init> (Lorg/partiql/ast/Binder;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Identifier$Symbol;
+	public final fun component1 ()Lorg/partiql/ast/Binder;
 	public final fun component2 ()Lorg/partiql/ast/Type;
 	public final fun component3 ()Ljava/util/List;
 	public final fun component4 ()Z
 	public final fun component5 ()Ljava/lang/String;
-	public final fun copy (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)Lorg/partiql/ast/TableDefinition$Attribute;
-	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Attribute;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public final fun copy (Lorg/partiql/ast/Binder;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Attribute;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -4254,8 +4254,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun statementQuery$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$Query;
 	public final fun tableDefinition (Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition;
 	public static synthetic fun tableDefinition$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition;
-	public final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Attribute;
-	public static synthetic fun tableDefinitionAttribute$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public final fun tableDefinitionAttribute (Lorg/partiql/ast/Binder;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static synthetic fun tableDefinitionAttribute$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Binder;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public final fun tableProperty (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableProperty;
 	public static synthetic fun tableProperty$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/String;Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableProperty;
 	public final fun typeAny (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Any;
@@ -5950,21 +5950,21 @@ public final class org/partiql/ast/builder/StatementQueryBuilder {
 
 public final class org/partiql/ast/builder/TableDefinitionAttributeBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/ast/Binder;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Binder;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/ast/TableDefinition$Attribute;
 	public final fun comment (Ljava/lang/String;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
 	public final fun constraints (Ljava/util/List;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
 	public final fun getComment ()Ljava/lang/String;
 	public final fun getConstraints ()Ljava/util/List;
-	public final fun getName ()Lorg/partiql/ast/Identifier$Symbol;
+	public final fun getName ()Lorg/partiql/ast/Binder;
 	public final fun getType ()Lorg/partiql/ast/Type;
 	public final fun isOptional ()Ljava/lang/Boolean;
 	public final fun isOptional (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
-	public final fun name (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
+	public final fun name (Lorg/partiql/ast/Binder;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
 	public final fun setComment (Ljava/lang/String;)V
 	public final fun setConstraints (Ljava/util/List;)V
-	public final fun setName (Lorg/partiql/ast/Identifier$Symbol;)V
+	public final fun setName (Lorg/partiql/ast/Binder;)V
 	public final fun setOptional (Ljava/lang/Boolean;)V
 	public final fun setType (Lorg/partiql/ast/Type;)V
 	public final fun type (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;

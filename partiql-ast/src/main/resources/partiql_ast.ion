@@ -839,7 +839,7 @@ table_definition::{
   constraints: list::[constraint],
   _: [
     attribute::{
-      name:        '.identifier.symbol',
+      name:        binder,
       type:        '.type',
       constraints: list::[constraint],
       // TODO: Consider to model this as a constraint?
