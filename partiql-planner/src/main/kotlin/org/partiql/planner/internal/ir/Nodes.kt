@@ -43,6 +43,7 @@ import org.partiql.planner.internal.ir.builder.RelOpSortSpecBuilder
 import org.partiql.planner.internal.ir.builder.RelOpUnpivotBuilder
 import org.partiql.planner.internal.ir.builder.RelTypeBuilder
 import org.partiql.planner.internal.ir.builder.RexBuilder
+import org.partiql.planner.internal.ir.builder.RexOpAddBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallDynamicBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallDynamicCandidateBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallStaticBuilder
@@ -53,17 +54,23 @@ import org.partiql.planner.internal.ir.builder.RexOpCastResolvedBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCastUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCoalesceBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
+import org.partiql.planner.internal.ir.builder.RexOpDivideBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
+import org.partiql.planner.internal.ir.builder.RexOpModuloBuilder
+import org.partiql.planner.internal.ir.builder.RexOpMultiplyBuilder
+import org.partiql.planner.internal.ir.builder.RexOpNegativeBuilder
 import org.partiql.planner.internal.ir.builder.RexOpNullifBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathSymbolBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPivotBuilder
+import org.partiql.planner.internal.ir.builder.RexOpPositiveBuilder
 import org.partiql.planner.internal.ir.builder.RexOpSelectBuilder
 import org.partiql.planner.internal.ir.builder.RexOpStructBuilder
 import org.partiql.planner.internal.ir.builder.RexOpStructFieldBuilder
 import org.partiql.planner.internal.ir.builder.RexOpSubqueryBuilder
+import org.partiql.planner.internal.ir.builder.RexOpSubtractBuilder
 import org.partiql.planner.internal.ir.builder.RexOpTupleUnionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarLocalBuilder
@@ -288,6 +295,13 @@ internal data class Rex(
             is TupleUnion -> visitor.visitRexOpTupleUnion(this, ctx)
             is Err -> visitor.visitRexOpErr(this, ctx)
             is Missing -> visitor.visitRexOpMissing(this, ctx)
+            is Add -> visitor.visitRexOpAdd(this, ctx)
+            is Subtract -> visitor.visitRexOpSubtract(this, ctx)
+            is Multiply -> visitor.visitRexOpMultiply(this, ctx)
+            is Divide -> visitor.visitRexOpDivide(this, ctx)
+            is Negative -> visitor.visitRexOpNegative(this, ctx)
+            is Positive -> visitor.visitRexOpPositive(this, ctx)
+            is Modulo -> visitor.visitRexOpModulo(this, ctx)
         }
 
         internal data class Lit(
@@ -477,6 +491,142 @@ internal data class Rex(
                     @JvmStatic
                     internal fun builder(): RexOpCastResolvedBuilder = RexOpCastResolvedBuilder()
                 }
+            }
+        }
+
+        internal data class Negative(
+            @JvmField internal val arg: Rex,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(arg)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpNegative(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpNegativeBuilder = RexOpNegativeBuilder()
+            }
+        }
+
+        internal data class Positive(
+            @JvmField internal val arg: Rex,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(arg)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpPositive(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpPositiveBuilder = RexOpPositiveBuilder()
+            }
+        }
+
+        internal data class Add(
+            @JvmField internal val lhs: Rex,
+            @JvmField internal val rhs: Rex,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(lhs)
+                kids.add(rhs)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpAdd(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpAddBuilder = RexOpAddBuilder()
+            }
+        }
+
+        internal data class Subtract(
+            @JvmField internal val lhs: Rex,
+            @JvmField internal val rhs: Rex,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(lhs)
+                kids.add(rhs)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpSubtract(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpSubtractBuilder = RexOpSubtractBuilder()
+            }
+        }
+
+        internal data class Multiply(
+            @JvmField internal val lhs: Rex,
+            @JvmField internal val rhs: Rex,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(lhs)
+                kids.add(rhs)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpMultiply(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpMultiplyBuilder = RexOpMultiplyBuilder()
+            }
+        }
+
+        internal data class Divide(
+            @JvmField internal val lhs: Rex,
+            @JvmField internal val rhs: Rex,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(lhs)
+                kids.add(rhs)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpDivide(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpDivideBuilder = RexOpDivideBuilder()
+            }
+        }
+
+        internal data class Modulo(
+            @JvmField internal val lhs: Rex,
+            @JvmField internal val rhs: Rex,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(lhs)
+                kids.add(rhs)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpModulo(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpModuloBuilder = RexOpModuloBuilder()
             }
         }
 

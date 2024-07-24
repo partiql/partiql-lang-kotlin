@@ -77,6 +77,9 @@ internal object ProblemGenerator {
     fun undefinedFunction(args: List<PType>, identifier: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
         problem(location, PlanningProblemDetails.UnknownFunction(identifier, args))
 
+    fun undefinedCast(source: PType, target: PType, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
+        problem(location, PlanningProblemDetails.UnknownCast(source, target))
+
     fun undefinedVariable(id: Identifier, inScopeVariables: Set<String> = emptySet(), location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
         problem(location, PlanningProblemDetails.UndefinedVariable(id, inScopeVariables))
 

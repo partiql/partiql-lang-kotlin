@@ -166,6 +166,13 @@ internal open class PlanningProblemDetails(
         "Unknown function `$identifier($types)"
     })
 
+    data class UnknownCast(
+        val source: PType,
+        val target: PType,
+    ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
+        "Cast does not exist for $source to $target."
+    })
+
     public data class UnknownAggregateFunction(
         val identifier: Identifier,
         val args: List<StaticType>,

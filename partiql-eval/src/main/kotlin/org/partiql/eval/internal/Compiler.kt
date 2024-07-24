@@ -25,6 +25,8 @@ import org.partiql.eval.internal.operator.rel.RelSort
 import org.partiql.eval.internal.operator.rel.RelUnionAll
 import org.partiql.eval.internal.operator.rel.RelUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelUnpivot
+import org.partiql.eval.internal.operator.rex.ExprArithmeticBinary
+import org.partiql.eval.internal.operator.rex.ExprArithmeticUnary
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic
 import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCase
@@ -279,6 +281,98 @@ internal class Compiler(
         }
     }
 
+    override fun visitRexOpAdd(node: Rex.Op.Add, ctx: PType?): Operator {
+        val (lhs, rhs) = visitBinaryArithmeticArgs(node.lhs, node.rhs, ctx!!)
+        val factory = getArithmeticBinaryFactory(ctx)
+        return factory.add(lhs, rhs)
+    }
+
+    override fun visitRexOpMultiply(node: Rex.Op.Multiply, ctx: PType?): Operator {
+        val (lhs, rhs) = visitBinaryArithmeticArgs(node.lhs, node.rhs, ctx!!)
+        val factory = getArithmeticBinaryFactory(ctx)
+        return factory.multiply(lhs, rhs)
+    }
+
+    override fun visitRexOpDivide(node: Rex.Op.Divide, ctx: PType?): Operator {
+        val (lhs, rhs) = visitBinaryArithmeticArgs(node.lhs, node.rhs, ctx!!)
+        val factory = getArithmeticBinaryFactory(ctx)
+        return factory.divide(lhs, rhs)
+    }
+
+    override fun visitRexOpSubtract(node: Rex.Op.Subtract, ctx: PType?): Operator {
+        val (lhs, rhs) = visitBinaryArithmeticArgs(node.lhs, node.rhs, ctx!!)
+        val factory = getArithmeticBinaryFactory(ctx)
+        return factory.subtract(lhs, rhs)
+    }
+
+    override fun visitRexOpModulo(node: Rex.Op.Modulo, ctx: PType?): Operator {
+        val (lhs, rhs) = visitBinaryArithmeticArgs(node.lhs, node.rhs, ctx!!)
+        val factory = getArithmeticBinaryFactory(ctx)
+        return factory.modulo(lhs, rhs)
+    }
+
+    override fun visitRexOpNegative(node: Rex.Op.Negative, ctx: PType?): Operator {
+        val arg = visitRex(node.arg, ctx)
+        val factory = getArithmeticUnaryFactory(node.arg.type)
+        return factory.negative(arg)
+    }
+
+    override fun visitRexOpPositive(node: Rex.Op.Positive, ctx: PType?): Operator {
+        val arg = visitRex(node.arg, ctx)
+        val factory = getArithmeticUnaryFactory(node.arg.type)
+        return factory.positive(arg)
+    }
+
+    private fun visitBinaryArithmeticArgs(l: Rex, r: Rex, returnType: PType): Pair<Operator.Expr, Operator.Expr> {
+        val lhsVisited = visitRex(l, l.type)
+        val rhsVisited = visitRex(r, r.type)
+        return when (returnType.kind) {
+            PType.Kind.TINYINT, PType.Kind.SMALLINT, PType.Kind.INT, PType.Kind.BIGINT, PType.Kind.INT_ARBITRARY,
+            PType.Kind.REAL, PType.Kind.DOUBLE_PRECISION,
+            PType.Kind.DECIMAL_ARBITRARY -> lhsVisited.coerce(l.type, returnType) to rhsVisited.coerce(r.type, returnType)
+            PType.Kind.DECIMAL -> lhsVisited.coerce(l.type, returnType) to rhsVisited.coerce(r.type, PType.typeDecimalArbitrary())
+            PType.Kind.DYNAMIC -> lhsVisited to rhsVisited
+            else -> error("Unsupported type: $returnType")
+        }
+    }
+
+    private fun getArithmeticUnaryFactory(returns: PType): ExprArithmeticUnary.Factory {
+        return when (returns.kind) {
+            PType.Kind.TINYINT -> ExprArithmeticUnary.Factory.Byte
+            PType.Kind.SMALLINT -> ExprArithmeticUnary.Factory.Short
+            PType.Kind.INT -> ExprArithmeticUnary.Factory.Int
+            PType.Kind.BIGINT -> ExprArithmeticUnary.Factory.BigInt
+            PType.Kind.INT_ARBITRARY -> ExprArithmeticUnary.Factory.IntArbitrary
+            PType.Kind.REAL -> ExprArithmeticUnary.Factory.Float
+            PType.Kind.DOUBLE_PRECISION -> ExprArithmeticUnary.Factory.Double
+            PType.Kind.DECIMAL -> ExprArithmeticUnary.Factory.Decimal(returns)
+            PType.Kind.DECIMAL_ARBITRARY -> ExprArithmeticUnary.Factory.DecimalArbitrary
+            PType.Kind.DYNAMIC -> ExprArithmeticUnary.Factory.Dynamic
+            else -> error("Unsupported type: $returns")
+        }
+    }
+
+    private fun getArithmeticBinaryFactory(returns: PType): ExprArithmeticBinary.Factory {
+        return when (returns.kind) {
+            PType.Kind.TINYINT -> ExprArithmeticBinary.Factory.Byte
+            PType.Kind.SMALLINT -> ExprArithmeticBinary.Factory.Short
+            PType.Kind.INT -> ExprArithmeticBinary.Factory.Int
+            PType.Kind.BIGINT -> ExprArithmeticBinary.Factory.BigInt
+            PType.Kind.INT_ARBITRARY -> ExprArithmeticBinary.Factory.IntArbitrary
+            PType.Kind.REAL -> ExprArithmeticBinary.Factory.Float
+            PType.Kind.DOUBLE_PRECISION -> ExprArithmeticBinary.Factory.Double
+            PType.Kind.DECIMAL -> ExprArithmeticBinary.Factory.Decimal(returns)
+            PType.Kind.DECIMAL_ARBITRARY -> ExprArithmeticBinary.Factory.DecimalArbitrary
+            PType.Kind.DYNAMIC -> ExprArithmeticBinary.Factory.Dynamic
+            else -> error("Unsupported type: $returns")
+        }
+    }
+
+    private fun Operator.Expr.coerce(input: PType, target: PType): Operator.Expr {
+        if (input == target) return this
+        return ExprCast(this, Ref.Cast(input, target, isNullable = true))
+    }
+
     // REL
     override fun visitRel(node: Rel, ctx: PType?): Operator.Relation {
         return super.visitRelOp(node.op, ctx) as Operator.Relation
@@ -430,5 +524,12 @@ internal class Compiler(
             error("Invalid catalog reference, $this for type ${T::class}")
         }
         return item
+    }
+
+    internal companion object {
+        private fun Operator.Expr.coerce(input: PType, target: PType): Operator.Expr {
+            if (input == target) return this
+            return ExprCast(this, Ref.Cast(input, target, isNullable = true))
+        }
     }
 }

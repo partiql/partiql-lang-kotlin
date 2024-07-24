@@ -74,6 +74,11 @@ class PartiQLEngineDefaultTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun globalsTests(tc: SuccessTestCase) = tc.assert()
 
+    @ParameterizedTest
+    @MethodSource("arithmeticUnaryTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun arithmeticUnaryTests(tc: SuccessTestCase) = tc.assert()
+
     companion object {
 
         @JvmStatic
@@ -156,6 +161,34 @@ class PartiQLEngineDefaultTest {
                         """
                     ),
                 )
+            ),
+        )
+
+        @JvmStatic
+        fun arithmeticUnaryTestCases() = listOf(
+            SuccessTestCase(
+                input = """
+                    +(1 + 2.0)
+                """.trimIndent(),
+                expected = decimalValue(BigDecimal.valueOf(3.0))
+            ),
+            SuccessTestCase(
+                input = """
+                    +(1 + 2)
+                """.trimIndent(),
+                expected = int32Value(3)
+            ),
+            SuccessTestCase(
+                input = """
+                    -(1 + 2.0)
+                """.trimIndent(),
+                expected = decimalValue(BigDecimal.valueOf(-3.0))
+            ),
+            SuccessTestCase(
+                input = """
+                    -(1 + 2)
+                """.trimIndent(),
+                expected = int32Value(-3)
             ),
         )
 
@@ -1233,8 +1266,8 @@ class PartiQLEngineDefaultTest {
         val globals: List<Global> = emptyList(),
     ) {
 
-        private val engine = PartiQLEngine.builder().build()
         private val planner = PartiQLPlannerBuilder().build()
+        private val engine = PartiQLEngine.builder().build()
         private val parser = PartiQLParser.default()
         private val loader = createIonElementLoader()
 
@@ -1287,9 +1320,11 @@ class PartiQLEngineDefaultTest {
             expectedWriter.append(expected)
             return buildString {
                 PlanPrinter.append(this, plan)
+                appendLine("Expected Type: ${expected.type}")
                 appendLine("Expected : $expectedBuffer")
                 expectedBuffer.reset()
                 expectedWriter.append(actual)
+                appendLine("Actual Type: ${actual.type}")
                 appendLine("Actual   : $expectedBuffer")
             }
         }
@@ -1387,22 +1422,19 @@ class PartiQLEngineDefaultTest {
     fun developmentTest() {
         val tc = SuccessTestCase(
             input = """
-                SELECT VALUE
-                    CASE x + 1
-                        WHEN NULL THEN 'shouldnt be null'
-                        WHEN MISSING THEN 'shouldnt be missing'
-                        WHEN i THEN 'ONE'
-                        WHEN f THEN 'TWO'
-                        WHEN d THEN 'THREE'
-                        ELSE '?'
-                    END
-                FROM << i, f, d, null, missing >> AS x
+                -- 3 - 6.1 * 2e0 / 2
+                -- 
+                -- (1 + 2) - (3.1 + d) * f / x
+                -- 1 > min_int
+                CAST([1, 2, 3] AS INT)
             """,
-            expected = boolValue(true),
+            expected = missingValue(),
             globals = listOf(
                 SuccessTestCase.Global("i", "1"),
                 SuccessTestCase.Global("f", "2e0"),
-                SuccessTestCase.Global("d", "3.")
+                SuccessTestCase.Global("d", "3."),
+                SuccessTestCase.Global("x", "2"),
+                SuccessTestCase.Global("min_int", "-9223372036854775808")
             )
         )
         tc.assert()

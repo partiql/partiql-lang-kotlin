@@ -3422,9 +3422,9 @@ internal class PlanTyperTestsPorted {
                 query = """
                     +MISSING
                 """.trimIndent(),
-                expected = StaticType.DECIMAL, // This is due to it being the highest precedence type
+                expected = StaticType.ANY, // This is due to it being the highest precedence type
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
+                    ProblemGenerator.incompatibleTypesForOp("POS", listOf(PType.typeUnknown()))
                 )
             ),
         )

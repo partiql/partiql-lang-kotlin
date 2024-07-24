@@ -1,4 +1,4 @@
-package org.partiql.planner.internal
+package org.partiql.eval.internal.helpers
 
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -7,6 +7,8 @@ import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
 /**
+ * DEVELOPMENT NOTE: THIS IS A COPY OF [org.partiql.planner.internal.FnComparator]. Keep them updated.
+ *
  * Function precedence comparator; this is not formally specified.
  *
  *  1. Fewest args first

@@ -147,21 +147,15 @@ internal object RexConverter {
             return rex(type, op)
         }
 
+        // TODO move hard-coded operator resolution into SPI
         private fun resolveUnaryOp(symbol: String, rhs: Expr, context: Env): Rex {
             val type = (ANY)
-            // Args
             val arg = visitExprCoerce(rhs, context)
-            val args = listOf(arg)
-            // Fn
-            val name = when (symbol) {
-                // TODO move hard-coded operator resolution into SPI
-                "+" -> "pos"
-                "-" -> "neg"
+            return when (symbol) {
+                "+" -> Rex(type = type, op = Rex.Op.Positive(arg))
+                "-" -> Rex(type = type, op = Rex.Op.Negative(arg))
                 else -> error("unsupported unary op $symbol")
             }
-            val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
-            val op = rexOpCallUnresolved(id, args)
-            return rex(type, op)
         }
 
         private fun resolveBinaryOp(lhs: Expr, symbol: String, rhs: Expr, context: Env): Rex {
@@ -199,31 +193,38 @@ internal object RexConverter {
                 }
             }
             // Wrap if a NOT, if necessary
+            // TODO eventually move hard-coded operator resolution into SPI
             return when (symbol) {
                 "<>", "!=" -> {
                     val op = negate(call("eq", *args.toTypedArray()))
                     rex(type, op)
                 }
-                else -> {
+                "<", ">", "<=", ">=", "=", "||", "&" -> {
                     val name = when (symbol) {
-                        // TODO eventually move hard-coded operator resolution into SPI
                         "<" -> "lt"
                         ">" -> "gt"
                         "<=" -> "lte"
                         ">=" -> "gte"
                         "=" -> "eq"
                         "||" -> "concat"
-                        "+" -> "plus"
-                        "-" -> "minus"
-                        "*" -> "times"
-                        "/" -> "divide"
-                        "%" -> "modulo"
                         "&" -> "bitwise_and"
                         else -> error("unsupported binary op $symbol")
                     }
                     val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
                     val op = rexOpCallUnresolved(id, args)
                     rex(type, op)
+                }
+                else -> {
+                    val operator: (Rex, Rex) -> Rex.Op = when (symbol) {
+                        "+" -> Rex.Op::Add
+                        "-" -> Rex.Op::Subtract
+                        "*" -> Rex.Op::Multiply
+                        "/" -> Rex.Op::Divide
+                        "%" -> Rex.Op::Modulo
+                        else -> error("unsupported binary op $symbol")
+                    }
+                    val op = operator(args[0], args[1])
+                    Rex(type, op)
                 }
             }
         }

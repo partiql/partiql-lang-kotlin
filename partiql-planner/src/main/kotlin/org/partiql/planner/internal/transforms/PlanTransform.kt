@@ -157,11 +157,18 @@ internal class PlanTransform(
         override fun visitRexOpPath(node: Rex.Op.Path, ctx: Unit) =
             super.visitRexOpPath(node, ctx) as org.partiql.plan.Rex.Op.Path
 
-        override fun visitRexOpCast(node: Rex.Op.Cast, ctx: Unit) =
-            super.visitRexOpCast(node, ctx) as org.partiql.plan.Rex.Op.Cast
-
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: Unit): PlanNode {
-            error("Unresolved cast $node")
+            val problem = ProblemGenerator.undefinedCast(node.arg.type, node.target)
+            return when (signalMode) {
+                true -> {
+                    onProblem.invoke(problem)
+                    rexOpErr(problem.toString(), emptyList())
+                }
+                false -> {
+                    onProblem.invoke(ProblemGenerator.asWarning(problem))
+                    org.partiql.plan.rexOpMissing(problem.toString(), emptyList())
+                }
+            }
         }
 
         override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: Unit): PlanNode {
@@ -196,6 +203,34 @@ internal class PlanTransform(
             val fn = visitRef(node.fn, ctx)
             val coercions = node.coercions.map { it?.let { visitRefCast(it, ctx) } }
             return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, coercions)
+        }
+
+        override fun visitRexOpAdd(node: Rex.Op.Add, ctx: Unit): PlanNode {
+            return org.partiql.plan.Rex.Op.Add(lhs = visitRex(node.lhs, ctx), rhs = visitRex(node.rhs, ctx))
+        }
+
+        override fun visitRexOpSubtract(node: Rex.Op.Subtract, ctx: Unit): PlanNode {
+            return org.partiql.plan.Rex.Op.Subtract(lhs = visitRex(node.lhs, ctx), rhs = visitRex(node.rhs, ctx))
+        }
+
+        override fun visitRexOpMultiply(node: Rex.Op.Multiply, ctx: Unit): PlanNode {
+            return org.partiql.plan.Rex.Op.Multiply(lhs = visitRex(node.lhs, ctx), rhs = visitRex(node.rhs, ctx))
+        }
+
+        override fun visitRexOpDivide(node: Rex.Op.Divide, ctx: Unit): PlanNode {
+            return org.partiql.plan.Rex.Op.Divide(lhs = visitRex(node.lhs, ctx), rhs = visitRex(node.rhs, ctx))
+        }
+
+        override fun visitRexOpModulo(node: Rex.Op.Modulo, ctx: Unit): PlanNode {
+            return org.partiql.plan.Rex.Op.Modulo(lhs = visitRex(node.lhs, ctx), rhs = visitRex(node.rhs, ctx))
+        }
+
+        override fun visitRexOpNegative(node: Rex.Op.Negative, ctx: Unit): PlanNode {
+            return org.partiql.plan.Rex.Op.Negative(arg = visitRex(node.arg, ctx))
+        }
+
+        override fun visitRexOpPositive(node: Rex.Op.Positive, ctx: Unit): PlanNode {
+            return org.partiql.plan.Rex.Op.Positive(arg = visitRex(node.arg, ctx))
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: Unit) = org.partiql.plan.Rex.Op.Case(
@@ -255,7 +290,6 @@ internal class PlanTransform(
                 return org.partiql.plan.Rex.Op.Err(node.problem.toString(), trace)
             }
 
-            @OptIn(PartiQLValueExperimental::class)
             override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: Unit): PlanNode {
                 // gather problem from subtree.
                 val trace = node.causes.map { visitRexOp(it, ctx) }

@@ -64,7 +64,6 @@ import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.stringValue
-import java.lang.reflect.Type
 import kotlin.math.max
 
 /**
@@ -793,7 +792,7 @@ internal class PlanTyper(private val env: Env) {
 
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: CompilerType?): Rex {
             val arg = visitRex(node.arg, null)
-            val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.errorRex(
+            val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.missingRex(
                 node.copy(node.target, arg),
                 ProblemGenerator.undefinedFunction(listOf(arg.type), "CAST(<arg> AS ${node.target})")
             )
@@ -1085,6 +1084,61 @@ internal class PlanTyper(private val env: Env) {
                 Rex.Op.Subquery.Coercion.SCALAR -> visitRexOpSubqueryScalar(subquery, constructor.type)
                 Rex.Op.Subquery.Coercion.ROW -> visitRexOpSubqueryRow(subquery, constructor.type)
             }
+        }
+
+        override fun visitRexOpAdd(node: Rex.Op.Add, ctx: CompilerType?): Rex {
+            return visitArithmeticBinary(node.lhs, node.rhs, "PLUS", Rex.Op::Add, ArithmeticTyper::add)
+        }
+
+        override fun visitRexOpSubtract(node: Rex.Op.Subtract, ctx: CompilerType?): PlanNode {
+            return visitArithmeticBinary(node.lhs, node.rhs, "MINUS", Rex.Op::Subtract, ArithmeticTyper::subtract)
+        }
+
+        override fun visitRexOpMultiply(node: Rex.Op.Multiply, ctx: CompilerType?): PlanNode {
+            return visitArithmeticBinary(node.lhs, node.rhs, "MULTIPLY", Rex.Op::Multiply, ArithmeticTyper::multiply)
+        }
+
+        override fun visitRexOpDivide(node: Rex.Op.Divide, ctx: CompilerType?): PlanNode {
+            return visitArithmeticBinary(node.lhs, node.rhs, "DIVIDE", Rex.Op::Divide, ArithmeticTyper::divide)
+        }
+
+        override fun visitRexOpModulo(node: Rex.Op.Modulo, ctx: CompilerType?): PlanNode {
+            return visitArithmeticBinary(node.lhs, node.rhs, "MODULO", Rex.Op::Modulo, ArithmeticTyper::modulo)
+        }
+
+        override fun visitRexOpNegative(node: Rex.Op.Negative, ctx: CompilerType?): Rex {
+            return visitArithmeticUnary(node.arg, "NEG", Rex.Op::Negative, ArithmeticTyper::negative)
+        }
+
+        override fun visitRexOpPositive(node: Rex.Op.Positive, ctx: CompilerType?): Rex {
+            return visitArithmeticUnary(node.arg, "POS", Rex.Op::Positive, ArithmeticTyper::positive)
+        }
+
+        private fun visitArithmeticUnary(arg: Rex, op: String, opInit: (Rex) -> Rex.Op, type: (PType) -> PType?): Rex {
+            val value = visitRex(arg, arg.type)
+            val vType = value.type
+            if (vType.kind == Kind.DYNAMIC) {
+                return Rex(PType.typeDynamic().toCType(), opInit(value))
+            }
+            val returns = type(vType) ?: return ProblemGenerator.missingRex(
+                causes = listOf(value.op),
+                problem = ProblemGenerator.incompatibleTypesForOp(op, listOf(vType))
+            )
+            return Rex(type = returns.toCType(), op = opInit(value))
+        }
+
+        private fun visitArithmeticBinary(lhs: Rex, rhs: Rex, op: String, opInit: (Rex, Rex) -> Rex.Op, type: (PType, PType) -> PType?): Rex {
+            val lhsVisited = visitRex(lhs, lhs.type)
+            val rhsVisited = visitRex(rhs, rhs.type)
+            val opVisited = opInit(lhsVisited, rhsVisited)
+            if (lhsVisited.type.kind == Kind.DYNAMIC || rhsVisited.type.kind == Kind.DYNAMIC) {
+                return Rex(PType.typeDynamic().toCType(), opVisited)
+            }
+            val typeVisited = type.invoke(lhsVisited.type, rhsVisited.type)?.toCType() ?: return ProblemGenerator.missingRex(
+                causes = listOf(lhsVisited.op, rhsVisited.op),
+                problem = ProblemGenerator.incompatibleTypesForOp(op, listOf(lhsVisited.type, rhsVisited.type))
+            )
+            return Rex(type = typeVisited.toCType(), op = opVisited)
         }
 
         /**

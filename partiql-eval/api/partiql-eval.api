@@ -66,6 +66,9 @@ public abstract interface class org/partiql/eval/PartiQLStatement$Query : org/pa
 public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterable {
 	public static fun bagValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
 	public static fun boolValue (Z)Lorg/partiql/eval/value/Datum;
+	public static fun decimal (Ljava/math/BigDecimal;II)Lorg/partiql/eval/value/Datum;
+	public static fun decimalArbitrary (Ljava/math/BigDecimal;)Lorg/partiql/eval/value/Datum;
+	public static fun doublePrecision (D)Lorg/partiql/eval/value/Datum;
 	public fun get (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
 	public fun getBigDecimal ()Ljava/math/BigDecimal;
 	public fun getBigInteger ()Ljava/math/BigInteger;
@@ -87,6 +90,7 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public abstract fun getType ()Lorg/partiql/types/PType;
 	public static fun int32Value (I)Lorg/partiql/eval/value/Datum;
 	public static fun int64Value (J)Lorg/partiql/eval/value/Datum;
+	public static fun intArbitrary (Ljava/math/BigInteger;)Lorg/partiql/eval/value/Datum;
 	public fun isMissing ()Z
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
@@ -96,9 +100,12 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public static fun nullValue ()Lorg/partiql/eval/value/Datum;
 	public static fun nullValue (Lorg/partiql/types/PType;)Lorg/partiql/eval/value/Datum;
 	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/eval/value/Datum;
+	public static fun real (F)Lorg/partiql/eval/value/Datum;
 	public static fun sexpValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
+	public static fun smallInt (S)Lorg/partiql/eval/value/Datum;
 	public static fun stringValue (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
 	public static fun structValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
+	public static fun tinyInt (B)Lorg/partiql/eval/value/Datum;
 	public fun toPartiQLValue ()Lorg/partiql/value/PartiQLValue;
 }
 
