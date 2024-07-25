@@ -64,6 +64,7 @@ internal object AstToPlan {
     }
 
     fun convert(binder: Binder): PlanIdentifier.Symbol = when (binder.isRegular) {
+        // This should be a dead branch
         true -> identifierSymbol(binder.symbol, PlanIdentifier.CaseSensitivity.INSENSITIVE)
         false -> identifierSymbol(binder.symbol, PlanIdentifier.CaseSensitivity.SENSITIVE)
     }

@@ -33,6 +33,7 @@ import org.partiql.planner.internal.ir.constraintDefinitionCheck
 import org.partiql.planner.internal.ir.constraintDefinitionUnique
 import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierSymbol
+import org.partiql.planner.internal.ir.partitionByAttrList
 import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
@@ -71,7 +72,7 @@ import org.partiql.planner.internal.ir.typeCollection
 import org.partiql.planner.internal.ir.typeRecord
 import org.partiql.planner.internal.ir.typeRecordField
 import org.partiql.planner.internal.ir.util.PlanRewriter
-import org.partiql.planner.internal.typer.ConstraintResolver.Visitor.normalize
+import org.partiql.planner.internal.typer.DdlUtils.match
 import org.partiql.planner.internal.utils.PlanUtils
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -1482,7 +1483,7 @@ internal class PlanTyper(private val env: Env) {
             when (node.op) {
                 is DdlOp.CreateTable -> {
                     val op = visitDdlOpCreateTable(node.op, ctx)
-                    val shape = ConstraintResolver.resolveTable(op.shape)
+                    val shape = DdlUtils.ConstraintResolver.resolveTable(op.shape)
                     return statementDDL(shape, op)
                 }
             }
@@ -1490,7 +1491,7 @@ internal class PlanTyper(private val env: Env) {
 
         override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: List<Type.Record.Field>): DdlOp.CreateTable {
             val shape = visitTypeCollection(node.shape, ctx)
-            val normalizedShape = ShapeNormalizer().normalize(shape, node.name.debug())
+            val normalizedShape = DdlUtils.ShapeNormalizer().normalize(shape, node.name.debug())
             val partitionBy = node.partitionBy?.let { visitPartitionBy(it, (shape.type as Type.Record).fields) }
 
             return ddlOpCreateTable(
@@ -1543,30 +1544,39 @@ internal class PlanTyper(private val env: Env) {
         }
 
         override fun visitConstraintDefinitionUnique(node: Constraint.Definition.Unique, ctx: List<Type.Record.Field>): Constraint.Definition.Unique {
+            val uniqueReference = node.attributes
+
             // inline primary key
-            return if (node.attributes.isEmpty()) {
+            return if (uniqueReference.isEmpty()) {
                 val attr = ctx.first()
                 if (attr.type !is Type.Atomic) throw IllegalArgumentException("Primary Key contains attribute whose type is a complex type:  ${attr.name.symbol}")
                 constraintDefinitionUnique(listOf(ctx.first().name), node.isPrimaryKey)
             } else {
-                val seen = mutableSetOf<String>()
+                val seen = mutableSetOf<Identifier.Symbol>()
                 // instead of invoking the rex typer, we manually check if the attribtue are in the scope
-                node.attributes.forEach { attr ->
+                uniqueReference.forEach { rvalue ->
                     val fields = ctx.filter {
-                        it.name.normalize() == attr.normalize()
+                        val lvalue = it.name
+                        match(lvalue, rvalue)
                     }
-                    when (fields.size) {
-                        0 -> throw IllegalArgumentException("Primary Key contains non-existing attribute - ${attr.symbol}")
+                    val lvalue = when (fields.size) {
+                        0 -> throw IllegalArgumentException("Primary Key contains non-existing attribute - ${rvalue.symbol}")
                         // check the type
                         1 -> {
                             val type = fields.first().type
-                            if (type !is Type.Atomic) throw IllegalArgumentException("Primary Key contains attribute whose type is a complex type:  ${attr.symbol}")
+                            if (type !is Type.Atomic) throw IllegalArgumentException("Primary Key contains attribute whose type is a complex type:  ${rvalue.symbol}")
+                            fields.first().name
                         }
-                        else -> throw IllegalArgumentException("Primary Key contains duplicated attribute:  ${attr.symbol}")
+                        else -> throw IllegalArgumentException("Primary Key contains duplicated attribute:  ${rvalue.symbol}")
                     }
-                    if (!seen.add(attr.normalize())) throw IllegalArgumentException("Primary Key Clause contains duplicated attribute:  ${attr.symbol}")
+                    // added the lvalue that has been referred
+                    // This is: PRIMARY KEY (bar, BAR)
+                    // in partial mode does not get normalize
+                    //  but should throw an error
+                    if (!seen.add(lvalue)) throw IllegalArgumentException("Primary Key Clause contains duplicated attribute:  ${lvalue.symbol}")
                 }
-                node
+                // we rewrite rvalue symbol to be exactly the same as lvalue so we don't have to worry about those in resolve
+                constraintDefinitionUnique(seen.toList(), node.isPrimaryKey)
             }
         }
 
@@ -1621,25 +1631,28 @@ internal class PlanTyper(private val env: Env) {
             super.visitPartitionBy(node, ctx) as PartitionBy
 
         override fun visitPartitionByAttrList(node: PartitionBy.AttrList, ctx: List<Type.Record.Field>): PartitionBy.AttrList {
-            val seen = mutableSetOf<String>()
-            node.attrs.forEach { attr ->
+            val partitionReference = node.attrs
+            val seen = mutableSetOf<Identifier.Symbol>()
+            partitionReference.forEach { rvalue ->
                 val fields = ctx.filter {
-                    it.name.normalize() == attr.normalize()
+                    val lvalue = it.name
+                    match(lvalue, rvalue)
                 }
-                when (fields.size) {
-                    0 -> throw IllegalArgumentException("Partition By Clause contains non-existing attribute - ${attr.symbol}")
+                val lvalue = when (fields.size) {
+                    0 -> throw IllegalArgumentException("Partition By Clause contains non-existing attribute - ${rvalue.symbol}")
                     // check the type
                     1 -> {
                         val field = fields.first()
                         val type = field.type
-                        if (type !is Type.Atomic) throw IllegalArgumentException("Partition By Clause contains attribute whose type is a complex type:  ${attr.symbol} : $type")
-                        if (field.isOptional) throw IllegalArgumentException("Partition By Clause contains optional attributes:  ${attr.symbol}")
+                        if (type !is Type.Atomic) throw IllegalArgumentException("Partition By Clause contains attribute whose type is a complex type:  ${rvalue.symbol} : $type")
+                        if (field.isOptional) throw IllegalArgumentException("Partition By Clause contains optional attributes:  ${rvalue.symbol}")
+                        field.name
                     }
-                    else -> throw IllegalArgumentException("Partition By Clause contains ambiguous binding: ${attr.symbol}")
+                    else -> throw IllegalArgumentException("Partition By Clause contains ambiguous binding: ${rvalue.symbol}")
                 }
-                if (!seen.add(attr.normalize())) throw IllegalArgumentException("Partition By Clause contains duplicated attribute:  ${attr.symbol}")
+                if (!seen.add(lvalue)) throw IllegalArgumentException("Partition By Clause contains duplicated attribute:  ${rvalue.symbol}")
             }
-            return node
+            return partitionByAttrList(seen.toList())
         }
     }
     // HELPERS

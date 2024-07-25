@@ -9,6 +9,7 @@ import org.partiql.plan.DdlOp
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
@@ -23,7 +24,7 @@ import kotlin.test.assertEquals
 class DDLTests {
 
     private val parser = PartiQLParser.default()
-    private val planner = PartiQLPlanner.builder().caseNormalize("EXACTCASE").build()
+    private val planner = PartiQLPlannerBuilder().build()
 
     private val catalogName = "TEST"
     private val catalog = MemoryCatalog.PartiQL().name(catalogName).build()
@@ -76,7 +77,7 @@ class DDLTests {
                 primaryKeyFields = emptyList(),
                 constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
                 metas = mapOf(
-                    "check_constraints" to ionStructOf(field("\$_\"my_catalog\".\"my_schema\".\"tbl\"_0", ionString("\"a\" <> \"b\""))),
+                    "check_constraints" to ionStructOf(field("\$_my_catalog.my_schema.\"tbl\"_0", ionString("a <> b"))),
                 )
             ),
             metas = mapOf(),
@@ -169,6 +170,30 @@ class DDLTests {
                 attr2 INT2,
                 attr3 STRUCT<attr4: INT>,
                 CHECK(attr3.attr4 >= 0)
+            )
+        """.trimIndent()
+
+        val ast = parser.parse(query).root
+        val plan = planner
+            .plan(ast, plannerSession) {}
+            .plan
+        val res = buildString {
+            PlanPrinter.append(this, plan)
+        }
+        println(res)
+
+        val staticType =
+            ((plan.statement as Statement.DDL).op as DdlOp.CreateTable).shape
+
+        println(staticType)
+    }
+
+    @Test
+    fun sanity7() {
+        val query = """
+            CREATE TABLE foo (
+                A INT2,
+                PRIMARY KEY(A) 
             )
         """.trimIndent()
 

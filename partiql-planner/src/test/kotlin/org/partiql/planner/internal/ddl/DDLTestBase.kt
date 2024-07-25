@@ -76,8 +76,8 @@ internal class DDLTestBase {
                 tblProperties: Map<String, String> = emptyMap()
             ): TestCase {
                 val typedOp = ddlOpCreateTable(
-                    id(tableName), normalizedShape,
-                    if (partitionByAttrs.isEmpty()) null else partitionByAttrList(partitionByAttrs.map { id(it) }),
+                    idSensitive(tableName), normalizedShape,
+                    if (partitionByAttrs.isEmpty()) null else partitionByAttrList(partitionByAttrs.map { idSensitive(it) }),
                     tblProperties.map { tableProperty(it.key, stringValue(it.value)) }
                 )
                 val resolved = statementDDL(
@@ -85,8 +85,8 @@ internal class DDLTestBase {
                 )
                 val publicPlan = org.partiql.plan.statementDDL(
                     org.partiql.plan.ddlOpCreateTable(
-                        id(tableName).toPublicPlan(), staticType,
-                        if (partitionByAttrs.isEmpty()) null else org.partiql.plan.partitionByAttrList(partitionByAttrs.map { id(it).toPublicPlan() }),
+                        idSensitive(tableName).toPublicPlan(), staticType,
+                        if (partitionByAttrs.isEmpty()) null else org.partiql.plan.partitionByAttrList(partitionByAttrs.map { idSensitive(it).toPublicPlan() }),
                         tblProperties.map { org.partiql.plan.tableProperty(it.key, stringValue(it.value)) }
                     )
                 )
@@ -121,8 +121,8 @@ internal class DDLTestBase {
                     description = description,
                     untyped = op,
                     typed = ddlOpCreateTable(
-                        id(tableName), normalizedShape,
-                        if (partitionByAttrs.isEmpty()) null else partitionByAttrList(partitionByAttrs.map { id(it) }),
+                        idSensitive(tableName), normalizedShape,
+                        if (partitionByAttrs.isEmpty()) null else partitionByAttrList(partitionByAttrs.map { idInsensitive(it) }),
                         tblProperties.map { tableProperty(it.key, stringValue(it.value)) }
                     ),
                     resolved = null,
@@ -139,8 +139,8 @@ internal class DDLTestBase {
                 tblProperties: Map<String, String> = emptyMap()
             ): TestCase {
                 val typedOp = ddlOpCreateTable(
-                    id(tableName), normalizedShape,
-                    if (partitionByAttrs.isEmpty()) null else partitionByAttrList(partitionByAttrs.map { id(it) }),
+                    idSensitive(tableName), normalizedShape,
+                    if (partitionByAttrs.isEmpty()) null else partitionByAttrList(partitionByAttrs.map { idInsensitive(it) }),
                     tblProperties.map { tableProperty(it.key, stringValue(it.value)) }
                 )
                 val resolved = statementDDL(
@@ -185,7 +185,7 @@ internal class DDLTestBase {
         // Convenient
         val FIELD_A_INT4 = Pair(
             Type.Record.Field(
-                id("a"), typeAtomicInt4(),
+                idSensitive("a"), typeAtomicInt4(),
                 emptyList(),
                 false, null,
             ),
@@ -194,7 +194,7 @@ internal class DDLTestBase {
 
         val FIELD_B_INT4 = Pair(
             Type.Record.Field(
-                id("b"), typeAtomicInt4(),
+                idSensitive("b"), typeAtomicInt4(),
                 emptyList(),
                 false, null,
             ),
@@ -203,14 +203,14 @@ internal class DDLTestBase {
 
         val FIELD_C_VARCHAR10 = Pair(
             Type.Record.Field(
-                id("c"), typeAtomicVarchar(10),
+                idSensitive("c"), typeAtomicVarchar(10),
                 emptyList(),
                 false, null,
             ),
             StructType.Field("c", StaticType.unionOf(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10))), StaticType.NULL))
         )
 
-        val CONSTR_NAME_ZERO = "\$_${tableName}_0"
+        val CONSTR_NAME_ZERO = "\$_\"${tableName}\"_0"
 
         val COMMENT = "this is a comment"
 
@@ -220,7 +220,7 @@ internal class DDLTestBase {
         val CONSTRA_A_LT_ZERO = Pair(
             checkConstraintUnresolved(
                 null,
-                rex(StaticType.ANY, rexOpVarUnresolved(id("a"), Rex.Op.Var.Scope.LOCAL)),
+                rex(StaticType.ANY, rexOpVarUnresolved(idInsensitive("a"), Rex.Op.Var.Scope.LOCAL)),
                 rex(StaticType.INT4, rexOpLit(int32Value(0))),
                 "a < 0"
             ),
@@ -233,12 +233,12 @@ internal class DDLTestBase {
         val CONSTRA_B_LT_ZERO = Pair(
             checkConstraintUnresolved(
                 null,
-                rex(StaticType.ANY, rexOpVarUnresolved(id("b"), Rex.Op.Var.Scope.LOCAL)),
+                rex(StaticType.ANY, rexOpVarUnresolved(idInsensitive("b"), Rex.Op.Var.Scope.LOCAL)),
                 rex(StaticType.INT4, rexOpLit(int32Value(0))),
                 "b < 0"
             ),
             checkConstraintResolved(
-                "\$_tbl_0", rex(StaticType.INT4, rexOpVarLocal(0, 0)), rex(StaticType.INT4, rexOpLit(int32Value(0))), "b < 0"
+                "\$_\"tbl\"_0", rex(StaticType.INT4, rexOpVarLocal(0, 0)), rex(StaticType.INT4, rexOpLit(int32Value(0))), "b < 0"
             )
         )
 
@@ -247,7 +247,7 @@ internal class DDLTestBase {
             TestCase.success(
                 "CREATE TABLE tbl (a INT4)",
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first),
                     null,
                     emptyList()
@@ -259,14 +259,14 @@ internal class DDLTestBase {
             TestCase.success(
                 "CREATE TABLE tbl (a INT4 PRIMARY KEY)",
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first.withConstraints(listOf(inlinePK(null)))),
                     null,
                     emptyList()
                 ),
                 tableInternal(
                     FIELD_A_INT4.first,
-                    collectionConstraint = listOf(tuplePk("\$_tbl_0", listOf("a")))
+                    collectionConstraint = listOf(tuplePk("\$_\"tbl\"_0", listOf("a"), true))
                 ),
                 table(StructType.Field("a", StaticType.INT4), tableConstraint = setOf(CollectionConstraint.PrimaryKey(setOf("a")))),
             ),
@@ -274,7 +274,7 @@ internal class DDLTestBase {
             TestCase.success(
                 "CREATE TABLE tbl (a OPTIONAL INT4)",
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first.asOptional()),
                     null,
                     emptyList()
@@ -288,21 +288,21 @@ internal class DDLTestBase {
                     PRIMARY KEY cannot be optional 
                 """.trimMargin(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first.withConstraints(listOf(inlinePK(null))).asOptional()),
                     null,
                     emptyList()
                 ),
                 tableInternal(
                     FIELD_A_INT4.first.asOptional(),
-                    collectionConstraint = listOf(tuplePk("\$_tbl_0", listOf("a")))
+                    collectionConstraint = listOf(tuplePk("\$_\"tbl\"_0", listOf("a"), true))
                 ),
             ),
 
             TestCase.success(
                 "CREATE TABLE tbl(a INT4 NOT NULL)",
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null)),)),
                     null,
                     emptyList()
@@ -314,7 +314,7 @@ internal class DDLTestBase {
             TestCase.success(
                 "CREATE TABLE tbl(a OPTIONAL INT4 NOT NULL)",
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null))).asOptional()),
                     null,
                     emptyList()
@@ -326,7 +326,7 @@ internal class DDLTestBase {
             TestCase.success(
                 "CREATE TABLE tbl (a INT4 COMMENT 'this is a comment')",
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first.withComment(COMMENT)),
                     null,
                     emptyList()
@@ -343,7 +343,7 @@ internal class DDLTestBase {
                     The constraint name is not exposed to public plan
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("a_not_null")),)),
                     null,
                     emptyList()
@@ -362,7 +362,7 @@ internal class DDLTestBase {
                     but will be normalized to struct level.
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id("tbl"),
+                    idSensitive(tableName),
                     tableInternal(
                         FIELD_A_INT4.first.withConstraints(listOf(CONSTRA_A_LT_ZERO.first))
                     ),
@@ -391,7 +391,7 @@ internal class DDLTestBase {
                     Note that the CHECK Constraint is set to tuple level
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         FIELD_A_INT4.first,
                         structConstraints = listOf(CONSTRA_A_LT_ZERO.first)
@@ -421,15 +421,15 @@ internal class DDLTestBase {
                     Note that the CHECK Constraint refers to multiple attribute in declared.
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         FIELD_A_INT4.first,
                         FIELD_B_INT4.first,
                         structConstraints = listOf(
                             checkConstraintUnresolved(
                                 null,
-                                rex(StaticType.ANY, rexOpVarUnresolved(id("a"), Rex.Op.Var.Scope.LOCAL)),
-                                rex(StaticType.ANY, rexOpVarUnresolved(id("b"), Rex.Op.Var.Scope.LOCAL)),
+                                rex(StaticType.ANY, rexOpVarUnresolved(idInsensitive("a"), Rex.Op.Var.Scope.LOCAL)),
+                                rex(StaticType.ANY, rexOpVarUnresolved(idInsensitive("b"), Rex.Op.Var.Scope.LOCAL)),
                                 "a < b"
                             )
                         )
@@ -466,7 +466,7 @@ internal class DDLTestBase {
                     Primary key as tuple level constraint
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         FIELD_A_INT4.first,
                         FIELD_B_INT4.first,
@@ -478,7 +478,7 @@ internal class DDLTestBase {
                 tableInternal(
                     FIELD_A_INT4.first,
                     FIELD_B_INT4.first,
-                    collectionConstraint = listOf(tuplePk("\$_tbl_0", listOf("a", "b")))
+                    collectionConstraint = listOf(tuplePk("\$_\"tbl\"_0", listOf("a", "b"), true))
                 ),
                 table(
                     StructType.Field("a", StaticType.INT4),
@@ -497,11 +497,11 @@ internal class DDLTestBase {
                     Primary key contains duplicated attributes
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         FIELD_A_INT4.first,
                         FIELD_B_INT4.first,
-                        structConstraints = listOf(tuplePk("\$_tbl_0", listOf("a", "a")))
+                        structConstraints = listOf(tuplePk("\$_\"tbl\"_0", listOf("a", "a")))
                     ),
                     null,
                     emptyList()
@@ -518,7 +518,7 @@ internal class DDLTestBase {
                     Primary key contains non-existing attributes
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         FIELD_A_INT4.first,
                         FIELD_B_INT4.first,
@@ -537,7 +537,7 @@ internal class DDLTestBase {
                     Note that the check constraint refers to an attribute that is not the attribute being declared
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id("tbl"),
+                    idSensitive(tableName),
                     tableInternal(
                         FIELD_A_INT4.first.withConstraints(listOf(CONSTRA_B_LT_ZERO.first))
                     ),
@@ -557,7 +557,7 @@ internal class DDLTestBase {
                     the attribute being declared.
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         FIELD_A_INT4.first.withConstraints(listOf(CONSTRA_B_LT_ZERO.first)),
                         FIELD_B_INT4.first
@@ -575,7 +575,7 @@ internal class DDLTestBase {
                     Duplicated Binding at the same level
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first, FIELD_A_INT4.first),
                     null,
                     emptyList()
@@ -591,10 +591,10 @@ internal class DDLTestBase {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("nested"),
+                            idSensitive("nested"),
                             typeRecord(
                                 listOf(FIELD_A_INT4.first),
                                 emptyList()
@@ -609,7 +609,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     typeRecordField(
-                        id("nested"),
+                        idSensitive("nested"),
                         typeRecord(
                             listOf(FIELD_A_INT4.first),
                             emptyList()
@@ -636,10 +636,10 @@ internal class DDLTestBase {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("nested"),
+                            idSensitive("nested"),
                             typeRecord(
                                 listOf(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null)))),
                                 emptyList()
@@ -654,9 +654,9 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     typeRecordField(
-                        id("nested"),
+                        idSensitive("nested"),
                         typeRecord(
-                            listOf(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("\$_tbl_0")))),
+                            listOf(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("\$_\"tbl\"_0")))),
                             emptyList()
                         ),
                         emptyList(),
@@ -681,10 +681,10 @@ internal class DDLTestBase {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("nested"),
+                            idSensitive("nested"),
                             typeRecord(
                                 listOf(FIELD_A_INT4.first.asOptional()),
                                 emptyList()
@@ -699,7 +699,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     typeRecordField(
-                        id("nested"),
+                        idSensitive("nested"),
                         typeRecord(
                             listOf(FIELD_A_INT4.first.asOptional()),
                             emptyList()
@@ -726,10 +726,10 @@ internal class DDLTestBase {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("nested"),
+                            idSensitive("nested"),
                             typeRecord(
                                 listOf(FIELD_A_INT4.first.withComment(COMMENT)),
                                 emptyList()
@@ -744,7 +744,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     typeRecordField(
-                        id("nested"),
+                        idSensitive("nested"),
                         typeRecord(
                             listOf(FIELD_A_INT4.first.withComment(COMMENT)),
                             emptyList()
@@ -769,10 +769,10 @@ internal class DDLTestBase {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("nested"),
+                            idSensitive("nested"),
                             typeRecord(
                                 listOf(FIELD_A_INT4.first),
                                 emptyList()
@@ -796,10 +796,10 @@ internal class DDLTestBase {
                     We allow this as the two "a"s are in different scope
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("nested"),
+                            idSensitive("nested"),
                             typeRecord(
                                 listOf(FIELD_A_INT4.first),
                                 emptyList()
@@ -815,7 +815,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     typeRecordField(
-                        id("nested"),
+                        idSensitive("nested"),
                         typeRecord(
                             listOf(FIELD_A_INT4.first),
                             emptyList()
@@ -847,10 +847,10 @@ internal class DDLTestBase {
                     Duplicated binding in nested scope
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("nested"),
+                            idSensitive("nested"),
                             typeRecord(
                                 listOf(FIELD_A_INT4.first, FIELD_A_INT4.first),
                                 emptyList()
@@ -865,7 +865,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     typeRecordField(
-                        id("nested"),
+                        idSensitive("nested"),
                         typeRecord(
                             listOf(FIELD_A_INT4.first, FIELD_A_INT4.first),
                             emptyList()
@@ -885,10 +885,10 @@ internal class DDLTestBase {
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         Type.Record.Field(
-                            id("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
+                            idSensitive("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
                             emptyList(),
                             false, null,
                         ),
@@ -899,7 +899,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     Type.Record.Field(
-                        id("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
+                        idSensitive("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
                         emptyList(),
                         false, null,
                     ),
@@ -919,10 +919,10 @@ internal class DDLTestBase {
                     This should fail as currently we do not allow setting attribute whose type is collection as primary key
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         Type.Record.Field(
-                            id("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
+                            idSensitive("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
                             listOf(inlinePK(null)),
                             false, null,
                         ),
@@ -941,10 +941,10 @@ internal class DDLTestBase {
                     COLLECTION OF COLLECTION, this should failed the conversion. 
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         Type.Record.Field(
-                            id("a"), typeCollection(typeCollection(typeAtomicInt4(), true, emptyList()), true, emptyList()),
+                            idSensitive("a"), typeCollection(typeCollection(typeAtomicInt4(), true, emptyList()), true, emptyList()),
                             emptyList(),
                             false, null,
                         ),
@@ -955,7 +955,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     Type.Record.Field(
-                        id("a"), typeCollection(typeCollection(typeAtomicInt4(), true, emptyList()), true, emptyList()),
+                        idSensitive("a"), typeCollection(typeCollection(typeAtomicInt4(), true, emptyList()), true, emptyList()),
                         emptyList(),
                         false, null,
                     ),
@@ -977,10 +977,10 @@ internal class DDLTestBase {
                     Purpose is to explore how we model create a bag(struct(bag(struct)))
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("tbl2"),
+                            idSensitive("tbl2"),
                             typeCollection(
                                 typeRecord(
                                     listOf(FIELD_A_INT4.first),
@@ -999,7 +999,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     typeRecordField(
-                        id("tbl2"),
+                        idSensitive("tbl2"),
                         typeCollection(
                             typeRecord(
                                 listOf(FIELD_A_INT4.first),
@@ -1034,10 +1034,10 @@ internal class DDLTestBase {
                     How do we model this?
                 """.trimIndent(),
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(
                         typeRecordField(
-                            id("tbl2"),
+                            idSensitive("tbl2"),
                             typeCollection(
                                 typeRecord(
                                     listOf(FIELD_A_INT4.first.withConstraints(listOf(inlinePK(null)))),
@@ -1056,14 +1056,14 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     typeRecordField(
-                        id("tbl2"),
+                        idSensitive("tbl2"),
                         typeCollection(
                             typeRecord(
                                 listOf(FIELD_A_INT4.first),
                                 emptyList()
                             ),
                             false,
-                            listOf(tuplePk("\$_tbl_0", listOf("a")))
+                            listOf(tuplePk("\$_\"tbl\"_0", listOf("a"), true))
                         ),
                         emptyList(),
                         false,
@@ -1087,9 +1087,9 @@ internal class DDLTestBase {
             TestCase.success(
                 "CREATE TABLE tbl (a INT4) PARTITION BY (a)",
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first),
-                    partitionByAttrList(listOf(id("a"))),
+                    partitionByAttrList(listOf(idInsensitive("a"))),
                     emptyList()
                 ),
                 tableInternal(FIELD_A_INT4.first),
@@ -1100,9 +1100,9 @@ internal class DDLTestBase {
             TestCase.failedValidation(
                 "CREATE TABLE tbl (a INT4) PARTITION BY (b)",
                 ddlOpCreateTable(
-                    id(tableName),
+                    idSensitive(tableName),
                     tableInternal(FIELD_A_INT4.first),
-                    partitionByAttrList(listOf(id("b"))),
+                    partitionByAttrList(listOf(idInsensitive("b"))),
                     emptyList()
                 ),
             ),
@@ -1133,7 +1133,9 @@ internal class DDLTestBase {
             collectionConstraint
         )
 
-        private fun id(id: String) = identifierSymbol(id, Identifier.CaseSensitivity.INSENSITIVE)
+        private fun idInsensitive(id: String) = identifierSymbol(id, Identifier.CaseSensitivity.INSENSITIVE)
+
+        private fun idSensitive(id: String) = identifierSymbol(id, Identifier.CaseSensitivity.SENSITIVE)
 
         private fun nonNullConstraint(name: String?) = constraint(name, constraintDefinitionNotNull())
 
@@ -1143,7 +1145,7 @@ internal class DDLTestBase {
                 rex(
                     StaticType.ANY,
                     rexOpCallUnresolved(
-                        id("lt"),
+                        idInsensitive("lt"),
                         listOf(lhs, rhs),
                     )
                 ),
@@ -1201,6 +1203,10 @@ internal class DDLTestBase {
 
         private fun inlinePK(name: String?) = constraint(name, constraintDefinitionUnique(emptyList(), true))
 
-        private fun tuplePk(name: String?, attrs: List<String>) = constraint(name, constraintDefinitionUnique(attrs.map { id(it) }, true))
+        private fun tuplePk(name: String?, attrs: List<String>, sensitive: Boolean = false) = if (sensitive) {
+            constraint(name, constraintDefinitionUnique(attrs.map { idSensitive(it) }, true))
+        } else {
+            constraint(name, constraintDefinitionUnique(attrs.map { idInsensitive(it) }, true))
+        }
     }
 }
