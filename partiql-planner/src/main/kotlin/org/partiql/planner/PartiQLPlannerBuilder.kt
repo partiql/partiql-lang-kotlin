@@ -1,5 +1,7 @@
 package org.partiql.planner
 
+import org.partiql.planner.internal.BooleanFlag
+import org.partiql.planner.internal.CaseNormalization
 import org.partiql.planner.internal.PartiQLPlannerDefault
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.spi.connector.ConnectorMetadata
@@ -50,7 +52,19 @@ public class PartiQLPlannerBuilder {
      * Java style method for setting the planner to signal mode
      */
     public fun signalMode(): PartiQLPlannerBuilder = this.apply {
-        this.flags.add(PlannerFlag.SIGNAL_MODE)
+        this.flags.add(BooleanFlag.SIGNAL_MODE)
+    }
+
+    public fun caseNormalize(behavior: String): PartiQLPlannerBuilder = this.apply {
+        this.flags.removeAll(
+            this.flags.filterIsInstance<CaseNormalization>().toSet()
+        )
+        when (behavior.uppercase()) {
+            CaseNormalization.UPPERCASE.name -> this.flags.add(CaseNormalization.UPPERCASE)
+            CaseNormalization.LOWERCASE.name -> this.flags.add(CaseNormalization.LOWERCASE)
+            CaseNormalization.EXACTCASE.name -> this.flags.add(CaseNormalization.EXACTCASE)
+            else -> error("Illegal flag, expect one of ${CaseNormalization.values()}")
+        }
     }
 
     /**

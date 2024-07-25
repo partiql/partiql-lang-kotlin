@@ -1,6 +1,9 @@
 package org.partiql.planner.internal
 
-internal enum class PlannerFlag {
+// Marker interface
+internal interface PlannerFlag
+
+internal enum class BooleanFlag : PlannerFlag {
     /**
      * Determine the planner behavior upon encounter an operation that always returns MISSING.
      *
@@ -16,5 +19,22 @@ internal enum class PlannerFlag {
      *
      *    The result plan will turn the problematic operation into a missing node.
      */
-    SIGNAL_MODE
+    SIGNAL_MODE,
+}
+
+internal enum class CaseNormalization : PlannerFlag {
+    /**
+     * Normalize identifier using uppercase (SQL Spec)
+     */
+    UPPERCASE,
+
+    /**
+     * Normalize identifier using lowercase (Postgres and friends)
+     */
+    LOWERCASE,
+
+    /**
+     * Normalize identifier by preserving original text (N1QL and friends)
+     */
+    EXACTCASE,
 }

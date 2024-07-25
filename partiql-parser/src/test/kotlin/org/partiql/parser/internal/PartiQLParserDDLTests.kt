@@ -12,6 +12,7 @@ import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.ast.PartitionBy
 import org.partiql.ast.Type
+import org.partiql.ast.binder
 import org.partiql.ast.constraint
 import org.partiql.ast.constraintDefinitionCheck
 import org.partiql.ast.constraintDefinitionNotNull
@@ -370,14 +371,14 @@ class PartiQLParserDDLTests {
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            binder("b", true),
                                             Type.Int2(),
                                             emptyList(),
                                             false,
                                             null
                                         ),
                                         Type.Struct.Field(
-                                            identifierSymbol("c", Identifier.CaseSensitivity.INSENSITIVE),
+                                            binder("c", true),
                                             Type.Int2(),
                                             listOf(Constraint(null, Constraint.Definition.NotNull())),
                                             false,
@@ -416,11 +417,11 @@ class PartiQLParserDDLTests {
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            binder("b", true),
                                             Type.Struct(
                                                 listOf(
                                                     Type.Struct.Field(
-                                                        identifierSymbol("c", Identifier.CaseSensitivity.INSENSITIVE),
+                                                        binder("c", true),
                                                         Type.Int2(),
                                                         emptyList(),
                                                         false,
@@ -433,7 +434,7 @@ class PartiQLParserDDLTests {
                                             null
                                         ),
                                         Type.Struct.Field(
-                                            identifierSymbol("d", Identifier.CaseSensitivity.INSENSITIVE),
+                                            binder("d", true),
                                             Type.Array(Type.Int2()),
                                             emptyList(),
                                             false,
@@ -523,7 +524,7 @@ class PartiQLParserDDLTests {
                                     Type.Struct(
                                         listOf(
                                             Type.Struct.Field(
-                                                identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                                binder("b", true),
                                                 Type.Int2(),
                                                 emptyList(),
                                                 false,
@@ -560,7 +561,7 @@ class PartiQLParserDDLTests {
                                     Type.Struct(
                                         listOf(
                                             Type.Struct.Field(
-                                                identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                                binder("b", true),
                                                 Type.Int2(),
                                                 emptyList(),
                                                 false,
@@ -652,7 +653,7 @@ class PartiQLParserDDLTests {
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            binder("b", true),
                                             Type.Int2(),
                                             emptyList(),
                                             true,
@@ -688,7 +689,7 @@ class PartiQLParserDDLTests {
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            binder("b", true),
                                             Type.Int2(),
                                             emptyList(),
                                             true,
@@ -751,7 +752,7 @@ class PartiQLParserDDLTests {
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            binder("b", true),
                                             Type.Int2(),
                                             emptyList(),
                                             false,
@@ -787,7 +788,7 @@ class PartiQLParserDDLTests {
                                 Type.Struct(
                                     listOf(
                                         Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            binder("b", true),
                                             Type.Int2(),
                                             emptyList(),
                                             false,

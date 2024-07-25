@@ -1007,7 +1007,7 @@ class SqlDialectTest {
             expect("SELECT a AS x FROM T") {
                 exprSFW {
                     select = selectProject {
-                        items += selectProjectItemExpression(v("a"), id("x"))
+                        items += selectProjectItemExpression(v("a"), bindName("x"))
                     }
                     from = table("T")
                 }
@@ -1015,8 +1015,8 @@ class SqlDialectTest {
             expect("SELECT a AS x, b AS y FROM T") {
                 exprSFW {
                     select = selectProject {
-                        items += selectProjectItemExpression(v("a"), id("x"))
-                        items += selectProjectItemExpression(v("b"), id("y"))
+                        items += selectProjectItemExpression(v("a"), bindName("x"))
+                        items += selectProjectItemExpression(v("b"), bindName("y"))
                     }
                     from = table("T")
                 }
@@ -1202,7 +1202,7 @@ class SqlDialectTest {
                     from = fromValue {
                         expr = v("T")
                         type = From.Value.Type.SCAN
-                        asAlias = id("x")
+                        asAlias = bindName("x")
                     }
                 }
             },
@@ -1212,8 +1212,8 @@ class SqlDialectTest {
                     from = fromValue {
                         expr = v("T")
                         type = From.Value.Type.SCAN
-                        asAlias = id("x")
-                        atAlias = id("y")
+                        asAlias = bindName("x")
+                        atAlias = bindName("y")
                     }
                 }
             },
@@ -1223,9 +1223,9 @@ class SqlDialectTest {
                     from = fromValue {
                         expr = v("T")
                         type = From.Value.Type.SCAN
-                        asAlias = id("x")
-                        atAlias = id("y")
-                        byAlias = id("z")
+                        asAlias = bindName("x")
+                        atAlias = bindName("y")
+                        byAlias = bindName("z")
                     }
                 }
             },
@@ -1244,7 +1244,7 @@ class SqlDialectTest {
                     from = fromValue {
                         expr = v("T")
                         type = From.Value.Type.UNPIVOT
-                        asAlias = id("x")
+                        asAlias = bindName("x")
                     }
                 }
             },
@@ -1254,8 +1254,8 @@ class SqlDialectTest {
                     from = fromValue {
                         expr = v("T")
                         type = From.Value.Type.UNPIVOT
-                        asAlias = id("x")
-                        atAlias = id("y")
+                        asAlias = bindName("x")
+                        atAlias = bindName("y")
                     }
                 }
             },
@@ -1265,9 +1265,9 @@ class SqlDialectTest {
                     from = fromValue {
                         expr = v("T")
                         type = From.Value.Type.UNPIVOT
-                        asAlias = id("x")
-                        atAlias = id("y")
-                        byAlias = id("z")
+                        asAlias = bindName("x")
+                        atAlias = bindName("y")
+                        byAlias = bindName("z")
                     }
                 }
             },
@@ -1345,7 +1345,7 @@ class SqlDialectTest {
                     select = select("a")
                     from = table("T")
                     let = let(mutableListOf()) {
-                        bindings += letBinding(v("x"), id("i"))
+                        bindings += letBinding(v("x"), bindName("i"))
                     }
                 }
             },
@@ -1354,8 +1354,8 @@ class SqlDialectTest {
                     select = select("a")
                     from = table("T")
                     let = let(mutableListOf()) {
-                        bindings += letBinding(v("x"), id("i"))
-                        bindings += letBinding(v("y"), id("j"))
+                        bindings += letBinding(v("x"), bindName("i"))
+                        bindings += letBinding(v("y"), bindName("j"))
                     }
                 }
             },
@@ -1419,7 +1419,7 @@ class SqlDialectTest {
                     from = table("T")
                     groupBy = groupBy {
                         strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"), id("i"))
+                        keys += groupByKey(v("x"), bindName("i"))
                     }
                 }
             },
@@ -1440,8 +1440,8 @@ class SqlDialectTest {
                     from = table("T")
                     groupBy = groupBy {
                         strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"), id("i"))
-                        keys += groupByKey(v("y"), id("j"))
+                        keys += groupByKey(v("x"), bindName("i"))
+                        keys += groupByKey(v("y"), bindName("j"))
                     }
                 }
             },
@@ -1452,7 +1452,7 @@ class SqlDialectTest {
                     groupBy = groupBy {
                         strategy = GroupBy.Strategy.FULL
                         keys += groupByKey(v("x"))
-                        asAlias = id("g")
+                        asAlias = bindName("g")
                     }
                 }
             },
@@ -1462,8 +1462,8 @@ class SqlDialectTest {
                     from = table("T")
                     groupBy = groupBy {
                         strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"), id("i"))
-                        asAlias = id("g")
+                        keys += groupByKey(v("x"), bindName("i"))
+                        asAlias = bindName("g")
                     }
                 }
             },
@@ -1475,7 +1475,7 @@ class SqlDialectTest {
                         strategy = GroupBy.Strategy.FULL
                         keys += groupByKey(v("x"))
                         keys += groupByKey(v("y"))
-                        asAlias = id("g")
+                        asAlias = bindName("g")
                     }
                 }
             },
@@ -1485,9 +1485,9 @@ class SqlDialectTest {
                     from = table("T")
                     groupBy = groupBy {
                         strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"), id("i"))
-                        keys += groupByKey(v("y"), id("j"))
-                        asAlias = id("g")
+                        keys += groupByKey(v("x"), bindName("i"))
+                        keys += groupByKey(v("y"), bindName("j"))
+                        asAlias = bindName("g")
                     }
                 }
             },
@@ -1781,6 +1781,11 @@ class SqlDialectTest {
             symbol: String,
             case: Identifier.CaseSensitivity = Identifier.CaseSensitivity.INSENSITIVE,
         ) = this.identifierSymbol(symbol, case)
+
+        private fun AstBuilder.bindName(
+            symbol: String,
+            isRegular: Boolean = true
+        ) = this.binder(symbol, isRegular)
 
         private fun AstBuilder.select(vararg s: String) = selectProject {
             s.forEach {

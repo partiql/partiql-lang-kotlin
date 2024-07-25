@@ -1,5 +1,6 @@
-package org.partiql.ast.helpers
+package org.partiql.planner.internal.utils
 
+import org.partiql.ast.Binder
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.ast.builder.ast
@@ -18,7 +19,7 @@ private val col = { index: () -> Int -> "_${index()}" }
  *
  *  See https://github.com/partiql/partiql-lang-kotlin/issues/1122
  */
-public fun Expr.toBinder(index: () -> Int): Identifier.Symbol = when (this) {
+public fun Expr.toBinder(index: () -> Int): Binder = when (this) {
     is Expr.Var -> this.identifier.toBinder()
     is Expr.Path -> this.toBinder(index)
     is Expr.Cast -> this.value.toBinder(index)
@@ -32,14 +33,21 @@ public fun Expr.toBinder(index: () -> Int): Identifier.Symbol = when (this) {
  * @param index
  * @return
  */
-public fun Expr.toBinder(index: Int): Identifier.Symbol = toBinder { index }
+internal fun Expr.toBinder(index: Int): Binder = toBinder { index }
 
-private fun String.toBinder(): Identifier.Symbol = ast {
-    // Every binder preserves case
-    identifierSymbol(this@toBinder, Identifier.CaseSensitivity.SENSITIVE)
+// Conscious Decision,
+// Identifier normalization will be the first step of AST normalization.
+// Binder generation then will always be delimited:
+// I.e., FROM bAr
+// UPPER -> FROM bAr -> FROM "BAR" -> FROM "BAR" AS "BAR"
+// DOWN -> FROM bAr -> FROM "bar" -> FROM "bar" AS "bar"
+// EXACT -> FROM bAr -> FROM "bAr" -> FROM "bAr" AS "bAr"
+// NULL -> FROM bAr -> FROM bAr -> FROM bAr AS "bAr"
+private fun String.toBinder(): Binder = ast {
+    binder(this@toBinder, false)
 }
 
-private fun Identifier.toBinder(): Identifier.Symbol = when (this@toBinder) {
+private fun Identifier.toBinder(): Binder = when (this@toBinder) {
     is Identifier.Qualified -> when (steps.isEmpty()) {
         true -> root.symbol.toBinder()
         else -> steps.last().symbol.toBinder()
@@ -48,14 +56,14 @@ private fun Identifier.toBinder(): Identifier.Symbol = when (this@toBinder) {
 }
 
 @OptIn(PartiQLValueExperimental::class)
-private fun Expr.Path.toBinder(index: () -> Int): Identifier.Symbol {
+private fun Expr.Path.toBinder(index: () -> Int): Binder {
     if (steps.isEmpty()) return root.toBinder(index)
     return when (val last = steps.last()) {
         is Expr.Path.Step.Symbol -> last.symbol.toBinder()
         is Expr.Path.Step.Index -> {
             val k = last.key
             if (k is Expr.Lit && k.value is StringValue) {
-                k.value.value!!.toBinder()
+                (k.value as StringValue).value!!.toBinder()
             } else {
                 col(index).toBinder()
             }

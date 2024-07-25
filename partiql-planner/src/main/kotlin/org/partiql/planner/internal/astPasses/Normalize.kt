@@ -12,16 +12,21 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.astPasses
 
 import org.partiql.ast.Statement
+import org.partiql.planner.internal.CaseNormalization
+import org.partiql.planner.internal.PlannerFlag
 
 /**
  * AST normalization
  */
-public fun Statement.normalize(): Statement {
+internal fun Statement.normalize(flags: Set<PlannerFlag>): Statement {
     // could be a fold, but this is nice for setting breakpoints
     var ast = this
+    val caseNormalization = flags.firstOrNull { it is CaseNormalization } as? CaseNormalization
+    // Order matters here!
+    ast = NormalizeIdentifier(caseNormalization).apply(ast)
     ast = NormalizeFromSource.apply(ast)
     ast = NormalizeGroupBy.apply(ast)
     return ast
