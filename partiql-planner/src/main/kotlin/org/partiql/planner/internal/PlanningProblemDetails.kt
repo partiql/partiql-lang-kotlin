@@ -188,7 +188,7 @@ internal open class PlanningProblemDetails(
 
     data class ExpressionAlwaysReturnsMissing(val reason: String? = null) : PlanningProblemDetails(
         severity = ProblemSeverity.ERROR,
-        messageFormatter = { "Expression always returns null or missing: caused by $reason" }
+        messageFormatter = { "Expression always returns missing: caused by $reason" }
     )
 
     data class InvalidArgumentTypeForFunction(
