@@ -128,7 +128,6 @@ public final class org/partiql/ast/Ast {
 	public static final fun tableDefinition (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/TableDefinition;
 	public static final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public static final fun typeAny ()Lorg/partiql/ast/Type$Any;
-	public static final fun typeArray (Lorg/partiql/ast/Type;)Lorg/partiql/ast/Type$Array;
 	public static final fun typeBag ()Lorg/partiql/ast/Type$Bag;
 	public static final fun typeBigint ()Lorg/partiql/ast/Type$Bigint;
 	public static final fun typeBit (Ljava/lang/Integer;)Lorg/partiql/ast/Type$Bit;
@@ -156,8 +155,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun typeSexp ()Lorg/partiql/ast/Type$Sexp;
 	public static final fun typeSmallint ()Lorg/partiql/ast/Type$Smallint;
 	public static final fun typeString (Ljava/lang/Integer;)Lorg/partiql/ast/Type$String;
-	public static final fun typeStruct (Ljava/util/List;)Lorg/partiql/ast/Type$Struct;
-	public static final fun typeStructField (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/Type$Struct$Field;
+	public static final fun typeStruct ()Lorg/partiql/ast/Type$Struct;
 	public static final fun typeSymbol ()Lorg/partiql/ast/Type$Symbol;
 	public static final fun typeTime (Ljava/lang/Integer;)Lorg/partiql/ast/Type$Time;
 	public static final fun typeTimeWithTz (Ljava/lang/Integer;)Lorg/partiql/ast/Type$TimeWithTz;
@@ -3162,25 +3160,6 @@ public final class org/partiql/ast/Type$Any$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/TypeAnyBuilder;
 }
 
-public final class org/partiql/ast/Type$Array : org/partiql/ast/Type {
-	public static final field Companion Lorg/partiql/ast/Type$Array$Companion;
-	public final field type Lorg/partiql/ast/Type;
-	public fun <init> (Lorg/partiql/ast/Type;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/TypeArrayBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Type;
-	public final fun copy (Lorg/partiql/ast/Type;)Lorg/partiql/ast/Type$Array;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Type$Array;Lorg/partiql/ast/Type;ILjava/lang/Object;)Lorg/partiql/ast/Type$Array;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Type$Array$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/TypeArrayBuilder;
-}
-
 public final class org/partiql/ast/Type$Bag : org/partiql/ast/Type {
 	public final field   C
 	public static final field Companion Lorg/partiql/ast/Type$Bag$Companion;
@@ -3731,14 +3710,16 @@ public final class org/partiql/ast/Type$String$Companion {
 }
 
 public final class org/partiql/ast/Type$Struct : org/partiql/ast/Type {
+	public final field   C
 	public static final field Companion Lorg/partiql/ast/Type$Struct$Companion;
-	public final field fields Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
+	public fun <init> ()V
+	public fun <init> (C)V
+	public synthetic fun <init> (CILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/TypeStructBuilder;
-	public final fun component1 ()Ljava/util/List;
-	public final fun copy (Ljava/util/List;)Lorg/partiql/ast/Type$Struct;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Type$Struct;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct;
+	public final fun component1 ()C
+	public final fun copy (C)Lorg/partiql/ast/Type$Struct;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Type$Struct;CILjava/lang/Object;)Lorg/partiql/ast/Type$Struct;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -3747,29 +3728,6 @@ public final class org/partiql/ast/Type$Struct : org/partiql/ast/Type {
 
 public final class org/partiql/ast/Type$Struct$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/TypeStructBuilder;
-}
-
-public final class org/partiql/ast/Type$Struct$Field : org/partiql/ast/AstNode {
-	public static final field Companion Lorg/partiql/ast/Type$Struct$Field$Companion;
-	public final field constraints Ljava/util/List;
-	public final field name Lorg/partiql/ast/Identifier$Symbol;
-	public final field type Lorg/partiql/ast/Type;
-	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/TypeStructFieldBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Identifier$Symbol;
-	public final fun component2 ()Lorg/partiql/ast/Type;
-	public final fun component3 ()Ljava/util/List;
-	public final fun copy (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/Type$Struct$Field;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Type$Struct$Field;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct$Field;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Type$Struct$Field$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/TypeStructFieldBuilder;
 }
 
 public final class org/partiql/ast/Type$Symbol : org/partiql/ast/Type {
@@ -4190,8 +4148,6 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun tableDefinitionAttribute$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public final fun typeAny (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Any;
 	public static synthetic fun typeAny$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Any;
-	public final fun typeArray (Lorg/partiql/ast/Type;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Array;
-	public static synthetic fun typeArray$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Type;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Array;
 	public final fun typeBag (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Bag;
 	public static synthetic fun typeBag$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Bag;
 	public final fun typeBigint (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Bigint;
@@ -4246,10 +4202,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun typeSmallint$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Smallint;
 	public final fun typeString (Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$String;
 	public static synthetic fun typeString$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$String;
-	public final fun typeStruct (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Struct;
-	public static synthetic fun typeStruct$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct;
-	public final fun typeStructField (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Struct$Field;
-	public static synthetic fun typeStructField$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct$Field;
+	public final fun typeStruct (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Struct;
+	public static synthetic fun typeStruct$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct;
 	public final fun typeSymbol (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Symbol;
 	public static synthetic fun typeSymbol$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Symbol;
 	public final fun typeTime (Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Time;
@@ -5903,16 +5857,6 @@ public final class org/partiql/ast/builder/TypeAnyBuilder {
 	public final fun build ()Lorg/partiql/ast/Type$Any;
 }
 
-public final class org/partiql/ast/builder/TypeArrayBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Type;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Type;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Type$Array;
-	public final fun getType ()Lorg/partiql/ast/Type;
-	public final fun setType (Lorg/partiql/ast/Type;)V
-	public final fun type (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/TypeArrayBuilder;
-}
-
 public final class org/partiql/ast/builder/TypeBagBuilder {
 	public fun <init> ()V
 	public final fun build ()Lorg/partiql/ast/Type$Bag;
@@ -6111,28 +6055,7 @@ public final class org/partiql/ast/builder/TypeStringBuilder {
 
 public final class org/partiql/ast/builder/TypeStructBuilder {
 	public fun <init> ()V
-	public fun <init> (Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/ast/Type$Struct;
-	public final fun fields (Ljava/util/List;)Lorg/partiql/ast/builder/TypeStructBuilder;
-	public final fun getFields ()Ljava/util/List;
-	public final fun setFields (Ljava/util/List;)V
-}
-
-public final class org/partiql/ast/builder/TypeStructFieldBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Type$Struct$Field;
-	public final fun constraints (Ljava/util/List;)Lorg/partiql/ast/builder/TypeStructFieldBuilder;
-	public final fun getConstraints ()Ljava/util/List;
-	public final fun getName ()Lorg/partiql/ast/Identifier$Symbol;
-	public final fun getType ()Lorg/partiql/ast/Type;
-	public final fun name (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/builder/TypeStructFieldBuilder;
-	public final fun setConstraints (Ljava/util/List;)V
-	public final fun setName (Lorg/partiql/ast/Identifier$Symbol;)V
-	public final fun setType (Lorg/partiql/ast/Type;)V
-	public final fun type (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/TypeStructFieldBuilder;
 }
 
 public final class org/partiql/ast/builder/TypeSymbolBuilder {
@@ -6812,8 +6735,6 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitTypeArray (Lorg/partiql/ast/Type$Array;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTypeArray (Lorg/partiql/ast/Type$Array;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeBag (Lorg/partiql/ast/Type$Bag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeBag (Lorg/partiql/ast/Type$Bag;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeBigint (Lorg/partiql/ast/Type$Bigint;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6870,8 +6791,6 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitTypeString (Lorg/partiql/ast/Type$String;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeStruct (Lorg/partiql/ast/Type$Struct;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeStruct (Lorg/partiql/ast/Type$Struct;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitTypeStructField (Lorg/partiql/ast/Type$Struct$Field;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTypeStructField (Lorg/partiql/ast/Type$Struct$Field;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeSymbol (Lorg/partiql/ast/Type$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeSymbol (Lorg/partiql/ast/Type$Symbol;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeTime (Lorg/partiql/ast/Type$Time;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7045,7 +6964,6 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitType (Lorg/partiql/ast/Type;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTypeArray (Lorg/partiql/ast/Type$Array;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeBag (Lorg/partiql/ast/Type$Bag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeBigint (Lorg/partiql/ast/Type$Bigint;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeBit (Lorg/partiql/ast/Type$Bit;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7074,7 +6992,6 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitTypeSmallint (Lorg/partiql/ast/Type$Smallint;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeString (Lorg/partiql/ast/Type$String;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeStruct (Lorg/partiql/ast/Type$Struct;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTypeStructField (Lorg/partiql/ast/Type$Struct$Field;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeSymbol (Lorg/partiql/ast/Type$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeTime (Lorg/partiql/ast/Type$Time;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeTimeWithTz (Lorg/partiql/ast/Type$TimeWithTz;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7237,7 +7154,6 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitType (Lorg/partiql/ast/Type;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeArray (Lorg/partiql/ast/Type$Array;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeBag (Lorg/partiql/ast/Type$Bag;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeBigint (Lorg/partiql/ast/Type$Bigint;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeBit (Lorg/partiql/ast/Type$Bit;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7266,7 +7182,6 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitTypeSmallint (Lorg/partiql/ast/Type$Smallint;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeString (Lorg/partiql/ast/Type$String;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeStruct (Lorg/partiql/ast/Type$Struct;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeStructField (Lorg/partiql/ast/Type$Struct$Field;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeSymbol (Lorg/partiql/ast/Type$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeTime (Lorg/partiql/ast/Type$Time;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeTimeWithTz (Lorg/partiql/ast/Type$TimeWithTz;Ljava/lang/Object;)Ljava/lang/Object;

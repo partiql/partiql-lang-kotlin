@@ -196,46 +196,10 @@ type::[
   timestamp_with_tz::{ precision: optional::int },             // TIMESTAMP [(<int>)] WITH TIMEZONE
   interval::{ precision: optional::int },                      // INTERVAL
   bag::{},                                                     // BAG
-  // Potential migration strategy:
-  // v0.14.x -- the current state in `main`
-  // typeList()
-  //
-  // v0.15.x -- the next release
-  // @Deprecated // recommend using `typeArray()`
-  // typeList()
-  // typeArray(...)
-  //
-  // v1.0.x
-  // typeArray(...) // `typeList` now deleted
   list::{},                                                    // LIST
-  array::{ type: optional::type },                             // ARRAY [<type>]
   sexp::{},                                                    // SEXP
-  // Potential migration strategy:
-  // v0.14.x -- the current state in `main`
-  // typeTuple()
-  // typeStruct()
-  //
-  // v0.15.x -- the next release
-  // @Deprecated // recommend using `typeStruct`
-  // typeTuple()
-  // typeStruct(fields = ...)
-  //
-  // v1.0.x
-  // typeStruct(fields = ...) // `typeTuple` now deleted
   tuple::{},                                                   // TUPLE
-  struct::{
-    fields: list::[field],
-    _ : [
-      field :: {
-        name: '.identifier.symbol',
-        type: '.type',
-        // This could be a boolean flag since we only support NOT NULL constraint
-        // for struct subfield. But modeling this to be a list of constraints
-        // to prevent future breaking changes.
-        constraints: list::[constraint],
-      }
-    ],
-  },                                                           // STRUCT <fields>
+  struct::{},                                                  // STRUCT
   any::{},                                                     // ANY
   custom::{ name: string },                                    // <symbol>
 ]

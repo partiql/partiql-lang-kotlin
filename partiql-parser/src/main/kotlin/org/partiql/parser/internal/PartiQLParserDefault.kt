@@ -178,7 +178,6 @@ import org.partiql.ast.statementQuery
 import org.partiql.ast.tableDefinition
 import org.partiql.ast.tableDefinitionAttribute
 import org.partiql.ast.typeAny
-import org.partiql.ast.typeArray
 import org.partiql.ast.typeBag
 import org.partiql.ast.typeBlob
 import org.partiql.ast.typeBool
@@ -192,6 +191,7 @@ import org.partiql.ast.typeFloat64
 import org.partiql.ast.typeInt2
 import org.partiql.ast.typeInt4
 import org.partiql.ast.typeInt8
+import org.partiql.ast.typeList
 import org.partiql.ast.typeMissing
 import org.partiql.ast.typeNullType
 import org.partiql.ast.typeNumeric
@@ -199,12 +199,12 @@ import org.partiql.ast.typeReal
 import org.partiql.ast.typeSexp
 import org.partiql.ast.typeString
 import org.partiql.ast.typeStruct
-import org.partiql.ast.typeStructField
 import org.partiql.ast.typeSymbol
 import org.partiql.ast.typeTime
 import org.partiql.ast.typeTimeWithTz
 import org.partiql.ast.typeTimestamp
 import org.partiql.ast.typeTimestampWithTz
+import org.partiql.ast.typeTuple
 import org.partiql.ast.typeVarchar
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
@@ -647,38 +647,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val type = (visit(ctx.type()) as Type).also {
                 isValidTypeDeclarationOrThrow(it, ctx.type())
             }
-            val constraints = ctx.columnConstraint().map { visitColumnConstraint(it) }
             tableDefinitionAttribute(name, type, constraints)
-        }
-
-        /**
-         * For Type Declaration used in DDL:
-         * We DO NOT support ANY Type, BAG Type, MISSING Type, Or NULL Type
-         */
-        private fun isValidTypeDeclarationOrThrow(type: Type, ctx: GeneratedParser.TypeContext) = when (type) {
-            is Type.Any,
-            is Type.Bag,
-            is Type.Missing,
-            is Type.NullType -> throw error(ctx, "declaration attribute with $type is not supported")
-            else -> Unit
-        }
-
-        private fun isValidTypeParameterOrThrow(type: Type, ctx: GeneratedParser.TypeContext) = when (type) {
-            is Type.Struct -> {
-                if (type.fields.isNotEmpty()) throw error(ctx, "using parameterized struct as type parameter is not supported")
-                else Unit
-            }
-            is Type.Array -> {
-                if (type.type != null) throw error(ctx, "using parameterized array as type parameter is not supported")
-                else Unit
-            }
-            else -> Unit
-        }
-
-        override fun visitColumnConstraint(ctx: GeneratedParser.ColumnConstraintContext) = translate(ctx) {
-            val identifier = ctx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
-            val body = visit(ctx.columnConstraintDef()) as Constraint.Definition
-            constraint(identifier, body)
         }
 
         override fun visitColConstrNotNull(ctx: GeneratedParser.ColConstrNotNullContext) = translate(ctx) {
@@ -1636,7 +1605,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitPredicateIs(ctx: GeneratedParser.PredicateIsContext) = translate(ctx) {
             val value = visitAs<Expr>(ctx.lhs)
-            val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
+            val type = visitAs<Type>(ctx.type())
             val not = ctx.NOT() != null
             exprIsType(value, type, not)
         }
@@ -1797,19 +1766,19 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitCast(ctx: GeneratedParser.CastContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
+            val type = visitAs<Type>(ctx.type())
             exprCast(expr, type)
         }
 
         override fun visitCanCast(ctx: GeneratedParser.CanCastContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
+            val type = visitAs<Type>(ctx.type())
             exprCanCast(expr, type)
         }
 
         override fun visitCanLosslessCast(ctx: GeneratedParser.CanLosslessCastContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
+            val type = visitAs<Type>(ctx.type())
             exprCanLosslessCast(expr, type)
         }
 
@@ -2140,6 +2109,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.BLOB -> typeBlob(null)
                 GeneratedParser.CLOB -> typeClob(null)
                 GeneratedParser.DATE -> typeDate()
+                GeneratedParser.STRUCT -> typeStruct()
+                GeneratedParser.TUPLE -> typeTuple()
+                GeneratedParser.LIST -> typeList()
                 GeneratedParser.SEXP -> typeSexp()
                 GeneratedParser.BAG -> typeBag()
                 GeneratedParser.ANY -> typeAny()
@@ -2199,39 +2171,6 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
             typeCustom(ctx.text.uppercase())
-        }
-
-        override fun visitTypeComplexUnparameterized(ctx: GeneratedParser.TypeComplexUnparameterizedContext) = translate(ctx) {
-            when (ctx.datatype.type) {
-                GeneratedParser.STRUCT, GeneratedParser.TUPLE -> typeStruct(emptyList())
-                GeneratedParser.ARRAY, GeneratedParser.LIST -> typeArray(null)
-                else -> throw error(ctx.datatype, "Invalid datatype")
-            }
-        }
-
-        override fun visitTypeList(ctx: GeneratedParser.TypeListContext) = translate(ctx) {
-            val type = visitOrNull<Type>(ctx.type())
-                ?.also { isValidTypeDeclarationOrThrow(it, ctx.type()) }
-            typeArray(type)
-        }
-
-        override fun visitTypeStruct(ctx: GeneratedParser.TypeStructContext) = translate(ctx) {
-            val fields = ctx.structField().map { structFieldCtx ->
-                val name = visitSymbolPrimitive(structFieldCtx.columnName().symbolPrimitive())
-                val type = visitAs<Type>(structFieldCtx.type())
-                    .also { isValidTypeDeclarationOrThrow(it, structFieldCtx.type()) }
-
-                val constraints = structFieldCtx.columnConstraint().map {
-                    when (it.columnConstraintDef()) {
-                        is GeneratedParser.ColConstrNullContext,
-                        is GeneratedParser.ColConstrNotNullContext -> visitColumnConstraint(it)
-                        else -> throw error(it, "Only NULL Constraint and NOT NULL Constraint are allowed in Struct field")
-                    }
-                }
-
-                typeStructField(name, type, constraints)
-            }
-            typeStruct(fields)
         }
 
         private inline fun <reified T : AstNode> visitOrEmpty(ctx: List<ParserRuleContext>?): List<T> = when {

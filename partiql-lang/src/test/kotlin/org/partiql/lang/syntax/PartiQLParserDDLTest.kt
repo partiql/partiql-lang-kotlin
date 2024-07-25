@@ -76,60 +76,6 @@ internal class PartiQLParserDDLTest : PartiQLParserTestBase() {
                 code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
                 context = mapOf(),
             ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support Struct Type with field declaration",
-                query = """
-                    CREATE TABLE tbl (
-                       a STRUCT<b : INT2>
-                    )
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support element type declaration in Array Type",
-                query = """
-                    CREATE TABLE tbl (
-                       a ARRAY<INT2>
-                    )
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-
-            // Putting those tests here are they are impacted by DDL implementation
-            ParserErrorTestCase(
-                description = "PIG Parser does not support Struct Type with field declaration -- IS operator",
-                query = """
-                    a IS STRUCT<b : INT2>
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support Struct Type with field declaration -- CAST operator",
-                query = """
-                    CAST(a AS STRUCT<b : INT2>)
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support element type declaration in Array Type -- IS operator",
-                query = """
-                    a IS ARRAY<INT2>
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support element type declaration in Array Type -- cast operator",
-                query = """
-                    CAST(a AS ARRAY<INT2>)
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
         )
     }
 }

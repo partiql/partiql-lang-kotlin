@@ -1648,6 +1648,9 @@ internal class PartiQLPigVisitor(
             PartiQLParser.BLOB -> blobType(metas)
             PartiQLParser.CLOB -> clobType(metas)
             PartiQLParser.DATE -> dateType(metas)
+            PartiQLParser.STRUCT -> structType(metas)
+            PartiQLParser.TUPLE -> tupleType(metas)
+            PartiQLParser.LIST -> listType(metas)
             PartiQLParser.BAG -> bagType(metas)
             PartiQLParser.SEXP -> sexpType(metas)
             PartiQLParser.ANY -> anyType(metas)
@@ -1713,32 +1716,6 @@ internal class PartiQLPigVisitor(
         customType_(SymbolPrimitive(customName, metas), metas)
     }
 
-    override fun visitTypeComplexUnparameterized(ctx: PartiQLParser.TypeComplexUnparameterizedContext) = PartiqlAst.build {
-        val metas = ctx.datatype.getSourceMetaContainer()
-        when (ctx.datatype.type) {
-            PartiQLParser.TUPLE -> tupleType(metas)
-            PartiQLParser.STRUCT -> structType(metas)
-            PartiQLParser.ARRAY, PartiQLParser.LIST -> listType(metas)
-            else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
-        }
-    }
-
-    override fun visitTypeStruct(ctx: PartiQLParser.TypeStructContext) = PartiqlAst.build {
-        throw ParserException(
-            "PIG Parser does not support struct type with field declaration",
-            ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            PropertyValueMap()
-        )
-    }
-
-    override fun visitTypeList(ctx: PartiQLParser.TypeListContext): PartiqlAst.PartiqlAstNode {
-        throw ParserException(
-            "PIG Parser does not support element type declaration for list",
-            ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            PropertyValueMap()
-        )
-    }
-
     /**
      *
      * HELPER METHODS
@@ -1755,14 +1732,6 @@ internal class PartiQLPigVisitor(
         if (this == null) return emptyMetaContainer()
         val metas = this.getSourceMetas()
         return com.amazon.ionelement.api.metaContainerOf(Pair(metas.tag, metas))
-    }
-
-    private fun List<Token>.getSourceMetaContainer(): MetaContainer {
-        val base = this.firstOrNull() ?: return emptyMetaContainer()
-        val length = this.fold(0) { acc, token ->
-            acc + token.stopIndex - token.startIndex + 1
-        }
-        return metaContainerOf(SourceLocationMeta(base.line.toLong(), base.charPositionInLine.toLong() + 1, length.toLong()))
     }
 
     private fun TerminalNode.getSourceMetas(): SourceLocationMeta = this.symbol.getSourceMetas()
