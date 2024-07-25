@@ -15,9 +15,9 @@ public final class org/partiql/ast/Ast {
 	public static final fun excludeStepCollWildcard ()Lorg/partiql/ast/Exclude$Step$CollWildcard;
 	public static final fun excludeStepStructField (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/Exclude$Step$StructField;
 	public static final fun excludeStepStructWildcard ()Lorg/partiql/ast/Exclude$Step$StructWildcard;
+	public static final fun exprAnd (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$And;
 	public static final fun exprBagOp (Lorg/partiql/ast/SetOp;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$BagOp;
 	public static final fun exprBetween (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$Between;
-	public static final fun exprBinary (Lorg/partiql/ast/Expr$Binary$Op;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Binary;
 	public static final fun exprCall (Lorg/partiql/ast/Identifier;Ljava/util/List;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/Expr$Call;
 	public static final fun exprCanCast (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)Lorg/partiql/ast/Expr$CanCast;
 	public static final fun exprCanLosslessCast (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)Lorg/partiql/ast/Expr$CanLosslessCast;
@@ -35,7 +35,10 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprLike (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$Like;
 	public static final fun exprLit (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/Expr$Lit;
 	public static final fun exprMatch (Lorg/partiql/ast/Expr;Lorg/partiql/ast/GraphMatch;)Lorg/partiql/ast/Expr$Match;
+	public static final fun exprNot (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Not;
 	public static final fun exprNullIf (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$NullIf;
+	public static final fun exprOperator (Ljava/lang/String;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Operator;
+	public static final fun exprOr (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Or;
 	public static final fun exprOverlay (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Overlay;
 	public static final fun exprParameter (I)Lorg/partiql/ast/Expr$Parameter;
 	public static final fun exprPath (Lorg/partiql/ast/Expr;Ljava/util/List;)Lorg/partiql/ast/Expr$Path;
@@ -51,7 +54,6 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprStructField (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Struct$Field;
 	public static final fun exprSubstring (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Substring;
 	public static final fun exprTrim (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr$Trim$Spec;)Lorg/partiql/ast/Expr$Trim;
-	public static final fun exprUnary (Lorg/partiql/ast/Expr$Unary$Op;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Unary;
 	public static final fun exprValues (Ljava/util/List;)Lorg/partiql/ast/Expr$Values;
 	public static final fun exprValuesRow (Ljava/util/List;)Lorg/partiql/ast/Expr$Values$Row;
 	public static final fun exprVar (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Expr$Var$Scope;)Lorg/partiql/ast/Expr$Var;
@@ -537,6 +539,27 @@ public abstract class org/partiql/ast/Expr : org/partiql/ast/AstNode {
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
+public final class org/partiql/ast/Expr$And : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$And$Companion;
+	public final field lhs Lorg/partiql/ast/Expr;
+	public final field rhs Lorg/partiql/ast/Expr;
+	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprAndBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Expr;
+	public final fun component2 ()Lorg/partiql/ast/Expr;
+	public final fun copy (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$And;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$And;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;ILjava/lang/Object;)Lorg/partiql/ast/Expr$And;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$And$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprAndBuilder;
+}
+
 public final class org/partiql/ast/Expr$BagOp : org/partiql/ast/Expr {
 	public static final field Companion Lorg/partiql/ast/Expr$BagOp$Companion;
 	public final field lhs Lorg/partiql/ast/Expr;
@@ -585,49 +608,6 @@ public final class org/partiql/ast/Expr$Between : org/partiql/ast/Expr {
 
 public final class org/partiql/ast/Expr$Between$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/ExprBetweenBuilder;
-}
-
-public final class org/partiql/ast/Expr$Binary : org/partiql/ast/Expr {
-	public static final field Companion Lorg/partiql/ast/Expr$Binary$Companion;
-	public final field lhs Lorg/partiql/ast/Expr;
-	public final field op Lorg/partiql/ast/Expr$Binary$Op;
-	public final field rhs Lorg/partiql/ast/Expr;
-	public fun <init> (Lorg/partiql/ast/Expr$Binary$Op;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/ExprBinaryBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Expr$Binary$Op;
-	public final fun component2 ()Lorg/partiql/ast/Expr;
-	public final fun component3 ()Lorg/partiql/ast/Expr;
-	public final fun copy (Lorg/partiql/ast/Expr$Binary$Op;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Binary;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$Binary;Lorg/partiql/ast/Expr$Binary$Op;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Binary;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Expr$Binary$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/ExprBinaryBuilder;
-}
-
-public final class org/partiql/ast/Expr$Binary$Op : java/lang/Enum {
-	public static final field AND Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field BITWISE_AND Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field CONCAT Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field DIVIDE Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field EQ Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field GT Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field GTE Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field LT Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field LTE Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field MINUS Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field MODULO Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field NE Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field OR Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field PLUS Lorg/partiql/ast/Expr$Binary$Op;
-	public static final field TIMES Lorg/partiql/ast/Expr$Binary$Op;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$Binary$Op;
-	public static fun values ()[Lorg/partiql/ast/Expr$Binary$Op;
 }
 
 public final class org/partiql/ast/Expr$Call : org/partiql/ast/Expr {
@@ -1007,6 +987,25 @@ public final class org/partiql/ast/Expr$Match$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/ExprMatchBuilder;
 }
 
+public final class org/partiql/ast/Expr$Not : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$Not$Companion;
+	public final field value Lorg/partiql/ast/Expr;
+	public fun <init> (Lorg/partiql/ast/Expr;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprNotBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Expr;
+	public final fun copy (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Not;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$Not;Lorg/partiql/ast/Expr;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Not;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$Not$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprNotBuilder;
+}
+
 public final class org/partiql/ast/Expr$NullIf : org/partiql/ast/Expr {
 	public static final field Companion Lorg/partiql/ast/Expr$NullIf$Companion;
 	public final field nullifier Lorg/partiql/ast/Expr;
@@ -1026,6 +1025,50 @@ public final class org/partiql/ast/Expr$NullIf : org/partiql/ast/Expr {
 
 public final class org/partiql/ast/Expr$NullIf$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/ExprNullIfBuilder;
+}
+
+public final class org/partiql/ast/Expr$Operator : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$Operator$Companion;
+	public final field lhs Lorg/partiql/ast/Expr;
+	public final field rhs Lorg/partiql/ast/Expr;
+	public final field symbol Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprOperatorBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/ast/Expr;
+	public final fun component3 ()Lorg/partiql/ast/Expr;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Operator;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$Operator;Ljava/lang/String;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Operator;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$Operator$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprOperatorBuilder;
+}
+
+public final class org/partiql/ast/Expr$Or : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$Or$Companion;
+	public final field lhs Lorg/partiql/ast/Expr;
+	public final field rhs Lorg/partiql/ast/Expr;
+	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprOrBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Expr;
+	public final fun component2 ()Lorg/partiql/ast/Expr;
+	public final fun copy (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Or;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$Or;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Or;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$Or$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprOrBuilder;
 }
 
 public final class org/partiql/ast/Expr$Overlay : org/partiql/ast/Expr {
@@ -1376,35 +1419,6 @@ public final class org/partiql/ast/Expr$Trim$Spec : java/lang/Enum {
 	public static final field TRAILING Lorg/partiql/ast/Expr$Trim$Spec;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$Trim$Spec;
 	public static fun values ()[Lorg/partiql/ast/Expr$Trim$Spec;
-}
-
-public final class org/partiql/ast/Expr$Unary : org/partiql/ast/Expr {
-	public static final field Companion Lorg/partiql/ast/Expr$Unary$Companion;
-	public final field expr Lorg/partiql/ast/Expr;
-	public final field op Lorg/partiql/ast/Expr$Unary$Op;
-	public fun <init> (Lorg/partiql/ast/Expr$Unary$Op;Lorg/partiql/ast/Expr;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/ExprUnaryBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Expr$Unary$Op;
-	public final fun component2 ()Lorg/partiql/ast/Expr;
-	public final fun copy (Lorg/partiql/ast/Expr$Unary$Op;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Unary;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$Unary;Lorg/partiql/ast/Expr$Unary$Op;Lorg/partiql/ast/Expr;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Unary;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Expr$Unary$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/ExprUnaryBuilder;
-}
-
-public final class org/partiql/ast/Expr$Unary$Op : java/lang/Enum {
-	public static final field NEG Lorg/partiql/ast/Expr$Unary$Op;
-	public static final field NOT Lorg/partiql/ast/Expr$Unary$Op;
-	public static final field POS Lorg/partiql/ast/Expr$Unary$Op;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$Unary$Op;
-	public static fun values ()[Lorg/partiql/ast/Expr$Unary$Op;
 }
 
 public final class org/partiql/ast/Expr$Values : org/partiql/ast/Expr {
@@ -4030,12 +4044,12 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun excludeStepStructField$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Exclude$Step$StructField;
 	public final fun excludeStepStructWildcard (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Exclude$Step$StructWildcard;
 	public static synthetic fun excludeStepStructWildcard$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Exclude$Step$StructWildcard;
+	public final fun exprAnd (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$And;
+	public static synthetic fun exprAnd$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$And;
 	public final fun exprBagOp (Lorg/partiql/ast/SetOp;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$BagOp;
 	public static synthetic fun exprBagOp$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/SetOp;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$BagOp;
 	public final fun exprBetween (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Between;
 	public static synthetic fun exprBetween$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Between;
-	public final fun exprBinary (Lorg/partiql/ast/Expr$Binary$Op;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Binary;
-	public static synthetic fun exprBinary$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr$Binary$Op;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Binary;
 	public final fun exprCall (Lorg/partiql/ast/Identifier;Ljava/util/List;Lorg/partiql/ast/SetQuantifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Call;
 	public static synthetic fun exprCall$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Ljava/util/List;Lorg/partiql/ast/SetQuantifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Call;
 	public final fun exprCanCast (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$CanCast;
@@ -4070,8 +4084,14 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun exprLit$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Lit;
 	public final fun exprMatch (Lorg/partiql/ast/Expr;Lorg/partiql/ast/GraphMatch;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Match;
 	public static synthetic fun exprMatch$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/GraphMatch;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Match;
+	public final fun exprNot (Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Not;
+	public static synthetic fun exprNot$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Not;
 	public final fun exprNullIf (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$NullIf;
 	public static synthetic fun exprNullIf$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$NullIf;
+	public final fun exprOperator (Ljava/lang/String;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Operator;
+	public static synthetic fun exprOperator$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/String;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Operator;
+	public final fun exprOr (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Or;
+	public static synthetic fun exprOr$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Or;
 	public final fun exprOverlay (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Overlay;
 	public static synthetic fun exprOverlay$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Overlay;
 	public final fun exprParameter (Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Parameter;
@@ -4102,8 +4122,6 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun exprSubstring$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Substring;
 	public final fun exprTrim (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr$Trim$Spec;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Trim;
 	public static synthetic fun exprTrim$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr$Trim$Spec;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Trim;
-	public final fun exprUnary (Lorg/partiql/ast/Expr$Unary$Op;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Unary;
-	public static synthetic fun exprUnary$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr$Unary$Op;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Unary;
 	public final fun exprValues (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Values;
 	public static synthetic fun exprValues$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Values;
 	public final fun exprValuesRow (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Values$Row;
@@ -4510,6 +4528,19 @@ public final class org/partiql/ast/builder/ExcludeStepStructWildcardBuilder {
 	public final fun build ()Lorg/partiql/ast/Exclude$Step$StructWildcard;
 }
 
+public final class org/partiql/ast/builder/ExprAndBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$And;
+	public final fun getLhs ()Lorg/partiql/ast/Expr;
+	public final fun getRhs ()Lorg/partiql/ast/Expr;
+	public final fun lhs (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprAndBuilder;
+	public final fun rhs (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprAndBuilder;
+	public final fun setLhs (Lorg/partiql/ast/Expr;)V
+	public final fun setRhs (Lorg/partiql/ast/Expr;)V
+}
+
 public final class org/partiql/ast/builder/ExprBagOpBuilder {
 	public fun <init> ()V
 	public fun <init> (Lorg/partiql/ast/SetOp;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
@@ -4546,22 +4577,6 @@ public final class org/partiql/ast/builder/ExprBetweenBuilder {
 	public final fun setValue (Lorg/partiql/ast/Expr;)V
 	public final fun to (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprBetweenBuilder;
 	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprBetweenBuilder;
-}
-
-public final class org/partiql/ast/builder/ExprBinaryBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Expr$Binary$Op;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Expr$Binary$Op;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Expr$Binary;
-	public final fun getLhs ()Lorg/partiql/ast/Expr;
-	public final fun getOp ()Lorg/partiql/ast/Expr$Binary$Op;
-	public final fun getRhs ()Lorg/partiql/ast/Expr;
-	public final fun lhs (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprBinaryBuilder;
-	public final fun op (Lorg/partiql/ast/Expr$Binary$Op;)Lorg/partiql/ast/builder/ExprBinaryBuilder;
-	public final fun rhs (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprBinaryBuilder;
-	public final fun setLhs (Lorg/partiql/ast/Expr;)V
-	public final fun setOp (Lorg/partiql/ast/Expr$Binary$Op;)V
-	public final fun setRhs (Lorg/partiql/ast/Expr;)V
 }
 
 public final class org/partiql/ast/builder/ExprCallBuilder {
@@ -4800,6 +4815,16 @@ public final class org/partiql/ast/builder/ExprMatchBuilder {
 	public final fun setPattern (Lorg/partiql/ast/GraphMatch;)V
 }
 
+public final class org/partiql/ast/builder/ExprNotBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Expr;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$Not;
+	public final fun getValue ()Lorg/partiql/ast/Expr;
+	public final fun setValue (Lorg/partiql/ast/Expr;)V
+	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprNotBuilder;
+}
+
 public final class org/partiql/ast/builder/ExprNullIfBuilder {
 	public fun <init> ()V
 	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
@@ -4811,6 +4836,35 @@ public final class org/partiql/ast/builder/ExprNullIfBuilder {
 	public final fun setNullifier (Lorg/partiql/ast/Expr;)V
 	public final fun setValue (Lorg/partiql/ast/Expr;)V
 	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprNullIfBuilder;
+}
+
+public final class org/partiql/ast/builder/ExprOperatorBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$Operator;
+	public final fun getLhs ()Lorg/partiql/ast/Expr;
+	public final fun getRhs ()Lorg/partiql/ast/Expr;
+	public final fun getSymbol ()Ljava/lang/String;
+	public final fun lhs (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprOperatorBuilder;
+	public final fun rhs (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprOperatorBuilder;
+	public final fun setLhs (Lorg/partiql/ast/Expr;)V
+	public final fun setRhs (Lorg/partiql/ast/Expr;)V
+	public final fun setSymbol (Ljava/lang/String;)V
+	public final fun symbol (Ljava/lang/String;)Lorg/partiql/ast/builder/ExprOperatorBuilder;
+}
+
+public final class org/partiql/ast/builder/ExprOrBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$Or;
+	public final fun getLhs ()Lorg/partiql/ast/Expr;
+	public final fun getRhs ()Lorg/partiql/ast/Expr;
+	public final fun lhs (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprOrBuilder;
+	public final fun rhs (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprOrBuilder;
+	public final fun setLhs (Lorg/partiql/ast/Expr;)V
+	public final fun setRhs (Lorg/partiql/ast/Expr;)V
 }
 
 public final class org/partiql/ast/builder/ExprOverlayBuilder {
@@ -5014,19 +5068,6 @@ public final class org/partiql/ast/builder/ExprTrimBuilder {
 	public final fun setValue (Lorg/partiql/ast/Expr;)V
 	public final fun spec (Lorg/partiql/ast/Expr$Trim$Spec;)Lorg/partiql/ast/builder/ExprTrimBuilder;
 	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprTrimBuilder;
-}
-
-public final class org/partiql/ast/builder/ExprUnaryBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Expr$Unary$Op;Lorg/partiql/ast/Expr;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Expr$Unary$Op;Lorg/partiql/ast/Expr;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Expr$Unary;
-	public final fun expr (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprUnaryBuilder;
-	public final fun getExpr ()Lorg/partiql/ast/Expr;
-	public final fun getOp ()Lorg/partiql/ast/Expr$Unary$Op;
-	public final fun op (Lorg/partiql/ast/Expr$Unary$Op;)Lorg/partiql/ast/builder/ExprUnaryBuilder;
-	public final fun setExpr (Lorg/partiql/ast/Expr;)V
-	public final fun setOp (Lorg/partiql/ast/Expr$Unary$Op;)V
 }
 
 public final class org/partiql/ast/builder/ExprValuesBuilder {
@@ -6392,12 +6433,12 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/A
 	public fun visitExcludeStepStructField (Lorg/partiql/ast/Exclude$Step$StructField;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExcludeStepStructWildcard (Lorg/partiql/ast/Exclude$Step$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludeStepStructWildcard (Lorg/partiql/ast/Exclude$Step$StructWildcard;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprAnd (Lorg/partiql/ast/Expr$And;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprAnd (Lorg/partiql/ast/Expr$And;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprBagOp (Lorg/partiql/ast/Expr$BagOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBagOp (Lorg/partiql/ast/Expr$BagOp;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public synthetic fun visitExprBinary (Lorg/partiql/ast/Expr$Binary;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprBinary (Lorg/partiql/ast/Expr$Binary;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/Expr$Call;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6430,8 +6471,14 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/A
 	public fun visitExprLike (Lorg/partiql/ast/Expr$Like;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprNot (Lorg/partiql/ast/Expr$Not;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNot (Lorg/partiql/ast/Expr$Not;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprNullIf (Lorg/partiql/ast/Expr$NullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNullIf (Lorg/partiql/ast/Expr$NullIf;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprOperator (Lorg/partiql/ast/Expr$Operator;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOperator (Lorg/partiql/ast/Expr$Operator;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprOr (Lorg/partiql/ast/Expr$Or;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOr (Lorg/partiql/ast/Expr$Or;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprOverlay (Lorg/partiql/ast/Expr$Overlay;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOverlay (Lorg/partiql/ast/Expr$Overlay;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprParameter (Lorg/partiql/ast/Expr$Parameter;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6462,8 +6509,6 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/A
 	public fun visitExprSubstring (Lorg/partiql/ast/Expr$Substring;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprTrim (Lorg/partiql/ast/Expr$Trim;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprTrim (Lorg/partiql/ast/Expr$Trim;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public synthetic fun visitExprUnary (Lorg/partiql/ast/Expr$Unary;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprUnary (Lorg/partiql/ast/Expr$Unary;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprValues (Lorg/partiql/ast/Expr$Values;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprValues (Lorg/partiql/ast/Expr$Values;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprValuesRow (Lorg/partiql/ast/Expr$Values$Row;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6667,12 +6712,12 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitExcludeStepStructField (Lorg/partiql/ast/Exclude$Step$StructField;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExcludeStepStructWildcard (Lorg/partiql/ast/Exclude$Step$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludeStepStructWildcard (Lorg/partiql/ast/Exclude$Step$StructWildcard;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprAnd (Lorg/partiql/ast/Expr$And;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprAnd (Lorg/partiql/ast/Expr$And;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprBagOp (Lorg/partiql/ast/Expr$BagOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBagOp (Lorg/partiql/ast/Expr$BagOp;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitExprBinary (Lorg/partiql/ast/Expr$Binary;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprBinary (Lorg/partiql/ast/Expr$Binary;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6707,8 +6752,14 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprMatch (Lorg/partiql/ast/Expr$Match;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprMatch (Lorg/partiql/ast/Expr$Match;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprNot (Lorg/partiql/ast/Expr$Not;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNot (Lorg/partiql/ast/Expr$Not;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprNullIf (Lorg/partiql/ast/Expr$NullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNullIf (Lorg/partiql/ast/Expr$NullIf;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprOperator (Lorg/partiql/ast/Expr$Operator;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOperator (Lorg/partiql/ast/Expr$Operator;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprOr (Lorg/partiql/ast/Expr$Or;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOr (Lorg/partiql/ast/Expr$Or;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprOverlay (Lorg/partiql/ast/Expr$Overlay;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOverlay (Lorg/partiql/ast/Expr$Overlay;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprParameter (Lorg/partiql/ast/Expr$Parameter;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6739,8 +6790,6 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitExprSubstring (Lorg/partiql/ast/Expr$Substring;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprTrim (Lorg/partiql/ast/Expr$Trim;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprTrim (Lorg/partiql/ast/Expr$Trim;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitExprUnary (Lorg/partiql/ast/Expr$Unary;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprUnary (Lorg/partiql/ast/Expr$Unary;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprValues (Lorg/partiql/ast/Expr$Values;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprValues (Lorg/partiql/ast/Expr$Values;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprValuesRow (Lorg/partiql/ast/Expr$Values$Row;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6998,9 +7047,9 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitExcludeStepStructField (Lorg/partiql/ast/Exclude$Step$StructField;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludeStepStructWildcard (Lorg/partiql/ast/Exclude$Step$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExpr (Lorg/partiql/ast/Expr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprAnd (Lorg/partiql/ast/Expr$And;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBagOp (Lorg/partiql/ast/Expr$BagOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprBinary (Lorg/partiql/ast/Expr$Binary;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCanLosslessCast (Lorg/partiql/ast/Expr$CanLosslessCast;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7018,7 +7067,10 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprMatch (Lorg/partiql/ast/Expr$Match;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNot (Lorg/partiql/ast/Expr$Not;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNullIf (Lorg/partiql/ast/Expr$NullIf;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOperator (Lorg/partiql/ast/Expr$Operator;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOr (Lorg/partiql/ast/Expr$Or;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOverlay (Lorg/partiql/ast/Expr$Overlay;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprParameter (Lorg/partiql/ast/Expr$Parameter;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprPath (Lorg/partiql/ast/Expr$Path;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7035,7 +7087,6 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitExprStructField (Lorg/partiql/ast/Expr$Struct$Field;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprSubstring (Lorg/partiql/ast/Expr$Substring;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprTrim (Lorg/partiql/ast/Expr$Trim;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprUnary (Lorg/partiql/ast/Expr$Unary;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprValues (Lorg/partiql/ast/Expr$Values;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprValuesRow (Lorg/partiql/ast/Expr$Values$Row;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprVar (Lorg/partiql/ast/Expr$Var;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7192,9 +7243,9 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitExcludeStepStructField (Lorg/partiql/ast/Exclude$Step$StructField;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExcludeStepStructWildcard (Lorg/partiql/ast/Exclude$Step$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExpr (Lorg/partiql/ast/Expr;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprAnd (Lorg/partiql/ast/Expr$And;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprBagOp (Lorg/partiql/ast/Expr$BagOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprBinary (Lorg/partiql/ast/Expr$Binary;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCanLosslessCast (Lorg/partiql/ast/Expr$CanLosslessCast;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7212,7 +7263,10 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprMatch (Lorg/partiql/ast/Expr$Match;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprNot (Lorg/partiql/ast/Expr$Not;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprNullIf (Lorg/partiql/ast/Expr$NullIf;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprOperator (Lorg/partiql/ast/Expr$Operator;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprOr (Lorg/partiql/ast/Expr$Or;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprOverlay (Lorg/partiql/ast/Expr$Overlay;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprParameter (Lorg/partiql/ast/Expr$Parameter;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprPath (Lorg/partiql/ast/Expr$Path;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7229,7 +7283,6 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitExprStructField (Lorg/partiql/ast/Expr$Struct$Field;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprSubstring (Lorg/partiql/ast/Expr$Substring;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprTrim (Lorg/partiql/ast/Expr$Trim;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprUnary (Lorg/partiql/ast/Expr$Unary;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprValues (Lorg/partiql/ast/Expr$Values;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprValuesRow (Lorg/partiql/ast/Expr$Values$Row;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprVar (Lorg/partiql/ast/Expr$Var;Ljava/lang/Object;)Ljava/lang/Object;

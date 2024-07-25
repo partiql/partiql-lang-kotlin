@@ -362,19 +362,26 @@ expr::[
     index: int,
   },
 
-  // Unary Operators
-  unary::{
-    op:   [ NOT, POS, NEG ],
-    expr: expr,
+  // Operator expr node
+  operator::{
+    symbol: string,
+    lhs: optional::expr,
+    rhs: expr
   },
 
-  // Binary Operators
-  binary::{
-    op: [
-      PLUS, MINUS, TIMES, DIVIDE, MODULO, CONCAT, BITWISE_AND,
-      AND, OR,
-      EQ, NE, GT, GTE, LT, LTE,
-    ],
+  // SQL special form `NOT`
+  not::{
+    value: expr,
+  },
+
+  // SQL special form `AND`
+  and::{
+    lhs: expr,
+    rhs: expr,
+  },
+
+  // SQL special form `OR`
+  or::{
     lhs: expr,
     rhs: expr,
   },

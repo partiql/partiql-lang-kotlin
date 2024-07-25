@@ -619,20 +619,32 @@ comparisonOp
     | BANG EQ
     ;
 
-// TODO : Opreator precedence of BITWISE_AND (&) may change in the future.
+otherOp
+    : OPERATOR
+    | AMPERSAND
+    // TODO introduce a separate lexical mode for GPML MATCH expressions (https://github.com/partiql/partiql-lang-kotlin/issues/1512)
+    //  This will eliminiate the need for this `AMPERSAND` parse branch.
+    ;
+
+// TODO : Opreator precedence of `otherOp` may change in the future.
 //  SEE: https://github.com/partiql/partiql-docs/issues/50
 mathOp00
-    : lhs=mathOp00 op=(AMPERSAND|CONCAT) rhs=mathOp01
+    : lhs=mathOp00 op=otherOp rhs=mathOp01
     | parent=mathOp01
     ;
 
 mathOp01
-    : lhs=mathOp01 op=(PLUS|MINUS) rhs=mathOp02
+    : op=otherOp rhs=mathOp02
     | parent=mathOp02
     ;
 
 mathOp02
-    : lhs=mathOp02 op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=valueExpr
+    : lhs=mathOp02 op=(PLUS|MINUS) rhs=mathOp03
+    | parent=mathOp03
+    ;
+
+mathOp03
+    : lhs=mathOp03 op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=valueExpr
     | parent=valueExpr
     ;
 

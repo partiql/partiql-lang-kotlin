@@ -4,17 +4,22 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
-internal class TypeEnvTest {
+internal class ScopeTest {
 
     companion object {
 
@@ -30,15 +35,41 @@ internal class TypeEnvTest {
          */
         @JvmStatic
         val locals = TypeEnv(
-            listOf(
-                relBinding("A", struct("B" to PType.typeBool().toCType())),
-                relBinding("a", struct("b" to PType.typeBool().toCType())),
-                relBinding("X", struct(open = true)),
-                relBinding("x", struct("Y" to PType.typeBool().toCType(), open = false)), // We currently don't allow for partial schema structs
-                relBinding("y", struct(open = true)),
-                relBinding("T", struct("x" to PType.typeBool().toCType(), "x" to PType.typeBool().toCType())),
+            Env(
+                PartiQLPlanner.Session(
+                    "queryId",
+                    "userId",
+                    "currentCatalog",
+                    catalogs = mapOf(
+                        "currentCatalog" to object : ConnectorMetadata {
+                            override fun getObject(path: BindingPath): ConnectorHandle.Obj? {
+                                return null
+                            }
+
+                            @FnExperimental
+                            override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {
+                                return null
+                            }
+
+                            @FnExperimental
+                            override fun getAggregation(path: BindingPath): ConnectorHandle.Agg? {
+                                return null
+                            }
+                        }
+                    )
+                )
             ),
-            outer = emptyList()
+            Scope(
+                listOf(
+                    relBinding("A", struct("B" to PType.typeBool().toCType())),
+                    relBinding("a", struct("b" to PType.typeBool().toCType())),
+                    relBinding("X", struct(open = true)),
+                    relBinding("x", struct("Y" to PType.typeBool().toCType(), open = false)), // We currently don't allow for partial schema structs
+                    relBinding("y", struct(open = true)),
+                    relBinding("T", struct("x" to PType.typeBool().toCType(), "x" to PType.typeBool().toCType())),
+                ),
+                outer = emptyList()
+            )
         )
 
         private fun struct(vararg fields: Pair<String, CompilerType>, open: Boolean = false): CompilerType {

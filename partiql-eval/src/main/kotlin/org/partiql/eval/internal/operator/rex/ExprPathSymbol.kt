@@ -19,11 +19,6 @@ internal class ExprPathSymbol(
         if (struct.isNull) {
             return Datum.nullValue()
         }
-        for (entry in struct.fields) {
-            if (entry.name.equals(symbol, ignoreCase = true)) {
-                return entry.value
-            }
-        }
-        throw TypeCheckException("Couldn't find symbol '$symbol' in $struct.")
+        return struct.getInsensitive(symbol) ?: throw TypeCheckException("Couldn't find symbol '$symbol' in $struct.")
     }
 }

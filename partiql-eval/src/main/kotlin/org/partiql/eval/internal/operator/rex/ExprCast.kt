@@ -23,6 +23,7 @@ import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.ListValue
+import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
@@ -46,6 +47,7 @@ import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
 import org.partiql.value.listValue
+import org.partiql.value.missingValue
 import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
@@ -59,7 +61,8 @@ import java.math.BigInteger
 internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.Expr {
     @OptIn(PartiQLValueExperimental::class)
     override fun eval(env: Environment): Datum {
-        val arg = arg.eval(env).toPartiQLValue()
+        val argDatum = arg.eval(env)
+        val arg = argDatum.toPartiQLValue()
         try {
             val partiqlValue = when (PType.fromPartiQLValueType(arg.type).kind) {
                 PType.Kind.DYNAMIC -> TODO("Not Possible")
@@ -86,14 +89,30 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 PType.Kind.BAG -> castFromCollection(arg as BagValue<*>, cast.target)
                 PType.Kind.LIST -> castFromCollection(arg as ListValue<*>, cast.target)
                 PType.Kind.SEXP -> castFromCollection(arg as SexpValue<*>, cast.target)
-                PType.Kind.STRUCT -> TODO("CAST FROM STRUCT not yet implemented")
+                PType.Kind.STRUCT -> castFromStruct(argDatum, cast.target).toPartiQLValue()
                 PType.Kind.ROW -> TODO("CAST FROM ROW not yet implemented")
-                PType.Kind.UNKNOWN -> TODO("CAST FROM UNKNOWN not yet implemented")
+                PType.Kind.UNKNOWN -> castFromUnknown(arg, cast.target)
                 PType.Kind.VARCHAR -> TODO("CAST FROM VARCHAR not yet implemented")
             }
             return Datum.of(partiqlValue)
         } catch (e: DataException) {
             throw TypeCheckException()
+        }
+    }
+
+    /**
+     * For now, we cannot cast from struct to anything else. Throw a type check exception.
+     */
+    private fun castFromStruct(value: Datum, t: PType): Datum {
+        throw TypeCheckException()
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    private fun castFromUnknown(value: PartiQLValue, t: PType): PartiQLValue {
+        return when (value) {
+            is NullValue -> castFromNull(value, t)
+            is MissingValue -> missingValue() // TODO: Is this allowed?
+            else -> error("This shouldn't have happened")
         }
     }
 
@@ -322,12 +341,17 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
         }
     }
 
-    // TODO: Fix NULL Collection
     @OptIn(PartiQLValueExperimental::class)
     private fun castFromCollection(value: CollectionValue<*>, t: PType): PartiQLValue {
-        val elements = mutableListOf<PartiQLValue>()
-        value.iterator().forEachRemaining {
-            elements.add(it)
+        val elements = when (value.isNull) {
+            true -> null
+            false -> {
+                val elements = mutableListOf<PartiQLValue>()
+                value.iterator().forEachRemaining {
+                    elements.add(it)
+                }
+                elements
+            }
         }
         return when (t.kind) {
             PType.Kind.BAG -> bagValue(elements)

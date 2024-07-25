@@ -21,11 +21,6 @@ internal class ExprPathKey(
             return Datum.nullValue()
         }
         val keyString = keyEvaluated.string
-        for (entry in rootEvaluated.fields) {
-            if (entry.name == keyString) {
-                return entry.value
-            }
-        }
-        throw TypeCheckException()
+        return rootEvaluated.get(keyString) ?: throw TypeCheckException()
     }
 }

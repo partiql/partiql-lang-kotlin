@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
@@ -23,6 +24,7 @@ internal class ExprCallStatic(
         val args = inputs.map { input ->
             val r = input.eval(env)
             if (r.isNull && fn.signature.isNullCall) return nil.invoke()
+            if (r.isMissing && fn.signature.isMissingCall) throw TypeCheckException()
             r.toPartiQLValue()
         }.toTypedArray()
         return Datum.of(fn.invoke(args))

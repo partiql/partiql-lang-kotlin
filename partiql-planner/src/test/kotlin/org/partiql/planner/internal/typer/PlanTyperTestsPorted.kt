@@ -598,14 +598,13 @@ internal class PlanTyperTestsPorted {
                 catalog = "pql",
                 expected = StaticType.BOOL,
             ),
-            ErrorTestCase(
+            // TODO: For some reason, the conformance tests say that this results in TRUE. Regardless, we know it returns
+            //  a boolean. We should re-look at what the conformance tests should return.
+            SuccessTestCase(
                 name = "MISSING IS NULL",
                 key = key("is-type-04"),
                 catalog = "pql",
                 expected = StaticType.BOOL,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
-                )
             ),
             SuccessTestCase(
                 name = "NULL IS NULL",
@@ -966,6 +965,50 @@ internal class PlanTyperTestsPorted {
                 ),
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("a"), setOf("t1", "t2"))
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN (Lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    LEFT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = BagType(INT4)
+            ),
+            SuccessTestCase(
+                name = "INNER JOIN (Lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    INNER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = BagType(INT4)
+            ),
+            ErrorTestCase(
+                name = "RIGHT JOIN (Doesn't support lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    RIGHT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                problemHandler = assertProblemExists(
+                    ProblemGenerator.undefinedVariable(insensitive("lhs"), setOf())
+                )
+            ),
+            ErrorTestCase(
+                name = "FULL JOIN (Doesn't support lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    FULL OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                problemHandler = assertProblemExists(
+                    ProblemGenerator.undefinedVariable(insensitive("lhs"), setOf())
                 )
             ),
         )
