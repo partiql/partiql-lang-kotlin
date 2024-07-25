@@ -55,7 +55,6 @@ import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
-import org.partiql.plan.rexOpErr
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
@@ -267,16 +266,7 @@ internal class Compiler(
     }
 
     override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: PType?): Operator {
-        return when (session.mode) {
-            PartiQLEngine.Mode.PERMISSIVE -> {
-                // Make a runtime TypeCheckException.
-                ExprMissing(node.message)
-            }
-            PartiQLEngine.Mode.STRICT -> {
-                // Promote to error.
-                visitRexOpErr(rexOpErr(node.message, node.causes), null)
-            }
-        }
+        return ExprMissing(ctx ?: PType.typeUnknown()) // TODO: Pass a type
     }
 
     // REL

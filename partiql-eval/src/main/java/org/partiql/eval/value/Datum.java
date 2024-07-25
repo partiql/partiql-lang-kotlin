@@ -345,6 +345,9 @@ public interface Datum extends Iterable<Datum> {
     @Deprecated
     default PartiQLValue toPartiQLValue() {
         PType type = this.getType();
+        if (this.isMissing()) {
+            return PartiQL.missingValue();
+        }
         switch (type.getKind()) {
             case BOOL:
                 return this.isNull() ? PartiQL.boolValue(null) : PartiQL.boolValue(this.getBoolean());

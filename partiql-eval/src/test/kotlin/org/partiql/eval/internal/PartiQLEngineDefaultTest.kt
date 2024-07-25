@@ -1073,6 +1073,20 @@ class PartiQLEngineDefaultTest {
                     structValue("a" to int32Value(1), "b" to int32Value(2))
                 )
             ),
+            // PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (1)
+            // According to the Specification, in permissive mode, functions/operators return missing when one of
+            //  the parameters is missing.
+            SuccessTestCase(
+                input = "SELECT VALUE 5 + v FROM <<1, MISSING>> AS v;",
+                expected = bagValue(int32Value(6), missingValue())
+            ),
+            // PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (1)
+            // See https://github.com/partiql/partiql-tests/pull/118 for more information.
+            SuccessTestCase(
+                input = "SELECT VALUE 5 + v FROM <<1, MISSING>> AS v;",
+                expected = bagValue(int32Value(6), missingValue()),
+                mode = PartiQLEngine.Mode.STRICT
+            ),
         )
 
         @JvmStatic
@@ -1193,11 +1207,6 @@ class PartiQLEngineDefaultTest {
                 expectedPermissive = structValue(
                     "amzn" to decimalValue(BigDecimal.valueOf(840.05))
                 )
-            ),
-            TypingTestCase(
-                name = "PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (1)",
-                input = "SELECT VALUE 5 + v FROM <<1, MISSING>> AS v;",
-                expectedPermissive = bagValue(int32Value(6), missingValue())
             ),
             TypingTestCase(
                 name = "PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (3)",
