@@ -133,12 +133,6 @@ ddl_op::[
   create_table::{
     name:       identifier,
     definition: optional::table_definition,
-    // This is an expression for backward compatibility
-    // For now, we support `PARTITION BY (<id> (, <id>)* ))`
-    // But in the future, we might support additional partition expressions:
-    // such as `PARTITION BY RANGE(..)`
-    partition_by: optional::partition_by,
-    table_properties: list::[table_property],
   },
 
   // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
@@ -239,8 +233,6 @@ type::[
         // for struct subfield. But modeling this to be a list of constraints
         // to prevent future breaking changes.
         constraints: list::[constraint],
-        is_optional: bool,
-        comment: optional::string,
       }
     ],
   },                                                           // STRUCT <fields>
@@ -838,9 +830,6 @@ table_definition::{
       name:        '.identifier.symbol',
       type:        '.type',
       constraints: list::[constraint],
-      // TODO: Consider to model this as a constraint?
-      is_optional: bool,
-      comment: optional::string,
     }
   ],
 }
@@ -857,18 +846,6 @@ constraint::{
       is_primary_key: bool,
     },
   ],
-}
-
-partition_by::[
-  attr_list :: {
-    list: list::['.identifier.symbol']
-  },
-  // We can add other commonly support Partition Expression like `range` later
-]
-
-table_property::{
-  name: string,
-  value: '.value',
 }
 
 // SQL-99 Table 11

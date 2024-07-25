@@ -423,9 +423,7 @@ class ToLegacyAstTest {
                     fields += org.partiql.ast.typeStructField(
                         org.partiql.ast.identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                         typeInt2(),
-                        emptyList(),
-                        false,
-                        null
+                        emptyList()
                     )
                 }
             },

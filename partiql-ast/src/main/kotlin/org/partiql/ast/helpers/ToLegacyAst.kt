@@ -138,12 +138,6 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         }
         val tableName = node.name.symbol
         val def = node.definition?.let { visitTableDefinition(it, ctx) }
-        if (node.partitionBy != null) {
-            error("The legacy AST does not support Partition BY in create Table")
-        }
-        if (node.tableProperties.isNotEmpty()) {
-            error("The legacy AST does not support TBLProperties in create Table")
-        }
         ddl(createTable(tableName, def), metas)
     }
 
@@ -195,12 +189,6 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val name = node.name.symbol
         val type = visitType(node.type, ctx)
         val constraints = node.constraints.translate<PartiqlAst.ColumnConstraint>(ctx)
-        if (node.isOptional) {
-            error("The legacy AST does not support optional field declaration")
-        }
-        if (node.comment != null) {
-            error("The legacy AST does not support comment clause")
-        }
         columnDeclaration(name, type, constraints, metas)
     }
 

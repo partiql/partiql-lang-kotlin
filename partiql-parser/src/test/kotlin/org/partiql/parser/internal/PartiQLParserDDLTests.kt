@@ -10,7 +10,6 @@ import org.partiql.ast.Constraint
 import org.partiql.ast.DdlOp
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
-import org.partiql.ast.PartitionBy
 import org.partiql.ast.Type
 import org.partiql.ast.constraint
 import org.partiql.ast.constraintDefinitionCheck
@@ -26,11 +25,9 @@ import org.partiql.ast.identifierSymbol
 import org.partiql.ast.statementDDL
 import org.partiql.ast.tableDefinition
 import org.partiql.ast.tableDefinitionAttribute
-import org.partiql.ast.tableProperty
 import org.partiql.parser.PartiQLParserException
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
-import org.partiql.value.stringValue
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -70,8 +67,6 @@ class PartiQLParserDDLTests {
                 ddlOpCreateTable(
                     identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
                     null,
-                    null,
-                    emptyList()
                 )
             ),
             // Support Case Sensitive identifier as table name
@@ -82,9 +77,7 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE \"foo\"",
                 ddlOpCreateTable(
                     identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
-                    null,
-                    null,
-                    emptyList()
+                    null
                 )
             ),
             SuccessTestCase(
@@ -98,9 +91,7 @@ class PartiQLParserDDLTests {
                             identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
                         )
                     ),
-                    null,
-                    null,
-                    emptyList()
+                    null
                 )
             ),
             SuccessTestCase(
@@ -114,9 +105,7 @@ class PartiQLParserDDLTests {
                             identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
                         )
                     ),
-                    null,
-                    null,
-                    emptyList()
+                    null
                 )
             ),
 
@@ -138,14 +127,10 @@ class PartiQLParserDDLTests {
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Int2(),
                                 listOf(constraint(null, constraintDefinitionNotNull())),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
-                    ),
-                    null,
-                    emptyList()
+                    )
                 )
             ),
 
@@ -164,14 +149,10 @@ class PartiQLParserDDLTests {
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Int2(),
                                 listOf(constraint(null, constraintDefinitionUnique(null, false))),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -190,14 +171,10 @@ class PartiQLParserDDLTests {
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Int2(),
                                 listOf(constraint(null, constraintDefinitionUnique(null, true))),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -227,14 +204,10 @@ class PartiQLParserDDLTests {
                                         )
                                     )
                                 ),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -262,8 +235,6 @@ class PartiQLParserDDLTests {
                             )
                         )
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -291,8 +262,6 @@ class PartiQLParserDDLTests {
                             )
                         )
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -320,8 +289,6 @@ class PartiQLParserDDLTests {
                             )
                         )
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -340,14 +307,10 @@ class PartiQLParserDDLTests {
                                 identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE),
                                 Type.Int2(),
                                 emptyList(),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -372,28 +335,20 @@ class PartiQLParserDDLTests {
                                         Type.Struct.Field(
                                             identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
                                             Type.Int2(),
-                                            emptyList(),
-                                            false,
-                                            null
+                                            emptyList()
                                         ),
                                         Type.Struct.Field(
                                             identifierSymbol("c", Identifier.CaseSensitivity.INSENSITIVE),
                                             Type.Int2(),
-                                            listOf(Constraint(null, Constraint.Definition.NotNull())),
-                                            false,
-                                            null
+                                            listOf(Constraint(null, Constraint.Definition.NotNull()))
                                         )
                                     )
                                 ),
                                 emptyList(),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -422,34 +377,24 @@ class PartiQLParserDDLTests {
                                                     Type.Struct.Field(
                                                         identifierSymbol("c", Identifier.CaseSensitivity.INSENSITIVE),
                                                         Type.Int2(),
-                                                        emptyList(),
-                                                        false,
-                                                        null
+                                                        emptyList()
                                                     ),
                                                 )
                                             ),
-                                            emptyList(),
-                                            false,
-                                            null
+                                            emptyList()
                                         ),
                                         Type.Struct.Field(
                                             identifierSymbol("d", Identifier.CaseSensitivity.INSENSITIVE),
                                             Type.Array(Type.Int2()),
-                                            emptyList(),
-                                            false,
-                                            null
+                                            emptyList()
                                         )
                                     )
                                 ),
                                 emptyList(),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -470,14 +415,10 @@ class PartiQLParserDDLTests {
                                     emptyList()
                                 ),
                                 emptyList(),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -496,14 +437,10 @@ class PartiQLParserDDLTests {
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Array(Type.Int2()),
                                 emptyList(),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
             SuccessTestCase(
@@ -525,22 +462,16 @@ class PartiQLParserDDLTests {
                                             Type.Struct.Field(
                                                 identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
                                                 Type.Int2(),
-                                                emptyList(),
-                                                false,
-                                                null
+                                                emptyList()
                                             ),
                                         )
                                     ),
                                 ),
                                 emptyList(),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
             SuccessTestCase(
@@ -562,22 +493,16 @@ class PartiQLParserDDLTests {
                                             Type.Struct.Field(
                                                 identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
                                                 Type.Int2(),
-                                                emptyList(),
-                                                false,
-                                                null
+                                                emptyList()
                                             ),
                                         )
                                     ),
                                 ),
                                 emptyList(),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
                 )
             ),
 
@@ -596,313 +521,10 @@ class PartiQLParserDDLTests {
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Array(null),
                                 emptyList(),
-                                false,
-                                null
                             )
                         ),
                         emptyList()
                     ),
-                    null,
-                    emptyList()
-                )
-            ),
-
-            //
-            // Optional keyword
-            //
-            SuccessTestCase(
-                "CREATE TABLE with top level attribute optional",
-                """
-                    CREATE TABLE tbl (
-                        a OPTIONAL INT2
-                    )
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    tableDefinition(
-                        listOf(
-                            tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                                Type.Int2(),
-                                emptyList(),
-                                true,
-                                null
-                            )
-                        ),
-                        emptyList()
-                    ),
-                    null,
-                    emptyList()
-                )
-            ),
-
-            SuccessTestCase(
-                "CREATE TABLE with struct optional field",
-                """
-                    CREATE TABLE tbl (
-                        a STRUCT<b OPTIONAL: INT2>
-                    )
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    tableDefinition(
-                        listOf(
-                            tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                                Type.Struct(
-                                    listOf(
-                                        Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
-                                            Type.Int2(),
-                                            emptyList(),
-                                            true,
-                                            null
-                                        )
-                                    )
-                                ),
-                                emptyList(),
-                                false,
-                                null
-                            )
-                        ),
-                        emptyList()
-                    ),
-                    null,
-                    emptyList()
-                )
-            ),
-
-            SuccessTestCase(
-                "CREATE TABLE with optional struct which has optional field",
-                """
-                    CREATE TABLE tbl (
-                        a OPTIONAL STRUCT<b OPTIONAL: INT2>
-                    )
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    tableDefinition(
-                        listOf(
-                            tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                                Type.Struct(
-                                    listOf(
-                                        Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
-                                            Type.Int2(),
-                                            emptyList(),
-                                            true,
-                                            null
-                                        )
-                                    )
-                                ),
-                                emptyList(),
-                                true,
-                                null
-                            )
-                        ),
-                        emptyList()
-                    ),
-                    null,
-                    emptyList()
-                )
-            ),
-
-            // COMMENT keyword
-            SuccessTestCase(
-                "CREATE TABLE with comment on top level attribute ",
-                """
-                    CREATE TABLE tbl (
-                        a INT2 COMMENT 'attribute a'
-                    )
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    tableDefinition(
-                        listOf(
-                            tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                                Type.Int2(),
-                                emptyList(),
-                                false,
-                                "attribute a"
-                            )
-                        ),
-                        emptyList()
-                    ),
-                    null,
-                    emptyList()
-                )
-            ),
-
-            SuccessTestCase(
-                "CREATE TABLE with comment on struct field",
-                """
-                    CREATE TABLE tbl (
-                        a STRUCT<b : INT2 COMMENT 'comment on struct field'>
-                    )
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    tableDefinition(
-                        listOf(
-                            tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                                Type.Struct(
-                                    listOf(
-                                        Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
-                                            Type.Int2(),
-                                            emptyList(),
-                                            false,
-                                            "comment on struct field"
-                                        )
-                                    )
-                                ),
-                                emptyList(),
-                                false,
-                                null
-                            )
-                        ),
-                        emptyList()
-                    ),
-                    null,
-                    emptyList()
-                )
-            ),
-
-            SuccessTestCase(
-                "CREATE TABLE with comment on struct which has comment on field",
-                """
-                    CREATE TABLE tbl (
-                        a STRUCT<b : INT2 COMMENT 'comment on inner level'> COMMENT 'comment on top level'
-                    )
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    tableDefinition(
-                        listOf(
-                            tableDefinitionAttribute(
-                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                                Type.Struct(
-                                    listOf(
-                                        Type.Struct.Field(
-                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
-                                            Type.Int2(),
-                                            emptyList(),
-                                            false,
-                                            "comment on inner level"
-                                        )
-                                    )
-                                ),
-                                emptyList(),
-                                false,
-                                "comment on top level"
-                            )
-                        ),
-                        emptyList()
-                    ),
-                    null,
-                    emptyList()
-                )
-            ),
-
-            // Partition BY
-            SuccessTestCase(
-                "CREATE TABLE with Partition by single attribute",
-                """
-                    CREATE TABLE tbl
-                        PARTITION BY (a)
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    null,
-                    PartitionBy.AttrList(
-                        listOf(
-                            identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                        )
-                    ),
-                    emptyList()
-                )
-            ),
-
-            SuccessTestCase(
-                "CREATE TABLE with Partition by multiple attribute",
-                """
-                    CREATE TABLE tbl
-                        PARTITION BY (a, b)
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    null,
-                    PartitionBy.AttrList(
-                        listOf(
-                            identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
-                        )
-                    ),
-                    emptyList()
-                )
-            ),
-
-            // Table Properties
-            SuccessTestCase(
-                "CREATE TABLE with TBLPROPERTIES single property",
-                """
-                    CREATE TABLE tbl
-                    TBLPROPERTIES ('k1' = 'v1')
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    null,
-                    null,
-                    listOf(tableProperty("k1", stringValue("v1")))
-                )
-            ),
-
-            SuccessTestCase(
-                "CREATE TABLE with TBLPROPERTIES preserve case sensitivity",
-                """
-                    CREATE TABLE tbl
-                    TBLPROPERTIES ('K1k' = 'V1v')
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    null,
-                    null,
-                    listOf(tableProperty("K1k", stringValue("V1v")))
-                )
-            ),
-
-            SuccessTestCase(
-                "CREATE TABLE with TBLPROPERTIES multiple properties",
-                """
-                    CREATE TABLE tbl
-                    TBLPROPERTIES ('k1' = 'v1', 'k2' = 'v2')
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    null,
-                    null,
-                    listOf(
-                        tableProperty("k1", stringValue("v1")),
-                        tableProperty("k2", stringValue("v2"))
-                    )
-                )
-            ),
-
-            SuccessTestCase(
-                "CREATE TABLE with TBLPROPERTIES and PARTITION BY",
-                """
-                    CREATE TABLE tbl
-                    PARTITION BY (a)
-                    TBLPROPERTIES ('k1' = 'v1')
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
-                    null,
-                    PartitionBy.AttrList(listOf(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),),),
-                    listOf(tableProperty("k1", stringValue("v1")),)
                 )
             ),
         )
@@ -994,90 +616,6 @@ class PartiQLParserDDLTests {
                 """
                     CREATE TABLE TBL(
                         a LIST<>
-                    )
-                """.trimIndent()
-            ),
-            ErrorTestCase(
-                "Multiple Partition by not allowed",
-                """
-                    CREATE TABLE TBL
-                        PARTITION BY (a)
-                        PARTITION BY (b)
-                """.trimIndent()
-            ),
-            ErrorTestCase(
-                "Empty Partition by not allowed",
-                """
-                    CREATE TABLE TBL
-                        PARTITION BY ()
-                """.trimIndent()
-            ),
-
-            ErrorTestCase(
-                "Multiple TBLPROPERTIES not allowed",
-                """
-                    CREATE TABLE TBL
-                        TBLPROPERTIES('k1' = 'v1')
-                        TBLPROPERTIES('k2' = 'v2')
-                """.trimIndent()
-            ),
-
-            ErrorTestCase(
-                "Empty TBLPROPERTIES not allowed",
-                """
-                    CREATE TABLE TBL
-                        TBLPROPERTIES()
-                """.trimIndent()
-            ),
-
-            ErrorTestCase(
-                "TBLPROPERTIES only allowed String value",
-                """
-                    CREATE TABLE TBL
-                        TBLPROPERTIES('k1' = 1)
-                """.trimIndent()
-            ),
-
-            ErrorTestCase(
-                "TBLPROPERTIES only allowed String key",
-                """
-                    CREATE TABLE TBL
-                        TBLPROPERTIES(1 = '1')
-                """.trimIndent()
-            ),
-
-            ErrorTestCase(
-                "OPTIONAL needs to follow attribute name",
-                """
-                    CREATE TABLE TBL (
-                        a INT2 OPTIONAL
-                    )
-                """.trimIndent()
-            ),
-
-            ErrorTestCase(
-                "Multiple Optional not allowed",
-                """
-                    CREATE TABLE TBL (
-                        a OPTIONAL OPTIONAL INT2
-                    )
-                """.trimIndent()
-            ),
-
-            ErrorTestCase(
-                "Multiple COMMENT not allowed",
-                """
-                    CREATE TABLE TBL (
-                        a INT2 COMMENT 'comment1' COMMENT 'comment2'
-                    )
-                """.trimIndent()
-            ),
-
-            ErrorTestCase(
-                "Inline comment needs to appear last",
-                """
-                    CREATE TABLE TBL (
-                        a INT2 COMMENT 'comment1' NOT NULL
                     )
                 """.trimIndent()
             ),

@@ -96,44 +96,6 @@ internal class PartiQLParserDDLTest : PartiQLParserTestBase() {
                 code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
                 context = mapOf(),
             ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support OPTIONAL Attribute",
-                query = """
-                    CREATE TABLE tbl (
-                        a OPTIONAL INT2
-                    )
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support COMMENT keyword",
-                query = """
-                    CREATE TABLE tbl (
-                        a INT2 COMMENT 'this is a comment'
-                    )
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support PARTITION BY keyword",
-                query = """
-                    CREATE TABLE tbl 
-                        PARTITION BY (a, b)
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support TBLPROPERTIES keyword",
-                query = """
-                    CREATE TABLE tbl 
-                        TBLPROPERTIES ('k1' = 'v1')
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
 
             // Putting those tests here are they are impacted by DDL implementation
             ParserErrorTestCase(
