@@ -106,9 +106,32 @@ statement::[
   ],
 
   // Data Definition Language
-  d_d_l::{
-    op: ddl_op
-  },
+  d_d_l::[
+
+    // CREATE TABLE <identifier> [<table_def>]
+    create_table::{
+      name:       identifier,
+      definition: optional::table_definition,
+    },
+
+    // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
+    create_index::{
+      index:  optional::identifier,
+      table:  identifier,
+      fields: list::[path],
+    },
+
+    // DROP TABLE <identifier>
+    drop_table::{
+      table: identifier,
+    },
+
+    // DROP INDEX <identifier> ON <identifier>
+    drop_index::{
+      index:  identifier, // <identifier>[0]
+      table:  identifier, // <identifier>[1]
+    },
+  ],
 
   // EXEC <symbol> [<expr>.*]
   exec::{
@@ -125,32 +148,6 @@ statement::[
         format:     optional::string,
       },
     ],
-  },
-]
-
-ddl_op::[
-  // CREATE TABLE <identifier> [<table_def>]
-  create_table::{
-    name:       identifier,
-    definition: optional::table_definition,
-  },
-
-  // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
-  create_index::{
-    index:  optional::identifier,
-    table:  identifier,
-    fields: list::[path],
-  },
-
-  // DROP TABLE <identifier>
-  drop_table::{
-    table: identifier,
-  },
-
-  // DROP INDEX <identifier> ON <identifier>
-  drop_index::{
-    index:  identifier, // <identifier>[0]
-    table:  identifier, // <identifier>[1]
   },
 ]
 
@@ -785,29 +782,27 @@ returning::{
   ],
 }
 
+// `<column_name> <type> <column_constraint>*`
+// `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
 table_definition::{
-  attributes: list::[attribute],
-  // table level constraints
-  constraints: list::[constraint],
+  columns: list::[column],
   _: [
-    attribute::{
-      name:        '.identifier.symbol',
+    column::{
+      name:        string,
       type:        '.type',
       constraints: list::[constraint],
-    }
-  ],
-}
-
-constraint::{
-  name: optional::string,
-  definition: [
-    nullable::{},
-    not_null::{},
-    check::{ expr: expr },
-    unique::{
-      // for attribute level constraint, we can set this attribute to null
-      attributes: optional::list::['.identifier.symbol'],
-      is_primary_key: bool,
+      _: [
+        // TODO improve modeling language to avoid these wrapped unions
+        // Also, prefer not to nest more than twice
+        constraint::{
+          name: optional::string,
+          body: [
+            nullable::{},
+            not_null::{},
+            check::{ expr: expr },
+          ],
+        },
+      ],
     },
   ],
 }

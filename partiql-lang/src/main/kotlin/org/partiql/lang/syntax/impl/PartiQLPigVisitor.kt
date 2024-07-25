@@ -281,7 +281,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitColumnConstraint(ctx: PartiQLParser.ColumnConstraintContext) = PartiqlAst.build {
-        val name = ctx.constraintName()?.let { visitSymbolPrimitive(it.symbolPrimitive()).name.text }
+        val name = ctx.columnConstraintName()?.let { visitSymbolPrimitive(it.symbolPrimitive()).name.text }
         val def = visit(ctx.columnConstraintDef()) as PartiqlAst.ColumnConstraintDef
         columnConstraint(name, def)
     }

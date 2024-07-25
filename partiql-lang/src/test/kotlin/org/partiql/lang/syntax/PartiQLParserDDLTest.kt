@@ -35,47 +35,7 @@ internal class PartiQLParserDDLTest : PartiQLParserTestBase() {
                 query = "DROP Table foo.bar",
                 code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
                 context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support Unique Constraints in CREATE TABLE",
-                query = """
-                    CREATE TABLE tbl (
-                        a INT2 UNIQUE
-                    )
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support Primary Key Constraint in CREATE TABLE",
-                query = """
-                    CREATE TABLE tbl (
-                        a INT2 PRIMARY KEY
-                    )
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support CHECK Constraint in CREATE TABLE",
-                query = """
-                    CREATE TABLE tbl (
-                        a INT2 CHECK(a > 0)
-                    )
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
-            ParserErrorTestCase(
-                description = "PIG Parser does not support table constraint in CREATE TABLE",
-                query = """
-                    CREATE TABLE tbl (
-                       check (a > 0)
-                    )
-                """.trimIndent(),
-                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                context = mapOf(),
-            ),
+            )
         )
     }
 }

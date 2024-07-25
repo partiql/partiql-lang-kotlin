@@ -77,8 +77,9 @@ execCommand
 qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
 
 tableName : symbolPrimitive;
+tableConstraintName : symbolPrimitive;
 columnName : symbolPrimitive;
-constraintName : symbolPrimitive;
+columnConstraintName : symbolPrimitive;
 
 ddl
     : createCommand
@@ -101,42 +102,16 @@ tableDef
 
 tableDefPart
     : columnName type columnConstraint*                             # ColumnDeclaration
-    | ( CONSTRAINT constraintName )?  tableConstraintDef            # TableConstrDeclaration
-    ;
-
-tableConstraintDef
-    : checkConstraintDef                                            # TableConstrCheck
-    | uniqueConstraintDef                                           # TableConstrUnique
     ;
 
 columnConstraint
-    : ( CONSTRAINT constraintName )?  columnConstraintDef
+    : ( CONSTRAINT columnConstraintName )?  columnConstraintDef
     ;
 
 columnConstraintDef
-    : NOT NULL                                     # ColConstrNotNull
-    | NULL                                         # ColConstrNull
-    | uniqueSpec                                   # ColConstrUnique
-    | checkConstraintDef                           # ColConstrCheck
+    : NOT NULL                                  # ColConstrNotNull
+    | NULL                                      # ColConstrNull
     ;
-
-checkConstraintDef
-    : CHECK PAREN_LEFT searchCondition PAREN_RIGHT
-    ;
-
-uniqueSpec
-    : PRIMARY KEY                                # PrimaryKey
-    | UNIQUE                                     # Unique
-    ;
-
-uniqueConstraintDef
-    : uniqueSpec PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT
-    ;
-
-// <search condition>    ::= <boolean term> | <search condition> OR <boolean term>
-// we cannot do exactly that for the way expression precedence is structured in the grammar file.
-// but we at least can eliminate SFW query here.
-searchCondition : exprOr;
 
 /**
  *
@@ -218,6 +193,9 @@ onConflictLegacy
 conflictTarget
     : PAREN_LEFT symbolPrimitive (COMMA symbolPrimitive)* PAREN_RIGHT
     | ON CONSTRAINT constraintName;
+
+constraintName
+    : symbolPrimitive;
 
 conflictAction
     : DO NOTHING

@@ -16,9 +16,7 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.ast.AstNode
-import org.partiql.ast.Constraint
 import org.partiql.ast.DatetimeField
-import org.partiql.ast.DdlOp
 import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
@@ -125,23 +123,24 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             domain(statement, type, format, metas)
         }
 
-    override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) = when (val op = node.op) {
-        is DdlOp.CreateIndex -> visitDdlOpCreateIndex(op, ctx)
-        is DdlOp.CreateTable -> visitDdlOpCreateTable(op, ctx)
-        is DdlOp.DropIndex -> visitDdlOpDropIndex(op, ctx)
-        is DdlOp.DropTable -> visitDdlOpDropTable(op, ctx)
-    }
+    override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) = super.visit(node, ctx) as PartiqlAst.Statement.Ddl
 
-    override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Ctx) = translate(node) { metas ->
+    override fun visitStatementDDLCreateTable(
+        node: Statement.DDL.CreateTable,
+        ctx: Ctx,
+    ) = translate(node) { metas ->
         if (node.name !is Identifier.Symbol) {
             error("The legacy AST does not support qualified identifiers as table names")
         }
-        val tableName = node.name.symbol
+        val tableName = (node.name as Identifier.Symbol).symbol
         val def = node.definition?.let { visitTableDefinition(it, ctx) }
         ddl(createTable(tableName, def), metas)
     }
 
-    override fun visitDdlOpCreateIndex(node: DdlOp.CreateIndex, ctx: Ctx) = translate(node) { metas ->
+    override fun visitStatementDDLCreateIndex(
+        node: Statement.DDL.CreateIndex,
+        ctx: Ctx,
+    ) = translate(node) { metas ->
         if (node.index != null) {
             error("The legacy AST does not support index names")
         }
@@ -153,7 +152,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         ddl(createIndex(tableName, fields), metas)
     }
 
-    override fun visitDdlOpDropTable(node: DdlOp.DropTable, ctx: Ctx) = translate(node) { metas ->
+    override fun visitStatementDDLDropTable(node: Statement.DDL.DropTable, ctx: Ctx) = translate(node) { metas ->
         if (node.table !is Identifier.Symbol) {
             error("The legacy AST does not support qualified identifiers as table names")
         }
@@ -162,7 +161,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         ddl(dropTable(tableName), metas)
     }
 
-    override fun visitDdlOpDropIndex(node: DdlOp.DropIndex, ctx: Ctx) = translate(node) { metas ->
+    override fun visitStatementDDLDropIndex(node: Statement.DDL.DropIndex, ctx: Ctx) = translate(node) { metas ->
         if (node.index !is Identifier.Symbol) {
             error("The legacy AST does not support qualified identifiers as index names")
         }
@@ -177,28 +176,28 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitTableDefinition(node: TableDefinition, ctx: Ctx) = translate(node) { metas ->
-        val parts = node.attributes.translate<PartiqlAst.TableDefPart>(ctx)
-        if (node.constraints.isNotEmpty()) {
-            error("The legacy AST does not support table level constraint declaration")
-        }
+        val parts = node.columns.translate<PartiqlAst.TableDefPart>(ctx)
         tableDef(parts, metas)
     }
 
-    override fun visitTableDefinitionAttribute(node: TableDefinition.Attribute, ctx: Ctx) = translate(node) { metas ->
-        // Legacy AST treat table name as a case-sensitive string
-        val name = node.name.symbol
+    override fun visitTableDefinitionColumn(node: TableDefinition.Column, ctx: Ctx) = translate(node) { metas ->
+        val name = node.name
         val type = visitType(node.type, ctx)
         val constraints = node.constraints.translate<PartiqlAst.ColumnConstraint>(ctx)
         columnDeclaration(name, type, constraints, metas)
     }
 
-    override fun visitConstraint(node: Constraint, ctx: Ctx) = translate(node) {
+    override fun visitTableDefinitionColumnConstraint(
+        node: TableDefinition.Column.Constraint,
+        ctx: Ctx,
+    ) = translate(node) { metas ->
         val name = node.name
-        val def = when (node.definition) {
-            is Constraint.Definition.Check -> throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
-            is Constraint.Definition.NotNull -> columnNotnull()
-            is Constraint.Definition.Nullable -> columnNull()
-            is Constraint.Definition.Unique -> throw IllegalArgumentException("PIG AST does not support Unique/Primary Key constraint")
+        val def = when (node.body) {
+            is TableDefinition.Column.Constraint.Body.Check -> {
+                throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
+            }
+            is TableDefinition.Column.Constraint.Body.NotNull -> columnNotnull()
+            is TableDefinition.Column.Constraint.Body.Nullable -> columnNull()
         }
         columnConstraint(name, def, metas)
     }
