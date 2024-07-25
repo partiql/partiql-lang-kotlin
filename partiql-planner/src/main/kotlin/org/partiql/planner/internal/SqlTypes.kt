@@ -207,7 +207,6 @@ internal object SqlTypes {
         }
         is Type.Any -> dynamic()
         is Type.List -> array()
-        is Type.Array -> array(type.type?.let { from(it) })
         is Type.Tuple -> struct()
         is Type.Struct -> struct()
         is Type.Custom -> TODO("Custom type not supported ")

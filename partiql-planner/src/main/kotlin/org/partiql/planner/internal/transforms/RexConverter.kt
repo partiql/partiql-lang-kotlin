@@ -852,10 +852,6 @@ internal object RexConverter {
                 is Type.Custom -> TODO("Custom type not supported ")
                 is Type.List -> PType.typeList()
                 is Type.Tuple -> PType.typeStruct()
-                is Type.Array -> when (type.type) {
-                    null -> PType.typeList()
-                    else -> PType.typeList(visitType(type.type!!))
-                }
                 is Type.Struct -> PType.typeStruct()
             }.toCType()
         }

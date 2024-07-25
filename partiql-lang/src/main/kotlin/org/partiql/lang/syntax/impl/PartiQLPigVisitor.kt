@@ -1734,6 +1734,14 @@ internal class PartiQLPigVisitor(
         return com.amazon.ionelement.api.metaContainerOf(Pair(metas.tag, metas))
     }
 
+    private fun List<Token>.getSourceMetaContainer(): MetaContainer {
+        val base = this.firstOrNull() ?: return emptyMetaContainer()
+        val length = this.fold(0) { acc, token ->
+            acc + token.stopIndex - token.startIndex + 1
+        }
+        return metaContainerOf(SourceLocationMeta(base.line.toLong(), base.charPositionInLine.toLong() + 1, length.toLong()))
+    }
+
     private fun TerminalNode.getSourceMetas(): SourceLocationMeta = this.symbol.getSourceMetas()
 
     private fun Token.getSourceMetas(): SourceLocationMeta {

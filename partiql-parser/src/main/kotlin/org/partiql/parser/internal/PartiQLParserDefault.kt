@@ -632,7 +632,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnDeclaration(ctx: GeneratedParser.ColumnDeclarationContext) = translate(ctx) {
-            val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive())
+            val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive()).symbol
             val type = visit(ctx.type()) as Type
             val constraints = ctx.columnConstraint().map {
                 visitColumnConstraint(it)
