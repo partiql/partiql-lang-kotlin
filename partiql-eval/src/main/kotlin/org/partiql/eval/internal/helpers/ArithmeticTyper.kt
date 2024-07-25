@@ -77,8 +77,8 @@ internal object ArithmeticTyper {
     private fun arithmeticUnary(arg: PType): PType? {
         val argMayBeNumber = arg.kind == Kind.DYNAMIC || TypeFamily.NUMBERS.contains(arg.kind)
         return when (argMayBeNumber) {
-            true -> null
-            false -> arg
+            true -> arg
+            false -> null
         }
     }
 
