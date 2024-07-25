@@ -376,12 +376,32 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         return h
     }
 
-    override fun visitExprIsType(node: Expr.IsType, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.value, h)
-        h = h concat if (node.not == true) r(" IS NOT ") else r(" IS ")
-        h = visitType(node.type, h)
-        return h
+    override fun visitExprIsNull(node: Expr.IsNull, head: SqlBlock): SqlBlock {
+        return visitExprIsType(node.value, node.not, "NULL", head)
+    }
+
+    override fun visitExprIsMissing(node: Expr.IsMissing, head: SqlBlock): SqlBlock {
+        return visitExprIsType(node.value, node.not, "MISSING", head)
+    }
+
+    override fun visitExprIsTrue(node: Expr.IsTrue, head: SqlBlock): SqlBlock {
+        return visitExprIsType(node.value, node.not, "TRUE", head)
+    }
+
+    override fun visitExprIsFalse(node: Expr.IsFalse, head: SqlBlock): SqlBlock {
+        return visitExprIsType(node.value, node.not, "FALSE", head)
+    }
+
+    override fun visitExprIsUnknown(node: Expr.IsUnknown, head: SqlBlock): SqlBlock {
+        return visitExprIsType(node.value, node.not, "UNKNOWN", head)
+    }
+
+    private fun visitExprIsType(value: Expr, not: Boolean?, rhs: String, head: SqlBlock): SqlBlock {
+        var t = head
+        t = visitExprWrapped(value, t)
+        t = t concat if (not == true) " IS NOT " else " IS "
+        t = t concat rhs
+        return t
     }
 
     override fun visitExprCase(node: Expr.Case, head: SqlBlock): SqlBlock {

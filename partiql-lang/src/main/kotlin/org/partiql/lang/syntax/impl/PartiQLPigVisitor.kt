@@ -1172,9 +1172,13 @@ internal class PartiQLPigVisitor(
         not(inCollection, ctx.NOT().getSourceMetaContainer() + metaContainerOf(LegacyLogicalNotMeta.instance))
     }
 
-    override fun visitPredicateIs(ctx: PartiQLParser.PredicateIsContext) = PartiqlAst.build {
+    override fun visitPredicateAbsent(ctx: PartiQLParser.PredicateAbsentContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
-        val rhs = visit(ctx.type()) as PartiqlAst.Type
+        val rhs = when (ctx.absent.type) {
+            PartiQLParser.NULL -> nullType()
+            PartiQLParser.MISSING -> missingType()
+            else -> error("Unexpected value for absent predicate IS [NULL|MISSING]")
+        }
         val isType = isType(lhs, rhs, ctx.IS().getSourceMetaContainer())
         if (ctx.NOT() == null) return@build isType
         not(isType, ctx.NOT().getSourceMetaContainer() + metaContainerOf(LegacyLogicalNotMeta.instance))

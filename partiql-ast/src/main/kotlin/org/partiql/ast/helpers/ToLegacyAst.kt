@@ -520,14 +520,36 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         }
     }
 
-    override fun visitExprIsType(node: Expr.IsType, ctx: Ctx) = translate(node) { metas ->
+    override fun visitExprIsNull(node: Expr.IsNull, ctx: Ctx) = translate(node) { metas ->
         val value = visitExpr(node.value, ctx)
-        val type = visitType(node.type, ctx)
-        if (node.not != null && node.not!!) {
+        val type = nullType()
+        if (node.not != null && node.not) {
             not(isType(value, type), metas)
         } else {
             isType(value, type, metas)
         }
+    }
+
+    override fun visitExprIsMissing(node: Expr.IsMissing, ctx: Ctx) = translate(node) { metas ->
+        val value = visitExpr(node.value, ctx)
+        val type = missingType()
+        if (node.not != null && node.not) {
+            not(isType(value, type), metas)
+        } else {
+            isType(value, type, metas)
+        }
+    }
+
+    override fun visitExprIsTrue(node: Expr.IsTrue, ctx: Ctx): PartiqlAst.PartiqlAstNode {
+        error("IS [ NOT ] TRUE is not supported in the legacy AST")
+    }
+
+    override fun visitExprIsFalse(node: Expr.IsFalse, ctx: Ctx): PartiqlAst.PartiqlAstNode {
+        error("IS [ NOT ] FALSE is not supported in the legacy AST")
+    }
+
+    override fun visitExprIsUnknown(node: Expr.IsUnknown, ctx: Ctx): PartiqlAst.PartiqlAstNode {
+        error("IS [ NOT ] UNKNOWN is not supported in the legacy AST")
     }
 
     override fun visitExprCase(node: Expr.Case, ctx: Ctx) = translate(node) { metas ->

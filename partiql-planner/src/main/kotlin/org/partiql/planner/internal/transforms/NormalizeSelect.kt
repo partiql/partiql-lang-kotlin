@@ -22,7 +22,6 @@ import org.partiql.ast.Select
 import org.partiql.ast.exprCall
 import org.partiql.ast.exprCase
 import org.partiql.ast.exprCaseBranch
-import org.partiql.ast.exprIsType
 import org.partiql.ast.exprLit
 import org.partiql.ast.exprStruct
 import org.partiql.ast.exprStructField
@@ -32,7 +31,6 @@ import org.partiql.ast.identifierSymbol
 import org.partiql.ast.selectProject
 import org.partiql.ast.selectProjectItemExpression
 import org.partiql.ast.selectValue
-import org.partiql.ast.typeStruct
 import org.partiql.ast.util.AstRewriter
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.stringValue
@@ -173,7 +171,10 @@ internal object NormalizeSelect {
             }
         }
 
-        override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, ctx: () -> Int): Select.Project.Item.Expression {
+        override fun visitSelectProjectItemExpression(
+            node: Select.Project.Item.Expression,
+            ctx: () -> Int,
+        ): Select.Project.Item.Expression {
             val expr = visitExpr(node.expr, newCtx()) as Expr
             val alias = when (node.asAlias) {
                 null -> expr.toBinder(ctx)
@@ -266,7 +267,8 @@ internal object NormalizeSelect {
         @OptIn(PartiQLValueExperimental::class)
         private fun visitSelectProjectWithoutProjectAll(node: Select.Project): Select.Value {
             val structFields = node.items.map { item ->
-                val itemExpr = item as? Select.Project.Item.Expression ?: error("Expected the projection to be an expression.")
+                val itemExpr =
+                    item as? Select.Project.Item.Expression ?: error("Expected the projection to be an expression.")
                 exprStructField(
                     name = exprLit(stringValue(itemExpr.asAlias?.symbol!!)),
                     value = item.expr
@@ -280,12 +282,15 @@ internal object NormalizeSelect {
             )
         }
 
-        @OptIn(PartiQLValueExperimental::class)
         private fun buildCaseWhenStruct(expr: Expr, index: Int): Expr.Case = exprCase(
             expr = null,
             branches = listOf(
                 exprCaseBranch(
-                    condition = exprIsType(expr, typeStruct(emptyList()), null),
+                    condition = exprCall(
+                        function = id("is_struct"),
+                        args = listOf(expr),
+                        setq = null,
+                    ),
                     expr = expr
                 )
             ),

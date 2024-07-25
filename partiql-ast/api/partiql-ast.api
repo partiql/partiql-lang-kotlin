@@ -30,7 +30,11 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprExtract (Lorg/partiql/ast/DatetimeField;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Extract;
 	public static final fun exprInCollection (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$InCollection;
 	public static final fun exprIon (Lcom/amazon/ionelement/api/IonElement;)Lorg/partiql/ast/Expr$Ion;
-	public static final fun exprIsType (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsType;
+	public static final fun exprIsFalse (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsFalse;
+	public static final fun exprIsMissing (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsMissing;
+	public static final fun exprIsNull (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsNull;
+	public static final fun exprIsTrue (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsTrue;
+	public static final fun exprIsUnknown (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsUnknown;
 	public static final fun exprLike (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$Like;
 	public static final fun exprLit (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/Expr$Lit;
 	public static final fun exprMatch (Lorg/partiql/ast/Expr;Lorg/partiql/ast/GraphMatch;)Lorg/partiql/ast/Expr$Match;
@@ -877,27 +881,109 @@ public final class org/partiql/ast/Expr$Ion$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/ExprIonBuilder;
 }
 
-public final class org/partiql/ast/Expr$IsType : org/partiql/ast/Expr {
-	public static final field Companion Lorg/partiql/ast/Expr$IsType$Companion;
+public final class org/partiql/ast/Expr$IsFalse : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$IsFalse$Companion;
 	public final field not Ljava/lang/Boolean;
-	public final field type Lorg/partiql/ast/Type;
 	public final field value Lorg/partiql/ast/Expr;
-	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;)V
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/ExprIsTypeBuilder;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprIsFalseBuilder;
 	public final fun component1 ()Lorg/partiql/ast/Expr;
-	public final fun component2 ()Lorg/partiql/ast/Type;
-	public final fun component3 ()Ljava/lang/Boolean;
-	public final fun copy (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsType;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$IsType;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsType;
+	public final fun component2 ()Ljava/lang/Boolean;
+	public final fun copy (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsFalse;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$IsFalse;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsFalse;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/Expr$IsType$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/ExprIsTypeBuilder;
+public final class org/partiql/ast/Expr$IsFalse$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprIsFalseBuilder;
+}
+
+public final class org/partiql/ast/Expr$IsMissing : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$IsMissing$Companion;
+	public final field not Ljava/lang/Boolean;
+	public final field value Lorg/partiql/ast/Expr;
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprIsMissingBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Expr;
+	public final fun component2 ()Ljava/lang/Boolean;
+	public final fun copy (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsMissing;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$IsMissing;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsMissing;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$IsMissing$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprIsMissingBuilder;
+}
+
+public final class org/partiql/ast/Expr$IsNull : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$IsNull$Companion;
+	public final field not Ljava/lang/Boolean;
+	public final field value Lorg/partiql/ast/Expr;
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprIsNullBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Expr;
+	public final fun component2 ()Ljava/lang/Boolean;
+	public final fun copy (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsNull;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$IsNull;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsNull;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$IsNull$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprIsNullBuilder;
+}
+
+public final class org/partiql/ast/Expr$IsTrue : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$IsTrue$Companion;
+	public final field not Ljava/lang/Boolean;
+	public final field value Lorg/partiql/ast/Expr;
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprIsTrueBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Expr;
+	public final fun component2 ()Ljava/lang/Boolean;
+	public final fun copy (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsTrue;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$IsTrue;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsTrue;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$IsTrue$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprIsTrueBuilder;
+}
+
+public final class org/partiql/ast/Expr$IsUnknown : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$IsUnknown$Companion;
+	public final field not Ljava/lang/Boolean;
+	public final field value Lorg/partiql/ast/Expr;
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprIsUnknownBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Expr;
+	public final fun component2 ()Ljava/lang/Boolean;
+	public final fun copy (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsUnknown;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$IsUnknown;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsUnknown;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$IsUnknown$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprIsUnknownBuilder;
 }
 
 public final class org/partiql/ast/Expr$Like : org/partiql/ast/Expr {
@@ -4052,8 +4138,16 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun exprInCollection$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$InCollection;
 	public final fun exprIon (Lcom/amazon/ionelement/api/IonElement;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Ion;
 	public static synthetic fun exprIon$default (Lorg/partiql/ast/builder/AstBuilder;Lcom/amazon/ionelement/api/IonElement;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Ion;
-	public final fun exprIsType (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$IsType;
-	public static synthetic fun exprIsType$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsType;
+	public final fun exprIsFalse (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$IsFalse;
+	public static synthetic fun exprIsFalse$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsFalse;
+	public final fun exprIsMissing (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$IsMissing;
+	public static synthetic fun exprIsMissing$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsMissing;
+	public final fun exprIsNull (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$IsNull;
+	public static synthetic fun exprIsNull$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsNull;
+	public final fun exprIsTrue (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$IsTrue;
+	public static synthetic fun exprIsTrue$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsTrue;
+	public final fun exprIsUnknown (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$IsUnknown;
+	public static synthetic fun exprIsUnknown$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsUnknown;
 	public final fun exprLike (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Like;
 	public static synthetic fun exprLike$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Like;
 	public final fun exprLit (Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Lit;
@@ -4720,20 +4814,69 @@ public final class org/partiql/ast/builder/ExprIonBuilder {
 	public final fun value (Lcom/amazon/ionelement/api/IonElement;)Lorg/partiql/ast/builder/ExprIonBuilder;
 }
 
-public final class org/partiql/ast/builder/ExprIsTypeBuilder {
+public final class org/partiql/ast/builder/ExprIsFalseBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Expr$IsType;
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$IsFalse;
 	public final fun getNot ()Ljava/lang/Boolean;
-	public final fun getType ()Lorg/partiql/ast/Type;
 	public final fun getValue ()Lorg/partiql/ast/Expr;
-	public final fun not (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/ExprIsTypeBuilder;
+	public final fun not (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/ExprIsFalseBuilder;
 	public final fun setNot (Ljava/lang/Boolean;)V
-	public final fun setType (Lorg/partiql/ast/Type;)V
 	public final fun setValue (Lorg/partiql/ast/Expr;)V
-	public final fun type (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/ExprIsTypeBuilder;
-	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprIsTypeBuilder;
+	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprIsFalseBuilder;
+}
+
+public final class org/partiql/ast/builder/ExprIsMissingBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$IsMissing;
+	public final fun getNot ()Ljava/lang/Boolean;
+	public final fun getValue ()Lorg/partiql/ast/Expr;
+	public final fun not (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/ExprIsMissingBuilder;
+	public final fun setNot (Ljava/lang/Boolean;)V
+	public final fun setValue (Lorg/partiql/ast/Expr;)V
+	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprIsMissingBuilder;
+}
+
+public final class org/partiql/ast/builder/ExprIsNullBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$IsNull;
+	public final fun getNot ()Ljava/lang/Boolean;
+	public final fun getValue ()Lorg/partiql/ast/Expr;
+	public final fun not (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/ExprIsNullBuilder;
+	public final fun setNot (Ljava/lang/Boolean;)V
+	public final fun setValue (Lorg/partiql/ast/Expr;)V
+	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprIsNullBuilder;
+}
+
+public final class org/partiql/ast/builder/ExprIsTrueBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$IsTrue;
+	public final fun getNot ()Ljava/lang/Boolean;
+	public final fun getValue ()Lorg/partiql/ast/Expr;
+	public final fun not (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/ExprIsTrueBuilder;
+	public final fun setNot (Ljava/lang/Boolean;)V
+	public final fun setValue (Lorg/partiql/ast/Expr;)V
+	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprIsTrueBuilder;
+}
+
+public final class org/partiql/ast/builder/ExprIsUnknownBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$IsUnknown;
+	public final fun getNot ()Ljava/lang/Boolean;
+	public final fun getValue ()Lorg/partiql/ast/Expr;
+	public final fun not (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/ExprIsUnknownBuilder;
+	public final fun setNot (Ljava/lang/Boolean;)V
+	public final fun setValue (Lorg/partiql/ast/Expr;)V
+	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprIsUnknownBuilder;
 }
 
 public final class org/partiql/ast/builder/ExprLikeBuilder {
@@ -6442,8 +6585,16 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/A
 	public fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public synthetic fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprIsFalse (Lorg/partiql/ast/Expr$IsFalse;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsFalse (Lorg/partiql/ast/Expr$IsFalse;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprIsMissing (Lorg/partiql/ast/Expr$IsMissing;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsMissing (Lorg/partiql/ast/Expr$IsMissing;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprIsNull (Lorg/partiql/ast/Expr$IsNull;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsNull (Lorg/partiql/ast/Expr$IsNull;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprIsTrue (Lorg/partiql/ast/Expr$IsTrue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsTrue (Lorg/partiql/ast/Expr$IsTrue;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprIsUnknown (Lorg/partiql/ast/Expr$IsUnknown;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsUnknown (Lorg/partiql/ast/Expr$IsUnknown;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLike (Lorg/partiql/ast/Expr$Like;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6719,8 +6870,16 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprIsFalse (Lorg/partiql/ast/Expr$IsFalse;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsFalse (Lorg/partiql/ast/Expr$IsFalse;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprIsMissing (Lorg/partiql/ast/Expr$IsMissing;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsMissing (Lorg/partiql/ast/Expr$IsMissing;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprIsNull (Lorg/partiql/ast/Expr$IsNull;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsNull (Lorg/partiql/ast/Expr$IsNull;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprIsTrue (Lorg/partiql/ast/Expr$IsTrue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsTrue (Lorg/partiql/ast/Expr$IsTrue;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprIsUnknown (Lorg/partiql/ast/Expr$IsUnknown;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsUnknown (Lorg/partiql/ast/Expr$IsUnknown;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7037,7 +7196,11 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitExprExtract (Lorg/partiql/ast/Expr$Extract;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsFalse (Lorg/partiql/ast/Expr$IsFalse;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsMissing (Lorg/partiql/ast/Expr$IsMissing;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsNull (Lorg/partiql/ast/Expr$IsNull;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsTrue (Lorg/partiql/ast/Expr$IsTrue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsUnknown (Lorg/partiql/ast/Expr$IsUnknown;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprMatch (Lorg/partiql/ast/Expr$Match;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7232,7 +7395,11 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitExprExtract (Lorg/partiql/ast/Expr$Extract;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprIsFalse (Lorg/partiql/ast/Expr$IsFalse;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprIsMissing (Lorg/partiql/ast/Expr$IsMissing;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprIsNull (Lorg/partiql/ast/Expr$IsNull;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprIsTrue (Lorg/partiql/ast/Expr$IsTrue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprIsUnknown (Lorg/partiql/ast/Expr$IsUnknown;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprMatch (Lorg/partiql/ast/Expr$Match;Ljava/lang/Object;)Ljava/lang/Object;

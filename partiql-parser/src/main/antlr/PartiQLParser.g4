@@ -552,7 +552,7 @@ joinType
  * 4. Addition, Subtraction (ex: a + b)
  * 5. Other operators (ex: a || b, a & b)
  * 6. Predicates (ex: a LIKE b, a < b, a IN b, a = b)
- * 7. IS true/false. Not yet implemented in PartiQL, but defined in SQL-92. (ex: a IS TRUE)
+ * 7. IS TRUE|FALSE|UNKNOWN
  * 8. NOT (ex: NOT a)
  * 8. AND (ex: a AND b)
  * 9. OR (ex: a OR b)
@@ -596,12 +596,18 @@ exprAnd
 
 exprNot
     : <assoc=right> op=NOT rhs=exprNot  # Not
-    | parent=exprPredicate              # ExprNotBase
+    | parent=exprTest                   # ExprNotBase
+    ;
+
+exprTest
+    : exprTest IS NOT? value=(TRUE|FALSE|UNKNOWN)   # Test
+    | parent=exprPredicate                          # ExprTestBase
     ;
 
 exprPredicate
     : lhs=exprPredicate op=comparisonOp rhs=mathOp00  # PredicateComparison
-    | lhs=exprPredicate IS NOT? type                                                 # PredicateIs
+    | lhs=exprPredicate IS NOT? absent=(NULL|MISSING)                                # PredicateAbsent
+    | lhs=exprPredicate IS NOT? type                                                 # PredicateType
     | lhs=exprPredicate NOT? IN PAREN_LEFT expr PAREN_RIGHT                          # PredicateIn
     | lhs=exprPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
     | lhs=exprPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=expr )?               # PredicateLike

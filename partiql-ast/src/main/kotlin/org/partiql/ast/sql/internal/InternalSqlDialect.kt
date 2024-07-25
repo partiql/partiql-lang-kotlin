@@ -404,11 +404,31 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         return t
     }
 
-    override fun visitExprIsType(node: Expr.IsType, tail: InternalSqlBlock): InternalSqlBlock {
+    override fun visitExprIsNull(node: Expr.IsNull, tail: InternalSqlBlock): InternalSqlBlock {
+        return visitExprIsType(node.value, node.not, "NULL", tail)
+    }
+
+    override fun visitExprIsMissing(node: Expr.IsMissing, tail: InternalSqlBlock): InternalSqlBlock {
+        return visitExprIsType(node.value, node.not, "MISSING", tail)
+    }
+
+    override fun visitExprIsTrue(node: Expr.IsTrue, tail: InternalSqlBlock): InternalSqlBlock {
+        return visitExprIsType(node.value, node.not, "TRUE", tail)
+    }
+
+    override fun visitExprIsFalse(node: Expr.IsFalse, tail: InternalSqlBlock): InternalSqlBlock {
+        return visitExprIsType(node.value, node.not, "FALSE", tail)
+    }
+
+    override fun visitExprIsUnknown(node: Expr.IsUnknown, tail: InternalSqlBlock): InternalSqlBlock {
+        return visitExprIsType(node.value, node.not, "UNKNOWN", tail)
+    }
+
+    private fun visitExprIsType(value: Expr, not: Boolean?, rhs: String, tail: InternalSqlBlock): InternalSqlBlock {
         var t = tail
-        t = visitExprWrapped(node.value, t)
-        t = t concat if (node.not == true) " IS NOT " else " IS "
-        t = visitType(node.type, t)
+        t = visitExprWrapped(value, t)
+        t = t concat if (not == true) " IS NOT " else " IS "
+        t = t concat rhs
         return t
     }
 

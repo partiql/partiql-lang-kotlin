@@ -791,16 +791,25 @@ class SqlDialectTest {
                     not = true
                 }
             },
-            expect("x IS BOOL") {
-                exprIsType {
+            expect("x IS TRUE") {
+                exprIsTrue {
                     value = v("x")
-                    type = typeBool()
                 }
             },
-            expect("x IS NOT BOOL") {
-                exprIsType {
+            expect("x IS NOT TRUE") {
+                exprIsTrue {
                     value = v("x")
-                    type = typeBool()
+                    not = true
+                }
+            },
+            expect("x IS UNKNOWN") {
+                exprIsUnknown {
+                    value = v("x")
+                }
+            },
+            expect("x IS NOT UNKNOWN") {
+                exprIsUnknown {
+                    value = v("x")
                     not = true
                 }
             },

@@ -84,7 +84,11 @@ import org.partiql.ast.exprDateDiff
 import org.partiql.ast.exprExtract
 import org.partiql.ast.exprInCollection
 import org.partiql.ast.exprIon
-import org.partiql.ast.exprIsType
+import org.partiql.ast.exprIsFalse
+import org.partiql.ast.exprIsMissing
+import org.partiql.ast.exprIsNull
+import org.partiql.ast.exprIsTrue
+import org.partiql.ast.exprIsUnknown
 import org.partiql.ast.exprLike
 import org.partiql.ast.exprLit
 import org.partiql.ast.exprMatch
@@ -1583,6 +1587,17 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprNot(expr)
         }
 
+        override fun visitTest(ctx: GeneratedParser.TestContext) = translate(ctx) {
+            val expr = visit(ctx.exprTest()) as Expr
+            val not: Boolean = ctx.NOT() != null
+            when (ctx.value.type) {
+                GeneratedParser.TRUE -> exprIsTrue(expr, not)
+                GeneratedParser.FALSE -> exprIsFalse(expr, not)
+                GeneratedParser.UNKNOWN -> exprIsUnknown(expr, not)
+                else -> throw error(ctx, "Unexpected value for boolean test IS [TRUE|FALSE|UNKNOWN]")
+            }
+        }
+
         private fun checkForInvalidTokens(op: ParserRuleContext) {
             val start = op.start.tokenIndex
             val stop = op.stop.tokenIndex
@@ -1668,11 +1683,22 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprInCollection(lhs, rhs, not)
         }
 
-        override fun visitPredicateIs(ctx: GeneratedParser.PredicateIsContext) = translate(ctx) {
+        override fun visitPredicateAbsent(ctx: GeneratedParser.PredicateAbsentContext) = translate(ctx) {
+            val value = visitAs<Expr>(ctx.lhs)
+            val not = ctx.NOT() != null
+            when (ctx.absent.type) {
+                GeneratedParser.NULL -> exprIsNull(value, not)
+                GeneratedParser.MISSING -> exprIsMissing(value, not)
+                else -> throw error(ctx, "Unexpected value for absent predicate IS [NULL|MISSING]")
+            }
+        }
+
+        override fun visitPredicateType(ctx: GeneratedParser.PredicateTypeContext) = translate(ctx) {
             val value = visitAs<Expr>(ctx.lhs)
             val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
             val not = ctx.NOT() != null
-            exprIsType(value, type, not)
+            TODO()
+            // exprIsType(value, type, not)
         }
 
         override fun visitPredicateBetween(ctx: GeneratedParser.PredicateBetweenContext) = translate(ctx) {

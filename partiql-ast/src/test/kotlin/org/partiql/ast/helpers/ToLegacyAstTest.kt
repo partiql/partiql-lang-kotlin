@@ -485,16 +485,25 @@ class ToLegacyAstTest {
                     not = true
                 }
             },
-            expect("(is_type (lit 'a') (any_type))") {
-                exprIsType {
+            expect("(is_type (lit 'a') (null_type))") {
+                exprIsNull {
                     value = exprLit(symbolValue(("a")))
-                    type = typeAny()
                 }
             },
-            expect("(not (is_type (lit 'a') (any_type)))") {
-                exprIsType {
+            expect("(not (is_type (lit 'a') (null_type)))") {
+                exprIsNull {
                     value = exprLit(symbolValue(("a")))
-                    type = typeAny()
+                    not = true
+                }
+            },
+            expect("(is_type (lit 'a') (missing_type))") {
+                exprIsMissing {
+                    value = exprLit(symbolValue(("a")))
+                }
+            },
+            expect("(not (is_type (lit 'a') (missing_type)))") {
+                exprIsMissing {
+                    value = exprLit(symbolValue(("a")))
                     not = true
                 }
             },

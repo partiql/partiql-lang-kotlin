@@ -434,10 +434,33 @@ expr::[
     not: optional::bool,
   },
 
-  // PartiQL special form `IS [NOT]`
-  is_type::{
+  // SQL special form `IS [NOT] NULL`
+  is_null::{
     value:  expr,
-    type:   '.type',
+    not:    optional::bool,
+  },
+
+  // PartiQL special form `IS [NOT] MISSING`
+  is_missing::{
+    value:  expr,
+    not:    optional::bool,
+  },
+
+  // SQL special form `IS [NOT] TRUE`
+  is_true::{
+    value:  expr,
+    not:    optional::bool,
+  },
+
+  // SQL special form `IS [NOT] FALSE`
+  is_false::{
+    value:  expr,
+    not:    optional::bool,
+  },
+
+  // SQL special form `IS [NOT] UNKNOWN`
+  is_unknown::{
+    value:  expr,
     not:    optional::bool,
   },
 
