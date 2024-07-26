@@ -19,13 +19,11 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.visitor.AstBaseVisitor
+import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.ir.identifierQualified
-import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.ast.Identifier as AstIdentifier
 import org.partiql.ast.Statement as AstStatement
-import org.partiql.planner.internal.ir.Identifier as PlanIdentifier
 import org.partiql.planner.internal.ir.Statement as PlanStatement
 
 /**
@@ -53,23 +51,24 @@ internal object AstToPlan {
 
     // --- Helpers --------------------
 
-    fun convert(identifier: AstIdentifier): PlanIdentifier = when (identifier) {
+    fun convert(identifier: AstIdentifier): Identifier = when (identifier) {
         is AstIdentifier.Qualified -> convert(identifier)
         is AstIdentifier.Symbol -> convert(identifier)
     }
 
-    fun convert(identifier: AstIdentifier.Qualified): PlanIdentifier.Qualified {
-        val root = convert(identifier.root)
-        val steps = identifier.steps.map { convert(it) }
-        return identifierQualified(root, steps)
+    fun convert(identifier: AstIdentifier.Qualified): Identifier {
+        val parts = mutableListOf<Identifier.Part>()
+        parts.add(part(identifier.root))
+        parts.addAll(identifier.steps.map { part(it) })
+        return Identifier.of(parts)
     }
 
-    fun convert(identifier: AstIdentifier.Symbol): PlanIdentifier.Symbol {
-        val symbol = identifier.symbol
-        val case = when (identifier.caseSensitivity) {
-            AstIdentifier.CaseSensitivity.SENSITIVE -> PlanIdentifier.CaseSensitivity.SENSITIVE
-            AstIdentifier.CaseSensitivity.INSENSITIVE -> PlanIdentifier.CaseSensitivity.INSENSITIVE
-        }
-        return identifierSymbol(symbol, case)
+    fun convert(identifier: AstIdentifier.Symbol): Identifier {
+        return Identifier.of(part(identifier))
+    }
+
+    fun part(identifier: AstIdentifier.Symbol): Identifier.Part = when (identifier.caseSensitivity) {
+        AstIdentifier.CaseSensitivity.SENSITIVE -> Identifier.Part.delimited(identifier.symbol)
+        AstIdentifier.CaseSensitivity.INSENSITIVE -> Identifier.Part.regular(identifier.symbol)
     }
 }

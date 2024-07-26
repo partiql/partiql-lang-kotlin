@@ -1,6 +1,7 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
@@ -73,12 +74,12 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         // Create an internal typed reference
         val ref = refObj(
             catalog = item.catalog,
-            path = item.handle.path.steps,
+            name = Name.of(item.handle.path.steps),
             type = CompilerType(item.handle.entity.getPType()),
         )
         // Rewrite as a path expression.
         val root = rex(ref.type, rexOpVarGlobal(ref))
-        val depth = calculateMatched(path, item.input, ref.path)
+        val depth = calculateMatched(path, item.input, ref.name.toList())
         val tail = path.steps.drop(depth)
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
@@ -95,7 +96,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 rexOpCallDynamicCandidate(
                     fn = refFn(
                         item.catalog,
-                        path = item.handle.path.steps,
+                        name = Name.of(item.handle.path.steps),
                         signature = fnSignature
                     ),
                     coercions = emptyList()
@@ -113,7 +114,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                     rexOpCallDynamicCandidate(
                         fn = refFn(
                             catalog = item.catalog,
-                            path = item.handle.path.steps,
+                            name = Name.of(item.handle.path.steps),
                             signature = it.signature,
                         ),
                         coercions = it.mapping.toList(),
@@ -126,7 +127,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 // Create an internal typed reference
                 val ref = refFn(
                     catalog = item.catalog,
-                    path = item.handle.path.steps,
+                    name = Name.of(item.handle.path.steps),
                     signature = match.signature,
                 )
                 // Apply the coercions as explicit casts
@@ -142,7 +143,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         }
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    @OptIn(FnExperimental::class)
     fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
         val path = BindingPath(listOf(BindingName(name, BindingCase.INSENSITIVE)))
@@ -153,7 +154,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         val agg = match.first
         val mapping = match.second
         // Create an internal typed reference
-        val ref = refAgg(item.catalog, item.handle.path.steps, agg)
+        val ref = refAgg(item.catalog, Name.of(item.handle.path.steps), agg)
         // Apply the coercions as explicit casts
         val coercions: List<Rex> = args.mapIndexed { i, arg ->
             when (val cast = mapping[i]) {

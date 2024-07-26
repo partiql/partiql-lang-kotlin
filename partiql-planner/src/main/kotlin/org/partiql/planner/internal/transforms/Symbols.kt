@@ -28,19 +28,19 @@ internal class Symbols private constructor() {
 
     fun insert(ref: Ref.Obj): CatalogRef = insert(
         catalog = ref.catalog,
-        item = catalogItemValue(ref.path, ref.type),
+        item = catalogItemValue(ref.name.toList(), ref.type),
     )
 
     @OptIn(FnExperimental::class)
     fun insert(ref: Ref.Fn): CatalogRef = insert(
         catalog = ref.catalog,
-        item = catalogItemFn(ref.path, ref.signature.specific),
+        item = catalogItemFn(ref.name.toList(), ref.signature.specific),
     )
 
     @OptIn(FnExperimental::class)
     fun insert(ref: Ref.Agg): CatalogRef = insert(
         catalog = ref.catalog,
-        item = catalogItemAgg(ref.path, ref.signature.specific),
+        item = catalogItemAgg(ref.name.toList(), ref.signature.specific),
     )
 
     private fun insert(catalog: String, item: Catalog.Item): CatalogRef {

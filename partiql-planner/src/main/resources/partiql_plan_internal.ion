@@ -1,5 +1,7 @@
 imports::{
   kotlin: [
+    identifier::'org.partiql.planner.catalog.Identifier',
+    name::'org.partiql.planner.catalog.Name',
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
@@ -21,17 +23,17 @@ parti_q_l_plan::{
 ref::[
   obj::{
     catalog: string,
-    path: list::[string],
+    name: name,
     type: static_type,
   },
   fn::{
     catalog: string,
-    path: list::[string],
+    name: name,
     signature: fn_signature,
   },
   agg::{
     catalog: string,
-    path: list::[string],
+    name: name,
     signature: agg_signature,
   },
   _::[
@@ -54,25 +56,6 @@ statement::[
   query::{
     root: rex,
   },
-]
-
-// Identifiers
-
-identifier::[
-  symbol::{
-    symbol:           string,
-    case_sensitivity: case_sensitivity,
-  },
-  qualified::{
-    root:   symbol,
-    steps:  list::[symbol],
-  },
-  _::[
-    case_sensitivity::[
-      SENSITIVE,
-      INSENSITIVE,
-    ],
-  ],
 ]
 
 // Rex

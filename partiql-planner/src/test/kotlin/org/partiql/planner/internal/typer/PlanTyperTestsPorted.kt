@@ -42,11 +42,8 @@ import org.partiql.types.PType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.DECIMAL
-import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.INT8
-import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.STRUCT
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType

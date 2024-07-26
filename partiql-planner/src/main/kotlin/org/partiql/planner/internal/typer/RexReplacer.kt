@@ -20,6 +20,8 @@ import org.partiql.planner.internal.ir.util.PlanRewriter
 
 /**
  * Uses to replace [Rex]'s within an expression tree.
+ *
+ * TODO remove me?
  */
 internal object RexReplacer {
 

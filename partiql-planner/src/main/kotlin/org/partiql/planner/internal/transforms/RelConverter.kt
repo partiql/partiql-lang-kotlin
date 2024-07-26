@@ -75,7 +75,6 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.stringValue
-import org.partiql.planner.internal.ir.Identifier as InternalId
 
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.
@@ -366,10 +365,11 @@ internal object RelConverter {
                 schema.add(binding)
                 val args = expr.args.map { arg -> arg.toRex(env) }
                 val id = AstToPlan.convert(expr.function)
-                val name = when (id) {
-                    is InternalId.Qualified -> error("Qualified aggregation calls are not supported.")
-                    is InternalId.Symbol -> id.symbol.lowercase()
+                if (id.hasQualifier()) {
+                    error("Qualified aggregation calls are not supported.")
                 }
+                // lowercase normalize all calls
+                val name = id.getIdentifier().getText().lowercase()
                 if (name == "count" && expr.args.isEmpty()) {
                     relOpAggregateCallUnresolved(
                         name,
