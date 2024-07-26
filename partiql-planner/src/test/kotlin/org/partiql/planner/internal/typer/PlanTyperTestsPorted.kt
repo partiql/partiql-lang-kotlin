@@ -39,6 +39,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.DECIMAL
 import org.partiql.types.StaticType.Companion.INT
+import org.partiql.types.StaticType.Companion.INT2
 import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.INT8
 import org.partiql.types.StaticType.Companion.unionOf
@@ -167,11 +168,13 @@ class PlanTyperTestsPorted {
         val TYPE_BOOL = StaticType.BOOL
         private val TYPE_AWS_DDB_PETS_ID = StaticType.INT4
         private val TYPE_AWS_DDB_PETS_BREED = StaticType.STRING
+        private val TYPE_AWS_DDB_PETS_TAG = StaticType.INT2
         val TABLE_AWS_DDB_PETS = BagType(
             elementType = StructType(
                 fields = mapOf(
                     "id" to TYPE_AWS_DDB_PETS_ID,
-                    "breed" to TYPE_AWS_DDB_PETS_BREED
+                    "breed" to TYPE_AWS_DDB_PETS_BREED,
+                    "tag" to TYPE_AWS_DDB_PETS_TAG,
                 ),
                 contentClosed = true,
                 constraints = setOf(
@@ -185,7 +188,8 @@ class PlanTyperTestsPorted {
             elementType = StructType(
                 fields = mapOf(
                     "id" to TYPE_AWS_DDB_PETS_ID,
-                    "breed" to TYPE_AWS_DDB_PETS_BREED
+                    "breed" to TYPE_AWS_DDB_PETS_BREED,
+                    "tag" to TYPE_AWS_DDB_PETS_TAG,
                 ),
                 contentClosed = true,
                 constraints = setOf(
@@ -288,6 +292,37 @@ class PlanTyperTestsPorted {
 
         @JvmStatic
         fun structs() = listOf<TestCase>()
+
+        @JvmStatic
+        fun extendedCastTests() = listOf<TestCase>(
+            SuccessTestCase(
+                name = "CAST INT4 TO INT2",
+                catalog = CATALOG_AWS,
+                query = "CAST((SELECT t.id FROM ddb.pets AS t) AS INT2)",
+                expected = INT2
+            ),
+            SuccessTestCase(
+                name = "CAST BOOL TO INT2",
+                catalog = CATALOG_AWS,
+                query = "CAST(true AS INT2)",
+                expected = INT2
+            ),
+            SuccessTestCase(
+                name = "CAST INT2 TO INT4",
+                catalog = CATALOG_AWS,
+                query = "CAST((SELECT t.tag FROM ddb.pets AS t) AS INT4)",
+                expected = INT4
+            ),
+            SuccessTestCase(
+                name = "CAST INT8 literal to INT2",
+                query = "CAST(343434534534 AS INT2)",
+                expected = INT2
+            ),
+            ErrorTestCase(
+                name = "CAST STRING to INT4",
+                query = "CAST((SELECT t.breed FROM ddb.pets AS t) AS INT2)",
+            ),
+        )
 
         @JvmStatic
         fun decimalCastCases() = listOf<TestCase>(
@@ -3524,6 +3559,11 @@ class PlanTyperTestsPorted {
     fun test(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
+    @MethodSource("extendedCastTests")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testCastCase(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
     @MethodSource("collections")
     @Execution(ExecutionMode.CONCURRENT)
     fun testCollections(tc: TestCase) = runTest(tc)
@@ -3843,7 +3883,7 @@ class PlanTyperTestsPorted {
                 name = "Project all implicitly",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
-                query = "SELECT id, breed FROM pets",
+                query = "SELECT id, breed, tag FROM pets",
                 expected = TABLE_AWS_DDB_PETS
             ),
             TestCase.SuccessTestCase(
