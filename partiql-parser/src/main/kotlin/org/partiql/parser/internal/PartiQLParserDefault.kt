@@ -33,9 +33,7 @@ import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.ast.AstNode
-import org.partiql.ast.Constraint
 import org.partiql.ast.DatetimeField
-import org.partiql.ast.DdlOp
 import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
@@ -44,7 +42,6 @@ import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
-import org.partiql.ast.PartitionBy
 import org.partiql.ast.Path
 import org.partiql.ast.Returning
 import org.partiql.ast.Select
@@ -52,16 +49,8 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
+import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
-import org.partiql.ast.constraint
-import org.partiql.ast.constraintDefinitionCheck
-import org.partiql.ast.constraintDefinitionNotNull
-import org.partiql.ast.constraintDefinitionNullable
-import org.partiql.ast.constraintDefinitionUnique
-import org.partiql.ast.ddlOpCreateIndex
-import org.partiql.ast.ddlOpCreateTable
-import org.partiql.ast.ddlOpDropIndex
-import org.partiql.ast.ddlOpDropTable
 import org.partiql.ast.exclude
 import org.partiql.ast.excludeItem
 import org.partiql.ast.excludeStepCollIndex
@@ -141,7 +130,6 @@ import org.partiql.ast.onConflictActionDoUpdate
 import org.partiql.ast.onConflictTargetConstraint
 import org.partiql.ast.onConflictTargetSymbols
 import org.partiql.ast.orderBy
-import org.partiql.ast.partitionByAttrList
 import org.partiql.ast.path
 import org.partiql.ast.pathStepIndex
 import org.partiql.ast.pathStepSymbol
@@ -157,7 +145,10 @@ import org.partiql.ast.selectStar
 import org.partiql.ast.selectValue
 import org.partiql.ast.setOp
 import org.partiql.ast.sort
-import org.partiql.ast.statementDDL
+import org.partiql.ast.statementDDLCreateIndex
+import org.partiql.ast.statementDDLCreateTable
+import org.partiql.ast.statementDDLDropIndex
+import org.partiql.ast.statementDDLDropTable
 import org.partiql.ast.statementDMLBatchLegacy
 import org.partiql.ast.statementDMLBatchLegacyOpDelete
 import org.partiql.ast.statementDMLBatchLegacyOpInsert
@@ -178,10 +169,11 @@ import org.partiql.ast.statementExplain
 import org.partiql.ast.statementExplainTargetDomain
 import org.partiql.ast.statementQuery
 import org.partiql.ast.tableDefinition
-import org.partiql.ast.tableDefinitionAttribute
-import org.partiql.ast.tableProperty
+import org.partiql.ast.tableDefinitionColumn
+import org.partiql.ast.tableDefinitionColumnConstraint
+import org.partiql.ast.tableDefinitionColumnConstraintBodyNotNull
+import org.partiql.ast.tableDefinitionColumnConstraintBodyNullable
 import org.partiql.ast.typeAny
-import org.partiql.ast.typeArray
 import org.partiql.ast.typeBag
 import org.partiql.ast.typeBlob
 import org.partiql.ast.typeBool
@@ -195,6 +187,7 @@ import org.partiql.ast.typeFloat64
 import org.partiql.ast.typeInt2
 import org.partiql.ast.typeInt4
 import org.partiql.ast.typeInt8
+import org.partiql.ast.typeList
 import org.partiql.ast.typeMissing
 import org.partiql.ast.typeNullType
 import org.partiql.ast.typeNumeric
@@ -202,12 +195,12 @@ import org.partiql.ast.typeReal
 import org.partiql.ast.typeSexp
 import org.partiql.ast.typeString
 import org.partiql.ast.typeStruct
-import org.partiql.ast.typeStructField
 import org.partiql.ast.typeSymbol
 import org.partiql.ast.typeTime
 import org.partiql.ast.typeTimeWithTz
 import org.partiql.ast.typeTimestamp
 import org.partiql.ast.typeTimestampWithTz
+import org.partiql.ast.typeTuple
 import org.partiql.ast.typeVarchar
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
@@ -603,44 +596,23 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
-        override fun visitQueryDdl(ctx: GeneratedParser.QueryDdlContext): AstNode = translate(ctx) {
-            statementDDL(visitAs<DdlOp>(ctx.ddl()))
-        }
+        override fun visitQueryDdl(ctx: GeneratedParser.QueryDdlContext): AstNode = visitDdl(ctx.ddl())
 
         override fun visitDropTable(ctx: GeneratedParser.DropTableContext) = translate(ctx) {
             val table = visitQualifiedName(ctx.qualifiedName())
-            ddlOpDropTable(table)
+            statementDDLDropTable(table)
         }
 
         override fun visitDropIndex(ctx: GeneratedParser.DropIndexContext) = translate(ctx) {
             val table = visitSymbolPrimitive(ctx.on)
             val index = visitSymbolPrimitive(ctx.target)
-            ddlOpDropIndex(index, table)
+            statementDDLDropIndex(index, table)
         }
 
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
             val table = visitQualifiedName(ctx.qualifiedName())
             val definition = ctx.tableDef()?.let { visitTableDef(it) }
-            val partitionBy = ctx
-                .tableExtension()
-                .filterIsInstance<GeneratedParser.TblExtensionPartitionContext>()
-                .let {
-                    if (it.size > 1) throw error(ctx, "Expect one PARTITION BY clause.")
-                    it.firstOrNull()?.let { visitTblExtensionPartition(it) }
-                }
-            val tblProperties = ctx
-                .tableExtension()
-                .filterIsInstance<GeneratedParser.TblExtensionTblPropertiesContext>()
-                .let {
-                    if (it.size > 1) throw error(ctx, "Expect one TBLPROPERTIES clause.")
-                    val tblPropertiesCtx = it.firstOrNull()
-                    tblPropertiesCtx?.keyValuePair()?.map {
-                        val key = it.key.getStringValue()
-                        val value = it.value.getStringValue()
-                        tableProperty(key, stringValue(value))
-                    } ?: emptyList()
-                }
-            ddlOpCreateTable(table, definition, partitionBy, tblProperties)
+            statementDDLCreateTable(table, definition)
         }
 
         override fun visitCreateIndex(ctx: GeneratedParser.CreateIndexContext) = translate(ctx) {
@@ -648,7 +620,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val name: Identifier? = null
             val table = visitSymbolPrimitive(ctx.symbolPrimitive())
             val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
-            ddlOpCreateIndex(name, table, fields)
+            statementDDLCreateIndex(name, table, fields)
         }
 
         override fun visitTableDef(ctx: GeneratedParser.TableDefContext) = translate(ctx) {
@@ -656,100 +628,30 @@ internal class PartiQLParserDefault : PartiQLParser {
             val columns = ctx.tableDefPart().filterIsInstance<GeneratedParser.ColumnDeclarationContext>().map {
                 visitColumnDeclaration(it)
             }
-
-            val tblConstr = ctx.tableDefPart().filterIsInstance<GeneratedParser.TableConstrDeclarationContext>().map {
-                visitTableConstrDeclaration(it)
-            }
-
-            tableDefinition(columns, tblConstr)
+            tableDefinition(columns)
         }
 
         override fun visitColumnDeclaration(ctx: GeneratedParser.ColumnDeclarationContext) = translate(ctx) {
-            val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive())
-            val type = (visit(ctx.type()) as Type).also {
-                isValidTypeDeclarationOrThrow(it, ctx.type())
+            val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive()).symbol
+            val type = visit(ctx.type()) as Type
+            val constraints = ctx.columnConstraint().map {
+                visitColumnConstraint(it)
             }
-            val constraints = ctx.columnConstraint().map { visitColumnConstraint(it) }
-            val optional = when (ctx.OPTIONAL()) {
-                null -> false
-                else -> true
-            }
-            val comment = ctx.comment()?.LITERAL_STRING()?.getStringValue()
-            tableDefinitionAttribute(name, type, constraints, optional, comment)
-        }
-
-        /**
-         * For Type Declaration used in DDL:
-         * We DO NOT support ANY Type, BAG Type, MISSING Type, Or NULL Type
-         */
-        private fun isValidTypeDeclarationOrThrow(type: Type, ctx: GeneratedParser.TypeContext) = when (type) {
-            is Type.Any,
-            is Type.Bag,
-            is Type.Missing,
-            is Type.NullType -> throw error(ctx, "declaration attribute with $type is not supported")
-            else -> Unit
-        }
-
-        private fun isValidTypeParameterOrThrow(type: Type, ctx: GeneratedParser.TypeContext) = when (type) {
-            is Type.Struct -> {
-                if (type.fields.isNotEmpty()) throw error(ctx, "using parameterized struct as type parameter is not supported")
-                else Unit
-            }
-            is Type.Array -> {
-                if (type.type != null) throw error(ctx, "using parameterized array as type parameter is not supported")
-                else Unit
-            }
-            else -> Unit
+            tableDefinitionColumn(name, type, constraints)
         }
 
         override fun visitColumnConstraint(ctx: GeneratedParser.ColumnConstraintContext) = translate(ctx) {
-            val identifier = ctx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
-            val body = visit(ctx.columnConstraintDef()) as Constraint.Definition
-            constraint(identifier, body)
+            val identifier = ctx.columnConstraintName()?.let { symbolToString(it.symbolPrimitive()) }
+            val body = visit(ctx.columnConstraintDef()) as TableDefinition.Column.Constraint.Body
+            tableDefinitionColumnConstraint(identifier, body)
         }
 
         override fun visitColConstrNotNull(ctx: GeneratedParser.ColConstrNotNullContext) = translate(ctx) {
-            constraintDefinitionNotNull()
+            tableDefinitionColumnConstraintBodyNotNull()
         }
 
         override fun visitColConstrNull(ctx: GeneratedParser.ColConstrNullContext) = translate(ctx) {
-            constraintDefinitionNullable()
-        }
-
-        override fun visitColConstrUnique(ctx: GeneratedParser.ColConstrUniqueContext) = translate(ctx) {
-            when (ctx.uniqueSpec()) {
-                is GeneratedParser.PrimaryKeyContext -> constraintDefinitionUnique(null, true)
-                is GeneratedParser.UniqueContext -> constraintDefinitionUnique(null, false)
-                else -> throw error(ctx, "Expect UNIQUE or PRIMARY KEY")
-            }
-        }
-
-        override fun visitCheckConstraintDef(ctx: GeneratedParser.CheckConstraintDefContext) = translate(ctx) {
-            val searchCondition = visitAs<Expr>(ctx.searchCondition())
-            constraintDefinitionCheck(searchCondition)
-        }
-
-        override fun visitUniqueConstraintDef(ctx: GeneratedParser.UniqueConstraintDefContext) = translate(ctx) {
-            val isPrimaryKey = when (ctx.uniqueSpec()) {
-                is GeneratedParser.PrimaryKeyContext -> true
-                is GeneratedParser.UniqueContext -> false
-                else -> throw error(ctx, "Expect UNIQUE or PRIMARY KEY")
-            }
-            val columns = ctx.columnName().map { visitSymbolPrimitive(it.symbolPrimitive()) }
-            constraintDefinitionUnique(columns, isPrimaryKey)
-        }
-
-        override fun visitTableConstrDeclaration(ctx: GeneratedParser.TableConstrDeclarationContext) = translate(ctx) {
-            val identifier = ctx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
-            val body = visit(ctx.tableConstraintDef()) as Constraint.Definition
-            constraint(identifier, body)
-        }
-
-        override fun visitTblExtensionPartition(ctx: GeneratedParser.TblExtensionPartitionContext) =
-            ctx.partitionBy().accept(this) as PartitionBy
-
-        override fun visitPartitionColList(ctx: GeneratedParser.PartitionColListContext) = translate(ctx) {
-            partitionByAttrList(ctx.columnName().map { visitSymbolPrimitive(it.symbolPrimitive()) })
+            tableDefinitionColumnConstraintBodyNullable()
         }
 
         /**
@@ -1670,7 +1572,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitPredicateIs(ctx: GeneratedParser.PredicateIsContext) = translate(ctx) {
             val value = visitAs<Expr>(ctx.lhs)
-            val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
+            val type = visitAs<Type>(ctx.type())
             val not = ctx.NOT() != null
             exprIsType(value, type, not)
         }
@@ -1831,19 +1733,19 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitCast(ctx: GeneratedParser.CastContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
+            val type = visitAs<Type>(ctx.type())
             exprCast(expr, type)
         }
 
         override fun visitCanCast(ctx: GeneratedParser.CanCastContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
+            val type = visitAs<Type>(ctx.type())
             exprCanCast(expr, type)
         }
 
         override fun visitCanLosslessCast(ctx: GeneratedParser.CanLosslessCastContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val type = visitAs<Type>(ctx.type()).also { isValidTypeParameterOrThrow(it, ctx.type()) }
+            val type = visitAs<Type>(ctx.type())
             exprCanLosslessCast(expr, type)
         }
 
@@ -2174,6 +2076,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.BLOB -> typeBlob(null)
                 GeneratedParser.CLOB -> typeClob(null)
                 GeneratedParser.DATE -> typeDate()
+                GeneratedParser.STRUCT -> typeStruct()
+                GeneratedParser.TUPLE -> typeTuple()
+                GeneratedParser.LIST -> typeList()
                 GeneratedParser.SEXP -> typeSexp()
                 GeneratedParser.BAG -> typeBag()
                 GeneratedParser.ANY -> typeAny()
@@ -2233,44 +2138,6 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
             typeCustom(ctx.text.uppercase())
-        }
-
-        override fun visitTypeComplexUnparameterized(ctx: GeneratedParser.TypeComplexUnparameterizedContext) = translate(ctx) {
-            when (ctx.datatype.type) {
-                GeneratedParser.STRUCT, GeneratedParser.TUPLE -> typeStruct(emptyList())
-                GeneratedParser.ARRAY, GeneratedParser.LIST -> typeArray(null)
-                else -> throw error(ctx.datatype, "Invalid datatype")
-            }
-        }
-
-        override fun visitTypeList(ctx: GeneratedParser.TypeListContext) = translate(ctx) {
-            val type = visitOrNull<Type>(ctx.type())
-                ?.also { isValidTypeDeclarationOrThrow(it, ctx.type()) }
-            typeArray(type)
-        }
-
-        override fun visitTypeStruct(ctx: GeneratedParser.TypeStructContext) = translate(ctx) {
-            val fields = ctx.structField().map { structFieldCtx ->
-                val name = visitSymbolPrimitive(structFieldCtx.columnName().symbolPrimitive())
-                val type = visitAs<Type>(structFieldCtx.type())
-                    .also { isValidTypeDeclarationOrThrow(it, structFieldCtx.type()) }
-
-                val constraints = structFieldCtx.columnConstraint().map {
-                    when (it.columnConstraintDef()) {
-                        is GeneratedParser.ColConstrNullContext,
-                        is GeneratedParser.ColConstrNotNullContext -> visitColumnConstraint(it)
-                        else -> throw error(it, "Only NULL Constraint and NOT NULL Constraint are allowed in Struct field")
-                    }
-                }
-                val optional = when (structFieldCtx.OPTIONAL()) {
-                    null -> false
-                    else -> true
-                }
-                val comment = structFieldCtx.comment()?.LITERAL_STRING()?.getStringValue()
-
-                typeStructField(name, type, constraints, optional, comment)
-            }
-            typeStruct(fields)
         }
 
         private inline fun <reified T : AstNode> visitOrEmpty(ctx: List<ParserRuleContext>?): List<T> = when {

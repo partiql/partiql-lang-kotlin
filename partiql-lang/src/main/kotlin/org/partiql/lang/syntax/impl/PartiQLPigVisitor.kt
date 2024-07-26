@@ -259,7 +259,6 @@ internal class PartiQLPigVisitor(
             throw ParserException("PIG Parser does not support qualified name as table name", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
         val def = ctx.tableDef()?.let { visitTableDef(it) }
-        ctx.tableExtension().map { visit(it) }
         createTable_(name, def, ctx.CREATE().getSourceMetaContainer())
     }
 
@@ -278,17 +277,11 @@ internal class PartiQLPigVisitor(
         val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive()).name.text
         val type = visit(ctx.type()) as PartiqlAst.Type
         val constrs = ctx.columnConstraint().map { visitColumnConstraint(it) }
-        if (ctx.OPTIONAL() != null) {
-            throw ParserException("PIG Parser does not support OPTIONAL Field", ErrorCode.PARSE_UNEXPECTED_TOKEN)
-        }
-        if (ctx.comment() != null) {
-            throw ParserException("PIG Parser does not support COMMENT Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
-        }
         columnDeclaration(name, type, constrs)
     }
 
     override fun visitColumnConstraint(ctx: PartiQLParser.ColumnConstraintContext) = PartiqlAst.build {
-        val name = ctx.constraintName()?.let { visitSymbolPrimitive(it.symbolPrimitive()).name.text }
+        val name = ctx.columnConstraintName()?.let { visitSymbolPrimitive(it.symbolPrimitive()).name.text }
         val def = visit(ctx.columnConstraintDef()) as PartiqlAst.ColumnConstraintDef
         columnConstraint(name, def)
     }
@@ -300,12 +293,6 @@ internal class PartiQLPigVisitor(
     override fun visitColConstrNull(ctx: PartiQLParser.ColConstrNullContext) = PartiqlAst.build {
         columnNull()
     }
-
-    override fun visitTableConstrDeclaration(ctx: PartiQLParser.TableConstrDeclarationContext) = throw ParserException("PIG Parser does not support tuple level constraint", ErrorCode.PARSE_UNEXPECTED_TOKEN)
-
-    override fun visitTblExtensionPartition(ctx: PartiQLParser.TblExtensionPartitionContext) = throw ParserException("PIG Parser does not support PARTITION BY Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
-
-    override fun visitTblExtensionTblProperties(ctx: PartiQLParser.TblExtensionTblPropertiesContext) = throw ParserException("PIG Parser does not support TBLPROPERTIES Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
 
     /**
      *
@@ -1661,6 +1648,9 @@ internal class PartiQLPigVisitor(
             PartiQLParser.BLOB -> blobType(metas)
             PartiQLParser.CLOB -> clobType(metas)
             PartiQLParser.DATE -> dateType(metas)
+            PartiQLParser.STRUCT -> structType(metas)
+            PartiQLParser.TUPLE -> tupleType(metas)
+            PartiQLParser.LIST -> listType(metas)
             PartiQLParser.BAG -> bagType(metas)
             PartiQLParser.SEXP -> sexpType(metas)
             PartiQLParser.ANY -> anyType(metas)
@@ -1724,32 +1714,6 @@ internal class PartiQLPigVisitor(
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
         }
         customType_(SymbolPrimitive(customName, metas), metas)
-    }
-
-    override fun visitTypeComplexUnparameterized(ctx: PartiQLParser.TypeComplexUnparameterizedContext) = PartiqlAst.build {
-        val metas = ctx.datatype.getSourceMetaContainer()
-        when (ctx.datatype.type) {
-            PartiQLParser.TUPLE -> tupleType(metas)
-            PartiQLParser.STRUCT -> structType(metas)
-            PartiQLParser.ARRAY, PartiQLParser.LIST -> listType(metas)
-            else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
-        }
-    }
-
-    override fun visitTypeStruct(ctx: PartiQLParser.TypeStructContext) = PartiqlAst.build {
-        throw ParserException(
-            "PIG Parser does not support struct type with field declaration",
-            ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            PropertyValueMap()
-        )
-    }
-
-    override fun visitTypeList(ctx: PartiQLParser.TypeListContext): PartiqlAst.PartiqlAstNode {
-        throw ParserException(
-            "PIG Parser does not support element type declaration for list",
-            ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            PropertyValueMap()
-        )
     }
 
     /**

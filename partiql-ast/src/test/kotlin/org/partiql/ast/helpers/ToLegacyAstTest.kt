@@ -407,31 +407,15 @@ class ToLegacyAstTest {
             expect("(struct_type)") { typeStruct() },
             expect("(tuple_type)") { typeTuple() },
             expect("(list_type)") { typeList() },
-            expect("(list_type)") { typeArray(null) },
             expect("(sexp_type)") { typeSexp() },
             expect("(bag_type)") { typeBag() },
             expect("(any_type)") { typeAny() },
             // Other (??)
             expect("(integer4_type)") { typeInt4() },
             expect("(integer8_type)") { typeInt8() },
-            expect("(custom_type dog)") { typeCustom("dog") },
+            expect("(custom_type dog)") { typeCustom("dog") }
             // LEGACY AST does not have TIMESTAMP or INTERVAL
             // LEGACY AST does not have parameterized blob/clob
-            // LEGACY AST does not support struct with field declaration
-            fail("The legacy AST does not support field declaration in struct type") {
-                typeStruct {
-                    fields += org.partiql.ast.typeStructField(
-                        org.partiql.ast.identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
-                        typeInt2(),
-                        emptyList(),
-                        false,
-                        null
-                    )
-                }
-            },
-            fail("The legacy AST does not support element type declaration for list") {
-                typeArray(typeInt2())
-            },
         )
 
         @JvmStatic

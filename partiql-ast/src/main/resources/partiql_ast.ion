@@ -106,9 +106,32 @@ statement::[
   ],
 
   // Data Definition Language
-  d_d_l::{
-    op: ddl_op
-  },
+  d_d_l::[
+
+    // CREATE TABLE <identifier> [<table_def>]
+    create_table::{
+      name:       identifier,
+      definition: optional::table_definition,
+    },
+
+    // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
+    create_index::{
+      index:  optional::identifier,
+      table:  identifier,
+      fields: list::[path],
+    },
+
+    // DROP TABLE <identifier>
+    drop_table::{
+      table: identifier,
+    },
+
+    // DROP INDEX <identifier> ON <identifier>
+    drop_index::{
+      index:  identifier, // <identifier>[0]
+      table:  identifier, // <identifier>[1]
+    },
+  ],
 
   // EXEC <symbol> [<expr>.*]
   exec::{
@@ -125,38 +148,6 @@ statement::[
         format:     optional::string,
       },
     ],
-  },
-]
-
-ddl_op::[
-  // CREATE TABLE <identifier> [<table_def>]
-  create_table::{
-    name:       identifier,
-    definition: optional::table_definition,
-    // This is an expression for backward compatibility
-    // For now, we support `PARTITION BY (<id> (, <id>)* ))`
-    // But in the future, we might support additional partition expressions:
-    // such as `PARTITION BY RANGE(..)`
-    partition_by: optional::partition_by,
-    table_properties: list::[table_property],
-  },
-
-  // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
-  create_index::{
-    index:  optional::identifier,
-    table:  identifier,
-    fields: list::[path],
-  },
-
-  // DROP TABLE <identifier>
-  drop_table::{
-    table: identifier,
-  },
-
-  // DROP INDEX <identifier> ON <identifier>
-  drop_index::{
-    index:  identifier, // <identifier>[0]
-    table:  identifier, // <identifier>[1]
   },
 ]
 
@@ -202,48 +193,10 @@ type::[
   timestamp_with_tz::{ precision: optional::int },             // TIMESTAMP [(<int>)] WITH TIMEZONE
   interval::{ precision: optional::int },                      // INTERVAL
   bag::{},                                                     // BAG
-  // Potential migration strategy:
-  // v0.14.x -- the current state in `main`
-  // typeList()
-  //
-  // v0.15.x -- the next release
-  // @Deprecated // recommend using `typeArray()`
-  // typeList()
-  // typeArray(...)
-  //
-  // v1.0.x
-  // typeArray(...) // `typeList` now deleted
   list::{},                                                    // LIST
-  array::{ type: optional::type },                             // ARRAY [<type>]
   sexp::{},                                                    // SEXP
-  // Potential migration strategy:
-  // v0.14.x -- the current state in `main`
-  // typeTuple()
-  // typeStruct()
-  //
-  // v0.15.x -- the next release
-  // @Deprecated // recommend using `typeStruct`
-  // typeTuple()
-  // typeStruct(fields = ...)
-  //
-  // v1.0.x
-  // typeStruct(fields = ...) // `typeTuple` now deleted
   tuple::{},                                                   // TUPLE
-  struct::{
-    fields: list::[field],
-    _ : [
-      field :: {
-        name: '.identifier.symbol',
-        type: '.type',
-        // This could be a boolean flag since we only support NOT NULL constraint
-        // for struct subfield. But modeling this to be a list of constraints
-        // to prevent future breaking changes.
-        constraints: list::[constraint],
-        is_optional: bool,
-        comment: optional::string,
-      }
-    ],
-  },                                                           // STRUCT <fields>
+  struct::{},                                                  // STRUCT
   any::{},                                                     // ANY
   custom::{ name: string },                                    // <symbol>
 ]
@@ -829,46 +782,29 @@ returning::{
   ],
 }
 
+// `<column_name> <type> <column_constraint>*`
+// `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
 table_definition::{
-  attributes: list::[attribute],
-  // table level constraints
-  constraints: list::[constraint],
+  columns: list::[column],
   _: [
-    attribute::{
-      name:        '.identifier.symbol',
+    column::{
+      name:        string,
       type:        '.type',
       constraints: list::[constraint],
-      // TODO: Consider to model this as a constraint?
-      is_optional: bool,
-      comment: optional::string,
-    }
-  ],
-}
-
-constraint::{
-  name: optional::string,
-  definition: [
-    nullable::{},
-    not_null::{},
-    check::{ expr: expr },
-    unique::{
-      // for attribute level constraint, we can set this attribute to null
-      attributes: optional::list::['.identifier.symbol'],
-      is_primary_key: bool,
+      _: [
+        // TODO improve modeling language to avoid these wrapped unions
+        // Also, prefer not to nest more than twice
+        constraint::{
+          name: optional::string,
+          body: [
+            nullable::{},
+            not_null::{},
+            check::{ expr: expr },
+          ],
+        },
+      ],
     },
   ],
-}
-
-partition_by::[
-  attr_list :: {
-    list: list::['.identifier.symbol']
-  },
-  // We can add other commonly support Partition Expression like `range` later
-]
-
-table_property::{
-  name: string,
-  value: '.value',
 }
 
 // SQL-99 Table 11

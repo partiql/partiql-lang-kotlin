@@ -201,13 +201,10 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
 
     override fun visitTypeList(node: Type.List, tail: InternalSqlBlock): InternalSqlBlock = tail concat "LIST"
 
-    // TODO: Support List Element
-    override fun visitTypeArray(node: Type.Array, tail: InternalSqlBlock): InternalSqlBlock = tail concat "ARRAY"
     override fun visitTypeSexp(node: Type.Sexp, tail: InternalSqlBlock): InternalSqlBlock = tail concat "SEXP"
 
     override fun visitTypeTuple(node: Type.Tuple, tail: InternalSqlBlock): InternalSqlBlock = tail concat "TUPLE"
 
-    // TODO: Support Struct Field
     override fun visitTypeStruct(node: Type.Struct, tail: InternalSqlBlock): InternalSqlBlock = tail concat "STRUCT"
 
     override fun visitTypeAny(node: Type.Any, tail: InternalSqlBlock): InternalSqlBlock = tail concat "ANY"
