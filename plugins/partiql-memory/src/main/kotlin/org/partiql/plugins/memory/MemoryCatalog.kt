@@ -17,12 +17,8 @@ package org.partiql.plugins.memory
 
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorPath
-import org.partiql.spi.connector.sql.SqlFnProvider
-import org.partiql.spi.connector.sql.info.InfoSchema
-import org.partiql.spi.fn.FnExperimental
 
 /**
  * A basic catalog implementation used in testing.
@@ -31,10 +27,7 @@ import org.partiql.spi.fn.FnExperimental
  *
  * @property name
  */
-public class MemoryCatalog(public val name: String, public val infoSchema: InfoSchema) {
-
-    @OptIn(FnExperimental::class)
-    public fun getFunctions(): ConnectorFnProvider = SqlFnProvider(infoSchema.functions)
+public class MemoryCatalog(public val name: String) {
 
     private val root: Tree.Dir = Tree.Dir(name)
 
@@ -122,12 +115,6 @@ public class MemoryCatalog(public val name: String, public val infoSchema: InfoS
 
         @JvmStatic
         public fun builder(): MemoryCatalogBuilder = MemoryCatalogBuilder()
-
-        @JvmStatic
-        public fun SQL(): MemoryCatalogBuilder = MemoryCatalogBuilder().info(InfoSchema.default())
-
-        @JvmStatic
-        public fun PartiQL(): MemoryCatalogBuilder = MemoryCatalogBuilder().info(InfoSchema.ext())
     }
 
     private sealed interface Tree {
