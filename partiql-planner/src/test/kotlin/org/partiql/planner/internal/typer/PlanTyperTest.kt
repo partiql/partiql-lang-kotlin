@@ -2,9 +2,9 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
@@ -25,7 +25,6 @@ import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
 import org.partiql.value.stringValue
-import java.util.Random
 import kotlin.io.path.toPath
 
 class PlanTyperTest {
@@ -119,15 +118,11 @@ class PlanTyperTest {
         private fun getTyper(): PlanTyperWrapper {
             ProblemCollector()
             val env = Env(
-                PartiQLPlanner.Session(
-                    queryId = Random().nextInt().toString(),
-                    userId = "test-user",
-                    currentCatalog = "pql",
-                    currentDirectory = listOf("main"),
-                    catalogs = mapOf(
-                        "pql" to LocalConnector.Metadata(root)
-                    ),
-                )
+                Session.builder()
+                    .catalog("pql")
+                    .namespace("main")
+                    .catalogs("pql" to LocalConnector.Metadata(root))
+                    .build()
             )
             return PlanTyperWrapper(PlanTyper(env))
         }

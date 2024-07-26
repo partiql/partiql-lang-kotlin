@@ -31,10 +31,11 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
+import org.partiql.planner.catalog.Session as PlannerSession
 
 @OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(
-    private val plannerSession: PartiQLPlanner.Session,
+    private val plannerSession: PlannerSession,
     private val evalSession: PartiQLEngine.Session
 ) : TestExecutor<PartiQLStatement<*>, PartiQLResult> {
 
@@ -113,7 +114,7 @@ class EvalExecutor(
     }
     companion object {
         val parser = PartiQLParser.default()
-        val planner = PartiQLPlanner.default()
+        val planner = PartiQLPlanner.standard()
         val engine = PartiQLEngine.default()
         val comparator = PartiQLValue.comparator()
     }
@@ -122,23 +123,20 @@ class EvalExecutor(
 
         override fun create(env: IonStruct, options: CompileOptions): TestExecutor<PartiQLStatement<*>, PartiQLResult> {
 
+            // infer catalog from conformance test `env`
             val catalog = "default"
-            val data = env.toIonElement() as StructElement
+            val connector = infer(env.toIonElement() as StructElement)
 
-            // infer catalog from env
-            val connector = infer(data)
-
-            val session = PartiQLPlanner.Session(
-                queryId = "query",
-                userId = "user",
-                currentCatalog = catalog,
-                catalogs = mapOf(
+            val session = PlannerSession.builder()
+                .catalog(catalog)
+                .catalogs(
                     "default" to connector.getMetadata(object : ConnectorSession {
                         override fun getQueryId(): String = "query"
                         override fun getUserId(): String = "user"
                     })
                 )
-            )
+                .build()
+
             val mode = when (options.typingMode) {
                 TypingMode.PERMISSIVE -> PartiQLEngine.Mode.PERMISSIVE
                 TypingMode.LEGACY -> PartiQLEngine.Mode.STRICT
@@ -172,17 +170,15 @@ class EvalExecutor(
         private fun inferEnv(env: AnyElement): PType {
             val catalog = MemoryCatalog.PartiQL().name("conformance_test").build()
             val connector = MemoryConnector(catalog)
-            val session = PartiQLPlanner.Session(
-                queryId = "query",
-                userId = "user",
-                currentCatalog = "default",
-                catalogs = mapOf(
+            val session = PlannerSession.builder()
+                .catalog("default")
+                .catalogs(
                     "default" to connector.getMetadata(object : ConnectorSession {
                         override fun getQueryId(): String = "query"
                         override fun getUserId(): String = "user"
                     })
                 )
-            )
+                .build()
             val stmt = parser.parse("`$env`").root
             val plan = planner.plan(stmt, session)
             return (plan.plan.statement as Statement.Query).root.type

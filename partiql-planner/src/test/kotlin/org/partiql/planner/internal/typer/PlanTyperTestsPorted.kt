@@ -19,6 +19,7 @@ import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
@@ -127,7 +128,7 @@ internal class PlanTyperTestsPorted {
     companion object {
 
         private val parser = PartiQLParser.default()
-        private val planner = PartiQLPlanner.builder().signalMode().build()
+        private val planner = PartiQLPlanner.builder().signal().build()
 
         private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
             val message = buildString {
@@ -200,8 +201,6 @@ internal class PlanTyperTestsPorted {
                 catalogName to connector.getMetadata(session)
             }
         }
-
-        private const val USER_ID = "TEST_USER"
 
         private fun key(name: String) = PartiQLTest.Key("schema_inferencer", name)
 
@@ -3742,7 +3741,7 @@ internal class PlanTyperTestsPorted {
     //
     private fun infer(
         query: String,
-        session: PartiQLPlanner.Session,
+        session: Session,
         problemCollector: ProblemCollector,
     ): PartiQLPlan {
         val ast = parser.parse(query).root
@@ -3756,13 +3755,11 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: SuccessTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
-        )
+        val session = Session.builder()
+            .catalog(tc.catalog)
+            .catalogs(*catalogs.toTypedArray())
+            .namespace(tc.catalogPath)
+            .build()
 
         val hasQuery = tc.query != null
         val hasKey = tc.key != null
@@ -3797,13 +3794,11 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: ErrorTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
-        )
+        val session = Session.builder()
+            .catalog(tc.catalog)
+            .catalogs(*catalogs.toTypedArray())
+            .namespace(tc.catalogPath)
+            .build()
         val collector = ProblemCollector()
 
         val hasQuery = tc.query != null
@@ -3843,13 +3838,11 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: ThrowingExceptionTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
-        )
+        val session = Session.builder()
+            .catalog(tc.catalog)
+            .catalogs(*catalogs.toTypedArray())
+            .namespace(tc.catalogPath)
+            .build()
         val collector = ProblemCollector()
         val exception = assertThrows<Throwable> {
             infer(tc.query, session, collector)

@@ -5,6 +5,7 @@ import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
@@ -12,14 +13,14 @@ import org.partiql.planner.internal.typer.PlanTyper
 /**
  * Default PartiQL logical query planner.
  */
-internal class PartiQLPlannerDefault(
+internal class SqlPlanner(
     private val passes: List<PartiQLPlannerPass>,
-    private val flags: Set<PlannerFlag>
+    private val flags: Set<PlannerFlag>,
 ) : PartiQLPlanner {
 
     override fun plan(
         statement: Statement,
-        session: PartiQLPlanner.Session,
+        session: Session,
         onProblem: ProblemCallback,
     ): PartiQLPlanner.Result {
 

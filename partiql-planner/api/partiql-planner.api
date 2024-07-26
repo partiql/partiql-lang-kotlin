@@ -1,17 +1,17 @@
 public abstract interface class org/partiql/planner/PartiQLPlanner {
 	public static final field Companion Lorg/partiql/planner/PartiQLPlanner$Companion;
-	public static fun builder ()Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public static fun default ()Lorg/partiql/planner/PartiQLPlanner;
-	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/planner/PartiQLPlanner$Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public static fun builder ()Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/planner/catalog/Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public static fun standard ()Lorg/partiql/planner/PartiQLPlanner;
 }
 
 public final class org/partiql/planner/PartiQLPlanner$Companion {
-	public final fun builder ()Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun default ()Lorg/partiql/planner/PartiQLPlanner;
+	public final fun builder ()Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public final fun standard ()Lorg/partiql/planner/PartiQLPlanner;
 }
 
 public final class org/partiql/planner/PartiQLPlanner$DefaultImpls {
-	public static synthetic fun plan$default (Lorg/partiql/planner/PartiQLPlanner;Lorg/partiql/ast/Statement;Lorg/partiql/planner/PartiQLPlanner$Session;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public static synthetic fun plan$default (Lorg/partiql/planner/PartiQLPlanner;Lorg/partiql/ast/Statement;Lorg/partiql/planner/catalog/Session;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Result;
 }
 
 public final class org/partiql/planner/PartiQLPlanner$Result {
@@ -20,30 +20,17 @@ public final class org/partiql/planner/PartiQLPlanner$Result {
 	public final fun getProblems ()Ljava/util/List;
 }
 
-public final class org/partiql/planner/PartiQLPlanner$Session {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getCatalogs ()Ljava/util/Map;
-	public final fun getCurrentCatalog ()Ljava/lang/String;
-	public final fun getCurrentDirectory ()Ljava/util/List;
-	public final fun getInstant ()Ljava/time/Instant;
-	public final fun getQueryId ()Ljava/lang/String;
-	public final fun getUserId ()Ljava/lang/String;
-}
-
-public final class org/partiql/planner/PartiQLPlannerBuilder {
-	public fun <init> ()V
-	public final fun addCatalog (Ljava/lang/String;Lorg/partiql/spi/connector/ConnectorMetadata;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun addPass (Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun addPasses ([Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
-	public final fun catalogs ([Lkotlin/Pair;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun passes (Ljava/util/List;)Lorg/partiql/planner/PartiQLPlannerBuilder;
-	public final fun signalMode ()Lorg/partiql/planner/PartiQLPlannerBuilder;
-}
-
 public abstract interface class org/partiql/planner/PartiQLPlannerPass {
 	public abstract fun apply (Lorg/partiql/plan/PartiQLPlan;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PartiQLPlan;
+}
+
+public final class org/partiql/planner/builder/PartiQLPlannerBuilder {
+	public fun <init> ()V
+	public final fun addPass (Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public final fun addPasses ([Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
+	public final fun signal (Z)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public static synthetic fun signal$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 }
 
 public abstract interface class org/partiql/planner/catalog/Catalog {
@@ -274,6 +261,7 @@ public abstract interface class org/partiql/planner/catalog/Session {
 	public static fun builder ()Lorg/partiql/planner/catalog/Session$Builder;
 	public static fun empty (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session;
 	public abstract fun getCatalog ()Ljava/lang/String;
+	public abstract fun getCatalogs ()Ljava/util/Map;
 	public abstract fun getIdentity ()Ljava/lang/String;
 	public abstract fun getNamespace ()Lorg/partiql/planner/catalog/Namespace;
 	public abstract fun getPath ()Lorg/partiql/planner/catalog/Path;
@@ -284,8 +272,11 @@ public final class org/partiql/planner/catalog/Session$Builder {
 	public fun <init> ()V
 	public final fun build ()Lorg/partiql/planner/catalog/Session;
 	public final fun catalog (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
+	public final fun catalogs ([Lkotlin/Pair;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun identity (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
+	public final fun namespace (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun namespace (Lorg/partiql/planner/catalog/Namespace;)Lorg/partiql/planner/catalog/Session$Builder;
+	public final fun namespace ([Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun property (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
 }
 

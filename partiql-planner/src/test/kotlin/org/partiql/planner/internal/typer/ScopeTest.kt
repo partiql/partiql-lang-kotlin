@@ -4,7 +4,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.relBinding
@@ -36,11 +36,9 @@ internal class ScopeTest {
         @JvmStatic
         val locals = TypeEnv(
             Env(
-                PartiQLPlanner.Session(
-                    "queryId",
-                    "userId",
-                    "currentCatalog",
-                    catalogs = mapOf(
+                Session.builder()
+                    .catalog("currentCatalog")
+                    .catalogs(
                         "currentCatalog" to object : ConnectorMetadata {
                             override fun getObject(path: BindingPath): ConnectorHandle.Obj? {
                                 return null
@@ -57,7 +55,7 @@ internal class ScopeTest {
                             }
                         }
                     )
-                )
+                    .build()
             ),
             Scope(
                 listOf(

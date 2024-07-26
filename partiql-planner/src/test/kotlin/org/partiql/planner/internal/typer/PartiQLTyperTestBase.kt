@@ -7,6 +7,7 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
@@ -23,7 +24,6 @@ import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
-import java.util.Random
 import java.util.stream.Stream
 
 abstract class PartiQLTyperTestBase {
@@ -43,17 +43,13 @@ abstract class PartiQLTyperTestBase {
     companion object {
 
         public val parser = PartiQLParser.default()
-        public val planner = PartiQLPlanner.default()
+        public val planner = PartiQLPlanner.standard()
 
-        internal val session: ((String, ConnectorMetadata) -> PartiQLPlanner.Session) = { catalog, metadata ->
-            PartiQLPlanner.Session(
-                queryId = Random().nextInt().toString(),
-                userId = "test-user",
-                currentCatalog = catalog,
-                catalogs = mapOf(
-                    catalog to metadata
-                ),
-            )
+        internal val session: ((String, ConnectorMetadata) -> Session) = { catalog, metadata ->
+            Session.builder()
+                .catalog(catalog)
+                .catalogs(catalog to metadata)
+                .build()
         }
 
         internal val connectorSession = object : ConnectorSession {
