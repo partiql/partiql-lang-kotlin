@@ -6,7 +6,6 @@ import org.partiql.value.PartiQLValueExperimental
 /**
  * Represents an SQL table-value expression call.
  */
-@FnExperimental
 public interface Agg {
 
     /**

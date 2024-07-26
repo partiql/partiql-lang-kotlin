@@ -20,7 +20,7 @@ import org.partiql.spi.fn.FnExperimental
  *
  * @property catalogs
  */
-@OptIn(FnExperimental::class)
+
 internal class Symbols private constructor(private val catalogs: Array<C>) {
 
     private class C(

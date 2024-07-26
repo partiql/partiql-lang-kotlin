@@ -30,7 +30,7 @@ internal sealed interface Operator {
 
     interface Aggregation : Operator {
 
-        @OptIn(FnExperimental::class)
+        
         val delegate: Agg
 
         val args: List<Expr>

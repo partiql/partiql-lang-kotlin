@@ -6,7 +6,6 @@ import org.partiql.value.PartiQLValueExperimental
 /**
  * Represents a scalar function (SQL row-value call expression).
  */
-@FnExperimental
 public interface Fn {
 
     /**

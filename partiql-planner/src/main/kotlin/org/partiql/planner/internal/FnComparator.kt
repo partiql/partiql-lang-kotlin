@@ -1,11 +1,9 @@
 package org.partiql.planner.internal
 
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnParameter
-import org.partiql.spi.fn.FnSignature
+import org.partiql.planner.internal.fn.FnParameter
+import org.partiql.planner.internal.fn.FnSignature
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Function precedence comparator; this is not formally specified.
@@ -13,7 +11,6 @@ import org.partiql.value.PartiQLValueExperimental
  *  1. Fewest args first
  *  2. Parameters are compared left-to-right
  */
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object FnComparator : Comparator<FnSignature> {
 
     override fun compare(fn1: FnSignature, fn2: FnSignature): Int {

@@ -179,7 +179,7 @@ internal class Compiler(
         return RelAggregate(input, groups, calls)
     }
 
-    @OptIn(FnExperimental::class)
+    
     override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: PType?): Operator.Aggregation {
         val args = node.args.map { visitRex(it, it.type).modeHandled() }
         val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setQuantifier) {
@@ -212,7 +212,7 @@ internal class Compiler(
         return ExprPathIndex(root, index)
     }
 
-    @OptIn(FnExperimental::class)
+    
     override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: PType?): Operator {
         val fn = symbols.getFn(node.fn)
         val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
@@ -225,7 +225,7 @@ internal class Compiler(
         }
     }
 
-    @OptIn(FnExperimental::class)
+    
     override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: PType?): Operator {
         val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
         // Check candidate list size

@@ -4,6 +4,7 @@ import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
+import org.partiql.planner.internal.fn.AggSignature
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -22,8 +23,8 @@ import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.fn.AggSignature
-import org.partiql.spi.fn.FnExperimental
+import org.partiql.planner.internal.fn.AggSignature
+import org.partiql.planner.internal.fn.FnExperimental
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
@@ -53,16 +54,6 @@ internal class Env(private val session: Session) {
     private val objects: PathResolverObj = PathResolverObj(catalog, catalogs, session)
 
     /**
-     * A [PathResolver] for looking up functions given both unqualified and qualified names.
-     */
-    private val fns: PathResolverFn = PathResolverFn(catalog, catalogs, session)
-
-    /**
-     * A [PathResolver] for aggregation function lookup.
-     */
-    private val aggs: PathResolverAgg = PathResolverAgg(catalog, catalogs, session)
-
-    /**
      * This function looks up a global [BindingPath], returning a global reference expression.
      *
      * Convert any remaining binding names (tail) to a path expression.
@@ -84,8 +75,7 @@ internal class Env(private val session: Session) {
         val tail = path.steps.drop(depth)
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
-
-    @OptIn(FnExperimental::class)
+    
     fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
         val item = fns.lookup(path) ?: return null
         // Invoke FnResolver to determine if we made a match
@@ -144,7 +134,6 @@ internal class Env(private val session: Session) {
         }
     }
 
-    @OptIn(FnExperimental::class)
     fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
         val path = BindingPath(listOf(BindingName(name, BindingCase.INSENSITIVE)))
@@ -217,7 +206,7 @@ internal class Env(private val session: Session) {
         return userInputPath.steps.size + actualAbsolutePath.size - pathSentToConnector.steps.size
     }
 
-    @OptIn(FnExperimental::class)
+    
     private fun match(candidates: List<AggSignature>, args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
@@ -243,7 +232,7 @@ internal class Env(private val session: Session) {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    @OptIn(FnExperimental::class)
+    
     private fun AggSignature.matches(args: List<PType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
@@ -259,7 +248,6 @@ internal class Env(private val session: Session) {
      * @param args
      * @return
      */
-    @OptIn(FnExperimental::class)
     private fun AggSignature.match(args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {

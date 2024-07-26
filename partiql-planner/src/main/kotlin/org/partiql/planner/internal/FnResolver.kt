@@ -4,8 +4,7 @@ import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnSignature
+import org.partiql.planner.internal.fn.FnSignature
 import org.partiql.types.PType.Kind
 
 /**
@@ -23,7 +22,7 @@ import org.partiql.types.PType.Kind
  *
  * Reference https://www.postgresql.org/docs/current/typeconv-func.html
  */
-@OptIn(FnExperimental::class)
+
 internal object FnResolver {
 
     /**

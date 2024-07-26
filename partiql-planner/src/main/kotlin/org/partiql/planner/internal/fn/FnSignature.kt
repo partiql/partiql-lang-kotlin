@@ -20,7 +20,6 @@ import org.partiql.value.PartiQLValueType
  * @property isMissable         Flag indicating this function's operator may return a MISSING value.
  * @property isMissingCall      Flag indicating if any of the call arguments is MISSING, the return MISSING.
  */
-@FnExperimental
 @OptIn(PartiQLValueExperimental::class)
 public data class FnSignature(
     @JvmField public val name: String,

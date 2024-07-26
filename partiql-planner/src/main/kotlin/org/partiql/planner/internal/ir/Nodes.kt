@@ -72,9 +72,9 @@ import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.planner.internal.typer.CompilerType
-import org.partiql.spi.fn.AggSignature
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnSignature
+import org.partiql.planner.internal.fn.AggSignature
+import org.partiql.planner.internal.fn.FnExperimental
+import org.partiql.planner.internal.fn.FnSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import kotlin.collections.Set
