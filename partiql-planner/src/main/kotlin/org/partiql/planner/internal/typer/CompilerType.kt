@@ -1,5 +1,6 @@
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
@@ -72,6 +73,58 @@ internal class CompilerType(
             var result = _name.hashCode()
             result = 31 * result + _type.hashCode()
             return result
+        }
+    }
+
+    internal fun isNumeric(): Boolean {
+        return this.kind in setOf(
+            Kind.INT,
+            Kind.INT_ARBITRARY,
+            Kind.BIGINT,
+            Kind.TINYINT,
+            Kind.SMALLINT,
+            Kind.REAL,
+            Kind.DOUBLE_PRECISION,
+            Kind.DECIMAL,
+            Kind.DECIMAL_ARBITRARY
+        )
+    }
+
+    /**
+     * Assumes that the type is either a struct or row.
+     *
+     * @return null when the field definitely does not exist; dynamic when the type cannot be determined
+     */
+    internal fun getSymbol(field: String): Pair<Identifier.Part, CompilerType>? {
+        if (this.kind == Kind.STRUCT) {
+            return Identifier.Part.regular(field) to CompilerType(PType.typeDynamic())
+        }
+        val fields = this.fields.mapNotNull {
+            when (it.name.equals(field, true)) {
+                true -> it.name to it.type
+                false -> null
+            }
+        }.ifEmpty { return null }
+        val type = anyOf(fields.map { it.second })
+        val ids = fields.map { it.first }.toSet()
+        return when (ids.size > 1) {
+            true -> Identifier.Part.regular(field) to type
+            false -> Identifier.Part.delimited(ids.first()) to type
+        }
+    }
+
+    internal companion object {
+
+        @JvmStatic
+        internal fun anyOf(types: Collection<CompilerType>): CompilerType {
+            if (types.isEmpty()) {
+                return CompilerType(PType.typeDynamic())
+            }
+            val unique = types.toSet()
+            return when (unique.size) {
+                1 -> unique.first()
+                else -> CompilerType(PType.typeDynamic())
+            }
         }
     }
 }

@@ -3,11 +3,11 @@ package org.partiql.planner.internal.typer
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Identifier
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
-import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.refObj
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
@@ -317,7 +317,7 @@ class PlanTyperTest {
         return rex(
             type,
             rexOpVarUnresolved(
-                identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE),
+                Identifier.delimited(name),
                 Rex.Op.Var.Scope.DEFAULT
             )
         )
@@ -326,7 +326,7 @@ class PlanTyperTest {
     private fun global(type: CompilerType, path: List<String>): Rex {
         return rex(
             type,
-            rexOpVarGlobal(refObj(catalog = "pql", path = path, type))
+            rexOpVarGlobal(refObj(catalog = "pql", name = Name.of(path), type))
         )
     }
 

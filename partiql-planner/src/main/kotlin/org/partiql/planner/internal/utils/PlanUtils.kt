@@ -24,27 +24,24 @@ internal object PlanUtils {
         Identifier.CaseSensitivity.INSENSITIVE -> node.symbol
     }
 
-    fun externalize(node: org.partiql.planner.internal.ir.Identifier): Identifier = when (node) {
-        is org.partiql.planner.internal.ir.Identifier.Symbol -> externalize(node)
-        is org.partiql.planner.internal.ir.Identifier.Qualified -> externalize(node)
-    }
-
-    private fun externalize(node: org.partiql.planner.internal.ir.Identifier.Symbol): Identifier.Symbol {
-        val symbol = node.symbol
-        val case = externalize(node.caseSensitivity)
-        return Identifier.Symbol(symbol, case)
-    }
-
-    private fun externalize(node: org.partiql.planner.internal.ir.Identifier.Qualified): Identifier.Qualified {
-        val root = externalize(node.root)
-        val steps = node.steps.map { externalize(it) }
-        return Identifier.Qualified(root, steps)
-    }
-
-    private fun externalize(node: org.partiql.planner.internal.ir.Identifier.CaseSensitivity): Identifier.CaseSensitivity {
-        return when (node) {
-            org.partiql.planner.internal.ir.Identifier.CaseSensitivity.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
-            org.partiql.planner.internal.ir.Identifier.CaseSensitivity.INSENSITIVE -> Identifier.CaseSensitivity.INSENSITIVE
+    fun externalize(identifier: org.partiql.planner.catalog.Identifier): Identifier {
+        if (identifier.hasQualifier()) {
+            val symbols = identifier.getParts().map { externalize(it) }
+            return Identifier.Qualified(
+                root = symbols.first(),
+                steps = symbols.subList(1, symbols.size)
+            )
         }
+        return externalize(identifier.getIdentifier())
+    }
+
+    private fun externalize(part: org.partiql.planner.catalog.Identifier.Part): Identifier.Symbol {
+        return Identifier.Symbol(
+            symbol = part.getText(),
+            caseSensitivity = when (part.isRegular()) {
+                true -> Identifier.CaseSensitivity.INSENSITIVE
+                false -> Identifier.CaseSensitivity.SENSITIVE
+            }
+        )
     }
 }
