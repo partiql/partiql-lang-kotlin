@@ -1,7 +1,7 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
@@ -26,7 +26,6 @@ import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -38,28 +37,30 @@ import org.partiql.value.PartiQLValueExperimental
  *
  * @property session
  */
-internal class Env(private val session: PartiQLPlanner.Session) {
+internal class Env(private val session: Session) {
+
+    private val catalogs = session.getCatalogs()
 
     /**
      * Current catalog [ConnectorMetadata]. Error if missing from the session.
      */
-    private val catalog: ConnectorMetadata = session.catalogs[session.currentCatalog]
-        ?: error("Session is missing ConnectorMetadata for current catalog ${session.currentCatalog}")
+    private val catalog: ConnectorMetadata = catalogs[session.getCatalog()]
+        ?: error("Session is missing ConnectorMetadata for current catalog ${session.getCatalog()}")
 
     /**
      * A [PathResolver] for looking up objects given both unqualified and qualified names.
      */
-    private val objects: PathResolverObj = PathResolverObj(catalog, session)
+    private val objects: PathResolverObj = PathResolverObj(catalog, catalogs, session)
 
     /**
      * A [PathResolver] for looking up functions given both unqualified and qualified names.
      */
-    private val fns: PathResolverFn = PathResolverFn(catalog, session)
+    private val fns: PathResolverFn = PathResolverFn(catalog, catalogs, session)
 
     /**
      * A [PathResolver] for aggregation function lookup.
      */
-    private val aggs: PathResolverAgg = PathResolverAgg(catalog, session)
+    private val aggs: PathResolverAgg = PathResolverAgg(catalog, catalogs, session)
 
     /**
      * This function looks up a global [BindingPath], returning a global reference expression.
@@ -84,7 +85,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    @OptIn(FnExperimental::class)
     fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
         val item = fns.lookup(path) ?: return null
         // Invoke FnResolver to determine if we made a match
@@ -216,7 +217,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         return userInputPath.steps.size + actualAbsolutePath.size - pathSentToConnector.steps.size
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    @OptIn(FnExperimental::class)
     private fun match(candidates: List<AggSignature>, args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
@@ -242,7 +243,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    @OptIn(FnExperimental::class)
     private fun AggSignature.matches(args: List<PType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
@@ -258,7 +259,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      * @param args
      * @return
      */
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    @OptIn(FnExperimental::class)
     private fun AggSignature.match(args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {

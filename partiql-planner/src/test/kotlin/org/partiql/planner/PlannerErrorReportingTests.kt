@@ -7,6 +7,7 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
@@ -49,12 +50,10 @@ internal class PlannerErrorReportingTests {
         }
     )
 
-    val session = PartiQLPlanner.Session(
-        queryId = queryId,
-        userId = userId,
-        currentCatalog = catalogName,
-        catalogs = mapOf(catalogName to metadata),
-    )
+    val session = Session.builder()
+        .catalog(catalogName)
+        .catalogs(catalogName to metadata)
+        .build()
 
     val parser = PartiQLParserBuilder().build()
 
@@ -397,10 +396,7 @@ internal class PlannerErrorReportingTests {
     }
 
     private fun runTestCase(tc: TestCase) {
-        val planner = when (tc.isSignal) {
-            true -> PartiQLPlanner.builder().signalMode().build()
-            else -> PartiQLPlanner.builder().build()
-        }
+        val planner = PartiQLPlanner.builder().signal(tc.isSignal).build()
         val pc = ProblemCollector()
         val res = planner.plan(statement(tc.query), session, pc)
         val problems = pc.problems

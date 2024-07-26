@@ -12,8 +12,8 @@ import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.debug.PlanPrinter
-import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PartiQLPlannerBuilder
+import org.partiql.planner.builder.PartiQLPlannerBuilder
+import org.partiql.planner.catalog.Session
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
@@ -1268,12 +1268,10 @@ class PartiQLEngineDefaultTest {
                 override fun getQueryId(): String = "q"
                 override fun getUserId(): String = "u"
             }
-            val session = PartiQLPlanner.Session(
-                "q",
-                "u",
-                "memory",
-                catalogs = mapOf("memory" to connector.getMetadata(connectorSession))
-            )
+            val session = Session.builder()
+                .catalog("memory")
+                .catalogs("memory" to connector.getMetadata(connectorSession))
+                .build()
             val plan = planner.plan(statement, session)
             val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
             val result = when (val returned = engine.execute(prepared)) {
@@ -1352,12 +1350,10 @@ class PartiQLEngineDefaultTest {
                 override fun getQueryId(): String = "q"
                 override fun getUserId(): String = "u"
             }
-            val session = PartiQLPlanner.Session(
-                "q",
-                "u",
-                "memory",
-                catalogs = mapOf("memory" to connector.getMetadata(connectorSession))
-            )
+            val session = Session.builder()
+                .catalog("memory")
+                .catalogs("memory" to connector.getMetadata(connectorSession))
+                .build()
             val plan = planner.plan(statement, session)
             val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
             when (val result = engine.execute(prepared)) {

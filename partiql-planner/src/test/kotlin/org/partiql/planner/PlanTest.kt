@@ -9,6 +9,7 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PlanNodeEquivalentVisitor
@@ -27,7 +28,6 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.io.File
 import java.nio.file.Path
-import java.time.Instant
 import java.util.stream.Stream
 import kotlin.io.path.toPath
 
@@ -77,20 +77,14 @@ class PlanTest {
     }
 
     val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
-        val session = PartiQLPlanner.Session(
-            queryId = test.key.toString(),
-            userId = "user_id",
-            currentCatalog = "default",
-            currentDirectory = listOf("SCHEMA"),
-            catalogs = mapOf("default" to buildMetadata("default")),
-            instant = Instant.now()
-        )
+        val session = Session.builder()
+            .catalog("default")
+            .catalogs("default" to buildMetadata("default"))
+            .namespace("SCHEMA")
+            .build()
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
-        val planner = when (isSignalMode) {
-            true -> PartiQLPlanner.builder().signalMode().build()
-            else -> PartiQLPlanner.builder().build()
-        }
+        val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
         planner.plan(ast, session, problemCollector)
     }
 

@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Session
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -8,6 +8,10 @@ import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
 
 /**
+ * TODO PATH RESOLVER WITH BE REPLACED BY THE org.partiql.planner.catalog HOWEVER THIS FACTORING IS TEMPORARY
+ *  TO MAKE THE TRANSITION OF THE SESSION A SMALLER AND MORE INCREMENTAL CHANGE.
+ *
+ *
  * This is the base behavior for name resolution.
  *
  * Let N be the number of steps in a given path.
@@ -28,13 +32,14 @@ import org.partiql.spi.connector.ConnectorMetadata
  */
 internal abstract class PathResolver<T>(
     private val catalog: ConnectorMetadata,
-    private val session: PartiQLPlanner.Session,
+    private val catalogs: Map<String, ConnectorMetadata>,
+    private val session: Session,
 ) {
 
     /**
      * The session's current directory represented as [BindingName] steps.
      */
-    open val schema = session.currentDirectory.map { it.toBindingName() }
+    open val schema = session.getNamespace().map { it.toBindingName() }
 
     /**
      * A [PathResolver] should override this one method for which [ConnectorMetadata] API to call.
@@ -83,7 +88,7 @@ internal abstract class PathResolver<T>(
      */
     private fun get(path: BindingPath): PathItem<T>? {
         val handle = get(catalog, path) ?: return null
-        return PathItem(session.currentCatalog, path, handle)
+        return PathItem(session.getCatalog(), path, handle)
     }
 
     /**
@@ -94,7 +99,7 @@ internal abstract class PathResolver<T>(
     private fun search(path: BindingPath): PathItem<T>? {
         var match: Map.Entry<String, ConnectorMetadata>? = null
         val first: BindingName = path.steps.first()
-        for (catalog in session.catalogs) {
+        for (catalog in catalogs) {
             if (first.matches(catalog.key)) {
                 if (match != null) {
                     // TODO root was already matched, emit ambiguous error

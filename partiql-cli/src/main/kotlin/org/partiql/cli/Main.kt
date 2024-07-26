@@ -26,11 +26,11 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Session
 import org.partiql.types.PType
 import picocli.CommandLine
 import java.io.PrintStream
 import java.nio.file.Paths
-import java.util.UUID
 import kotlin.system.exitProcess
 
 /**
@@ -56,7 +56,7 @@ object Debug {
     private val root = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
 
     private val parser = PartiQLParser.default()
-    private val planner = PartiQLPlanner.default()
+    private val planner = PartiQLPlanner.standard()
 
     // !!
     // IMPLEMENT DEBUG BEHAVIOR HERE
@@ -72,12 +72,10 @@ object Debug {
         AstPrinter.append(out, statement)
 
         // Plan
-        val sess = PartiQLPlanner.Session(
-            queryId = UUID.randomUUID().toString(),
-            userId = "debug",
-            currentCatalog = "default",
-            catalogs = emptyMap(),
-        )
+        val sess = Session.builder()
+            .identity("debug")
+            .catalog("default")
+            .build()
         val result = planner.plan(statement, sess).plan
         out.info("-- Plan ----------")
         PlanPrinter.append(out, result.statement)

@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Session
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorFn
@@ -13,13 +13,15 @@ import org.partiql.spi.fn.FnExperimental
 
  *
  * @param catalog
+ * @param catalogs
  * @param session
  */
 @OptIn(FnExperimental::class)
 internal class PathResolverFn(
     catalog: ConnectorMetadata,
-    session: PartiQLPlanner.Session,
-) : PathResolver<ConnectorFn>(catalog, session) {
+    catalogs: Map<String, ConnectorMetadata>,
+    session: Session,
+) : PathResolver<ConnectorFn>(catalog, catalogs, session) {
 
     /**
      * Default INFORMATION_SCHEMA.ROUTINES. Keep empty for now for top-level lookup.

@@ -20,6 +20,7 @@ import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Session
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
 import java.util.stream.Stream
@@ -29,7 +30,7 @@ class SubsumptionTest {
 
     companion object {
 
-        private val planner = PartiQLPlanner.default()
+        private val planner = PartiQLPlanner.standard()
         private val parser = PartiQLParser.default()
         private val session = object : ConnectorSession {
             override fun getQueryId(): String = "query-id"
@@ -47,12 +48,12 @@ class SubsumptionTest {
     private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
         val text = "SELECT * EXCLUDE ${tc.excludeExprStr} FROM <<>> AS s, <<>> AS t;"
         val statement = parser.parse(text).root
-        val session = PartiQLPlanner.Session(
-            queryId = "query-id", userId = "user-id", currentCatalog = "default",
-            catalogs = mapOf(
+        val session = Session.builder()
+            .catalog("default")
+            .catalogs(
                 "default" to connector.getMetadata(session),
             )
-        )
+            .build()
         val plan = planner.plan(statement, session).plan
         val excludeClause = getExcludeClause(plan.statement).paths
         assertEquals(tc.expectedExcludeExprs, excludeClause)
