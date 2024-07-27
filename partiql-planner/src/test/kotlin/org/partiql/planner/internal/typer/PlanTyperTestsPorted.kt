@@ -318,9 +318,11 @@ class PlanTyperTestsPorted {
                 query = "CAST(343434534534 AS INT2)",
                 expected = INT2
             ),
-            ErrorTestCase(
-                name = "CAST STRING to INT4",
+            SuccessTestCase(
+                name = "CAST STRING to INT2",
+                catalog = CATALOG_AWS,
                 query = "CAST((SELECT t.breed FROM ddb.pets AS t) AS INT2)",
+                expected = INT2
             ),
         )
 
