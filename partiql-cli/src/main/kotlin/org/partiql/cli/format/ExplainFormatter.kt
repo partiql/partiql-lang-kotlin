@@ -14,20 +14,19 @@
 
 package org.partiql.cli.format
 
-import org.partiql.lang.eval.PartiQLResult
-
-internal object ExplainFormatter {
-
-    internal fun format(result: PartiQLResult.Explain.Domain): String {
-        val format = result.format?.toUpperCase() ?: ExplainFormats.ION_SEXP.name
-        val formatOption = ExplainFormats.valueOf(format)
-        return formatOption.formatter.format(result.value)
-    }
-
-    private enum class ExplainFormats(val formatter: NodeFormatter) {
-        ION_SEXP(SexpFormatter),
-        TREE(TreeFormatter),
-        DOT(DotFormatter),
-        DOT_URL(DotUrlFormatter)
-    }
-}
+// TODO add explain to shell or plan?
+// internal object ExplainFormatter {
+//
+//     internal fun format(result: PartiQLResult.Explain.Domain): String {
+//         val format = result.format?.toUpperCase() ?: ExplainFormats.ION_SEXP.name
+//         val formatOption = ExplainFormats.valueOf(format)
+//         return formatOption.formatter.format(result.value)
+//     }
+//
+//     private enum class ExplainFormats(val formatter: NodeFormatter) {
+//         ION_SEXP(SexpFormatter),
+//         TREE(TreeFormatter),
+//         DOT(DotFormatter),
+//         DOT_URL(DotUrlFormatter)
+//     }
+// }
