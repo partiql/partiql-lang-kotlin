@@ -18,7 +18,7 @@ internal object ValueUtility {
      */
     @JvmStatic
     fun Datum.isTrue(): Boolean {
-        return this.type.kind == PType.Kind.BOOL && !this.isNull && this.boolean
+        return this.type.kind == PType.Kind.BOOL && !this.isNull && !this.isMissing && this.boolean
     }
 
     @OptIn(PartiQLValueExperimental::class)
