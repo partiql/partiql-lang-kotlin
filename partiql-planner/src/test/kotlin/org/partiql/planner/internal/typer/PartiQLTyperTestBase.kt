@@ -70,7 +70,7 @@ abstract class PartiQLTyperTestBase {
      */
     @OptIn(PartiQLValueExperimental::class)
     private fun buildMetadata(catalog: String, types: List<StaticType>): ConnectorMetadata {
-        val cat = MemoryCatalog.PartiQL().name(catalog).build()
+        val cat = MemoryCatalog.builder().name(catalog).build()
         val connector = MemoryConnector(cat)
 
         // define all bindings

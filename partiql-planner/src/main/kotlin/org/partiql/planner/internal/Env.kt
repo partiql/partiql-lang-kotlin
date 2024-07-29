@@ -5,6 +5,7 @@ import org.partiql.planner.catalog.Name
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.fn.AggSignature
+import org.partiql.planner.internal.fn.SqlFnProvider
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -19,12 +20,8 @@ import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.planner.internal.fn.AggSignature
-import org.partiql.planner.internal.fn.FnExperimental
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
@@ -54,6 +51,11 @@ internal class Env(private val session: Session) {
     private val objects: PathResolverObj = PathResolverObj(catalog, catalogs, session)
 
     /**
+     * A [SqlFnProvider] for looking up built-in functions.
+     */
+    private val fns: SqlFnProvider = SqlFnProvider
+
+    /**
      * This function looks up a global [BindingPath], returning a global reference expression.
      *
      * Convert any remaining binding names (tail) to a path expression.
@@ -75,19 +77,24 @@ internal class Env(private val session: Session) {
         val tail = path.steps.drop(depth)
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
-    
+
     fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
-        val item = fns.lookup(path) ?: return null
-        // Invoke FnResolver to determine if we made a match
-        val variants = item.handle.entity.getVariants()
+        // Assume all functions are defined in the current catalog and reject qualified routine names.
+        if (path.steps.size > 1) {
+            error("Qualified functions are not supported.")
+        }
+        val catalog = session.getCatalog()
+        val name = path.steps.last().name.lowercase()
+        // Invoke existing function resolution logic
+        val variants = fns.lookupFn(name) ?: return null
         val match = FnResolver.resolve(variants, args.map { it.type })
         // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {
             val candidates = variants.map { fnSignature ->
                 rexOpCallDynamicCandidate(
                     fn = refFn(
-                        item.catalog,
-                        name = Name.of(item.handle.path.steps),
+                        catalog = catalog,
+                        name = Name.of(name),
                         signature = fnSignature
                     ),
                     coercions = emptyList()
@@ -104,8 +111,8 @@ internal class Env(private val session: Session) {
                     // Create an internal typed reference for every candidate
                     rexOpCallDynamicCandidate(
                         fn = refFn(
-                            catalog = item.catalog,
-                            name = Name.of(item.handle.path.steps),
+                            catalog = catalog,
+                            name = Name.of(name),
                             signature = it.signature,
                         ),
                         coercions = it.mapping.toList(),
@@ -117,8 +124,8 @@ internal class Env(private val session: Session) {
             is FnMatch.Static -> {
                 // Create an internal typed reference
                 val ref = refFn(
-                    catalog = item.catalog,
-                    name = Name.of(item.handle.path.steps),
+                    catalog = catalog,
+                    name = Name.of(name),
                     signature = match.signature,
                 )
                 // Apply the coercions as explicit casts
@@ -134,17 +141,18 @@ internal class Env(private val session: Session) {
         }
     }
 
-    fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+    fun resolveAgg(path: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
-        val path = BindingPath(listOf(BindingName(name, BindingCase.INSENSITIVE)))
-        val item = aggs.lookup(path) ?: return null
-        val candidates = item.handle.entity.getVariants()
+        val catalog = session.getCatalog()
+        val name = path.lowercase()
+        // Invoke existing function resolution logic
+        val candidates = fns.lookupAgg(name) ?: return null
         val parameters = args.mapIndexed { i, arg -> arg.type }
         val match = match(candidates, parameters) ?: return null
         val agg = match.first
         val mapping = match.second
         // Create an internal typed reference
-        val ref = refAgg(item.catalog, Name.of(item.handle.path.steps), agg)
+        val ref = refAgg(catalog, Name.of(name), agg)
         // Apply the coercions as explicit casts
         val coercions: List<Rex> = args.mapIndexed { i, arg ->
             when (val cast = mapping[i]) {
@@ -206,7 +214,6 @@ internal class Env(private val session: Session) {
         return userInputPath.steps.size + actualAbsolutePath.size - pathSentToConnector.steps.size
     }
 
-    
     private fun match(candidates: List<AggSignature>, args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
@@ -232,7 +239,7 @@ internal class Env(private val session: Session) {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    
+
     private fun AggSignature.matches(args: List<PType>): Boolean {
         for (i in args.indices) {
             val a = args[i]

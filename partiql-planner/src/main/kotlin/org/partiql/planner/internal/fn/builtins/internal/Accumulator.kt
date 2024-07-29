@@ -19,7 +19,6 @@ package org.partiql.planner.internal.fn.builtins.internal
 import com.amazon.ion.Decimal
 import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.fn.Agg
-
 import org.partiql.value.BoolValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value

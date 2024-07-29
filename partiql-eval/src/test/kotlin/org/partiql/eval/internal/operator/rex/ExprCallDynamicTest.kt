@@ -13,10 +13,9 @@ import org.partiql.eval.value.Datum.boolValue
 import org.partiql.eval.value.Datum.int32Value
 import org.partiql.eval.value.Datum.listValue
 import org.partiql.eval.value.Datum.stringValue
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnParameter
-import org.partiql.spi.fn.FnSignature
+import org.partiql.planner.internal.fn.Fn
+import org.partiql.planner.internal.fn.FnParameter
+import org.partiql.planner.internal.fn.FnSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -64,7 +63,7 @@ class ExprCallDynamicTest {
                 PartiQLValueType.ANY to PartiQLValueType.ANY, // Index 12
             )
 
-            @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+            @OptIn(PartiQLValueExperimental::class)
             internal val candidates = params.mapIndexed { index, it ->
                 ExprCallDynamic.Candidate(
                     fn = object : Fn {

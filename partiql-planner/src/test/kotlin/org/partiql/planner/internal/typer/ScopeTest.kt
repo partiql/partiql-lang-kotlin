@@ -14,7 +14,6 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -41,16 +40,6 @@ internal class ScopeTest {
                     .catalogs(
                         "currentCatalog" to object : ConnectorMetadata {
                             override fun getObject(path: BindingPath): ConnectorHandle.Obj? {
-                                return null
-                            }
-
-                            @FnExperimental
-                            override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {
-                                return null
-                            }
-
-                            @FnExperimental
-                            override fun getAggregation(path: BindingPath): ConnectorHandle.Agg? {
                                 return null
                             }
                         }

@@ -6,7 +6,6 @@ import org.partiql.plan.catalogItemAgg
 import org.partiql.plan.catalogItemFn
 import org.partiql.plan.catalogItemValue
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.planner.internal.fn.FnExperimental
 import org.partiql.plan.Ref as CatalogRef
 
 /**
@@ -31,13 +30,11 @@ internal class Symbols private constructor() {
         item = catalogItemValue(ref.name.toList(), ref.type),
     )
 
-    
     fun insert(ref: Ref.Fn): CatalogRef = insert(
         catalog = ref.catalog,
         item = catalogItemFn(ref.name.toList(), ref.signature.specific),
     )
 
-    
     fun insert(ref: Ref.Agg): CatalogRef = insert(
         catalog = ref.catalog,
         item = catalogItemAgg(ref.name.toList(), ref.signature.specific),

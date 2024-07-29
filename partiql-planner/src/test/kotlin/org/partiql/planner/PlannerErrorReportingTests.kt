@@ -28,7 +28,7 @@ internal class PlannerErrorReportingTests {
     val queryId = "query"
 
     val catalog = MemoryCatalog
-        .PartiQL()
+        .builder()
         .name(catalogName)
         .define("missing_binding", StaticType.ANY)
         .define("atomic", StaticType.INT2)

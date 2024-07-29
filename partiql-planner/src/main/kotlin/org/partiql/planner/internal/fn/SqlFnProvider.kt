@@ -19,15 +19,20 @@ package org.partiql.planner.internal.fn
  */
 public object SqlFnProvider {
 
-    // planner and evaluator lookup
-    private val fnNameIndex: Map<String, Fn> = SqlBuiltins.builtins.associateBy { it.signature.name }
-    private val fnSpecIndex: Map<String, Fn> = SqlBuiltins.builtins.associateBy { it.signature.specific }
-    public fun getFnByName(name: String): Fn? = fnNameIndex[name]
-    public fun getFnBySpecific(specific: String): Fn? = fnSpecIndex[specific]
+    private val fnNameIndex = SqlBuiltins.builtins.groupBy({ it.signature.name }, { it.signature })
+    private val fnSpecIndex = SqlBuiltins.builtins.associateBy { it.signature.specific }
+    private val aggNameIndex = SqlBuiltins.aggregations.groupBy({ it.signature.name }, { it.signature })
+    private val aggSpecIndex = SqlBuiltins.aggregations.associateBy { it.signature.specific }
 
-    // planner and evaluator lookup
-    private val aggNameIndex: Map<String, Agg> = SqlBuiltins.aggregations.associateBy { it.signature.name }
-    private val aggSpecIndex: Map<String, Agg> = SqlBuiltins.aggregations.associateBy { it.signature.specific }
-    public fun getAggByName(name: String): Agg? = aggNameIndex[name]
-    public fun getAggBySpecific(specific: String): Agg? = aggSpecIndex[specific]
+    //
+    // INTERNAL PLANNER APIS
+    //
+    internal fun lookupFn(name: String) = fnNameIndex[name]
+    internal fun lookupAgg(name: String) = aggNameIndex[name]
+
+    //
+    // TEMPORARY PUBLIC EVALUATOR APIS
+    //
+    public fun getFn(specific: String): Fn? = fnSpecIndex[specific]
+    public fun getAgg(specific: String): Agg? = aggSpecIndex[specific]
 }

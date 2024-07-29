@@ -5,8 +5,8 @@ imports::{
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
-    fn_signature::'org.partiql.spi.fn.FnSignature',
-    agg_signature::'org.partiql.spi.fn.AggSignature',
+    fn_signature::'org.partiql.planner.internal.fn.FnSignature',
+    agg_signature::'org.partiql.planner.internal.fn.AggSignature',
     problem::'org.partiql.errors.Problem'
   ],
 }

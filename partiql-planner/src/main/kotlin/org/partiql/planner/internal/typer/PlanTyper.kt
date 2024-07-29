@@ -55,7 +55,6 @@ import org.partiql.planner.internal.utils.PlanUtils
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.planner.internal.fn.FnExperimental
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -804,7 +803,7 @@ internal class PlanTyper(private val env: Env) {
          * @param ctx
          * @return
          */
-        
+
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: CompilerType?): Rex {
             // Apply the coercions as explicit casts
             val args: List<Rex> = node.args.map {
@@ -836,7 +835,7 @@ internal class PlanTyper(private val env: Env) {
          * @param ctx
          * @return
          */
-        
+
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: CompilerType?): Rex {
             val types = node.candidates.map { candidate -> candidate.fn.signature.returns }.toMutableSet()
             // TODO: Should this always be DYNAMIC?
@@ -1168,7 +1167,6 @@ internal class PlanTyper(private val env: Env) {
             return Rex(type.toCType(), Rex.Op.Struct(fields))
         }
 
-        
         private fun replaceGeneratedTupleUnionArg(node: Rex): Rex? {
             if (node.op is Rex.Op.Struct && node.type.kind == Kind.ROW) {
                 return node
@@ -1259,7 +1257,7 @@ internal class PlanTyper(private val env: Env) {
          *     Let TX be the single-column table that is the result of applying the <value expression>
          *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
          */
-        
+
         fun resolveAgg(node: Rel.Op.Aggregate.Call.Unresolved): Pair<Rel.Op.Aggregate.Call, CompilerType> {
             // Type the arguments
             val args = node.args.map { visitRex(it, null) }

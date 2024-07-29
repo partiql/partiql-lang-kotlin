@@ -6,7 +6,6 @@ package org.partiql.planner.internal.fn.builtins
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.fn.Fn
-
 import org.partiql.planner.internal.fn.FnParameter
 import org.partiql.planner.internal.fn.FnSignature
 import org.partiql.value.DateValue

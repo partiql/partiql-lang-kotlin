@@ -21,6 +21,7 @@ import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.catalog.Session
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
 import java.util.stream.Stream
@@ -36,7 +37,7 @@ class SubsumptionTest {
             override fun getQueryId(): String = "query-id"
             override fun getUserId(): String = "user-id"
         }
-        private val connector = MemoryConnector.partiQL()
+        private val connector = MemoryConnector(MemoryCatalog("default"))
     }
 
     private fun getExcludeClause(statement: Statement): Rel.Op.Exclude {
