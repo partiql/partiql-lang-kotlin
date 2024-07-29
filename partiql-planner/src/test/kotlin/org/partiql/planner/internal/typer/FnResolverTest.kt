@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
-import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.fn.FnParameter
 import org.partiql.planner.internal.fn.FnSignature
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType

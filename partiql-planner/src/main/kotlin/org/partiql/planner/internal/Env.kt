@@ -1,7 +1,7 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.fn.AggSignature
