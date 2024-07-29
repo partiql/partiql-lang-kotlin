@@ -10,6 +10,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.boolValue
 
 /**
@@ -47,7 +48,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0]
         val rhs = args[1]
-        if (lhs.type == ANY || rhs.type == ANY) {
+        if (lhs.type == MISSING || rhs.type == MISSING) {
             return boolValue(null)
         }
         return boolValue(comparator.compare(lhs, rhs) == 0)

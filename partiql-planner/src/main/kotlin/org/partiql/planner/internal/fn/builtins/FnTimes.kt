@@ -35,7 +35,6 @@ import org.partiql.value.int8Value
 import org.partiql.value.intValue
 
 // TODO: Handle Overflow
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_TIMES__INT8_INT8__INT8 : Fn {
 

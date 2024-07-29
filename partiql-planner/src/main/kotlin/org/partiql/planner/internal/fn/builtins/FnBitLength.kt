@@ -13,7 +13,6 @@ import org.partiql.value.check
 import org.partiql.value.int32Value
 
 // SQL spec section 6.17 contains <bit length expression>
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_BIT_LENGTH__STRING__INT32 : Fn {
 

@@ -10,6 +10,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class)
@@ -26,7 +27,7 @@ internal object Fn_IS_NULL__ANY__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        if (args[0].type == ANY) {
+        if (args[0].type == MISSING) {
             return boolValue(true)
         }
         return boolValue(args[0].isNull)

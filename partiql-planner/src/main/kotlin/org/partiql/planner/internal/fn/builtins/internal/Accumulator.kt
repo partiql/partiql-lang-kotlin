@@ -128,7 +128,7 @@ internal fun checkIsBooleanType(funcName: String, value: PartiQLValue) {
 }
 
 @OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValue.isUnknown(): Boolean = this.type == PartiQLValueType.ANY || this.isNull
+internal fun PartiQLValue.isUnknown(): Boolean = this.type == PartiQLValueType.MISSING || this.isNull
 
 @OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValue.numberValue(): Number = when (this) {

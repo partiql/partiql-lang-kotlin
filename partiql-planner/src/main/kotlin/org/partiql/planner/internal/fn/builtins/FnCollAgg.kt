@@ -1,6 +1,5 @@
 // ktlint-disable filename
 @file:Suppress("ClassName")
-@file:OptIn(PartiQLValueExperimental::class)
 
 package org.partiql.planner.internal.fn.builtins
 
@@ -22,11 +21,11 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.check
 
+@OptIn(PartiQLValueExperimental::class)
 internal abstract class Fn_COLL_AGG__BAG__ANY : Fn {
 
     abstract fun getAccumulator(): Agg.Accumulator
 
-    @OptIn(PartiQLValueExperimental::class)
     companion object {
         @JvmStatic
         internal fun createSignature(name: String) = FnSignature(

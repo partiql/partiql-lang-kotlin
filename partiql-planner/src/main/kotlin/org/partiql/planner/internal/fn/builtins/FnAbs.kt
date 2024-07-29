@@ -36,7 +36,6 @@ import org.partiql.value.intValue
 import kotlin.math.absoluteValue
 
 // TODO: When negate a negative value, we need to consider overflow
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_ABS__INT8__INT8 : Fn {
 

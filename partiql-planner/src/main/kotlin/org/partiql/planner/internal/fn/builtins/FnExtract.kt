@@ -24,7 +24,6 @@ import org.partiql.value.int32Value
 //
 // Extract Year
 //
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXTRACT_YEAR__DATE__INT32 : Fn {
 
@@ -66,7 +65,6 @@ internal object Fn_EXTRACT_YEAR__TIMESTAMP__INT32 : Fn {
 //
 // Extract Month
 //
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXTRACT_MONTH__DATE__INT32 : Fn {
 
@@ -150,7 +148,6 @@ internal object Fn_EXTRACT_DAY__TIMESTAMP__INT32 : Fn {
 //
 // Extract Hour
 //
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXTRACT_HOUR__TIME__INT32 : Fn {
 
@@ -192,7 +189,6 @@ internal object Fn_EXTRACT_HOUR__TIMESTAMP__INT32 : Fn {
 //
 // Extract Minute
 //
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXTRACT_MINUTE__TIME__INT32 : Fn {
 
@@ -234,7 +230,6 @@ internal object Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 : Fn {
 //
 // Extract Second
 //
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY : Fn {
 
@@ -276,7 +271,6 @@ internal object Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY : Fn {
 //
 // Extract Timezone Hour
 //
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 : Fn {
 
@@ -326,7 +320,6 @@ internal object Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 : Fn {
 //
 // Extract Timezone Minute
 //
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 : Fn {
 

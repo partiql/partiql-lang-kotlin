@@ -49,7 +49,6 @@ import org.partiql.value.symbolValue
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_TRIM__STRING__STRING : Fn {
 

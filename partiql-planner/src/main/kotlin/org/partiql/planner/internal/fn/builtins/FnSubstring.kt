@@ -93,7 +93,6 @@ import org.partiql.value.symbolValue
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
-
 @OptIn(PartiQLValueExperimental::class)
 internal object Fn_SUBSTRING__STRING_INT64__STRING : Fn {
 
