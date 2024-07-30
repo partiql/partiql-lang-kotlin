@@ -30,6 +30,7 @@ object Versions {
     const val ktlintGradle = "10.2.1"
     const val pig = "0.6.1"
     const val shadow = "8.1.1"
+    const val smithyJar = "1.1.0"
 }
 
 object Plugins {
@@ -40,6 +41,7 @@ object Plugins {
     const val ktlintGradle = "org.jlleitschuh.gradle:ktlint-gradle:${Versions.ktlintGradle}"
     const val pig = "org.partiql:pig-gradle-plugin:${Versions.pig}"
     const val shadow = "com.github.johnrengelman:shadow:${Versions.shadow}"
+    const val smithyJar = "software.amazon.smithy.gradle:smithy-jar:${Versions.smithyJar}"
 }
 
 dependencies {
@@ -50,6 +52,7 @@ dependencies {
     implementation(Plugins.pig)
     implementation(Plugins.binaryCompatibilityValidator)
     implementation(Plugins.shadow)
+    implementation(Plugins.smithyJar)
 }
 
 allprojects {

@@ -1,7 +1,7 @@
 package org.partiql.planner.internal.transforms
 
 import org.partiql.plan.Catalog
-import org.partiql.plan.builder.CatalogBuilder
+import org.partiql.plan.logical.builder.CatalogBuilder
 import org.partiql.plan.catalogItemAgg
 import org.partiql.plan.catalogItemFn
 import org.partiql.plan.catalogItemValue

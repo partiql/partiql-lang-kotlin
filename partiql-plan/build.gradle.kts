@@ -18,12 +18,28 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
     id(Plugins.library)
+    id(Plugins.smithyJar)
+    distribution
 }
 
 dependencies {
     api(project(":partiql-types"))
     implementation(Deps.ionElement)
     implementation(Deps.kotlinReflect)
+
+    // smithy
+    implementation("software.amazon.smithy:smithy-model:1.50.0")
+    implementation("software.amazon.smithy:smithy-aws-traits:1.50.0")
+    smithyBuild("software.amazon.smithy.kotlin:smithy-kotlin-codegen:0.10.1")
+}
+
+java {
+    // needed for smithy codegen
+    withSourcesJar()
+}
+
+smithy {
+    // smithy configuration...
 }
 
 tasks.shadowJar {
@@ -67,6 +83,6 @@ val generate = tasks.register<Exec>("generate") {
     )
 }
 
-tasks.compileKotlin {
-    dependsOn(generate)
+tasks.named("sourcesJar") {
+    dependsOn("smithyJarStaging")
 }

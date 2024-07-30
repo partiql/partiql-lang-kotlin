@@ -123,5 +123,7 @@ object Plugins {
     const val dokka = "org.jetbrains.dokka"
     const val jmh = "me.champeau.jmh"
     const val library = "org.gradle.java-library"
+    const val smithy = "software.amazon.smithy"
+    const val smithyJar = "software.amazon.smithy.gradle.smithy-jar"
     const val testFixtures = "org.gradle.java-test-fixtures"
 }

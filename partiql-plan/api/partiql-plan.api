@@ -2375,6 +2375,59 @@ public final class org/partiql/plan/debug/PlanPrinter {
 	public final fun toString (Lorg/partiql/plan/PlanNode;)Ljava/lang/String;
 }
 
+public abstract interface class org/partiql/plan/logical/Node {
+	public abstract fun getChildren ()Ljava/util/List;
+	public abstract fun getTag ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/logical/Node$DefaultImpls {
+	public static fun getChildren (Lorg/partiql/plan/logical/Node;)Ljava/util/List;
+	public static fun getTag (Lorg/partiql/plan/logical/Node;)Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/logical/Plan : org/partiql/plan/logical/Node {
+	public static final field Companion Lorg/partiql/plan/logical/Plan$Companion;
+	public static fun builder ()V
+	public abstract fun getChildren ()Ljava/util/List;
+	public abstract fun getStatement ()Lorg/partiql/plan/logical/Statement;
+	public abstract fun getVersion ()Lorg/partiql/plan/logical/Version;
+}
+
+public final class org/partiql/plan/logical/Plan$Companion {
+	public final fun builder ()V
+}
+
+public final class org/partiql/plan/logical/Plan$DefaultImpls {
+	public static fun getChildren (Lorg/partiql/plan/logical/Plan;)Ljava/util/List;
+	public static fun getTag (Lorg/partiql/plan/logical/Plan;)Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/logical/Statement : org/partiql/plan/logical/Node {
+}
+
+public final class org/partiql/plan/logical/Statement$DefaultImpls {
+	public static fun getChildren (Lorg/partiql/plan/logical/Statement;)Ljava/util/List;
+	public static fun getTag (Lorg/partiql/plan/logical/Statement;)Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/logical/Statement$Query : org/partiql/plan/logical/Statement {
+	public static final field Companion Lorg/partiql/plan/logical/Statement$Query$Companion;
+	public static fun builder ()V
+}
+
+public final class org/partiql/plan/logical/Statement$Query$Companion {
+	public final fun builder ()V
+}
+
+public final class org/partiql/plan/logical/Statement$Query$DefaultImpls {
+	public static fun getChildren (Lorg/partiql/plan/logical/Statement$Query;)Ljava/util/List;
+	public static fun getTag (Lorg/partiql/plan/logical/Statement$Query;)Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/logical/Version {
+	public abstract fun getVersion ()Ljava/lang/String;
+}
+
 public abstract class org/partiql/plan/util/PlanRewriter : org/partiql/plan/visitor/PlanBaseVisitor {
 	public fun <init> ()V
 	public synthetic fun defaultReturn (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;
