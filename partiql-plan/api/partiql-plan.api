@@ -2505,6 +2505,182 @@ public abstract class org/partiql/plan/util/PlanRewriter : org/partiql/plan/visi
 	public fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 }
 
+public abstract interface class org/partiql/plan/v1/Node {
+	public abstract fun getChildren ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/Plan {
+	public abstract fun getCatalogs ()Ljava/util/List;
+	public abstract fun getStatement ()Lorg/partiql/plan/v1/Statement;
+	public abstract fun getVersion ()Lorg/partiql/plan/v1/Version;
+}
+
+public abstract interface class org/partiql/plan/v1/Schema {
+	public abstract fun getField (Ljava/lang/String;)Lorg/partiql/types/Field;
+	public abstract fun getFields ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/Statement {
+}
+
+public abstract interface class org/partiql/plan/v1/Statement$Query {
+	public abstract fun getRoot ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/Version {
+	public abstract fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/Rel : org/partiql/plan/v1/Node {
+	public abstract fun getSchema ()Lorg/partiql/plan/v1/Schema;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelAggregate {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelDistinct {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelExcept {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelExclude {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelFilter {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelIntersect {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelJoin {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelLimit {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelOffset {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelProject {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelScan {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelScanIndexed {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelSort {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelUnion {
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelUnpviot {
+}
+
+public abstract interface class org/partiql/plan/v1/rex/Rex : org/partiql/plan/v1/Node {
+	public abstract fun getType ()Lorg/partiql/types/PType;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexCall : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getArgs ()Ljava/util/List;
+	public abstract fun getFunction ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexCase : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getBranches ()Ljava/util/List;
+	public abstract fun getDefault ()Lorg/partiql/plan/v1/rex/Rex;
+	public abstract fun getMatch ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexCase$Branch {
+	public abstract fun getCondition ()Lorg/partiql/plan/v1/rex/Rex;
+	public abstract fun getResult ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexCast : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getOperand ()Lorg/partiql/plan/v1/rex/Rex;
+	public abstract fun getTarget ()Lorg/partiql/types/PType;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexCoalesce : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getArgs ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexCollection : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getValues ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexGlobal : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getCatalog ()Ljava/lang/String;
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexLit : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getValue ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexNullIf : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getNullifier ()Lorg/partiql/plan/v1/rex/Rex;
+	public abstract fun getValue ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexPath : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getRoot ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexPath$Index : org/partiql/plan/v1/rex/RexPath {
+	public abstract fun getIndex ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexPath$Key : org/partiql/plan/v1/rex/RexPath {
+	public abstract fun getKey ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexPath$Symbol : org/partiql/plan/v1/rex/RexPath {
+	public abstract fun getSymbol ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexPivot : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getKey ()Lorg/partiql/plan/v1/rex/Rex;
+	public abstract fun getValue ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexSelect : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getConstructor ()Lorg/partiql/plan/v1/rex/Rex;
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexStruct : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getFields ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexStruct$Field {
+	public abstract fun getKey ()Lorg/partiql/plan/v1/rex/Rex;
+	public abstract fun getValue ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexSubquery : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexSubqueryIn {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getValues ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexTupleUnion : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getArgs ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/rex/RexVar : org/partiql/plan/v1/rex/Rex {
+	public abstract fun getDepth ()I
+	public abstract fun getOffset ()I
+}
+
 public abstract class org/partiql/plan/visitor/PlanBaseVisitor : org/partiql/plan/visitor/PlanVisitor {
 	public fun <init> ()V
 	public abstract fun defaultReturn (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;
