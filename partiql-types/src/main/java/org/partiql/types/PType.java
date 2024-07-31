@@ -1,7 +1,6 @@
 package org.partiql.types;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -682,75 +681,6 @@ public interface PType {
     @NotNull
     static PType typeUnknown() {
         return new PTypePrimitive(Kind.UNKNOWN);
-    }
-
-    /**
-     * @return a corresponding PType from a {@link PartiQLValueType}
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice. This is
-     * meant for use internally by the PartiQL library. Public consumers should not use this API.
-     */
-    @NotNull
-    static PType fromPartiQLValueType(@NotNull PartiQLValueType type) {
-        switch (type) {
-            case DECIMAL:
-            case DECIMAL_ARBITRARY:
-                return PType.typeDecimalArbitrary();
-            case INT8:
-                return PType.typeTinyInt();
-            case CHAR:
-                return PType.typeChar(255);
-            case TIMESTAMP:
-                return PType.typeTimestampWithTZ(6);
-            case DATE:
-                return PType.typeDate();
-            case BOOL:
-                return PType.typeBool();
-            case SYMBOL:
-                return PType.typeSymbol();
-            case STRING:
-                return PType.typeString();
-            case STRUCT:
-                return PType.typeStruct();
-            case SEXP:
-                return PType.typeSexp();
-            case LIST:
-                return PType.typeList();
-            case BAG:
-                return PType.typeBag();
-            case FLOAT32:
-                return PType.typeReal();
-            case INT:
-                return PType.typeIntArbitrary();
-            case INT64:
-                return PType.typeBigInt();
-            case INT32:
-                return PType.typeInt();
-            case INT16:
-                return PType.typeSmallInt();
-            case TIME:
-                return PType.typeTimeWithoutTZ(6);
-            case ANY:
-                return PType.typeDynamic();
-            case FLOAT64:
-                return PType.typeDoublePrecision();
-            case CLOB:
-                return PType.typeClob(Integer.MAX_VALUE);
-            case BLOB:
-                return PType.typeBlob(Integer.MAX_VALUE);
-
-            // TODO: Is this allowed? This is specifically for literals
-            case NULL:
-            case MISSING:
-                return PType.typeUnknown();
-
-            // Unsupported types
-            case INTERVAL:
-            case BYTE:
-            case BINARY:
-                return PType.typeDynamic(); // TODO: REMOVE THIS
-            default:
-                throw new IllegalStateException();
-        }
     }
 
     /**

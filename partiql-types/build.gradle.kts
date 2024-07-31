@@ -19,8 +19,7 @@ plugins {
 }
 
 dependencies {
-    implementation(Deps.ionElement)
-    implementation(Deps.kotlinxCollections)
+    // empty
 }
 
 tasks.shadowJar {

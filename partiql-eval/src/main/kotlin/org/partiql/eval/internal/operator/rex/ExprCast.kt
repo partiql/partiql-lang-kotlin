@@ -64,7 +64,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
         val argDatum = arg.eval(env)
         val arg = argDatum.toPartiQLValue()
         try {
-            val partiqlValue = when (PType.fromPartiQLValueType(arg.type).kind) {
+            val partiqlValue = when (arg.type.toPType().kind) {
                 PType.Kind.DYNAMIC -> TODO("Not Possible")
                 PType.Kind.BOOL -> castFromBool(arg as BoolValue, cast.target)
                 PType.Kind.TINYINT -> castFromNumeric(arg as Int8Value, cast.target)

@@ -1,4 +1,4 @@
-package org.partiql.datetime
+package org.partiql.value
 
 import com.amazon.ionelement.api.ionTimestamp
 import org.junit.jupiter.api.assertThrows
@@ -12,7 +12,6 @@ import org.partiql.value.datetime.TimestampWithTimeZone
 import org.partiql.value.datetime.TimestampWithoutTimeZone
 import java.math.BigDecimal
 import kotlin.test.assertEquals
-import com.amazon.ion.Timestamp as TimestampIon
 
 class TimestampTest {
 
@@ -32,7 +31,7 @@ class TimestampTest {
         val tzMinute: Int,
         val precision: Int?,
         val expectedTimestamp: Timestamp,
-        val expectedIonEquivalent: TimestampIon
+        val expectedIonEquivalent: com.amazon.ion.Timestamp
     ) : TimestampTestCase("Success Case With Known Time Zone - $name")
 
     data class SuccessCaseWithUnknownTimeZone(
@@ -45,7 +44,7 @@ class TimestampTest {
         val second: BigDecimal,
         val precision: Int?,
         val expectedTimestamp: Timestamp,
-        val expectedIonEquivalent: TimestampIon
+        val expectedIonEquivalent: com.amazon.ion.Timestamp
     ) : TimestampTestCase("Success Case With Unknown Time Zone - $name")
 
     data class SuccessCaseWithNoTimeZone(
@@ -895,8 +894,22 @@ class TimestampTest {
             FailedTest("hour 3 digits") { DateTimeValue.time(123, 1, BigDecimal.ZERO) },
             FailedTest("minute 3 digits") { DateTimeValue.time(12, 111, BigDecimal.ZERO) },
             FailedTest("whole decimalSecond large than 2") { DateTimeValue.time(12, 1, BigDecimal.valueOf(1000L, 1)) },
-            FailedTest("Timezone hour more than 3 digits") { DateTimeValue.time(12, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(100, 0)) },
-            FailedTest("Time zone minutes more than 3 digits") { DateTimeValue.time(12, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(1, 100)) },
+            FailedTest("Timezone hour more than 3 digits") {
+                DateTimeValue.time(
+                    12,
+                    1,
+                    BigDecimal.ZERO,
+                    TimeZone.UtcOffset.of(100, 0)
+                )
+            },
+            FailedTest("Time zone minutes more than 3 digits") {
+                DateTimeValue.time(
+                    12,
+                    1,
+                    BigDecimal.ZERO,
+                    TimeZone.UtcOffset.of(1, 100)
+                )
+            },
             FailedTest("Hour more than 24") { DateTimeValue.time(25, 1, BigDecimal.ZERO) },
             FailedTest("Minute more than 60") { DateTimeValue.time(12, 61, BigDecimal.ZERO) },
             FailedTest("Second more than 60") { DateTimeValue.time(12, 1, BigDecimal.valueOf(61L)) },

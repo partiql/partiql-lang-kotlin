@@ -43,7 +43,7 @@ public data class FnSignature(
         isNullCall: Boolean = false,
         isMissable: Boolean = true,
         isMissingCall: Boolean = true,
-    ) : this(name, PType.fromPartiQLValueType(returns), parameters, description, isDeterministic, isNullable, isNullCall, isMissable, isMissingCall)
+    ) : this(name, returns.toPType(), parameters, description, isDeterministic, isNullable, isNullCall, isMissable, isMissingCall)
 
     /**
      * Symbolic name of this operator of the form NAME__INPUTS__RETURNS

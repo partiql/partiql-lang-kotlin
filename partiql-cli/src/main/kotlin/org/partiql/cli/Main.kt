@@ -27,7 +27,6 @@ import org.partiql.eval.PartiQLResult
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.sql.info.InfoSchema
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
@@ -226,7 +225,6 @@ internal class MainCommand : Runnable {
         }
         val catalog = MemoryCatalog.builder()
             .name("default")
-            .info(InfoSchema.ext())
             .define(
                 name = "stdin",
                 type = StaticType.ANY,

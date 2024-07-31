@@ -54,15 +54,6 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     }
 }
 
-// Need to add this as we have both Java and Kotlin sources. Dokka already handles multi-language projects. If
-// Javadoc is enabled, we end up overwriting index.html (causing compilation errors).
-tasks.withType<Javadoc>() {
-    enabled = false
-}
-tasks.withType<Jar>() {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
 publish {
     artifactId = "partiql-eval"
     name = "PartiQL Lang Kotlin Evaluator"

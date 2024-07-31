@@ -1,6 +1,5 @@
 package org.partiql.planner.internal
 
-import org.partiql.ast.Type
 import org.partiql.types.Field
 import org.partiql.types.PType
 
@@ -165,52 +164,52 @@ internal object SqlTypes {
     @JvmStatic
     fun row(fields: List<Field>): PType = PType.typeRow(fields)
 
-    /**
-     * Create PType from the AST type.
-     */
-    @JvmStatic
-    fun from(type: Type): PType = when (type) {
-        is Type.NullType -> error("Casting to NULL is not supported.")
-        is Type.Missing -> error("Casting to MISSING is not supported.")
-        is Type.Bool -> bool()
-        is Type.Tinyint -> tinyint()
-        is Type.Smallint, is Type.Int2 -> smallint()
-        is Type.Int4, is Type.Int -> int()
-        is Type.Bigint, is Type.Int8 -> bigint()
-        is Type.Numeric -> numeric(type.precision, type.scale)
-        is Type.Decimal -> decimal(type.precision, type.scale)
-        is Type.Real -> real()
-        is Type.Float32 -> real()
-        is Type.Float64 -> double()
-        is Type.Char -> char(type.length)
-        is Type.Varchar -> varchar(type.length)
-        is Type.String -> string()
-        is Type.Symbol -> {
-            // TODO will we continue supporting symbol?
-            PType.typeSymbol()
-        }
-        is Type.Bit -> error("BIT is not supported yet.")
-        is Type.BitVarying -> error("BIT VARYING is not supported yet.")
-        is Type.ByteString -> error("BINARY is not supported yet.")
-        is Type.Blob -> blob(type.length)
-        is Type.Clob -> clob(type.length)
-        is Type.Date -> date()
-        is Type.Time -> time(type.precision)
-        is Type.TimeWithTz -> timez(type.precision)
-        is Type.Timestamp -> timestamp(type.precision)
-        is Type.TimestampWithTz -> timestampz(type.precision)
-        is Type.Interval -> error("INTERVAL is not supported yet.")
-        is Type.Bag -> bag()
-        is Type.Sexp -> {
-            // TODO will we continue supporting s-expression?
-            PType.typeSexp()
-        }
-        is Type.Any -> dynamic()
-        is Type.List -> array()
-        is Type.Tuple -> struct()
-        is Type.Struct -> struct()
-        is Type.Custom -> TODO("Custom type not supported ")
-    }
+    // /**
+    //  * Create PType from the AST type.
+    //  */
+    // @JvmStatic
+    // fun from(type: Type): PType = when (type) {
+    //     is Type.NullType -> error("Casting to NULL is not supported.")
+    //     is Type.Missing -> error("Casting to MISSING is not supported.")
+    //     is Type.Bool -> bool()
+    //     is Type.Tinyint -> tinyint()
+    //     is Type.Smallint, is Type.Int2 -> smallint()
+    //     is Type.Int4, is Type.Int -> int()
+    //     is Type.Bigint, is Type.Int8 -> bigint()
+    //     is Type.Numeric -> numeric(type.precision, type.scale)
+    //     is Type.Decimal -> decimal(type.precision, type.scale)
+    //     is Type.Real -> real()
+    //     is Type.Float32 -> real()
+    //     is Type.Float64 -> double()
+    //     is Type.Char -> char(type.length)
+    //     is Type.Varchar -> varchar(type.length)
+    //     is Type.String -> string()
+    //     is Type.Symbol -> {
+    //         // TODO will we continue supporting symbol?
+    //         PType.typeSymbol()
+    //     }
+    //     is Type.Bit -> error("BIT is not supported yet.")
+    //     is Type.BitVarying -> error("BIT VARYING is not supported yet.")
+    //     is Type.ByteString -> error("BINARY is not supported yet.")
+    //     is Type.Blob -> blob(type.length)
+    //     is Type.Clob -> clob(type.length)
+    //     is Type.Date -> date()
+    //     is Type.Time -> time(type.precision)
+    //     is Type.TimeWithTz -> timez(type.precision)
+    //     is Type.Timestamp -> timestamp(type.precision)
+    //     is Type.TimestampWithTz -> timestampz(type.precision)
+    //     is Type.Interval -> error("INTERVAL is not supported yet.")
+    //     is Type.Bag -> bag()
+    //     is Type.Sexp -> {
+    //         // TODO will we continue supporting s-expression?
+    //         PType.typeSexp()
+    //     }
+    //     is Type.Any -> dynamic()
+    //     is Type.List -> array()
+    //     is Type.Tuple -> struct()
+    //     is Type.Struct -> struct()
+    //     is Type.Custom -> TODO("Custom type not supported ")
+    // }
 
     @JvmStatic
     fun from(kind: PType.Kind): PType = when (kind) {

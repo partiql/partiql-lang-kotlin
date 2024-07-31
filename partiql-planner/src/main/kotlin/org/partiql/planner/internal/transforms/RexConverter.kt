@@ -84,7 +84,7 @@ internal object RexConverter {
 
         override fun visitExprLit(node: Expr.Lit, context: Env): Rex {
             val type = CompilerType(
-                _delegate = PType.fromPartiQLValueType(node.value.type),
+                _delegate = node.value.type.toPType(),
                 isNullValue = node.value.isNull,
                 isMissingValue = node.value is MissingValue
             )
@@ -96,7 +96,7 @@ internal object RexConverter {
             val value =
                 PartiQLValueIonReaderBuilder
                     .standard().build(node.value).read()
-            val type = CompilerType(PType.fromPartiQLValueType(value.type))
+            val type = CompilerType(value.type.toPType())
             return rex(type, rexOpLit(value))
         }
 

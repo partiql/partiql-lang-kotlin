@@ -28,7 +28,7 @@ public class AggSignature(
         isNullable: Boolean = true,
         isDecomposable: Boolean = true,
     ) : this(
-        name, PType.fromPartiQLValueType(returns), parameters, description, isNullable, isDecomposable
+        name, returns.toPType(), parameters, description, isNullable, isDecomposable
     )
 
     /**

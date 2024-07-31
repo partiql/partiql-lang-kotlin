@@ -417,7 +417,7 @@ public interface Datum extends Iterable<Datum> {
     static Datum of(PartiQLValue value) {
         PartiQLValueType type = value.getType();
         if (value.isNull()) {
-            return new DatumNull(PType.fromPartiQLValueType(type));
+            return new DatumNull(type.toPType());
         }
         switch (type) {
             case MISSING:
