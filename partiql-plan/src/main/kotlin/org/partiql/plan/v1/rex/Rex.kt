@@ -9,4 +9,8 @@ import org.partiql.types.PType
 public interface Rex : Node {
 
     public fun getType(): PType
+
+    public fun getInputs(): List<Rex>
+
+    public fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R
 }

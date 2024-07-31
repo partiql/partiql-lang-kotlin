@@ -8,9 +8,11 @@ import org.partiql.plan.v1.rel.Rel
  * - x IN (<subquery>)
  * - (x,y,z) IN (<subquery>)
  */
-interface RexSubqueryIn {
+public interface RexSubqueryIn : Rex {
 
-    fun getInput(): Rel
+    public fun getInput(): Rel
 
-    fun getValues(): List<Rex>
+    public fun getValues(): List<Rex>
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexSubqueryIn(this, ctx)
 }

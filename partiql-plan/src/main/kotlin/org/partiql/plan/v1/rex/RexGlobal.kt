@@ -11,4 +11,6 @@ interface RexGlobal : Rex {
      * TODO replace with Catalog Name
      */
     fun getName(): String
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexGlobal(this, ctx)
 }

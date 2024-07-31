@@ -10,4 +10,6 @@ public interface RelFilter : Rel {
     public fun getInput(): Rel
 
     public fun getPredicate(): Rex
+
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelFilter(this, ctx)
 }

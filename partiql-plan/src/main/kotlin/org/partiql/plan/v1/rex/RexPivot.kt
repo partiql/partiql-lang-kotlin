@@ -12,4 +12,6 @@ public interface RexPivot : Rex {
     public fun getKey(): Rex
 
     public fun getValue(): Rex
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexPivot(this, ctx)
 }

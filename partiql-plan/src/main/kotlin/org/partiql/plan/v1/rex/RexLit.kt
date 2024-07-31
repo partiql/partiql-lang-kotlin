@@ -9,4 +9,6 @@ public interface RexLit : Rex {
      * TODO REPLACE WITH DATUM
      */
     public fun getValue(): String
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexLit(this, ctx)
 }

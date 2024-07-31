@@ -14,4 +14,6 @@ public interface RexVar : Rex {
      * 0-index tuple offset.
      */
     public fun getOffset(): Int
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexVar(this, ctx)
 }

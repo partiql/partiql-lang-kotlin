@@ -14,4 +14,6 @@ public interface RelJoin : Rel {
     public fun getCondition(): Rex
 
     public fun getType(): RelJoinType
+
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelJoin(this, ctx)
 }

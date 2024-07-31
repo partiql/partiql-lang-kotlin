@@ -10,4 +10,6 @@ public interface RelProject : Rel {
     public fun getInput(): Rel
 
     public fun getProjections(): List<Rex>
+
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelProject(this, ctx)
 }

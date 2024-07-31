@@ -16,4 +16,6 @@ public interface RexCall : Rex {
      * Returns the list of function arguments.
      */
     public fun getArgs(): List<Rex>
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexCall(this, ctx)
 }

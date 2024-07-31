@@ -16,4 +16,6 @@ public interface RexStruct : Rex {
 
         public fun getValue(): Rex
     }
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexStruct(this, ctx)
 }

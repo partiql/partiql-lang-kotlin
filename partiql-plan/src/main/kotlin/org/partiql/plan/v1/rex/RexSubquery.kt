@@ -8,4 +8,6 @@ import org.partiql.plan.v1.rel.Rel
 public interface RexSubquery : Rex {
 
     public fun getInput(): Rel
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexSubquery(this, ctx)
 }

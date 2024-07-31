@@ -10,4 +10,6 @@ public interface RexSelect : Rex {
     public fun getInput(): Rel
 
     public fun getConstructor(): Rex
+
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexSelect(this, ctx)
 }

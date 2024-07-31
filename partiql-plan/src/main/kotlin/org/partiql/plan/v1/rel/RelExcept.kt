@@ -10,4 +10,6 @@ public interface RelExcept : Rel {
     public fun getLeft(): Rel
 
     public fun getRight(): Rel
+
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelExcept(this, ctx)
 }
