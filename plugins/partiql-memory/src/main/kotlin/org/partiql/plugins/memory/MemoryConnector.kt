@@ -18,25 +18,19 @@ package org.partiql.plugins.memory
 import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorFnProvider
+import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.connector.sql.SqlConnector
-import org.partiql.spi.connector.sql.SqlMetadata
-import org.partiql.spi.fn.FnExperimental
 
 /**
  * This is a plugin used for testing and is not a versioned API per semver.
  */
-public class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector() {
+public class MemoryConnector(private val catalog: MemoryCatalog) : Connector {
 
     private val bindings = MemoryBindings(catalog)
 
     override fun getBindings(): ConnectorBindings = bindings
 
-    override fun getMetadata(session: ConnectorSession): SqlMetadata = MemoryMetadata(catalog, session, catalog.infoSchema)
-
-    @OptIn(FnExperimental::class)
-    override fun getFunctions(): ConnectorFnProvider = catalog.getFunctions()
+    override fun getMetadata(session: ConnectorSession): ConnectorMetadata = MemoryMetadata(catalog)
 
     internal class Factory(private val catalogs: List<MemoryCatalog>) : Connector.Factory {
 
@@ -47,14 +41,5 @@ public class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector(
                 ?: error("Catalog $catalogName is not registered in the MemoryPlugin")
             return MemoryConnector(catalog)
         }
-    }
-
-    public companion object {
-
-        /**
-         * A connector whose catalogs holds no binding and all SQL-92 function and PartiQL-Builtin
-         */
-        @JvmStatic
-        public fun partiQL(): MemoryConnector = MemoryConnector(MemoryCatalog.PartiQL().name("default").build())
     }
 }

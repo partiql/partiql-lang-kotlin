@@ -15,7 +15,6 @@
 package org.partiql.spi.connector
 
 import org.partiql.spi.BindingPath
-import org.partiql.spi.fn.FnExperimental
 
 /**
  * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
@@ -37,22 +36,4 @@ public interface ConnectorMetadata {
      * If the [path] does not correspond to an existing [ConnectorObject], implementers should return null.
      */
     public fun getObject(path: BindingPath): ConnectorHandle.Obj?
-
-    /**
-     * Returns all function signatures matching the given path.
-     *
-     * @param path
-     * @return
-     */
-    @FnExperimental
-    public fun getFunction(path: BindingPath): ConnectorHandle.Fn?
-
-    /**
-     * Returns all aggregation function signatures matching the given name.
-     *
-     * @param path
-     * @return
-     */
-    @FnExperimental
-    public fun getAggregation(path: BindingPath): ConnectorHandle.Agg?
 }

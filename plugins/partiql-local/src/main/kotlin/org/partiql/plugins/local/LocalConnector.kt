@@ -17,14 +17,11 @@ package org.partiql.plugins.local
 import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.ConnectorAggProvider
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.fn.FnExperimental
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.notExists
@@ -67,16 +64,6 @@ public class LocalConnector(
         TODO("Not yet implemented")
     }
 
-    @FnExperimental
-    override fun getFunctions(): ConnectorFnProvider {
-        TODO("Not yet implemented")
-    }
-
-    @FnExperimental
-    override fun getAggregations(): ConnectorAggProvider {
-        TODO("Not yet implemented")
-    }
-
     internal class Factory : Connector.Factory {
 
         private val default: Path = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
@@ -113,14 +100,6 @@ public class LocalConnector(
                 entity = value,
             )
         }
-
-        @FnExperimental
-        override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {
-            TODO("Not yet implemented")
-        }
-
-        @FnExperimental
-        override fun getAggregation(path: BindingPath): ConnectorHandle.Agg? = null
 
         internal fun listObjects(): List<BindingPath> = catalog.listObjects()
     }

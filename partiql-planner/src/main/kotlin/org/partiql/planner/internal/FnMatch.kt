@@ -1,13 +1,12 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 
 /**
  * Result of matching an unresolved function.
  */
-@OptIn(FnExperimental::class)
+
 internal sealed class FnMatch {
 
     /**

@@ -5,7 +5,6 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Agg
-import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -51,13 +50,13 @@ internal class RelAggregate(
      *
      * @property seen maintains which values have already been seen. If null, we accumulate all values coming through.
      */
-    class AccumulatorWrapper @OptIn(PartiQLValueExperimental::class, FnExperimental::class) constructor(
+    class AccumulatorWrapper @OptIn(PartiQLValueExperimental::class) constructor(
         val delegate: Agg.Accumulator,
         val args: List<Operator.Expr>,
         val seen: TreeSet<List<PartiQLValue>>?
     )
 
-    @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+    @OptIn(PartiQLValueExperimental::class)
     override fun open(env: Environment) {
         input.open(env)
         for (inputRecord in input) {

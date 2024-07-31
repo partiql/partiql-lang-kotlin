@@ -33,14 +33,4 @@ public sealed class ConnectorHandle<T> {
         override val path: ConnectorPath,
         override val entity: ConnectorObject,
     ) : ConnectorHandle<ConnectorObject>()
-
-    public data class Fn(
-        override val path: ConnectorPath,
-        override val entity: ConnectorFn,
-    ) : ConnectorHandle<ConnectorFn>()
-
-    public data class Agg(
-        override val path: ConnectorPath,
-        override val entity: ConnectorAgg,
-    ) : ConnectorHandle<ConnectorAgg>()
 }

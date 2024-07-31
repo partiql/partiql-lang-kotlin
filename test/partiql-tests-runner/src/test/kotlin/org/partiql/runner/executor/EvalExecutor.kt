@@ -162,13 +162,13 @@ class EvalExecutor(
             env.fields.forEach {
                 map[it.name] = inferEnv(it.value)
             }
-            val catalog = MemoryCatalog.PartiQL().name("default").build()
+            val catalog = MemoryCatalog.builder().name("default").build()
             catalog.load(env)
             return MemoryConnector(catalog)
         }
 
         private fun inferEnv(env: AnyElement): PType {
-            val catalog = MemoryCatalog.PartiQL().name("conformance_test").build()
+            val catalog = MemoryCatalog.builder().name("conformance_test").build()
             val connector = MemoryConnector(catalog)
             val session = PlannerSession.builder()
                 .catalog("default")

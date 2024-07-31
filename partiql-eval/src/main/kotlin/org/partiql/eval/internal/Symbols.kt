@@ -1,4 +1,3 @@
-@file:OptIn(FnExperimental::class)
 
 package org.partiql.eval.internal
 
@@ -7,29 +6,29 @@ import org.partiql.eval.internal.operator.rex.ExprVarGlobal
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Ref
-import org.partiql.spi.connector.ConnectorAggProvider
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.SqlFnProvider
 
 /**
  *
  *
  * @property catalogs
  */
-@OptIn(FnExperimental::class)
+
 internal class Symbols private constructor(private val catalogs: Array<C>) {
 
     private class C(
         val name: String,
         val bindings: ConnectorBindings,
-        val functions: ConnectorFnProvider,
-        val aggregations: ConnectorAggProvider,
         val items: Array<Catalog.Item>,
     ) {
+
+        // TEMPORARY FOR DEPENDENCY REASONS
+        fun getFn(path: ConnectorPath, specific: String): Fn? = SqlFnProvider.getFn(specific)
+        fun getAgg(path: ConnectorPath, specific: String): Agg? = SqlFnProvider.getAgg(specific)
 
         override fun toString(): String = name
     }
@@ -52,7 +51,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         }
         // Lookup in connector
         val path = ConnectorPath(item.path)
-        return catalog.functions.getFn(path, item.specific)
+        return catalog.getFn(path, item.specific)
             ?: error("Catalog `$catalog` has no entry for function $item")
     }
 
@@ -64,7 +63,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         }
         // Lookup in connector
         val path = ConnectorPath(item.path)
-        return catalog.aggregations.getAgg(path, item.specific)
+        return catalog.getAgg(path, item.specific)
             ?: error("Catalog `$catalog` has no entry for aggregation function $item")
     }
 
@@ -85,8 +84,6 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
                 C(
                     name = it.name,
                     bindings = connector.getBindings(),
-                    functions = connector.getFunctions(),
-                    aggregations = connector.getAggregations(),
                     items = it.items.toTypedArray()
                 )
             }.toTypedArray()

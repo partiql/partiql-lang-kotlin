@@ -18,12 +18,10 @@ import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.AggSignature
-import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
@@ -53,14 +51,9 @@ internal class Env(private val session: Session) {
     private val objects: PathResolverObj = PathResolverObj(catalog, catalogs, session)
 
     /**
-     * A [PathResolver] for looking up functions given both unqualified and qualified names.
+     * A [SqlFnProvider] for looking up built-in functions.
      */
-    private val fns: PathResolverFn = PathResolverFn(catalog, catalogs, session)
-
-    /**
-     * A [PathResolver] for aggregation function lookup.
-     */
-    private val aggs: PathResolverAgg = PathResolverAgg(catalog, catalogs, session)
+    private val fns: SqlFnProvider = SqlFnProvider
 
     /**
      * This function looks up a global [BindingPath], returning a global reference expression.
@@ -85,19 +78,23 @@ internal class Env(private val session: Session) {
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
 
-    @OptIn(FnExperimental::class)
     fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
-        val item = fns.lookup(path) ?: return null
-        // Invoke FnResolver to determine if we made a match
-        val variants = item.handle.entity.getVariants()
+        // Assume all functions are defined in the current catalog and reject qualified routine names.
+        if (path.steps.size > 1) {
+            error("Qualified functions are not supported.")
+        }
+        val catalog = session.getCatalog()
+        val name = path.steps.last().name.lowercase()
+        // Invoke existing function resolution logic
+        val variants = fns.lookupFn(name) ?: return null
         val match = FnResolver.resolve(variants, args.map { it.type })
         // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {
             val candidates = variants.map { fnSignature ->
                 rexOpCallDynamicCandidate(
                     fn = refFn(
-                        item.catalog,
-                        name = Name.of(item.handle.path.steps),
+                        catalog = catalog,
+                        name = Name.of(name),
                         signature = fnSignature
                     ),
                     coercions = emptyList()
@@ -114,8 +111,8 @@ internal class Env(private val session: Session) {
                     // Create an internal typed reference for every candidate
                     rexOpCallDynamicCandidate(
                         fn = refFn(
-                            catalog = item.catalog,
-                            name = Name.of(item.handle.path.steps),
+                            catalog = catalog,
+                            name = Name.of(name),
                             signature = it.signature,
                         ),
                         coercions = it.mapping.toList(),
@@ -127,8 +124,8 @@ internal class Env(private val session: Session) {
             is FnMatch.Static -> {
                 // Create an internal typed reference
                 val ref = refFn(
-                    catalog = item.catalog,
-                    name = Name.of(item.handle.path.steps),
+                    catalog = catalog,
+                    name = Name.of(name),
                     signature = match.signature,
                 )
                 // Apply the coercions as explicit casts
@@ -144,18 +141,18 @@ internal class Env(private val session: Session) {
         }
     }
 
-    @OptIn(FnExperimental::class)
-    fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+    fun resolveAgg(path: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
-        val path = BindingPath(listOf(BindingName(name, BindingCase.INSENSITIVE)))
-        val item = aggs.lookup(path) ?: return null
-        val candidates = item.handle.entity.getVariants()
+        val catalog = session.getCatalog()
+        val name = path.lowercase()
+        // Invoke existing function resolution logic
+        val candidates = fns.lookupAgg(name) ?: return null
         val parameters = args.mapIndexed { i, arg -> arg.type }
         val match = match(candidates, parameters) ?: return null
         val agg = match.first
         val mapping = match.second
         // Create an internal typed reference
-        val ref = refAgg(item.catalog, Name.of(item.handle.path.steps), agg)
+        val ref = refAgg(catalog, Name.of(name), agg)
         // Apply the coercions as explicit casts
         val coercions: List<Rex> = args.mapIndexed { i, arg ->
             when (val cast = mapping[i]) {
@@ -217,7 +214,6 @@ internal class Env(private val session: Session) {
         return userInputPath.steps.size + actualAbsolutePath.size - pathSentToConnector.steps.size
     }
 
-    @OptIn(FnExperimental::class)
     private fun match(candidates: List<AggSignature>, args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
@@ -243,7 +239,7 @@ internal class Env(private val session: Session) {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    @OptIn(FnExperimental::class)
+
     private fun AggSignature.matches(args: List<PType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
@@ -259,7 +255,6 @@ internal class Env(private val session: Session) {
      * @param args
      * @return
      */
-    @OptIn(FnExperimental::class)
     private fun AggSignature.match(args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {

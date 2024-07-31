@@ -10,7 +10,6 @@ import org.partiql.value.PartiQLValueType
  * @property name A human-readable name to help clarify its use.
  * @property type The parameter's PartiQL type.
  */
-@FnExperimental
 @OptIn(PartiQLValueExperimental::class)
 public data class FnParameter(
     public val name: String,

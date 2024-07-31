@@ -15,7 +15,6 @@
 package org.partiql.spi.connector
 
 import com.amazon.ionelement.api.StructElement
-import org.partiql.spi.fn.FnExperimental
 
 /**
  * A [Connector] is used by the PartiQL compiler and engine to implement a catalog.
@@ -38,22 +37,6 @@ public interface Connector {
      * @return
      */
     public fun getBindings(): ConnectorBindings
-
-    /**
-     * Returns a [ConnectorFnProvider] which the engine uses to load function implementations.
-     *
-     * @return
-     */
-    @FnExperimental
-    public fun getFunctions(): ConnectorFnProvider
-
-    /**
-     * Returns a [ConnectorAggProvider] which the engine uses to load aggregation function implementations.
-     *
-     * @return
-     */
-    @FnExperimental
-    public fun getAggregations(): ConnectorAggProvider
 
     /**
      * A Plugin leverages a [Factory] to produce a [Connector] which is used for catalog metadata and data access.

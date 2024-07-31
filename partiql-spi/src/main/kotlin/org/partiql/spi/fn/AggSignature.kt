@@ -10,7 +10,6 @@ import org.partiql.value.PartiQLValueType
  * @property isDecomposable     Flag indicating this aggregation can be decomposed
  * @constructor
  */
-@FnExperimental
 @OptIn(PartiQLValueExperimental::class)
 public class AggSignature(
     @JvmField public val name: String,

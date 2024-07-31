@@ -6,7 +6,6 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.plan.Ref
 import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -20,7 +19,7 @@ import org.partiql.value.PartiQLValueType
  * [ExprCallStatic]'s. By doing this, this implementation can evaluate ([eval]) the input [Record], execute and gather the
  * arguments, and pass the [PartiQLValue]s directly to the [Candidate.eval].
  */
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+@OptIn(PartiQLValueExperimental::class)
 internal class ExprCallDynamic(
     private val name: String,
     private val candidates: Array<Candidate>,

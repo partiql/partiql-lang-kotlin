@@ -5,7 +5,6 @@ import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.PType
@@ -17,7 +16,7 @@ import org.partiql.value.PartiQLValueType
  * We may be able to pretty-print with string equals to also simplify things.
  * Only the "types" of expressions matter, we ignore the underlying ops.
  */
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+@OptIn(PartiQLValueExperimental::class)
 class FnResolverTest {
 
     @Test

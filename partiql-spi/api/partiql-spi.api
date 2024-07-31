@@ -35,9 +35,7 @@ public abstract interface class org/partiql/spi/Plugin {
 }
 
 public abstract interface class org/partiql/spi/connector/Connector {
-	public abstract fun getAggregations ()Lorg/partiql/spi/connector/ConnectorAggProvider;
 	public abstract fun getBindings ()Lorg/partiql/spi/connector/ConnectorBindings;
-	public abstract fun getFunctions ()Lorg/partiql/spi/connector/ConnectorFnProvider;
 	public abstract fun getMetadata (Lorg/partiql/spi/connector/ConnectorSession;)Lorg/partiql/spi/connector/ConnectorMetadata;
 }
 
@@ -50,57 +48,13 @@ public final class org/partiql/spi/connector/Connector$Factory$DefaultImpls {
 	public static synthetic fun create$default (Lorg/partiql/spi/connector/Connector$Factory;Ljava/lang/String;Lcom/amazon/ionelement/api/StructElement;ILjava/lang/Object;)Lorg/partiql/spi/connector/Connector;
 }
 
-public abstract interface class org/partiql/spi/connector/ConnectorAgg {
-	public abstract fun getVariants ()Ljava/util/List;
-}
-
-public abstract interface class org/partiql/spi/connector/ConnectorAggProvider {
-	public abstract fun getAgg (Lorg/partiql/spi/connector/ConnectorPath;Ljava/lang/String;)Lorg/partiql/spi/fn/Agg;
-}
-
 public abstract interface class org/partiql/spi/connector/ConnectorBindings {
 	public abstract fun getValue (Lorg/partiql/spi/connector/ConnectorPath;)Lorg/partiql/value/PartiQLValue;
-}
-
-public abstract interface class org/partiql/spi/connector/ConnectorFn {
-	public abstract fun getVariants ()Ljava/util/List;
-}
-
-public abstract interface class org/partiql/spi/connector/ConnectorFnProvider {
-	public abstract fun getFn (Lorg/partiql/spi/connector/ConnectorPath;Ljava/lang/String;)Lorg/partiql/spi/fn/Fn;
 }
 
 public abstract class org/partiql/spi/connector/ConnectorHandle {
 	public abstract fun getEntity ()Ljava/lang/Object;
 	public abstract fun getPath ()Lorg/partiql/spi/connector/ConnectorPath;
-}
-
-public final class org/partiql/spi/connector/ConnectorHandle$Agg : org/partiql/spi/connector/ConnectorHandle {
-	public fun <init> (Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorAgg;)V
-	public final fun component1 ()Lorg/partiql/spi/connector/ConnectorPath;
-	public final fun component2 ()Lorg/partiql/spi/connector/ConnectorAgg;
-	public final fun copy (Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorAgg;)Lorg/partiql/spi/connector/ConnectorHandle$Agg;
-	public static synthetic fun copy$default (Lorg/partiql/spi/connector/ConnectorHandle$Agg;Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorAgg;ILjava/lang/Object;)Lorg/partiql/spi/connector/ConnectorHandle$Agg;
-	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun getEntity ()Ljava/lang/Object;
-	public fun getEntity ()Lorg/partiql/spi/connector/ConnectorAgg;
-	public fun getPath ()Lorg/partiql/spi/connector/ConnectorPath;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/spi/connector/ConnectorHandle$Fn : org/partiql/spi/connector/ConnectorHandle {
-	public fun <init> (Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorFn;)V
-	public final fun component1 ()Lorg/partiql/spi/connector/ConnectorPath;
-	public final fun component2 ()Lorg/partiql/spi/connector/ConnectorFn;
-	public final fun copy (Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorFn;)Lorg/partiql/spi/connector/ConnectorHandle$Fn;
-	public static synthetic fun copy$default (Lorg/partiql/spi/connector/ConnectorHandle$Fn;Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorFn;ILjava/lang/Object;)Lorg/partiql/spi/connector/ConnectorHandle$Fn;
-	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun getEntity ()Ljava/lang/Object;
-	public fun getEntity ()Lorg/partiql/spi/connector/ConnectorFn;
-	public fun getPath ()Lorg/partiql/spi/connector/ConnectorPath;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/spi/connector/ConnectorHandle$Obj : org/partiql/spi/connector/ConnectorHandle {
@@ -118,8 +72,6 @@ public final class org/partiql/spi/connector/ConnectorHandle$Obj : org/partiql/s
 }
 
 public abstract interface class org/partiql/spi/connector/ConnectorMetadata {
-	public abstract fun getAggregation (Lorg/partiql/spi/BindingPath;)Lorg/partiql/spi/connector/ConnectorHandle$Agg;
-	public abstract fun getFunction (Lorg/partiql/spi/BindingPath;)Lorg/partiql/spi/connector/ConnectorHandle$Fn;
 	public abstract fun getObject (Lorg/partiql/spi/BindingPath;)Lorg/partiql/spi/connector/ConnectorHandle$Obj;
 }
 
@@ -163,330 +115,6 @@ public final class org/partiql/spi/connector/Constants {
 	public static final field INSTANCE Lorg/partiql/spi/connector/Constants;
 }
 
-public final class org/partiql/spi/connector/sql/SqlAgg : org/partiql/spi/connector/ConnectorAgg {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
-	public fun getVariants ()Ljava/util/List;
-}
-
-public final class org/partiql/spi/connector/sql/SqlAggProvider : org/partiql/spi/connector/ConnectorAggProvider {
-	public fun <init> (Lorg/partiql/spi/fn/Index;)V
-	public fun getAgg (Lorg/partiql/spi/connector/ConnectorPath;Ljava/lang/String;)Lorg/partiql/spi/fn/Agg;
-}
-
-public final class org/partiql/spi/connector/sql/SqlBindings : org/partiql/spi/connector/ConnectorBindings {
-	public fun <init> (Lorg/partiql/spi/connector/sql/info/InfoSchema;)V
-	public fun getValue (Lorg/partiql/spi/connector/ConnectorPath;)Lorg/partiql/value/PartiQLValue;
-}
-
-public abstract class org/partiql/spi/connector/sql/SqlConnector : org/partiql/spi/connector/Connector {
-	public fun <init> ()V
-	public fun getAggregations ()Lorg/partiql/spi/connector/ConnectorAggProvider;
-	public fun getBindings ()Lorg/partiql/spi/connector/ConnectorBindings;
-	public fun getFunctions ()Lorg/partiql/spi/connector/ConnectorFnProvider;
-	public fun getInfo ()Lorg/partiql/spi/connector/sql/info/InfoSchema;
-	public abstract fun getMetadata (Lorg/partiql/spi/connector/ConnectorSession;)Lorg/partiql/spi/connector/sql/SqlMetadata;
-}
-
-public final class org/partiql/spi/connector/sql/SqlFn : org/partiql/spi/connector/ConnectorFn {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
-	public fun getVariants ()Ljava/util/List;
-}
-
-public final class org/partiql/spi/connector/sql/SqlFnProvider : org/partiql/spi/connector/ConnectorFnProvider {
-	public fun <init> (Lorg/partiql/spi/fn/Index;)V
-	public fun getFn (Lorg/partiql/spi/connector/ConnectorPath;Ljava/lang/String;)Lorg/partiql/spi/fn/Fn;
-}
-
-public class org/partiql/spi/connector/sql/SqlMetadata : org/partiql/spi/connector/ConnectorMetadata {
-	public fun <init> (Lorg/partiql/spi/connector/ConnectorSession;Lorg/partiql/spi/connector/sql/info/InfoSchema;)V
-	public fun getAggregation (Lorg/partiql/spi/BindingPath;)Lorg/partiql/spi/connector/ConnectorHandle$Agg;
-	public fun getFunction (Lorg/partiql/spi/BindingPath;)Lorg/partiql/spi/connector/ConnectorHandle$Fn;
-	public fun getObject (Lorg/partiql/spi/BindingPath;)Lorg/partiql/spi/connector/ConnectorHandle$Obj;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_ANY__ANY__BOOL : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_ANY__ANY__BOOL;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_ANY__BOOL__BOOL : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_ANY__BOOL__BOOL;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__ANY__ANY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__ANY__ANY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__FLOAT32__FLOAT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__FLOAT32__FLOAT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__FLOAT64__FLOAT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__FLOAT64__FLOAT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__INT16__INT16 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__INT16__INT16;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__INT32__INT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__INT32__INT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__INT64__INT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__INT64__INT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__INT8__INT8 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__INT8__INT8;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__INT__INT : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_AVG__INT__INT;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_COUNT__ANY__INT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_COUNT__ANY__INT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_EVERY__ANY__BOOL : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_EVERY__ANY__BOOL;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_EVERY__BOOL__BOOL : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_EVERY__BOOL__BOOL;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_GROUP_AS__ANY__ANY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_GROUP_AS__ANY__ANY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__ANY__ANY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__ANY__ANY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__FLOAT32__FLOAT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__FLOAT32__FLOAT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__FLOAT64__FLOAT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__FLOAT64__FLOAT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__INT16__INT16 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__INT16__INT16;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__INT32__INT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__INT32__INT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__INT64__INT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__INT64__INT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__INT8__INT8 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__INT8__INT8;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MAX__INT__INT : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MAX__INT__INT;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__ANY__ANY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__ANY__ANY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__FLOAT32__FLOAT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__FLOAT32__FLOAT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__FLOAT64__FLOAT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__FLOAT64__FLOAT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__INT16__INT16 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__INT16__INT16;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__INT32__INT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__INT32__INT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__INT64__INT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__INT64__INT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__INT8__INT8 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__INT8__INT8;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_MIN__INT__INT : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_MIN__INT__INT;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SOME__ANY__BOOL : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SOME__ANY__BOOL;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SOME__BOOL__BOOL : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SOME__BOOL__BOOL;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__ANY__ANY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__ANY__ANY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__FLOAT32__FLOAT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__FLOAT32__FLOAT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__FLOAT64__FLOAT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__FLOAT64__FLOAT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__INT16__INT16 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__INT16__INT16;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__INT32__INT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__INT32__INT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__INT64__INT64 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__INT64__INT64;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__INT8__INT8 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__INT8__INT8;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_SUM__INT__INT : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_SUM__INT__INT;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/info/InfoSchema {
-	public static final field Companion Lorg/partiql/spi/connector/sql/info/InfoSchema$Companion;
-	public fun <init> (Lorg/partiql/spi/fn/Index;Lorg/partiql/spi/fn/Index;)V
-	public static final fun default ()Lorg/partiql/spi/connector/sql/info/InfoSchema;
-	public final fun get (Ljava/lang/String;)Lorg/partiql/spi/connector/sql/info/InfoView;
-	public final fun getAggregations ()Lorg/partiql/spi/fn/Index;
-	public final fun getFunctions ()Lorg/partiql/spi/fn/Index;
-}
-
-public final class org/partiql/spi/connector/sql/info/InfoSchema$Companion {
-	public final fun default ()Lorg/partiql/spi/connector/sql/info/InfoSchema;
-	public final fun ext ()Lorg/partiql/spi/connector/sql/info/InfoSchema;
-}
-
-public abstract interface class org/partiql/spi/connector/sql/info/InfoView {
-	public abstract fun getSchema ()Lorg/partiql/types/StaticType;
-	public abstract fun value ()Lorg/partiql/value/PartiQLValue;
-}
-
 public abstract interface class org/partiql/spi/fn/Agg {
 	public abstract fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
 	public abstract fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
@@ -517,9 +145,6 @@ public final class org/partiql/spi/fn/AggSignature {
 public abstract interface class org/partiql/spi/fn/Fn {
 	public abstract fun getSignature ()Lorg/partiql/spi/fn/FnSignature;
 	public abstract fun invoke ([Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/PartiQLValue;
-}
-
-public abstract interface annotation class org/partiql/spi/fn/FnExperimental : java/lang/annotation/Annotation {
 }
 
 public final class org/partiql/spi/fn/FnParameter {
@@ -568,33 +193,11 @@ public final class org/partiql/spi/fn/FnSignature {
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/spi/fn/Index {
-	public static final field Companion Lorg/partiql/spi/fn/Index$Companion;
-	public static fun aggBuilder ()Lorg/partiql/spi/fn/Index$Builder;
-	public static fun fnBuilder ()Lorg/partiql/spi/fn/Index$Builder;
-	public abstract fun get (Ljava/util/List;)Ljava/util/List;
-	public abstract fun get (Lorg/partiql/spi/connector/ConnectorPath;Ljava/lang/String;)Ljava/lang/Object;
-}
-
-public abstract class org/partiql/spi/fn/Index$Builder {
-	public fun <init> ()V
-	public final fun add (Ljava/lang/Object;)Lorg/partiql/spi/fn/Index$Builder;
-	public final fun addAll (Ljava/util/List;)Lorg/partiql/spi/fn/Index$Builder;
-	public abstract fun build ()Lorg/partiql/spi/fn/Index;
-}
-
-public final class org/partiql/spi/fn/Index$Builder$Agg : org/partiql/spi/fn/Index$Builder {
-	public fun <init> ()V
-	public fun build ()Lorg/partiql/spi/fn/Index;
-}
-
-public final class org/partiql/spi/fn/Index$Builder$Fn : org/partiql/spi/fn/Index$Builder {
-	public fun <init> ()V
-	public fun build ()Lorg/partiql/spi/fn/Index;
-}
-
-public final class org/partiql/spi/fn/Index$Companion {
-	public final fun aggBuilder ()Lorg/partiql/spi/fn/Index$Builder;
-	public final fun fnBuilder ()Lorg/partiql/spi/fn/Index$Builder;
+public final class org/partiql/spi/fn/SqlFnProvider {
+	public static final field INSTANCE Lorg/partiql/spi/fn/SqlFnProvider;
+	public final fun getAgg (Ljava/lang/String;)Lorg/partiql/spi/fn/Agg;
+	public final fun getFn (Ljava/lang/String;)Lorg/partiql/spi/fn/Fn;
+	public final fun lookupAgg (Ljava/lang/String;)Ljava/util/List;
+	public final fun lookupFn (Ljava/lang/String;)Ljava/util/List;
 }
 
