@@ -1,7 +1,7 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.internal.fn.FnParameter
-import org.partiql.planner.internal.fn.FnSignature
+import org.partiql.spi.fn.FnParameter
+import org.partiql.spi.fn.FnSignature
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 

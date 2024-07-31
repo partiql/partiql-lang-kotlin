@@ -3,7 +3,7 @@ package org.partiql.eval.internal.operator
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.value.Datum
-import org.partiql.planner.internal.fn.Agg
+import org.partiql.spi.fn.Agg
 
 internal sealed interface Operator {
 

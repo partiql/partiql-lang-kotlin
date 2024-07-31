@@ -6,11 +6,11 @@ import org.partiql.eval.internal.operator.rex.ExprVarGlobal
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Ref
-import org.partiql.planner.internal.fn.Agg
-import org.partiql.planner.internal.fn.Fn
-import org.partiql.planner.internal.fn.SqlFnProvider
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorPath
+import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.SqlFnProvider
 
 /**
  *

@@ -56,7 +56,7 @@ import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
-import org.partiql.planner.internal.fn.Agg
+import org.partiql.spi.fn.Agg
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import java.lang.IllegalStateException

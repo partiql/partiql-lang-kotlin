@@ -4,8 +4,6 @@ import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
-import org.partiql.planner.internal.fn.AggSignature
-import org.partiql.planner.internal.fn.SqlFnProvider
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -22,6 +20,8 @@ import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.fn.AggSignature
+import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 

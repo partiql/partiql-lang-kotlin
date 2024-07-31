@@ -115,3 +115,89 @@ public final class org/partiql/spi/connector/Constants {
 	public static final field INSTANCE Lorg/partiql/spi/connector/Constants;
 }
 
+public abstract interface class org/partiql/spi/fn/Agg {
+	public abstract fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
+	public abstract fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
+}
+
+public abstract interface class org/partiql/spi/fn/Agg$Accumulator {
+	public abstract fun next ([Lorg/partiql/value/PartiQLValue;)V
+	public abstract fun value ()Lorg/partiql/value/PartiQLValue;
+}
+
+public final class org/partiql/spi/fn/AggSignature {
+	public final field description Ljava/lang/String;
+	public final field isDecomposable Z
+	public final field isNullable Z
+	public final field name Ljava/lang/String;
+	public final field parameters Ljava/util/List;
+	public final field returns Lorg/partiql/types/PType;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZ)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZ)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSpecific ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/spi/fn/Fn {
+	public abstract fun getSignature ()Lorg/partiql/spi/fn/FnSignature;
+	public abstract fun invoke ([Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/PartiQLValue;
+}
+
+public final class org/partiql/spi/fn/FnParameter {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/types/PType;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/spi/fn/FnParameter;
+	public static synthetic fun copy$default (Lorg/partiql/spi/fn/FnParameter;Ljava/lang/String;Lorg/partiql/types/PType;ILjava/lang/Object;)Lorg/partiql/spi/fn/FnParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lorg/partiql/types/PType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/fn/FnSignature {
+	public final field description Ljava/lang/String;
+	public final field isDeterministic Z
+	public final field isMissable Z
+	public final field isMissingCall Z
+	public final field isNullCall Z
+	public final field isNullable Z
+	public final field name Ljava/lang/String;
+	public final field parameters Ljava/util/List;
+	public final field returns Lorg/partiql/types/PType;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZ)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZZZZ)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/types/PType;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Z
+	public final fun component6 ()Z
+	public final fun component7 ()Z
+	public final fun component8 ()Z
+	public final fun component9 ()Z
+	public final fun copy (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZ)Lorg/partiql/spi/fn/FnSignature;
+	public static synthetic fun copy$default (Lorg/partiql/spi/fn/FnSignature;Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZILjava/lang/Object;)Lorg/partiql/spi/fn/FnSignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSpecific ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun sql ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/fn/SqlFnProvider {
+	public static final field INSTANCE Lorg/partiql/spi/fn/SqlFnProvider;
+	public final fun getAgg (Ljava/lang/String;)Lorg/partiql/spi/fn/Agg;
+	public final fun getFn (Ljava/lang/String;)Lorg/partiql/spi/fn/Fn;
+	public final fun lookupAgg (Ljava/lang/String;)Ljava/util/List;
+	public final fun lookupFn (Ljava/lang/String;)Ljava/util/List;
+}
+

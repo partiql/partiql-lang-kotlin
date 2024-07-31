@@ -5,7 +5,7 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.plan.Ref
-import org.partiql.planner.internal.fn.Fn
+import org.partiql.spi.fn.Fn
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental

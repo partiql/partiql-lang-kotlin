@@ -5,8 +5,8 @@ package org.partiql.planner.`internal`.ir
 import org.partiql.errors.Problem
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
-import org.partiql.planner.internal.fn.AggSignature
-import org.partiql.planner.internal.fn.FnSignature
+import org.partiql.spi.fn.AggSignature
+import org.partiql.spi.fn.FnSignature
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
 import org.partiql.planner.internal.ir.builder.RefAggBuilder
 import org.partiql.planner.internal.ir.builder.RefCastBuilder
