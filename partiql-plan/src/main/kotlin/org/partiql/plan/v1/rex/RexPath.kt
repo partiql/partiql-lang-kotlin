@@ -7,7 +7,7 @@ public interface RexPath : Rex {
 
     public fun getRoot(): Rex
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexPath(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPath(this, ctx)
 
     /**
      * TODO DOCUMENTATION
@@ -16,7 +16,7 @@ public interface RexPath : Rex {
 
         public fun getIndex(): Rex
 
-        public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexPathIndex(this, ctx)
+        public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPathIndex(this, ctx)
     }
 
     /**
@@ -26,7 +26,7 @@ public interface RexPath : Rex {
 
         public fun getKey(): Rex
 
-        public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexPathKey(this, ctx)
+        public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPathKey(this, ctx)
     }
 
     /**
@@ -36,6 +36,6 @@ public interface RexPath : Rex {
 
         public fun getSymbol(): String
 
-        public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexPathSymbol(this, ctx)
+        public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPathSymbol(this, ctx)
     }
 }

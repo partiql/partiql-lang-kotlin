@@ -15,5 +15,5 @@ public interface RelJoin : Rel {
 
     public fun getType(): RelJoinType
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelJoin(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitJoin(this, ctx)
 }

@@ -11,5 +11,5 @@ public interface RexSelect : Rex {
 
     public fun getConstructor(): Rex
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexSelect(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSelect(this, ctx)
 }

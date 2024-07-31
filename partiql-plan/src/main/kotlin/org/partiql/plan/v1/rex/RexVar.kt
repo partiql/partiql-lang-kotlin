@@ -15,5 +15,5 @@ public interface RexVar : Rex {
      */
     public fun getOffset(): Int
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexVar(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitVar(this, ctx)
 }

@@ -11,5 +11,5 @@ interface RelLimit : Rel {
 
     public fun getLimit(): Rex
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelLimit(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitLimit(this, ctx)
 }

@@ -11,5 +11,5 @@ public interface RelFilter : Rel {
 
     public fun getPredicate(): Rex
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelFilter(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitFilter(this, ctx)
 }

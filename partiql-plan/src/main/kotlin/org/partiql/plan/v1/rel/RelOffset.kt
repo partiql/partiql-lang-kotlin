@@ -11,5 +11,5 @@ interface RelOffset : Rel {
 
     public fun getLimit(): Rex
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelOffset(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitOffset(this, ctx)
 }

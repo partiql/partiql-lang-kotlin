@@ -7,5 +7,5 @@ public interface RelDistinct : Rel {
 
     public fun getInput(): Rel
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelDistinct(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitDistinct(this, ctx)
 }

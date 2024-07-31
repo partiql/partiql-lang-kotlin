@@ -14,5 +14,5 @@ public interface RexSubqueryIn : Rex {
 
     public fun getValues(): List<Rex>
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexSubqueryIn(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubqueryIn(this, ctx)
 }

@@ -9,5 +9,5 @@ public interface RexSubquery : Rex {
 
     public fun getInput(): Rel
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexSubquery(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubquery(this, ctx)
 }

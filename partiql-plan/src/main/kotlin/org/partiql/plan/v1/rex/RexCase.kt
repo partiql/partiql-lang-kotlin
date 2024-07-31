@@ -11,5 +11,5 @@ public interface RexCase : Rex {
 
     public fun getDefault(): Rex
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexCase(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCase(this, ctx)
 }

@@ -9,5 +9,5 @@ public interface RelExclude : Rel {
 
     public fun getPaths(): List<RelExcludePath>
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelExclude(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitExclude(this, ctx)
 }

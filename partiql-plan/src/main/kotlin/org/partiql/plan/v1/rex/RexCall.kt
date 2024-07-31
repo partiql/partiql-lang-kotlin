@@ -17,5 +17,5 @@ public interface RexCall : Rex {
      */
     public fun getArgs(): List<Rex>
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexCall(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCall(this, ctx)
 }

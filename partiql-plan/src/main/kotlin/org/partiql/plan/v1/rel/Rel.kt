@@ -1,9 +1,11 @@
 package org.partiql.plan.v1.rel
 
-import org.partiql.plan.v1.Node
 import org.partiql.plan.v1.Schema
 
-public interface Rel : Node {
+/**
+ * TODO DOCUMENTATION
+ */
+public interface Rel {
 
     public fun getInputs(): List<Rel>
 

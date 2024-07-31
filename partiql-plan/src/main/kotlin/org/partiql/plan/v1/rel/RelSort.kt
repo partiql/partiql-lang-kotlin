@@ -9,5 +9,5 @@ public interface RelSort : Rel {
 
     public fun getSortSpecs(): List<RelSortSpec>
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelSort(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitSort(this, ctx)
 }

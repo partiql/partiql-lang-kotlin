@@ -9,5 +9,5 @@ public interface RelUnpivot : Rel {
 
     public fun getInput(): Rex
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelUnpivot(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitUnpivot(this, ctx)
 }

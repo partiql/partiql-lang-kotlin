@@ -10,5 +10,5 @@ public interface RexLit : Rex {
      */
     public fun getValue(): String
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexLit(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitLit(this, ctx)
 }

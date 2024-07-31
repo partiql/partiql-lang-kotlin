@@ -7,5 +7,5 @@ public interface RelScanIndexed : Rel {
 
     public fun getInput(): Rel
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelScanIndexed(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitScanIndexed(this, ctx)
 }

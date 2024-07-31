@@ -12,5 +12,5 @@ public interface RelUnion : Rel {
 
     public fun getRight(): Rel
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelUnion(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitUnion(this, ctx)
 }

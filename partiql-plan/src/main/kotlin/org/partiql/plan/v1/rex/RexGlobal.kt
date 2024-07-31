@@ -12,5 +12,5 @@ interface RexGlobal : Rex {
      */
     fun getName(): String
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexGlobal(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitGlobal(this, ctx)
 }

@@ -11,5 +11,5 @@ public interface RelIntersect : Rel {
 
     public fun getRight(): Rel
 
-    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitRelIntersect(this, ctx)
+    public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitIntersect(this, ctx)
 }

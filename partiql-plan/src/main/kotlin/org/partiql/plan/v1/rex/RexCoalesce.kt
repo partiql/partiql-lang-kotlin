@@ -7,5 +7,5 @@ public interface RexCoalesce : Rex {
 
     public fun getArgs(): List<Rex>
 
-    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitRexCoalesce(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCoalesce(this, ctx)
 }
