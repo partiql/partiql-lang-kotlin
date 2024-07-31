@@ -1,3 +1,9 @@
 package org.partiql.plan.v1.rel
 
-interface RelScan
+/**
+ * TODO DOCUMENTATION
+ */
+public interface RelScan : Rel {
+
+    public fun getInput(): Rel
+}

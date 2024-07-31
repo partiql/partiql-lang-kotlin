@@ -1,3 +1,13 @@
 package org.partiql.plan.v1.rel
 
-interface RelProject
+import org.partiql.plan.v1.rex.Rex
+
+/**
+ * TODO DOCUMENTATION
+ */
+public interface RelProject : Rel {
+
+    public fun getInput(): Rel
+
+    public fun getProjections(): List<Rex>
+}

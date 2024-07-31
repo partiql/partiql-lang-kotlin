@@ -1,3 +1,13 @@
 package org.partiql.plan.v1.rel
 
-interface RelExcept
+/**
+ * TODO DOCUMENTATION
+ */
+public interface RelExcept : Rel {
+
+    public fun isAll(): Boolean
+
+    public fun getLeft(): Rel
+
+    public fun getRight(): Rel
+}

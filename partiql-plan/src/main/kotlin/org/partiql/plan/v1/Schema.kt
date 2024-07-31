@@ -5,7 +5,7 @@ import org.partiql.types.Field
 /**
  * Analogous to a ROW type.
  */
-interface Schema {
+public interface Schema {
 
     public fun getFields(): List<Field>
 

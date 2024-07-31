@@ -1,3 +1,9 @@
 package org.partiql.plan.v1.rel
 
-interface RelDistinct
+/**
+ * TODO DOCUMENTATION
+ */
+public interface RelDistinct : Rel {
+
+    public fun getInput(): Rel
+}

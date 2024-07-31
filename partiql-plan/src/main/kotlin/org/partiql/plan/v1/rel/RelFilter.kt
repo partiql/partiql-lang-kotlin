@@ -1,3 +1,13 @@
 package org.partiql.plan.v1.rel
 
-interface RelFilter
+import org.partiql.plan.v1.rex.Rex
+
+/**
+ * TODO DOCUMENTATION
+ */
+public interface RelFilter : Rel {
+
+    public fun getInput(): Rel
+
+    public fun getPredicate(): Rex
+}

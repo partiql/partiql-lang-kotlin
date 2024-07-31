@@ -2533,51 +2533,149 @@ public abstract interface class org/partiql/plan/v1/Version {
 
 public abstract interface class org/partiql/plan/v1/rel/Rel : org/partiql/plan/v1/Node {
 	public abstract fun getSchema ()Lorg/partiql/plan/v1/Schema;
+	public abstract fun isOrdered ()Z
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelAggregate {
+public abstract interface class org/partiql/plan/v1/rel/RelAggregate : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getCalls ()Lorg/partiql/plan/v1/rel/RelAggregateCall;
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelDistinct {
+public abstract interface class org/partiql/plan/v1/rel/RelAggregateCall {
+	public abstract fun getArgs ()Ljava/util/List;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getType ()Lorg/partiql/types/PType;
+	public abstract fun isDistinct ()Z
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelExcept {
+public abstract interface class org/partiql/plan/v1/rel/RelDistinct : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelExclude {
+public abstract interface class org/partiql/plan/v1/rel/RelExcept : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getLeft ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getRight ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun isAll ()Z
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelFilter {
+public abstract interface class org/partiql/plan/v1/rel/RelExclude : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getPaths ()Ljava/util/List;
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelIntersect {
+public abstract interface class org/partiql/plan/v1/rel/RelExcludePath {
+	public abstract fun getRoot ()Lorg/partiql/plan/v1/rex/RexVar;
+	public abstract fun getSteps ()Lorg/partiql/plan/v1/rel/RelExcludeStep;
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelJoin {
+public abstract interface class org/partiql/plan/v1/rel/RelExcludeStep : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getSteps ()Ljava/util/List;
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelLimit {
+public abstract interface class org/partiql/plan/v1/rel/RelExcludeStep$CollectionWildcard : org/partiql/plan/v1/rel/RelExcludeStep {
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelOffset {
+public abstract interface class org/partiql/plan/v1/rel/RelExcludeStep$Index : org/partiql/plan/v1/rel/RelExcludeStep {
+	public abstract fun getIndex ()I
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelProject {
+public abstract interface class org/partiql/plan/v1/rel/RelExcludeStep$Key : org/partiql/plan/v1/rel/RelExcludeStep {
+	public abstract fun getKey ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelScan {
+public abstract interface class org/partiql/plan/v1/rel/RelExcludeStep$StructWildcard : org/partiql/plan/v1/rel/RelExcludeStep {
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelScanIndexed {
+public abstract interface class org/partiql/plan/v1/rel/RelExcludeStep$Symbol : org/partiql/plan/v1/rel/RelExcludeStep {
+	public abstract fun getSymbol ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelSort {
+public abstract interface class org/partiql/plan/v1/rel/RelFilter : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getPredicate ()Lorg/partiql/plan/v1/rex/Rex;
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelUnion {
+public abstract interface class org/partiql/plan/v1/rel/RelIntersect : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getLeft ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getRight ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun isAll ()Z
 }
 
-public abstract interface class org/partiql/plan/v1/rel/RelUnpviot {
+public abstract interface class org/partiql/plan/v1/rel/RelJoin : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getCondition ()Lorg/partiql/plan/v1/rex/Rex;
+	public abstract fun getLeft ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getRight ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getType ()Lorg/partiql/plan/v1/rel/RelJoinType;
+}
+
+public final class org/partiql/plan/v1/rel/RelJoinType : java/lang/Enum {
+	public static final field FULL Lorg/partiql/plan/v1/rel/RelJoinType;
+	public static final field INNER Lorg/partiql/plan/v1/rel/RelJoinType;
+	public static final field LEFT Lorg/partiql/plan/v1/rel/RelJoinType;
+	public static final field OTHER Lorg/partiql/plan/v1/rel/RelJoinType;
+	public static final field RIGHT Lorg/partiql/plan/v1/rel/RelJoinType;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/rel/RelJoinType;
+	public static fun values ()[Lorg/partiql/plan/v1/rel/RelJoinType;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelLimit : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getLimit ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelOffset : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getLimit ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelProject : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getProjections ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelScan : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelScanIndexed : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelSort : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getSortSpecs ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelSortSpec {
+	public abstract fun getNulls ()Lorg/partiql/plan/v1/rel/RelSortSpec$Nulls;
+	public abstract fun getOrder ()Lorg/partiql/plan/v1/rel/RelSortSpec$Order;
+	public abstract fun getRex ()Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public final class org/partiql/plan/v1/rel/RelSortSpec$Nulls : java/lang/Enum {
+	public static final field FIRST Lorg/partiql/plan/v1/rel/RelSortSpec$Nulls;
+	public static final field LAST Lorg/partiql/plan/v1/rel/RelSortSpec$Nulls;
+	public static final field OTHER Lorg/partiql/plan/v1/rel/RelSortSpec$Nulls;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/rel/RelSortSpec$Nulls;
+	public static fun values ()[Lorg/partiql/plan/v1/rel/RelSortSpec$Nulls;
+}
+
+public final class org/partiql/plan/v1/rel/RelSortSpec$Order : java/lang/Enum {
+	public static final field ASC Lorg/partiql/plan/v1/rel/RelSortSpec$Order;
+	public static final field DESC Lorg/partiql/plan/v1/rel/RelSortSpec$Order;
+	public static final field OTHER Lorg/partiql/plan/v1/rel/RelSortSpec$Order;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/rel/RelSortSpec$Order;
+	public static fun values ()[Lorg/partiql/plan/v1/rel/RelSortSpec$Order;
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelUnion : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getLeft ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getRight ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun isAll ()Z
+}
+
+public abstract interface class org/partiql/plan/v1/rel/RelUnpviot : org/partiql/plan/v1/rel/Rel {
+	public abstract fun getInput ()Lorg/partiql/plan/v1/rex/Rex;
 }
 
 public abstract interface class org/partiql/plan/v1/rex/Rex : org/partiql/plan/v1/Node {
