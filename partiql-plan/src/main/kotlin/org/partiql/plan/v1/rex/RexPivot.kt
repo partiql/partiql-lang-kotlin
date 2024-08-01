@@ -14,42 +14,66 @@ public interface RexPivot : Rex {
 
     public fun getValue(): Rex
 
+    public override fun getType(): PType = PType.typeStruct()
+
+    public override fun getOperands(): List<Rex> = listOf(getKey(), getValue())
+
     public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPivot(this, ctx)
 
     /**
      * An abstract [RexPivot] implementation intended for extension.
-     *
-     * @property input
-     * @property key
-     * @property value
      */
     public abstract class Base(
-        private val input: Rel,
-        private val key: Rex,
-        private val value: Rex,
+        input: Rel,
+        key: Rex,
+        value: Rex,
     ) : RexPivot {
+
+        // DO NOT USE FINAL
+        private var _input = input
+        private var _key = key
+        private var _value = value
 
         private var operands: List<Rex>? = null
         private var type: PType? = null
 
-        override fun getInput(): Rel = input
+        public override fun getInput(): Rel = _input
 
-        override fun getKey(): Rex = key
+        public override fun getKey(): Rex = _key
 
-        override fun getValue(): Rex = value
+        public override fun getValue(): Rex = _value
 
-        override fun getType(): PType {
+        public override fun getType(): PType {
             if (type == null) {
                 type = PType.typeStruct()
             }
             return type!!
         }
 
-        override fun getOperands(): List<Rex> {
+        public override fun getOperands(): List<Rex> {
             if (operands == null) {
-                operands = listOf(key, value)
+                operands = listOf(getKey(), getValue())
             }
             return operands!!
+        }
+
+        public override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is RexPivot) return false
+
+            if (_input != other.getInput()) return false
+            if (_key != other.getKey()) return false
+            if (_value != other.getValue()) return false
+
+            return true
+        }
+
+        public override fun hashCode(): Int {
+            var result = 1
+            result = 31 * result + _input.hashCode()
+            result = 31 * result + _key.hashCode()
+            result = 31 * result + _value.hashCode()
+            return result
         }
     }
 }

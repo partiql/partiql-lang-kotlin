@@ -20,6 +20,7 @@ public interface RelSort : Rel {
      */
     public abstract class Base(input: Rel, collations: List<RelCollation>) : RelSort {
 
+        // DO NOT USE FINAL
         private var _input = input
         private var _collations = collations
 
