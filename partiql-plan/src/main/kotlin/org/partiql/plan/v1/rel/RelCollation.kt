@@ -5,7 +5,7 @@ import org.partiql.plan.v1.rex.Rex
 /**
  * TODO DOCUMENTATION
  */
-interface RelSortSpec {
+interface RelCollation {
 
     /**
      * TODO REPLACE WITH COLUMN INDEX

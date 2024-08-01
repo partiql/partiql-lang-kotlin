@@ -1,7 +1,6 @@
 package org.partiql.plan.v1.rex
 
 import org.partiql.plan.v1.rel.Rel
-import org.partiql.plan.v1.rex.builder.RexPivotBuilder
 import org.partiql.types.PType
 
 /**
@@ -17,12 +16,6 @@ public interface RexPivot : Rex {
 
     public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPivot(this, ctx)
 
-    public companion object {
-
-        @JvmStatic
-        public fun builder(): RexPivotBuilder = RexPivotBuilder()
-    }
-
     /**
      * An abstract [RexPivot] implementation intended for extension.
      *
@@ -37,7 +30,7 @@ public interface RexPivot : Rex {
     ) : RexPivot {
 
         private var operands: List<Rex>? = null
-        private var type:  PType? = null
+        private var type: PType? = null
 
         override fun getInput(): Rel = input
 
