@@ -3,9 +3,9 @@ package org.partiql.plan.v1.rel
 /**
  * TODO DOCUMENTATION
  */
-public interface RelExcludeStep : Rel {
+public interface RelExcludeStep {
 
-    public fun getSteps(): List<RelExcludeStep>
+    public fun getSubsteps(): List<RelExcludeStep>
 
     /**
      * TODO DOCUMENTATION

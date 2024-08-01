@@ -15,5 +15,9 @@ public interface RelJoin : Rel {
 
     public fun getType(): RelJoinType
 
+    override fun getInputs(): List<Rel> = listOf(getLeft(), getRight())
+
+    override fun isOrdered(): Boolean = false
+
     public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitJoin(this, ctx)
 }

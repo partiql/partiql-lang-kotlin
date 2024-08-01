@@ -12,5 +12,9 @@ public interface RelUnion : Rel {
 
     public fun getRight(): Rel
 
+    override fun getInputs(): List<Rel> = listOf(getLeft(), getRight())
+
+    override fun isOrdered(): Boolean = false
+
     public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitUnion(this, ctx)
 }
