@@ -1,5 +1,6 @@
 package org.partiql.plan.v1.rel
 
+import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.rex.Rex
 
 /**
@@ -31,6 +32,10 @@ public interface RelProject : Rel {
         override fun getInput(): Rel = _input
 
         override fun getProjections(): List<Rex> = _projections
+
+        override fun getSchema(): Schema {
+            TODO("Not yet implemented")
+        }
 
         override fun getInputs(): List<Rel> {
             if (_inputs == null) {

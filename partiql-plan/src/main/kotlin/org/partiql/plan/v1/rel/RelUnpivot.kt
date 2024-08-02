@@ -1,5 +1,6 @@
 package org.partiql.plan.v1.rel
 
+import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.rex.Rex
 
 /**
@@ -29,6 +30,10 @@ public interface RelUnpivot : Rel {
             if (this === other) return true
             if (other == null || other !is RelUnpivot) return false
             return _input == other.getInput()
+        }
+
+        override fun getSchema(): Schema {
+            TODO("Not yet implemented")
         }
 
         override fun hashCode(): Int {

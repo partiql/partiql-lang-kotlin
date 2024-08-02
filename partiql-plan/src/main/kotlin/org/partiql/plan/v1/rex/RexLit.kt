@@ -1,5 +1,6 @@
 package org.partiql.plan.v1.rex
 
+import org.partiql.eval.value.Datum
 import org.partiql.types.PType
 
 /**
@@ -10,7 +11,7 @@ public interface RexLit : Rex {
     /**
      * TODO REPLACE WITH DATUM
      */
-    public fun getValue(): String
+    public fun getValue(): Datum
 
     public override fun getOperands(): List<Rex> = emptyList()
 
@@ -18,12 +19,12 @@ public interface RexLit : Rex {
 
     public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitLit(this, ctx)
 
-    public abstract class Base(value: String) : RexLit {
+    public abstract class Base(value: Datum) : RexLit {
 
         // DO NOT USE FINAL
         private var _value = value
 
-        public override fun getValue(): String = _value
+        public override fun getValue(): Datum = _value
 
         public override fun equals(other: Any?): Boolean {
             if (this === other) return true

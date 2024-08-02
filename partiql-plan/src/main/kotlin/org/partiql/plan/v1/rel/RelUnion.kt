@@ -1,5 +1,7 @@
 package org.partiql.plan.v1.rel
 
+import org.partiql.plan.v1.Schema
+
 /**
  * Logical `UNION [ALL|DISTINCT]` operator for set (or multiset) union.
  */
@@ -47,6 +49,10 @@ public interface RelUnion : Rel {
         }
 
         override fun isOrdered(): Boolean = false
+
+        override fun getSchema(): Schema {
+            TODO("Not yet implemented")
+        }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

@@ -2,6 +2,7 @@ package org.partiql.plan.v1.rex
 
 /**
  * Global variable references e.g. tables and views.
+ * TODO NAMING?? RexTable??
  */
 interface RexGlobal : Rex {
 

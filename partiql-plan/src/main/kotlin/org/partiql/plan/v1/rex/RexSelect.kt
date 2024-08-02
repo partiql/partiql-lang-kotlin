@@ -1,6 +1,7 @@
 package org.partiql.plan.v1.rex
 
 import org.partiql.plan.v1.rel.Rel
+import org.partiql.types.PType
 
 /**
  * TODO DOCUMENTATION
@@ -10,6 +11,10 @@ public interface RexSelect : Rex {
     public fun getInput(): Rel
 
     public fun getConstructor(): Rex
+
+    public override fun getType(): PType = PType.typeBag(getConstructor().getType())
+
+    public override fun getOperands(): List<Rex> = listOf(getConstructor())
 
     public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSelect(this, ctx)
 
@@ -21,6 +26,10 @@ public interface RexSelect : Rex {
         public override fun getInput(): Rel = _input
 
         public override fun getConstructor(): Rex = _constructor
+
+        public override fun getType(): PType = PType.typeBag(_constructor.getType())
+
+        public override fun getOperands(): List<Rex> = listOf(_constructor)
 
         public override fun equals(other: Any?): Boolean {
             if (this === other) return true

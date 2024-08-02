@@ -1,7 +1,10 @@
 package org.partiql.plan.v1.rex
 
+import org.partiql.types.PType
+
 /**
  * TODO DOCUMENTATION
+ * TODO NAMING??
  */
 public interface RexVar : Rex {
 
@@ -31,6 +34,10 @@ public interface RexVar : Rex {
         public override fun getDepth(): Int = _depth
 
         public override fun getOffset(): Int = _offset
+
+        override fun getType(): PType {
+            TODO("Not yet implemented")
+        }
 
         public override fun equals(other: Any?): Boolean {
             if (this === other) return true

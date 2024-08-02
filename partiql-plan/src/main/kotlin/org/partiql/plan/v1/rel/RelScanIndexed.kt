@@ -1,5 +1,6 @@
 package org.partiql.plan.v1.rel
 
+import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.rex.Rex
 
 /**
@@ -24,6 +25,10 @@ public interface RelScanIndexed : Rel {
         private var _input: Rex = input
 
         override fun getInput(): Rex = _input
+
+        override fun getSchema(): Schema {
+            TODO("Not yet implemented")
+        }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

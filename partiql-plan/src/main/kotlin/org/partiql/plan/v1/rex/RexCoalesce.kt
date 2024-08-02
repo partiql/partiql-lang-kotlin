@@ -1,5 +1,7 @@
 package org.partiql.plan.v1.rex
 
+import org.partiql.types.PType
+
 /**
  * TODO DOCUMENTATION
  */
@@ -19,6 +21,10 @@ public interface RexCoalesce : Rex {
         public override fun getArgs(): List<Rex> = _args
 
         public override fun getOperands(): List<Rex> = _args
+
+        public override fun getType(): PType {
+            TODO("Not yet implemented")
+        }
 
         public override fun equals(other: Any?): Boolean {
             if (this === other) return true
