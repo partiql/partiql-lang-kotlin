@@ -32,10 +32,11 @@ import org.partiql.value.PartiQLValueExperimental
 @OptIn(PartiQLValueExperimental::class)
 internal class ExprCallDynamic(
     private val name: String,
-    private val candidates: Array<Candidate>,
+    candidateFns: Array<Fn>,
     private val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
+    private val candidates = Array(candidateFns.size) { Candidate(candidateFns[it]) }
     private val paramIndices: IntRange = args.indices
     private val paramTypes: List<List<PType>> = this.candidates.map { candidate -> candidate.fn.signature.parameters.map { it.type } }
     private val paramFamilies: List<List<CoercionFamily>> = this.candidates.map { candidate -> candidate.fn.signature.parameters.map { family(it.type.kind) } }
@@ -46,11 +47,11 @@ internal class ExprCallDynamic(
         val actualTypes = actualArgs.map { it.type }
         val cached = cachedMatches[actualTypes]
         if (cached != null) {
-            return candidates[cached].eval(actualArgs, env)
+            return candidates[cached].eval(actualArgs)
         }
         val candidateIndex = match(actualTypes) ?: throw TypeCheckException("Could not find function $name with types: $actualTypes.")
         cachedMatches[actualTypes] = candidateIndex
-        return candidates[candidateIndex].eval(actualArgs, env)
+        return candidates[candidateIndex].eval(actualArgs)
     }
 
     /**
@@ -89,7 +90,7 @@ internal class ExprCallDynamic(
      * TODO: [UNKNOWN] should likely be removed in the future. However, it is needed due to literal nulls and missings.
      * TODO: [DYNAMIC] should likely be removed in the future. This is currently only kept to map function signatures.
      */
-    enum class CoercionFamily {
+    private enum class CoercionFamily {
         NUMBER,
         STRING,
         BINARY,
@@ -103,7 +104,7 @@ internal class ExprCallDynamic(
         DYNAMIC
     }
 
-    companion object {
+    private companion object {
         /**
          * Gets the coercion family for the given [PType.Kind].
          *
@@ -154,7 +155,7 @@ internal class ExprCallDynamic(
      *
      * @see ExprCallDynamic
      */
-    data class Candidate(
+    private class Candidate(
         val fn: Fn,
     ) {
 
@@ -163,7 +164,7 @@ internal class ExprCallDynamic(
          */
         private val nil = { Datum.nullValue(fn.signature.returns) }
 
-        fun eval(originalArgs: Array<Datum>, env: Environment): Datum {
+        fun eval(originalArgs: Array<Datum>): Datum {
             val args = originalArgs.mapIndexed { i, arg ->
                 if (arg.isNull && fn.signature.isNullCall) {
                     return nil.invoke()

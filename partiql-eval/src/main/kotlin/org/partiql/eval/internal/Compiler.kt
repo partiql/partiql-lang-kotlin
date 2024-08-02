@@ -251,7 +251,7 @@ internal class Compiler(
                     error("Dynamic call candidate had different name than others; found $fnName but expected $name")
                 }
             }
-            ExprCallDynamic.Candidate(fn)
+            fn
         }
         return ExprCallDynamic(name, candidates, args)
     }

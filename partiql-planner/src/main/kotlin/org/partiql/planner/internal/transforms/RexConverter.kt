@@ -642,7 +642,7 @@ internal object RexConverter {
                 is Type.Bag -> call("is_bag", arg0)
                 is Type.List -> call("is_list", arg0)
                 is Type.Sexp -> call("is_sexp", arg0)
-                is Type.Tuple -> call("is_tuple", arg0)
+                is Type.Tuple -> call("is_struct", arg0)
                 is Type.Struct -> call("is_struct", arg0)
                 is Type.Any -> call("is_any", arg0)
                 is Type.Custom -> call("is_custom", arg0)

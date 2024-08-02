@@ -36,34 +36,4 @@ class DatumCollection implements Datum {
     public PType getType() {
         return _type;
     }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(_type);
-        sb.append("::");
-        if (_type.getKind() == PType.Kind.LIST) {
-            sb.append("[");
-        } else if (_type.getKind() == PType.Kind.BAG) {
-            sb.append("<<");
-        } else if (_type.getKind() == PType.Kind.SEXP) {
-            sb.append("(");
-        }
-        Iterator<Datum> iter = _value.iterator();
-        while (iter.hasNext()) {
-            Datum child = iter.next();
-            sb.append(child);
-            if (iter.hasNext()) {
-                sb.append(", ");
-            }
-        }
-        if (_type.getKind() == PType.Kind.LIST) {
-            sb.append("]");
-        } else if (_type.getKind() == PType.Kind.BAG) {
-            sb.append(">>");
-        } else if (_type.getKind() == PType.Kind.SEXP) {
-            sb.append(")");
-        }
-        return sb.toString();
-    }
 }
