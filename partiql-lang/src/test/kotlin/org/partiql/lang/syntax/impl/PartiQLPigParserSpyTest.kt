@@ -19,12 +19,12 @@ import com.amazon.ion.system.IonSystemBuilder
 import io.mockk.every
 import io.mockk.spyk
 import io.mockk.verify
-import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.junit.Assert
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.ParserException
+import org.partiql.parser.thirdparty.antlr.v4.runtime.misc.ParseCancellationException
 
 /**
  * This test class is used for spying the [PartiQLPigParser].
