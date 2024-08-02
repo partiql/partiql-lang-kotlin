@@ -17,10 +17,6 @@ package org.partiql.lang.syntax.impl
 import com.amazon.ionelement.api.ionInt
 import io.mockk.every
 import io.mockk.spyk
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonToken
-import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.TokenSource
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -32,6 +28,10 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.parser.antlr.PartiQLTokens
+import org.partiql.parser.thirdparty.antlr.v4.runtime.CharStreams
+import org.partiql.parser.thirdparty.antlr.v4.runtime.CommonToken
+import org.partiql.parser.thirdparty.antlr.v4.runtime.Token
+import org.partiql.parser.thirdparty.antlr.v4.runtime.TokenSource
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread

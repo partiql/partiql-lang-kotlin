@@ -33,9 +33,6 @@ import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.loadSingleElement
-import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
@@ -62,6 +59,9 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
 import org.partiql.parser.antlr.PartiQLParser
 import org.partiql.parser.antlr.PartiQLParserBaseVisitor
+import org.partiql.parser.thirdparty.antlr.v4.runtime.ParserRuleContext
+import org.partiql.parser.thirdparty.antlr.v4.runtime.Token
+import org.partiql.parser.thirdparty.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.TimeZone
