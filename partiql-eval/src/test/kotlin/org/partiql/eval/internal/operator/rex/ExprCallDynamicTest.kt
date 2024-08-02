@@ -27,7 +27,7 @@ class ExprCallDynamicTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun sanityTests(tc: DynamicTestCase) = tc.assert()
 
-    public class DynamicTestCase @OptIn(PartiQLValueExperimental::class) constructor(
+    public class DynamicTestCase(
         val lhs: Datum,
         val rhs: Datum,
         val expectedIndex: Int,
@@ -77,8 +77,7 @@ class ExprCallDynamicTest {
                         )
 
                         override fun invoke(args: Array<PartiQLValue>): PartiQLValue = int32Value(index).toPartiQLValue()
-                    },
-                    coercions = arrayOf(null, null)
+                    }
                 )
             }.toTypedArray()
         }

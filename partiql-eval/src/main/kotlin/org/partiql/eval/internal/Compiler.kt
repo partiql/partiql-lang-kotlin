@@ -237,7 +237,6 @@ internal class Compiler(
         val candidates = Array(node.candidates.size) {
             val candidate = node.candidates[it]
             val fn = symbols.getFn(candidate.fn)
-            val coercions = candidate.coercions.toTypedArray()
             // Check this candidate
             val fnArity = fn.signature.parameters.size
             val fnName = fn.signature.name.uppercase()
@@ -252,13 +251,13 @@ internal class Compiler(
                     error("Dynamic call candidate had different name than others; found $fnName but expected $name")
                 }
             }
-            ExprCallDynamic.Candidate(fn, coercions)
+            ExprCallDynamic.Candidate(fn)
         }
         return ExprCallDynamic(name, candidates, args)
     }
 
     override fun visitRexOpCast(node: Rex.Op.Cast, ctx: PType?): Operator {
-        return ExprCast(visitRex(node.arg, ctx), node.cast)
+        return ExprCast(visitRex(node.arg, ctx), node.cast.target)
     }
 
     override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: PType?): Operator {

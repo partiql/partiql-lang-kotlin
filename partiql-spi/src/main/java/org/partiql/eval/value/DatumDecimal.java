@@ -36,4 +36,9 @@ class DatumDecimal implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        return _type + "::" + _value;
+    }
 }

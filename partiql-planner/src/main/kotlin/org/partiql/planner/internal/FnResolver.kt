@@ -46,34 +46,33 @@ internal object FnResolver {
             }
         }
 
-        // 2. Discard functions that cannot be matched (via implicit coercion or exact matches)
-        var matches = match(candidates, args).ifEmpty { return null }
-        if (matches.size == 1) {
-            return matches.first().match
+        // 2. If there are DYNAMIC arguments, return all candidates
+        val isDynamic = args.any { it.kind == Kind.DYNAMIC }
+        if (isDynamic) {
+            val matches = match(candidates, args).ifEmpty { return null }
+            val orderedMatches = matches.sortedWith(MatchResultComparator).map { it.match }
+            return FnMatch.Dynamic(orderedMatches)
         }
 
-        // 3. Run through all candidates and keep those with the most exact matches on input types.
-        matches = matchOn(matches) { it.numberOfExactInputTypes }
+        // 3. Look for the best match
+        return resolveBestMatch(candidates, args)
+    }
+
+    private fun resolveBestMatch(candidates: List<FnSignature>, args: List<CompilerType>): FnMatch.Static? {
+        // 3. Discard functions that cannot be matched (via implicit coercion or exact matches)
+        val invocableMatches = match(candidates, args).ifEmpty { return null }
+        if (invocableMatches.size == 1) {
+            return invocableMatches.first().match
+        }
+
+        // 4. Run through all candidates and keep those with the most exact matches on input types.
+        val matches = matchOn(invocableMatches) { it.numberOfExactInputTypes }
         if (matches.size == 1) {
             return matches.first().match
         }
 
         // TODO: Do we care about preferred types? This is a PostgreSQL concept.
-        // 4. Run through all candidates and keep those that accept preferred types (of the input data type's type category) at the most positions where type conversion will be required.
-
-        // 5. If there are DYNAMIC nodes, return all candidates
-        var isDynamic = false
-        for (match in matches) {
-            val params = match.match.signature.parameters
-            for (index in params.indices) {
-                if ((args[index].kind == Kind.DYNAMIC) && params[index].type.kind != Kind.DYNAMIC) {
-                    isDynamic = true
-                }
-            }
-        }
-        if (isDynamic) {
-            return FnMatch.Dynamic(matches.map { it.match })
-        }
+        // 5. Run through all candidates and keep those that accept preferred types (of the input data type's type category) at the most positions where type conversion will be required.
 
         // 6. Find the highest precedence one. NOTE: This is a remnant of the previous implementation. Whether we want
         //  to keep this is up to us.

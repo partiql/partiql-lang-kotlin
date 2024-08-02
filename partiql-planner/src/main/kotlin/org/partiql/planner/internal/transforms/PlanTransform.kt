@@ -138,11 +138,18 @@ internal class PlanTransform(
         override fun visitRexOpPath(node: Rex.Op.Path, ctx: Unit) =
             super.visitRexOpPath(node, ctx) as org.partiql.plan.Rex.Op.Path
 
-        override fun visitRexOpCast(node: Rex.Op.Cast, ctx: Unit) =
-            super.visitRexOpCast(node, ctx) as org.partiql.plan.Rex.Op.Cast
-
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: Unit): PlanNode {
-            error("Unresolved cast $node")
+            val problem = ProblemGenerator.undefinedCast(node.arg.type, node.target)
+            return when (signalMode) {
+                true -> {
+                    onProblem.invoke(problem)
+                    rexOpErr(problem.toString(), emptyList())
+                }
+                false -> {
+                    onProblem.invoke(ProblemGenerator.asWarning(problem))
+                    org.partiql.plan.rexOpMissing(problem.toString(), emptyList())
+                }
+            }
         }
 
         override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: Unit): PlanNode {

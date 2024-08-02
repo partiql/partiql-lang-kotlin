@@ -273,6 +273,7 @@ internal object SqlBuiltins {
         Fn_IS_TIME__ANY__BOOL,
         Fn_IS_TIMESTAMP__BOOL_INT32_ANY__BOOL,
         Fn_IS_TIMESTAMP__ANY__BOOL,
+        Fn_IS_TUPLE__ANY__BOOL,
         Fn_LIKE__STRING_STRING__BOOL,
         Fn_LIKE__CLOB_CLOB__BOOL,
         Fn_LIKE__SYMBOL_SYMBOL__BOOL,
