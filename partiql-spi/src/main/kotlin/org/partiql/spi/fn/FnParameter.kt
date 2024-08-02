@@ -18,5 +18,5 @@ public data class FnParameter(
     public constructor(
         name: String,
         type: PartiQLValueType,
-    ) : this(name, PType.fromPartiQLValueType(type))
+    ) : this(name, type.toPType())
 }

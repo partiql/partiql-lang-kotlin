@@ -23,7 +23,7 @@ internal object ValueUtility {
 
     @OptIn(PartiQLValueExperimental::class)
     fun Datum.check(type: PartiQLValueType): Datum {
-        return this.check(PType.fromPartiQLValueType(type))
+        return this.check(type.toPType())
     }
 
     /**
