@@ -55,25 +55,25 @@ public class MemoryConnector private constructor(
 
         @JvmStatic
         public fun builder(): Builder = Builder()
+    }
 
-        public class Builder internal constructor() {
+    public class Builder internal constructor() {
 
-            private var name: String? = null
-            private var tables: MutableMap<Name, MemoryTable> = mutableMapOf()
+        private var name: String? = null
+        private var tables: MutableMap<Name, MemoryTable> = mutableMapOf()
 
-            public fun name(name: String): Builder = apply { this.name = name }
+        public fun name(name: String): Builder = apply { this.name = name }
 
-            // TODO REMOVE AFTER CREATE TABLE IS ADDED TO CATALOG
-            public fun define(name: String, type: StaticType): Builder {
-                val table = MemoryTable.empty(name, PType.fromStaticType(type))
-                return define(table)
-            }
-
-            // TODO REMOVE AFTER CREATE TABLE IS ADDED TO CATALOG
-            public fun define(table: MemoryTable): Builder = apply { tables[table.getName()] = table }
-
-            public fun build(): MemoryConnector = MemoryConnector(name!!, tables)
+        // TODO REMOVE AFTER CREATE TABLE IS ADDED TO CATALOG
+        public fun define(name: String, type: StaticType): Builder {
+            val table = MemoryTable.empty(name, PType.fromStaticType(type))
+            return define(table)
         }
+
+        // TODO REMOVE AFTER CREATE TABLE IS ADDED TO CATALOG
+        public fun define(table: MemoryTable): Builder = apply { tables[table.getName()] = table }
+
+        public fun build(): MemoryConnector = MemoryConnector(name!!, tables)
     }
 
     /**

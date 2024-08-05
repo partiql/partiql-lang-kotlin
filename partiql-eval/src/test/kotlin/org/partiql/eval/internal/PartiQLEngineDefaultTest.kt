@@ -1,6 +1,7 @@
 package org.partiql.eval.internal
 
 import com.amazon.ionelement.api.createIonElementLoader
+import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -13,10 +14,11 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.builder.PartiQLPlannerBuilder
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
-import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.spi.connector.ConnectorSession
+import org.partiql.plugins.memory.MemoryTable
+import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValue
@@ -28,6 +30,7 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.intValue
 import org.partiql.value.io.PartiQLValueIonWriterBuilder
+import org.partiql.value.ion.IonDatum
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -1258,19 +1261,22 @@ class PartiQLEngineDefaultTest {
 
         internal fun assert() {
             val statement = parser.parse(input).root
-            val catalogBuilder = MemoryCatalog.builder().name("memory")
-            globals.forEach { global ->
-                catalogBuilder.define(global.name, global.type, loader.loadSingleElement(global.value))
-            }
-            val catalog = catalogBuilder.build()
-            val connector = MemoryConnector(catalog)
-            val connectorSession = object : ConnectorSession {
-                override fun getQueryId(): String = "q"
-                override fun getUserId(): String = "u"
-            }
+            val connector = MemoryConnector.builder()
+                .name("memory")
+                .apply {
+                    globals.forEach {
+                        val table = MemoryTable.of(
+                            name = Name.of(it.name),
+                            schema = PType.fromStaticType(it.type),
+                            datum = IonDatum.of(loadSingleElement(it.value))
+                        )
+                        define(table)
+                    }
+                }
+                .build()
             val session = Session.builder()
                 .catalog("memory")
-                .catalogs("memory" to connector.getMetadata(connectorSession))
+                .catalogs(connector.getCatalog())
                 .build()
             val plan = planner.plan(statement, session)
             val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
@@ -1344,15 +1350,10 @@ class PartiQLEngineDefaultTest {
 
         private fun run(mode: PartiQLEngine.Mode): Pair<PartiQLValue, PartiQLPlan> {
             val statement = parser.parse(input).root
-            val catalog = MemoryCatalog.builder().name("memory").build()
-            val connector = MemoryConnector(catalog)
-            val connectorSession = object : ConnectorSession {
-                override fun getQueryId(): String = "q"
-                override fun getUserId(): String = "u"
-            }
+            val connector = MemoryConnector.builder().name("memory").build()
             val session = Session.builder()
                 .catalog("memory")
-                .catalogs("memory" to connector.getMetadata(connectorSession))
+                .catalogs(connector.getCatalog())
                 .build()
             val plan = planner.plan(statement, session)
             val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
