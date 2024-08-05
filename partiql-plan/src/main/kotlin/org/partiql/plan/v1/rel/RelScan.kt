@@ -1,5 +1,6 @@
 package org.partiql.plan.v1.rel
 
+import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.rex.Rex
 import org.partiql.types.PType
 
@@ -25,6 +26,10 @@ public interface RelScan : Rel {
         private var _input: Rex = input
 
         override fun getInput(): Rex = _input
+
+        override fun getSchema(): Schema {
+            TODO("Implement getSchema for scan")
+        }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

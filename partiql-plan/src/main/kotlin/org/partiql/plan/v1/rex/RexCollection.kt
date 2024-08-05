@@ -1,5 +1,7 @@
 package org.partiql.plan.v1.rex
 
+import org.partiql.types.PType
+
 /**
  * TODO DOCUMENTATION
  */
@@ -22,6 +24,10 @@ interface RexCollection : Rex {
         public override fun getValues(): List<Rex> = _values
 
         public override fun getOperands(): List<Rex> = _values
+
+        override fun getType(): PType {
+            TODO("Not yet implemented")
+        }
 
         public override fun equals(other: Any?): Boolean {
             if (this === other) return true

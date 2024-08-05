@@ -2528,10 +2528,20 @@ public abstract interface class org/partiql/plan/v1/Version {
 }
 
 public abstract interface class org/partiql/plan/v1/rel/Rel {
+	public static final field Companion Lorg/partiql/plan/v1/rel/Rel$Companion;
 	public abstract fun accept (Lorg/partiql/plan/v1/rel/RelVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getInputs ()Ljava/util/List;
 	public abstract fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public abstract fun isOrdered ()Z
+	public static fun scan (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/Rel;
+	public static fun scanIndexed (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/Rel;
+	public static fun unpivot (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/Rel;
+}
+
+public final class org/partiql/plan/v1/rel/Rel$Companion {
+	public final fun scan (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/Rel;
+	public final fun scanIndexed (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/Rel;
+	public final fun unpivot (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/Rel;
 }
 
 public abstract interface class org/partiql/plan/v1/rel/RelAggregate : org/partiql/plan/v1/rel/Rel {
@@ -2549,6 +2559,7 @@ public abstract class org/partiql/plan/v1/rel/RelAggregate$Base : org/partiql/pl
 	public fun getCalls ()Ljava/util/List;
 	public fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
 	public fun getInputs ()Ljava/util/List;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isOrdered ()Z
 }
@@ -2564,6 +2575,34 @@ public abstract interface class org/partiql/plan/v1/rel/RelAggregateCall {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getType ()Lorg/partiql/types/PType;
 	public abstract fun isDistinct ()Z
+}
+
+public final class org/partiql/plan/v1/rel/RelBuilder {
+	public static final field Companion Lorg/partiql/plan/v1/rel/RelBuilder$Companion;
+	public synthetic fun <init> (Lorg/partiql/plan/v1/rel/Rel;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun aggregate (Ljava/util/List;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun build ()Lorg/partiql/plan/v1/rel/Rel;
+	public final fun distinct ()Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun except (Lorg/partiql/plan/v1/rel/Rel;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun filter (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun intersect (Lorg/partiql/plan/v1/rel/Rel;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun join (Lorg/partiql/plan/v1/rel/Rel;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun limit (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun offset (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun pivot (Lorg/partiql/plan/v1/rex/Rex;Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun project (Ljava/util/List;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public static final fun scan (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public static final fun scanIndexed (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun select (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun sort (Ljava/util/List;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun union (Lorg/partiql/plan/v1/rel/Rel;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public static final fun unpivot (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
+}
+
+public final class org/partiql/plan/v1/rel/RelBuilder$Companion {
+	public final fun scan (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun scanIndexed (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
+	public final fun unpivot (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rel/RelBuilder;
 }
 
 public abstract interface class org/partiql/plan/v1/rel/RelCollation {
@@ -2631,6 +2670,7 @@ public abstract class org/partiql/plan/v1/rel/RelExcept$Base : org/partiql/plan/
 	public fun getInputs ()Ljava/util/List;
 	public fun getLeft ()Lorg/partiql/plan/v1/rel/Rel;
 	public fun getRight ()Lorg/partiql/plan/v1/rel/Rel;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isAll ()Z
 	public fun isOrdered ()Z
@@ -2739,6 +2779,7 @@ public abstract class org/partiql/plan/v1/rel/RelIntersect$Base : org/partiql/pl
 	public fun getInputs ()Ljava/util/List;
 	public fun getLeft ()Lorg/partiql/plan/v1/rel/Rel;
 	public fun getRight ()Lorg/partiql/plan/v1/rel/Rel;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isAll ()Z
 	public fun isOrdered ()Z
@@ -2768,6 +2809,7 @@ public abstract class org/partiql/plan/v1/rel/RelJoin$Base : org/partiql/plan/v1
 	public fun getInputs ()Ljava/util/List;
 	public fun getLeft ()Lorg/partiql/plan/v1/rel/Rel;
 	public fun getRight ()Lorg/partiql/plan/v1/rel/Rel;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun getType ()Lorg/partiql/plan/v1/rel/RelJoinType;
 	public fun hashCode ()I
 	public fun isOrdered ()Z
@@ -2860,6 +2902,7 @@ public abstract class org/partiql/plan/v1/rel/RelProject$Base : org/partiql/plan
 	public fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
 	public fun getInputs ()Ljava/util/List;
 	public fun getProjections ()Ljava/util/List;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isOrdered ()Z
 }
@@ -2883,6 +2926,7 @@ public abstract class org/partiql/plan/v1/rel/RelScan$Base : org/partiql/plan/v1
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getInput ()Lorg/partiql/plan/v1/rex/Rex;
 	public fun getInputs ()Ljava/util/List;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isOrdered ()Z
 }
@@ -2906,6 +2950,7 @@ public abstract class org/partiql/plan/v1/rel/RelScanIndexed$Base : org/partiql/
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getInput ()Lorg/partiql/plan/v1/rex/Rex;
 	public fun getInputs ()Ljava/util/List;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isOrdered ()Z
 }
@@ -2921,6 +2966,7 @@ public abstract interface class org/partiql/plan/v1/rel/RelSort : org/partiql/pl
 	public abstract fun getCollations ()Ljava/util/List;
 	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
 	public abstract fun getInputs ()Ljava/util/List;
+	public abstract fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public abstract fun isOrdered ()Z
 }
 
@@ -2931,6 +2977,7 @@ public abstract class org/partiql/plan/v1/rel/RelSort$Base : org/partiql/plan/v1
 	public fun getCollations ()Ljava/util/List;
 	public fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
 	public fun getInputs ()Ljava/util/List;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isOrdered ()Z
 }
@@ -2938,6 +2985,7 @@ public abstract class org/partiql/plan/v1/rel/RelSort$Base : org/partiql/plan/v1
 public final class org/partiql/plan/v1/rel/RelSort$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/v1/rel/RelSort;Lorg/partiql/plan/v1/rel/RelVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun getInputs (Lorg/partiql/plan/v1/rel/RelSort;)Ljava/util/List;
+	public static fun getSchema (Lorg/partiql/plan/v1/rel/RelSort;)Lorg/partiql/plan/v1/Schema;
 	public static fun isOrdered (Lorg/partiql/plan/v1/rel/RelSort;)Z
 }
 
@@ -2958,6 +3006,7 @@ public abstract class org/partiql/plan/v1/rel/RelUnion$Base : org/partiql/plan/v
 	public fun getInputs ()Ljava/util/List;
 	public fun getLeft ()Lorg/partiql/plan/v1/rel/Rel;
 	public fun getRight ()Lorg/partiql/plan/v1/rel/Rel;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isAll ()Z
 	public fun isOrdered ()Z
@@ -2982,6 +3031,7 @@ public abstract class org/partiql/plan/v1/rel/RelUnpivot$Base : org/partiql/plan
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getInput ()Lorg/partiql/plan/v1/rex/Rex;
 	public fun getInputs ()Ljava/util/List;
+	public fun getSchema ()Lorg/partiql/plan/v1/Schema;
 	public fun hashCode ()I
 	public fun isOrdered ()Z
 }
@@ -3034,9 +3084,50 @@ public final class org/partiql/plan/v1/rel/RelVisitor$DefaultImpls {
 }
 
 public abstract interface class org/partiql/plan/v1/rex/Rex {
+	public static final field Companion Lorg/partiql/plan/v1/rex/Rex$Companion;
 	public abstract fun accept (Lorg/partiql/plan/v1/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getOperands ()Ljava/util/List;
 	public abstract fun getType ()Lorg/partiql/types/PType;
+	public static fun lit (I)Lorg/partiql/plan/v1/rex/Rex;
+	public static fun lit (J)Lorg/partiql/plan/v1/rex/Rex;
+	public static fun lit (Ljava/lang/String;)Lorg/partiql/plan/v1/rex/Rex;
+	public static fun lit (Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/rex/Rex;
+	public static fun lit (Z)Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public final class org/partiql/plan/v1/rex/Rex$Companion {
+	public final fun lit (I)Lorg/partiql/plan/v1/rex/Rex;
+	public final fun lit (J)Lorg/partiql/plan/v1/rex/Rex;
+	public final fun lit (Ljava/lang/String;)Lorg/partiql/plan/v1/rex/Rex;
+	public final fun lit (Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/rex/Rex;
+	public final fun lit (Z)Lorg/partiql/plan/v1/rex/Rex;
+}
+
+public final class org/partiql/plan/v1/rex/RexBuilder {
+	public static final field Companion Lorg/partiql/plan/v1/rex/RexBuilder$Companion;
+	public final fun cast (Lorg/partiql/types/PType;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public static final fun coalesce (Ljava/util/List;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public static final fun collection (Ljava/util/List;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun index (Lorg/partiql/plan/v1/rex/Rex;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public static final fun lit (Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public static final fun local (II)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun path (Ljava/lang/String;Z)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public static synthetic fun path$default (Lorg/partiql/plan/v1/rex/RexBuilder;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun scan ()Lorg/partiql/plan/v1/rel/RelBuilder;
+	public static final fun spread (Ljava/util/List;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public static final fun struct (Ljava/util/List;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public static final fun subquery (Lorg/partiql/plan/v1/rel/Rel;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun unpivot ()Lorg/partiql/plan/v1/rel/RelBuilder;
+}
+
+public final class org/partiql/plan/v1/rex/RexBuilder$Companion {
+	public final fun coalesce (Ljava/util/List;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun collection (Ljava/util/List;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun lit (Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun local (II)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun spread (Ljava/util/List;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun struct (Ljava/util/List;)Lorg/partiql/plan/v1/rex/RexBuilder;
+	public final fun subquery (Lorg/partiql/plan/v1/rel/Rel;)Lorg/partiql/plan/v1/rex/RexBuilder;
 }
 
 public abstract interface class org/partiql/plan/v1/rex/RexCall : org/partiql/plan/v1/rex/Rex {
@@ -3124,6 +3215,7 @@ public abstract class org/partiql/plan/v1/rex/RexCoalesce$Base : org/partiql/pla
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getArgs ()Ljava/util/List;
 	public fun getOperands ()Ljava/util/List;
+	public fun getType ()Lorg/partiql/types/PType;
 	public fun hashCode ()I
 }
 
@@ -3143,6 +3235,7 @@ public abstract class org/partiql/plan/v1/rex/RexCollection$Base : org/partiql/p
 	public fun accept (Lorg/partiql/plan/v1/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getOperands ()Ljava/util/List;
+	public fun getType ()Lorg/partiql/types/PType;
 	public fun getValues ()Ljava/util/List;
 	public fun hashCode ()I
 }
@@ -3178,16 +3271,16 @@ public abstract interface class org/partiql/plan/v1/rex/RexLit : org/partiql/pla
 	public abstract fun accept (Lorg/partiql/plan/v1/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getOperands ()Ljava/util/List;
 	public abstract fun getType ()Lorg/partiql/types/PType;
-	public abstract fun getValue ()Ljava/lang/String;
+	public abstract fun getValue ()Lorg/partiql/eval/value/Datum;
 }
 
 public abstract class org/partiql/plan/v1/rex/RexLit$Base : org/partiql/plan/v1/rex/RexLit {
-	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Lorg/partiql/eval/value/Datum;)V
 	public fun accept (Lorg/partiql/plan/v1/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getOperands ()Ljava/util/List;
 	public fun getType ()Lorg/partiql/types/PType;
-	public fun getValue ()Ljava/lang/String;
+	public fun getValue ()Lorg/partiql/eval/value/Datum;
 	public fun hashCode ()I
 }
 
@@ -3264,6 +3357,8 @@ public abstract interface class org/partiql/plan/v1/rex/RexSelect : org/partiql/
 	public abstract fun accept (Lorg/partiql/plan/v1/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getConstructor ()Lorg/partiql/plan/v1/rex/Rex;
 	public abstract fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public abstract fun getOperands ()Ljava/util/List;
+	public abstract fun getType ()Lorg/partiql/types/PType;
 }
 
 public abstract class org/partiql/plan/v1/rex/RexSelect$Base : org/partiql/plan/v1/rex/RexSelect {
@@ -3272,11 +3367,15 @@ public abstract class org/partiql/plan/v1/rex/RexSelect$Base : org/partiql/plan/
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getConstructor ()Lorg/partiql/plan/v1/rex/Rex;
 	public fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
+	public fun getOperands ()Ljava/util/List;
+	public fun getType ()Lorg/partiql/types/PType;
 	public fun hashCode ()I
 }
 
 public final class org/partiql/plan/v1/rex/RexSelect$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/v1/rex/RexSelect;Lorg/partiql/plan/v1/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getOperands (Lorg/partiql/plan/v1/rex/RexSelect;)Ljava/util/List;
+	public static fun getType (Lorg/partiql/plan/v1/rex/RexSelect;)Lorg/partiql/types/PType;
 }
 
 public abstract interface class org/partiql/plan/v1/rex/RexStruct : org/partiql/plan/v1/rex/Rex {
@@ -3319,6 +3418,7 @@ public abstract class org/partiql/plan/v1/rex/RexSubquery$Base : org/partiql/pla
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getInput ()Lorg/partiql/plan/v1/rel/Rel;
 	public fun getOperands ()Ljava/util/List;
+	public fun getType ()Lorg/partiql/types/PType;
 	public fun hashCode ()I
 }
 
@@ -3383,6 +3483,7 @@ public abstract class org/partiql/plan/v1/rex/RexVar$Base : org/partiql/plan/v1/
 	public fun getDepth ()I
 	public fun getOffset ()I
 	public fun getOperands ()Ljava/util/List;
+	public fun getType ()Lorg/partiql/types/PType;
 	public fun hashCode ()I
 }
 

@@ -1,6 +1,7 @@
 package org.partiql.plan.v1.rex
 
 import org.partiql.plan.v1.rel.Rel
+import org.partiql.types.PType
 
 /**
  * Scalar subquery coercion.
@@ -19,6 +20,10 @@ public interface RexSubquery : Rex {
         private var _input = input
 
         public override fun getInput(): Rel = _input
+
+        public override fun getType(): PType {
+            TODO("Not yet implemented")
+        }
 
         public override fun equals(other: Any?): Boolean {
             if (this === other) return true

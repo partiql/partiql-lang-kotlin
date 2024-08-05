@@ -1,5 +1,6 @@
 package org.partiql.plan.v1.rel
 
+import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.rex.Rex
 
 /**
@@ -47,6 +48,10 @@ public interface RelJoin : Rel {
                 _inputs = listOf(_left, _right)
             }
             return _inputs!!
+        }
+
+        override fun getSchema(): Schema {
+            TODO("Not yet implemented")
         }
 
         override fun isOrdered(): Boolean = false

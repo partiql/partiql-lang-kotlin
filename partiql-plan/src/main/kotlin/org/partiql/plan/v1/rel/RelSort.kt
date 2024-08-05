@@ -1,5 +1,7 @@
 package org.partiql.plan.v1.rel
 
+import org.partiql.plan.v1.Schema
+
 /**
  * Logical sort operator.
  */
@@ -10,6 +12,8 @@ public interface RelSort : Rel {
     public fun getCollations(): List<RelCollation>
 
     override fun getInputs(): List<Rel> = listOf(getInput())
+
+    override fun getSchema(): Schema = getInput().getSchema()
 
     override fun isOrdered(): Boolean = true
 
@@ -29,6 +33,8 @@ public interface RelSort : Rel {
         override fun getInput(): Rel = _input
 
         override fun getCollations(): List<RelCollation> = _collations
+
+        override fun getSchema(): Schema = _input.getSchema()
 
         override fun getInputs(): List<Rel> {
             if (_inputs == null) {
