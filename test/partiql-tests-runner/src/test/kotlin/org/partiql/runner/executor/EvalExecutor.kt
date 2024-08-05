@@ -22,7 +22,6 @@ import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.PType

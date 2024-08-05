@@ -2253,17 +2253,6 @@ public final class org/partiql/lang/planner/transforms/AstNormalizeKt {
 	public static final fun normalize (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Lorg/partiql/lang/domains/PartiqlAst$Statement;
 }
 
-public final class org/partiql/lang/planner/transforms/PlannerSession {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getCatalogConfig ()Ljava/util/Map;
-	public final fun getCurrentCatalog ()Ljava/lang/String;
-	public final fun getCurrentDirectory ()Ljava/util/List;
-	public final fun getInstant ()Ljava/time/Instant;
-	public final fun getQueryId ()Ljava/lang/String;
-	public final fun getUserId ()Ljava/lang/String;
-}
-
 public final class org/partiql/lang/planner/transforms/UtilKt {
 	public static final field PLAN_VERSION_NUMBER Ljava/lang/String;
 	public static final fun isLitTrue (Lorg/partiql/lang/domains/PartiqlPhysical$Expr;)Z

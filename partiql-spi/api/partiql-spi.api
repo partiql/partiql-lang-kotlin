@@ -353,9 +353,8 @@ public final class org/partiql/planner/catalog/Catalog$DefaultImpls {
 public abstract interface class org/partiql/planner/catalog/Catalogs {
 	public static final field Companion Lorg/partiql/planner/catalog/Catalogs$Companion;
 	public static fun builder ()Lorg/partiql/planner/catalog/Catalogs$Builder;
-	public abstract fun default ()Lorg/partiql/planner/catalog/Catalog;
-	public abstract fun get (Ljava/lang/String;Z)Lorg/partiql/planner/catalog/Catalog;
-	public abstract fun list ()Ljava/util/Collection;
+	public abstract fun getCatalog (Ljava/lang/String;Z)Lorg/partiql/planner/catalog/Catalog;
+	public abstract fun listCatalogs ()Ljava/util/Collection;
 	public static fun of (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Catalogs;
 	public static fun of ([Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/catalog/Catalogs;
 }
@@ -364,7 +363,6 @@ public final class org/partiql/planner/catalog/Catalogs$Builder {
 	public fun <init> ()V
 	public final fun add (Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/catalog/Catalogs$Builder;
 	public final fun build ()Lorg/partiql/planner/catalog/Catalogs;
-	public final fun default (Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/catalog/Catalogs$Builder;
 }
 
 public final class org/partiql/planner/catalog/Catalogs$Companion {
@@ -374,9 +372,8 @@ public final class org/partiql/planner/catalog/Catalogs$Companion {
 }
 
 public final class org/partiql/planner/catalog/Catalogs$DefaultImpls {
-	public static fun get (Lorg/partiql/planner/catalog/Catalogs;Ljava/lang/String;Z)Lorg/partiql/planner/catalog/Catalog;
-	public static synthetic fun get$default (Lorg/partiql/planner/catalog/Catalogs;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/planner/catalog/Catalog;
-	public static fun list (Lorg/partiql/planner/catalog/Catalogs;)Ljava/util/Collection;
+	public static synthetic fun getCatalog$default (Lorg/partiql/planner/catalog/Catalogs;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/planner/catalog/Catalog;
+	public static fun listCatalogs (Lorg/partiql/planner/catalog/Catalogs;)Ljava/util/Collection;
 }
 
 public abstract interface class org/partiql/planner/catalog/Function {
@@ -557,7 +554,7 @@ public abstract interface class org/partiql/planner/catalog/Session {
 	public static fun builder ()Lorg/partiql/planner/catalog/Session$Builder;
 	public static fun empty (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session;
 	public abstract fun getCatalog ()Ljava/lang/String;
-	public abstract fun getCatalogs ()Ljava/util/Map;
+	public abstract fun getCatalogs ()Lorg/partiql/planner/catalog/Catalogs;
 	public abstract fun getIdentity ()Ljava/lang/String;
 	public abstract fun getNamespace ()Lorg/partiql/planner/catalog/Namespace;
 	public abstract fun getPath ()Lorg/partiql/planner/catalog/Path;
@@ -568,7 +565,7 @@ public final class org/partiql/planner/catalog/Session$Builder {
 	public fun <init> ()V
 	public final fun build ()Lorg/partiql/planner/catalog/Session;
 	public final fun catalog (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
-	public final fun catalogs ([Lkotlin/Pair;)Lorg/partiql/planner/catalog/Session$Builder;
+	public final fun catalogs ([Lorg/partiql/planner/catalog/Catalog;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun identity (Ljava/lang/String;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun namespace (Ljava/util/Collection;)Lorg/partiql/planner/catalog/Session$Builder;
 	public final fun namespace (Lorg/partiql/planner/catalog/Namespace;)Lorg/partiql/planner/catalog/Session$Builder;
@@ -589,7 +586,7 @@ public final class org/partiql/planner/catalog/Session$DefaultImpls {
 public abstract interface class org/partiql/planner/catalog/Table {
 	public static final field Companion Lorg/partiql/planner/catalog/Table$Companion;
 	public static fun builder ()Lorg/partiql/planner/catalog/Table$Builder;
-	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getName ()Lorg/partiql/planner/catalog/Name;
 	public abstract fun getSchema ()Lorg/partiql/types/PType;
 	public static fun of (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
 }
@@ -617,121 +614,30 @@ public final class org/partiql/planner/catalog/Table$Handle {
 	public fun <init> (Lorg/partiql/planner/catalog/Name;Lorg/partiql/planner/catalog/Table;)V
 }
 
-public final class org/partiql/spi/BindingCase : java/lang/Enum {
-	public static final field INSENSITIVE Lorg/partiql/spi/BindingCase;
-	public static final field SENSITIVE Lorg/partiql/spi/BindingCase;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/spi/BindingCase;
-	public static fun values ()[Lorg/partiql/spi/BindingCase;
-}
-
-public final class org/partiql/spi/BindingName {
-	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/BindingCase;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Lorg/partiql/spi/BindingCase;
-	public final fun copy (Ljava/lang/String;Lorg/partiql/spi/BindingCase;)Lorg/partiql/spi/BindingName;
-	public static synthetic fun copy$default (Lorg/partiql/spi/BindingName;Ljava/lang/String;Lorg/partiql/spi/BindingCase;ILjava/lang/Object;)Lorg/partiql/spi/BindingName;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCase ()Lorg/partiql/spi/BindingCase;
-	public final fun getName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public final fun matches (Ljava/lang/String;)Z
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/spi/BindingPath {
-	public fun <init> (Ljava/util/List;)V
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getKey ()Ljava/lang/String;
-	public final fun getNormalized ()Ljava/util/List;
-	public final fun getSteps ()Ljava/util/List;
-	public fun hashCode ()I
-	public final fun matches (Lorg/partiql/spi/connector/ConnectorPath;)Z
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class org/partiql/spi/Plugin {
 	public abstract fun getFactory ()Lorg/partiql/spi/connector/Connector$Factory;
 }
 
 public abstract interface class org/partiql/spi/connector/Connector {
 	public abstract fun getBindings ()Lorg/partiql/spi/connector/ConnectorBindings;
-	public abstract fun getMetadata (Lorg/partiql/spi/connector/ConnectorSession;)Lorg/partiql/spi/connector/ConnectorMetadata;
+	public abstract fun getCatalog ()Lorg/partiql/planner/catalog/Catalog;
 }
 
 public abstract interface class org/partiql/spi/connector/Connector$Factory {
-	public abstract fun create (Ljava/lang/String;Lcom/amazon/ionelement/api/StructElement;)Lorg/partiql/spi/connector/Connector;
+	public abstract fun create (Lcom/amazon/ionelement/api/StructElement;)Lorg/partiql/spi/connector/Connector;
 	public abstract fun getName ()Ljava/lang/String;
 }
 
 public final class org/partiql/spi/connector/Connector$Factory$DefaultImpls {
-	public static synthetic fun create$default (Lorg/partiql/spi/connector/Connector$Factory;Ljava/lang/String;Lcom/amazon/ionelement/api/StructElement;ILjava/lang/Object;)Lorg/partiql/spi/connector/Connector;
+	public static synthetic fun create$default (Lorg/partiql/spi/connector/Connector$Factory;Lcom/amazon/ionelement/api/StructElement;ILjava/lang/Object;)Lorg/partiql/spi/connector/Connector;
+}
+
+public abstract interface class org/partiql/spi/connector/ConnectorBinding {
+	public abstract fun getDatum ()Lorg/partiql/eval/value/Datum;
 }
 
 public abstract interface class org/partiql/spi/connector/ConnectorBindings {
-	public abstract fun getValue (Lorg/partiql/spi/connector/ConnectorPath;)Lorg/partiql/value/PartiQLValue;
-}
-
-public abstract class org/partiql/spi/connector/ConnectorHandle {
-	public abstract fun getEntity ()Ljava/lang/Object;
-	public abstract fun getPath ()Lorg/partiql/spi/connector/ConnectorPath;
-}
-
-public final class org/partiql/spi/connector/ConnectorHandle$Obj : org/partiql/spi/connector/ConnectorHandle {
-	public fun <init> (Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorObject;)V
-	public final fun component1 ()Lorg/partiql/spi/connector/ConnectorPath;
-	public final fun component2 ()Lorg/partiql/spi/connector/ConnectorObject;
-	public final fun copy (Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorObject;)Lorg/partiql/spi/connector/ConnectorHandle$Obj;
-	public static synthetic fun copy$default (Lorg/partiql/spi/connector/ConnectorHandle$Obj;Lorg/partiql/spi/connector/ConnectorPath;Lorg/partiql/spi/connector/ConnectorObject;ILjava/lang/Object;)Lorg/partiql/spi/connector/ConnectorHandle$Obj;
-	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun getEntity ()Ljava/lang/Object;
-	public fun getEntity ()Lorg/partiql/spi/connector/ConnectorObject;
-	public fun getPath ()Lorg/partiql/spi/connector/ConnectorPath;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class org/partiql/spi/connector/ConnectorMetadata {
-	public abstract fun getObject (Lorg/partiql/spi/BindingPath;)Lorg/partiql/spi/connector/ConnectorHandle$Obj;
-}
-
-public abstract interface class org/partiql/spi/connector/ConnectorObject {
-	public abstract fun getPType ()Lorg/partiql/types/PType;
-	public abstract fun getType ()Lorg/partiql/types/StaticType;
-}
-
-public final class org/partiql/spi/connector/ConnectorObject$DefaultImpls {
-	public static fun getPType (Lorg/partiql/spi/connector/ConnectorObject;)Lorg/partiql/types/PType;
-}
-
-public final class org/partiql/spi/connector/ConnectorPath : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
-	public static final field Companion Lorg/partiql/spi/connector/ConnectorPath$Companion;
-	public fun <init> (Ljava/util/List;)V
-	public final fun component1 ()Ljava/util/List;
-	public final fun copy (Ljava/util/List;)Lorg/partiql/spi/connector/ConnectorPath;
-	public static synthetic fun copy$default (Lorg/partiql/spi/connector/ConnectorPath;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/spi/connector/ConnectorPath;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun forEach (Ljava/util/function/Consumer;)V
-	public final fun get (I)Ljava/lang/String;
-	public final fun getSteps ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun iterator ()Ljava/util/Iterator;
-	public static final fun of ([Ljava/lang/String;)Lorg/partiql/spi/connector/ConnectorPath;
-	public fun spliterator ()Ljava/util/Spliterator;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/spi/connector/ConnectorPath$Companion {
-	public final fun of ([Ljava/lang/String;)Lorg/partiql/spi/connector/ConnectorPath;
-}
-
-public abstract interface class org/partiql/spi/connector/ConnectorSession {
-	public abstract fun getQueryId ()Ljava/lang/String;
-	public abstract fun getUserId ()Ljava/lang/String;
-}
-
-public final class org/partiql/spi/connector/Constants {
-	public static final field CONFIG_KEY_CONNECTOR_NAME Ljava/lang/String;
-	public static final field INSTANCE Lorg/partiql/spi/connector/Constants;
+	public abstract fun getBinding (Lorg/partiql/planner/catalog/Name;)Lorg/partiql/spi/connector/ConnectorBinding;
 }
 
 public abstract interface class org/partiql/spi/fn/Agg {
@@ -1592,6 +1498,31 @@ public final class org/partiql/value/io/PartiQLValueWriterBuilder {
 
 public final class org/partiql/value/io/PartiQLValueWriterBuilder$Companion {
 	public final fun standard ()Lorg/partiql/value/io/PartiQLValueWriterBuilder;
+}
+
+public final class org/partiql/value/ion/IonDatum : org/partiql/eval/value/Datum {
+	public static final field Companion Lorg/partiql/value/ion/IonDatum$Companion;
+	public synthetic fun <init> (Lcom/amazon/ionelement/api/AnyElement;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun get (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
+	public fun getBigDecimal ()Ljava/math/BigDecimal;
+	public fun getBigInteger ()Ljava/math/BigInteger;
+	public fun getBoolean ()Z
+	public fun getDate ()Lorg/partiql/value/datetime/Date;
+	public fun getDouble ()D
+	public fun getFields ()Ljava/util/Iterator;
+	public fun getInsensitive (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
+	public fun getString ()Ljava/lang/String;
+	public fun getTime ()Lorg/partiql/value/datetime/Time;
+	public fun getTimestamp ()Lorg/partiql/value/datetime/Timestamp;
+	public fun getType ()Lorg/partiql/types/PType;
+	public fun isMissing ()Z
+	public fun isNull ()Z
+	public fun iterator ()Ljava/util/Iterator;
+	public static final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/value/ion/IonDatum;
+}
+
+public final class org/partiql/value/ion/IonDatum$Companion {
+	public final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/value/ion/IonDatum;
 }
 
 public final class org/partiql/value/util/NumberExtensionsKt {

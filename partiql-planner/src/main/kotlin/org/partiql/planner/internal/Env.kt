@@ -1,5 +1,8 @@
 package org.partiql.planner.internal
 
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Catalogs
+import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
@@ -9,7 +12,6 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.refAgg
 import org.partiql.planner.internal.ir.refFn
-import org.partiql.planner.internal.ir.refObj
 import org.partiql.planner.internal.ir.relOpAggregateCallResolved
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallDynamic
@@ -18,8 +20,6 @@ import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.types.PType
@@ -37,18 +37,12 @@ import org.partiql.types.PType.Kind
  */
 internal class Env(private val session: Session) {
 
-    private val catalogs = session.getCatalogs()
+    private val catalogs: Catalogs = session.getCatalogs()
 
     /**
-     * Current catalog [ConnectorMetadata]. Error if missing from the session.
+     * Current [Catalog] implementation; error if missing from the [Catalogs] provider.
      */
-    private val catalog: ConnectorMetadata = catalogs[session.getCatalog()]
-        ?: error("Session is missing ConnectorMetadata for current catalog ${session.getCatalog()}")
-
-    /**
-     * A [PathResolver] for looking up objects given both unqualified and qualified names.
-     */
-    private val objects: PathResolverObj = PathResolverObj(catalog, catalogs, session)
+    private val default: Catalog = catalogs.getCatalog(session.getCatalog()) ?: error("Default catalog does not exist")
 
     /**
      * A [SqlFnProvider] for looking up built-in functions.
@@ -56,35 +50,60 @@ internal class Env(private val session: Session) {
     private val fns: SqlFnProvider = SqlFnProvider
 
     /**
-     * This function looks up a global [BindingPath], returning a global reference expression.
+     * Catalog lookup needs to search (3x) to handle schema-qualified and catalog-qualified use-cases.
      *
-     * Convert any remaining binding names (tail) to a path expression.
+     *  1. Lookup in current catalog and namespace.
+     *  2. Lookup as a schema-qualified identifier.
+     *  3. Lookup as a catalog-qualified identifier.
      *
-     * @param path
-     * @return
      */
-    fun resolveObj(path: BindingPath): Rex? {
-        val item = objects.lookup(path) ?: return null
-        // Create an internal typed reference
-        val ref = refObj(
-            catalog = item.catalog,
-            name = Name.of(item.handle.path.steps),
-            type = CompilerType(item.handle.entity.getPType()),
-        )
-        // Rewrite as a path expression.
-        val root = rex(ref.type, rexOpVarGlobal(ref))
-        val depth = calculateMatched(path, item.input, ref.name.toList())
-        val tail = path.steps.drop(depth)
+    fun resolveTable(identifier: Identifier): Rex? {
+
+        // 1. Search in current catalog and namespace
+        var catalog = default
+        var path = resolve(identifier)
+        var handle = catalog.getTableHandle(session, path)
+
+        // 2. Lookup as a schema-qualified identifier.
+        if (handle == null && identifier.hasQualifier()) {
+            path = identifier
+            handle = catalog.getTableHandle(session, path)
+        }
+
+        // 3. Lookup as a catalog-qualified identifier
+        if (handle == null && identifier.hasQualifier()) {
+            val parts = identifier.getParts()
+            val head = parts.first()
+            val tail = parts.drop(1)
+            catalog = catalogs.getCatalog(head.getText(), ignoreCase = head.isRegular()) ?: return null
+            path = Identifier.of(tail)
+            handle = catalog.getTableHandle(session, path)
+        }
+
+        // !! NOT FOUND !!
+        if (handle == null) {
+            return null
+        }
+
+        // Make a reference and return a global variable expression.
+        val refCatalog = catalog.getName()
+        val refName = handle.name
+        val refType = CompilerType(handle.table.getSchema())
+        val ref = Ref.Obj(refCatalog, refName, refType)
+
+        // Convert any remaining identifier parts to a path expression
+        val root = Rex(ref.type, rexOpVarGlobal(ref))
+        val tail = calculateMatched(path, handle.name)
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
 
-    fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
+    fun resolveFn(identifier: Identifier, args: List<Rex>): Rex? {
         // Assume all functions are defined in the current catalog and reject qualified routine names.
-        if (path.steps.size > 1) {
+        if (identifier.hasQualifier()) {
             error("Qualified functions are not supported.")
         }
         val catalog = session.getCatalog()
-        val name = path.steps.last().name.lowercase()
+        val name = identifier.getIdentifier().getText().lowercase()
         // Invoke existing function resolution logic
         val variants = fns.lookupFn(name) ?: return null
         val match = FnResolver.resolve(variants, args.map { it.type })
@@ -100,9 +119,10 @@ internal class Env(private val session: Session) {
                     coercions = emptyList()
                 )
             }
+            // TODO consistency for error messages?
             return ProblemGenerator.missingRex(
                 rexOpCallDynamic(args, candidates),
-                ProblemGenerator.incompatibleTypesForOp(path.normalized.joinToString("."), args.map { it.type })
+                ProblemGenerator.incompatibleTypesForOp(name.uppercase(), args.map { it.type })
             )
         }
         return when (match) {
@@ -173,45 +193,29 @@ internal class Env(private val session: Session) {
     //  Helpers
     // -----------------------
 
+    // Helpers
+
     /**
-     * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
-     *
-     * Assume:
-     * - steps_matched = user_input_path_size - path_steps_not_found_size
-     * - path_steps_not_found_size = catalog_path_sent_to_spi_size - actual_catalog_absolute_path_size
-     *
-     * Therefore, we present the equation to [calculateMatched]:
-     * - steps_matched = user_input_path_size - (catalog_path_sent_to_spi_size - actual_catalog_absolute_path_size)
-     *                 = user_input_path_size + actual_catalog_absolute_path_size - catalog_path_sent_to_spi_size
-     *
-     * For example:
-     *
-     * Assume we are in some catalog, C, in some schema, S. There is a tuple, T, with attribute, A1. Assume A1 is of type
-     * tuple with an attribute A2.
-     * If our query references `T.A1.A2`, we will eventually ask SPI (connector C) for `S.T.A1.A2`. In this scenario:
-     * - The original user input was `T.A1.A2` (length 3)
-     * - The absolute path returned from SPI will be `S.T` (length 2)
-     * - The path we eventually sent to SPI to resolve was `S.T.A1.A2` (length 4)
-     *
-     * So, we can now use [calculateMatched] to determine how many were actually matched from the user input. Using the
-     * equation from above:
-     *
-     * - steps_matched = len(user input) + len(absolute catalog path) - len(path sent to SPI)
-     * = len([userInputPath]) + len([actualAbsolutePath]) - len([pathSentToConnector])
-     * = 3 + 2 - 4
-     * = 5 - 4
-     * = 1
-     *
-     *
-     * Therefore, in this example we have determined that from the original input (`T.A1.A2`) `T` is the value matched in the
-     * database environment.
+     * Prepends the current session namespace to the identifier; named like Path.resolve() from java io.
      */
-    private fun calculateMatched(
-        userInputPath: BindingPath,
-        pathSentToConnector: BindingPath,
-        actualAbsolutePath: List<String>,
-    ): Int {
-        return userInputPath.steps.size + actualAbsolutePath.size - pathSentToConnector.steps.size
+    private fun resolve(identifier: Identifier): Identifier {
+        val namespace = session.getNamespace()
+        return if (namespace.isEmpty()) {
+            // no need to create another object
+            identifier
+        } else {
+            // prepend the namespace
+            namespace.asIdentifier().append(identifier)
+        }
+    }
+
+    /**
+     * Returns a list of the unmatched parts of the identifier given the matched name.
+     */
+    private fun calculateMatched(path: Identifier, name: Name): List<Identifier.Part> {
+        val lhs = name.toList()
+        val rhs = path.toList()
+        return rhs.takeLast(rhs.size - lhs.size)
     }
 
     private fun match(candidates: List<AggSignature>, args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {

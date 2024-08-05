@@ -1,5 +1,6 @@
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rex
@@ -7,9 +8,7 @@ import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
@@ -36,9 +35,10 @@ internal data class Scope(
     /**
      * Attempts to resolve using just the local binding name.
      */
-    fun resolveName(path: BindingPath): Rex? {
-        val head: BindingName = path.steps[0]
-        val tail: List<BindingName> = path.steps.drop(1)
+    fun resolveName(identifier: Identifier): Rex? {
+        val path = identifier.toList()
+        val head = path.first()
+        val tail = path.drop(1)
         val r = matchRoot(head) ?: return null
         // Convert any remaining binding names (tail) to an untyped path expression.
         return if (tail.isEmpty()) r else r.toPath(tail)
@@ -47,14 +47,12 @@ internal data class Scope(
     /**
      * Check if the path root unambiguously matches a local binding struct value field.
      * Convert any remaining binding names (tail) to a path expression.
-     *
-     * @param path
-     * @return
      */
-    fun resolveField(path: BindingPath): Rex? {
-        val head: BindingName = path.steps[0]
+    fun resolveField(identifier: Identifier): Rex? {
+        val head = identifier.first()
+        val tail = identifier.toList()
+        // Match first identifier to a struct field
         val r = matchStruct(head) ?: return null
-        val tail = path.steps
         // Convert any remaining binding names (tail) to an untyped path expression.
         return if (tail.isEmpty()) r else r.toPath(tail)
     }
@@ -72,7 +70,7 @@ internal data class Scope(
      * @param name
      * @return
      */
-    private fun matchRoot(name: BindingName, depth: Int = 0): Rex? {
+    private fun matchRoot(name: Identifier.Part, depth: Int = 0): Rex? {
         var r: Rex? = null
         for (i in schema.indices) {
             val local = schema[i]
@@ -97,7 +95,7 @@ internal data class Scope(
      * @param name
      * @return
      */
-    private fun matchStruct(name: BindingName, depth: Int = 0): Rex? {
+    private fun matchStruct(name: Identifier.Part, depth: Int = 0): Rex? {
         var c: Rex? = null
         var known = false
         for (i in schema.indices) {
@@ -134,7 +132,7 @@ internal data class Scope(
     }
 
     /**
-     * Searches for the [BindingName] within the given [StaticType].
+     * Searches for the [Identifier.Part] within the given [StaticType].
      *
      * Returns
      *  - true  iff known to contain key
@@ -144,9 +142,9 @@ internal data class Scope(
      * @param name
      * @return
      */
-    private fun CompilerType.containsKey(name: BindingName): Boolean? {
+    private fun CompilerType.containsKey(name: Identifier.Part): Boolean? {
         return when (this.kind) {
-            Kind.ROW -> this.fields!!.any { name.matches(it.name) }
+            Kind.ROW -> this.fields.any { name.matches(it.name) }
             Kind.STRUCT -> null
             Kind.DYNAMIC -> null
             else -> false
@@ -156,22 +154,26 @@ internal data class Scope(
     companion object {
 
         /**
-         * Converts a list of [BindingName] to a path expression.
+         * Converts a list of [Identifier.Part] to a path expression.
          *
          *  1) Case SENSITIVE identifiers become string literal key lookups.
          *  2) Case INSENSITIVE identifiers become symbol lookups.
          *
-         * @param steps
+         * @param parts
          * @return
          */
         @JvmStatic
-        @OptIn(PartiQLValueExperimental::class)
-        internal fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
-            val op = when (step.case) {
-                BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(CompilerType(PType.string()), rexOpLit(stringValue(step.name))))
-                BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
+        internal fun Rex.toPath(parts: List<Identifier.Part>): Rex = parts.fold(this) { curr, part ->
+            val type = PType.dynamic().toCType()
+            val text = part.getText()
+            val op = when (part.isRegular()) {
+                true -> rexOpPathSymbol(curr, text)
+                else -> rexOpPathKey(curr, string(text))
             }
-            rex(CompilerType(PType.dynamic()), op)
+            rex(type, op)
         }
+
+        @OptIn(PartiQLValueExperimental::class)
+        private fun string(text: String) = rex(CompilerType(PType.string()), rexOpLit(stringValue(text)))
     }
 }
