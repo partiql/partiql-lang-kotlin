@@ -527,10 +527,11 @@ expr
     ;
 
 exprBagOp
-    : lhs=exprBagOp OUTER? EXCEPT (DISTINCT|ALL)? rhs=exprSelect           # Except
-    | lhs=exprBagOp OUTER? UNION (DISTINCT|ALL)? rhs=exprSelect            # Union
-    | lhs=exprBagOp OUTER? INTERSECT (DISTINCT|ALL)? rhs=exprSelect        # Intersect
-    | exprSelect                                                           # QueryBase
+    : lhs=exprBagOp OUTER? op=(UNION | EXCEPT | INTERSECT) (DISTINCT|ALL)? rhs=exprSelect
+      order=orderByClause?
+      limit=limitClause?
+      offset=offsetByClause?  # BagOp
+    | exprSelect                                                                                    # QueryBase
     ;
 
 exprSelect
@@ -541,9 +542,9 @@ exprSelect
         where=whereClauseSelect?
         group=groupClause?
         having=havingClause?
-        order=orderByClause?
-        limit=limitClause?
-        offset=offsetByClause? # SfwQuery
+        order=orderByClause??
+        limit=limitClause??
+        offset=offsetByClause?? # SfwQuery
     | exprOr            # SfwBase
     ;
 

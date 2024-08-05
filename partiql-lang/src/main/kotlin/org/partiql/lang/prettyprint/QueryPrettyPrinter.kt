@@ -320,7 +320,14 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.Or -> writeNAryOperator("OR", node.operands, sb, level)
             is PartiqlAst.Expr.InCollection -> writeNAryOperator("IN", node.operands, sb, level)
             is PartiqlAst.Expr.BagOp -> {
-                var name = node.op.javaClass.simpleName.toUpperCase().replace("_", " ")
+                var name = when (node.op) {
+                    is PartiqlAst.BagOpType.Except -> "EXCEPT"
+                    is PartiqlAst.BagOpType.Intersect -> "INTERSECT"
+                    is PartiqlAst.BagOpType.Union -> "UNION"
+                    is PartiqlAst.BagOpType.OuterExcept -> "OUTER EXCEPT"
+                    is PartiqlAst.BagOpType.OuterIntersect -> "OUTER INTERSECT"
+                    is PartiqlAst.BagOpType.OuterUnion -> "OUTER UNION"
+                }
                 if (node.quantifier is PartiqlAst.SetQuantifier.All) {
                     name += " ALL"
                 }

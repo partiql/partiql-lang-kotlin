@@ -23,6 +23,7 @@ import org.partiql.ast.Identifier
 import org.partiql.ast.Let
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Path
+import org.partiql.ast.QueryExpr
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
@@ -75,10 +76,10 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
      * @param tail
      */
     open fun visitExprWrapped(node: Expr, tail: InternalSqlBlock): InternalSqlBlock = when (node) {
-        is Expr.SFW -> {
+        is Expr.QuerySet -> {
             var t = tail
             t = t concat "("
-            t = visitExprSFW(node, t)
+            t = visit(node, t)
             t = t concat ")"
             t
         }
@@ -579,11 +580,7 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
 
     override fun visitExprBagOp(node: Expr.BagOp, tail: InternalSqlBlock): InternalSqlBlock {
         // [OUTER] [UNION|INTERSECT|EXCEPT] [ALL|DISTINCT]
-        val op = mutableListOf<String>()
-        when (node.outer) {
-            true -> op.add("OUTER")
-            else -> {}
-        }
+        val op = mutableListOf("OUTER")
         when (node.type.type) {
             SetOp.Type.UNION -> op.add("UNION")
             SetOp.Type.INTERSECT -> op.add("INTERSECT")
@@ -601,9 +598,22 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         return t
     }
 
+    override fun visitExprQuerySet(node: Expr.QuerySet, tail: InternalSqlBlock): InternalSqlBlock {
+        var t = tail
+        // visit body (SFW or other SQL set op)
+        t = visit(node.body, t)
+        // ORDER BY
+        t = if (node.orderBy != null) visitOrderBy(node.orderBy, t concat " ") else t
+        // LIMIT
+        t = if (node.limit != null) visitExprWrapped(node.limit, t concat " LIMIT ") else t
+        // OFFSET
+        t = if (node.offset != null) visitExprWrapped(node.offset, t concat " OFFSET ") else t
+        return t
+    }
+
     // SELECT-FROM-WHERE
 
-    override fun visitExprSFW(node: Expr.SFW, tail: InternalSqlBlock): InternalSqlBlock {
+    override fun visitQueryExprSFW(node: QueryExpr.SFW, tail: InternalSqlBlock): InternalSqlBlock {
         var t = tail
         // SELECT
         t = visit(node.select, t)
@@ -612,21 +622,32 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         // FROM
         t = visit(node.from, t concat " FROM ")
         // LET
-        t = if (node.let != null) visitLet(node.let!!, t concat " ") else t
+        t = if (node.let != null) visitLet(node.let, t concat " ") else t
         // WHERE
-        t = if (node.where != null) visitExprWrapped(node.where!!, t concat " WHERE ") else t
+        t = if (node.where != null) visitExprWrapped(node.where, t concat " WHERE ") else t
         // GROUP BY
-        t = if (node.groupBy != null) visitGroupBy(node.groupBy!!, t concat " ") else t
+        t = if (node.groupBy != null) visitGroupBy(node.groupBy, t concat " ") else t
         // HAVING
-        t = if (node.having != null) visitExprWrapped(node.having!!, t concat " HAVING ") else t
-        // SET OP
-        t = if (node.setOp != null) visitExprSFWSetOp(node.setOp!!, t concat " ") else t
-        // ORDER BY
-        t = if (node.orderBy != null) visitOrderBy(node.orderBy!!, t concat " ") else t
-        // LIMIT
-        t = if (node.limit != null) visitExprWrapped(node.limit!!, t concat " LIMIT ") else t
-        // OFFSET
-        t = if (node.offset != null) visitExprWrapped(node.offset!!, t concat " OFFSET ") else t
+        t = if (node.having != null) visitExprWrapped(node.having, t concat " HAVING ") else t
+        return t
+    }
+
+    override fun visitQueryExprSetOp(node: QueryExpr.SetOp, tail: InternalSqlBlock): InternalSqlBlock {
+        val op = mutableListOf<String>()
+        when (node.type.type) {
+            SetOp.Type.UNION -> op.add("UNION")
+            SetOp.Type.INTERSECT -> op.add("INTERSECT")
+            SetOp.Type.EXCEPT -> op.add("EXCEPT")
+        }
+        when (node.type.setq) {
+            SetQuantifier.ALL -> op.add("ALL")
+            SetQuantifier.DISTINCT -> op.add("DISTINCT")
+            null -> {}
+        }
+        var t = tail
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat " ${op.joinToString(" ")} "
+        t = visitExprWrapped(node.rhs, t)
         return t
     }
 
@@ -759,17 +780,6 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
             else -> "${node.type.name} ${node.setq!!.name}"
         }
         return tail concat op
-    }
-
-    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, tail: InternalSqlBlock): InternalSqlBlock {
-        var t = tail
-        t = visitSetOp(node.type, t)
-        t = t concat InternalSqlBlock.Nest(
-            prefix = " (",
-            postfix = ")",
-            child = InternalSqlBlock.root().apply { visitExprSFW(node.operand, this) },
-        )
-        return t
     }
 
     // ORDER BY

@@ -489,22 +489,10 @@ expr::[
     type:   '.set_op',
     lhs:    expr,
     rhs:    expr,
-    outer:  optional::bool,
   },
 
-  // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
-  s_f_w::{
-    select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
-    exclude:  optional::exclude,
-    from:     from,
-    let:      optional::let,
-    where:    optional::expr,
-    group_by: optional::group_by,
-    having:   optional::expr,
-    set_op:   optional::{
-      type:    '.set_op',
-      operand: '.expr.s_f_w',
-    },
+  query_set::{
+    body: query_expr,
     order_by: optional::order_by,
     limit:    optional::expr,
     offset:   optional::expr,
@@ -527,6 +515,26 @@ expr::[
       partitions: optional::list::[expr],
       sorts:      optional::list::[sort],
     },
+  },
+]
+
+query_expr::[
+  // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
+  s_f_w::{
+    select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
+    exclude:  optional::exclude,
+    from:     from,
+    let:      optional::let,
+    where:    optional::expr,
+    group_by: optional::group_by,
+    having:   optional::expr,
+  },
+
+  // SQL UNION (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
+  set_op::{
+    type:   '.set_op',
+    lhs:    '.expr.query_set',
+    rhs:    '.expr.query_set',
   },
 ]
 

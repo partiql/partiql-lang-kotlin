@@ -18,6 +18,7 @@ import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
+import org.partiql.ast.QueryExpr
 import org.partiql.ast.Select
 import org.partiql.ast.exprCall
 import org.partiql.ast.exprCase
@@ -80,7 +81,7 @@ import org.partiql.value.stringValue
  * } FROM A AS x
  * ```
  *
- * NOTE: This does NOT transform subqueries. It operates directly on an [Expr.SFW] -- and that is it. Therefore:
+ * NOTE: This does NOT transform subqueries. It operates directly on an [QueryExpr.SFW] -- and that is it. Therefore:
  * ```
  * SELECT
  *   (SELECT 1 FROM T AS "T")
@@ -97,8 +98,25 @@ import org.partiql.value.stringValue
  */
 internal object NormalizeSelect {
 
-    internal fun normalize(node: Expr.SFW): Expr.SFW {
-        return Visitor.visitSFW(node, newCtx())
+    internal fun normalize(node: Expr.QuerySet): Expr.QuerySet {
+        return when (val body = node.body) {
+            is QueryExpr.SFW -> {
+                val sfw = Visitor.visitSFW(body, newCtx())
+                node.copy(
+                    body = sfw
+                )
+            }
+            is QueryExpr.SetOp -> {
+                val lhs = normalize(body.lhs)
+                val rhs = normalize(body.rhs)
+                node.copy(
+                    body = body.copy(
+                        lhs = lhs,
+                        rhs = rhs
+                    )
+                )
+            }
+        }
     }
 
     /**
@@ -136,8 +154,8 @@ internal object NormalizeSelect {
          */
         private val col = { index: Int -> "_${index + 1}" }
 
-        internal fun visitSFW(node: Expr.SFW, ctx: () -> Int): Expr.SFW {
-            val sfw = super.visitExprSFW(node, ctx) as Expr.SFW
+        internal fun visitSFW(node: QueryExpr.SFW, ctx: () -> Int): QueryExpr.SFW {
+            val sfw = super.visitQueryExprSFW(node, ctx) as QueryExpr.SFW
             return when (val select = sfw.select) {
                 is Select.Star -> {
                     val selectValue = when (val group = sfw.groupBy) {
@@ -150,7 +168,7 @@ internal object NormalizeSelect {
             }
         }
 
-        override fun visitExprSFW(node: Expr.SFW, ctx: () -> Int): Expr.SFW {
+        override fun visitQueryExprSFW(node: QueryExpr.SFW, ctx: () -> Int): QueryExpr.SFW {
             return node
         }
 

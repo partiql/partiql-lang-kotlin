@@ -73,6 +73,12 @@ identifier::[
   ],
 ]
 
+// [ ALL | DISTINCT ]
+set_quantifier::[
+  ALL,
+  DISTINCT,
+]
+
 // Rex
 rex::{
   type: static_type,
@@ -202,6 +208,25 @@ rex::{
       args: list::[rex],
     },
 
+    // PartiQL bag ops
+    union::{
+      setq: set_quantifier,
+      lhs: rex,
+      rhs: rex,
+    },
+
+    intersect::{
+      setq: set_quantifier,
+      lhs: rex,
+      rhs: rex,
+    },
+
+    except::{
+      setq: set_quantifier,
+      lhs: rex,
+      rhs: rex,
+    },
+
     err::{
       message: string,
       causes: list::['.rex.op']
@@ -261,29 +286,24 @@ rel::{
       ],
     },
 
-    set::[
-      union::{
-        quantifier: quantifier,
-        lhs: rel,
-        rhs: rel,
-      },
+    // SQL set ops
+    union::{
+      setq: set_quantifier,
+      lhs: rel,
+      rhs: rel,
+    },
 
-      intersect::{
-        quantifier: quantifier,
-        lhs: rel,
-        rhs: rel,
-      },
+    intersect::{
+      setq: set_quantifier,
+      lhs: rel,
+      rhs: rel,
+    },
 
-      except::{
-        quantifier: quantifier,
-        lhs: rel,
-        rhs: rel,
-      },
-
-      _::[
-        quantifier::[ ALL, DISTINCT ],
-      ]
-    ],
+    except::{
+      setq: set_quantifier,
+      lhs: rel,
+      rhs: rel,
+    },
 
     limit::{
       input:  rel,
@@ -322,7 +342,7 @@ rel::{
       _: [
         call::{
           agg:  ref,
-          set_quantifier: [ ALL, DISTINCT ],
+          set_quantifier: set_quantifier,
           args: list::[rex],
         },
       ],

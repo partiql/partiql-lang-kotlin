@@ -31,6 +31,10 @@ import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprCollection
+import org.partiql.eval.internal.operator.rex.ExprExceptAll
+import org.partiql.eval.internal.operator.rex.ExprExceptDistinct
+import org.partiql.eval.internal.operator.rex.ExprIntersectAll
+import org.partiql.eval.internal.operator.rex.ExprIntersectDistinct
 import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
@@ -46,6 +50,8 @@ import org.partiql.eval.internal.operator.rex.ExprStructPermissive
 import org.partiql.eval.internal.operator.rex.ExprStructStrict
 import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
+import org.partiql.eval.internal.operator.rex.ExprUnionAll
+import org.partiql.eval.internal.operator.rex.ExprUnionDistinct
 import org.partiql.eval.internal.operator.rex.ExprVarLocal
 import org.partiql.eval.internal.operator.rex.ExprVarOuter
 import org.partiql.eval.value.Datum
@@ -55,13 +61,13 @@ import org.partiql.plan.PlanNode
 import org.partiql.plan.Ref
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
+import org.partiql.plan.SetQuantifier
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Agg
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
-import java.lang.IllegalStateException
 
 internal class Compiler(
     private val plan: PartiQLPlan,
@@ -186,8 +192,8 @@ internal class Compiler(
     override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: PType?): Operator.Aggregation {
         val args = node.args.map { visitRex(it, it.type).modeHandled() }
         val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setQuantifier) {
-            Rel.Op.Aggregate.Call.SetQuantifier.ALL -> Operator.Aggregation.SetQuantifier.ALL
-            Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT -> Operator.Aggregation.SetQuantifier.DISTINCT
+            SetQuantifier.ALL -> Operator.Aggregation.SetQuantifier.ALL
+            SetQuantifier.DISTINCT -> Operator.Aggregation.SetQuantifier.DISTINCT
         }
         val agg = symbols.getAgg(node.agg)
         return object : Operator.Aggregation {
@@ -269,6 +275,33 @@ internal class Compiler(
         return ExprMissing(ctx ?: PType.unknown()) // TODO: Pass a type
     }
 
+    override fun visitRexOpUnion(node: Rex.Op.Union, ctx: PType?): Operator {
+        val lhs = visitRex(node.lhs, ctx)
+        val rhs = visitRex(node.rhs, ctx)
+        return when (node.setq) {
+            SetQuantifier.ALL -> ExprUnionAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> ExprUnionDistinct(lhs, rhs)
+        }
+    }
+
+    override fun visitRexOpExcept(node: Rex.Op.Except, ctx: PType?): Operator {
+        val lhs = visitRex(node.lhs, ctx)
+        val rhs = visitRex(node.rhs, ctx)
+        return when (node.setq) {
+            SetQuantifier.ALL -> ExprExceptAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> ExprExceptDistinct(lhs, rhs)
+        }
+    }
+
+    override fun visitRexOpIntersect(node: Rex.Op.Intersect, ctx: PType?): Operator {
+        val lhs = visitRex(node.lhs, ctx)
+        val rhs = visitRex(node.rhs, ctx)
+        return when (node.setq) {
+            SetQuantifier.ALL -> ExprIntersectAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> ExprIntersectDistinct(lhs, rhs)
+        }
+    }
+
     // REL
     override fun visitRel(node: Rel, ctx: PType?): Operator.Relation {
         return super.visitRelOp(node.op, ctx) as Operator.Relation
@@ -304,30 +337,30 @@ internal class Compiler(
         }
     }
 
-    override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: PType?): Operator {
+    override fun visitRelOpExcept(node: Rel.Op.Except, ctx: PType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
-        return when (node.quantifier) {
-            Rel.Op.Set.Quantifier.ALL -> RelExceptAll(lhs, rhs)
-            Rel.Op.Set.Quantifier.DISTINCT -> RelExceptDistinct(lhs, rhs)
+        return when (node.setq) {
+            SetQuantifier.ALL -> RelExceptAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> RelExceptDistinct(lhs, rhs)
         }
     }
 
-    override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: PType?): Operator {
+    override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: PType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
-        return when (node.quantifier) {
-            Rel.Op.Set.Quantifier.ALL -> RelIntersectAll(lhs, rhs)
-            Rel.Op.Set.Quantifier.DISTINCT -> RelIntersectDistinct(lhs, rhs)
+        return when (node.setq) {
+            SetQuantifier.ALL -> RelIntersectAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> RelIntersectDistinct(lhs, rhs)
         }
     }
 
-    override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: PType?): Operator {
+    override fun visitRelOpUnion(node: Rel.Op.Union, ctx: PType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
-        return when (node.quantifier) {
-            Rel.Op.Set.Quantifier.ALL -> RelUnionAll(lhs, rhs)
-            Rel.Op.Set.Quantifier.DISTINCT -> RelUnionDistinct(lhs, rhs)
+        return when (node.setq) {
+            SetQuantifier.ALL -> RelUnionAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> RelUnionDistinct(lhs, rhs)
         }
     }
 

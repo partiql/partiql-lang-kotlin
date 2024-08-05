@@ -19,6 +19,7 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
+import org.partiql.ast.QueryExpr
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
@@ -284,10 +285,14 @@ internal object RexConverter {
 
         private fun isLiteralArray(node: Expr): Boolean = node is Expr.Collection && (node.type == Expr.Collection.Type.ARRAY || node.type == Expr.Collection.Type.LIST)
 
-        private fun isSqlSelect(node: Expr): Boolean = node is Expr.SFW &&
-            (
-                node.select is Select.Project || node.select is Select.Star
-                )
+        private fun isSqlSelect(node: Expr): Boolean {
+            return if (node is Expr.QuerySet) {
+                val body = node.body
+                body is QueryExpr.SFW && (body.select is Select.Project || body.select is Select.Star)
+            } else {
+                false
+            }
+        }
 
         override fun visitExprPath(node: Expr.Path, context: Env): Rex {
             // Args
@@ -947,40 +952,23 @@ internal object RexConverter {
             return rex(type, call)
         }
 
-        override fun visitExprSFW(node: Expr.SFW, context: Env): Rex = RelConverter.apply(node, context)
+        override fun visitExprQuerySet(node: Expr.QuerySet, context: Env): Rex = RelConverter.apply(node, context)
 
         override fun visitExprBagOp(node: Expr.BagOp, ctx: Env): Rex {
-            val lhs = Rel(
-                type = Rel.Type(listOf(Rel.Binding("_0", ANY)), props = emptySet()),
-                op = Rel.Op.Scan(visitExpr(node.lhs, ctx))
-            )
-            val rhs = Rel(
-                type = Rel.Type(listOf(Rel.Binding("_1", ANY)), props = emptySet()),
-                op = Rel.Op.Scan(visitExpr(node.rhs, ctx))
-            )
+            val lhs = visitExpr(node.lhs, ctx)
+            val rhs = visitExpr(node.rhs, ctx)
             val quantifier = when (node.type.setq) {
-                SetQuantifier.ALL -> Rel.Op.Set.Quantifier.ALL
-                null, SetQuantifier.DISTINCT -> Rel.Op.Set.Quantifier.DISTINCT
+                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
             }
-            val isOuter = node.outer == true
             val op = when (node.type.type) {
-                SetOp.Type.UNION -> Rel.Op.Set.Union(quantifier, lhs, rhs, isOuter)
-                SetOp.Type.EXCEPT -> Rel.Op.Set.Except(quantifier, lhs, rhs, isOuter)
-                SetOp.Type.INTERSECT -> Rel.Op.Set.Intersect(quantifier, lhs, rhs, isOuter)
+                SetOp.Type.UNION -> Rex.Op.Union(quantifier, lhs, rhs)
+                SetOp.Type.EXCEPT -> Rex.Op.Except(quantifier, lhs, rhs)
+                SetOp.Type.INTERSECT -> Rex.Op.Intersect(quantifier, lhs, rhs)
             }
-            val rel = Rel(
-                type = Rel.Type(listOf(Rel.Binding("_0", ANY)), props = emptySet()),
-                op = op
-            )
             return Rex(
                 type = ANY,
-                op = Rex.Op.Select(
-                    constructor = Rex(
-                        ANY,
-                        Rex.Op.Var.Unresolved(Identifier.delimited("_0"), Rex.Op.Var.Scope.LOCAL)
-                    ),
-                    rel = rel
-                )
+                op = op
             )
         }
 

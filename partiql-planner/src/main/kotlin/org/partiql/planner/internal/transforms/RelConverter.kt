@@ -23,6 +23,7 @@ import org.partiql.ast.From
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.OrderBy
+import org.partiql.ast.QueryExpr
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
@@ -87,20 +88,46 @@ internal object RelConverter {
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
-    internal fun apply(sfw: Expr.SFW, env: Env): Rex {
-        val normalizedSfw = NormalizeSelect.normalize(sfw)
-        val rel = normalizedSfw.accept(ToRel(env), nil)
-        val rex = when (val projection = normalizedSfw.select) {
-            // PIVOT ... FROM
-            is Select.Pivot -> {
-                val key = projection.key.toRex(env)
-                val value = projection.value.toRex(env)
-                val type = (STRUCT)
-                val op = rexOpPivot(key, value, rel)
-                rex(type, op)
+    internal fun apply(qSet: Expr.QuerySet, env: Env): Rex {
+        val newQSet = NormalizeSelect.normalize(qSet)
+        val rex = when (val body = newQSet.body) {
+            is QueryExpr.SFW -> {
+                val rel = newQSet.accept(ToRel(env), nil)
+                when (val projection = body.select) {
+                    // PIVOT ... FROM
+                    is Select.Pivot -> {
+                        val key = projection.key.toRex(env)
+                        val value = projection.value.toRex(env)
+                        val type = (STRUCT)
+                        val op = rexOpPivot(key, value, rel)
+                        rex(type, op)
+                    }
+                    // SELECT VALUE ... FROM
+                    is Select.Value -> {
+                        assert(rel.type.schema.size == 1) {
+                            "Expected SELECT VALUE's input to have a single binding. " +
+                                "However, it contained: ${rel.type.schema.map { it.name }}."
+                        }
+                        val constructor = rex(ANY, rexOpVarLocal(0, 0))
+                        val op = rexOpSelect(constructor, rel)
+                        val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
+                            true -> (LIST)
+                            else -> (BAG)
+                        }
+                        rex(type, op)
+                    }
+                    // SELECT * FROM
+                    is Select.Star -> {
+                        throw IllegalArgumentException("AST not normalized")
+                    }
+                    // SELECT ... FROM
+                    is Select.Project -> {
+                        throw IllegalArgumentException("AST not normalized")
+                    }
+                }
             }
-            // SELECT VALUE ... FROM
-            is Select.Value -> {
+            is QueryExpr.SetOp -> {
+                val rel = body.accept(ToRel(env), nil)
                 assert(rel.type.schema.size == 1) {
                     "Expected SELECT VALUE's input to have a single binding. " +
                         "However, it contained: ${rel.type.schema.map { it.name }}."
@@ -112,14 +139,6 @@ internal object RelConverter {
                     else -> (BAG)
                 }
                 rex(type, op)
-            }
-            // SELECT * FROM
-            is Select.Star -> {
-                throw IllegalArgumentException("AST not normalized")
-            }
-            // SELECT ... FROM
-            is Select.Project -> {
-                throw IllegalArgumentException("AST not normalized")
             }
         }
         return rex
@@ -140,34 +159,49 @@ internal object RelConverter {
          * Translate SFW AST node to a pipeline of [Rel] operators; skip any SELECT VALUE or PIVOT projection.
          */
 
-        override fun visitExprSFW(node: Expr.SFW, input: Rel): Rel {
-            var sel = node
-            var rel = visitFrom(sel.from, nil)
-            rel = convertWhere(rel, sel.where)
-            // kotlin does not have destructuring reassignment
-            val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy)
-            sel = _sel
-            rel = _rel
-            // Plan.create (possibly rewritten) sel node
-            rel = convertHaving(rel, sel.having)
-            rel = convertSetOp(rel, sel.setOp)
-            rel = convertOrderBy(rel, sel.orderBy)
-            // offset should precede limit
-            rel = convertOffset(rel, sel.offset)
-            rel = convertLimit(rel, sel.limit)
-            rel = convertExclude(rel, sel.exclude)
-            // append SQL projection if present
-            rel = when (val projection = sel.select) {
-                is Select.Value -> {
-                    val project = visitSelectValue(projection, rel)
-                    visitSetQuantifier(projection.setq, project)
+        override fun visitExprQuerySet(node: Expr.QuerySet, ctx: Rel): Rel {
+            val body = node.body
+            val orderBy = node.orderBy
+            val limit = node.limit
+            val offset = node.offset
+            when (body) {
+                is QueryExpr.SFW -> {
+                    var sel = body
+                    var rel = visitFrom(sel.from, nil)
+                    rel = convertWhere(rel, sel.where)
+                    // kotlin does not have destructuring reassignment
+                    val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy)
+                    sel = _sel
+                    rel = _rel
+                    // Plan.create (possibly rewritten) sel node
+                    rel = convertHaving(rel, sel.having)
+                    rel = convertOrderBy(rel, orderBy)
+                    // offset should precede limit
+                    rel = convertOffset(rel, offset)
+                    rel = convertLimit(rel, limit)
+                    rel = convertExclude(rel, sel.exclude)
+                    // append SQL projection if present
+                    rel = when (val projection = sel.select) {
+                        is Select.Value -> {
+                            val project = visitSelectValue(projection, rel)
+                            visitSetQuantifier(projection.setq, project)
+                        }
+                        is Select.Star, is Select.Project -> {
+                            error("AST not normalized, found ${projection.javaClass.simpleName}")
+                        }
+                        is Select.Pivot -> rel // Skip PIVOT
+                    }
+                    return rel
                 }
-                is Select.Star, is Select.Project -> {
-                    error("AST not normalized, found ${projection.javaClass.simpleName}")
+                is QueryExpr.SetOp -> {
+                    var rel = convertSetOp(body)
+                    rel = convertOrderBy(rel, orderBy)
+                    // offset should precede limit
+                    rel = convertOffset(rel, offset)
+                    rel = convertLimit(rel, limit)
+                    return rel
                 }
-                is Select.Pivot -> rel // Skip PIVOT
             }
-            return rel
         }
 
         /**
@@ -342,7 +376,7 @@ internal object RelConverter {
          *         2. Rel which has the appropriate Rex.Agg calls and groups
          */
         @OptIn(PartiQLValueExperimental::class)
-        private fun convertAgg(input: Rel, select: Expr.SFW, groupBy: GroupBy?): Pair<Expr.SFW, Rel> {
+        private fun convertAgg(input: Rel, select: QueryExpr.SFW, groupBy: GroupBy?): Pair<QueryExpr.SFW, Rel> {
             // Rewrite and extract all aggregations in the SELECT clause
             val (sel, aggregations) = AggregationTransform.apply(select)
 
@@ -373,14 +407,14 @@ internal object RelConverter {
                 if (name == "count" && expr.args.isEmpty()) {
                     relOpAggregateCallUnresolved(
                         name,
-                        Rel.Op.Aggregate.SetQuantifier.ALL,
+                        org.partiql.planner.internal.ir.SetQuantifier.ALL,
                         args = listOf(exprLit(int32Value(1)).toRex(env))
                     )
                 } else {
                     val setq = when (expr.setq) {
-                        null -> Rel.Op.Aggregate.SetQuantifier.ALL
-                        SetQuantifier.ALL -> Rel.Op.Aggregate.SetQuantifier.ALL
-                        SetQuantifier.DISTINCT -> Rel.Op.Aggregate.SetQuantifier.DISTINCT
+                        null -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                        SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                        SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
                     }
                     relOpAggregateCallUnresolved(name, setq, args)
                 }
@@ -398,7 +432,7 @@ internal object RelConverter {
                         )
                     }
                     val arg = listOf(rex(ANY, rexOpStruct(fields)))
-                    calls.add(relOpAggregateCallUnresolved("group_as", Rel.Op.Aggregate.SetQuantifier.ALL, arg))
+                    calls.add(relOpAggregateCallUnresolved("group_as", org.partiql.planner.internal.ir.SetQuantifier.ALL, arg))
                 }
             }
             var groups = emptyList<Rex>()
@@ -444,21 +478,18 @@ internal object RelConverter {
         /**
          * Append SQL set operator if present
          */
-        private fun convertSetOp(input: Rel, setOp: Expr.SFW.SetOp?): Rel {
-            if (setOp == null) {
-                return input
+        private fun convertSetOp(setExpr: QueryExpr.SetOp): Rel {
+            val lhs = visit(setExpr.lhs, nil)
+            val rhs = visit(setExpr.rhs, nil)
+            val type = nil.type
+            val quantifier = when (setExpr.type.setq) {
+                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
             }
-            val type = input.type.copy(props = emptySet())
-            val lhs = input
-            val rhs = visitExprSFW(setOp.operand, nil)
-            val quantifier = when (setOp.type.setq) {
-                SetQuantifier.ALL -> Rel.Op.Set.Quantifier.ALL
-                null, SetQuantifier.DISTINCT -> Rel.Op.Set.Quantifier.DISTINCT
-            }
-            val op = when (setOp.type.type) {
-                SetOp.Type.UNION -> Rel.Op.Set.Union(quantifier, lhs, rhs, false)
-                SetOp.Type.EXCEPT -> Rel.Op.Set.Except(quantifier, lhs, rhs, false)
-                SetOp.Type.INTERSECT -> Rel.Op.Set.Intersect(quantifier, lhs, rhs, false)
+            val op = when (setExpr.type.type) {
+                SetOp.Type.UNION -> Rel.Op.Union(quantifier, lhs, rhs)
+                SetOp.Type.EXCEPT -> Rel.Op.Except(quantifier, lhs, rhs)
+                SetOp.Type.INTERSECT -> Rel.Op.Intersect(quantifier, lhs, rhs)
             }
             return rel(type, op)
         }
@@ -602,11 +633,11 @@ internal object RelConverter {
             val keys: List<GroupBy.Key>
         )
 
-        fun apply(node: Expr.SFW): Pair<Expr.SFW, List<Expr.Call>> {
+        fun apply(node: QueryExpr.SFW): Pair<QueryExpr.SFW, List<Expr.Call>> {
             val aggs = mutableListOf<Expr.Call>()
             val keys = node.groupBy?.keys ?: emptyList()
             val context = Context(aggs, keys)
-            val select = super.visitExprSFW(node, context) as Expr.SFW
+            val select = super.visitQueryExprSFW(node, context) as QueryExpr.SFW
             return Pair(select, aggs)
         }
 
@@ -619,7 +650,7 @@ internal object RelConverter {
         }
 
         // only rewrite top-level SFW
-        override fun visitExprSFW(node: Expr.SFW, ctx: Context): AstNode = node
+        override fun visitQueryExprSFW(node: QueryExpr.SFW, ctx: Context): AstNode = node
 
         override fun visitExprCall(node: Expr.Call, ctx: Context) = ast {
             // TODO replace w/ proper function resolution to determine whether a function call is a scalar or aggregate.
