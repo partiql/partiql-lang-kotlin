@@ -6,26 +6,14 @@ package org.partiql.planner.catalog
 public interface Catalogs {
 
     /**
-     * Returns the default catalog. Required.
-     */
-    public fun default(): Catalog
-
-    /**
      * Returns a catalog by name (single identifier).
      */
-    public fun get(name: String, ignoreCase: Boolean = false): Catalog? {
-        val default = default()
-        return if (name.equals(default.getName(), ignoreCase)) {
-            default
-        } else {
-            null
-        }
-    }
+    public fun getCatalog(name: String, ignoreCase: Boolean = false): Catalog?
 
     /**
      * Returns a list of all available catalogs.
      */
-    public fun list(): Collection<Catalog> = listOf(default())
+    public fun listCatalogs(): Collection<Catalog> = listOf()
 
     /**
      * Factory methods and builder.
@@ -37,9 +25,6 @@ public interface Catalogs {
 
         @JvmStatic
         public fun of(catalogs: Collection<Catalog>): Catalogs {
-            if (catalogs.isEmpty()) {
-                error("Cannot create `Catalogs` with empty catalogs list.")
-            }
             return builder().apply { catalogs.forEach { add(it) } }.build()
         }
 
@@ -52,40 +37,24 @@ public interface Catalogs {
      */
     public class Builder {
 
-        private var default: Catalog? = null
         private val catalogs = mutableMapOf<String, Catalog>()
-
-        /**
-         * Sets the default catalog.
-         */
-        public fun default(default: Catalog): Builder = this.apply {
-            this.default = default
-            catalogs[default.getName()] = default
-        }
 
         /**
          * Adds this catalog, overwriting any existing one with the same name.
          */
         public fun add(catalog: Catalog): Builder = this.apply {
-            if (default == null) {
-                this.default = catalog
-            }
             catalogs[catalog.getName()] = catalog
         }
 
         public fun build(): Catalogs {
 
-            val default = default ?: error("Default catalog is required")
-
             return object : Catalogs {
 
-                override fun default(): Catalog = default
-
-                override fun get(name: String, ignoreCase: Boolean): Catalog? {
+                override fun getCatalog(name: String, ignoreCase: Boolean): Catalog? {
+                    // search
                     if (ignoreCase) {
-                        // search
                         var match: Catalog? = null
-                        for (catalog in list()) {
+                        for (catalog in catalogs.values) {
                             if (catalog.getName().equals(name, ignoreCase = true)) {
                                 if (match != null) {
                                     // TODO exceptions for ambiguous catalog name lookup
@@ -101,7 +70,7 @@ public interface Catalogs {
                     return catalogs[name]
                 }
 
-                override fun list(): Collection<Catalog> = catalogs.values
+                override fun listCatalogs(): Collection<Catalog> = catalogs.values
             }
         }
     }

@@ -7,23 +7,18 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.plugins.memory.MemoryObject
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorSession
+import org.partiql.plugins.memory.MemoryTable
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
-import org.partiql.value.PartiQLValueExperimental
 import java.util.stream.Stream
 
 abstract class PartiQLTyperTestBase {
@@ -45,22 +40,17 @@ abstract class PartiQLTyperTestBase {
         public val parser = PartiQLParser.default()
         public val planner = PartiQLPlanner.standard()
 
-        internal val session: ((String, ConnectorMetadata) -> Session) = { catalog, metadata ->
+        internal val session: ((String, Catalog) -> Session) = { catalog, metadata ->
             Session.builder()
                 .catalog(catalog)
-                .catalogs(catalog to metadata)
+                .catalogs(metadata)
                 .build()
-        }
-
-        internal val connectorSession = object : ConnectorSession {
-            override fun getQueryId(): String = "test"
-            override fun getUserId(): String = "test"
         }
     }
 
     val inputs = PartiQLTestProvider().apply { load() }
 
-    val testingPipeline: ((String, String, ConnectorMetadata, ProblemCallback) -> PartiQLPlanner.Result) = { query, catalog, metadata, collector ->
+    val testingPipeline: ((String, String, Catalog, ProblemCallback) -> PartiQLPlanner.Result) = { query, catalog, metadata, collector ->
         val ast = parser.parse(query).root
         planner.plan(ast, session(catalog, metadata), collector)
     }
@@ -68,18 +58,16 @@ abstract class PartiQLTyperTestBase {
     /**
      * Build a ConnectorMetadata instance from the list of types.
      */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun buildMetadata(catalog: String, types: List<StaticType>): ConnectorMetadata {
-        val cat = MemoryCatalog.builder().name(catalog).build()
-        val connector = MemoryConnector(cat)
-
+    private fun buildMetadata(catalog: String, types: List<StaticType>): Catalog {
+        val connector = MemoryConnector.builder().name(catalog)
         // define all bindings
         types.forEachIndexed { i, t ->
-            val binding = BindingPath(listOf(BindingName("t${i + 1}", BindingCase.SENSITIVE)))
-            val obj = MemoryObject(t)
-            cat.insert(binding, obj)
+            val name = Name.of("t${i + 1}")
+            val schema = PType.fromStaticType(t)
+            val table = MemoryTable.empty(name, schema)
+            connector.define(table)
         }
-        return connector.getMetadata(connectorSession)
+        return connector.build().getCatalog()
     }
 
     fun testGen(

@@ -21,9 +21,7 @@ import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.catalog.Session
-import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.spi.connector.ConnectorSession
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -33,11 +31,7 @@ class SubsumptionTest {
 
         private val planner = PartiQLPlanner.standard()
         private val parser = PartiQLParser.default()
-        private val session = object : ConnectorSession {
-            override fun getQueryId(): String = "query-id"
-            override fun getUserId(): String = "user-id"
-        }
-        private val connector = MemoryConnector(MemoryCatalog("default"))
+        private val catalog = MemoryConnector.builder().name("default").build().getCatalog()
     }
 
     private fun getExcludeClause(statement: Statement): Rel.Op.Exclude {
@@ -51,9 +45,7 @@ class SubsumptionTest {
         val statement = parser.parse(text).root
         val session = Session.builder()
             .catalog("default")
-            .catalogs(
-                "default" to connector.getMetadata(session),
-            )
+            .catalogs(catalog)
             .build()
         val plan = planner.plan(statement, session).plan
         val excludeClause = getExcludeClause(plan.statement).paths

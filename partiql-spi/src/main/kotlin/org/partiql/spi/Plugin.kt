@@ -22,7 +22,7 @@ import org.partiql.spi.connector.Connector
 public interface Plugin {
 
     /**
-     * A [Connector.Factory] is used to instantiate a connector.
+     * A [Connector.Factory] is used to instantiate a catalog.
      */
     public val factory: Connector.Factory
 }

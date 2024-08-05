@@ -19,8 +19,11 @@ import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
@@ -29,14 +32,6 @@ import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.plugins.memory.MemoryObject
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.PType
@@ -49,7 +44,6 @@ import org.partiql.types.StaticType.Companion.STRUCT
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import org.partiql.value.PartiQLValueExperimental
 import java.util.stream.Stream
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
@@ -146,11 +140,6 @@ internal class PlanTyperTestsPorted {
             }
         }
 
-        val session = object : ConnectorSession {
-            override fun getQueryId(): String = "query-id"
-            override fun getUserId(): String = "user-id"
-        }
-
         private fun id(vararg parts: Identifier.Symbol): Identifier {
             return when (parts.size) {
                 0 -> error("Identifier requires more than one part.")
@@ -168,10 +157,10 @@ internal class PlanTyperTestsPorted {
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
          */
-        @OptIn(PartiQLValueExperimental::class)
-        val catalogs: List<Pair<String, ConnectorMetadata>> by lazy {
+        private val catalogs: List<Catalog> by lazy {
+            // Make a map from catalog name to tables.
             val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
-            val map = mutableMapOf<String, MutableList<Pair<BindingPath, StaticType>>>()
+            val map = mutableMapOf<String, MutableList<Pair<Name, PType>>>()
             inputStream.reader().readLines().forEach { path ->
                 if (path.startsWith("catalogs/default")) {
                     val schema = this::class.java.getResourceAsStream("/$path")!!
@@ -179,26 +168,26 @@ internal class PlanTyperTestsPorted {
                     val staticType = ion.toStaticType()
                     val steps = path.substring(0, path.length - 4).split('/').drop(2) // drop the catalogs/default
                     val catalogName = steps.first()
-                    val bindingSteps = steps
-                        .drop(1)
-                        .map { BindingName(it, BindingCase.INSENSITIVE) }
-                    val bindingPath = BindingPath(bindingSteps)
+                    // args
+                    val name = Name.of(steps.drop(1))
+                    val ptype = PType.fromStaticType(staticType)
                     if (map.containsKey(catalogName)) {
-                        map[catalogName]!!.add(bindingPath to staticType)
+                        map[catalogName]!!.add(name to ptype)
                     } else {
-                        map[catalogName] = mutableListOf(bindingPath to staticType)
+                        map[catalogName] = mutableListOf(name to ptype)
                     }
                 }
             }
-            map.entries.map { (catalogName, bindings) ->
-                val catalog = MemoryCatalog.builder().name(catalogName).build()
-                val connector = MemoryConnector(catalog)
-                for (binding in bindings) {
-                    val path = binding.first
-                    val obj = MemoryObject(binding.second)
-                    catalog.insert(path, obj)
-                }
-                catalogName to connector.getMetadata(session)
+            // Make a catalogs list
+            map.map { (catalog, tables) ->
+                TestCatalog.builder()
+                    .name(catalog)
+                    .apply {
+                        for ((name, schema) in tables) {
+                            createTable(name, schema)
+                        }
+                    }
+                    .build()
             }
         }
 
@@ -286,14 +275,6 @@ internal class PlanTyperTestsPorted {
                     TupleConstraint.Ordered
                 )
             )
-
-        private fun insensitiveId(symbol: String) = BindingPath(listOf(BindingName(symbol, BindingCase.INSENSITIVE)))
-
-        private fun sensitiveId(symbol: String) = BindingPath(listOf(BindingName(symbol, BindingCase.SENSITIVE)))
-
-        private fun idQualified(vararg symbol: Pair<String, BindingCase>) = symbol.map {
-            BindingName(it.first, it.second)
-        }.let { BindingPath(it) }
 
         //
         // Parameterized Test Source
