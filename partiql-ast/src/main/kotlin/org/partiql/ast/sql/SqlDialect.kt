@@ -9,6 +9,7 @@ import org.partiql.ast.Identifier
 import org.partiql.ast.Let
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Path
+import org.partiql.ast.QueryExpr
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
@@ -57,10 +58,10 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
      * @param head
      */
     public open fun visitExprWrapped(node: Expr, head: SqlBlock): SqlBlock = when (node) {
-        is Expr.SFW -> {
+        is Expr.QuerySet -> {
             var h = head
             h = h concat "("
-            h = visitExprSFW(node, h)
+            h = visitExpr(node, h)
             h = h concat ")"
             h
         }
@@ -554,11 +555,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExprBagOp(node: Expr.BagOp, head: SqlBlock): SqlBlock {
         // [OUTER] [UNION|INTERSECT|EXCEPT] [ALL|DISTINCT]
-        val op = mutableListOf<String>()
-        when (node.outer) {
-            true -> op.add("OUTER")
-            else -> {}
-        }
+        val op = mutableListOf("OUTER")
         when (node.type.type) {
             SetOp.Type.UNION -> op.add("UNION")
             SetOp.Type.INTERSECT -> op.add("INTERSECT")
@@ -576,9 +573,22 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         return h
     }
 
+    override fun visitExprQuerySet(node: Expr.QuerySet, head: SqlBlock): SqlBlock {
+        var h = head
+        // visit body (SFW or other SQL set op)
+        h = visit(node.body, h)
+        // ORDER BY
+        h = if (node.orderBy != null) visitOrderBy(node.orderBy, h concat r(" ")) else h
+        // LIMIT
+        h = if (node.limit != null) visitExprWrapped(node.limit, h concat r(" LIMIT ")) else h
+        // OFFSET
+        h = if (node.offset != null) visitExprWrapped(node.offset, h concat r(" OFFSET ")) else h
+        return h
+    }
+
     // SELECT-FROM-WHERE
 
-    override fun visitExprSFW(node: Expr.SFW, head: SqlBlock): SqlBlock {
+    override fun visitQueryExprSFW(node: QueryExpr.SFW, head: SqlBlock): SqlBlock {
         var h = head
         // SELECT
         h = visit(node.select, h)
@@ -594,14 +604,25 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = if (node.groupBy != null) visitGroupBy(node.groupBy, h concat r(" ")) else h
         // HAVING
         h = if (node.having != null) visitExprWrapped(node.having, h concat r(" HAVING ")) else h
-        // SET OP
-        h = if (node.setOp != null) visitExprSFWSetOp(node.setOp, h concat r(" ")) else h
-        // ORDER BY
-        h = if (node.orderBy != null) visitOrderBy(node.orderBy, h concat r(" ")) else h
-        // LIMIT
-        h = if (node.limit != null) visitExprWrapped(node.limit, h concat r(" LIMIT ")) else h
-        // OFFSET
-        h = if (node.offset != null) visitExprWrapped(node.offset, h concat r(" OFFSET ")) else h
+        return h
+    }
+
+    override fun visitQueryExprSetOp(node: QueryExpr.SetOp, head: SqlBlock): SqlBlock {
+        val op = mutableListOf<String>()
+        when (node.type.type) {
+            SetOp.Type.UNION -> op.add("UNION")
+            SetOp.Type.INTERSECT -> op.add("INTERSECT")
+            SetOp.Type.EXCEPT -> op.add("EXCEPT")
+        }
+        when (node.type.setq) {
+            SetQuantifier.ALL -> op.add("ALL")
+            SetQuantifier.DISTINCT -> op.add("DISTINCT")
+            null -> {}
+        }
+        var h = head
+        h = visitExprWrapped(node.lhs, h)
+        h = h concat r(" ${op.joinToString(" ")} ")
+        h = visitExprWrapped(node.rhs, h)
         return h
     }
 
@@ -734,17 +755,6 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             else -> "${node.type.name} ${node.setq.name}"
         }
         return head concat r(op)
-    }
-
-    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitSetOp(node.type, h)
-        h = h concat r(" ")
-        h = h concat r("(")
-        val subquery = visitExprSFW(node.operand, SqlBlock.Nil)
-        h = h concat SqlBlock.Nest(subquery)
-        h = h concat r(")")
-        return h
     }
 
     // ORDER BY

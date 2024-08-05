@@ -11,6 +11,7 @@ import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.value.PartiQLValueExperimental
@@ -245,6 +246,24 @@ internal class PlanTransform(
             override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Unit) =
                 org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
 
+            override fun visitRexOpExcept(node: Rex.Op.Except, ctx: Unit) = org.partiql.plan.Rex.Op.Except(
+                lhs = visitRex(node.lhs, ctx),
+                rhs = visitRex(node.rhs, ctx),
+                setq = visitSetQuantifier(node.setq)
+            )
+
+            override fun visitRexOpIntersect(node: Rex.Op.Intersect, ctx: Unit) = org.partiql.plan.Rex.Op.Intersect(
+                lhs = visitRex(node.lhs, ctx),
+                rhs = visitRex(node.rhs, ctx),
+                setq = visitSetQuantifier(node.setq)
+            )
+
+            override fun visitRexOpUnion(node: Rex.Op.Union, ctx: Unit) = org.partiql.plan.Rex.Op.Union(
+                lhs = visitRex(node.lhs, ctx),
+                rhs = visitRex(node.rhs, ctx),
+                setq = visitSetQuantifier(node.setq)
+            )
+
             override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): PlanNode {
                 // track the error in call back
                 val trace = node.causes.map { visitRexOp(it, ctx) }
@@ -325,27 +344,27 @@ internal class PlanTransform(
                 }
             )
 
-            override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Except(
+            override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Unit) = org.partiql.plan.Rel.Op.Except(
                 lhs = visitRel(node.lhs, ctx),
                 rhs = visitRel(node.rhs, ctx),
-                quantifier = visitRelOpSetQuantifier(node.quantifier)
+                setq = visitSetQuantifier(node.setq)
             )
 
-            override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Intersect(
+            override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: Unit) = org.partiql.plan.Rel.Op.Intersect(
                 lhs = visitRel(node.lhs, ctx),
                 rhs = visitRel(node.rhs, ctx),
-                quantifier = visitRelOpSetQuantifier(node.quantifier)
+                setq = visitSetQuantifier(node.setq)
             )
 
-            override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Union(
+            override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Unit) = org.partiql.plan.Rel.Op.Union(
                 lhs = visitRel(node.lhs, ctx),
                 rhs = visitRel(node.rhs, ctx),
-                quantifier = visitRelOpSetQuantifier(node.quantifier)
+                setq = visitSetQuantifier(node.setq)
             )
 
-            private fun visitRelOpSetQuantifier(node: Rel.Op.Set.Quantifier) = when (node) {
-                Rel.Op.Set.Quantifier.ALL -> org.partiql.plan.Rel.Op.Set.Quantifier.ALL
-                Rel.Op.Set.Quantifier.DISTINCT -> org.partiql.plan.Rel.Op.Set.Quantifier.DISTINCT
+            private fun visitSetQuantifier(node: SetQuantifier) = when (node) {
+                SetQuantifier.ALL -> org.partiql.plan.SetQuantifier.ALL
+                SetQuantifier.DISTINCT -> org.partiql.plan.SetQuantifier.DISTINCT
             }
 
             override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Unit) = org.partiql.plan.Rel.Op.Limit(
@@ -395,10 +414,7 @@ internal class PlanTransform(
             override fun visitRelOpAggregateCallResolved(node: Rel.Op.Aggregate.Call.Resolved, ctx: Unit): PlanNode {
                 val agg = visitRef(node.agg, ctx)
                 val args = node.args.map { visitRex(it, ctx) }
-                val setQuantifier = when (node.setQuantifier) {
-                    Rel.Op.Aggregate.SetQuantifier.ALL -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.ALL
-                    Rel.Op.Aggregate.SetQuantifier.DISTINCT -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT
-                }
+                val setQuantifier = visitSetQuantifier(node.setQuantifier)
                 return org.partiql.plan.relOpAggregateCall(agg, setQuantifier, args)
             }
 

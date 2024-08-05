@@ -89,7 +89,7 @@ import org.partiql.ast.exprPathStepSymbol
 import org.partiql.ast.exprPathStepUnpivot
 import org.partiql.ast.exprPathStepWildcard
 import org.partiql.ast.exprPosition
-import org.partiql.ast.exprSFW
+import org.partiql.ast.exprQuerySet
 import org.partiql.ast.exprSessionAttribute
 import org.partiql.ast.exprStruct
 import org.partiql.ast.exprStructField
@@ -133,6 +133,8 @@ import org.partiql.ast.orderBy
 import org.partiql.ast.path
 import org.partiql.ast.pathStepIndex
 import org.partiql.ast.pathStepSymbol
+import org.partiql.ast.queryExprSFW
+import org.partiql.ast.queryExprSetOp
 import org.partiql.ast.returning
 import org.partiql.ast.returningColumn
 import org.partiql.ast.returningColumnValueExpression
@@ -934,12 +936,17 @@ internal class PartiQLParserDefault : PartiQLParser {
             val where = visitOrNull<Expr>(ctx.where)
             val groupBy = ctx.group?.let { visitGroupClause(it) }
             val having = visitOrNull<Expr>(ctx.having?.arg)
-            // TODO Add SQL UNION, INTERSECT, EXCEPT to PartiQL.g4
-            val setOp: Expr.SFW.SetOp? = null
             val orderBy = ctx.order?.let { visitOrderByClause(it) }
             val limit = visitOrNull<Expr>(ctx.limit?.arg)
             val offset = visitOrNull<Expr>(ctx.offset?.arg)
-            exprSFW(select, exclude, from, let, where, groupBy, having, setOp, orderBy, limit, offset)
+            exprQuerySet(
+                body = queryExprSFW(
+                    select, exclude, from, let, where, groupBy, having
+                ),
+                orderBy = orderBy,
+                limit = limit,
+                offset = offset
+            )
         }
 
         /**
@@ -1121,44 +1128,42 @@ internal class PartiQLParserDefault : PartiQLParser {
          * BAG OPERATIONS
          *
          */
-
-        override fun visitIntersect(ctx: GeneratedParser.IntersectContext) = translate(ctx) {
+        override fun visitBagOp(ctx: GeneratedParser.BagOpContext) = translate(ctx) {
             val setq = when {
                 ctx.ALL() != null -> SetQuantifier.ALL
                 ctx.DISTINCT() != null -> SetQuantifier.DISTINCT
                 else -> null
             }
-            val op = setOp(SetOp.Type.INTERSECT, setq)
-            val lhs = visitAs<Expr>(ctx.lhs)
-            val rhs = visitAs<Expr>(ctx.rhs)
-            val outer = ctx.OUTER() != null
-            exprBagOp(op, lhs, rhs, outer)
-        }
-
-        override fun visitExcept(ctx: GeneratedParser.ExceptContext) = translate(ctx) {
-            val setq = when {
-                ctx.ALL() != null -> SetQuantifier.ALL
-                ctx.DISTINCT() != null -> SetQuantifier.DISTINCT
-                else -> null
+            val op = when (ctx.op.type) {
+                GeneratedParser.UNION -> setOp(SetOp.Type.UNION, setq)
+                GeneratedParser.INTERSECT -> setOp(SetOp.Type.INTERSECT, setq)
+                GeneratedParser.EXCEPT -> setOp(SetOp.Type.EXCEPT, setq)
+                else -> error("Unsupported bag op token ${ctx.op}")
             }
-            val op = setOp(SetOp.Type.EXCEPT, setq)
             val lhs = visitAs<Expr>(ctx.lhs)
             val rhs = visitAs<Expr>(ctx.rhs)
             val outer = ctx.OUTER() != null
-            exprBagOp(op, lhs, rhs, outer)
-        }
-
-        override fun visitUnion(ctx: GeneratedParser.UnionContext) = translate(ctx) {
-            val setq = when {
-                ctx.ALL() != null -> SetQuantifier.ALL
-                ctx.DISTINCT() != null -> SetQuantifier.DISTINCT
-                else -> null
+            if (!outer && lhs is Expr.QuerySet && rhs is Expr.QuerySet) {
+                val orderBy = ctx.order?.let { visitOrderByClause(it) }
+                val limit = ctx.limit?.let { visitAs<Expr>(it) }
+                val offset = ctx.offset?.let { visitAs<Expr>(it) }
+                exprQuerySet(
+                    body = queryExprSetOp(
+                        type = op,
+                        lhs = lhs,
+                        rhs = rhs
+                    ),
+                    orderBy = orderBy,
+                    limit = limit,
+                    offset = offset,
+                )
+            } else {
+                exprBagOp(
+                    type = op,
+                    lhs = lhs,
+                    rhs = rhs
+                )
             }
-            val op = setOp(SetOp.Type.UNION, setq)
-            val lhs = visitAs<Expr>(ctx.lhs)
-            val rhs = visitAs<Expr>(ctx.rhs)
-            val outer = ctx.OUTER() != null
-            exprBagOp(op, lhs, rhs, outer)
         }
 
         /**
@@ -1559,7 +1564,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val lhs = visitAs<Expr>(ctx.lhs)
             val rhs = visitAs<Expr>(ctx.rhs ?: ctx.expr()).let {
                 // Wrap rhs in an array unless it's a query or already a collection
-                if (it is Expr.SFW || it is Expr.Collection || ctx.PAREN_LEFT() == null) {
+                if (it is Expr.QuerySet || it is Expr.Collection || ctx.PAREN_LEFT() == null) {
                     it
                 } else {
                     // IN ( expr )
