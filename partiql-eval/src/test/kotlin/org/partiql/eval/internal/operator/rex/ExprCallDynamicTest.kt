@@ -27,7 +27,7 @@ class ExprCallDynamicTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun sanityTests(tc: DynamicTestCase) = tc.assert()
 
-    public class DynamicTestCase @OptIn(PartiQLValueExperimental::class) constructor(
+    public class DynamicTestCase(
         val lhs: Datum,
         val rhs: Datum,
         val expectedIndex: Int,
@@ -37,7 +37,7 @@ class ExprCallDynamicTest {
         fun assert() {
             val expr = ExprCallDynamic(
                 name = "example_function",
-                candidates = candidates,
+                candidateFns = candidates,
                 args = arrayOf(ExprLiteral(lhs), ExprLiteral(rhs)),
             )
             val result = expr.eval(Environment.empty).check(PartiQLValueType.INT32)
@@ -64,22 +64,19 @@ class ExprCallDynamicTest {
             )
 
             @OptIn(PartiQLValueExperimental::class)
-            internal val candidates = params.mapIndexed { index, it ->
-                ExprCallDynamic.Candidate(
-                    fn = object : Fn {
-                        override val signature: FnSignature = FnSignature(
-                            name = "example_function",
-                            returns = PartiQLValueType.INT32,
-                            parameters = listOf(
-                                FnParameter("first", type = it.first),
-                                FnParameter("second", type = it.second),
-                            )
+            internal val candidates: Array<Fn> = params.mapIndexed { index, it ->
+                object : Fn {
+                    override val signature: FnSignature = FnSignature(
+                        name = "example_function",
+                        returns = PartiQLValueType.INT32,
+                        parameters = listOf(
+                            FnParameter("first", type = it.first),
+                            FnParameter("second", type = it.second),
                         )
+                    )
 
-                        override fun invoke(args: Array<PartiQLValue>): PartiQLValue = int32Value(index).toPartiQLValue()
-                    },
-                    coercions = arrayOf(null, null)
-                )
+                    override fun invoke(args: Array<PartiQLValue>): PartiQLValue = int32Value(index).toPartiQLValue()
+                }
             }.toTypedArray()
         }
     }

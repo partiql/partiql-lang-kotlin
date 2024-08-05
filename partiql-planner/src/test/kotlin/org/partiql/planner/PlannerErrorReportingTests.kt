@@ -278,13 +278,13 @@ internal class PlannerErrorReportingTests {
                 "1 + not_a_function(1)",
                 false,
                 assertOnProblemCount(0, 1),
-                StaticType.INT4,
+                StaticType.ANY,
             ),
             TestCase(
                 "1 + not_a_function(1)",
                 true,
                 assertOnProblemCount(0, 1),
-                StaticType.INT4,
+                StaticType.ANY,
             ),
 
             TestCase(

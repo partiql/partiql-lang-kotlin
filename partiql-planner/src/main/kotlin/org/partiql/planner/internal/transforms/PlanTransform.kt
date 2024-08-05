@@ -138,11 +138,27 @@ internal class PlanTransform(
         override fun visitRexOpPath(node: Rex.Op.Path, ctx: Unit) =
             super.visitRexOpPath(node, ctx) as org.partiql.plan.Rex.Op.Path
 
-        override fun visitRexOpCast(node: Rex.Op.Cast, ctx: Unit) =
-            super.visitRexOpCast(node, ctx) as org.partiql.plan.Rex.Op.Cast
-
+        /**
+         * See PartiQL Specification [Section 4.1.1](https://partiql.org/partiql-lang/#sec:schema-in-tuple-path).
+         * While it talks about pathing into a tuple, it provides guidance on expressions that always return missing:
+         *
+         * > In a more important and common case, an PartiQL implementation can utilize the input data schema to prove
+         * > that a path expression always returns MISSING and thus throw a compile-time error.
+         *
+         * This is accomplished via the signaling mode below.
+         */
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: Unit): PlanNode {
-            error("Unresolved cast $node")
+            val problem = ProblemGenerator.undefinedCast(node.arg.type, node.target)
+            return when (signalMode) {
+                true -> {
+                    onProblem.invoke(problem)
+                    rexOpErr(problem.toString(), emptyList())
+                }
+                false -> {
+                    onProblem.invoke(ProblemGenerator.asWarning(problem))
+                    org.partiql.plan.rexOpMissing(problem.toString(), emptyList())
+                }
+            }
         }
 
         override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: Unit): PlanNode {

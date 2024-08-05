@@ -538,6 +538,16 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
+    static Datum tinyInt(byte value) {
+        return new DatumByte(value, PType.typeTinyInt());
+    }
+
+    @NotNull
+    static Datum smallInt(short value) {
+        return new DatumShort(value);
+    }
+
+    @NotNull
     static Datum int64Value(long value) {
         return new DatumLong(value);
     }
@@ -545,6 +555,33 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum int32Value(int value) {
         return new DatumInt(value);
+    }
+
+    @Deprecated
+    @NotNull
+    static Datum intArbitrary(@NotNull BigInteger value) {
+        return new DatumBigInteger(value);
+    }
+
+    @NotNull
+    static Datum real(float value) {
+        return new DatumFloat(value);
+    }
+
+    @NotNull
+    static Datum doublePrecision(double value) {
+        return new DatumDouble(value);
+    }
+
+    @Deprecated
+    @NotNull
+    static Datum decimalArbitrary(@NotNull BigDecimal value) {
+        return new DatumDecimal(value, PType.typeDecimalArbitrary());
+    }
+
+    @NotNull
+    static Datum decimal(@NotNull BigDecimal value, int precision, int scale) {
+        return new DatumDecimal(value, PType.typeDecimal(precision, scale));
     }
 
     @NotNull

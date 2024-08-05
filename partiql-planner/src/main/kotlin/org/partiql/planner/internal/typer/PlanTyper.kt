@@ -769,7 +769,7 @@ internal class PlanTyper(private val env: Env) {
 
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: CompilerType?): Rex {
             val arg = visitRex(node.arg, null)
-            val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.errorRex(
+            val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.missingRex(
                 node.copy(node.target, arg),
                 ProblemGenerator.undefinedFunction(listOf(arg.type), "CAST(<arg> AS ${node.target})")
             )

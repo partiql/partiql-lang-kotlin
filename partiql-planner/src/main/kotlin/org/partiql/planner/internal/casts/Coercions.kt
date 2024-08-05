@@ -101,19 +101,10 @@ internal object Coercions {
      */
     private fun areAssignableStructuralTypes(input: PType, target: PType): Boolean {
         return when {
-            input.kind == Kind.ROW && target.kind == Kind.ROW -> fieldsAreAssignable(input.fields!!.toList(), target.fields!!.toList())
-            input.kind == Kind.STRUCT && target.kind == Kind.ROW -> when (input.fields) {
-                null -> true
-                else -> namedFieldsAreAssignableUnordered(input.fields!!.toList(), target.fields!!.toList())
-            }
-            input.kind == Kind.ROW && target.kind == Kind.STRUCT -> when (target.fields) {
-                null -> true
-                else -> namedFieldsAreAssignableUnordered(input.fields!!.toList(), target.fields!!.toList())
-            }
-            input.kind == Kind.STRUCT && target.kind == Kind.STRUCT -> when {
-                input.fields == null || target.fields == null -> true
-                else -> fieldsAreAssignable(input.fields!!.toList(), target.fields!!.toList())
-            }
+            input.kind == Kind.ROW && target.kind == Kind.ROW -> fieldsAreAssignable(input.fields.toList(), target.fields!!.toList())
+            input.kind == Kind.STRUCT && target.kind == Kind.ROW -> true
+            input.kind == Kind.ROW && target.kind == Kind.STRUCT -> true
+            input.kind == Kind.STRUCT && target.kind == Kind.STRUCT -> true
             else -> false
         }
     }
