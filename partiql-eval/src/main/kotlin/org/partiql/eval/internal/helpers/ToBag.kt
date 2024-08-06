@@ -1,8 +1,7 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.value.BagValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.value.Datum
+import org.partiql.types.PType
 
 /**
  * Coercion function F for bag operators described in RFC-0007
@@ -12,7 +11,14 @@ import org.partiql.value.PartiQLValueExperimental
  *  - F(array_value)  -> bag_value          # discard ordering
  *  - F(bag_value)    -> bag_value          # identity
  */
-@OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValue.toBag(): BagValue<*> {
-    TODO("For OUTER set operators")
+internal fun Datum.asIterator(): Iterator<Datum> {
+    val d = this
+    return if (d.isNull || d.isMissing) {
+        emptyList<Datum>().iterator()
+    } else {
+        when (d.type.kind) {
+            PType.Kind.LIST, PType.Kind.BAG, PType.Kind.SEXP -> d.iterator()
+            else -> listOf(d).iterator()
+        }
+    }
 }
