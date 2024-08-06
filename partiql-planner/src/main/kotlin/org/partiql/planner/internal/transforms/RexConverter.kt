@@ -79,6 +79,17 @@ internal object RexConverter {
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private object ToRex : AstBaseVisitor<Rex, Env>() {
 
+        private val COLL_AGG_NAMES = setOf(
+            "coll_any",
+            "coll_avg",
+            "coll_count",
+            "coll_every",
+            "coll_max",
+            "coll_min",
+            "coll_some",
+            "coll_sum",
+        )
+
         override fun defaultReturn(node: AstNode, context: Env): Rex =
             throw IllegalArgumentException("unsupported rex $node")
 
@@ -465,13 +476,14 @@ internal object RexConverter {
             }
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
-            // Rex
+
+            // Check if function is actually coll_<agg>
+            if (isCollAgg(node)) {
+                return callToCollAgg(id, node.setq, args)
+            }
+
             if (node.setq != null) {
-                if (isCollAgg(node)) {
-                    return callToCollAgg(id, node.setq!!, args)
-                } else {
-                    error("Currently, only COLL_<AGG> may use set quantifiers.")
-                }
+                error("Currently, only COLL_<AGG> may use set quantifiers.")
             }
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
@@ -482,7 +494,7 @@ internal object RexConverter {
          */
         private fun isCollAgg(node: Expr.Call): Boolean {
             val id = node.function as? org.partiql.ast.Identifier.Symbol ?: return false
-            return id.symbol.lowercase().startsWith("coll_")
+            return COLL_AGG_NAMES.contains(id.symbol.lowercase())
         }
 
         /**
@@ -499,41 +511,20 @@ internal object RexConverter {
          * For the case where there is no set quantifier (or, if ALL is specified), i.e. `COLL_MAX(x)` or
          * `COLL_MAX(ALL x)`, the plan is equivalent to `COLL_MAX(x)`.
          */
-        private fun callToCollAgg(id: Identifier, setQuantifier: SetQuantifier, args: List<Rex>): Rex {
+        private fun callToCollAgg(id: Identifier, setQuantifier: SetQuantifier?, args: List<Rex>): Rex {
+            if (id.hasQualifier()) {
+                error("Qualified function calls are not currently supported.")
+            }
             if (args.size != 1) {
                 error("Aggregate calls currently only support single arguments. Received ${args.size} arguments.")
             }
-            if (setQuantifier == SetQuantifier.ALL) {
-                return Rex(ANY, Rex.Op.Call.Unresolved(id, args))
+            val postfix = when (setQuantifier) {
+                SetQuantifier.DISTINCT -> "_distinct"
+                SetQuantifier.ALL -> "_all"
+                null -> "_all"
             }
-            val input = Rel(
-                type = Rel.Type(
-                    schema = listOf(Rel.Binding(name = "_input", type = ANY)),
-                    props = emptySet()
-                ),
-                op = Rel.Op.Scan(rex = args[0])
-            )
-            val distinct = Rel(
-                type = Rel.Type(
-                    schema = listOf(Rel.Binding(name = "_input", type = BOOL)),
-                    props = emptySet()
-                ),
-                op = Rel.Op.Distinct(input)
-            )
-            val rex = Rex(
-                type = ANY,
-                op = Rex.Op.Select(
-                    constructor = Rex(
-                        type = PType.typeDynamic().toCType(),
-                        op = Rex.Op.Var.Unresolved(
-                            identifier = Identifier.Symbol("_input", Identifier.CaseSensitivity.SENSITIVE),
-                            scope = Rex.Op.Var.Scope.LOCAL
-                        )
-                    ),
-                    rel = distinct
-                )
-            )
-            val op = Rex.Op.Call.Unresolved(id, listOf(rex))
+            val newId = Identifier.regular(id.getIdentifier().getText() + postfix)
+            val op = Rex.Op.Call.Unresolved(newId, listOf(args[0]))
             return Rex(ANY, op)
         }
 
