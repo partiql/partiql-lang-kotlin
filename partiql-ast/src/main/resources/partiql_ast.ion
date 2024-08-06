@@ -156,6 +156,23 @@ ddl_op::[
     table: identifier,
   },
 
+  alter_table::{
+    name:       identifier,
+    operations: list::[operation],
+    _: [
+      operation:: [
+        change_column:: {
+          old_name: '.identifier.symbol',
+          new_name: binder,
+          type:  '.type',
+          constraints: list::[constraint],
+          is_optional: bool,
+          comment: optional::string,
+        }
+      ]
+    ],
+  },
+
   // DROP INDEX <identifier> ON <identifier>
   drop_index::{
     index:  identifier, // <identifier>[0]

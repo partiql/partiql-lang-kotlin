@@ -90,6 +90,54 @@ public abstract class org/partiql/plan/DdlOp : org/partiql/plan/PlanNode {
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
+public final class org/partiql/plan/DdlOp$AlterTable : org/partiql/plan/DdlOp {
+	public static final field Companion Lorg/partiql/plan/DdlOp$AlterTable$Companion;
+	public final field name Lorg/partiql/plan/Identifier;
+	public final field op Ljava/util/List;
+	public fun <init> (Lorg/partiql/plan/Identifier;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/DdlOpAlterTableBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Identifier;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Identifier;Ljava/util/List;)Lorg/partiql/plan/DdlOp$AlterTable;
+	public static synthetic fun copy$default (Lorg/partiql/plan/DdlOp$AlterTable;Lorg/partiql/plan/Identifier;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/DdlOp$AlterTable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/DdlOp$AlterTable$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/DdlOpAlterTableBuilder;
+}
+
+public abstract class org/partiql/plan/DdlOp$AlterTable$Operation : org/partiql/plan/PlanNode {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn : org/partiql/plan/DdlOp$AlterTable$Operation {
+	public static final field Companion Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn$Companion;
+	public final field newName Lorg/partiql/plan/Identifier$Symbol;
+	public final field oldName Lorg/partiql/plan/Identifier$Symbol;
+	public final field type Lorg/partiql/types/StaticType;
+	public fun <init> (Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/types/StaticType;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/DdlOpAlterTableOperationChangeColumnBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun component2 ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun component3 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;
+	public static synthetic fun copy$default (Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/DdlOpAlterTableOperationChangeColumnBuilder;
+}
+
 public final class org/partiql/plan/DdlOp$CreateTable : org/partiql/plan/DdlOp {
 	public static final field Companion Lorg/partiql/plan/DdlOp$CreateTable$Companion;
 	public final field name Lorg/partiql/plan/Identifier;
@@ -217,6 +265,8 @@ public final class org/partiql/plan/Plan {
 	public static final fun catalogItemAgg (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Agg;
 	public static final fun catalogItemFn (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Fn;
 	public static final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Catalog$Item$Value;
+	public static final fun ddlOpAlterTable (Lorg/partiql/plan/Identifier;Ljava/util/List;)Lorg/partiql/plan/DdlOp$AlterTable;
+	public static final fun ddlOpAlterTableOperationChangeColumn (Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;
 	public static final fun ddlOpCreateTable (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;)Lorg/partiql/plan/DdlOp$CreateTable;
 	public static final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)Lorg/partiql/plan/Identifier$Qualified;
 	public static final fun identifierSymbol (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;)Lorg/partiql/plan/Identifier$Symbol;
@@ -1607,6 +1657,35 @@ public final class org/partiql/plan/builder/CatalogItemValueBuilder {
 	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/CatalogItemValueBuilder;
 }
 
+public final class org/partiql/plan/builder/DdlOpAlterTableBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Identifier;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Identifier;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/DdlOp$AlterTable;
+	public final fun getName ()Lorg/partiql/plan/Identifier;
+	public final fun getOp ()Ljava/util/List;
+	public final fun name (Lorg/partiql/plan/Identifier;)Lorg/partiql/plan/builder/DdlOpAlterTableBuilder;
+	public final fun op (Ljava/util/List;)Lorg/partiql/plan/builder/DdlOpAlterTableBuilder;
+	public final fun setName (Lorg/partiql/plan/Identifier;)V
+	public final fun setOp (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/DdlOpAlterTableOperationChangeColumnBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/types/StaticType;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/types/StaticType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;
+	public final fun getNewName ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun getOldName ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun getType ()Lorg/partiql/types/StaticType;
+	public final fun newName (Lorg/partiql/plan/Identifier$Symbol;)Lorg/partiql/plan/builder/DdlOpAlterTableOperationChangeColumnBuilder;
+	public final fun oldName (Lorg/partiql/plan/Identifier$Symbol;)Lorg/partiql/plan/builder/DdlOpAlterTableOperationChangeColumnBuilder;
+	public final fun setNewName (Lorg/partiql/plan/Identifier$Symbol;)V
+	public final fun setOldName (Lorg/partiql/plan/Identifier$Symbol;)V
+	public final fun setType (Lorg/partiql/types/StaticType;)V
+	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/DdlOpAlterTableOperationChangeColumnBuilder;
+}
+
 public final class org/partiql/plan/builder/DdlOpCreateTableBuilder {
 	public fun <init> ()V
 	public fun <init> (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;)V
@@ -1685,6 +1764,10 @@ public final class org/partiql/plan/builder/PlanBuilder {
 	public static synthetic fun catalogItemFn$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Fn;
 	public final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Value;
 	public static synthetic fun catalogItemValue$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Value;
+	public final fun ddlOpAlterTable (Lorg/partiql/plan/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/DdlOp$AlterTable;
+	public static synthetic fun ddlOpAlterTable$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/DdlOp$AlterTable;
+	public final fun ddlOpAlterTableOperationChangeColumn (Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;
+	public static synthetic fun ddlOpAlterTableOperationChangeColumn$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/plan/Identifier$Symbol;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;
 	public final fun ddlOpCreateTable (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/DdlOp$CreateTable;
 	public static synthetic fun ddlOpCreateTable$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/DdlOp$CreateTable;
 	public final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Identifier$Qualified;
@@ -2543,6 +2626,10 @@ public abstract class org/partiql/plan/util/PlanRewriter : org/partiql/plan/visi
 	public fun visitCatalogItemFn (Lorg/partiql/plan/Catalog$Item$Fn;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitCatalogItemValue (Lorg/partiql/plan/Catalog$Item$Value;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCatalogItemValue (Lorg/partiql/plan/Catalog$Item$Value;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitDdlOpAlterTable (Lorg/partiql/plan/DdlOp$AlterTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpAlterTable (Lorg/partiql/plan/DdlOp$AlterTable;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitDdlOpAlterTableOperationChangeColumn (Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpAlterTableOperationChangeColumn (Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitDdlOpCreateTable (Lorg/partiql/plan/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDdlOpCreateTable (Lorg/partiql/plan/DdlOp$CreateTable;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2680,6 +2767,9 @@ public abstract class org/partiql/plan/visitor/PlanBaseVisitor : org/partiql/pla
 	public fun visitCatalogItemFn (Lorg/partiql/plan/Catalog$Item$Fn;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCatalogItemValue (Lorg/partiql/plan/Catalog$Item$Value;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDdlOp (Lorg/partiql/plan/DdlOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpAlterTable (Lorg/partiql/plan/DdlOp$AlterTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpAlterTableOperation (Lorg/partiql/plan/DdlOp$AlterTable$Operation;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpAlterTableOperationChangeColumn (Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDdlOpCreateTable (Lorg/partiql/plan/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifier (Lorg/partiql/plan/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2761,6 +2851,9 @@ public abstract interface class org/partiql/plan/visitor/PlanVisitor {
 	public abstract fun visitCatalogItemFn (Lorg/partiql/plan/Catalog$Item$Fn;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitCatalogItemValue (Lorg/partiql/plan/Catalog$Item$Value;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitDdlOp (Lorg/partiql/plan/DdlOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOpAlterTable (Lorg/partiql/plan/DdlOp$AlterTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOpAlterTableOperation (Lorg/partiql/plan/DdlOp$AlterTable$Operation;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOpAlterTableOperationChangeColumn (Lorg/partiql/plan/DdlOp$AlterTable$Operation$ChangeColumn;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitDdlOpCreateTable (Lorg/partiql/plan/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitIdentifier (Lorg/partiql/plan/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;

@@ -1,8 +1,7 @@
 package org.partiql.planner.internal.ddl
 
-import com.amazon.ionelement.api.field
+import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
@@ -12,10 +11,9 @@ import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Type
-import org.partiql.planner.internal.ir.constraint
-import org.partiql.planner.internal.ir.constraintDefinitionCheck
-import org.partiql.planner.internal.ir.constraintDefinitionNotNull
-import org.partiql.planner.internal.ir.constraintDefinitionUnique
+import org.partiql.planner.internal.ir.constraintCheck
+import org.partiql.planner.internal.ir.constraintNotNull
+import org.partiql.planner.internal.ir.constraintUnique
 import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.partitionByAttrList
@@ -33,15 +31,19 @@ import org.partiql.planner.internal.ir.typeCollection
 import org.partiql.planner.internal.ir.typeRecord
 import org.partiql.planner.internal.ir.typeRecordField
 import org.partiql.planner.internal.typer.PlanTyper
+import org.partiql.planner.internal.typer.isOptional
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.types.AnyOfType
 import org.partiql.types.BagType
 import org.partiql.types.CollectionConstraint
 import org.partiql.types.ListType
+import org.partiql.types.MissingType
+import org.partiql.types.NullType
 import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
 import org.partiql.types.StringType
@@ -225,7 +227,7 @@ internal class DDLTestBase {
                 "a < 0"
             ),
             checkConstraintResolved(
-                CONSTR_NAME_ZERO, rex(StaticType.INT4, rexOpVarLocal(0, 0)), rex(StaticType.INT4, rexOpLit(int32Value(0))), "a < 0"
+                null, rex(StaticType.INT4, rexOpVarLocal(0, 0)), rex(StaticType.INT4, rexOpLit(int32Value(0))), "a < 0"
             )
         )
 
@@ -266,7 +268,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     FIELD_A_INT4.first,
-                    collectionConstraint = listOf(tuplePk("\$_\"tbl\"_0", listOf("a"), true))
+                    collectionConstraint = listOf(tuplePk(null, listOf("a"), true))
                 ),
                 table(StructType.Field("a", StaticType.INT4), tableConstraint = setOf(CollectionConstraint.PrimaryKey(setOf("a")))),
             ),
@@ -295,7 +297,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(
                     FIELD_A_INT4.first.asOptional(),
-                    collectionConstraint = listOf(tuplePk("\$_\"tbl\"_0", listOf("a"), true))
+                    collectionConstraint = listOf(tuplePk(null, listOf("a"), true))
                 ),
             ),
 
@@ -307,7 +309,7 @@ internal class DDLTestBase {
                     null,
                     emptyList()
                 ),
-                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(CONSTR_NAME_ZERO)),)),
+                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null)),)),
                 table(StructType.Field("a", StaticType.INT4))
             ),
 
@@ -319,7 +321,7 @@ internal class DDLTestBase {
                     null,
                     emptyList()
                 ),
-                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(CONSTR_NAME_ZERO))).asOptional()),
+                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null))).asOptional()),
                 table(StructType.Field("a", StaticType.INT4.asOptional()))
             ),
 
@@ -335,22 +337,23 @@ internal class DDLTestBase {
                 table(FIELD_A_INT4.second.withMeta(COMMENT_META)),
             ),
 
-            TestCase.failedConversion(
-                """
-                    CREATE TABLE tbl(
-                       a INT4 CONSTRAINT a_not_null NOT NULL
-                    )
-                    The constraint name is not exposed to public plan
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    idSensitive(tableName),
-                    tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("a_not_null")),)),
-                    null,
-                    emptyList()
-                ),
-                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("a_not_null")),)),
-                table(StructType.Field("a", StaticType.INT4))
-            ),
+            // Constraint name support is nuked
+//            TestCase.failedConversion(
+//                """
+//                    CREATE TABLE tbl(
+//                       a INT4 CONSTRAINT a_not_null NOT NULL
+//                    )
+//                    The constraint name is not exposed to public plan
+//                """.trimIndent(),
+//                ddlOpCreateTable(
+//                    idSensitive(tableName),
+//                    tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("a_not_null")),)),
+//                    null,
+//                    emptyList()
+//                ),
+//                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("a_not_null")),)),
+//                table(StructType.Field("a", StaticType.INT4))
+//            ),
 
             // Attribute Level check:
             TestCase.success(
@@ -359,7 +362,6 @@ internal class DDLTestBase {
                         a INT4 CHECK(a < 0)
                     )
                     Note that the CHECK Constraint is set to attribute level, 
-                    but will be normalized to struct level.
                 """.trimIndent(),
                 ddlOpCreateTable(
                     idSensitive(tableName),
@@ -370,14 +372,10 @@ internal class DDLTestBase {
                     emptyList()
                 ),
                 tableInternal(
-                    FIELD_A_INT4.first,
-                    structConstraints = listOf(
-                        CONSTRA_A_LT_ZERO.second
-                    ),
+                    FIELD_A_INT4.first.withConstraints(listOf(CONSTRA_A_LT_ZERO.second))
                 ),
                 table(
-                    FIELD_A_INT4.second,
-                    structMeta = mapOf("check_constraints" to ionStructOf(field(CONSTR_NAME_ZERO, ionString("a < 0"))),)
+                    FIELD_A_INT4.second.withCheckConstraint("a < 0"),
                 )
             ),
 
@@ -407,7 +405,7 @@ internal class DDLTestBase {
                 ),
                 table(
                     FIELD_A_INT4.second,
-                    structMeta = mapOf("check_constraints" to ionStructOf(field(CONSTR_NAME_ZERO, ionString("a < 0"))),)
+                    structMeta = mapOf("check_constraints" to ionListOf(ionString("a < 0")),)
                 )
             ),
 
@@ -442,7 +440,7 @@ internal class DDLTestBase {
                     FIELD_B_INT4.first,
                     structConstraints = listOf(
                         checkConstraintResolved(
-                            CONSTR_NAME_ZERO,
+                            null,
                             rex(StaticType.INT4, rexOpVarLocal(0, 0)),
                             rex(StaticType.INT4, rexOpVarLocal(0, 1)),
                             "a < b"
@@ -452,7 +450,7 @@ internal class DDLTestBase {
                 table(
                     FIELD_A_INT4.second,
                     FIELD_B_INT4.second,
-                    structMeta = mapOf("check_constraints" to ionStructOf(field(CONSTR_NAME_ZERO, ionString("a < b"))),)
+                    structMeta = mapOf("check_constraints" to ionListOf(ionString("a < b")),)
                 )
             ),
 
@@ -478,7 +476,7 @@ internal class DDLTestBase {
                 tableInternal(
                     FIELD_A_INT4.first,
                     FIELD_B_INT4.first,
-                    collectionConstraint = listOf(tuplePk("\$_\"tbl\"_0", listOf("a", "b"), true))
+                    collectionConstraint = listOf(tuplePk(null, listOf("a", "b"), true))
                 ),
                 table(
                     StructType.Field("a", StaticType.INT4),
@@ -656,7 +654,7 @@ internal class DDLTestBase {
                     typeRecordField(
                         idSensitive("nested"),
                         typeRecord(
-                            listOf(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("\$_\"tbl\"_0")))),
+                            listOf(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null)))),
                             emptyList()
                         ),
                         emptyList(),
@@ -1063,7 +1061,7 @@ internal class DDLTestBase {
                                 emptyList()
                             ),
                             false,
-                            listOf(tuplePk("\$_\"tbl\"_0", listOf("a"), true))
+                            listOf(tuplePk(null, listOf("a"), true))
                         ),
                         emptyList(),
                         false,
@@ -1137,31 +1135,25 @@ internal class DDLTestBase {
 
         private fun idSensitive(id: String) = identifierSymbol(id, Identifier.CaseSensitivity.SENSITIVE)
 
-        private fun nonNullConstraint(name: String?) = constraint(name, constraintDefinitionNotNull())
+        private fun nonNullConstraint(name: String?) = constraintNotNull()
 
-        private fun checkConstraintUnresolved(name: String?, lhs: Rex, rhs: Rex, sql: String) = constraint(
-            name,
-            constraintDefinitionCheck(
-                rex(
-                    StaticType.ANY,
-                    rexOpCallUnresolved(
-                        idInsensitive("lt"),
-                        listOf(lhs, rhs),
-                    )
-                ),
-                sql,
-            )
+        private fun checkConstraintUnresolved(name: String?, lhs: Rex, rhs: Rex, sql: String) = constraintCheck(
+            rex(
+                StaticType.ANY,
+                rexOpCallUnresolved(
+                    idInsensitive("lt"),
+                    listOf(lhs, rhs),
+                )
+            ),
+            sql,
         )
 
-        private fun checkConstraintResolved(name: String?, lhs: Rex, rhs: Rex, sql: String) = constraint(
-            name,
-            constraintDefinitionCheck(
-                rex(
-                    StaticType.BOOL,
-                    lessThanRexOpResolved(lhs, rhs)
-                ),
-                sql,
-            )
+        private fun checkConstraintResolved(name: String?, lhs: Rex, rhs: Rex, sql: String) = constraintCheck(
+            rex(
+                StaticType.BOOL,
+                lessThanRexOpResolved(lhs, rhs)
+            ),
+            sql,
         )
 
         @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
@@ -1201,12 +1193,31 @@ internal class DDLTestBase {
 
         private fun StructType.Field.withMeta(meta: Map<String, Any>) = StructType.Field(this.key, this.value, meta)
 
-        private fun inlinePK(name: String?) = constraint(name, constraintDefinitionUnique(emptyList(), true))
+        private fun inlinePK(name: String?) = constraintUnique(emptyList(), true)
 
         private fun tuplePk(name: String?, attrs: List<String>, sensitive: Boolean = false) = if (sensitive) {
-            constraint(name, constraintDefinitionUnique(attrs.map { idSensitive(it) }, true))
+            constraintUnique(attrs.map { idSensitive(it) }, true)
         } else {
-            constraint(name, constraintDefinitionUnique(attrs.map { idInsensitive(it) }, true))
+            constraintUnique(attrs.map { idInsensitive(it) }, true)
+        }
+
+        private fun StructType.Field.withCheckConstraint(vararg constraint: String): StructType.Field {
+            val checkConstraint = mapOf(
+                "check_constraints" to ionListOf(
+                    constraint.map { ionString(it) }
+                )
+            )
+            when (val type = this.value) {
+                is AnyOfType -> {
+                    var known = type.types.filterNot { it is NullType || it is MissingType }.first().withMetas(checkConstraint)
+                    if (type.isNullable()) known = known.asNullable()
+                    if (type.isOptional()) known = known.asOptional()
+                    return StructType.Field(this.key, known, this.meta)
+                }
+                else -> {
+                    return StructType.Field(this.key, this.value.withMetas(checkConstraint), this.meta)
+                }
+            }
         }
     }
 }

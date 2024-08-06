@@ -1,6 +1,5 @@
 package org.partiql.planner.internal.transforms
 
-import org.partiql.planner.internal.ir.Constraint
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.Type
@@ -49,9 +48,10 @@ internal object DDLFeatureGate {
 //            super.visitTypeRecordField(node, ctx)
 //        }
 
-        override fun visitConstraint(node: Constraint, ctx: Ctx) {
-            val name = node.name ?: return
-            if (!name.startsWith("$")) throw IllegalArgumentException("Unsupported Feature - Constraint name")
-        }
+        // Support for constraint name has been dropped
+//        override fun visitConstraint(node: Constraint, ctx: Ctx) {
+//            val name = node.name ?: return
+//            if (!name.startsWith("$")) throw IllegalArgumentException("Unsupported Feature - Constraint name")
+//        }
     }
 }

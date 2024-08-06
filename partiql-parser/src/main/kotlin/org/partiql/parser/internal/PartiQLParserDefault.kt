@@ -60,6 +60,8 @@ import org.partiql.ast.constraintDefinitionCheck
 import org.partiql.ast.constraintDefinitionNotNull
 import org.partiql.ast.constraintDefinitionNullable
 import org.partiql.ast.constraintDefinitionUnique
+import org.partiql.ast.ddlOpAlterTable
+import org.partiql.ast.ddlOpAlterTableOperationChangeColumn
 import org.partiql.ast.ddlOpCreateIndex
 import org.partiql.ast.ddlOpCreateTable
 import org.partiql.ast.ddlOpDropIndex
@@ -664,6 +666,22 @@ internal class PartiQLParserDefault : PartiQLParser {
             val table = visitSymbolPrimitive(ctx.symbolPrimitive())
             val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
             ddlOpCreateIndex(name, table, fields)
+        }
+
+        override fun visitAlterTable(ctx: GeneratedParser.AlterTableContext) = translate(ctx) {
+            val qualifiedName = visitQualifiedName(ctx.qualifiedName())
+            val op = visitAs<DdlOp.AlterTable.Operation>(ctx.alterOp())
+            ddlOpAlterTable(qualifiedName, listOf(op))
+        }
+
+        override fun visitChangeColumn(ctx: GeneratedParser.ChangeColumnContext) = translate(ctx) {
+            val oldName = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val new = when (val defCtx = ctx.tableDefPart()) {
+                is GeneratedParser.ColumnDeclarationContext -> visitColumnDeclaration(defCtx)
+                else -> throw error(defCtx, "Expected column declaration")
+            }
+
+            ddlOpAlterTableOperationChangeColumn(oldName, new.name, new.type, new.constraints, new.isOptional, new.comment)
         }
 
         override fun visitTableDef(ctx: GeneratedParser.TableDefContext) = translate(ctx) {

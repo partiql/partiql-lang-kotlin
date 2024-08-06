@@ -425,7 +425,7 @@ class StatementRedactorTest : PartiQLParserTestBase() {
     @Test
     fun testInputStatementAstMismatch() = forEachTarget {
         val inputStatement = "SELECT * FROM tb WHERE nonKey = 'a'"
-        val inputAst = parser.parseAstStatement("SELECT * FROM tb WHERE hk = 1 AND nonKey = 'a'")
+        val inputAst = parser.parseAstStatement("SELECT * FROM tb WHERE nonKey = 'a\n'   ")
         assertFalse(validateInputAstParsedFromInputStatement(inputStatement, inputAst))
 
         try {
@@ -433,6 +433,7 @@ class StatementRedactorTest : PartiQLParserTestBase() {
             fail("Expected IllegalArgumentException but there was no Exception")
         } catch (e: IllegalArgumentException) {
             assertEquals(INPUT_AST_STATEMENT_MISMATCH, e.message)
+            println("${e.message}")
         } catch (e: Exception) {
             fail("Expected EvaluationException but a different exception was thrown \n\t  $e")
         }

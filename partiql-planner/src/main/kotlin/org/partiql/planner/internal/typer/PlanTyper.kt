@@ -29,8 +29,8 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.Type
-import org.partiql.planner.internal.ir.constraintDefinitionCheck
-import org.partiql.planner.internal.ir.constraintDefinitionUnique
+import org.partiql.planner.internal.ir.constraintCheck
+import org.partiql.planner.internal.ir.constraintUnique
 import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.partitionByAttrList
@@ -93,7 +93,6 @@ import org.partiql.types.NumberConstraint
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.BAG
 import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.DATE
 import org.partiql.types.StaticType.Companion.DECIMAL
@@ -104,7 +103,6 @@ import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.INT8
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
-import org.partiql.types.StaticType.Companion.SEXP
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StringType
@@ -1486,12 +1484,14 @@ internal class PlanTyper(private val env: Env) {
                     val shape = DdlUtils.ConstraintResolver.resolveTable(op.shape)
                     return statementDDL(shape, op)
                 }
+
+                is DdlOp.AlterTable -> TODO()
             }
         }
 
         override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: List<Type.Record.Field>): DdlOp.CreateTable {
             val shape = visitTypeCollection(node.shape, ctx)
-            val normalizedShape = DdlUtils.ShapeNormalizer().normalize(shape, node.name.debug())
+            val normalizedShape = DdlUtils.ShapeNormalizer().normalize(shape)
             val partitionBy = node.partitionBy?.let { visitPartitionBy(it, (shape.type as Type.Record).fields) }
 
             return ddlOpCreateTable(
@@ -1530,7 +1530,7 @@ internal class PlanTyper(private val env: Env) {
         override fun visitConstraint(node: Constraint, ctx: List<Type.Record.Field>) =
             super.visitConstraint(node, ctx) as Constraint
 
-        override fun visitConstraintDefinitionCheck(node: Constraint.Definition.Check, ctx: List<Type.Record.Field>): Constraint.Definition.Check {
+        override fun visitConstraintCheck(node: Constraint.Check, ctx: List<Type.Record.Field>): Constraint.Check {
             val binding = ctx.map {
                 Rel.Binding(
                     it.name.toBindingName().name,
@@ -1540,17 +1540,17 @@ internal class PlanTyper(private val env: Env) {
             val typedCheckExpr = node.lowered.type(binding, emptyList())
             if (typedCheckExpr.type.toRuntimeType() != PartiQLValueType.BOOL) throw IllegalArgumentException("Check Constraint - Search condition inferred as a non-boolean type")
             // the sql parts needs to be normalized
-            return constraintDefinitionCheck(typedCheckExpr, node.sql)
+            return constraintCheck(typedCheckExpr, node.sql)
         }
 
-        override fun visitConstraintDefinitionUnique(node: Constraint.Definition.Unique, ctx: List<Type.Record.Field>): Constraint.Definition.Unique {
+        override fun visitConstraintUnique(node: Constraint.Unique, ctx: List<Type.Record.Field>): Constraint.Unique {
             val uniqueReference = node.attributes
 
             // inline primary key
             return if (uniqueReference.isEmpty()) {
                 val attr = ctx.first()
                 if (attr.type !is Type.Atomic) throw IllegalArgumentException("Primary Key contains attribute whose type is a complex type:  ${attr.name.symbol}")
-                constraintDefinitionUnique(listOf(ctx.first().name), node.isPrimaryKey)
+                constraintUnique(listOf(ctx.first().name), node.isPrimaryKey)
             } else {
                 val seen = mutableSetOf<Identifier.Symbol>()
                 // instead of invoking the rex typer, we manually check if the attribtue are in the scope
@@ -1576,7 +1576,7 @@ internal class PlanTyper(private val env: Env) {
                     if (!seen.add(lvalue)) throw IllegalArgumentException("Primary Key Clause contains duplicated attribute:  ${lvalue.symbol}")
                 }
                 // we rewrite rvalue symbol to be exactly the same as lvalue so we don't have to worry about those in resolve
-                constraintDefinitionUnique(seen.toList(), node.isPrimaryKey)
+                constraintUnique(seen.toList(), node.isPrimaryKey)
             }
         }
 

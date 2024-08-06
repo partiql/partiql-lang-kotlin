@@ -1,13 +1,11 @@
 package org.partiql.planner.internal.typer
 
-import com.amazon.ionelement.api.field
+import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import org.partiql.planner.internal.ir.Constraint
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Type
-import org.partiql.planner.internal.ir.constraint
 import org.partiql.planner.internal.ir.typeCollection
 import org.partiql.planner.internal.ir.typeRecord
 import org.partiql.planner.internal.ir.typeRecordField
@@ -49,95 +47,56 @@ internal object DdlUtils {
 
     internal class ShapeNormalizer {
 
-        fun normalize(collectionType: Type.Collection, prefix: String) =
-            Normalizer.visitTypeCollection(collectionType, Ctx(0, prefix)).first
+        fun normalize(collectionType: Type.Collection) =
+            Normalizer.visitTypeCollection(collectionType, Unit).first
 
-        internal data class Ctx(
-            var count: Int,
-            val prefix: String
-        )
+        // Unique normalizer
+        // Lift primary key declaration at attribute level to a collection constraint.
+        // We nuked the constraint name and table level constraint support
+        private object Normalizer : PlanBaseVisitor<Pair<PlanNode, List<Constraint>>, Unit>() {
+            override fun defaultReturn(node: PlanNode, ctx: Unit): Pair<PlanNode, List<Constraint>> = throw IllegalArgumentException("Unsupported feature during shape normalization")
 
-        // The normalizer will only lift constraint up, instead of push constraint down
-        // this is cause the nature of a struct or collection constraint might be declared at attribute level,
-        // but an attribute level constraint will never be declared at struct/collection level.
-        private object Normalizer : PlanBaseVisitor<Pair<PlanNode, List<Constraint>>, Ctx>() {
-            override fun defaultReturn(node: PlanNode, ctx: Ctx): Pair<PlanNode, List<Constraint>> = throw IllegalArgumentException("Unsupported feature during shape normalization")
-
-            override fun visitType(node: Type, ctx: Ctx): Pair<Type, List<Constraint>> =
+            override fun visitType(node: Type, ctx: Unit): Pair<Type, List<Constraint>> =
                 when (node) {
                     is Type.Atomic -> node to emptyList()
                     is Type.Collection -> visitTypeCollection(node, ctx)
                     is Type.Record -> visitTypeRecord(node, ctx)
                 }
 
-            override fun visitTypeCollection(node: Type.Collection, ctx: Ctx): Pair<Type.Collection, List<Constraint>> {
+            override fun visitTypeCollection(node: Type.Collection, ctx: Unit): Pair<Type.Collection, List<Constraint>> {
                 if (node.type == null) {
                     return typeCollection(null, node.isOrdered, node.constraints) to emptyList()
                 } else {
                     val (elementType, constraints) = visitType(node.type, ctx)
-                    val named = constraints.map { it.addNameIfNotExists(ctx) }
-                    return typeCollection(elementType, node.isOrdered, named) to emptyList()
+                    return typeCollection(elementType, node.isOrdered, constraints) to emptyList()
                 }
             }
 
-            override fun visitTypeRecord(node: Type.Record, ctx: Ctx): Pair<Type.Record, List<Constraint>> {
-                val structConstraints = mutableListOf<Constraint>()
-                val collectionConstraints = mutableListOf<Constraint>()
-
-                // arrange partition on the struct
-                node.constraints.partitionTo(structConstraints, collectionConstraints) {
-                    it.definition.isStructConstraint()
-                }
-
+            override fun visitTypeRecord(node: Type.Record, ctx: Unit): Pair<Type.Record, List<Constraint>> {
+                val (collectionConstraints, structConstraints) = node.constraints.partition { it.isCollectionConstraint() }
+                val carriedCollectionConstraint = mutableListOf<Constraint>()
                 val fields = node.fields.map { f ->
                     val (field, carried) = visitTypeRecordField(f, ctx)
                     // arrange carried partition
-                    carried.partitionTo(structConstraints, collectionConstraints) {
-                        it.definition.isStructConstraint()
-                    }
+                    carriedCollectionConstraint += carried.filter { it.isCollectionConstraint() }
                     field
                 }
 
-                val named = structConstraints.map { it.addNameIfNotExists(ctx) }
-
-                return typeRecord(fields, named) to collectionConstraints
+                return typeRecord(fields, structConstraints) to collectionConstraints + carriedCollectionConstraint
             }
 
-            override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx): Pair<Type.Record.Field, List<Constraint>> {
-                val (carried, attrConstrs) = node.constraints.partition { it.definition.isStructConstraint() || it.definition.isCollectionConstraint() }
+            override fun visitTypeRecordField(node: Type.Record.Field, ctx: Unit): Pair<Type.Record.Field, List<Constraint>> {
+                val (carried, attrConstrs) = node.constraints.partition { it.isCollectionConstraint() }
                 val (type, carriedCollectionConstrs) = visitType(node.type, ctx)
-                val named = attrConstrs.map { it.addNameIfNotExists(ctx) }
-                return typeRecordField(node.name, type, named, node.isOptional, node.comment) to carriedCollectionConstrs + carried
+                return typeRecordField(node.name, type, attrConstrs, node.isOptional, node.comment) to carriedCollectionConstrs + carried
             }
 
-            private fun Constraint.addNameIfNotExists(ctx: Ctx): Constraint {
-                val named =
-                    if (this.name == null) constraint("\$_${ctx.prefix}_${ctx.count}", this.definition)
-                    else this
-                ctx.count += 1
-                return named
-            }
-
-            private fun <T> List<T>.partitionTo(container1: MutableList<T>, container2: MutableList<T>, predicate: (T) -> Boolean) {
-                val (p1, p2) = this.partition(predicate)
-                container1.addAll(p1)
-                container2.addAll(p2)
-            }
-
-            private fun Constraint.Definition.isStructConstraint() =
+            private fun Constraint.isCollectionConstraint() =
                 when (this) {
-                    is Constraint.Definition.Unique -> false
-                    is Constraint.Definition.Check -> true
-                    is Constraint.Definition.NotNull -> false
-                    is Constraint.Definition.Nullable -> false
-                }
-
-            private fun Constraint.Definition.isCollectionConstraint() =
-                when (this) {
-                    is Constraint.Definition.Unique -> true
-                    is Constraint.Definition.Check -> false
-                    is Constraint.Definition.NotNull -> false
-                    is Constraint.Definition.Nullable -> false
+                    is Constraint.Unique -> true
+                    is Constraint.Check -> false
+                    is Constraint.NotNull -> false
+                    is Constraint.Nullable -> false
                 }
         }
     }
@@ -164,18 +123,16 @@ internal object DdlUtils {
             override fun visitTypeCollection(node: Type.Collection, ctx: Ctx): StaticType {
                 val elementType = node.type ?: return if (node.isOrdered) StaticType.LIST.asNullable() else StaticType.BAG.asNullable()
                 // only one pk constraint
-                val pkConstrs = node.constraints.filter {
-                    val def = it.definition
-                    if (def is Constraint.Definition.Unique) {
-                        def.isPrimaryKey
-                    } else false
-                }
+                val pkConstrs = node.constraints.filterIsInstance<Constraint.Unique>()
+                    .filter { it.isPrimaryKey }
                 val pkConstr = when (pkConstrs.size) {
                     0 -> null
                     1 -> pkConstrs.first()
                     else -> throw IllegalArgumentException("Only one primary key constraint is allowed")
                 }
-                val pkAttr = pkConstr?.let { (it.definition as Constraint.Definition.Unique).attributes } ?: emptyList()
+                val pkAttr = pkConstr?.let {
+                    it.attributes
+                } ?: emptyList()
                 // if associated with PK
                 // the underlying type must be a non null struct
                 val resolvedElementType = visitType(elementType, Ctx(pkAttr)).let {
@@ -184,10 +141,9 @@ internal object DdlUtils {
                     } else it
                 }
                 val collectionConstraint = node.constraints.mapNotNull { contr ->
-                    val def = contr.definition
-                    if (def is Constraint.Definition.Unique) {
-                        val uniqueReference = def.attributes.map { it.symbol }.toSet()
-                        if (def.isPrimaryKey) CollectionConstraint.PrimaryKey(uniqueReference)
+                    if (contr is Constraint.Unique) {
+                        val uniqueReference = contr.attributes.map { it.symbol }.toSet()
+                        if (contr.isPrimaryKey) CollectionConstraint.PrimaryKey(uniqueReference)
                         else CollectionConstraint.UniqueKey(uniqueReference)
                     } else null
                 }.toSet()
@@ -203,10 +159,10 @@ internal object DdlUtils {
                 //  and struct by default is closed and unique
                 //  For now we dump check constraint in struct meta
                 val constraintMeta = node.constraints.mapNotNull { constr ->
-                    if (constr.definition is Constraint.Definition.Check) {
-                        field(constr.name!!, ionString(constr.definition.sql))
+                    if (constr is Constraint.Check) {
+                        ionString(constr.sql)
                     } else null
-                }.let { if (it.isNotEmpty()) { mapOf("check_constraints" to ionStructOf(it)) } else emptyMap() }
+                }.let { if (it.isNotEmpty()) { mapOf("check_constraints" to ionListOf(it)) } else emptyMap() }
                 val seen = mutableSetOf<String>()
                 val resolvedField = node.fields.map {
                     StructType.Field(
@@ -236,8 +192,17 @@ internal object DdlUtils {
                 if (node.isOptional && isPK) throw IllegalArgumentException("Primary key attribute cannot be optional")
 
                 val notNullable =
-                    (node.constraints.any { it.definition is Constraint.Definition.NotNull }) || isPK
-                val type = visitType(node.type, ctx).let { if (notNullable) it.removeNull() else it }
+                    (node.constraints.any { it is Constraint.NotNull }) || isPK
+
+                val checkMeta = node.constraints.mapNotNull {
+                    if (it is Constraint.Check) {
+                        ionString(it.sql)
+                    } else null
+                }.let { if (it.isEmpty()) emptyMap() else mapOf("check_constraints" to ionListOf(it)) }
+
+                val nonNullType = visitType(node.type, ctx).removeNull().let { it.withMetas(it.metas + checkMeta) }
+
+                val type = if (notNullable) nonNullType else nonNullType.asNullable()
 
                 return if (node.isOptional) type.asOptional() else type
             }

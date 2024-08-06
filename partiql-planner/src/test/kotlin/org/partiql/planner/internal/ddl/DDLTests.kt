@@ -1,8 +1,5 @@
 package org.partiql.planner.internal.ddl
 
-import com.amazon.ionelement.api.field
-import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.Test
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.DdlOp
@@ -13,13 +10,7 @@ import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.types.BagType
-import org.partiql.types.CollectionConstraint
-import org.partiql.types.StaticType
-import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
 import java.util.Random
-import kotlin.test.assertEquals
 
 class DDLTests {
 
@@ -47,44 +38,45 @@ class DDLTests {
         ),
     )
 
-    @Test
-    fun sanity() {
-        val query = """
-            CREATE TABLE my_catalog.my_schema.tbl(
-                a INT2 PRIMARY KEY, 
-                b INT2,
-                CHECK(a != b)
-            )
-        """.trimIndent()
-        val ast = parser.parse(query).root
-        val plan = planner
-            .plan(ast, plannerSession) {}
-            .plan
-        val res = buildString {
-            PlanPrinter.append(this, plan)
-        }
-        println(res)
-
-        val staticType =
-            ((plan.statement as Statement.DDL).op as DdlOp.CreateTable).shape
-        val expected = BagType(
-            StructType(
-                fields = listOf(
-                    StructType.Field("a", StaticType.INT2),
-                    StructType.Field("b", StaticType.INT2.asNullable()),
-                ),
-                contentClosed = true,
-                primaryKeyFields = emptyList(),
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
-                metas = mapOf(
-                    "check_constraints" to ionStructOf(field("\$_my_catalog.my_schema.\"tbl\"_0", ionString("a <> b"))),
-                )
-            ),
-            metas = mapOf(),
-            constraints = setOf(CollectionConstraint.PrimaryKey(setOf("a")))
-        )
-        assertEquals(expected, staticType)
-    }
+    // Table Level Check constraint is nuked
+//    @Test
+//    fun sanity() {
+//        val query = """
+//            CREATE TABLE my_catalog.my_schema.tbl(
+//                a INT2 PRIMARY KEY,
+//                b INT2,
+//                CHECK(a != b)
+//            )
+//        """.trimIndent()
+//        val ast = parser.parse(query).root
+//        val plan = planner
+//            .plan(ast, plannerSession) {}
+//            .plan
+//        val res = buildString {
+//            PlanPrinter.append(this, plan)
+//        }
+//        println(res)
+//
+//        val staticType =
+//            ((plan.statement as Statement.DDL).op as DdlOp.CreateTable).shape
+//        val expected = BagType(
+//            StructType(
+//                fields = listOf(
+//                    StructType.Field("a", StaticType.INT2),
+//                    StructType.Field("b", StaticType.INT2.asNullable()),
+//                ),
+//                contentClosed = true,
+//                primaryKeyFields = emptyList(),
+//                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
+//                metas = mapOf(
+//                    "check_constraints" to ionListOf(ionString("a <> b")),
+//                )
+//            ),
+//            metas = mapOf(),
+//            constraints = setOf(CollectionConstraint.PrimaryKey(setOf("a")))
+//        )
+//        assertEquals(expected, staticType)
+//    }
 
     @Test
     fun sanity2() {
@@ -162,31 +154,32 @@ class DDLTests {
         println(res)
     }
 
-    @Test
-    fun sanity6() {
-        val query = """
-            CREATE TABLE foo.bar.my_table_V1 (
-                attr1 VARCHAR(3),
-                attr2 INT2,
-                attr3 STRUCT<attr4: INT>,
-                CHECK(attr3.attr4 >= 0)
-            )
-        """.trimIndent()
-
-        val ast = parser.parse(query).root
-        val plan = planner
-            .plan(ast, plannerSession) {}
-            .plan
-        val res = buildString {
-            PlanPrinter.append(this, plan)
-        }
-        println(res)
-
-        val staticType =
-            ((plan.statement as Statement.DDL).op as DdlOp.CreateTable).shape
-
-        println(staticType)
-    }
+    // The support for table level check constraint is nuked
+//    @Test
+//    fun sanity6() {
+//        val query = """
+//            CREATE TABLE foo.bar.my_table_V1 (
+//                attr1 VARCHAR(3),
+//                attr2 INT2,
+//                attr3 STRUCT<attr4: INT>,
+//                CHECK(attr3.attr4 >= 0)
+//            )
+//        """.trimIndent()
+//
+//        val ast = parser.parse(query).root
+//        val plan = planner
+//            .plan(ast, plannerSession) {}
+//            .plan
+//        val res = buildString {
+//            PlanPrinter.append(this, plan)
+//        }
+//        println(res)
+//
+//        val staticType =
+//            ((plan.statement as Statement.DDL).op as DdlOp.CreateTable).shape
+//
+//        println(staticType)
+//    }
 
     @Test
     fun sanity7() {

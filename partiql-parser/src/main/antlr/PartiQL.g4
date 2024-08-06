@@ -84,6 +84,7 @@ comment : COMMENT LITERAL_STRING;
 ddl
     : createCommand
     | dropCommand
+    | alterCommand
     ;
 
 createCommand
@@ -96,6 +97,14 @@ dropCommand
     | DROP INDEX target=symbolPrimitive ON on=symbolPrimitive   # DropIndex
     ;
 
+alterCommand
+    : ALTER TABLE qualifiedName alterOp                         #AlterTable
+    ;
+
+alterOp
+    : CHANGE (COLUMN)? symbolPrimitive tableDefPart            #ChangeColumn
+    ;
+
 tableDef
     : tableDefPart ( COMMA tableDefPart )*
     ;
@@ -106,8 +115,9 @@ tableDefPart
     ;
 
 tableConstraintDef
-    : checkConstraintDef                                            # TableConstrCheck
-    | uniqueConstraintDef                                           # TableConstrUnique
+    : uniqueConstraintDef                                           # TableConstrUnique
+    // Remove the support for table-level check constraint
+    //    : checkConstraintDef                                            # TableConstrCheck
     ;
 
 columnConstraint

@@ -123,6 +123,20 @@ ddl_op::[
     // table proproties:
     table_properties: list::[table_property],
   },
+
+  alter_table::{
+    name: identifier,
+    op: list::[operation],
+    _: [
+      operation:: [
+        change_column:: {
+          old_name: '.identifier.symbol',
+          new_name: '.identifier.symbol',
+          type:  type
+        }
+      ]
+    ],
+  }
 ]
 
 type::[
@@ -186,22 +200,19 @@ type::[
 
 // Constraints
 // needed for DDL and DML.
-constraint::{
-  // Keep this optional at the internal plan node so it is easier to sanitize...
-  name: optional::string,
-  definition: [
-    check::{
-      lowered: rex, // check expression in rex
-      sql: string, // check expression in sql text
-    },
-    unique::{
-      attributes: list::['.identifier.symbol'],
-      is_primary_key: bool,
-    },
-    not_null::{},
-    nullable::{},
-  ],
-}
+constraint:: [
+  // Remove the support for constraint name
+  check::{
+    lowered: rex, // check expression in rex
+    sql: string, // check expression in sql text
+  },
+  unique::{
+    attributes: list::['.identifier.symbol'],
+    is_primary_key: bool,
+  },
+  not_null::{},
+  nullable::{},
+]
 
 partition_by::[
   attr_list::{

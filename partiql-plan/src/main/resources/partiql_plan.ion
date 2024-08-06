@@ -70,6 +70,20 @@ ddl_op::[
     // table proproties:
     table_properties: list::[table_property],
   },
+
+  alter_table::{
+    name: identifier,
+    op: list::[operation],
+    _: [
+      operation:: [
+        change_column:: {
+          old_name: '.identifier.symbol',
+          new_name: '.identifier.symbol',
+          type:  'static_type'
+        }
+      ]
+    ],
+  }
 ]
 
 partition_by::[

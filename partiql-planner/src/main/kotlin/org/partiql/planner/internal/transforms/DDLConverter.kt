@@ -14,11 +14,8 @@ import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Statement.DDL
-import org.partiql.planner.internal.ir.constraint
-import org.partiql.planner.internal.ir.constraintDefinitionCheck
-import org.partiql.planner.internal.ir.constraintDefinitionNotNull
-import org.partiql.planner.internal.ir.constraintDefinitionNullable
-import org.partiql.planner.internal.ir.constraintDefinitionUnique
+import org.partiql.planner.internal.ir.constraintCheck
+import org.partiql.planner.internal.ir.constraintUnique
 import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.partitionByAttrList
@@ -164,21 +161,24 @@ internal object DDLConverter {
                 node.comment,
             )
 
-        override fun visitConstraint(node: Constraint, ctx: Ctx) = when (val def = node.definition) {
-            is Constraint.Definition.Check -> constraint(node.name, visitConstraintDefinitionCheck(def, ctx))
-            is Constraint.Definition.NotNull -> constraint(node.name, constraintDefinitionNotNull())
-            is Constraint.Definition.Nullable -> constraint(node.name, constraintDefinitionNullable())
-            is Constraint.Definition.Unique -> constraint(node.name, visitConstraintDefinitionUnique(def, ctx))
+        override fun visitConstraint(node: Constraint, ctx: Ctx): org.partiql.planner.internal.ir.Constraint {
+            if (node.name != null) throw IllegalArgumentException("Constraint Name is not supported during Planning yet")
+            return when (val def = node.definition) {
+                is Constraint.Definition.Check -> visitConstraintDefinitionCheck(def, ctx)
+                is Constraint.Definition.NotNull -> org.partiql.planner.internal.ir.constraintNotNull()
+                is Constraint.Definition.Nullable -> org.partiql.planner.internal.ir.constraintNullable()
+                is Constraint.Definition.Unique -> visitConstraintDefinitionUnique(def, ctx)
+            }
         }
 
         override fun visitConstraintDefinitionCheck(node: Constraint.Definition.Check, ctx: Ctx) =
-            constraintDefinitionCheck(
+            constraintCheck(
                 RexConverter.apply(node.expr, ctx.env),
                 node.expr.sql()
             )
 
         override fun visitConstraintDefinitionUnique(node: Constraint.Definition.Unique, ctx: Ctx) =
-            constraintDefinitionUnique(
+            constraintUnique(
                 node.attributes?.map { convert(it) } ?: emptyList(), node.isPrimaryKey
             )
 

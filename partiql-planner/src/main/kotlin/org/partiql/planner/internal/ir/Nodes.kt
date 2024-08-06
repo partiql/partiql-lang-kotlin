@@ -6,11 +6,12 @@
 package org.partiql.planner.`internal`.ir
 
 import org.partiql.errors.Problem
-import org.partiql.planner.`internal`.ir.builder.ConstraintBuilder
-import org.partiql.planner.`internal`.ir.builder.ConstraintDefinitionCheckBuilder
-import org.partiql.planner.`internal`.ir.builder.ConstraintDefinitionNotNullBuilder
-import org.partiql.planner.`internal`.ir.builder.ConstraintDefinitionNullableBuilder
-import org.partiql.planner.`internal`.ir.builder.ConstraintDefinitionUniqueBuilder
+import org.partiql.plan.builder.DdlOpAlterTableBuilder
+import org.partiql.plan.builder.DdlOpAlterTableOperationChangeColumnBuilder
+import org.partiql.planner.internal.ir.builder.ConstraintCheckBuilder
+import org.partiql.planner.internal.ir.builder.ConstraintNotNullBuilder
+import org.partiql.planner.internal.ir.builder.ConstraintNullableBuilder
+import org.partiql.planner.internal.ir.builder.ConstraintUniqueBuilder
 import org.partiql.planner.`internal`.ir.builder.DdlOpCreateTableBuilder
 import org.partiql.planner.`internal`.ir.builder.IdentifierQualifiedBuilder
 import org.partiql.planner.`internal`.ir.builder.IdentifierSymbolBuilder
@@ -267,6 +268,7 @@ internal sealed class Statement : PlanNode() {
 internal sealed class DdlOp : PlanNode() {
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
         is CreateTable -> visitor.visitDdlOpCreateTable(this, ctx)
+        is AlterTable -> visitor.visitDdlOpAlterTable(this, ctx)
     }
 
     internal data class CreateTable(
@@ -290,6 +292,59 @@ internal sealed class DdlOp : PlanNode() {
         internal companion object {
             @JvmStatic
             internal fun builder(): DdlOpCreateTableBuilder = DdlOpCreateTableBuilder()
+        }
+    }
+
+    internal data class AlterTable(
+        @JvmField internal val name: Identifier,
+        @JvmField internal val op: List<Operation>,
+    ) : DdlOp() {
+        public override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(name)
+            kids.addAll(op)
+            kids.filterNotNull()
+        }
+
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitDdlOpAlterTable(this, ctx)
+
+        public sealed class Operation : PlanNode() {
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                is ChangeColumn -> visitor.visitDdlOpAlterTableOperationChangeColumn(this, ctx)
+            }
+
+            public data class ChangeColumn(
+                @JvmField
+                public val oldName: Identifier.Symbol,
+                @JvmField
+                public val newName: Identifier.Symbol,
+                @JvmField
+                public val type: Type,
+            ) : Operation() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(oldName)
+                    kids.add(newName)
+                    kids.filterNotNull()
+                }
+
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitDdlOpAlterTableOperationChangeColumn(this, ctx)
+
+                public companion object {
+                    @JvmStatic
+                    public fun builder(): DdlOpAlterTableOperationChangeColumnBuilder =
+                        DdlOpAlterTableOperationChangeColumnBuilder()
+                }
+            }
+        }
+
+        public companion object {
+            @JvmStatic
+            public fun builder(): DdlOpAlterTableBuilder = DdlOpAlterTableBuilder()
         }
     }
 }
@@ -583,100 +638,82 @@ internal sealed class Type : PlanNode() {
     }
 }
 
-internal data class Constraint(
-    @JvmField internal val name: String?,
-    @JvmField internal val definition: Definition,
-) : PlanNode() {
-    public override val children: List<PlanNode> by lazy {
-        val kids = mutableListOf<PlanNode?>()
-        kids.add(definition)
-        kids.filterNotNull()
+internal sealed class Constraint : PlanNode() {
+
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+        is Check -> visitor.visitConstraintCheck(this, ctx)
+        is Unique -> visitor.visitConstraintUnique(this, ctx)
+        is NotNull -> visitor.visitConstraintNotNull(this, ctx)
+        is Nullable -> visitor.visitConstraintNullable(this, ctx)
     }
 
-    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-        visitor.visitConstraint(this, ctx)
-
-    internal sealed class Definition : PlanNode() {
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-            is Check -> visitor.visitConstraintDefinitionCheck(this, ctx)
-            is Unique -> visitor.visitConstraintDefinitionUnique(this, ctx)
-            is NotNull -> visitor.visitConstraintDefinitionNotNull(this, ctx)
-            is Nullable -> visitor.visitConstraintDefinitionNullable(this, ctx)
+    internal data class Check(
+        @JvmField internal val lowered: Rex,
+        @JvmField internal val sql: String,
+    ) : Constraint() {
+        public override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(lowered)
+            kids.filterNotNull()
         }
 
-        internal data class Check(
-            @JvmField internal val lowered: Rex,
-            @JvmField internal val sql: String,
-        ) : Definition() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(lowered)
-                kids.filterNotNull()
-            }
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitConstraintCheck(this, ctx)
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitConstraintDefinitionCheck(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): ConstraintDefinitionCheckBuilder = ConstraintDefinitionCheckBuilder()
-            }
-        }
-
-        internal data class Unique(
-            @JvmField internal val attributes: List<Identifier.Symbol>,
-            @JvmField internal val isPrimaryKey: Boolean,
-        ) : Definition() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.addAll(attributes)
-                kids.filterNotNull()
-            }
-
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitConstraintDefinitionUnique(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): ConstraintDefinitionUniqueBuilder =
-                    ConstraintDefinitionUniqueBuilder()
-            }
-        }
-
-        internal data class NotNull(
-            @JvmField internal val ` `: Char = ' ',
-        ) : Definition() {
-            public override val children: List<PlanNode> = emptyList()
-
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitConstraintDefinitionNotNull(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): ConstraintDefinitionNotNullBuilder =
-                    ConstraintDefinitionNotNullBuilder()
-            }
-        }
-
-        internal data class Nullable(
-            @JvmField internal val ` `: Char = ' ',
-        ) : Definition() {
-            public override val children: List<PlanNode> = emptyList()
-
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitConstraintDefinitionNullable(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): ConstraintDefinitionNullableBuilder =
-                    ConstraintDefinitionNullableBuilder()
-            }
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): ConstraintCheckBuilder = ConstraintCheckBuilder()
         }
     }
 
-    internal companion object {
-        @JvmStatic
-        internal fun builder(): ConstraintBuilder = ConstraintBuilder()
+    internal data class Unique(
+        @JvmField internal val attributes: List<Identifier.Symbol>,
+        @JvmField internal val isPrimaryKey: Boolean,
+    ) : Constraint() {
+        public override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.addAll(attributes)
+            kids.filterNotNull()
+        }
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitConstraintUnique(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): ConstraintUniqueBuilder =
+                ConstraintUniqueBuilder()
+        }
+    }
+
+    internal data class NotNull(
+        @JvmField internal val ` `: Char = ' ',
+    ) : Constraint() {
+        public override val children: List<PlanNode> = emptyList()
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitConstraintNotNull(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): ConstraintNotNullBuilder =
+                ConstraintNotNullBuilder()
+        }
+    }
+
+    internal data class Nullable(
+        @JvmField internal val ` `: Char = ' ',
+    ) : Constraint() {
+        public override val children: List<PlanNode> = emptyList()
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitConstraintNullable(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): ConstraintNullableBuilder =
+                ConstraintNullableBuilder()
+        }
     }
 }
 

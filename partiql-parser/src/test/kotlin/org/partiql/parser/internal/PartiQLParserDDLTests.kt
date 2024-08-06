@@ -1,5 +1,6 @@
 package org.partiql.parser.internal
 
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
@@ -306,35 +307,33 @@ class PartiQLParserDDLTests {
                 )
             ),
 
-            SuccessTestCase(
-                "CREATE TABLE with Table CHECK Constraint",
-                """
-                    CREATE TABLE tbl (
-                        CHECK (a > 0)
-                    )
-                """.trimIndent(),
-                ddlOpCreateTable(
-                    null,
-                    binder("tbl", true),
-                    tableDefinition(
-                        emptyList(),
-                        listOf(
-                            constraint(
-                                null,
-                                constraintDefinitionCheck(
-                                    exprBinary(
-                                        Expr.Binary.Op.GT,
-                                        exprVar(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE), Expr.Var.Scope.DEFAULT),
-                                        exprLit(int32Value(0))
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                    null,
-                    emptyList()
-                )
-            ),
+            // Support for Table Check constraint has been nuked
+//            SuccessTestCase(
+//                "CREATE TABLE with Table CHECK Constraint",
+//                """
+//                    CREATE TABLE tbl (
+//                        CHECK (a > 0)
+//                    )
+//                """.trimIndent(),
+//                ddlOpCreateTable(
+//                    null,
+//                    binder("tbl", true),
+//                    tableDefinition(
+//                        emptyList(),
+//                        listOf(
+//                            constraintCheck(
+//                                exprBinary(
+//                                    Expr.Binary.Op.GT,
+//                                    exprVar(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE), Expr.Var.Scope.DEFAULT),
+//                                    exprLit(int32Value(0))
+//                                )
+//                            )
+//                        )
+//                    ),
+//                    null,
+//                    emptyList()
+//                )
+//            ),
 
             SuccessTestCase(
                 "CREATE TABLE with CASE SENSITIVE Identifier as column name",
@@ -1146,5 +1145,18 @@ class PartiQLParserDDLTests {
         assertThrows<PartiQLParserException> {
             parser.parse(input)
         }
+    }
+
+    @Test
+    fun sanity() {
+        val query = """
+        CREATE TABLE andes.my_provider.my_table_v1 (
+            attr1 STRUCT<attr2: STRUCT<attr3: INT2 CHECK(attr3 >=0)>>
+        )
+        """.trimIndent()
+
+        val ast = parser.parse(query).root
+
+        println(ast)
     }
 }

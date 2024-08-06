@@ -130,6 +130,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         is DdlOp.CreateTable -> visitDdlOpCreateTable(op, ctx)
         is DdlOp.DropIndex -> visitDdlOpDropIndex(op, ctx)
         is DdlOp.DropTable -> visitDdlOpDropTable(op, ctx)
+        is DdlOp.AlterTable -> error("Legacy AST does not support Alter Command")
     }
 
     override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Ctx) = translate(node) { metas ->

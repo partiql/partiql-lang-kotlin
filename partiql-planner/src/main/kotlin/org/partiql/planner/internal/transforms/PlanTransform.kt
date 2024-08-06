@@ -111,6 +111,7 @@ internal class PlanTransform(
         override fun visitDdlOp(node: DdlOp, ctx: Unit) =
             when (node) {
                 is DdlOp.CreateTable -> visitDdlOpCreateTable(node, ctx)
+                is DdlOp.AlterTable -> TODO()
             }
 
         override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Unit): org.partiql.plan.DdlOp.CreateTable {
