@@ -10,7 +10,6 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.ConnectorSession
 import java.time.Instant
 import org.partiql.planner.catalog.Session as PlannerSession
 
@@ -34,15 +33,13 @@ internal class Pipeline private constructor(
         @JvmField val mode: PartiQLEngine.Mode,
     ) {
 
-        val connector = object : ConnectorSession {
-            override fun getQueryId(): String = queryId
-            override fun getUserId(): String = userId
-        }
+        private val catalogs = connectors.values.map { it.getCatalog() }
 
         fun planner() = PlannerSession.builder()
             .identity(userId)
+            .namespace(currentDirectory)
             .catalog(currentCatalog)
-            .catalogs(*connectors.map { it.key to it.value.getMetadata(connector) }.toTypedArray())
+            .catalogs(*catalogs.toTypedArray())
             .build()
 
         fun engine() = PartiQLEngine.Session(

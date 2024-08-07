@@ -31,8 +31,6 @@ import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.eval.PartiQLResult
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.Closeable
@@ -250,16 +248,7 @@ internal class Shell(
                                     out.error("No connector for catalog ${session.currentCatalog}.")
                                     continue
                                 }
-                                // Create a path from the arg
-                                val arg1 = args.getOrNull(1)
-                                val path = if (arg1 == null) {
-                                    emptyList<BindingName>()
-                                } else {
-                                    arg1.split(".").map { BindingName(it, BindingCase.INSENSITIVE) }
-                                }
-                                // Query connector metadata
-                                TODO("Connectors do not support listing metadata")
-                                out.println()
+                                out.error("Connectors do not support listing metadata")
                             }
                             "session" -> {
                                 // Print session information

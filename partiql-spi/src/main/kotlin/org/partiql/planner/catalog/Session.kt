@@ -1,7 +1,5 @@
 package org.partiql.planner.catalog
 
-import org.partiql.spi.connector.ConnectorMetadata
-
 /**
  * Session is used for authorization and name resolution.
  */
@@ -19,10 +17,8 @@ public interface Session {
 
     /**
      * Returns the catalog provider for this session.
-     *
-     * TODO replace with org.partiql.planner.catalog.Catalogs
      */
-    public fun getCatalogs(): Map<String, ConnectorMetadata>
+    public fun getCatalogs(): Catalogs
 
     /**
      * Returns the current [Namespace]; accessible via the CURRENT_NAMESPACE session variable.
@@ -53,7 +49,7 @@ public interface Session {
         public fun empty(catalog: String): Session = object : Session {
             override fun getIdentity(): String = "unknown"
             override fun getCatalog(): String = catalog
-            override fun getCatalogs(): Map<String, ConnectorMetadata> = emptyMap()
+            override fun getCatalogs(): Catalogs = Catalogs.of()
             override fun getNamespace(): Namespace = Namespace.empty()
         }
 
@@ -68,7 +64,7 @@ public interface Session {
 
         private var identity: String = "unknown"
         private var catalog: String? = null
-        private var catalogs: MutableMap<String, ConnectorMetadata> = mutableMapOf()
+        private var catalogs: Catalogs.Builder = Catalogs.builder()
         private var namespace: Namespace = Namespace.empty()
         private var properties: MutableMap<String, String> = mutableMapOf()
 
@@ -107,12 +103,16 @@ public interface Session {
          *
          * TODO replace with org.partiql.planner.catalog.Catalog.
          */
-        public fun catalogs(vararg catalogs: Pair<String, ConnectorMetadata>): Builder {
-            for ((name, metadata) in catalogs) this.catalogs[name] = metadata
+        public fun catalogs(vararg catalogs: Catalog): Builder {
+            for (catalog in catalogs) {
+                this.catalogs.add(catalog)
+            }
             return this
         }
 
         public fun build(): Session = object : Session {
+
+            private val _catalogs = catalogs.build()
 
             init {
                 require(catalog != null) { "Session catalog must be set" }
@@ -120,7 +120,7 @@ public interface Session {
 
             override fun getIdentity(): String = identity
             override fun getCatalog(): String = catalog!!
-            override fun getCatalogs(): Map<String, ConnectorMetadata> = catalogs
+            override fun getCatalogs(): Catalogs = _catalogs
             override fun getNamespace(): Namespace = namespace
         }
     }

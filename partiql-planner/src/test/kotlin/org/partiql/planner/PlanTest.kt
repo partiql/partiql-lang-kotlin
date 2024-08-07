@@ -9,20 +9,16 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
+import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PlanNodeEquivalentVisitor
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.plugins.memory.MemoryObject
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
+import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -71,15 +67,10 @@ class PlanTest {
         )
     )
 
-    val connectorSession = object : ConnectorSession {
-        override fun getQueryId(): String = "query-id"
-        override fun getUserId(): String = "user-id"
-    }
-
     val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
         val session = Session.builder()
             .catalog("default")
-            .catalogs("default" to buildMetadata("default"))
+            .catalogs(buildCatalog("default"))
             .namespace("SCHEMA")
             .build()
         val problemCollector = ProblemCollector()
@@ -88,18 +79,11 @@ class PlanTest {
         planner.plan(ast, session, problemCollector)
     }
 
-    fun buildMetadata(catalogName: String): ConnectorMetadata {
-        val catalog = MemoryCatalog.builder().name(catalogName).build()
-        // Insert binding
-        val name = BindingPath(
-            listOf(
-                BindingName("SCHEMA", BindingCase.INSENSITIVE),
-                BindingName("T", BindingCase.INSENSITIVE),
-            )
-        )
-        val obj = MemoryObject(type)
-        catalog.insert(name, obj)
-        return MemoryConnector(catalog).getMetadata(connectorSession)
+    private fun buildCatalog(catalogName: String): Catalog {
+        return TestCatalog.builder()
+            .name(catalogName)
+            .createTable(Name.of("SCHEMA", "T"), PType.fromStaticType(type))
+            .build()
     }
 
     @TestFactory

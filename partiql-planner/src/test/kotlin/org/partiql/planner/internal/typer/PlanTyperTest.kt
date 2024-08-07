@@ -121,7 +121,12 @@ class PlanTyperTest {
                 Session.builder()
                     .catalog("pql")
                     .namespace("main")
-                    .catalogs("pql" to LocalConnector.Metadata(root))
+                    .catalogs(
+                        LocalConnector.builder()
+                            .name("pql")
+                            .root(root)
+                            .build().getCatalog()
+                    )
                     .build()
             )
             return PlanTyperWrapper(PlanTyper(env))
