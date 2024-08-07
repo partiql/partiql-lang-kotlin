@@ -45,46 +45,95 @@ internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecim
     else -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
 }
 
+/**
+ * This should handle Byte, Short, Int, Long, BigInteger, Float, Double, BigDecimal
+ */
 private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
+    // BYTE
+    setOf(Byte::class.javaObjectType, Byte::class.javaObjectType) to Byte::class.javaObjectType,
+    setOf(Byte::class.javaObjectType, Short::class.javaObjectType) to Short::class.javaObjectType,
+    setOf(Byte::class.javaObjectType, Int::class.javaObjectType) to Int::class.javaObjectType,
+    setOf(Byte::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
+    setOf(Byte::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(Byte::class.javaObjectType, Float::class.javaObjectType) to Float::class.javaObjectType,
+    setOf(Byte::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Byte::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    // SHORT
+    setOf(Short::class.javaObjectType, Byte::class.javaObjectType) to Short::class.javaObjectType,
+    setOf(Short::class.javaObjectType, Short::class.javaObjectType) to Short::class.javaObjectType,
+    setOf(Short::class.javaObjectType, Int::class.javaObjectType) to Int::class.javaObjectType,
+    setOf(Short::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
+    setOf(Short::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(Short::class.javaObjectType, Float::class.javaObjectType) to Float::class.javaObjectType,
+    setOf(Short::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Short::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    // INT
+    setOf(Int::class.javaObjectType, Byte::class.javaObjectType) to Int::class.javaObjectType,
+    setOf(Int::class.javaObjectType, Short::class.javaObjectType) to Int::class.javaObjectType,
     setOf(Int::class.javaObjectType, Int::class.javaObjectType) to Int::class.javaObjectType,
     setOf(Int::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
     setOf(Int::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
-    setOf(Long::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
-    setOf(BigInteger::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
-    // Int w/ Float -> Double
     setOf(Int::class.javaObjectType, Float::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Int::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Int::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
-
-    setOf(Float::class.javaObjectType, Float::class.javaObjectType) to Float::class.javaObjectType,
-    // Float w/ Long -> Double
-    setOf(Float::class.javaObjectType, Long::class.javaObjectType) to Double::class.javaObjectType,
-    setOf(Float::class.javaObjectType, BigInteger::class.javaObjectType) to Double::class.javaObjectType,
-    setOf(Float::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
-    setOf(Float::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
-
+    // LONG
+    setOf(Long::class.javaObjectType, Byte::class.javaObjectType) to Long::class.javaObjectType,
+    setOf(Long::class.javaObjectType, Short::class.javaObjectType) to Long::class.javaObjectType,
+    setOf(Long::class.javaObjectType, Int::class.javaObjectType) to Long::class.javaObjectType,
     setOf(Long::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
     setOf(Long::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(Long::class.javaObjectType, Float::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Long::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Long::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
-
-    setOf(BigInteger::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
-    setOf(BigInteger::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
-    setOf(BigInteger::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
-
+    // FLOAT
+    setOf(Float::class.javaObjectType, Byte::class.javaObjectType) to Float::class.javaObjectType,
+    setOf(Float::class.javaObjectType, Short::class.javaObjectType) to Float::class.javaObjectType,
+    setOf(Float::class.javaObjectType, Int::class.javaObjectType) to Float::class.javaObjectType,
+    setOf(Float::class.javaObjectType, Long::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Float::class.javaObjectType, BigInteger::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Float::class.javaObjectType, Float::class.javaObjectType) to Float::class.javaObjectType,
+    setOf(Float::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Float::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    // DOUBLE
+    setOf(Double::class.javaObjectType, Byte::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Double::class.javaObjectType, Short::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Double::class.javaObjectType, Int::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Double::class.javaObjectType, Long::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Double::class.javaObjectType, BigInteger::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Double::class.javaObjectType, Float::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Double::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Double::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
-
+    // BIG INTEGER
+    setOf(BigInteger::class.javaObjectType, Byte::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, Short::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, Int::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, Long::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, Float::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    // BIG DECIMAL
+    setOf(BigDecimal::class.javaObjectType, Byte::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    setOf(BigDecimal::class.javaObjectType, Short::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    setOf(BigDecimal::class.javaObjectType, Int::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    setOf(BigDecimal::class.javaObjectType, Long::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    setOf(BigDecimal::class.javaObjectType, BigInteger::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    setOf(BigDecimal::class.javaObjectType, Float::class.javaObjectType) to BigDecimal::class.javaObjectType,
+    setOf(BigDecimal::class.javaObjectType, Double::class.javaObjectType) to BigDecimal::class.javaObjectType,
     setOf(BigDecimal::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 )
 
 private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
+    Byte::class.javaObjectType to Number::toByte,
+    Short::class.javaObjectType to Number::toShort,
     Int::class.javaObjectType to Number::toInt,
     Long::class.javaObjectType to Number::toLong,
     Float::class.javaObjectType to Number::toFloat,
     Double::class.javaObjectType to Number::toDouble,
     BigInteger::class.javaObjectType to { num ->
         when (num) {
+            is Byte -> num.toInt().toBigInteger()
+            is Short -> num.toInt().toBigInteger()
             is Int -> num.toBigInteger()
             is Long -> num.toBigInteger()
             is BigInteger -> num
@@ -95,6 +144,8 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     },
     BigDecimal::class.java to { num ->
         when (num) {
+            is Byte -> bigDecimalOf(num)
+            is Short -> bigDecimalOf(num)
             is Int -> bigDecimalOf(num)
             is Long -> bigDecimalOf(num)
             is Float -> bigDecimalOf(num)
@@ -109,13 +160,15 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
 )
 
 internal fun Number.isZero() = when (this) {
+    is Byte -> this.toInt() == 0
+    is Short -> this.toInt() == 0
     is Int -> this == 0
     is Long -> this == 0L
     is Float -> this == 0.0f || this == -0.0f
     is Double -> this == 0.0 || this == -0.0
     is BigDecimal -> this.signum() == 0
     is BigInteger -> this.signum() == 0
-    else -> throw IllegalStateException("$this")
+    else -> throw IllegalStateException("$this (${this.javaClass.simpleName})")
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -148,6 +201,8 @@ public fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
 internal operator fun Number.compareTo(other: Number): Int {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
+        is Byte -> first.compareTo(second as Byte)
+        is Short -> first.compareTo(second as Short)
         is Int -> first.compareTo(second as Int)
         is Long -> first.compareTo(second as Long)
         is Float -> first.compareTo(second as Float)

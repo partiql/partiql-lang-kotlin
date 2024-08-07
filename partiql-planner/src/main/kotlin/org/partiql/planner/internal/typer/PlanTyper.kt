@@ -101,9 +101,9 @@ internal class PlanTyper(private val env: Env) {
          *
          * TODO: Can this be merged with [anyOf]? Should we even allow this?
          */
-        fun anyOfLiterals(types: Collection<PType>): PType? {
+        fun anyOfLiterals(types: Collection<CompilerType>): PType? {
             // Grab unique
-            var unique: Collection<PType> = types.toSet()
+            var unique: Collection<PType> = types.map { it.getDelegate() }.toSet()
             if (unique.size == 0) {
                 return null
             } else if (unique.size == 1) {
@@ -133,7 +133,7 @@ internal class PlanTyper(private val env: Env) {
         }
 
         private fun collapseCollection(collections: Iterable<PType>, type: Kind): PType {
-            val typeParam = anyOfLiterals(collections.map { it.typeParameter })!!
+            val typeParam = anyOfLiterals(collections.map { it.typeParameter.toCType() })!!
             return when (type) {
                 Kind.LIST -> PType.typeList(typeParam)
                 Kind.BAG -> PType.typeList(typeParam)
@@ -145,13 +145,13 @@ internal class PlanTyper(private val env: Env) {
         private fun collapseRows(rows: Iterable<PType>): PType {
             val firstFields = rows.first().fields!!
             val fieldNames = firstFields.map { it.name }
-            val fieldTypes = firstFields.map { mutableListOf(it.type) }
+            val fieldTypes = firstFields.map { mutableListOf(it.type.toCType()) }
             rows.map { struct ->
                 val fields = struct.fields!!
                 if (fields.map { it.name } != fieldNames) {
                     return PType.typeStruct()
                 }
-                fields.forEachIndexed { index, field -> fieldTypes[index].add(field.type) }
+                fields.forEachIndexed { index, field -> fieldTypes[index].add(field.type.toCType()) }
             }
             val newFields = fieldTypes.mapIndexed { i, types -> Field.of(fieldNames[i], anyOfLiterals(types)!!) }
             return PType.typeRow(newFields)
@@ -162,7 +162,10 @@ internal class PlanTyper(private val env: Env) {
             return anyOf(unique)
         }
 
-        fun PType.toCType(): CompilerType = CompilerType(this)
+        fun PType.toCType(): CompilerType = when (this) {
+            is CompilerType -> this
+            else -> CompilerType(this)
+        }
 
         fun List<PType>.toCType(): List<CompilerType> = this.map { it.toCType() }
 

@@ -79,6 +79,17 @@ internal object RexConverter {
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private object ToRex : AstBaseVisitor<Rex, Env>() {
 
+        private val COLL_AGG_NAMES = setOf(
+            "coll_any",
+            "coll_avg",
+            "coll_count",
+            "coll_every",
+            "coll_max",
+            "coll_min",
+            "coll_some",
+            "coll_sum",
+        )
+
         override fun defaultReturn(node: AstNode, context: Env): Rex =
             throw IllegalArgumentException("unsupported rex $node")
 
@@ -465,9 +476,50 @@ internal object RexConverter {
             }
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
-            // Rex
+
+            // Check if function is actually coll_<agg>
+            if (isCollAgg(node)) {
+                return callToCollAgg(id, node.setq, args)
+            }
+
+            if (node.setq != null) {
+                error("Currently, only COLL_<AGG> may use set quantifiers.")
+            }
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
+        }
+
+        /**
+         * @return whether call is `COLL_<AGG>`.
+         */
+        private fun isCollAgg(node: Expr.Call): Boolean {
+            val id = node.function as? org.partiql.ast.Identifier.Symbol ?: return false
+            return COLL_AGG_NAMES.contains(id.symbol.lowercase())
+        }
+
+        /**
+         * Converts COLL_<AGG> to the relevant function calls. For example:
+         * - `COLL_SUM(x)` becomes `coll_sum_all(x)`
+         * - `COLL_SUM(ALL x)` becomes `coll_sum_all(x)`
+         * - `COLL_SUM(DISTINCT x)` becomes `coll_sum_distinct(x)`
+         *
+         * It is assumed that the [id] has already been vetted by [isCollAgg].
+         */
+        private fun callToCollAgg(id: Identifier, setQuantifier: SetQuantifier?, args: List<Rex>): Rex {
+            if (id.hasQualifier()) {
+                error("Qualified function calls are not currently supported.")
+            }
+            if (args.size != 1) {
+                error("Aggregate calls currently only support single arguments. Received ${args.size} arguments.")
+            }
+            val postfix = when (setQuantifier) {
+                SetQuantifier.DISTINCT -> "_distinct"
+                SetQuantifier.ALL -> "_all"
+                null -> "_all"
+            }
+            val newId = Identifier.regular(id.getIdentifier().getText() + postfix)
+            val op = Rex.Op.Call.Unresolved(newId, listOf(args[0]))
+            return Rex(ANY, op)
         }
 
         private fun visitExprCallTupleUnion(node: Expr.Call, context: Env): Rex {
