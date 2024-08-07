@@ -498,18 +498,12 @@ internal object RexConverter {
         }
 
         /**
-         * Converts inputs to `COLL_<AGG>` when DISTINCT is used.
+         * Converts COLL_<AGG> to the relevant function calls. For example:
+         * - `COLL_SUM(x)` becomes `coll_sum_all(x)`
+         * - `COLL_SUM(ALL x)` becomes `coll_sum_all(x)`
+         * - `COLL_SUM(DISTINCT x)` becomes `coll_sum_distinct(x)`
          *
-         * Converts AST `COLL_MAX(DISTINCT x)` to PLAN:
-         * ```
-         * Call (COLL_MAX(Var(0)))
-         * - Select (Var(0))
-         *   - Distinct (Var(0))
-         *     - Scan (x)
-         * ```
-         *
-         * For the case where there is no set quantifier (or, if ALL is specified), i.e. `COLL_MAX(x)` or
-         * `COLL_MAX(ALL x)`, the plan is equivalent to `COLL_MAX(x)`.
+         * It is assumed that the [id] has already been vetted by [isCollAgg].
          */
         private fun callToCollAgg(id: Identifier, setQuantifier: SetQuantifier?, args: List<Rex>): Rex {
             if (id.hasQualifier()) {

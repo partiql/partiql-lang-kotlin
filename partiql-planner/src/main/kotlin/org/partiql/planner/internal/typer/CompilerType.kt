@@ -19,7 +19,7 @@ internal class CompilerType(
     // Note: This is an experimental property.
     internal val isMissingValue: Boolean = false
 ) : PType {
-    public fun getDelegate(): PType = _delegate
+    fun getDelegate(): PType = _delegate
     override fun getKind(): Kind = _delegate.kind
     override fun getFields(): MutableCollection<Field> {
         return _delegate.fields.map { field ->
