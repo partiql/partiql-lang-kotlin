@@ -72,6 +72,7 @@ tasks.compileKotlin {
     kotlinOptions.jvmTarget = Versions.jvmTarget
     kotlinOptions.apiVersion = Versions.kotlinApi
     kotlinOptions.languageVersion = Versions.kotlinLanguage
+    kotlinOptions.freeCompilerArgs += listOf("-Xjvm-default=all")
 }
 
 tasks.compileTestKotlin {

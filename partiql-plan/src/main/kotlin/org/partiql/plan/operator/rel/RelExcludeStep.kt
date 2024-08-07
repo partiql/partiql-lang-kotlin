@@ -1,0 +1,40 @@
+package org.partiql.plan.operator.rel
+
+/**
+ * TODO DOCUMENTATION
+ */
+public interface RelExcludeStep {
+
+    public fun getSubsteps(): List<RelExcludeStep>
+
+    /**
+     * TODO DOCUMENTATION
+     */
+    public interface Index : RelExcludeStep {
+        public fun getIndex(): Int
+    }
+
+    /**
+     * TODO DOCUMENTATION
+     */
+    public interface Key : RelExcludeStep {
+        public fun getKey(): String
+    }
+
+    /**
+     * TODO DOCUMENTATION
+     */
+    public interface Symbol : RelExcludeStep {
+        public fun getSymbol(): String
+    }
+
+    /**
+     * TODO DOCUMENTATION
+     */
+    public interface StructWildcard : RelExcludeStep
+
+    /**
+     * TODO DOCUMENTATION
+     */
+    public interface CollectionWildcard : RelExcludeStep
+}
