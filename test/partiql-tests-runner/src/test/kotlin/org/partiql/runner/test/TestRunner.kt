@@ -26,6 +26,8 @@ class TestRunner<T, V>(private val factory: TestExecutor.Factory<T, V>) {
         case.statements.forEach { run(it, case, executor) }
     }
 
+    private class TestRunnerException(message: String) : RuntimeException(message)
+
     private fun run(input: String, case: TestCase, executor: TestExecutor<T, V>) {
         val assertion = case.assertion
         try {
@@ -36,14 +38,16 @@ class TestRunner<T, V>(private val factory: TestExecutor.Factory<T, V>) {
                     val expect = executor.fromIon(assertion.expectedResult)
                     if (!executor.compare(actual, expect)) {
                         val ion = executor.toIon(actual)
-                        error("Expected: ${assertion.expectedResult}\nActual: $ion\nMode: ${case.compileOptions.typingMode}")
+                        throw TestRunnerException("Expected error to be thrown but none was thrown.\n${case.name}\nActual result: $ion")
                     }
                 }
                 is Assertion.EvaluationFailure -> {
                     val ion = executor.toIon(actual)
-                    error("Expected error to be thrown but none was thrown.\n${case.name}\nActual result: $ion")
+                    throw TestRunnerException("Expected error to be thrown but none was thrown.\n${case.name}\nActual result: $ion")
                 }
             }
+        } catch (e: TestRunnerException) {
+            throw TestRunnerException(e.message ?: "Expected error to be thrown but none was thrown.")
         } catch (e: Exception) {
             when (case.assertion) {
                 is Assertion.EvaluationSuccess -> throw IllegalStateException("Expected success but exception thrown.", e)
