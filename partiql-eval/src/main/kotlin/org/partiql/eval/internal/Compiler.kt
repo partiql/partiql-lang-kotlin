@@ -279,8 +279,8 @@ internal class Compiler(
         val lhs = visitRex(node.lhs, ctx)
         val rhs = visitRex(node.rhs, ctx)
         return when (node.setq) {
-            SetQuantifier.ALL -> ExprUnionAll(lhs, rhs)
-            SetQuantifier.DISTINCT -> ExprUnionDistinct(lhs, rhs)
+            SetQuantifier.ALL -> ExprUnionAll(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
+            SetQuantifier.DISTINCT -> ExprUnionDistinct(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
         }
     }
 
@@ -288,8 +288,8 @@ internal class Compiler(
         val lhs = visitRex(node.lhs, ctx)
         val rhs = visitRex(node.rhs, ctx)
         return when (node.setq) {
-            SetQuantifier.ALL -> ExprExceptAll(lhs, rhs)
-            SetQuantifier.DISTINCT -> ExprExceptDistinct(lhs, rhs)
+            SetQuantifier.ALL -> ExprExceptAll(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
+            SetQuantifier.DISTINCT -> ExprExceptDistinct(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
         }
     }
 
@@ -297,8 +297,8 @@ internal class Compiler(
         val lhs = visitRex(node.lhs, ctx)
         val rhs = visitRex(node.rhs, ctx)
         return when (node.setq) {
-            SetQuantifier.ALL -> ExprIntersectAll(lhs, rhs)
-            SetQuantifier.DISTINCT -> ExprIntersectDistinct(lhs, rhs)
+            SetQuantifier.ALL -> ExprIntersectAll(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
+            SetQuantifier.DISTINCT -> ExprIntersectDistinct(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
         }
     }
 

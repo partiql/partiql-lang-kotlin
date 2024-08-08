@@ -127,11 +127,7 @@ internal object RelConverter {
                 }
             }
             is QueryExpr.SetOp -> {
-                val rel = body.accept(ToRel(env), nil)
-                assert(rel.type.schema.size == 1) {
-                    "Expected SELECT VALUE's input to have a single binding. " +
-                        "However, it contained: ${rel.type.schema.map { it.name }}."
-                }
+                val rel = newQSet.accept(ToRel(env), nil)
                 val constructor = rex(ANY, rexOpVarLocal(0, 0))
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
