@@ -3,22 +3,12 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.spi.fn.utils.StringUtils.codepointTrim
-import org.partiql.value.ClobValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.StringValue
-import org.partiql.value.SymbolValue
-import org.partiql.value.check
-import org.partiql.value.clobValue
-import org.partiql.value.stringValue
-import org.partiql.value.symbolValue
+import org.partiql.types.PType
 
 /**
  * From section 6.7 of SQL 92 spec:
@@ -49,56 +39,53 @@ import org.partiql.value.symbolValue
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_TRIM__STRING__STRING : Fn {
 
     override val signature = FnSignature(
         name = "trim",
-        returns = STRING,
-        parameters = listOf(FnParameter("value", STRING)),
+        returns = PType.typeString(),
+        parameters = listOf(FnParameter("value", PType.typeString())),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<StringValue>().string!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
         val result = value.codepointTrim()
-        return stringValue(result)
+        return Datum.string(result)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_TRIM__SYMBOL__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "trim",
-        returns = SYMBOL,
-        parameters = listOf(FnParameter("value", SYMBOL)),
+        returns = PType.typeSymbol(),
+        parameters = listOf(FnParameter("value", PType.typeSymbol())),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<SymbolValue>().string!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
         val result = value.codepointTrim()
-        return symbolValue(result)
+        return Datum.symbol(result)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_TRIM__CLOB__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "trim",
-        returns = CLOB,
-        parameters = listOf(FnParameter("value", CLOB)),
+        returns = PType.typeClob(Int.MAX_VALUE),
+        parameters = listOf(FnParameter("value", PType.typeClob(Int.MAX_VALUE))),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val string = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
+    override fun invoke(args: Array<Datum>): Datum {
+        val string = args[0].bytes.toString(Charsets.UTF_8)
         val result = string.codepointTrim()
-        return clobValue(result.toByteArray())
+        return Datum.clob(result.toByteArray())
     }
 }

@@ -40,9 +40,9 @@ internal class RelScanIndexedPermissive(
             true -> {
                 val i = index
                 index += 1
-                Record.of(v, Datum.int64Value(i))
+                Record.of(v, Datum.bigInt(i))
             }
-            false -> Record.of(v, Datum.missingValue())
+            false -> Record.of(v, Datum.missing())
         }
     }
 

@@ -1,17 +1,14 @@
 package org.partiql.spi.fn.builtins.internal
 
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.bagValue
+import org.partiql.eval.value.Datum
 
-@OptIn(PartiQLValueExperimental::class)
 internal class AccumulatorGroupAs : Accumulator() {
 
-    val values = mutableListOf<PartiQLValue>()
+    val values = mutableListOf<Datum>()
 
-    override fun nextValue(value: PartiQLValue) {
+    override fun nextValue(value: Datum) {
         values.add(value)
     }
 
-    override fun value(): PartiQLValue = bagValue(values)
+    override fun value(): Datum = Datum.bag(values)
 }

@@ -3,81 +3,68 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.ClobValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.StringValue
-import org.partiql.value.SymbolValue
-import org.partiql.value.check
-import org.partiql.value.clobValue
-import org.partiql.value.stringValue
-import org.partiql.value.symbolValue
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_CONCAT__STRING_STRING__STRING : Fn {
 
     override val signature = FnSignature(
         name = "concat",
-        returns = STRING,
+        returns = PType.typeString(),
         parameters = listOf(
-            FnParameter("lhs", STRING),
-            FnParameter("rhs", STRING),
+            FnParameter("lhs", PType.typeString()),
+            FnParameter("rhs", PType.typeString()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val arg0 = args[0].check<StringValue>().value!!
-        val arg1 = args[1].check<StringValue>().value!!
-        return stringValue(arg0 + arg1)
+    override fun invoke(args: Array<Datum>): Datum {
+        val arg0 = args[0].string
+        val arg1 = args[1].string
+        return Datum.string(arg0 + arg1)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "concat",
-        returns = SYMBOL,
+        returns = PType.typeSymbol(),
         parameters = listOf(
-            FnParameter("lhs", SYMBOL),
-            FnParameter("rhs", SYMBOL),
+            FnParameter("lhs", PType.typeSymbol()),
+            FnParameter("rhs", PType.typeSymbol()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val arg0 = args[0].check<SymbolValue>().value!!
-        val arg1 = args[1].check<SymbolValue>().value!!
-        return symbolValue(arg0 + arg1)
+    override fun invoke(args: Array<Datum>): Datum {
+        val arg0 = args[0].string
+        val arg1 = args[1].string
+        return Datum.symbol(arg0 + arg1)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_CONCAT__CLOB_CLOB__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "concat",
-        returns = CLOB,
+        returns = PType.typeClob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("lhs", CLOB),
-            FnParameter("rhs", CLOB),
+            FnParameter("lhs", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("rhs", PType.typeClob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val arg0 = args[0].check<ClobValue>().value!!
-        val arg1 = args[1].check<ClobValue>().value!!
-        return clobValue(arg0 + arg1)
+    override fun invoke(args: Array<Datum>): Datum {
+        val arg0 = args[0].bytes
+        val arg1 = args[1].bytes
+        return Datum.clob(arg0 + arg1)
     }
 }

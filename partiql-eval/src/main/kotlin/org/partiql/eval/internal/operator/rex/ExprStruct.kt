@@ -19,7 +19,7 @@ internal class ExprStruct(private val fields: List<Field>) : Operator.Expr {
                 false -> org.partiql.eval.value.Field.of(keyString, value)
             }
         }
-        return Datum.structValue(fields)
+        return Datum.struct(fields)
     }
 
     internal class Field(val key: Operator.Expr, val value: Operator.Expr)

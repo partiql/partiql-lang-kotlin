@@ -24,6 +24,6 @@ internal class ExprPivot(
             fields.add(Field.of(keyString, v))
         }
         input.close()
-        return Datum.structValue(fields)
+        return Datum.struct(fields)
     }
 }

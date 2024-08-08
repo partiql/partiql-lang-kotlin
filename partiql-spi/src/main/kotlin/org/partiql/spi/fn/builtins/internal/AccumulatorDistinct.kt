@@ -1,5 +1,6 @@
 package org.partiql.spi.fn.builtins.internal
 
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import java.util.TreeSet
@@ -13,16 +14,16 @@ internal class AccumulatorDistinct(
     @OptIn(PartiQLValueExperimental::class)
     private val seen = TreeSet(PartiQLValue.comparator())
 
-    @OptIn(PartiQLValueExperimental::class)
-    override fun nextValue(value: PartiQLValue) {
-        if (!seen.contains(value)) {
-            seen.add(value)
+    override fun nextValue(value: Datum) {
+        @OptIn(PartiQLValueExperimental::class)
+        val pValue = value.toPartiQLValue()
+        if (!seen.contains(pValue)) {
+            seen.add(pValue)
             _delegate.nextValue(value)
         }
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    override fun value(): PartiQLValue {
+    override fun value(): Datum {
         return _delegate.value()
     }
 }

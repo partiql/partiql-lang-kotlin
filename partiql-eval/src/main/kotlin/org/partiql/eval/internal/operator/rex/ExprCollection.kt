@@ -14,9 +14,9 @@ internal class ExprCollection(
     @PartiQLValueExperimental
     override fun eval(env: Environment): Datum {
         return when (type.kind) {
-            PType.Kind.BAG -> Datum.bagValue(values.map { it.eval(env) })
-            PType.Kind.SEXP -> Datum.sexpValue(values.map { it.eval(env) })
-            PType.Kind.LIST -> Datum.listValue(values.map { it.eval(env) })
+            PType.Kind.BAG -> Datum.bag(values.map { it.eval(env) })
+            PType.Kind.SEXP -> Datum.sexp(values.map { it.eval(env) })
+            PType.Kind.LIST -> Datum.list(values.map { it.eval(env) })
             else -> error("Unsupported type for collection $type")
         }
     }

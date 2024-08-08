@@ -3,54 +3,45 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.Int16Value
-import org.partiql.value.Int32Value
-import org.partiql.value.Int64Value
-import org.partiql.value.Int8Value
-import org.partiql.value.IntValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.boolValue
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_IS_INT16__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_int16",
-        returns = BOOL,
-        parameters = listOf(FnParameter("value", ANY)),
+        returns = PType.typeBool(),
+        parameters = listOf(FnParameter("value", PType.typeDynamic())),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return when (val arg = args[0]) {
-            is Int8Value,
-            is Int16Value,
-            -> boolValue(true)
-            is Int32Value -> {
-                val v = arg.value!!
-                boolValue(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
+    override fun invoke(args: Array<Datum>): Datum {
+        val arg = args[0]
+        return when (arg.type.kind) {
+            PType.Kind.TINYINT,
+            PType.Kind.SMALLINT -> Datum.bool(true)
+            PType.Kind.INT -> {
+                val v = arg.int
+                Datum.bool(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
             }
-            is Int64Value -> {
-                val v = arg.value!!
-                boolValue(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
+            PType.Kind.BIGINT -> {
+                val v = arg.long
+                Datum.bool(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
             }
-            is IntValue -> {
-                val v = arg.value!!
+            PType.Kind.INT_ARBITRARY -> {
+                val v = arg.bigInteger
                 return try {
                     v.shortValueExact()
-                    boolValue(true)
+                    Datum.bool(true)
                 } catch (_: ArithmeticException) {
-                    boolValue(false)
+                    Datum.bool(false)
                 }
             }
-            else -> boolValue(false)
+            else -> Datum.bool(false)
         }
     }
 }

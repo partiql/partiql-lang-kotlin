@@ -3,27 +3,24 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.TIMESTAMP
+import org.partiql.types.PType
 import org.partiql.value.datetime.TimestampWithTimeZone
-import org.partiql.value.timestampValue
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_UTCNOW____TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "utcnow",
-        returns = TIMESTAMP,
+        returns = PType.typeTimestampWithoutTZ(6),
         parameters = listOf(),
         isNullCall = false,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+    override fun invoke(args: Array<Datum>): Datum {
         val now = TimestampWithTimeZone.nowZ()
-        return timestampValue(now)
+        return Datum.timestampWithoutTZ(now)
     }
 }

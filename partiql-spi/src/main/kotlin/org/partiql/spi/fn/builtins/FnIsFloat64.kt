@@ -3,34 +3,27 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.Float32Value
-import org.partiql.value.Float64Value
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.boolValue
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_IS_FLOAT64__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_float64",
-        returns = BOOL,
-        parameters = listOf(FnParameter("value", ANY)),
+        returns = PType.typeBool(),
+        parameters = listOf(FnParameter("value", PType.typeDynamic())),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return when (args[0]) {
-            is Float32Value,
-            is Float64Value,
-            -> boolValue(true)
-            else -> boolValue(false)
+    override fun invoke(args: Array<Datum>): Datum {
+        return when (args[0].type.kind) {
+            PType.Kind.REAL,
+            PType.Kind.DOUBLE_PRECISION -> Datum.bool(true)
+            else -> Datum.bool(false)
         }
     }
 }

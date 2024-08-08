@@ -7,7 +7,6 @@ import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * This represents Dynamic Dispatch.
@@ -29,7 +28,6 @@ import org.partiql.value.PartiQLValueExperimental
  * to know if an argument is coercible to the target parameter.
  * @property cachedMatches a memoization cache for the [match] function.
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class ExprCallDynamic(
     private val name: String,
     candidateFns: Array<Fn>,
@@ -172,14 +170,11 @@ internal class ExprCallDynamic(
                 val argType = arg.type
                 val paramType = fn.signature.parameters[i].type
                 when (paramType == argType) {
-                    true -> arg.toPartiQLValue()
-                    false -> {
-                        val argDatum = CastTable.cast(arg, paramType)
-                        argDatum.toPartiQLValue()
-                    }
+                    true -> arg
+                    false -> CastTable.cast(arg, paramType)
                 }
             }.toTypedArray()
-            return Datum.of(fn.invoke(args))
+            return fn.invoke(args)
         }
     }
 }

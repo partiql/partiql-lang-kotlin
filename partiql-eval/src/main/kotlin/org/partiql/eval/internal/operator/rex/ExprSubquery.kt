@@ -31,7 +31,7 @@ internal abstract class ExprSubquery : Operator.Expr {
         override fun eval(env: Environment): Datum {
             val tuple = getFirst(env) ?: return Datum.nullValue()
             val values = IteratorSupplier { tuple.fields }.map { it.value }
-            return Datum.listValue(values)
+            return Datum.list(values)
         }
     }
 

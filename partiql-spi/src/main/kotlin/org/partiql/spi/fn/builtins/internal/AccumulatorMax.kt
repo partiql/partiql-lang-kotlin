@@ -1,17 +1,20 @@
 package org.partiql.spi.fn.builtins.internal
 
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.nullValue
 
-@OptIn(PartiQLValueExperimental::class)
 internal class AccumulatorMax : Accumulator() {
 
-    var max: PartiQLValue = nullValue()
+    var max: Datum = Datum.nullValue()
 
-    override fun nextValue(value: PartiQLValue) {
-        max = comparisonAccumulator(PartiQLValue.comparator(nullsFirst = true).reversed())(max, value)
+    /**
+     * TODO: When we add a Datum comparator, the inefficient jumping between PartiQLValue and Datum can be removed.
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    override fun nextValue(value: Datum) {
+        max = Datum.of(comparisonAccumulator(PartiQLValue.comparator(nullsFirst = true).reversed())(max.toPartiQLValue(), value.toPartiQLValue()))
     }
 
-    override fun value(): PartiQLValue = max
+    override fun value(): Datum = max
 }

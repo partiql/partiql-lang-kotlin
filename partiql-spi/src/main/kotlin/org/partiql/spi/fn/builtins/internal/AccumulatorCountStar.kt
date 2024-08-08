@@ -1,18 +1,15 @@
 package org.partiql.spi.fn.builtins.internal
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Agg
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int64Value
 
-@OptIn(PartiQLValueExperimental::class)
 internal class AccumulatorCountStar : Agg.Accumulator {
 
     var count: Long = 0L
 
-    override fun next(args: Array<PartiQLValue>) {
+    override fun next(args: Array<Datum>) {
         this.count += 1L
     }
 
-    override fun value(): PartiQLValue = int64Value(count)
+    override fun value(): Datum = Datum.bigInt(count)
 }

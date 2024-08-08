@@ -8,15 +8,12 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * As far as testing is concerned, we can stub out all value related things.
  * We may be able to pretty-print with string equals to also simplify things.
  * Only the "types" of expressions matter, we ignore the underlying ops.
  */
-@OptIn(PartiQLValueExperimental::class)
 class FnResolverTest {
 
     @Test
@@ -25,10 +22,10 @@ class FnResolverTest {
         val variants = listOf(
             FnSignature(
                 name = "plus",
-                returns = PartiQLValueType.FLOAT64,
+                returns = PType.typeDoublePrecision(),
                 parameters = listOf(
-                    FnParameter("arg-0", PartiQLValueType.FLOAT64),
-                    FnParameter("arg-1", PartiQLValueType.FLOAT64),
+                    FnParameter("arg-0", PType.typeDoublePrecision()),
+                    FnParameter("arg-1", PType.typeDoublePrecision()),
                 ),
             )
         )
@@ -43,10 +40,10 @@ class FnResolverTest {
         val variants = listOf(
             FnSignature(
                 name = "split",
-                returns = PartiQLValueType.LIST,
+                returns = PType.typeList(),
                 parameters = listOf(
-                    FnParameter("value", PartiQLValueType.STRING),
-                    FnParameter("delimiter", PartiQLValueType.STRING),
+                    FnParameter("value", PType.typeString()),
+                    FnParameter("delimiter", PType.typeString()),
                 ),
                 isNullable = false,
             )

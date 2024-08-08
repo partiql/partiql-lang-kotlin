@@ -7,17 +7,15 @@ import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.builtins.internal.AccumulatorGroupAs
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_GROUP_AS__ANY__ANY : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "group_as",
-        returns = PartiQLValueType.ANY,
+        returns = PType.typeDynamic(),
         parameters = listOf(
-            FnParameter("value", PartiQLValueType.ANY),
+            FnParameter("value", PType.typeDynamic()),
         ),
         isNullable = true,
         isDecomposable = true

@@ -1,8 +1,6 @@
 package org.partiql.spi.fn
 
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * Represents the signature of a PartiQL aggregation function.
@@ -10,7 +8,6 @@ import org.partiql.value.PartiQLValueType
  * @property isDecomposable     Flag indicating this aggregation can be decomposed
  * @constructor
  */
-@OptIn(PartiQLValueExperimental::class)
 public class AggSignature(
     @JvmField public val name: String,
     @JvmField public val returns: PType,
@@ -19,17 +16,6 @@ public class AggSignature(
     @JvmField public val isNullable: Boolean = true,
     @JvmField public val isDecomposable: Boolean = true,
 ) {
-
-    public constructor(
-        name: String,
-        returns: PartiQLValueType,
-        parameters: List<FnParameter>,
-        description: String? = null,
-        isNullable: Boolean = true,
-        isDecomposable: Boolean = true,
-    ) : this(
-        name, returns.toPType(), parameters, description, isNullable, isDecomposable
-    )
 
     /**
      * Symbolic name of this operator of the form NAME__INPUTS__RETURNS

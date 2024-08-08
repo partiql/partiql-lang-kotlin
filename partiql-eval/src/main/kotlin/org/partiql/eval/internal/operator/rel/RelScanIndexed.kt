@@ -38,7 +38,7 @@ internal class RelScanIndexed(
         val i = index
         val v = iterator.next()
         index += 1
-        return Record.of(v, Datum.int64Value(i))
+        return Record.of(v, Datum.bigInt(i))
     }
 
     override fun close() {}

@@ -18,28 +18,12 @@ package org.partiql.spi.fn.builtins.internal
 
 import com.amazon.ion.Decimal
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Agg
-import org.partiql.value.BoolValue
-import org.partiql.value.DecimalValue
-import org.partiql.value.Float32Value
-import org.partiql.value.Float64Value
-import org.partiql.value.Int16Value
-import org.partiql.value.Int32Value
-import org.partiql.value.Int64Value
-import org.partiql.value.Int8Value
-import org.partiql.value.IntValue
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.decimalValue
-import org.partiql.value.float32Value
-import org.partiql.value.float64Value
-import org.partiql.value.int16Value
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.int8Value
-import org.partiql.value.intValue
-import org.partiql.value.nullValue
 import org.partiql.value.util.coerceNumbers
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -48,18 +32,15 @@ import java.math.RoundingMode
 
 internal abstract class Accumulator : Agg.Accumulator {
 
-    /** Accumulates the next value into this [Accumulator]. */
-    @OptIn(PartiQLValueExperimental::class)
-    override fun next(args: Array<PartiQLValue>) {
+    override fun next(args: Array<Datum>) {
         val value = args[0]
-        if (value.isUnknown()) return
+        if (value.isNull || value.isMissing) return
         nextValue(value)
     }
 
-    abstract fun nextValue(value: PartiQLValue)
+    abstract fun nextValue(value: Datum)
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal fun comparisonAccumulator(comparator: Comparator<PartiQLValue>): (PartiQLValue?, PartiQLValue) -> PartiQLValue =
     { left, right ->
         when {
@@ -68,8 +49,7 @@ internal fun comparisonAccumulator(comparator: Comparator<PartiQLValue>): (Parti
         }
     }
 
-@OptIn(PartiQLValueExperimental::class)
-internal fun checkIsNumberType(funcName: String, value: PartiQLValue) {
+internal fun checkIsNumberType(funcName: String, value: Datum) {
     if (!value.type.isNumber()) {
         throw TypeCheckException("Expected NUMBER but received ${value.type}.")
     }
@@ -120,101 +100,80 @@ private fun Long.checkOverflowPlus(other: Long): Number {
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
-internal fun checkIsBooleanType(funcName: String, value: PartiQLValue) {
-    if (value.type != PartiQLValueType.BOOL) {
+internal fun checkIsBooleanType(funcName: String, value: Datum) {
+    if (value.type.kind != PType.Kind.BOOL) {
         throw TypeCheckException("Expected ${PartiQLValueType.BOOL} but received ${value.type}.")
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValue.isUnknown(): Boolean = this.type == PartiQLValueType.MISSING || this.isNull
-
-@OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValue.numberValue(): Number = when (this) {
-    is IntValue -> this.value!!
-    is Int8Value -> this.value!!
-    is Int16Value -> this.value!!
-    is Int32Value -> this.value!!
-    is Int64Value -> this.value!!
-    is DecimalValue -> this.value!!
-    is Float32Value -> this.value!!
-    is Float64Value -> this.value!!
+internal fun Datum.numberValue(): Number = when (this.type.kind) {
+    PType.Kind.TINYINT -> this.byte
+    PType.Kind.SMALLINT -> this.short
+    PType.Kind.INT -> this.int
+    PType.Kind.BIGINT -> this.long
+    PType.Kind.INT_ARBITRARY -> this.bigInteger
+    PType.Kind.REAL -> this.float
+    PType.Kind.DOUBLE_PRECISION -> this.double
+    PType.Kind.DECIMAL -> this.bigDecimal
+    PType.Kind.DECIMAL_ARBITRARY -> this.bigDecimal
     else -> error("Cannot convert PartiQLValue ($this) to number.")
 }
 
-@OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValue.booleanValue(): Boolean = when (this) {
-    is BoolValue -> this.value!!
+internal fun Datum.booleanValue(): Boolean = when (this.type.kind) {
+    PType.Kind.BOOL -> this.boolean
     else -> error("Cannot convert PartiQLValue ($this) to boolean.")
 }
 
-@OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValueType.isNumber(): Boolean = when (this) {
-    PartiQLValueType.INT,
-    PartiQLValueType.INT8,
-    PartiQLValueType.INT16,
-    PartiQLValueType.INT32,
-    PartiQLValueType.INT64,
-    PartiQLValueType.DECIMAL,
-    PartiQLValueType.DECIMAL_ARBITRARY,
-    PartiQLValueType.FLOAT32,
-    PartiQLValueType.FLOAT64,
-    -> true
+internal fun PType.isNumber(): Boolean = when (this.kind) {
+    PType.Kind.INT,
+    PType.Kind.TINYINT,
+    PType.Kind.SMALLINT,
+    PType.Kind.BIGINT,
+    PType.Kind.INT_ARBITRARY,
+    PType.Kind.REAL,
+    PType.Kind.DOUBLE_PRECISION,
+    PType.Kind.DECIMAL,
+    PType.Kind.DECIMAL_ARBITRARY -> true
     else -> false
 }
 
 /**
  * This is specifically for SUM/AVG
  */
-@OptIn(PartiQLValueExperimental::class)
-internal fun nullToTargetType(type: PartiQLValueType): PartiQLValue = when (type) {
-    PartiQLValueType.ANY -> nullValue()
-    PartiQLValueType.FLOAT32 -> float32Value(null)
-    PartiQLValueType.FLOAT64 -> float64Value(null)
-    PartiQLValueType.INT8 -> int8Value(null)
-    PartiQLValueType.INT16 -> int16Value(null)
-    PartiQLValueType.INT32 -> int32Value(null)
-    PartiQLValueType.INT64 -> int64Value(null)
-    PartiQLValueType.INT -> intValue(null)
-    PartiQLValueType.DECIMAL_ARBITRARY, PartiQLValueType.DECIMAL -> decimalValue(null)
-    else -> TODO("Unsupported target type $type")
-}
+internal fun nullToTargetType(type: PType): Datum = Datum.nullValue(type)
 
 /**
  * This is specifically for SUM/AVG
  */
-@OptIn(PartiQLValueExperimental::class)
-internal fun Number.toTargetType(type: PartiQLValueType): PartiQLValue = when (type) {
-    PartiQLValueType.ANY -> this.partiqlValue()
-    PartiQLValueType.FLOAT32 -> float32Value(this.toFloat())
-    PartiQLValueType.FLOAT64 -> float64Value(this.toDouble())
-    PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY -> {
+internal fun Number.toTargetType(type: PType): Datum = when (type.kind) {
+    PType.Kind.DYNAMIC -> this.toDatum()
+    PType.Kind.REAL -> Datum.real(this.toFloat())
+    PType.Kind.DOUBLE_PRECISION -> Datum.doublePrecision(this.toDouble())
+    PType.Kind.DECIMAL, PType.Kind.DECIMAL_ARBITRARY -> {
         when (this) {
-            is BigDecimal -> decimalValue(this)
-            is BigInteger -> decimalValue(this.toBigDecimal())
-            else -> decimalValue(BigDecimal.valueOf(this.toDouble()))
+            is BigDecimal -> Datum.decimalArbitrary(this)
+            is BigInteger -> Datum.decimalArbitrary(this.toBigDecimal())
+            else -> Datum.decimalArbitrary(BigDecimal.valueOf(this.toDouble()))
         }
     }
-    PartiQLValueType.INT8 -> int8Value(this.toByte())
-    PartiQLValueType.INT16 -> int16Value(this.toShort())
-    PartiQLValueType.INT32 -> int32Value(this.toInt())
-    PartiQLValueType.INT64 -> int64Value(this.toLong())
-    PartiQLValueType.INT -> when (this) {
-        is BigInteger -> intValue(this)
-        is BigDecimal -> intValue(this.toBigInteger())
-        else -> intValue(BigInteger.valueOf(this.toLong()))
+    PType.Kind.TINYINT -> Datum.tinyInt(this.toByte())
+    PType.Kind.SMALLINT -> Datum.smallInt(this.toShort())
+    PType.Kind.INT -> Datum.integer(this.toInt())
+    PType.Kind.BIGINT -> Datum.bigInt(this.toLong())
+    PType.Kind.INT_ARBITRARY -> when (this) {
+        is BigInteger -> Datum.intArbitrary(this)
+        is BigDecimal -> Datum.intArbitrary(this.toBigInteger())
+        else -> Datum.intArbitrary(BigInteger.valueOf(this.toLong()))
     }
     else -> TODO("Unsupported target type $type")
 }
 
-@OptIn(PartiQLValueExperimental::class)
-internal fun Number.partiqlValue(): PartiQLValue = when (this) {
-    is Int -> int32Value(this)
-    is Long -> int64Value(this)
-    is Double -> float64Value(this)
-    is BigDecimal -> decimalValue(this)
-    is BigInteger -> intValue(this)
+internal fun Number.toDatum(): Datum = when (this) {
+    is Int -> Datum.integer(this)
+    is Long -> Datum.bigInt(this)
+    is Double -> Datum.doublePrecision(this)
+    is BigDecimal -> Datum.decimalArbitrary(this)
+    is BigInteger -> Datum.intArbitrary(this)
     else -> TODO("Could not convert $this to PartiQL Value")
 }
 

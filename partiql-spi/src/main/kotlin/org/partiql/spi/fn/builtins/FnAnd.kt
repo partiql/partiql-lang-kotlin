@@ -3,25 +3,20 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.BoolValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.boolValue
-import org.partiql.value.check
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "and",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", BOOL),
-            FnParameter("rhs", BOOL),
+            FnParameter("lhs", PType.typeBool()),
+            FnParameter("rhs", PType.typeBool()),
         ),
         isNullable = true,
         isNullCall = false,
@@ -29,17 +24,16 @@ internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
         isMissingCall = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<BoolValue>()
-        val rhs = args[1].check<BoolValue>()
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
         // SQL:1999 Section 6.30 Table 13
-        val toReturn = when {
-            lhs.isNull && rhs.isNull -> null
-            lhs.value == true && rhs.isNull -> null
-            rhs.value == true && lhs.isNull -> null
-            lhs.value == false || rhs.value == false -> false
-            else -> true
+        return when {
+            lhs.isNull && rhs.isNull -> Datum.nullValue(PType.typeBool())
+            lhs.boolean && rhs.isNull -> Datum.nullValue(PType.typeBool())
+            rhs.boolean && lhs.isNull -> Datum.nullValue(PType.typeBool())
+            !lhs.boolean || !rhs.boolean -> Datum.bool(false)
+            else -> Datum.bool(true)
         }
-        return boolValue(toReturn)
     }
 }

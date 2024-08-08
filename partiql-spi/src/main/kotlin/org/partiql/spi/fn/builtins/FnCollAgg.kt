@@ -3,6 +3,7 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
@@ -15,13 +16,8 @@ import org.partiql.spi.fn.builtins.internal.AccumulatorEvery
 import org.partiql.spi.fn.builtins.internal.AccumulatorMax
 import org.partiql.spi.fn.builtins.internal.AccumulatorMin
 import org.partiql.spi.fn.builtins.internal.AccumulatorSum
-import org.partiql.value.BagValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.check
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal abstract class Fn_COLL_AGG__BAG__ANY(
     name: String,
     private val isDistinct: Boolean,
@@ -39,17 +35,17 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
         @JvmStatic
         internal fun createSignature(name: String) = FnSignature(
             name = name,
-            returns = PartiQLValueType.ANY,
+            returns = PType.typeDynamic(),
             parameters = listOf(
-                FnParameter("value", PartiQLValueType.BAG),
+                FnParameter("value", PType.typeBag()),
             ),
             isNullCall = true,
             isNullable = true
         )
     }
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val bag = args[0].check<BagValue<*>>()
+    override fun invoke(args: Array<Datum>): Datum {
+        val bag = args[0]
         val accumulator = getAccumulator()
         bag.forEach { element -> accumulator.next(arrayOf(element)) }
         return accumulator.value()

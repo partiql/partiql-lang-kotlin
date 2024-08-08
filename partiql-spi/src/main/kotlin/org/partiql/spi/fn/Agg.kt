@@ -1,7 +1,6 @@
 package org.partiql.spi.fn
 
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.value.Datum
 
 /**
  * Represents an SQL table-value expression call.
@@ -31,15 +30,13 @@ public interface Agg {
          * @param args
          * @return
          */
-        @OptIn(PartiQLValueExperimental::class)
-        public fun next(args: Array<PartiQLValue>)
+        public fun next(args: Array<Datum>)
 
         /**
          * Return the accumulator value.
          *
          * @return
          */
-        @OptIn(PartiQLValueExperimental::class)
-        public fun value(): PartiQLValue
+        public fun value(): Datum
     }
 }

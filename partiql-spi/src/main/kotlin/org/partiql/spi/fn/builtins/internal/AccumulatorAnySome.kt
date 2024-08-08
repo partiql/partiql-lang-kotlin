@@ -1,19 +1,16 @@
 package org.partiql.spi.fn.builtins.internal
 
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.boolValue
-import org.partiql.value.nullValue
+import org.partiql.eval.value.Datum
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal class AccumulatorAnySome : Accumulator() {
 
-    private var res: PartiQLValue? = null
+    private var res: Datum? = null
 
-    override fun nextValue(value: PartiQLValue) {
+    override fun nextValue(value: Datum) {
         checkIsBooleanType("ANY/SOME", value)
-        res = res?.let { boolValue(it.booleanValue() || value.booleanValue()) } ?: value
+        res = res?.let { Datum.bool(it.booleanValue() || value.booleanValue()) } ?: value
     }
 
-    override fun value(): PartiQLValue = res ?: nullValue()
+    override fun value(): Datum = res ?: Datum.nullValue(PType.typeBool())
 }

@@ -10,6 +10,6 @@ internal class ExprMissing(
 ) : Operator.Expr {
 
     override fun eval(env: Environment): Datum {
-        return Datum.missingValue(type)
+        return Datum.missing(type)
     }
 }
