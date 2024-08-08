@@ -128,39 +128,43 @@ class NormalizeSelectTest {
     )
 
     private fun select(vararg items: Select.Project.Item) = ast {
-        exprSFW {
-            select = selectProject {
-                this.items += items
-            }
-            from = fromValue {
-                expr = variable("T")
-                type = From.Value.Type.SCAN
+        exprQuerySet {
+            body = queryExprSFW {
+                select = selectProject {
+                    this.items += items
+                }
+                from = fromValue {
+                    expr = variable("T")
+                    type = From.Value.Type.SCAN
+                }
             }
         }
     }
 
     @OptIn(PartiQLValueExperimental::class)
     private fun selectValue(vararg items: Pair<String, Expr>) = ast {
-        exprSFW {
-            select = selectValue {
-                constructor = exprStruct {
-                    for ((k, v) in items) {
-                        fields += exprStructField {
-                            name = exprLit(stringValue(k))
-                            value = v
+        exprQuerySet {
+            body = queryExprSFW {
+                select = selectValue {
+                    constructor = exprStruct {
+                        for ((k, v) in items) {
+                            fields += exprStructField {
+                                name = exprLit(stringValue(k))
+                                value = v
+                            }
                         }
                     }
                 }
-            }
-            from = fromValue {
-                expr = exprVar {
-                    identifier = identifierSymbol {
-                        symbol = "T"
-                        caseSensitivity = Identifier.CaseSensitivity.INSENSITIVE
+                from = fromValue {
+                    expr = exprVar {
+                        identifier = identifierSymbol {
+                            symbol = "T"
+                            caseSensitivity = Identifier.CaseSensitivity.INSENSITIVE
+                        }
+                        scope = Expr.Var.Scope.DEFAULT
                     }
-                    scope = Expr.Var.Scope.DEFAULT
+                    type = From.Value.Type.SCAN
                 }
-                type = From.Value.Type.SCAN
             }
         }
     }

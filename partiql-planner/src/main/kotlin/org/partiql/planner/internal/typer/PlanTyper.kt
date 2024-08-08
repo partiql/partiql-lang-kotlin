@@ -289,14 +289,14 @@ internal class PlanTyper(private val env: Env) {
             return rel(type, op)
         }
 
-        override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: Rel.Type?): Rel {
+        override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility
             if (!setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
-            if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
@@ -304,14 +304,14 @@ internal class PlanTyper(private val env: Env) {
             return Rel(type, node.copy(lhs = lhs, rhs = rhs))
         }
 
-        override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: Rel.Type?): Rel {
+        override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility
             if (!setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
-            if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
@@ -319,14 +319,14 @@ internal class PlanTyper(private val env: Env) {
             return Rel(type, node.copy(lhs = lhs, rhs = rhs))
         }
 
-        override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: Rel.Type?): Rel {
+        override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility
             if (!setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
-            if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
+            if (!setOpSchemaTypesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchTypes()
             }
             // Compute Schema
@@ -588,6 +588,30 @@ internal class PlanTyper(private val env: Env) {
     ) : PlanRewriter<CompilerType?>() {
 
         override fun visitRex(node: Rex, ctx: CompilerType?): Rex = visitRexOp(node.op, node.type) as Rex
+
+        override fun visitRexOpUnion(node: Rex.Op.Union, ctx: CompilerType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = CompilerType(anyOf(lhs.type, rhs.type)!!)
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
+
+        override fun visitRexOpExcept(node: Rex.Op.Except, ctx: CompilerType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = CompilerType(anyOf(lhs.type, rhs.type)!!)
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
+
+        override fun visitRexOpIntersect(node: Rex.Op.Intersect, ctx: CompilerType?): Rex {
+            val lhs = visitRex(node.lhs, node.lhs.type)
+            val rhs = visitRex(node.rhs, node.rhs.type)
+            // Compute Schema
+            val type = CompilerType(anyOf(lhs.type, rhs.type)!!)
+            return Rex(type, node.copy(lhs = lhs, rhs = rhs))
+        }
 
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: CompilerType?): Rex {
             // type comes from RexConverter
