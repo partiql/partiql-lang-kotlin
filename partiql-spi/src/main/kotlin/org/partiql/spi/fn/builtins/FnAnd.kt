@@ -27,11 +27,14 @@ internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
     override fun invoke(args: Array<Datum>): Datum {
         val lhs = args[0]
         val rhs = args[1]
+        val lhsIsUnknown = lhs.isNull || lhs.isMissing
+        val rhsIsUnknown = rhs.isNull || rhs.isMissing
+
         // SQL:1999 Section 6.30 Table 13
         return when {
-            lhs.isNull && rhs.isNull -> Datum.nullValue(PType.typeBool())
-            lhs.boolean && rhs.isNull -> Datum.nullValue(PType.typeBool())
-            rhs.boolean && lhs.isNull -> Datum.nullValue(PType.typeBool())
+            lhsIsUnknown && rhsIsUnknown -> Datum.nullValue(PType.typeBool())
+            !lhsIsUnknown && lhs.boolean && rhsIsUnknown -> Datum.nullValue(PType.typeBool())
+            !rhsIsUnknown && rhs.boolean && lhsIsUnknown -> Datum.nullValue(PType.typeBool())
             !lhs.boolean || !rhs.boolean -> Datum.bool(false)
             else -> Datum.bool(true)
         }

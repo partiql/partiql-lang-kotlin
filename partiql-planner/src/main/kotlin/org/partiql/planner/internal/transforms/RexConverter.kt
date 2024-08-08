@@ -474,6 +474,9 @@ internal object RexConverter {
             if (id.matches("TUPLEUNION")) {
                 return visitExprCallTupleUnion(node, context)
             }
+            if (id.matches("EXISTS", ignoreCase = true)) {
+                return visitExprCallExists(node, context)
+            }
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
 
@@ -526,6 +529,20 @@ internal object RexConverter {
             val type = (STRUCT)
             val args = node.args.map { visitExprCoerce(it, context) }.toMutableList()
             val op = rexOpTupleUnion(args)
+            return rex(type, op)
+        }
+
+        /**
+         * Assume that the node's identifier refers to EXISTS.
+         * TODO: This could be better suited as a dedicated node in the future.
+         */
+        private fun visitExprCallExists(node: Expr.Call, context: Env): Rex {
+            val type = (STRUCT)
+            if (node.args.size != 1) {
+                error("EXISTS requires a single argument.")
+            }
+            val arg = visitExpr(node.args[0], context)
+            val op = rexOpCallUnresolved(AstToPlan.convert(node.function), listOf(arg))
             return rex(type, op)
         }
 
