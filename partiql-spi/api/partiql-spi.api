@@ -272,8 +272,12 @@ public final class org/partiql/errors/TypeCheckException : java/lang/RuntimeExce
 }
 
 public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterable {
-	public static fun bagValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
-	public static fun boolValue (Z)Lorg/partiql/eval/value/Datum;
+	public static fun bag (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
+	public static fun bigInt (J)Lorg/partiql/eval/value/Datum;
+	public static fun blob ([B)Lorg/partiql/eval/value/Datum;
+	public static fun bool (Z)Lorg/partiql/eval/value/Datum;
+	public static fun clob ([B)Lorg/partiql/eval/value/Datum;
+	public static fun date (Lorg/partiql/value/datetime/Date;)Lorg/partiql/eval/value/Datum;
 	public static fun decimal (Ljava/math/BigDecimal;II)Lorg/partiql/eval/value/Datum;
 	public static fun decimalArbitrary (Ljava/math/BigDecimal;)Lorg/partiql/eval/value/Datum;
 	public static fun doublePrecision (D)Lorg/partiql/eval/value/Datum;
@@ -296,23 +300,25 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public fun getTime ()Lorg/partiql/value/datetime/Time;
 	public fun getTimestamp ()Lorg/partiql/value/datetime/Timestamp;
 	public abstract fun getType ()Lorg/partiql/types/PType;
-	public static fun int32Value (I)Lorg/partiql/eval/value/Datum;
-	public static fun int64Value (J)Lorg/partiql/eval/value/Datum;
 	public static fun intArbitrary (Ljava/math/BigInteger;)Lorg/partiql/eval/value/Datum;
+	public static fun integer (I)Lorg/partiql/eval/value/Datum;
 	public fun isMissing ()Z
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
-	public static fun listValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
-	public static fun missingValue ()Lorg/partiql/eval/value/Datum;
-	public static fun missingValue (Lorg/partiql/types/PType;)Lorg/partiql/eval/value/Datum;
+	public static fun list (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
+	public static fun missing ()Lorg/partiql/eval/value/Datum;
+	public static fun missing (Lorg/partiql/types/PType;)Lorg/partiql/eval/value/Datum;
 	public static fun nullValue ()Lorg/partiql/eval/value/Datum;
 	public static fun nullValue (Lorg/partiql/types/PType;)Lorg/partiql/eval/value/Datum;
 	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/eval/value/Datum;
 	public static fun real (F)Lorg/partiql/eval/value/Datum;
-	public static fun sexpValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
+	public static fun sexp (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
 	public static fun smallInt (S)Lorg/partiql/eval/value/Datum;
-	public static fun stringValue (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
-	public static fun structValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
+	public static fun string (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
+	public static fun struct (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
+	public static fun symbol (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
+	public static fun timeWithoutTZ (Lorg/partiql/value/datetime/Time;)Lorg/partiql/eval/value/Datum;
+	public static fun timestampWithoutTZ (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/eval/value/Datum;
 	public static fun tinyInt (B)Lorg/partiql/eval/value/Datum;
 	public fun toPartiQLValue ()Lorg/partiql/value/PartiQLValue;
 }
@@ -734,8 +740,8 @@ public abstract interface class org/partiql/spi/fn/Agg {
 }
 
 public abstract interface class org/partiql/spi/fn/Agg$Accumulator {
-	public abstract fun next ([Lorg/partiql/value/PartiQLValue;)V
-	public abstract fun value ()Lorg/partiql/value/PartiQLValue;
+	public abstract fun next ([Lorg/partiql/eval/value/Datum;)V
+	public abstract fun value ()Lorg/partiql/eval/value/Datum;
 }
 
 public final class org/partiql/spi/fn/AggSignature {
@@ -747,8 +753,6 @@ public final class org/partiql/spi/fn/AggSignature {
 	public final field returns Lorg/partiql/types/PType;
 	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZ)V
 	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZ)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getSpecific ()Ljava/lang/String;
 	public fun hashCode ()I
@@ -757,12 +761,11 @@ public final class org/partiql/spi/fn/AggSignature {
 
 public abstract interface class org/partiql/spi/fn/Fn {
 	public abstract fun getSignature ()Lorg/partiql/spi/fn/FnSignature;
-	public abstract fun invoke ([Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/PartiQLValue;
+	public abstract fun invoke ([Lorg/partiql/eval/value/Datum;)Lorg/partiql/eval/value/Datum;
 }
 
 public final class org/partiql/spi/fn/FnParameter {
 	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;)V
-	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lorg/partiql/types/PType;
 	public final fun copy (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/spi/fn/FnParameter;
@@ -786,8 +789,6 @@ public final class org/partiql/spi/fn/FnSignature {
 	public final field returns Lorg/partiql/types/PType;
 	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZ)V
 	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZZZZ)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lorg/partiql/types/PType;
 	public final fun component3 ()Ljava/util/List;

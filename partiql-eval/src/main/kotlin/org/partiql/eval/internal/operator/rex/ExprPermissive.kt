@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.CardinalityViolation
+import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
@@ -14,9 +15,13 @@ internal class ExprPermissive(
         return try {
             target.eval(env)
         } catch (e: TypeCheckException) {
-            Datum.missingValue()
+            Datum.missing()
         } catch (e: CardinalityViolation) {
-            Datum.missingValue()
+            Datum.missing()
+        } catch (e: UnsupportedOperationException) {
+            Datum.missing()
+        } catch (e: DataException) {
+            Datum.missing()
         }
     }
 }

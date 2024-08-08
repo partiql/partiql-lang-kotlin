@@ -3,47 +3,38 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.DecimalValue
-import org.partiql.value.Int32Value
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.boolValue
-import org.partiql.value.check
+import org.partiql.types.PType
 import java.math.RoundingMode
 import kotlin.math.max
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_IS_DECIMAL__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_decimal",
-        returns = BOOL,
-        parameters = listOf(FnParameter("value", ANY)),
+        returns = PType.typeBool(),
+        parameters = listOf(FnParameter("value", PType.typeDynamic())),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(args[0] is DecimalValue)
+    override fun invoke(args: Array<Datum>): Datum {
+        return Datum.bool(args[0].type.kind == PType.Kind.DECIMAL)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_decimal",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("type_parameter_1", INT32),
-            FnParameter("type_parameter_2", INT32),
-            FnParameter("value", ANY),
+            FnParameter("type_parameter_1", PType.typeInt()),
+            FnParameter("type_parameter_2", PType.typeInt()),
+            FnParameter("value", PType.typeDynamic()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -64,22 +55,22 @@ internal object Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL : Fn {
      * @param args
      * @return
      */
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+    override fun invoke(args: Array<Datum>): Datum {
         val v = args[2]
-        if (v !is DecimalValue) {
-            return boolValue(false)
+        if (v.type.kind != PType.Kind.DECIMAL && v.type.kind != PType.Kind.DECIMAL_ARBITRARY) {
+            return Datum.bool(false)
         }
 
-        val p = args[0].check<Int32Value>().value!!
-        val s = args[1].check<Int32Value>().value!!
-        val d = v.value!!
+        val p = args[0].int
+        val s = args[1].int
+        val d = v.bigDecimal
         val dp = max(d.scale(), 0)
         if (dp > s) {
-            return boolValue(false)
+            return Datum.bool(false)
         }
         val ip = d.setScale(0, RoundingMode.DOWN)
         val il = if (ip.signum() != 0) ip.precision() - ip.scale() else 0
         val el = p - s
-        return boolValue(el >= il)
+        return Datum.bool(el >= il)
     }
 }

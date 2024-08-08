@@ -7,153 +7,135 @@ import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.builtins.internal.AccumulatorSum
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
-import org.partiql.value.PartiQLValueType.FLOAT32
-import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT16
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__INT8__INT8 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = INT8,
+        returns = PType.typeTinyInt(),
         parameters = listOf(
-            FnParameter("value", INT8),
+            FnParameter("value", PType.typeTinyInt()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT8)
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeTinyInt())
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__INT16__INT16 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = INT16,
+        returns = PType.typeSmallInt(),
         parameters = listOf(
-            FnParameter("value", INT16),
+            FnParameter("value", PType.typeSmallInt()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT16)
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeSmallInt())
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__INT32__INT32 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = INT32,
+        returns = PType.typeInt(),
         parameters = listOf(
-            FnParameter("value", INT32),
+            FnParameter("value", PType.typeInt()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT32)
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeInt())
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__INT64__INT64 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = INT64,
+        returns = PType.typeBigInt(),
         parameters = listOf(
-            FnParameter("value", INT64),
+            FnParameter("value", PType.typeBigInt()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT64)
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeBigInt())
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__INT__INT : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = INT,
+        returns = PType.typeIntArbitrary(),
         parameters = listOf(
-            FnParameter("value", INT),
+            @Suppress("DEPRECATION") FnParameter("value", PType.typeIntArbitrary()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT)
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeIntArbitrary())
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = DECIMAL_ARBITRARY,
+        returns = PType.typeDecimalArbitrary(),
         parameters = listOf(
-            FnParameter("value", DECIMAL_ARBITRARY),
+            @Suppress("DEPRECATION") FnParameter("value", PType.typeDecimalArbitrary()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(DECIMAL_ARBITRARY)
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeDecimalArbitrary())
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__FLOAT32__FLOAT32 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = FLOAT32,
+        returns = PType.typeReal(),
         parameters = listOf(
-            FnParameter("value", FLOAT32),
+            FnParameter("value", PType.typeReal()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(FLOAT32)
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeReal())
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__FLOAT64__FLOAT64 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = FLOAT64,
+        returns = PType.typeDoublePrecision(),
         parameters = listOf(
-            FnParameter("value", FLOAT64),
+            FnParameter("value", PType.typeDoublePrecision()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(FLOAT64)
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeDoublePrecision())
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Agg_SUM__ANY__ANY : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = ANY,
+        returns = PType.typeDynamic(),
         parameters = listOf(
-            FnParameter("value", ANY),
+            FnParameter("value", PType.typeDynamic()),
         ),
         isNullable = true,
         isDecomposable = true

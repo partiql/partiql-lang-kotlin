@@ -7,6 +7,7 @@ import org.partiql.types.PType;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
+import org.partiql.value.datetime.Date;
 import org.partiql.value.datetime.Time;
 import org.partiql.value.datetime.Timestamp;
 
@@ -510,7 +511,7 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum missingValue() {
+    static Datum missing() {
         return new DatumMissing();
     }
 
@@ -528,12 +529,12 @@ public interface Datum extends Iterable<Datum> {
      */
     @Deprecated
     @NotNull
-    static Datum missingValue(@NotNull PType type) {
+    static Datum missing(@NotNull PType type) {
         return new DatumMissing(type);
     }
 
     @NotNull
-    static Datum bagValue(@NotNull Iterable<Datum> values) {
+    static Datum bag(@NotNull Iterable<Datum> values) {
         return new DatumCollection(values, PType.typeBag());
     }
 
@@ -548,13 +549,13 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum int64Value(long value) {
-        return new DatumLong(value);
+    static Datum integer(int value) {
+        return new DatumInt(value);
     }
 
     @NotNull
-    static Datum int32Value(int value) {
-        return new DatumInt(value);
+    static Datum bigInt(long value) {
+        return new DatumLong(value);
     }
 
     @Deprecated
@@ -585,27 +586,59 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum boolValue(boolean value) {
+    static Datum bool(boolean value) {
         return new DatumBoolean(value);
     }
 
     @NotNull
-    static Datum sexpValue(@NotNull Iterable<Datum> values) {
+    static Datum sexp(@NotNull Iterable<Datum> values) {
         return new DatumCollection(values, PType.typeSexp());
     }
 
     @NotNull
-    static Datum listValue(@NotNull Iterable<Datum> values) {
+    static Datum list(@NotNull Iterable<Datum> values) {
         return new DatumCollection(values, PType.typeList());
     }
 
     @NotNull
-    static Datum structValue(@NotNull Iterable<Field> values) {
+    static Datum struct(@NotNull Iterable<Field> values) {
         return new DatumStruct(values);
     }
 
     @NotNull
-    static Datum stringValue(@NotNull String value) {
+    static Datum string(@NotNull String value) {
         return new DatumString(value, PType.typeString());
+    }
+
+    @NotNull
+    static Datum symbol(@NotNull String value) {
+        return new DatumString(value, PType.typeSymbol());
+    }
+
+    @NotNull
+    static Datum clob(@NotNull byte[] value) {
+        return new DatumBytes(value, PType.typeClob(Integer.MAX_VALUE));
+    }
+
+    @NotNull
+    static Datum blob(@NotNull byte[] value) {
+        return new DatumBytes(value, PType.typeBlob(Integer.MAX_VALUE));
+    }
+
+    // time
+    @NotNull
+    static Datum timeWithoutTZ(@NotNull Time value) {
+        return new DatumTime(value);
+    }
+
+    // time
+    @NotNull
+    static Datum timestampWithoutTZ(@NotNull Timestamp value) {
+        return new DatumTimestamp(value);
+    }
+
+    @NotNull
+    static Datum date(@NotNull Date value) {
+        return new DatumDate(value);
     }
 }

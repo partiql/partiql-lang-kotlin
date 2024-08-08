@@ -25,6 +25,6 @@ internal class ExprTupleUnion(
             }
         }
 
-        return Datum.structValue(tuples.flatMap { it.fields.asSequence() })
+        return Datum.struct(tuples.flatMap { it.fields.asSequence() })
     }
 }

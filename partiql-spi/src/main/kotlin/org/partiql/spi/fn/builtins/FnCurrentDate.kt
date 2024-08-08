@@ -3,24 +3,22 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DATE
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_CURRENT_DATE____DATE : Fn {
 
     override val signature = FnSignature(
         name = "current_date",
-        returns = DATE,
+        returns = PType.typeDate(),
         parameters = listOf(),
         isNullCall = false,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+    override fun invoke(args: Array<Datum>): Datum {
         TODO("Function current_date not implemented")
     }
 }

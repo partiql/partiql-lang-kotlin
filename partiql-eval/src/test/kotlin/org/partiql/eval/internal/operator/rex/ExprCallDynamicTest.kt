@@ -8,15 +8,15 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.eval.value.Datum
-import org.partiql.eval.value.Datum.bagValue
-import org.partiql.eval.value.Datum.boolValue
-import org.partiql.eval.value.Datum.int32Value
-import org.partiql.eval.value.Datum.listValue
-import org.partiql.eval.value.Datum.stringValue
+import org.partiql.eval.value.Datum.bag
+import org.partiql.eval.value.Datum.bool
+import org.partiql.eval.value.Datum.integer
+import org.partiql.eval.value.Datum.list
+import org.partiql.eval.value.Datum.string
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.PartiQLValue
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -68,14 +68,14 @@ class ExprCallDynamicTest {
                 object : Fn {
                     override val signature: FnSignature = FnSignature(
                         name = "example_function",
-                        returns = PartiQLValueType.INT32,
+                        returns = PType.typeInt(),
                         parameters = listOf(
-                            FnParameter("first", type = it.first),
-                            FnParameter("second", type = it.second),
+                            FnParameter("first", type = it.first.toPType()),
+                            FnParameter("second", type = it.second.toPType()),
                         )
                     )
 
-                    override fun invoke(args: Array<PartiQLValue>): PartiQLValue = int32Value(index).toPartiQLValue()
+                    override fun invoke(args: Array<Datum>): Datum = integer(index)
                 }
             }.toTypedArray()
         }
@@ -87,48 +87,48 @@ class ExprCallDynamicTest {
         @JvmStatic
         fun sanityTestsCases() = listOf(
             DynamicTestCase(
-                lhs = int32Value(20),
-                rhs = int32Value(40),
+                lhs = integer(20),
+                rhs = integer(40),
                 expectedIndex = 4
             ),
             DynamicTestCase(
-                lhs = listValue(emptyList()),
-                rhs = listValue(emptyList()),
+                lhs = list(emptyList()),
+                rhs = list(emptyList()),
                 expectedIndex = 0
             ),
             DynamicTestCase(
-                lhs = bagValue(emptyList()),
-                rhs = bagValue(emptyList()),
+                lhs = bag(emptyList()),
+                rhs = bag(emptyList()),
                 expectedIndex = 1
             ),
             DynamicTestCase(
-                lhs = stringValue("hello"),
-                rhs = stringValue("world"),
+                lhs = string("hello"),
+                rhs = string("world"),
                 expectedIndex = 6
             ),
             DynamicTestCase(
-                lhs = stringValue("hello"),
-                rhs = listValue(emptyList()),
+                lhs = string("hello"),
+                rhs = list(emptyList()),
                 expectedIndex = 7
             ),
             DynamicTestCase(
-                lhs = bagValue(emptyList()),
-                rhs = stringValue("world"),
+                lhs = bag(emptyList()),
+                rhs = string("world"),
                 expectedIndex = 8
             ),
             DynamicTestCase(
-                lhs = int32Value(20),
-                rhs = stringValue("world"),
+                lhs = integer(20),
+                rhs = string("world"),
                 expectedIndex = 9
             ),
             DynamicTestCase(
-                lhs = listValue(emptyList()),
-                rhs = stringValue("hello"),
+                lhs = list(emptyList()),
+                rhs = string("hello"),
                 expectedIndex = 11
             ),
             DynamicTestCase(
-                lhs = boolValue(true),
-                rhs = boolValue(false),
+                lhs = bool(true),
+                rhs = bool(false),
                 expectedIndex = 12
             ),
         )

@@ -5,167 +5,148 @@ package org.partiql.spi.fn.builtins
 
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.Int32Value
-import org.partiql.value.Int64Value
-import org.partiql.value.IntValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.TIME
-import org.partiql.value.PartiQLValueType.TIMESTAMP
-import org.partiql.value.TimeValue
-import org.partiql.value.TimestampValue
-import org.partiql.value.check
-import org.partiql.value.timeValue
-import org.partiql.value.timestampValue
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MINUTE__INT32_TIME__TIME : Fn {
 
     override val signature = FnSignature(
         name = "date_add_minute",
-        returns = TIME,
+        returns = PType.typeTimeWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT32),
-            FnParameter("datetime", TIME),
+            FnParameter("interval", PType.typeInt()),
+            FnParameter("datetime", PType.typeTimeWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<Int32Value>()
-        val datetime = args[1].check<TimeValue>()
-        val datetimeValue = datetime.value!!
-        val intervalValue = interval.toInt64().value!!
-        return timeValue(datetimeValue.plusMinutes(intervalValue))
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0].int
+        val datetime = args[1]
+        val datetimeValue = datetime.time
+        val intervalValue = interval.toLong()
+        return Datum.timeWithoutTZ(datetimeValue.plusMinutes(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MINUTE__INT64_TIME__TIME : Fn {
 
     override val signature = FnSignature(
         name = "date_add_minute",
-        returns = TIME,
+        returns = PType.typeTimeWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT64),
-            FnParameter("datetime", TIME),
+            FnParameter("interval", PType.typeBigInt()),
+            FnParameter("datetime", PType.typeTimeWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<Int64Value>()
-        val datetime = args[1].check<TimeValue>()
-        val datetimeValue = datetime.value!!
-        val intervalValue = interval.value!!
-        return timeValue(datetimeValue.plusMinutes(intervalValue))
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0]
+        val datetime = args[1]
+        val datetimeValue = datetime.time
+        val intervalValue = interval.long
+        return Datum.timeWithoutTZ(datetimeValue.plusMinutes(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MINUTE__INT_TIME__TIME : Fn {
 
     override val signature = FnSignature(
         name = "date_add_minute",
-        returns = TIME,
+        returns = PType.typeTimeWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT),
-            FnParameter("datetime", TIME),
+            @Suppress("DEPRECATION") FnParameter("interval", PType.typeIntArbitrary()),
+            FnParameter("datetime", PType.typeTimeWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<IntValue>()
-        val datetime = args[1].check<TimeValue>()
-        val datetimeValue = datetime.value!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0]
+        val datetime = args[1]
+        val datetimeValue = datetime.time
         val intervalValue = try {
-            interval.toInt64().value!!
+            interval.bigInteger.toLong()
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return timeValue(datetimeValue.plusMinutes(intervalValue))
+        return Datum.timeWithoutTZ(datetimeValue.plusMinutes(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_minute",
-        returns = TIMESTAMP,
+        returns = PType.typeTimestampWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT32),
-            FnParameter("datetime", TIMESTAMP),
+            FnParameter("interval", PType.typeInt()),
+            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<Int32Value>()
-        val datetime = args[1].check<TimestampValue>()
-        val datetimeValue = datetime.value!!
-        val intervalValue = interval.toInt64().value!!
-        return timestampValue(datetimeValue.plusMinutes(intervalValue))
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0].int
+        val datetime = args[1]
+        val datetimeValue = datetime.timestamp
+        val intervalValue = interval.toLong()
+        return Datum.timestampWithoutTZ(datetimeValue.plusMinutes(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_minute",
-        returns = TIMESTAMP,
+        returns = PType.typeTimestampWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT64),
-            FnParameter("datetime", TIMESTAMP),
+            FnParameter("interval", PType.typeBigInt()),
+            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<Int64Value>()
-        val datetime = args[1].check<TimestampValue>()
-        val datetimeValue = datetime.value!!
-        val intervalValue = interval.value!!
-        return timestampValue(datetimeValue.plusMinutes(intervalValue))
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0]
+        val datetime = args[1]
+        val datetimeValue = datetime.timestamp
+        val intervalValue = interval.long
+        return Datum.timestampWithoutTZ(datetimeValue.plusMinutes(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_minute",
-        returns = TIMESTAMP,
+        returns = PType.typeTimestampWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT),
-            FnParameter("datetime", TIMESTAMP),
+            @Suppress("DEPRECATION") FnParameter("interval", PType.typeIntArbitrary()),
+            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<IntValue>()
-        val datetime = args[1].check<TimestampValue>()
-        val datetimeValue = datetime.value!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0]
+        val datetime = args[1]
+        val datetimeValue = datetime.timestamp
         val intervalValue = try {
-            interval.toInt64().value!!
+            interval.bigInteger.toLong()
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return timestampValue(datetimeValue.plusMinutes(intervalValue))
+        return Datum.timestampWithoutTZ(datetimeValue.plusMinutes(intervalValue))
     }
 }

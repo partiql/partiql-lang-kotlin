@@ -3,26 +3,13 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.spi.fn.utils.StringUtils.codepointSubstring
-import org.partiql.value.ClobValue
-import org.partiql.value.Int64Value
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.StringValue
-import org.partiql.value.SymbolValue
-import org.partiql.value.check
-import org.partiql.value.clobValue
-import org.partiql.value.stringValue
-import org.partiql.value.symbolValue
+import org.partiql.types.PType
 
 /**
  * Built in function to return the substring of an existing string. This function
@@ -93,179 +80,137 @@ import org.partiql.value.symbolValue
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
-@OptIn(PartiQLValueExperimental::class)
-internal object Fn_SUBSTRING__STRING_INT64__STRING : Fn {
+internal object Fn_SUBSTRING__STRING_INT32__STRING : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = STRING,
+        returns = PType.typeString(),
         parameters = listOf(
-            FnParameter("value", STRING),
-            FnParameter("start", INT64),
+            FnParameter("value", PType.typeString()),
+            FnParameter("start", PType.typeInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<StringValue>().string!!
-        val start = try {
-            args[1].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
+        val start = args[1].int
         val result = value.codepointSubstring(start)
-        return stringValue(result)
+        return Datum.string(result)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
-internal object Fn_SUBSTRING__STRING_INT64_INT64__STRING : Fn {
+internal object Fn_SUBSTRING__STRING_INT32_INT32__STRING : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = STRING,
+        returns = PType.typeString(),
         parameters = listOf(
-            FnParameter("value", STRING),
-            FnParameter("start", INT64),
-            FnParameter("end", INT64),
+            FnParameter("value", PType.typeString()),
+            FnParameter("start", PType.typeInt()),
+            FnParameter("end", PType.typeInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<StringValue>().string!!
-        val start = try {
-            args[1].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
-        val end = try {
-            args[2].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
+        val start = args[1].int
+        val end = args[2].int
         if (end < 0) throw TypeCheckException()
         val result = value.codepointSubstring(start, end)
-        return stringValue(result)
+        return Datum.string(result)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = SYMBOL,
+        returns = PType.typeSymbol(),
         parameters = listOf(
-            FnParameter("value", SYMBOL),
-            FnParameter("start", INT64),
+            FnParameter("value", PType.typeSymbol()),
+            FnParameter("start", PType.typeInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<SymbolValue>().string!!
-        val start = try {
-            args[1].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
+        val start = args[1].int
         val result = value.codepointSubstring(start)
-        return symbolValue(result)
+        return Datum.symbol(result)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
-internal object Fn_SUBSTRING__SYMBOL_INT64_INT64__SYMBOL : Fn {
+internal object Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = SYMBOL,
+        returns = PType.typeSymbol(),
         parameters = listOf(
-            FnParameter("value", SYMBOL),
-            FnParameter("start", INT64),
-            FnParameter("end", INT64),
+            FnParameter("value", PType.typeSymbol()),
+            FnParameter("start", PType.typeInt()),
+            FnParameter("end", PType.typeInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<SymbolValue>().string!!
-        val start = try {
-            args[1].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
-        val end = try {
-            args[2].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
+        val start = args[1].int
+        val end = args[1].int
         if (end < 0) throw TypeCheckException()
         val result = value.codepointSubstring(start, end)
-        return symbolValue(result)
+        return Datum.symbol(result)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = CLOB,
+        returns = PType.typeClob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("value", CLOB),
-            FnParameter("start", INT64),
+            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("start", PType.typeInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
-        val start = try {
-            args[1].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].bytes.toString(Charsets.UTF_8)
+        val start = args[1].int
         val result = value.codepointSubstring(start)
-        return clobValue(result.toByteArray())
+        return Datum.clob(result.toByteArray())
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = CLOB,
+        returns = PType.typeClob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("value", CLOB),
-            FnParameter("start", INT64),
-            FnParameter("end", INT64),
+            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("start", PType.typeInt()),
+            FnParameter("end", PType.typeInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val string = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
-        val start = try {
-            args[1].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
-        val end = try {
-            args[2].check<Int64Value>().toInt32().value!!
-        } catch (e: DataException) {
-            throw TypeCheckException()
-        }
+    override fun invoke(args: Array<Datum>): Datum {
+        val string = args[0].bytes.toString(Charsets.UTF_8)
+        val start = args[1].int
+        val end = args[2].int
         if (end < 0) throw TypeCheckException()
         val result = string.codepointSubstring(start, end)
-        return clobValue(result.toByteArray())
+        return Datum.clob(result.toByteArray())
     }
 }

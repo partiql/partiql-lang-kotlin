@@ -7,7 +7,6 @@ import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Agg
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import org.partiql.value.nullValue
 import java.util.TreeMap
 import java.util.TreeSet
@@ -84,16 +83,18 @@ internal class RelAggregate(
             // Aggregate Values in Aggregation State
             accumulators.forEachIndexed { index, function ->
                 // TODO: Add support for aggregating PQLValues directly
-                val valueToAggregate = function.args.map { it.eval(env.push(inputRecord)).toPartiQLValue() }
+                val arguments = function.args.map { it.eval(env.push(inputRecord)) }
                 // Skip over aggregation if NULL/MISSING
-                if (valueToAggregate.any { it.type == PartiQLValueType.MISSING || it.isNull }) {
+                if (arguments.any { it.isMissing || it.isNull }) {
                     return@forEachIndexed
                 }
+                // TODO: Add support for a Datum comparator. Currently, this conversion is inefficient.
+                val valuesToCompare = arguments.map { it.toPartiQLValue() }
                 // Skip over aggregation if DISTINCT and SEEN
-                if (function.seen != null && (function.seen.add(valueToAggregate).not())) {
+                if (function.seen != null && (function.seen.add(valuesToCompare).not())) {
                     return@forEachIndexed
                 }
-                accumulators[index].delegate.next(valueToAggregate.toTypedArray())
+                accumulators[index].delegate.next(arguments.toTypedArray())
             }
         }
 
@@ -102,7 +103,7 @@ internal class RelAggregate(
             val record = mutableListOf<Datum>()
             functions.forEach { function ->
                 val accumulator = function.delegate.accumulator()
-                record.add(Datum.of(accumulator.value()))
+                record.add(accumulator.value())
             }
             records = iterator { yield(Record.of(*record.toTypedArray())) }
             return
@@ -110,7 +111,7 @@ internal class RelAggregate(
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
-                val recordValues = accumulators.map { acc -> Datum.of(acc.delegate.value()) } + keysEvaluated.map { value -> Datum.of(value) }
+                val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated.map { value -> Datum.of(value) }
                 yield(Record.of(*recordValues.toTypedArray()))
             }
         }

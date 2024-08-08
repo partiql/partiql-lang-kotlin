@@ -1,25 +1,21 @@
 package org.partiql.spi.fn.builtins.internal
 
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.eval.value.Datum
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal class AccumulatorSum(
-    private val targetType: PartiQLValueType = PartiQLValueType.ANY,
+    private val targetType: PType = PType.typeDynamic(),
 ) : Accumulator() {
 
     var sum: Number? = null
 
-    @OptIn(PartiQLValueExperimental::class)
-    override fun nextValue(value: PartiQLValue) {
+    override fun nextValue(value: Datum) {
         checkIsNumberType(funcName = "SUM", value = value)
         if (sum == null) sum = 0L
         this.sum = value.numberValue() + this.sum!!
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    override fun value(): PartiQLValue {
+    override fun value(): Datum {
         return sum?.toTargetType(targetType) ?: nullToTargetType(targetType)
     }
 }

@@ -3,103 +3,92 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.spi.fn.utils.PatternUtils.matchRegexPattern
 import org.partiql.spi.fn.utils.PatternUtils.parsePattern
-import org.partiql.value.ClobValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.TextValue
-import org.partiql.value.boolValue
-import org.partiql.value.check
+import org.partiql.types.PType
 import java.util.regex.Pattern
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_LIKE__STRING_STRING__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "like",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("value", STRING),
-            FnParameter("pattern", STRING),
+            FnParameter("value", PType.typeString()),
+            FnParameter("pattern", PType.typeString()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<TextValue<String>>().value!!
-        val pattern = args[1].check<TextValue<String>>().value!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
+        val pattern = args[1].string
         val likeRegexPattern = when {
             pattern.isEmpty() -> Pattern.compile("")
             else -> parsePattern(pattern, null)
         }
         return when (matchRegexPattern(value, likeRegexPattern)) {
-            true -> boolValue(true)
-            else -> boolValue(false)
+            true -> Datum.bool(true)
+            else -> Datum.bool(false)
         }
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "like",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("value", SYMBOL),
-            FnParameter("pattern", SYMBOL),
+            FnParameter("value", PType.typeSymbol()),
+            FnParameter("pattern", PType.typeSymbol()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<TextValue<String>>().value!!
-        val pattern = args[1].check<TextValue<String>>().value!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
+        val pattern = args[1].string
         val likeRegexPattern = when {
             pattern.isEmpty() -> Pattern.compile("")
             else -> parsePattern(pattern, null)
         }
         return when (matchRegexPattern(value, likeRegexPattern)) {
-            true -> boolValue(true)
-            else -> boolValue(false)
+            true -> Datum.bool(true)
+            else -> Datum.bool(false)
         }
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_LIKE__CLOB_CLOB__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "like",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("value", CLOB),
-            FnParameter("pattern", CLOB),
+            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("pattern", PType.typeClob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
-        val pattern = args[1].check<ClobValue>().value!!.toString(Charsets.UTF_8)
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].bytes.toString(Charsets.UTF_8)
+        val pattern = args[1].bytes.toString(Charsets.UTF_8)
         val likeRegexPattern = when {
             pattern.isEmpty() -> Pattern.compile("")
             else -> parsePattern(pattern, null)
         }
         return when (matchRegexPattern(value, likeRegexPattern)) {
-            true -> boolValue(true)
-            else -> boolValue(false)
+            true -> Datum.bool(true)
+            else -> Datum.bool(false)
         }
     }
 }

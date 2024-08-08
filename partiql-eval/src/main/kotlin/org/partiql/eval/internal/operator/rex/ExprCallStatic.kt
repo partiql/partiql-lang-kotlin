@@ -20,7 +20,7 @@ internal class ExprCallStatic(
     /**
      * Memoize creation of missing values
      */
-    private val missing = { Datum.missingValue(fn.signature.returns) }
+    private val missing = { Datum.missing(fn.signature.returns) }
 
     override fun eval(env: Environment): Datum {
         // Evaluate arguments
@@ -28,8 +28,8 @@ internal class ExprCallStatic(
             val r = input.eval(env)
             if (r.isNull && fn.signature.isNullCall) return nil.invoke()
             if (r.isMissing && fn.signature.isMissingCall) return missing.invoke()
-            r.toPartiQLValue()
+            r
         }.toTypedArray()
-        return Datum.of(fn.invoke(args))
+        return fn.invoke(args)
     }
 }

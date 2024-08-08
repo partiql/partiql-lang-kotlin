@@ -1,72 +1,63 @@
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.ClobValue
-import org.partiql.value.Int32Value
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.StringValue
-import org.partiql.value.check
-import org.partiql.value.int32Value
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_OCTET_LENGTH__STRING__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "octet_length",
-        returns = PartiQLValueType.INT32,
+        returns = PType.typeInt(),
         parameters = listOf(
-            FnParameter("value", PartiQLValueType.STRING),
+            FnParameter("value", PType.typeString()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): Int32Value {
-        val value = args[0].check<StringValue>().value!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
         val length = value.toByteArray(Charsets.UTF_8).size
-        return int32Value(length)
+        return Datum.integer(length)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_OCTET_LENGTH__SYMBOL__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "octet_length",
-        returns = PartiQLValueType.INT32,
+        returns = PType.typeInt(),
         parameters = listOf(
-            FnParameter("value", PartiQLValueType.SYMBOL),
+            FnParameter("value", PType.typeSymbol()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): Int32Value {
-        val value = args[0].check<StringValue>().value!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].string
         val length = value.toByteArray(Charsets.UTF_8).size
-        return int32Value(length)
+        return Datum.integer(length)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_OCTET_LENGTH__CLOB__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "octet_length",
-        returns = PartiQLValueType.INT32,
+        returns = PType.typeInt(),
         parameters = listOf(
-            FnParameter("value", PartiQLValueType.CLOB),
+            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): Int32Value {
-        val value = args[0].check<ClobValue>().value!!
-        return int32Value(value.size)
+    override fun invoke(args: Array<Datum>): Datum {
+        val value = args[0].bytes
+        return Datum.integer(value.size)
     }
 }

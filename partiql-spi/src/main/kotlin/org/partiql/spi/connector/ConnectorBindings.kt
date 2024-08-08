@@ -20,7 +20,6 @@ import org.partiql.value.PartiQLValueExperimental
 /**
  * [ConnectorBindings] is responsible for managing value bindings in a catalog.
  */
-@OptIn(PartiQLValueExperimental::class)
 public interface ConnectorBindings {
 
     /**
@@ -29,5 +28,6 @@ public interface ConnectorBindings {
      * @param path
      * @return
      */
+    @OptIn(PartiQLValueExperimental::class)
     public fun getValue(path: ConnectorPath): PartiQLValue
 }

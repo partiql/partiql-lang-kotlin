@@ -20,16 +20,16 @@ public interface Rex {
     public companion object {
 
         @JvmStatic
-        public fun lit(value: Boolean): Rex = lit(Datum.boolValue(value))
+        public fun lit(value: Boolean): Rex = lit(Datum.bool(value))
 
         @JvmStatic
-        public fun lit(value: Int): Rex = lit(Datum.int32Value(value))
+        public fun lit(value: Int): Rex = lit(Datum.integer(value))
 
         @JvmStatic
-        public fun lit(value: Long): Rex = lit(Datum.int64Value(value))
+        public fun lit(value: Long): Rex = lit(Datum.bigInt(value))
 
         @JvmStatic
-        public fun lit(value: String): Rex = lit(Datum.stringValue(value))
+        public fun lit(value: String): Rex = lit(Datum.string(value))
 
         @JvmStatic
         public fun lit(value: Datum): Rex = object : RexLit.Base(value) {}

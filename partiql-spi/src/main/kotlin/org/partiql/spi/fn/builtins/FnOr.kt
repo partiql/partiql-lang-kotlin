@@ -3,25 +3,20 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.BoolValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.boolValue
-import org.partiql.value.check
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_OR__BOOL_BOOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "or",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", BOOL),
-            FnParameter("rhs", BOOL),
+            FnParameter("lhs", PType.typeBool()),
+            FnParameter("rhs", PType.typeBool()),
         ),
         isNullable = true,
         isNullCall = false,
@@ -29,14 +24,10 @@ internal object Fn_OR__BOOL_BOOL__BOOL : Fn {
         isMissingCall = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<BoolValue>().value
-        val rhs = args[1].check<BoolValue>().value
-        val toReturn = when {
-            lhs == true || rhs == true -> true
-            lhs == null || rhs == null -> null
-            else -> false
-        }
-        return boolValue(toReturn)
+    override fun invoke(args: Array<Datum>): Datum {
+        if (args[0].isNull || args[1].isNull) return Datum.nullValue(PType.typeBool())
+        val lhs = args[0].boolean
+        val rhs = args[1].boolean
+        return Datum.bool(lhs || rhs)
     }
 }

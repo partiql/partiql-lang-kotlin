@@ -5,167 +5,148 @@ package org.partiql.spi.fn.builtins
 
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.DateValue
-import org.partiql.value.Int32Value
-import org.partiql.value.Int64Value
-import org.partiql.value.IntValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.TIMESTAMP
-import org.partiql.value.TimestampValue
-import org.partiql.value.check
-import org.partiql.value.dateValue
-import org.partiql.value.timestampValue
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MONTH__INT32_DATE__DATE : Fn {
 
     override val signature = FnSignature(
         name = "date_add_month",
-        returns = DATE,
+        returns = PType.typeDate(),
         parameters = listOf(
-            FnParameter("interval", INT32),
-            FnParameter("datetime", DATE),
+            FnParameter("interval", PType.typeInt()),
+            FnParameter("datetime", PType.typeDate()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<Int32Value>()
-        val datetime = args[1].check<DateValue>()
-        val datetimeValue = datetime.value!!
-        val intervalValue = interval.toInt64().value!!
-        return dateValue(datetimeValue.plusMonths(intervalValue))
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0].int
+        val datetime = args[1].date
+        val datetimeValue = datetime
+        val intervalValue = interval.toLong()
+        return Datum.date(datetimeValue.plusMonths(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MONTH__INT64_DATE__DATE : Fn {
 
     override val signature = FnSignature(
         name = "date_add_month",
-        returns = DATE,
+        returns = PType.typeDate(),
         parameters = listOf(
-            FnParameter("interval", INT64),
-            FnParameter("datetime", DATE),
+            FnParameter("interval", PType.typeBigInt()),
+            FnParameter("datetime", PType.typeDate()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<Int64Value>()
-        val datetime = args[1].check<DateValue>()
-        val datetimeValue = datetime.value!!
-        val intervalValue = interval.value!!
-        return dateValue(datetimeValue.plusMonths(intervalValue))
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0].long
+        val datetime = args[1].date
+        val datetimeValue = datetime
+        val intervalValue = interval
+        return Datum.date(datetimeValue.plusMonths(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MONTH__INT_DATE__DATE : Fn {
 
     override val signature = FnSignature(
         name = "date_add_month",
-        returns = DATE,
+        returns = PType.typeDate(),
         parameters = listOf(
-            FnParameter("interval", INT),
-            FnParameter("datetime", DATE),
+            @Suppress("DEPRECATION") FnParameter("interval", PType.typeIntArbitrary()),
+            FnParameter("datetime", PType.typeDate()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<IntValue>()
-        val datetime = args[1].check<DateValue>()
-        val datetimeValue = datetime.value!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0].bigInteger
+        val datetime = args[1].date
+        val datetimeValue = datetime
         val intervalValue = try {
-            interval.toInt64().value!!
+            interval.toLong()
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return dateValue(datetimeValue.plusMonths(intervalValue))
+        return Datum.date(datetimeValue.plusMonths(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_month",
-        returns = TIMESTAMP,
+        returns = PType.typeTimestampWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT32),
-            FnParameter("datetime", TIMESTAMP),
+            FnParameter("interval", PType.typeInt()),
+            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<Int32Value>()
-        val datetime = args[1].check<TimestampValue>()
-        val datetimeValue = datetime.value!!
-        val intervalValue = interval.toInt64().value!!
-        return timestampValue(datetimeValue.plusMonths(intervalValue))
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0].int
+        val datetime = args[1].timestamp
+        val datetimeValue = datetime
+        val intervalValue = interval.toLong()
+        return Datum.timestampWithoutTZ(datetimeValue.plusMonths(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_month",
-        returns = TIMESTAMP,
+        returns = PType.typeTimestampWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT64),
-            FnParameter("datetime", TIMESTAMP),
+            FnParameter("interval", PType.typeBigInt()),
+            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<Int64Value>()
-        val datetime = args[1].check<TimestampValue>()
-        val datetimeValue = datetime.value!!
-        val intervalValue = interval.value!!
-        return timestampValue(datetimeValue.plusMonths(intervalValue))
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0].long
+        val datetime = args[1].timestamp
+        val datetimeValue = datetime
+        val intervalValue = interval
+        return Datum.timestampWithoutTZ(datetimeValue.plusMonths(intervalValue))
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_DATE_ADD_MONTH__INT_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_month",
-        returns = TIMESTAMP,
+        returns = PType.typeTimestampWithoutTZ(6),
         parameters = listOf(
-            FnParameter("interval", INT),
-            FnParameter("datetime", TIMESTAMP),
+            @Suppress("DEPRECATION") FnParameter("interval", PType.typeIntArbitrary()),
+            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val interval = args[0].check<IntValue>()
-        val datetime = args[1].check<TimestampValue>()
-        val datetimeValue = datetime.value!!
+    override fun invoke(args: Array<Datum>): Datum {
+        val interval = args[0].bigInteger
+        val datetime = args[1].timestamp
+        val datetimeValue = datetime
         val intervalValue = try {
-            interval.toInt64().value!!
+            interval.toLong()
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return timestampValue(datetimeValue.plusMonths(intervalValue))
+        return Datum.timestampWithoutTZ(datetimeValue.plusMonths(intervalValue))
     }
 }

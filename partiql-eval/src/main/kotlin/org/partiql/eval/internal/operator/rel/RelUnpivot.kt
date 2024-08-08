@@ -44,7 +44,7 @@ internal sealed class RelUnpivot : Operator.Relation {
 
     override fun next(): Record {
         val f = _iterator.next()
-        val k = Datum.stringValue(f.name)
+        val k = Datum.string(f.name)
         val v = f.value
         return Record.of(k, v)
     }
@@ -81,11 +81,11 @@ internal sealed class RelUnpivot : Operator.Relation {
         override fun struct(): Datum {
             val v = expr.eval(env.push(Record.empty))
             if (v.isMissing) {
-                return Datum.structValue(emptyList())
+                return Datum.struct(emptyList())
             }
             return when (v.type.kind) {
                 PType.Kind.STRUCT, PType.Kind.ROW -> v
-                else -> Datum.structValue(listOf(Field.of("_1", v)))
+                else -> Datum.struct(listOf(Field.of("_1", v)))
             }
         }
     }

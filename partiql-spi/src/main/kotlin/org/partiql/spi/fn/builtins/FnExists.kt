@@ -1,94 +1,83 @@
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.BagValue
-import org.partiql.value.ListValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.SexpValue
-import org.partiql.value.StructValue
-import org.partiql.value.boolValue
-import org.partiql.value.check
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXISTS__BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "exists",
-        returns = PartiQLValueType.BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("container", PartiQLValueType.BAG),
+            FnParameter("container", PType.typeBag()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val container = args[0].check<BagValue<*>>()
+    override fun invoke(args: Array<Datum>): Datum {
+        val container = args[0]
         val exists = container.iterator().hasNext()
-        return boolValue(exists)
+        return Datum.bool(exists)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXISTS__LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "exists",
-        returns = PartiQLValueType.BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("container", PartiQLValueType.LIST),
+            FnParameter("container", PType.typeList()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val container = args[0].check<ListValue<*>>()
+    override fun invoke(args: Array<Datum>): Datum {
+        val container = args[0]
         val exists = container.iterator().hasNext()
-        return boolValue(exists)
+        return Datum.bool(exists)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXISTS__SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "exists",
-        returns = PartiQLValueType.BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("container", PartiQLValueType.SEXP),
+            FnParameter("container", PType.typeSexp()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val container = args[0].check<SexpValue<*>>()
+    override fun invoke(args: Array<Datum>): Datum {
+        val container = args[0]
         val exists = container.iterator().hasNext()
-        return boolValue(exists)
+        return Datum.bool(exists)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_EXISTS__STRUCT__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "exists",
-        returns = PartiQLValueType.BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("container", PartiQLValueType.STRUCT),
+            FnParameter("container", PType.typeStruct()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val container = args[0].check<StructValue<*>>()
+    override fun invoke(args: Array<Datum>): Datum {
+        val container = args[0]
         val exists = container.fields.iterator().hasNext()
-        return boolValue(exists)
+        return Datum.bool(exists)
     }
 }

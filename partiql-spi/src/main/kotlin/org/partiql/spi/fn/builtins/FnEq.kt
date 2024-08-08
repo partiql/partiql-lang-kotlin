@@ -3,15 +3,13 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.MISSING
-import org.partiql.value.boolValue
 
 /**
  * According to SQL:1999:
@@ -27,17 +25,17 @@ import org.partiql.value.boolValue
  * TODO: The PartiQL Specification needs to clearly define the semantics of MISSING. That being said, this implementation
  *  follows the existing conformance tests and SQL:1999.
  */
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_EQ__ANY_ANY__BOOL : Fn {
 
+    @OptIn(PartiQLValueExperimental::class)
     private val comparator = PartiQLValue.comparator()
 
     override val signature = FnSignature(
         name = "eq",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", ANY),
-            FnParameter("rhs", ANY),
+            FnParameter("lhs", PType.typeDynamic()),
+            FnParameter("rhs", PType.typeDynamic()),
         ),
         isNullable = true,
         isNullCall = true,
@@ -45,12 +43,14 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         isMissingCall = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+    override fun invoke(args: Array<Datum>): Datum {
         val lhs = args[0]
         val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) {
-            return boolValue(null)
+        if (lhs.isMissing || rhs.isMissing) {
+            return Datum.nullValue(PType.typeBool())
         }
-        return boolValue(comparator.compare(lhs, rhs) == 0)
+        @OptIn(PartiQLValueExperimental::class)
+        @Suppress("DEPRECATION")
+        return Datum.bool(comparator.compare(lhs.toPartiQLValue(), rhs.toPartiQLValue()) == 0)
     }
 }

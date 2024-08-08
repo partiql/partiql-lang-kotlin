@@ -58,7 +58,7 @@ internal class RelExclude(
                     when (val leafType = exclusion.type) {
                         is Rel.Op.Exclude.Type.StructWildcard -> {
                             // struct wildcard at current level. return empty struct
-                            return Datum.structValue(emptyList())
+                            return Datum.struct(emptyList())
                         }
                         is Rel.Op.Exclude.Type.StructSymbol -> structSymbolsToRemove.add(leafType.symbol)
                         is Rel.Op.Exclude.Type.StructKey -> structKeysToRemove.add(leafType.key.lowercase())
@@ -101,7 +101,7 @@ internal class RelExclude(
                 Pair(name, value)
             }
         }.map { Field.of(it.first, it.second) }
-        return Datum.structValue(finalStruct)
+        return Datum.struct(finalStruct)
     }
 
     /**
@@ -110,9 +110,9 @@ internal class RelExclude(
      */
     private fun newCollValue(type: PType, coll: Iterable<Datum>): Datum {
         return when (type.kind) {
-            PType.Kind.LIST -> Datum.listValue(coll)
-            PType.Kind.BAG -> Datum.bagValue(coll)
-            PType.Kind.SEXP -> Datum.sexpValue(coll)
+            PType.Kind.LIST -> Datum.list(coll)
+            PType.Kind.BAG -> Datum.bag(coll)
+            PType.Kind.SEXP -> Datum.sexp(coll)
             else -> error("Collection type required")
         }
     }

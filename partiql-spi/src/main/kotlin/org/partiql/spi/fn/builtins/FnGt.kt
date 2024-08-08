@@ -3,332 +3,288 @@
 
 package org.partiql.spi.fn.builtins
 
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.BoolValue
-import org.partiql.value.DateValue
-import org.partiql.value.DecimalValue
-import org.partiql.value.Float32Value
-import org.partiql.value.Float64Value
-import org.partiql.value.Int16Value
-import org.partiql.value.Int32Value
-import org.partiql.value.Int64Value
-import org.partiql.value.Int8Value
-import org.partiql.value.IntValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
-import org.partiql.value.PartiQLValueType.FLOAT32
-import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT16
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.PartiQLValueType.TIME
-import org.partiql.value.PartiQLValueType.TIMESTAMP
-import org.partiql.value.StringValue
-import org.partiql.value.SymbolValue
-import org.partiql.value.TimeValue
-import org.partiql.value.TimestampValue
-import org.partiql.value.boolValue
-import org.partiql.value.check
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__INT8_INT8__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", INT8),
-            FnParameter("rhs", INT8),
+            FnParameter("lhs", PType.typeTinyInt()),
+            FnParameter("rhs", PType.typeTinyInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<Int8Value>()
-        val rhs = args[1].check<Int8Value>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.byte > rhs.byte)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__INT16_INT16__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", INT16),
-            FnParameter("rhs", INT16),
+            FnParameter("lhs", PType.typeSmallInt()),
+            FnParameter("rhs", PType.typeSmallInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<Int16Value>()
-        val rhs = args[1].check<Int16Value>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.short > rhs.short)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__INT32_INT32__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", INT32),
-            FnParameter("rhs", INT32),
+            FnParameter("lhs", PType.typeInt()),
+            FnParameter("rhs", PType.typeInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<Int32Value>()
-        val rhs = args[1].check<Int32Value>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0].int
+        val rhs = args[1].int
+        return Datum.bool(lhs > rhs)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__INT64_INT64__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", INT64),
-            FnParameter("rhs", INT64),
+            FnParameter("lhs", PType.typeBigInt()),
+            FnParameter("rhs", PType.typeBigInt()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<Int64Value>()
-        val rhs = args[1].check<Int64Value>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.long > rhs.long)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__INT_INT__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", INT),
-            FnParameter("rhs", INT),
+            @Suppress("DEPRECATION") FnParameter("lhs", PType.typeIntArbitrary()),
+            @Suppress("DEPRECATION") FnParameter("rhs", PType.typeIntArbitrary()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<IntValue>()
-        val rhs = args[1].check<IntValue>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.bigInteger > rhs.bigInteger)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", DECIMAL_ARBITRARY),
-            FnParameter("rhs", DECIMAL_ARBITRARY),
+            @Suppress("DEPRECATION") FnParameter("lhs", PType.typeDecimalArbitrary()),
+            @Suppress("DEPRECATION") FnParameter("rhs", PType.typeDecimalArbitrary()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<DecimalValue>()
-        val rhs = args[1].check<DecimalValue>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.bigDecimal > rhs.bigDecimal)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__FLOAT32_FLOAT32__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", FLOAT32),
-            FnParameter("rhs", FLOAT32),
+            FnParameter("lhs", PType.typeReal()),
+            FnParameter("rhs", PType.typeReal()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<Float32Value>()
-        val rhs = args[1].check<Float32Value>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.float > rhs.float)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__FLOAT64_FLOAT64__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", FLOAT64),
-            FnParameter("rhs", FLOAT64),
+            FnParameter("lhs", PType.typeDoublePrecision()),
+            FnParameter("rhs", PType.typeDoublePrecision()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<Float64Value>()
-        val rhs = args[1].check<Float64Value>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.double > rhs.double)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__STRING_STRING__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", STRING),
-            FnParameter("rhs", STRING),
+            FnParameter("lhs", PType.typeString()),
+            FnParameter("rhs", PType.typeString()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<StringValue>()
-        val rhs = args[1].check<StringValue>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.string > rhs.string)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__SYMBOL_SYMBOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", SYMBOL),
-            FnParameter("rhs", SYMBOL),
+            FnParameter("lhs", PType.typeSymbol()),
+            FnParameter("rhs", PType.typeSymbol()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<SymbolValue>()
-        val rhs = args[1].check<SymbolValue>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.string > rhs.string)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__DATE_DATE__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", DATE),
-            FnParameter("rhs", DATE),
+            FnParameter("lhs", PType.typeDate()),
+            FnParameter("rhs", PType.typeDate()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<DateValue>()
-        val rhs = args[1].check<DateValue>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.date > rhs.date)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__TIME_TIME__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", TIME),
-            FnParameter("rhs", TIME),
+            FnParameter("lhs", PType.typeTimeWithoutTZ(6)),
+            FnParameter("rhs", PType.typeTimeWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<TimeValue>()
-        val rhs = args[1].check<TimeValue>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.time > rhs.time)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__TIMESTAMP_TIMESTAMP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", TIMESTAMP),
-            FnParameter("rhs", TIMESTAMP),
+            FnParameter("lhs", PType.typeTimestampWithoutTZ(6)),
+            FnParameter("rhs", PType.typeTimestampWithoutTZ(6)),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<TimestampValue>()
-        val rhs = args[1].check<TimestampValue>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.timestamp > rhs.timestamp)
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 internal object Fn_GT__BOOL_BOOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gt",
-        returns = BOOL,
+        returns = PType.typeBool(),
         parameters = listOf(
-            FnParameter("lhs", BOOL),
-            FnParameter("rhs", BOOL),
+            FnParameter("lhs", PType.typeBool()),
+            FnParameter("rhs", PType.typeBool()),
         ),
         isNullCall = true,
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<BoolValue>()
-        val rhs = args[1].check<BoolValue>()
-        return boolValue(lhs.value!! > rhs.value!!)
+    override fun invoke(args: Array<Datum>): Datum {
+        val lhs = args[0]
+        val rhs = args[1]
+        return Datum.bool(lhs.boolean > rhs.boolean)
     }
 }
