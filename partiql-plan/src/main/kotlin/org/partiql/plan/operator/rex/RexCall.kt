@@ -22,24 +22,24 @@ public interface RexCall : Rex {
     override fun getOperands(): List<Rex> = getArgs()
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCall(this, ctx)
+}
 
-    /**
-     * Default [RexCall] implementation meant for extension.
-     */
-    abstract class Base(function: String, args: List<Rex>) : RexCall {
+/**
+ * Default [RexCall] implementation meant for extension.
+ */
+internal class RexCallImpl(function: String, args: List<Rex>) : RexCall {
 
-        // DO NOT USE FINAL
-        private var _function = function
-        private var _args = args
+    // DO NOT USE FINAL
+    private var _function = function
+    private var _args = args
 
-        final override fun getFunction(): String = _function
+    override fun getFunction(): String = _function
 
-        final override fun getArgs(): List<Rex> = _args
+    override fun getArgs(): List<Rex> = _args
 
-        override fun getType(): PType {
-            TODO("Function .getType()")
-        }
-
-        override fun getOperands(): List<Rex> = _args
+    override fun getType(): PType {
+        TODO("Function .getType()")
     }
+
+    override fun getOperands(): List<Rex> = _args
 }

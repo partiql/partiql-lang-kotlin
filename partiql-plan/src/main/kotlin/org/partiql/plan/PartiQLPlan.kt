@@ -2,7 +2,7 @@ package org.partiql.plan
 
 import org.partiql.planner.catalog.Catalog
 
-public interface Plan {
+public interface PartiQLPlan {
 
     public fun getVersion(): Version
 

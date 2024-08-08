@@ -21,4 +21,3 @@ public interface RelJoin : Rel {
 
     override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitJoin(this, ctx)
 }
-

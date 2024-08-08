@@ -5,34 +5,35 @@ import org.partiql.types.PType
 /**
  * TODO DOCUMENTATION
  */
-public interface RexCoalesce : Rex {
+public interface RexSpread : Rex {
 
     public fun getArgs(): List<Rex>
 
     override fun getOperands(): List<Rex> = getArgs()
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCoalesce(this, ctx)
+    override fun getType(): PType = PType.typeStruct()
+
+    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSpread(this, ctx)
 }
 
-internal class RexCoalesceImpl(args: List<Rex>) : RexCoalesce {
+/**
+ * Default [RexSpread] operator intended for extension.
+ */
+internal class RexSpreadImpl(args: List<Rex>) : RexSpread {
 
     // DO NOT USE FINAL
     private var _args = args
 
     override fun getArgs(): List<Rex> = _args
 
-    override fun getOperands(): List<Rex> = _args
-
-    override fun getType(): PType {
-        TODO("Not yet implemented")
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is RexCoalesce) return false
+        if (other !is RexSpread) return false
         if (_args != other.getArgs()) return false
         return true
     }
 
-    override fun hashCode(): Int = _args.hashCode()
+    override fun hashCode(): Int {
+        return _args.hashCode()
+    }
 }

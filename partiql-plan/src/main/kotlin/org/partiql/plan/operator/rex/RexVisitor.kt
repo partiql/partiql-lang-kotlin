@@ -29,8 +29,6 @@ public interface RexVisitor<R, C> {
 
     public fun visitCollection(rex: RexCollection, ctx: C): R = defaultVisit(rex, ctx)
 
-    public fun visitGlobal(rex: RexGlobal, ctx: C): R = defaultVisit(rex, ctx)
-
     public fun visitLit(rex: RexLit, ctx: C): R = defaultVisit(rex, ctx)
 
     public fun visitPath(rex: RexPath, ctx: C): R = rex.accept(this, ctx)
@@ -49,9 +47,15 @@ public interface RexVisitor<R, C> {
 
     public fun visitSubquery(rex: RexSubquery, ctx: C): R = defaultVisit(rex, ctx)
 
+    public fun visitSubqueryComp(rex: RexSubqueryComp, ctx: C): R = defaultVisit(rex, ctx)
+
     public fun visitSubqueryIn(rex: RexSubqueryIn, ctx: C): R = defaultVisit(rex, ctx)
 
-    public fun visitTupleUnion(rex: RexTupleUnion, ctx: C): R = defaultVisit(rex, ctx)
+    public fun visitSubqueryTest(rex: RexSubqueryTest, ctx: C): R = defaultVisit(rex, ctx)
+
+    public fun visitSpread(rex: RexSpread, ctx: C): R = defaultVisit(rex, ctx)
+
+    public fun visitTable(rex: RexTable, ctx: C): R = defaultVisit(rex, ctx)
 
     public fun visitVar(rex: RexVar, ctx: C): R = defaultVisit(rex, ctx)
 }

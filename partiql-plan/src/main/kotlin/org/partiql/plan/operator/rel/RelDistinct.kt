@@ -17,4 +17,3 @@ public interface RelDistinct : Rel {
 
     override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitDistinct(this, ctx)
 }
-

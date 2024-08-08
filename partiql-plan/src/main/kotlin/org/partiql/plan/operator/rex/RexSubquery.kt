@@ -1,5 +1,6 @@
 package org.partiql.plan.operator.rex
 
+import org.partiql.plan.operator.rel.Rel
 import org.partiql.types.PType
 
 /**
@@ -7,32 +8,37 @@ import org.partiql.types.PType
  */
 public interface RexSubquery : Rex {
 
-    public fun getInput(): org.partiql.plan.operator.rel.Rel
-
-    override fun getOperands(): List<Rex> = emptyList()
+    public fun getRel(): Rel
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubquery(this, ctx)
+}
 
-    abstract class Base(input: org.partiql.plan.operator.rel.Rel) : RexSubquery {
+/**
+ * Implementation of scalar subquery coercion.
+ */
+internal class RexSubqueryImpl(rel: Rel) : RexSubquery {
 
-        // DO NOT USE FINAL
-        private var _input = input
+    // DO NOT USE FINAL
+    private var _rel = rel
 
-        override fun getInput(): org.partiql.plan.operator.rel.Rel = _input
+    override fun getRel(): Rel = _rel
 
-        override fun getType(): PType {
-            TODO("Not yet implemented")
-        }
+    override fun getType(): PType {
+        TODO("Not yet implemented")
+    }
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is RexSubquery) return false
-            if (_input != other.getInput()) return false
-            return true
-        }
+    override fun getOperands(): List<Rex> {
+        TODO("Not yet implemented")
+    }
 
-        override fun hashCode(): Int {
-            return _input.hashCode()
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is RexSubquery) return false
+        if (_rel != other.getRel()) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return _rel.hashCode()
     }
 }

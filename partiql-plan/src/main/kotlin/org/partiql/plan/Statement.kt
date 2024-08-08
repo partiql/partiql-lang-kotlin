@@ -1,6 +1,6 @@
 package org.partiql.plan
 
-import org.partiql.plan.rex.Rex
+import org.partiql.plan.operator.rex.Rex
 
 /**
  * TODO DOCUMENTATION

@@ -16,13 +16,13 @@ public interface RelCollation {
 
     public fun getNulls(): Nulls
 
-    enum class Order {
+    public enum class Order {
         ASC,
         DESC,
         OTHER,
     }
 
-    enum class Nulls {
+    public enum class Nulls {
         FIRST,
         LAST,
         OTHER,

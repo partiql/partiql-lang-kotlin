@@ -1,128 +1,167 @@
 package org.partiql.plan.builder
 
 import org.partiql.eval.value.Datum
+import org.partiql.plan.operator.rel.Rel
 import org.partiql.plan.operator.rex.Rex
-import org.partiql.plan.operator.rex.RexCast
-import org.partiql.plan.operator.rex.RexCoalesce
-import org.partiql.plan.operator.rex.RexCollection
-import org.partiql.plan.operator.rex.RexLit
 import org.partiql.plan.operator.rex.RexStruct
-import org.partiql.plan.operator.rex.RexStructField
-import org.partiql.plan.operator.rex.RexSubquery
-import org.partiql.plan.operator.rex.RexTupleUnion
-import org.partiql.plan.operator.rex.RexVar
+import org.partiql.plan.operator.rex.RexSubqueryTest
 import org.partiql.types.PType
 
 /**
  * DataFrame style fluent-builder for PartiQL logical plans.
  *
+ * TODO change all arguments to RexBuilder.
  * TODO schemas and field names.
- * TODO call expressions.
- * TODO list SOME/ANY/ALL CONTAINS etc.
  */
-public class RexBuilder internal constructor(rex: Rex) {
+@Suppress("LocalVariableName")
+public class RexBuilder private constructor(rex: Builder) {
 
-    // KEEP FINAL TO ENSURE ITS NEVER MUTATED
-    private val _rex = rex
-
-    // TODO CONSIDER BINARY OPERATORS
-
-    /**
-     * The CAST(<_rex> AS <target>) operator.
-     *
-     * @param target
-     * @return
-     */
-    public fun cast(target: PType): RexBuilder {
-        val rex = object : RexCast.Base(_rex, target) {}
-        return RexBuilder(rex)
-    }
+    // DO NOT USE FINAL MEMBERS
+    private var self: Builder = rex
 
     /**
-     * The SCAN expression-to-relation projects — i.e. FROM <rex>
-     *
-     * @return
+     * Invoke the builder with the default [PlanFactory] implementation.
      */
-    public fun scan(): RelBuilder = RelBuilder.scan(_rex)
+    public fun build(): Rex = build(PlanFactory.STANDARD)
 
     /**
-     * The pathing expressions for keys and symbols — i.e. <rex>.<key> / <rex>['key']
-     *
-     * @param key           The key expression.
-     * @param insensitive   If true, then a symbol lookup is used.
-     * @return
+     * Invoke the builder with the given [PlanFactory] implementation.
      */
-    public fun path(key: String, insensitive: Boolean = false): RexBuilder {
-        TODO("not implemented")
-    }
-
-    public fun index(index: Rex): RexBuilder {
-        TODO("not implemented")
-    }
+    public fun build(factory: PlanFactory): Rex = self.build(factory)
 
     /**
-     * The UNPIVOT expression-to-relation projection.
+     * This object holds named constructors for the [RexBuilder] class.
      */
-    public fun unpivot(): RelBuilder = RelBuilder.unpivot(_rex)
-
     public companion object {
 
-        /**
-         * TODO NAMING??
-         */
         @JvmStatic
-        public fun local(depth: Int, offset: Int): RexBuilder {
-            val rex = object : RexVar.Base(depth, offset) {}
-            return RexBuilder(rex)
+        public fun col(depth: Int, offset: Int): RexBuilder = RexBuilder {
+            it.rexCol(depth, offset)
         }
 
         @JvmStatic
-        public fun lit(value: Datum): RexBuilder {
-            val rex = object : RexLit.Base(value) {}
-            return RexBuilder(rex)
+        public fun lit(value: Boolean): RexBuilder = lit(Datum.boolValue(value))
+
+        @JvmStatic
+        public fun lit(value: Int): RexBuilder = lit(Datum.int32Value(value))
+
+        @JvmStatic
+        public fun lit(value: Long): RexBuilder = lit(Datum.int64Value(value))
+
+        @JvmStatic
+        public fun lit(value: String): RexBuilder = lit(Datum.stringValue(value))
+
+        @JvmStatic
+        public fun lit(value: Datum): RexBuilder = RexBuilder { it.rexLit(value) }
+
+        @JvmStatic
+        public fun collection(values: List<Rex>): RexBuilder = RexBuilder {
+            it.rexCollection(values)
         }
 
         @JvmStatic
-        public fun collection(values: List<Rex>): RexBuilder {
-            val rex = object : RexCollection.Base(values) {}
-            return RexBuilder(rex)
-        }
-
-        @JvmStatic
-        public fun coalesce(args: List<Rex>): RexBuilder {
-            val rex = object : RexCoalesce.Base(args) {}
-            return RexBuilder(rex)
-        }
-
-        /**
-         * Scalar subquery coercion.
-         */
-        @JvmStatic
-        public fun subquery(rel: org.partiql.plan.operator.rel.Rel): RexBuilder {
-            val rex = object : RexSubquery.Base(rel) {}
-            return RexBuilder(rex)
+        public fun coalesce(args: List<Rex>): RexBuilder = RexBuilder {
+            it.rexCoalesce(args)
         }
 
         /**
          * TODO add some vararg and vararg pair overloads.
          */
         @JvmStatic
-        public fun struct(fields: List<RexStructField>): RexBuilder {
-            val rex = object : RexStruct.Base(fields) {}
-            return RexBuilder(rex)
+        public fun struct(fields: List<RexStruct.Field>): RexBuilder = RexBuilder {
+            it.rexStruct(fields)
         }
 
         /**
-         * The TUPLEUNION function (which could just be a scalar function..)
-         *
          * Spread because it's similar to the struct/dict spread of other languages. { x..., y... }
-         *
-         * TODO NAMING??
          */
         @JvmStatic
-        public fun spread(args: List<Rex>): RexBuilder {
-            val rex = object : RexTupleUnion.Base(args) {}
-            return RexBuilder(rex)
+        public fun spread(args: List<Rex>): RexBuilder = RexBuilder {
+            it.rexSpread(args)
         }
+
+        /**
+         * Scalar subquery coercion.
+         */
+        @JvmStatic
+        public fun subquery(rel: RelBuilder): RexBuilder = RexBuilder {
+            val _rel = rel.build(it)
+            it.rexSubquery(_rel)
+        }
+
+        /**
+         * Subquery EXISTS.
+         */
+        @JvmStatic
+        public fun exists(rel: RelBuilder): RexBuilder = RexBuilder {
+            val _rel = rel.build(it)
+            it.rexSubqueryTest(RexSubqueryTest.Test.EXISTS, _rel)
+        }
+
+        /**
+         * Subquery UNIQUE.
+         */
+        @JvmStatic
+        public fun unique(rel: RelBuilder): RexBuilder = RexBuilder {
+            val _rel = rel.build(it)
+            it.rexSubqueryTest(RexSubqueryTest.Test.UNIQUE, _rel)
+        }
+
+        /**
+         * Creates a RexPivot operator.
+         */
+        @JvmStatic
+        public fun pivot(input: RelBuilder, key: RexBuilder, value: RexBuilder): RexBuilder = RexBuilder {
+            val _input = input.build(it)
+            val _key = key.build(it)
+            val _value = value.build(it)
+            it.rexPivot(_input, _key, _value)
+        }
+
+        /**
+         * Creates a RexSelect operator.
+         *
+         * @param input
+         * @param constructor
+         * @return
+         */
+        @JvmStatic
+        public fun select(input: RelBuilder, constructor: RexBuilder): RexBuilder = RexBuilder {
+            val _input = input.build(it)
+            val _constructor = constructor.build(it)
+            it.rexSelect(_input, _constructor)
+        }
+    }
+
+    /**
+     * Appends a RexCast to the current rex builder.
+     */
+    public fun cast(target: PType): RexBuilder = RexBuilder {
+        val _operand = self.build(it)
+        it.rexCast(_operand, target)
+    }
+
+    /**
+     * Transform the [Rex] operator into a RelScan operator - this a rex->rel projection.
+     */
+    public fun scan(): RelBuilder = RelBuilder.scan(this)
+
+    /**
+     * Transform the [Rel] operator into a RelIterate operator – this is rex->rel projection.
+     *
+     * @return
+     */
+    public fun iterate(): RelBuilder = RelBuilder.iterate(this)
+
+    /**
+     * The UNPIVOT expression-to-relation projection.
+     */
+    public fun unpivot(): RelBuilder = RelBuilder.unpivot(this)
+
+    /**
+     * PRIVATE FUNCTIONAL INTERFACE COMPILES DOWN TO PRIVATE STATIC METHODS.
+     */
+    private fun interface Builder {
+        fun build(factory: PlanFactory): Rex
     }
 }

@@ -5,26 +5,18 @@ import org.partiql.plan.operator.rel.RelAggregateCall
 import org.partiql.plan.operator.rel.RelCollation
 import org.partiql.plan.operator.rel.RelExcludePath
 import org.partiql.plan.operator.rel.RelJoinType
-import org.partiql.plan.operator.rex.Rex
 
 /**
  * DataFrame style fluent-builder for PartiQL logical plans.
  *
+ * TODO change all arguments to RelBuilder.
  * TODO schemas and field names.
  */
-public class RelBuilder private constructor(rel: _Rel) {
+@Suppress("LocalVariableName")
+public class RelBuilder private constructor(builder: Builder) {
 
-    // KEEP FINAL TO ENSURE ITS NEVER MUTATED.
-    private val _rel: _Rel = rel
-
-    // PRIVATE FUNCTIONAL INTERFACE TO ENSURE WE GET A JVM LAMBDA.
-    @Suppress("ClassName")
-    private fun interface _Rel { fun build(factory: PlanFactory): Rel }
-
-    /**
-     * Invoke the builder with the given [PlanFactory] implementation.
-     */
-    public fun build(factory: PlanFactory): Rel = _rel.build(factory)
+    // DO NOT USE FINAL MEMBERS
+    private var self: Builder = builder
 
     /**
      * Invoke the builder with the default [PlanFactory] implementation.
@@ -32,54 +24,95 @@ public class RelBuilder private constructor(rel: _Rel) {
     public fun build(): Rel = build(PlanFactory.STANDARD)
 
     /**
-     * Appends a RelAggregate to the current operator builder.
+     * Invoke the builder with the given [PlanFactory] implementation.
      */
-    public fun aggregate(calls: List<RelAggregateCall>): RelBuilder = RelBuilder { factory ->
-        val input = _rel.build(factory)
-        factory.relAggregate(input, calls)
+    public fun build(factory: PlanFactory): Rel = self.build(factory)
+
+    /**
+     * This object holds named constructors for the [RelBuilder] class.
+     */
+    public companion object {
+
+        /**
+         * Initialize a logical scan operator builder.
+         */
+        @JvmStatic
+        public fun scan(input: RexBuilder): RelBuilder = RelBuilder {
+            val _input = input.build(it)
+            it.relScan(_input)
+        }
+
+        /**
+         * Initialize a logical iterate operator builder.
+         */
+        @JvmStatic
+        public fun iterate(input: RexBuilder): RelBuilder = RelBuilder {
+            val _input = input.build(it)
+            it.relIterate(_input)
+        }
+
+        /**
+         * Initialize a logical unpivot operator builder.
+         */
+        @JvmStatic
+        public fun unpivot(input: RexBuilder): RelBuilder = RelBuilder {
+            val _input = input.build(it)
+            it.relUnpivot(_input)
+        }
     }
 
-    public fun distinct(): RelBuilder = RelBuilder { factory ->
-        val input = _rel.build(factory)
-        factory.relDistinct(input)
+    /**
+     * Appends a RelAggregate to the current operator builder.
+     */
+    public fun aggregate(calls: List<RelAggregateCall>): RelBuilder = RelBuilder {
+        val _input = self.build(it)
+        val _calls = calls
+        it.relAggregate(_input, _calls)
+    }
+
+    public fun distinct(): RelBuilder = RelBuilder {
+        val _input = self.build(it)
+        it.relDistinct(_input)
     }
 
     /**
      * Appends a RelExcept to the current operator builder.
      */
-    public fun except(rhs: Rel): RelBuilder = RelBuilder { factory ->
-        val lhs = _rel.build(factory)
-        factory.relIntersect(lhs, rhs)
+    public fun except(rhs: Rel): RelBuilder = RelBuilder {
+        val lhs = self.build(it)
+        it.relIntersect(lhs, rhs)
     }
 
     /**
      * Appends a RelExclude to the current operator builder.
      */
-    public fun exclude(paths: List<RelExcludePath>): RelBuilder = RelBuilder { factory ->
-        val input = _rel.build(factory)
-        factory.relExclude(input, paths)
+    public fun exclude(paths: List<RelExcludePath>): RelBuilder = RelBuilder {
+        val _input = self.build(it)
+        it.relExclude(_input, paths)
     }
 
     /**
      * Appends a RelFilter to the current operator builder.
      */
-    public fun filter(predicate: Rex): RelBuilder = RelBuilder { factory ->
-        val input = _rel.build(factory)
-        factory.relFilter(input, predicate)
+    public fun filter(predicate: RexBuilder): RelBuilder = RelBuilder {
+        val _input = self.build(it)
+        val _predicate = predicate.build(it)
+        it.relFilter(_input, _predicate)
     }
 
     /**
      * Appends a RelIntersect to the current operator builder.
      */
-    public fun intersect(rhs: Rel): RelBuilder = RelBuilder { factory ->
-        val lhs = _rel.build(factory)
-        factory.relIntersect(lhs, rhs)
+    public fun intersect(rhs: RelBuilder): RelBuilder = RelBuilder {
+        val _lhs = self.build(it)
+        val _rhs = rhs.build(it)
+        it.relIntersect(_lhs, _rhs)
     }
 
     /**
      * Appends a RelJoin to the current operator builder for LATERAL CROSS JOIN.
      */
-    public fun join(rhs: Rel): RelBuilder = join(rhs, null, RelJoinType.INNER)
+    public fun join(rhs: RelBuilder): RelBuilder = join(rhs, null, RelJoinType.INNER)
 
     /**
      * Appends a RelJoin to the current operator builder for INNER JOIN ON <condition>.
@@ -88,7 +121,7 @@ public class RelBuilder private constructor(rel: _Rel) {
      * @param condition
      * @return
      */
-    public fun join(rhs: Rel, condition: Rex): RelBuilder = join(rhs, condition, RelJoinType.INNER)
+    public fun join(rhs: RelBuilder, condition: RexBuilder): RelBuilder = join(rhs, condition, RelJoinType.INNER)
 
     /**
      * Appends a RelJoin to the current operator builder for [LEFT|RIGHT|INNER|FULL] JOIN.
@@ -97,7 +130,7 @@ public class RelBuilder private constructor(rel: _Rel) {
      * @param type
      * @return
      */
-    public fun join(rhs: Rel, type: RelJoinType): RelBuilder = join(rhs, null, type)
+    public fun join(rhs: RelBuilder, type: RelJoinType): RelBuilder = join(rhs, null, type)
 
     /**
      * Appends a RelJoin to the current operator builder for [LEFT|RIGHT|INNER|FULL] JOIN ON <condition>.
@@ -107,9 +140,11 @@ public class RelBuilder private constructor(rel: _Rel) {
      * @param type
      * @return
      */
-    public fun join(rhs: Rel, condition: Rex?, type: RelJoinType): RelBuilder = RelBuilder { factory ->
-        val lhs = _rel.build(factory)
-        factory.relJoin(lhs, rhs, condition, type)
+    public fun join(rhs: RelBuilder, condition: RexBuilder?, type: RelJoinType): RelBuilder = RelBuilder {
+        val _lhs = self.build(it)
+        val _rhs = rhs.build(it)
+        val _condition = condition?.build(it)
+        it.relJoin(_lhs, _rhs, _condition, type)
     }
 
     /**
@@ -118,9 +153,10 @@ public class RelBuilder private constructor(rel: _Rel) {
      * @param limit
      * @return
      */
-    public fun limit(limit: Rex): RelBuilder = RelBuilder { factory ->
-        val rel = _rel.build(factory)
-        factory.relLimit(rel, limit)
+    public fun limit(limit: RexBuilder): RelBuilder = RelBuilder {
+        val _input = self.build(it)
+        val _limit = limit.build(it)
+        it.relLimit(_input, _limit)
     }
 
     /**
@@ -129,9 +165,10 @@ public class RelBuilder private constructor(rel: _Rel) {
      * @param offset
      * @return
      */
-    public fun offset(offset: Rex): RelBuilder = RelBuilder { factory ->
-        val rel = _rel.build(factory)
-        factory.relLimit(rel, offset)
+    public fun offset(offset: RexBuilder): RelBuilder = RelBuilder {
+        val _input = self.build(it)
+        val _offset = offset.build(it)
+        it.relOffset(_input, _offset)
     }
 
     /**
@@ -140,9 +177,10 @@ public class RelBuilder private constructor(rel: _Rel) {
      * @param projections
      * @return
      */
-    public fun project(projections: List<Rex>): RelBuilder = RelBuilder { factory ->
-        val input = _rel.build(factory)
-        factory.relProject(input, projections)
+    public fun project(projections: List<RexBuilder>): RelBuilder = RelBuilder {
+        val _input = self.build(it)
+        val _projections = projections.map { rex -> rex.build(it) }
+        it.relProject(_input, _projections)
     }
 
     /**
@@ -151,62 +189,31 @@ public class RelBuilder private constructor(rel: _Rel) {
      * @param collations
      * @return
      */
-    public fun sort(collations: List<RelCollation>): RelBuilder = RelBuilder { factory ->
-        val input = _rel.build(factory)
-        factory.relSort(input, collations)
+    public fun sort(collations: List<RelCollation>): RelBuilder = RelBuilder {
+        val _input = self.build(it)
+        it.relSort(_input, collations)
     }
 
     /**
      * Appends a RelUnion to the current operator builder.
      */
-    public fun union(rhs: Rel): RelBuilder = RelBuilder { factory ->
-        val lhs = _rel.build(factory)
-        factory.relUnion(lhs, rhs)
+    public fun union(rhs: Rel): RelBuilder = RelBuilder {
+        val lhs = self.build(it)
+        it.relUnion(lhs, rhs)
     }
 
-    // /**
-    //  * The SELECT VALUE operator.
-    //  *
-    //  * @param constructor
-    //  * @return
-    //  */
-    // public fun select(constructor: Rex): RexBuilder {
-    //     val rex = object : RexSelect.Base(_rel, constructor) {}
-    //     return RexBuilder(rex)
-    // }
-    //
-    // /**
-    //  * The PIVOT relation-expression projection.
-    //  */
-    // public fun pivot(key: Rex, value: Rex): RexBuilder {
-    //     val rex = object : RexPivot.Base(_rel, key, value) {}
-    //     return RexBuilder(rex)
-    // }
+    /**
+     * Appends a RexPivot to the current relational operator – this is a rel->rex projection.
+     */
+    public fun pivot(key: RexBuilder, value: RexBuilder): RexBuilder = RexBuilder.pivot(this, key, value)
 
     /**
-     * PlanBuilder constructor remains private, and all logic for the static methods lives here.
+     * Appends a RexSelect to the current relation operator – this is a rel->rex projection.
      */
-    public companion object {
+    public fun select(constructor: RexBuilder): RexBuilder = RexBuilder.select(this, constructor)
 
-        /**
-         * Initialize a logical scan operator builder.
-         */
-        @JvmStatic
-        public fun scan(input: Rex): RelBuilder = RelBuilder { it.relScan(input) }
-
-        /**
-         * Initialize a logical iterate operator builder.
-         */
-        @JvmStatic
-        public fun iterate(input: Rex): RelBuilder  = RelBuilder { it.relIterate(input) }
-
-        /**
-         * Initialize a logical unpivot operator builder.
-         *
-         * @param input
-         * @return
-         */
-        @JvmStatic
-        public fun unpivot(input: Rex): RelBuilder = RelBuilder { it.relUnpivot(input) }
+    // PRIVATE FUNCTIONAL INTERFACE COMPILES DOWN TO PRIVATE STATIC METHODS.
+    private fun interface Builder {
+        fun build(factory: PlanFactory): Rel
     }
 }

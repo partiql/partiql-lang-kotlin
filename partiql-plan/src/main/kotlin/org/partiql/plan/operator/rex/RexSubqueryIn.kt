@@ -1,39 +1,35 @@
 package org.partiql.plan.operator.rex
 
-/**
- * The subquery IN operator e.g. `<values> IN (<subquery>)`
- */
+import org.partiql.plan.operator.rel.Rel
+import org.partiql.types.PType
+
 public interface RexSubqueryIn : Rex {
 
-    public fun getInput(): org.partiql.plan.operator.rel.Rel
+    public fun getArgs(): List<Rex>
 
-    public fun getValues(): List<Rex>
+    public fun getRel(): Rel
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubqueryIn(this, ctx)
+    public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubqueryIn(this, ctx)
+}
 
-    /**
-     * The default [RexSubqueryIn] operator intended for extension.
-     */
-    abstract class Base(input: org.partiql.plan.operator.rel.Rel, values: List<Rex>) : RexSubqueryIn {
+/**
+ * Logical operator for SQL subquery comparisons.
+ *
+ *  - <comparison predicate> for subqueries.
+ *  - <quantified comparison predicate>.
+ */
+internal class RexSubqueryInImpl(args: List<Rex>, rel: Rel) : RexSubqueryIn {
 
-        // DO NOT USE FINAL
-        private var _input = input
-        private var _values = values
+    private var _args = args
+    private var _rel = rel
 
-        override fun getInput(): org.partiql.plan.operator.rel.Rel = _input
+    override fun getType(): PType = TODO("Not yet implemented")
 
-        override fun getValues(): List<Rex> = _values
+    override fun getArgs(): List<Rex> = _args
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is RexSubqueryIn) return false
-            if (_input != other.getInput()) return false
-            if (_values != other.getValues()) return false
-            return true
-        }
+    override fun getRel(): Rel = _rel
 
-        override fun hashCode(): Int {
-            return _input.hashCode()
-        }
-    }
+    override fun getOperands(): List<Rex> = _args
+
+    // TODO hashcode/equals?
 }

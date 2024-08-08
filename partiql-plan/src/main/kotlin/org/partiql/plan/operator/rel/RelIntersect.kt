@@ -17,4 +17,3 @@ public interface RelIntersect : Rel {
 
     override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitIntersect(this, ctx)
 }
-
