@@ -11,14 +11,15 @@ import org.partiql.value.PartiQLValueExperimental
 internal class ExprExceptAll(
     private val lhs: Operator.Expr,
     private val rhs: Operator.Expr,
+    private val coerce: Boolean,
 ) : Operator.Expr {
 
     // TODO: Add support for equals/hashcode in Datum
     private val counts: MutableMap<PartiQLValue, Int> = mutableMapOf()
 
     override fun eval(env: Environment): Datum {
-        val lIter = lhs.eval(env).asIterator()
-        val rIter = rhs.eval(env).asIterator()
+        val lIter = lhs.eval(env).asIterator(coerce)
+        val rIter = rhs.eval(env).asIterator(coerce)
         // read in RHS first
         for (d in rIter) {
             val value = d.toPartiQLValue()
@@ -36,6 +37,6 @@ internal class ExprExceptAll(
                 yield(d)
             }
         }
-        return Datum.bagValue(excepted.toList())
+        return Datum.bagValue(excepted.asIterable())
     }
 }

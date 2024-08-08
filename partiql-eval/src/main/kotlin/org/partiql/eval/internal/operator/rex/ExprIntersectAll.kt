@@ -11,13 +11,14 @@ import org.partiql.value.PartiQLValueExperimental
 internal class ExprIntersectAll(
     private val lhs: Operator.Expr,
     private val rhs: Operator.Expr,
+    private val coerce: Boolean,
 ) : Operator.Expr {
     // TODO: Add support for equals/hashcode in Datum
     private val counts: MutableMap<PartiQLValue, Int> = mutableMapOf()
 
     override fun eval(env: Environment): Datum {
-        val lIter = lhs.eval(env).asIterator()
-        val rIter = rhs.eval(env).asIterator()
+        val lIter = lhs.eval(env).asIterator(coerce)
+        val rIter = rhs.eval(env).asIterator(coerce)
         // read in LHS first
         for (d in lIter) {
             val value = d.toPartiQLValue()
@@ -34,6 +35,6 @@ internal class ExprIntersectAll(
                 }
             }
         }
-        return Datum.bagValue(intersected.toList())
+        return Datum.bagValue(intersected.asIterable())
     }
 }

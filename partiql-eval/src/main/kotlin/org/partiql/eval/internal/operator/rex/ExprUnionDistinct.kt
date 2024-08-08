@@ -11,13 +11,14 @@ import org.partiql.value.PartiQLValueExperimental
 internal class ExprUnionDistinct(
     private val lhs: Operator.Expr,
     private val rhs: Operator.Expr,
+    private val coerce: Boolean,
 ) : Operator.Expr {
     // TODO: Add support for equals/hashcode in Datum
     private val seen: MutableSet<PartiQLValue> = mutableSetOf()
 
     override fun eval(env: Environment): Datum {
-        val lIter = lhs.eval(env).asIterator()
-        val rIter = rhs.eval(env).asIterator()
+        val lIter = lhs.eval(env).asIterator(coerce)
+        val rIter = rhs.eval(env).asIterator(coerce)
         val unioned = lIter.asSequence() + rIter.asSequence()
         val distinct = sequence {
             for (d in unioned) {
@@ -28,6 +29,6 @@ internal class ExprUnionDistinct(
                 }
             }
         }
-        return Datum.bagValue(distinct.toList())
+        return Datum.bagValue(distinct.asIterable())
     }
 }
