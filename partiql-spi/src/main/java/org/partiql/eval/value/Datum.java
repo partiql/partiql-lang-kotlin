@@ -13,6 +13,7 @@ import org.partiql.value.datetime.Timestamp;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -291,6 +292,7 @@ public interface Datum extends Iterable<Datum> {
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
+    @NotNull
     @Override
     default Iterator<Datum> iterator() {
         throw new UnsupportedOperationException();
@@ -640,5 +642,28 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum date(@NotNull Date value) {
         return new DatumDate(value);
+    }
+
+    /**
+     * Comparator for PartiQL's scalar comparison operator.
+     * @return the default comparator for {@link Datum}. The comparator orders null values first.
+     */
+    @NotNull
+    static Comparator<Datum> comparator() {
+        return comparator(true);
+    }
+
+    /**
+     * Comparator for PartiQL's scalar comparison operator.
+     * @param nullsFirst if true, nulls are ordered before non-null values, otherwise after.
+     * @return the default comparator for {@link Datum}.
+     */
+    @NotNull
+    static Comparator<Datum> comparator(boolean nullsFirst) {
+        if (nullsFirst) {
+            return new DatumComparator.NullsFirst();
+        } else {
+            return new DatumComparator.NullsLast();
+        }
     }
 }

@@ -277,6 +277,8 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public static fun blob ([B)Lorg/partiql/eval/value/Datum;
 	public static fun bool (Z)Lorg/partiql/eval/value/Datum;
 	public static fun clob ([B)Lorg/partiql/eval/value/Datum;
+	public static fun comparator ()Ljava/util/Comparator;
+	public static fun comparator (Z)Ljava/util/Comparator;
 	public static fun date (Lorg/partiql/value/datetime/Date;)Lorg/partiql/eval/value/Datum;
 	public static fun decimal (Ljava/math/BigDecimal;II)Lorg/partiql/eval/value/Datum;
 	public static fun decimalArbitrary (Ljava/math/BigDecimal;)Lorg/partiql/eval/value/Datum;

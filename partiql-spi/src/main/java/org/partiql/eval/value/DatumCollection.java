@@ -26,6 +26,7 @@ class DatumCollection implements Datum {
         _type = type;
     }
 
+    @NotNull
     @Override
     public Iterator<Datum> iterator() {
         return _value.iterator();

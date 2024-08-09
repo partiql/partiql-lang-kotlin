@@ -26,32 +26,39 @@ class TestRunner<T, V>(private val factory: TestExecutor.Factory<T, V>) {
         case.statements.forEach { run(it, case, executor) }
     }
 
-    private class TestRunnerException(message: String) : RuntimeException(message)
-
     private fun run(input: String, case: TestCase, executor: TestExecutor<T, V>) {
-        val assertion = case.assertion
-        try {
-            val statement = executor.prepare(input)
-            val actual = executor.execute(statement)
-            when (assertion) {
-                is Assertion.EvaluationSuccess -> {
-                    val expect = executor.fromIon(assertion.expectedResult)
-                    if (!executor.compare(actual, expect)) {
-                        val ion = executor.toIon(actual)
-                        throw TestRunnerException("Expected error to be thrown but none was thrown.\n${case.name}\nActual result: $ion")
-                    }
-                }
-                is Assertion.EvaluationFailure -> {
+        when (val assertion = case.assertion) {
+            is Assertion.EvaluationSuccess -> {
+                val statement = executor.prepare(input)
+                val actual = executor.execute(statement)
+                val expect = executor.fromIon(assertion.expectedResult)
+                if (!executor.compare(actual, expect)) {
                     val ion = executor.toIon(actual)
-                    throw TestRunnerException("Expected error to be thrown but none was thrown.\n${case.name}\nActual result: $ion")
+                    val message = buildString {
+                        appendLine("*** EXPECTED != ACTUAL ***")
+                        appendLine("Mode     : ${case.compileOptions.typingMode}")
+                        appendLine("Expected : ${assertion.expectedResult}")
+                        appendLine("Actual   : $ion")
+                    }
+                    error(message)
                 }
             }
-        } catch (e: TestRunnerException) {
-            throw TestRunnerException(e.message ?: "Expected error to be thrown but none was thrown.")
-        } catch (e: Exception) {
-            when (case.assertion) {
-                is Assertion.EvaluationSuccess -> throw IllegalStateException("Expected success but exception thrown.", e)
-                is Assertion.EvaluationFailure -> {} // skip
+            is Assertion.EvaluationFailure -> {
+                var thrown: Throwable? = null
+                val ion = try {
+                    val statement = executor.prepare(input)
+                    val actual = executor.execute(statement)
+                    executor.toIon(actual)
+                } catch (t: Throwable) {
+                    thrown = t
+                }
+                if (thrown == null) {
+                    val message = buildString {
+                        appendLine("Expected error to be thrown but none was thrown.")
+                        appendLine("Actual Result: $ion")
+                    }
+                    error(message)
+                }
             }
         }
     }
