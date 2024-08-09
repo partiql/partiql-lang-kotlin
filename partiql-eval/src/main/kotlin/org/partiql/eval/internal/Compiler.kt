@@ -191,7 +191,7 @@ internal class Compiler(
 
     override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: PType?): Operator.Aggregation {
         val args = node.args.map { visitRex(it, it.type).modeHandled() }
-        val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setQuantifier) {
+        val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setq) {
             SetQuantifier.ALL -> Operator.Aggregation.SetQuantifier.ALL
             SetQuantifier.DISTINCT -> Operator.Aggregation.SetQuantifier.DISTINCT
         }

@@ -342,7 +342,7 @@ rel::{
       _: [
         call::{
           agg:  ref,
-          set_quantifier: set_quantifier,
+          setq: set_quantifier,
           args: list::[rex],
         },
       ],

@@ -1270,10 +1270,10 @@ internal class PlanTyper(private val env: Env) {
         fun resolveAgg(node: Rel.Op.Aggregate.Call.Unresolved): Pair<Rel.Op.Aggregate.Call, CompilerType> {
             // Type the arguments
             val args = node.args.map { visitRex(it, null) }
-            val argsResolved = Rel.Op.Aggregate.Call.Unresolved(node.name, node.setQuantifier, args)
+            val argsResolved = Rel.Op.Aggregate.Call.Unresolved(node.name, node.setq, args)
 
             // Resolve the function
-            val call = env.resolveAgg(node.name, node.setQuantifier, args) ?: return argsResolved to CompilerType(PType.dynamic())
+            val call = env.resolveAgg(node.name, node.setq, args) ?: return argsResolved to CompilerType(PType.dynamic())
             return call to CompilerType(call.agg.signature.returns)
         }
     }

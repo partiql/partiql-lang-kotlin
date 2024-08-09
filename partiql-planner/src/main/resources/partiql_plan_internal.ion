@@ -358,12 +358,12 @@ rel::{
         call::[
           unresolved::{
             name: string,
-            set_quantifier: set_quantifier,
+            setq: set_quantifier,
             args: list::[rex],
           },
           resolved::{
             agg:  '.ref.agg',
-            set_quantifier: set_quantifier,
+            setq: set_quantifier,
             args: list::[rex],
           },
         ],

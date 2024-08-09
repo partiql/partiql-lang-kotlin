@@ -414,7 +414,7 @@ internal class PlanTransform(
             override fun visitRelOpAggregateCallResolved(node: Rel.Op.Aggregate.Call.Resolved, ctx: Unit): PlanNode {
                 val agg = visitRef(node.agg, ctx)
                 val args = node.args.map { visitRex(it, ctx) }
-                val setQuantifier = visitSetQuantifier(node.setQuantifier)
+                val setQuantifier = visitSetQuantifier(node.setq)
                 return org.partiql.plan.relOpAggregateCall(agg, setQuantifier, args)
             }
 

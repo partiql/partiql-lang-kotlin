@@ -350,7 +350,7 @@ public final class org/partiql/plan/Rel$Op$Aggregate$Call : org/partiql/plan/Pla
 	public static final field Companion Lorg/partiql/plan/Rel$Op$Aggregate$Call$Companion;
 	public final field agg Lorg/partiql/plan/Ref;
 	public final field args Ljava/util/List;
-	public final field setQuantifier Lorg/partiql/plan/SetQuantifier;
+	public final field setq Lorg/partiql/plan/SetQuantifier;
 	public fun <init> (Lorg/partiql/plan/Ref;Lorg/partiql/plan/SetQuantifier;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/plan/builder/RelOpAggregateCallBuilder;
@@ -1832,11 +1832,11 @@ public final class org/partiql/plan/builder/RelOpAggregateCallBuilder {
 	public final fun build ()Lorg/partiql/plan/Rel$Op$Aggregate$Call;
 	public final fun getAgg ()Lorg/partiql/plan/Ref;
 	public final fun getArgs ()Ljava/util/List;
-	public final fun getSetQuantifier ()Lorg/partiql/plan/SetQuantifier;
+	public final fun getSetq ()Lorg/partiql/plan/SetQuantifier;
 	public final fun setAgg (Lorg/partiql/plan/Ref;)V
 	public final fun setArgs (Ljava/util/List;)V
-	public final fun setQuantifier (Lorg/partiql/plan/SetQuantifier;)Lorg/partiql/plan/builder/RelOpAggregateCallBuilder;
-	public final fun setSetQuantifier (Lorg/partiql/plan/SetQuantifier;)V
+	public final fun setSetq (Lorg/partiql/plan/SetQuantifier;)V
+	public final fun setq (Lorg/partiql/plan/SetQuantifier;)Lorg/partiql/plan/builder/RelOpAggregateCallBuilder;
 }
 
 public final class org/partiql/plan/builder/RelOpDistinctBuilder {

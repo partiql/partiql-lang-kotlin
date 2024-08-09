@@ -1234,7 +1234,7 @@ internal data class Rel(
 
                 internal data class Unresolved(
                     @JvmField internal val name: String,
-                    @JvmField internal val setQuantifier: SetQuantifier,
+                    @JvmField internal val setq: SetQuantifier,
                     @JvmField internal val args: List<Rex>,
                 ) : Call() {
                     public override val children: List<PlanNode> by lazy {
@@ -1255,7 +1255,7 @@ internal data class Rel(
 
                 internal data class Resolved(
                     @JvmField internal val agg: Ref.Agg,
-                    @JvmField internal val setQuantifier: SetQuantifier,
+                    @JvmField internal val setq: SetQuantifier,
                     @JvmField internal val args: List<Rex>,
                 ) : Call() {
                     public override val children: List<PlanNode> by lazy {
