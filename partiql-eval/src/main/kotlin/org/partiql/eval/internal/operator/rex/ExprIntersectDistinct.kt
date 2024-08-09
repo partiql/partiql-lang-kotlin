@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
+import org.partiql.eval.internal.helpers.IteratorPeeking
 import org.partiql.eval.internal.helpers.asIterator
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
@@ -13,25 +14,31 @@ internal class ExprIntersectDistinct(
     private val rhs: Operator.Expr,
     private val coerce: Boolean,
 ) : Operator.Expr {
-    // TODO: Add support for equals/hashcode in Datum
-    private val seen: MutableSet<PartiQLValue> = mutableSetOf()
-
     override fun eval(env: Environment): Datum {
-        val lIter = lhs.eval(env).asIterator(coerce)
-        val rIter = rhs.eval(env).asIterator(coerce)
-        // read in LHS first
-        for (d in lIter) {
-            val value = d.toPartiQLValue()
-            seen.add(value)
-        }
-        val intersected = sequence {
-            for (d in rIter) {
-                val value = d.toPartiQLValue()
-                if (seen.remove(value)) {
-                    yield(d)
+        val lDatum = lhs.eval(env)
+        val rDatum = rhs.eval(env)
+        val iter = Iterable {
+            // TODO: Add support for equals/hashcode in Datum
+            val seen: MutableSet<PartiQLValue> = mutableSetOf()
+            val lIter = lDatum.asIterator(coerce)
+            val rIter = rDatum.asIterator(coerce)
+            object : IteratorPeeking<Datum>() {
+                override fun peek(): Datum? {
+                    // read in LHS first
+                    for (l in lIter) {
+                        val value = l.toPartiQLValue()
+                        seen.add(value)
+                    }
+                    for (r in rIter) {
+                        val value = r.toPartiQLValue()
+                        if (seen.remove(value)) {
+                            return r
+                        }
+                    }
+                    return null
                 }
             }
         }
-        return Datum.bagValue(intersected.asIterable())
+        return Datum.bag(iter)
     }
 }

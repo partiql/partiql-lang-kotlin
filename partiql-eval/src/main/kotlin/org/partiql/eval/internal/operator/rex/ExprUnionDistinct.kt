@@ -1,6 +1,8 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
+import org.partiql.eval.internal.helpers.IteratorChain
+import org.partiql.eval.internal.helpers.IteratorPeeking
 import org.partiql.eval.internal.helpers.asIterator
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
@@ -13,22 +15,28 @@ internal class ExprUnionDistinct(
     private val rhs: Operator.Expr,
     private val coerce: Boolean,
 ) : Operator.Expr {
-    // TODO: Add support for equals/hashcode in Datum
-    private val seen: MutableSet<PartiQLValue> = mutableSetOf()
-
     override fun eval(env: Environment): Datum {
-        val lIter = lhs.eval(env).asIterator(coerce)
-        val rIter = rhs.eval(env).asIterator(coerce)
-        val unioned = lIter.asSequence() + rIter.asSequence()
-        val distinct = sequence {
-            for (d in unioned) {
-                val value = d.toPartiQLValue()
-                if (!seen.contains(value)) {
-                    seen.add(value)
-                    yield(d)
+        val lDatum = lhs.eval(env)
+        val rDatum = rhs.eval(env)
+        val iter = Iterable {
+            // TODO: Add support for equals/hashcode in Datum
+            val seen: MutableSet<PartiQLValue> = mutableSetOf()
+            val lIter = lDatum.asIterator(coerce)
+            val rIter = rDatum.asIterator(coerce)
+            val combined = IteratorChain(arrayOf(lIter, rIter))
+            object : IteratorPeeking<Datum>() {
+                override fun peek(): Datum? {
+                    for (d in combined) {
+                        val value = d.toPartiQLValue()
+                        if (!seen.contains(value)) {
+                            seen.add(value)
+                            return d
+                        }
+                    }
+                    return null
                 }
             }
         }
-        return Datum.bagValue(distinct.asIterable())
+        return Datum.bag(iter)
     }
 }

@@ -1159,13 +1159,13 @@ internal class PartiQLParserDefault : PartiQLParser {
                 )
             } else {
                 if (ctx.order != null) {
-                    error("ORDER BY not supported for bag ops")
+                    throw error(ctx.order, "ORDER BY not supported for bag ops")
                 }
                 if (ctx.limit != null) {
-                    error("LIMIT not supported for bag ops")
+                    throw error(ctx.limit, "LIMIT not supported for bag ops")
                 }
                 if (ctx.offset != null) {
-                    error("OFFSET not supported for bag ops")
+                    throw error(ctx.offset, "OFFSET not supported for bag ops")
                 }
                 exprBagOp(
                     type = op,
