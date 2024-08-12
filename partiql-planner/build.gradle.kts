@@ -114,7 +114,16 @@ tasks.register<Exec>("codegen") {
 tasks.register<Copy>("copyUtils") {
     includeEmptyDirs = false
     dependsOn("codegen")
-    filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
+    eachFile {
+        var toChange = true
+        filter {
+            // If the sprout generated name is too long, then the function declaration gets break down into two lines
+            // where the first line is just a visibility modifier.
+            if (it.contains("interface", false)) toChange = false
+            it.replace(Regex("public\\s+(?!(override|(fun visit)))"), "internal ")
+                .replace(Regex("public\\s*$"), if (toChange) "internal" else "public")
+        }
+    }
     from("$buildDir/tmp")
     exclude("**/Nodes.kt")
     into("$buildDir/generated-src")

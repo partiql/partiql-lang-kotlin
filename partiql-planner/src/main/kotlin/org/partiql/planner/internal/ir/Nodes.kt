@@ -6,12 +6,16 @@
 package org.partiql.planner.`internal`.ir
 
 import org.partiql.errors.Problem
-import org.partiql.plan.builder.DdlOpAlterTableBuilder
-import org.partiql.plan.builder.DdlOpAlterTableOperationChangeColumnBuilder
 import org.partiql.planner.internal.ir.builder.ConstraintCheckBuilder
 import org.partiql.planner.internal.ir.builder.ConstraintNotNullBuilder
 import org.partiql.planner.internal.ir.builder.ConstraintNullableBuilder
 import org.partiql.planner.internal.ir.builder.ConstraintUniqueBuilder
+import org.partiql.planner.internal.ir.builder.DdlOpAlterTableBuilder
+import org.partiql.planner.internal.ir.builder.DdlOpAlterTableOperationAddColumnBuilder
+import org.partiql.planner.internal.ir.builder.DdlOpAlterTableOperationChangeColumnBuilder
+import org.partiql.planner.internal.ir.builder.DdlOpAlterTableOperationChangeColumnSubcommandChangeCommentBuilder
+import org.partiql.planner.internal.ir.builder.DdlOpAlterTableOperationChangeColumnSubcommandChangeNullableBuilder
+import org.partiql.planner.internal.ir.builder.DdlOpAlterTableOperationChangeColumnSubcommandChangeTypeBuilder
 import org.partiql.planner.`internal`.ir.builder.DdlOpCreateTableBuilder
 import org.partiql.planner.`internal`.ir.builder.IdentifierQualifiedBuilder
 import org.partiql.planner.`internal`.ir.builder.IdentifierSymbolBuilder
@@ -102,6 +106,7 @@ import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
+import org.partiql.types.StructType
 import org.partiql.`value`.PartiQLValue
 import org.partiql.`value`.PartiQLValueExperimental
 import org.partiql.`value`.PartiQLValueType
@@ -296,13 +301,17 @@ internal sealed class DdlOp : PlanNode() {
     }
 
     internal data class AlterTable(
-        @JvmField internal val name: Identifier,
-        @JvmField internal val op: List<Operation>,
+        @JvmField
+        public val name: Identifier,
+        @JvmField
+        public val op: List<Operation>,
+        @JvmField val updatedShape: Type.Collection
     ) : DdlOp() {
         public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
             kids.add(name)
             kids.addAll(op)
+            kids.add(updatedShape)
             kids.filterNotNull()
         }
 
@@ -313,20 +322,19 @@ internal sealed class DdlOp : PlanNode() {
         public sealed class Operation : PlanNode() {
             public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
                 is ChangeColumn -> visitor.visitDdlOpAlterTableOperationChangeColumn(this, ctx)
+                is AddColumn -> visitor.visitDdlOpAlterTableOperationAddColumn(this, ctx)
             }
 
             public data class ChangeColumn(
                 @JvmField
-                public val oldName: Identifier.Symbol,
+                public val target: Identifier.Symbol,
                 @JvmField
-                public val newName: Identifier.Symbol,
-                @JvmField
-                public val type: Type,
+                public val subcommand: Subcommand,
             ) : Operation() {
                 public override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
-                    kids.add(oldName)
-                    kids.add(newName)
+                    kids.add(target)
+                    kids.add(subcommand)
                     kids.filterNotNull()
                 }
 
@@ -334,10 +342,121 @@ internal sealed class DdlOp : PlanNode() {
                 public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                     visitor.visitDdlOpAlterTableOperationChangeColumn(this, ctx)
 
+                public sealed class Subcommand : PlanNode() {
+                    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                        is ChangeType ->
+                            visitor.visitDdlOpAlterTableOperationChangeColumnSubcommandChangeType(this, ctx)
+                        is ChangeNullable ->
+                            visitor.visitDdlOpAlterTableOperationChangeColumnSubcommandChangeNullable(this, ctx)
+                        is ChangeComment ->
+                            visitor.visitDdlOpAlterTableOperationChangeColumnSubcommandChangeComment(this, ctx)
+                    }
+
+                    public data class ChangeType(
+                        @JvmField
+                        public val updatedType: StaticType,
+                        @JvmField
+                        public val type: Type,
+                        @JvmField
+                        public val constraints: List<Constraint>,
+                        @JvmField
+                        public val isOptional: Boolean,
+                    ) : Subcommand() {
+                        public override val children: List<PlanNode> by lazy {
+                            val kids = mutableListOf<PlanNode?>()
+                            kids.add(type)
+                            kids.addAll(constraints)
+                            kids.filterNotNull()
+                        }
+
+
+                        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                            visitor.visitDdlOpAlterTableOperationChangeColumnSubcommandChangeType(this, ctx)
+
+                        public companion object {
+                            @JvmStatic
+                            public fun builder(): DdlOpAlterTableOperationChangeColumnSubcommandChangeTypeBuilder
+                                    = DdlOpAlterTableOperationChangeColumnSubcommandChangeTypeBuilder()
+                        }
+                    }
+
+                    public data class ChangeNullable(
+                        @JvmField
+                        public val op: Op,
+                    ) : Subcommand() {
+                        public override val children: List<PlanNode> = emptyList()
+
+                        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                            visitor.visitDdlOpAlterTableOperationChangeColumnSubcommandChangeNullable(this, ctx)
+
+                        public enum class Op {
+                            SET,
+                            DROP,
+                        }
+
+                        public companion object {
+                            @JvmStatic
+                            public fun builder():
+                                    DdlOpAlterTableOperationChangeColumnSubcommandChangeNullableBuilder =
+                                DdlOpAlterTableOperationChangeColumnSubcommandChangeNullableBuilder()
+                        }
+                    }
+
+                    public data class ChangeComment(
+                        @JvmField
+                        public val newComment: String,
+                    ) : Subcommand() {
+                        public override val children: List<PlanNode> = emptyList()
+
+                        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                            visitor.visitDdlOpAlterTableOperationChangeColumnSubcommandChangeComment(this, ctx)
+
+                        public companion object {
+                            @JvmStatic
+                            public fun builder():
+                                    DdlOpAlterTableOperationChangeColumnSubcommandChangeCommentBuilder =
+                                DdlOpAlterTableOperationChangeColumnSubcommandChangeCommentBuilder()
+                        }
+                    }
+                }
+
                 public companion object {
                     @JvmStatic
                     public fun builder(): DdlOpAlterTableOperationChangeColumnBuilder =
                         DdlOpAlterTableOperationChangeColumnBuilder()
+                }
+            }
+
+            public data class AddColumn(
+                @JvmField
+                public val field: StructType.Field,
+                @JvmField
+                public val name: Identifier.Symbol,
+                @JvmField
+                public val type: Type,
+                @JvmField
+                public val constraints: List<Constraint>,
+                @JvmField
+                public val isOptional: Boolean,
+                @JvmField
+                public val comment: String?,
+            ) : Operation() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(name)
+                    kids.add(type)
+                    kids.addAll(constraints)
+                    kids.filterNotNull()
+                }
+
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitDdlOpAlterTableOperationAddColumn(this, ctx)
+
+                public companion object {
+                    @JvmStatic
+                    public fun builder(): DdlOpAlterTableOperationAddColumnBuilder =
+                        DdlOpAlterTableOperationAddColumnBuilder()
                 }
             }
         }

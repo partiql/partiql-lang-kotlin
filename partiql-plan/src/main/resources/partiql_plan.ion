@@ -3,6 +3,7 @@ imports::{
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.value.PartiQLValueType',
     static_type::'org.partiql.types.StaticType',
+    struct_field::'org.partiql.types.StructType.Field'
   ],
 }
 
@@ -74,12 +75,28 @@ ddl_op::[
   alter_table::{
     name: identifier,
     op: list::[operation],
+    updated_shape: 'static_type',
     _: [
       operation:: [
         change_column:: {
-          old_name: '.identifier.symbol',
-          new_name: '.identifier.symbol',
-          type:  'static_type'
+          target: '.identifier.symbol',
+          subcommand: [
+            change_type :: {
+                updated_type: 'static_type'
+            },
+            change_nullable :: {
+              op :[
+                SET,
+                DROP
+              ]
+            },
+            change_comment :: {
+              new_comment: string
+            },
+          ],
+        },
+        add_column :: {
+          field: struct_field
         }
       ]
     ],

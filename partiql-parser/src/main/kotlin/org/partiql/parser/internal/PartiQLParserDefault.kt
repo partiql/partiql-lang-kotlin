@@ -61,7 +61,11 @@ import org.partiql.ast.constraintDefinitionNotNull
 import org.partiql.ast.constraintDefinitionNullable
 import org.partiql.ast.constraintDefinitionUnique
 import org.partiql.ast.ddlOpAlterTable
+import org.partiql.ast.ddlOpAlterTableOperationAddColumn
 import org.partiql.ast.ddlOpAlterTableOperationChangeColumn
+import org.partiql.ast.ddlOpAlterTableOperationChangeColumnSubcommandChangeComment
+import org.partiql.ast.ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable
+import org.partiql.ast.ddlOpAlterTableOperationChangeColumnSubcommandChangeType
 import org.partiql.ast.ddlOpCreateIndex
 import org.partiql.ast.ddlOpCreateTable
 import org.partiql.ast.ddlOpDropIndex
@@ -675,13 +679,45 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitChangeColumn(ctx: GeneratedParser.ChangeColumnContext) = translate(ctx) {
-            val oldName = visitSymbolPrimitive(ctx.symbolPrimitive())
-            val new = when (val defCtx = ctx.tableDefPart()) {
-                is GeneratedParser.ColumnDeclarationContext -> visitColumnDeclaration(defCtx)
-                else -> throw error(defCtx, "Expected column declaration")
-            }
+            val target = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val changeColumnOp = visitAs<DdlOp.AlterTable.Operation.ChangeColumn.Subcommand>(ctx.changeColumnOp())
+            ddlOpAlterTableOperationChangeColumn(target, changeColumnOp)
+        }
 
-            ddlOpAlterTableOperationChangeColumn(oldName, new.name, new.type, new.constraints, new.isOptional, new.comment)
+        override fun visitChangeColumnType(ctx: org.partiql.parser.internal.antlr.PartiQLParser.ChangeColumnTypeContext) = translate(ctx) {
+            val type = (visit(ctx.type()) as Type).also {
+                isValidTypeDeclarationOrThrow(it, ctx.type())
+            }
+            val constraints = ctx.columnConstraint().map { visitColumnConstraint(it) }
+            val optional = when (ctx.OPTIONAL()) {
+                null -> false
+                else -> true
+            }
+            // This is a long name.... unnest?
+            ddlOpAlterTableOperationChangeColumnSubcommandChangeType(type, constraints, optional)
+        }
+
+        override fun visitChangeColumnNullable(ctx: org.partiql.parser.internal.antlr.PartiQLParser.ChangeColumnNullableContext) = translate(ctx) {
+            // unnest this
+            when (ctx.op.type) {
+                GeneratedParser.SET -> ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable(DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.SET)
+                GeneratedParser.DROP -> ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable(DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.DROP)
+                else -> throw error(ctx, "Expect SET or DROP")
+            }
+        }
+
+        override fun visitChangeColumnComment(ctx: org.partiql.parser.internal.antlr.PartiQLParser.ChangeColumnCommentContext) = translate(ctx) {
+            val comment = ctx.comment().LITERAL_STRING().getStringValue()
+            ddlOpAlterTableOperationChangeColumnSubcommandChangeComment(comment)
+        }
+
+        override fun visitAddColumn(ctx: org.partiql.parser.internal.antlr.PartiQLParser.AddColumnContext) = translate(ctx) {
+            val tableDefPart = ctx.tableDefPart()
+            val columnDef = when (tableDefPart) {
+                is GeneratedParser.ColumnDeclarationContext -> visitColumnDeclaration(tableDefPart)
+                else -> throw error(ctx, "Expect column definition but received table constraint definition")
+            }
+            ddlOpAlterTableOperationAddColumn(columnDef.name, columnDef.type, columnDef.constraints, columnDef.isOptional, columnDef.comment)
         }
 
         override fun visitTableDef(ctx: GeneratedParser.TableDefContext) = translate(ctx) {

@@ -28,7 +28,8 @@ statement
  */
 
 explainOption
-    : param=IDENTIFIER value=IDENTIFIER;
+// Type is a keyword
+    : param=(TYPE|IDENTIFIER) value=IDENTIFIER;
 
 asIdent
     : AS symbolPrimitive;
@@ -102,7 +103,19 @@ alterCommand
     ;
 
 alterOp
-    : CHANGE (COLUMN)? symbolPrimitive tableDefPart            #ChangeColumn
+    : CHANGE COLUMN symbolPrimitive changeColumnOp              #ChangeColumn
+    | ADD COLUMN tableDefPart                                   #AddColumn
+    ;
+
+changeColumnOp
+    // Change Column Type Declaration and constraint declaration
+    //  all old constraint associated with type are removed
+    // Note that comment is associted with field, hence not changed
+    : TYPE OPTIONAL? type columnConstraint*                     #ChangeColumnType
+    // Drop / add nullable constraint to the type
+    | op = (SET | DROP) NOT NULL                                #ChangeColumnNullable
+    // Modify comment on the given column/field
+    | comment                                           #ChangeColumnComment
     ;
 
 tableDef

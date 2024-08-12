@@ -16,6 +16,12 @@ import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Statement.DDL
 import org.partiql.planner.internal.ir.constraintCheck
 import org.partiql.planner.internal.ir.constraintUnique
+import org.partiql.planner.internal.ir.ddlOpAlterTable
+import org.partiql.planner.internal.ir.ddlOpAlterTableOperationAddColumn
+import org.partiql.planner.internal.ir.ddlOpAlterTableOperationChangeColumn
+import org.partiql.planner.internal.ir.ddlOpAlterTableOperationChangeColumnSubcommandChangeComment
+import org.partiql.planner.internal.ir.ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable
+import org.partiql.planner.internal.ir.ddlOpAlterTableOperationChangeColumnSubcommandChangeType
 import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.partitionByAttrList
@@ -40,6 +46,7 @@ import org.partiql.planner.internal.ir.typeRecord
 import org.partiql.planner.internal.ir.typeRecordField
 import org.partiql.planner.internal.transforms.AstToPlan.convert
 import org.partiql.types.StaticType
+import org.partiql.types.StructType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.planner.internal.ir.Type as PlanType
 
@@ -57,9 +64,8 @@ internal object DDLConverter {
 
         override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) =
             when (val op = node.op) {
-                is DdlOp.CreateTable -> {
-                    statementDDL(StaticType.ANY, visitDdlOpCreateTable(op, ctx))
-                }
+                is DdlOp.CreateTable -> statementDDL(StaticType.ANY, visitDdlOpCreateTable(op, ctx))
+                is DdlOp.AlterTable -> statementDDL(StaticType.ANY, visitDdlOpAlterTable(op, ctx))
                 else -> throw IllegalArgumentException("Unsupported DDL operation $op")
             }
 
@@ -82,11 +88,71 @@ internal object DDLConverter {
             return ddlOpCreateTable(name, typeCollection(record, false, emptyList()), partitionBy, tblProperties)
         }
 
+        override fun visitDdlOpAlterTable(node: DdlOp.AlterTable, ctx: Ctx): org.partiql.planner.internal.ir.DdlOp.AlterTable {
+            val table = convert(node.name)
+            val op = node.operations.map { visitDdlOpAlterTableOperation(it, ctx) }
+            val updatedShape = org.partiql.planner.internal.ir.Type.Collection(null, false, emptyList())
+            return ddlOpAlterTable(table, op, updatedShape)
+        }
+
+        override fun visitDdlOpAlterTableOperation(node: DdlOp.AlterTable.Operation, ctx: Ctx) =
+            super.visitDdlOpAlterTableOperation(node, ctx) as org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation
+
+        override fun visitDdlOpAlterTableOperationChangeColumn(
+            node: DdlOp.AlterTable.Operation.ChangeColumn,
+            ctx: Ctx
+        ): org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation {
+            val target = convert(node.target)
+            val op = visitDdlOpAlterTableOperationChangeColumnSubcommand(node.subcommand, Ctx(ctx.env, target))
+            return ddlOpAlterTableOperationChangeColumn(target, op)
+        }
+
+        override fun visitDdlOpAlterTableOperationChangeColumnSubcommand(
+            node: DdlOp.AlterTable.Operation.ChangeColumn.Subcommand,
+            ctx: Ctx
+        ) = super.visitDdlOpAlterTableOperationChangeColumnSubcommand(node, ctx) as org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand
+
+        override fun visitDdlOpAlterTableOperationChangeColumnSubcommandChangeType(
+            node: DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeType,
+            ctx: Ctx
+        ): org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeType {
+            val type = visitType(node.type, ctx)
+            val constraints = node.constraints.map { visitConstraint(it, ctx) }
+            val updatedType = StaticType.ANY
+            return ddlOpAlterTableOperationChangeColumnSubcommandChangeType(updatedType, type, constraints, node.isOptional)
+        }
+
+        override fun visitDdlOpAlterTableOperationChangeColumnSubcommandChangeNullable(
+            node: DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable,
+            ctx: Ctx
+        ) = when (node.op) {
+            DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.SET -> ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable(org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.SET)
+            DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.DROP -> ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable(org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.DROP)
+        }
+
+        override fun visitDdlOpAlterTableOperationChangeColumnSubcommandChangeComment(
+            node: DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeComment,
+            ctx: Ctx
+        ): org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeComment {
+            return ddlOpAlterTableOperationChangeColumnSubcommandChangeComment(node.newComment)
+        }
+
         override fun visitTableDefinitionAttribute(node: TableDefinition.Attribute, ctx: Ctx): org.partiql.planner.internal.ir.Type.Record.Field {
             val attrName = convert(node.name)
             val type = visitType(node.type, ctx)
             val constraints = node.constraints.map { visitConstraint(it, ctx) }
             return typeRecordField(attrName, type, constraints, node.isOptional, node.comment)
+        }
+
+        override fun visitDdlOpAlterTableOperationAddColumn(
+            node: DdlOp.AlterTable.Operation.AddColumn,
+            ctx: Ctx
+        ): org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation.AddColumn {
+            val name = convert(node.name)
+            val type = visitType(node.type, ctx)
+            val constraints = node.constraints.map { visitConstraint(it, ctx) }
+            val field = StructType.Field(name.symbol, StaticType.ANY)
+            return ddlOpAlterTableOperationAddColumn(field, name, type, constraints, node.isOptional, node.comment)
         }
 
         override fun visitType(node: Type, ctx: Ctx): org.partiql.planner.internal.ir.Type =

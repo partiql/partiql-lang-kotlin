@@ -158,12 +158,33 @@ ddl_op::[
 
   alter_table::{
     name:       identifier,
+    // To support potentially multiple operations
     operations: list::[operation],
     _: [
       operation:: [
         change_column:: {
-          old_name: '.identifier.symbol',
-          new_name: binder,
+          target: '.identifier.symbol',
+          subcommand: [
+            change_type :: {
+              type:  '.type',
+              constraints: list::[constraint],
+              is_optional: bool,
+            },
+            change_nullable :: {
+              op :[
+                SET,
+                DROP
+              ]
+            },
+            change_comment :: {
+              new_comment: string
+            },
+          ],
+        },
+        // Do we want allow adding an attribute in a nested struct?
+        // Do we want new syntax for this?
+        add_column :: {
+          name: binder,
           type:  '.type',
           constraints: list::[constraint],
           is_optional: bool,

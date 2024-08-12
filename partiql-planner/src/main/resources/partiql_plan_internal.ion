@@ -5,7 +5,8 @@ imports::{
     static_type::'org.partiql.types.StaticType',
     fn_signature::'org.partiql.spi.fn.FnSignature',
     agg_signature::'org.partiql.spi.fn.AggSignature',
-    problem::'org.partiql.errors.Problem'
+    problem::'org.partiql.errors.Problem',
+    struct_field::'org.partiql.types.StructType.Field'
   ],
 }
 
@@ -55,6 +56,7 @@ statement::[
     root: rex,
   },
   d_d_l::{
+    // TODO: remove this
     shape: static_type,
     op: ddl_op,
   },
@@ -127,12 +129,40 @@ ddl_op::[
   alter_table::{
     name: identifier,
     op: list::[operation],
+    // ideally during typing we update the schema information.
+    updated_shape: '.type.collection',
     _: [
       operation:: [
         change_column:: {
-          old_name: '.identifier.symbol',
-          new_name: '.identifier.symbol',
-          type:  type
+          target: '.identifier.symbol',
+          subcommand: [
+            // the following can be simplified if we retreive the column information using SPI
+            // in which case all of below can cascade into a just supply with the new field post typing.
+            //  (we can still preserve the subcommand if it helps with Evaluation)
+            change_type :: {
+              updated_type: static_type,
+              type:  '.type',
+              constraints: list::[constraint],
+              is_optional: bool,
+            },
+            change_nullable :: {
+              op :[
+                SET,
+                DROP
+              ]
+            },
+            change_comment :: {
+              new_comment: string
+            },
+          ],
+        },
+        add_column :: {
+          field: 'struct_field',
+          name: '.identifier.symbol',
+          type:  '.type',
+          constraints: list::[constraint],
+          is_optional: bool,
+          comment: optional::string,
         }
       ]
     ],

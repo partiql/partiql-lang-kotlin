@@ -107,6 +107,11 @@ internal object DdlUtils {
             return type.copy(type.elementType.removeNull(), type.metas, type.constraints)
         }
 
+        fun resolveField(field: Type.Record.Field): StructType.Field {
+            val type = Visitor.visitTypeRecordField(field, Ctx(emptyList()))
+            return StructType.Field(field.name.symbol, type, field.comment?.let { mapOf("comment" to it) } ?: emptyMap())
+        }
+
         private fun StaticType.removeNull() =
             this.allTypes.filterNot { it is NullType }.toSet().let { StaticType.unionOf(it).flatten() }
 

@@ -16,6 +16,7 @@
 
 package org.partiql.planner.internal.typer
 
+import com.amazon.ionelement.api.field
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.exclude.ExcludeRepr
@@ -31,6 +32,8 @@ import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.Type
 import org.partiql.planner.internal.ir.constraintCheck
 import org.partiql.planner.internal.ir.constraintUnique
+import org.partiql.planner.internal.ir.ddlOpAlterTable
+import org.partiql.planner.internal.ir.ddlOpAlterTableOperationChangeColumn
 import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.partitionByAttrList
@@ -1485,7 +1488,10 @@ internal class PlanTyper(private val env: Env) {
                     return statementDDL(shape, op)
                 }
 
-                is DdlOp.AlterTable -> TODO()
+                is DdlOp.AlterTable -> {
+                    val op = visitDdlOpAlterTable(node.op, ctx)
+                    return statementDDL(ANY, op)
+                }
             }
         }
 
@@ -1499,13 +1505,54 @@ internal class PlanTyper(private val env: Env) {
             )
         }
 
+        // TODO: Ideally, we need to define the allowed operation for alter
+        //  At a bare minimum: We should
+        //   1. Resolve and assert the target table/ column exists
+        //   2. If the operation if valid, then we can update the schema.
+        //  In the evaluator, we can persist the updated table schema, perform data clean up, etc.
+        override fun visitDdlOpAlterTable(node: DdlOp.AlterTable, ctx: List<Type.Record.Field>): DdlOp.AlterTable {
+            val op = node.op.map { visitDdlOpAlterTableOperation(it, ctx) }
+            // For now: updated shape is always a bag of any
+            val updatedShape = Type.Collection(null, false, emptyList())
+            return ddlOpAlterTable(node.name, op, updatedShape)
+        }
+
+        override fun visitDdlOpAlterTableOperation(
+            node: DdlOp.AlterTable.Operation,
+            ctx: List<Type.Record.Field>
+        ) = super.visitDdlOpAlterTableOperation(node, ctx) as DdlOp.AlterTable.Operation
+
+        override fun visitDdlOpAlterTableOperationChangeColumn(
+            node: DdlOp.AlterTable.Operation.ChangeColumn,
+            ctx: List<Type.Record.Field>
+        ): DdlOp.AlterTable.Operation.ChangeColumn {
+            // TODO: Assert if column exists here
+            val subcommand =
+                when (val sub = node.subcommand) {
+                    is DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeComment -> node.subcommand
+                    is DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable -> node.subcommand
+                    is DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeType -> {
+                        // ideally we can get the field comment from SPI, left as to-do now.
+                        val recordField = Type.Record.Field(node.target, sub.type, sub.constraints, sub.isOptional, null)
+                        val resolved = DdlUtils.ConstraintResolver.resolveField(recordField)
+                        sub.copy(updatedType = resolved.value)
+                    }
+                }
+            return ddlOpAlterTableOperationChangeColumn(node.target, subcommand)
+        }
+
+        override fun visitDdlOpAlterTableOperationAddColumn(
+            node: DdlOp.AlterTable.Operation.AddColumn,
+            ctx: List<Type.Record.Field>
+        ): DdlOp.AlterTable.Operation.AddColumn {
+            val recordField = Type.Record.Field(node.name, node.type, node.constraints, node.isOptional, node.comment).let { visitTypeRecordField(it, ctx) }
+            val resolved = DdlUtils.ConstraintResolver.resolveField(recordField)
+            return node.copy(field = resolved)
+        }
+
         override fun visitTypeRecord(node: Type.Record, ctx: List<Type.Record.Field>): Type.Record {
             val fields = node.fields.map { field ->
-                val constraints = field.constraints.map { constr ->
-                    visitConstraint(constr, listOf(field))
-                }
-                val type = visitType(field.type, ctx)
-                typeRecordField(field.name, type, constraints, field.isOptional, field.comment)
+                visitTypeRecordField(field, ctx)
             }
             val constraints = node.constraints.map { constr ->
                 visitConstraint(constr, fields)
@@ -1514,6 +1561,14 @@ internal class PlanTyper(private val env: Env) {
                 fields,
                 constraints
             )
+        }
+
+        override fun visitTypeRecordField(node: Type.Record.Field, ctx: List<Type.Record.Field>): Type.Record.Field {
+            val constraints = node.constraints.map { constr ->
+                visitConstraint(constr, listOf(node))
+            }
+            val type = visitType(node.type, ctx)
+            return typeRecordField(node.name, type, constraints, node.isOptional, node.comment)
         }
 
         override fun visitTypeCollection(node: Type.Collection, ctx: List<Type.Record.Field>): Type.Collection {

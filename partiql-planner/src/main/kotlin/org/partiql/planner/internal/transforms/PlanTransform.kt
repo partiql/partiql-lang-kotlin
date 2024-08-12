@@ -2,7 +2,12 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PlanNode
-import org.partiql.plan.TableProperty
+import org.partiql.plan.ddlOpAlterTable
+import org.partiql.plan.ddlOpAlterTableOperationAddColumn
+import org.partiql.plan.ddlOpAlterTableOperationChangeColumn
+import org.partiql.plan.ddlOpAlterTableOperationChangeColumnSubcommandChangeComment
+import org.partiql.plan.ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable
+import org.partiql.plan.ddlOpAlterTableOperationChangeColumnSubcommandChangeType
 import org.partiql.plan.ddlOpCreateTable
 import org.partiql.plan.partiQLPlan
 import org.partiql.plan.partitionByAttrList
@@ -21,7 +26,6 @@ import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
-import org.partiql.planner.internal.ir.Type
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
@@ -103,15 +107,18 @@ internal class PlanTransform(
             DDLFeatureGate.gate(node)
             onProblem.invoke(ProblemGenerator.experiementalFeature("DDL"))
             val op = visitDdlOp(node.op, ctx)
-            return statementDDL(
-                op = op.copy(op.name, node.shape, op.partitionBy, op.tableProperties)
-            )
+            return when (op) {
+                is org.partiql.plan.DdlOp.AlterTable -> statementDDL(op)
+                is org.partiql.plan.DdlOp.CreateTable -> statementDDL(
+                    op = op.copy(op.name, node.shape, op.partitionBy, op.tableProperties)
+                )
+            }
         }
 
         override fun visitDdlOp(node: DdlOp, ctx: Unit) =
             when (node) {
                 is DdlOp.CreateTable -> visitDdlOpCreateTable(node, ctx)
-                is DdlOp.AlterTable -> TODO()
+                is DdlOp.AlterTable -> visitDdlOpAlterTable(node, ctx)
             }
 
         override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Unit): org.partiql.plan.DdlOp.CreateTable {
@@ -122,6 +129,57 @@ internal class PlanTransform(
                 node.tableProperties.map { visitTableProperty(it, ctx) }
             )
         }
+
+        override fun visitDdlOpAlterTable(node: DdlOp.AlterTable, ctx: Unit): org.partiql.plan.DdlOp.AlterTable {
+            val op = node.op.map { visitDdlOpAlterTableOperation(it, ctx) }
+            return ddlOpAlterTable(visitIdentifier(node.name, ctx), op, StaticType.ANY)
+        }
+
+        override fun visitDdlOpAlterTableOperation(node: DdlOp.AlterTable.Operation, ctx: Unit) =
+            super.visitDdlOpAlterTableOperation(node, ctx) as org.partiql.plan.DdlOp.AlterTable.Operation
+
+        override fun visitDdlOpAlterTableOperationChangeColumn(
+            node: DdlOp.AlterTable.Operation.ChangeColumn,
+            ctx: Unit
+        ): org.partiql.plan.DdlOp.AlterTable.Operation.ChangeColumn {
+            val target = visitIdentifierSymbol(node.target, ctx)
+            val subCommand = visitDdlOpAlterTableOperationChangeColumnSubcommand(node.subcommand, ctx)
+            return ddlOpAlterTableOperationChangeColumn(target, subCommand)
+        }
+
+        override fun visitDdlOpAlterTableOperationChangeColumnSubcommand(
+            node: DdlOp.AlterTable.Operation.ChangeColumn.Subcommand,
+            ctx: Unit
+        ) = super.visitDdlOpAlterTableOperationChangeColumnSubcommand(node, ctx) as org.partiql.plan.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand
+
+        override fun visitDdlOpAlterTableOperationChangeColumnSubcommandChangeComment(
+            node: DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeComment,
+            ctx: Unit
+        ) = ddlOpAlterTableOperationChangeColumnSubcommandChangeComment(node.newComment)
+
+        override fun visitDdlOpAlterTableOperationChangeColumnSubcommandChangeNullable(
+            node: DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable,
+            ctx: Unit
+        ) = when (node.op) {
+            DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.SET ->
+                ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable(
+                    org.partiql.plan.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.SET
+                )
+            DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.DROP ->
+                ddlOpAlterTableOperationChangeColumnSubcommandChangeNullable(
+                    org.partiql.plan.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeNullable.Op.DROP
+                )
+        }
+
+        override fun visitDdlOpAlterTableOperationChangeColumnSubcommandChangeType(
+            node: DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeType,
+            ctx: Unit
+        ) = ddlOpAlterTableOperationChangeColumnSubcommandChangeType(node.updatedType)
+
+        override fun visitDdlOpAlterTableOperationAddColumn(
+            node: DdlOp.AlterTable.Operation.AddColumn,
+            ctx: Unit
+        ) = ddlOpAlterTableOperationAddColumn(node.field)
 
         override fun visitPartitionBy(node: PartitionBy, ctx: Unit) = when (node) {
             is PartitionBy.AttrList -> visitPartitionByAttrList(node, ctx)

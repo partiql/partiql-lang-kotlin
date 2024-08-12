@@ -204,4 +204,20 @@ class DDLTests {
 
         println(staticType)
     }
+
+    @Test
+    fun sanity8() {
+        val query = """
+            ALTER TABLE FOO CHANGE COLUMN foo TYPE INT2 COMMENT 'a'
+        """.trimIndent()
+
+        val ast = parser.parse(query).root
+        val plan = planner
+            .plan(ast, plannerSession) {}
+            .plan
+        val res = buildString {
+            PlanPrinter.append(this, plan)
+        }
+        println(res)
+    }
 }
