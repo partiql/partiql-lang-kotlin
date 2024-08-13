@@ -12,7 +12,7 @@ internal object Fn_CURRENT_DATE____DATE : Fn {
 
     override val signature = FnSignature(
         name = "current_date",
-        returns = PType.typeDate(),
+        returns = PType.date(),
         parameters = listOf(),
         isNullCall = false,
         isNullable = false,

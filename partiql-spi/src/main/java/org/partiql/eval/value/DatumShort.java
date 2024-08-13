@@ -10,7 +10,7 @@ class DatumShort implements Datum {
 
     private final short _value;
 
-    private final static PType _type = PType.typeSmallInt();
+    private final static PType _type = PType.smallint();
 
     DatumShort(short value) {
         _value = value;

@@ -70,9 +70,9 @@ internal object ValueUtility {
         return when (this.type.kind) {
             PType.Kind.TINYINT -> this.byte.toInt().toBigInteger()
             PType.Kind.SMALLINT -> this.short.toInt().toBigInteger()
-            PType.Kind.INT -> this.int.toBigInteger()
+            PType.Kind.INTEGER -> this.int.toBigInteger()
             PType.Kind.BIGINT -> this.long.toBigInteger()
-            PType.Kind.INT_ARBITRARY -> this.bigInteger
+            PType.Kind.NUMERIC -> this.bigInteger
             else -> throw TypeCheckException()
         }
     }
@@ -92,9 +92,9 @@ internal object ValueUtility {
         return when (this.type.kind) {
             PType.Kind.TINYINT -> this.byte.toInt()
             PType.Kind.SMALLINT -> this.short.toInt()
-            PType.Kind.INT -> this.int
+            PType.Kind.INTEGER -> this.int
             PType.Kind.BIGINT -> this.long.toInt()
-            PType.Kind.INT_ARBITRARY -> this.bigInteger.toInt()
+            PType.Kind.NUMERIC -> this.bigInteger.toInt()
             else -> throw TypeCheckException()
         }
     }

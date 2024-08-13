@@ -28,9 +28,9 @@ internal object Agg_MAX__INT16__INT16 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeSmallInt(),
+        returns = PType.smallint(),
         parameters = listOf(
-            FnParameter("value", PType.typeSmallInt()),
+            FnParameter("value", PType.smallint()),
         ),
         isNullable = true,
         isDecomposable = true
@@ -43,9 +43,9 @@ internal object Agg_MAX__INT32__INT32 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("value", PType.typeInt()),
+            FnParameter("value", PType.integer()),
         ),
         isNullable = true,
         isDecomposable = true
@@ -58,9 +58,9 @@ internal object Agg_MAX__INT64__INT64 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("value", PType.typeBigInt()),
+            FnParameter("value", PType.bigint()),
         ),
         isNullable = true,
         isDecomposable = true
@@ -73,9 +73,9 @@ internal object Agg_MAX__INT__INT : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeIntArbitrary(),
+        returns = PType.numeric(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.typeIntArbitrary()),
+            @Suppress("DEPRECATION") FnParameter("value", PType.numeric()),
         ),
         isNullable = true,
         isDecomposable = true
@@ -88,9 +88,9 @@ internal object Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeDecimalArbitrary(),
+        returns = PType.decimal(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.typeDecimalArbitrary()),
+            @Suppress("DEPRECATION") FnParameter("value", PType.decimal()),
         ),
         isNullable = true,
         isDecomposable = true
@@ -103,9 +103,9 @@ internal object Agg_MAX__FLOAT32__FLOAT32 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeReal(),
+        returns = PType.real(),
         parameters = listOf(
-            FnParameter("value", PType.typeReal()),
+            FnParameter("value", PType.real()),
         ),
         isNullable = true,
         isDecomposable = true
@@ -118,9 +118,9 @@ internal object Agg_MAX__FLOAT64__FLOAT64 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeDoublePrecision(),
+        returns = PType.doublePrecision(),
         parameters = listOf(
-            FnParameter("value", PType.typeDoublePrecision()),
+            FnParameter("value", PType.doublePrecision()),
         ),
         isNullable = true,
         isDecomposable = true
@@ -133,9 +133,9 @@ internal object Agg_MAX__ANY__ANY : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeDynamic(),
+        returns = PType.dynamic(),
         parameters = listOf(
-            FnParameter("value", PType.typeDynamic()),
+            FnParameter("value", PType.dynamic()),
         ),
         isNullable = true,
         isDecomposable = true

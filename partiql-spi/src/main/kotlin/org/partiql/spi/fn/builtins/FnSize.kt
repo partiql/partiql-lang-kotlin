@@ -10,9 +10,9 @@ internal object Fn_SIZE__BAG__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "size",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("container", PType.typeBag()),
+            FnParameter("container", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -28,9 +28,9 @@ internal object Fn_SIZE__LIST__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "size",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("container", PType.typeList()),
+            FnParameter("container", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -46,7 +46,7 @@ internal object Fn_SIZE__SEXP__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "size",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
             FnParameter("container", PType.typeSexp()),
         ),
@@ -64,9 +64,9 @@ internal object Fn_SIZE__STRUCT__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "size",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("container", PType.typeStruct()),
+            FnParameter("container", PType.struct()),
         ),
         isNullCall = true,
         isNullable = false,

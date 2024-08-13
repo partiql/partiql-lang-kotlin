@@ -11,7 +11,7 @@ public interface RexTupleUnion : Rex {
 
     public override fun getOperands(): List<Rex> = getArgs()
 
-    public override fun getType(): PType = PType.typeStruct()
+    public override fun getType(): PType = PType.struct()
 
     public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitTupleUnion(this, ctx)
 

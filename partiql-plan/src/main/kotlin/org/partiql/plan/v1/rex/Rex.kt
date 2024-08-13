@@ -26,7 +26,7 @@ public interface Rex {
         public fun lit(value: Int): Rex = lit(Datum.integer(value))
 
         @JvmStatic
-        public fun lit(value: Long): Rex = lit(Datum.bigInt(value))
+        public fun lit(value: Long): Rex = lit(Datum.bigint(value))
 
         @JvmStatic
         public fun lit(value: String): Rex = lit(Datum.string(value))

@@ -19,7 +19,7 @@ class DatumNull implements Datum {
     private final PType _type;
 
     DatumNull() {
-        this._type = PType.typeUnknown();
+        this._type = PType.unknown();
     }
 
     DatumNull(@NotNull PType type) {
@@ -57,7 +57,7 @@ class DatumNull implements Datum {
 
     @Override
     public int getInt() {
-        if (_type.getKind() == PType.Kind.INT) {
+        if (_type.getKind() == PType.Kind.INTEGER) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -76,7 +76,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public BigInteger getBigInteger() {
-        if (_type.getKind() == PType.Kind.INT_ARBITRARY) {
+        if (_type.getKind() == PType.Kind.NUMERIC) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -124,7 +124,7 @@ class DatumNull implements Datum {
 
     @Override
     public double getDouble() {
-        if (_type.getKind() == PType.Kind.DOUBLE_PRECISION) {
+        if (_type.getKind() == PType.Kind.DOUBLE) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -142,7 +142,7 @@ class DatumNull implements Datum {
 
     @Override
     public Iterator<Datum> iterator() {
-        if (_type.getKind() == PType.Kind.BAG || _type.getKind() == PType.Kind.LIST || _type.getKind() == PType.Kind.SEXP) {
+        if (_type.getKind() == PType.Kind.BAG || _type.getKind() == PType.Kind.ARRAY || _type.getKind() == PType.Kind.SEXP) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -172,7 +172,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Time getTime() {
-        if (_type.getKind() == PType.Kind.TIME_WITH_TZ || _type.getKind() == PType.Kind.TIME_WITHOUT_TZ) {
+        if (_type.getKind() == PType.Kind.TIMEZ || _type.getKind() == PType.Kind.TIME) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -182,7 +182,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Timestamp getTimestamp() {
-        if (_type.getKind() == PType.Kind.TIMESTAMP_WITH_TZ || _type.getKind() == PType.Kind.TIMESTAMP_WITHOUT_TZ) {
+        if (_type.getKind() == PType.Kind.TIMESTAMPZ || _type.getKind() == PType.Kind.TIMESTAMP) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();

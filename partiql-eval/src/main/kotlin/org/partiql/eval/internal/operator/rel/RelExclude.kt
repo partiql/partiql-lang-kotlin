@@ -110,7 +110,7 @@ internal class RelExclude(
      */
     private fun newCollValue(type: PType, coll: Iterable<Datum>): Datum {
         return when (type.kind) {
-            PType.Kind.LIST -> Datum.list(coll)
+            PType.Kind.ARRAY -> Datum.array(coll)
             PType.Kind.BAG -> Datum.bag(coll)
             PType.Kind.SEXP -> Datum.sexp(coll)
             else -> error("Collection type required")
@@ -154,7 +154,7 @@ internal class RelExclude(
             } else {
                 // deeper level exclusions
                 var value = element
-                if (type.kind == PType.Kind.LIST || type.kind == PType.Kind.SEXP) {
+                if (type.kind == PType.Kind.ARRAY || type.kind == PType.Kind.SEXP) {
                     // apply collection index exclusions at deeper levels for lists and sexps
                     val collIndex = relOpExcludeTypeCollIndex(index)
                     branches[collIndex]?.let {
@@ -175,7 +175,7 @@ internal class RelExclude(
     private fun excludeValue(initialPartiQLValue: Datum, exclusions: List<Rel.Op.Exclude.Step>): Datum {
         return when (initialPartiQLValue.type.kind) {
             PType.Kind.ROW, PType.Kind.STRUCT -> excludeFields(initialPartiQLValue, exclusions)
-            PType.Kind.BAG, PType.Kind.LIST, PType.Kind.SEXP -> excludeCollection(
+            PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> excludeCollection(
                 initialPartiQLValue,
                 initialPartiQLValue.type,
                 exclusions

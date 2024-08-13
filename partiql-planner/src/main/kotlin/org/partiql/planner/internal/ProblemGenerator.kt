@@ -41,17 +41,17 @@ internal object ProblemGenerator {
         )
     }
 
-    fun missingRex(causes: List<Rex.Op>, problem: Problem, type: CompilerType = CompilerType(PType.typeDynamic(), isMissingValue = true)): Rex =
+    fun missingRex(causes: List<Rex.Op>, problem: Problem, type: CompilerType = CompilerType(PType.dynamic(), isMissingValue = true)): Rex =
         rex(type, rexOpMissing(problem, causes))
 
-    fun missingRex(causes: Rex.Op, problem: Problem, type: CompilerType = CompilerType(PType.typeDynamic(), isMissingValue = true)): Rex =
+    fun missingRex(causes: Rex.Op, problem: Problem, type: CompilerType = CompilerType(PType.dynamic(), isMissingValue = true)): Rex =
         rex(type, rexOpMissing(problem, listOf(causes)))
 
     fun errorRex(causes: List<Rex.Op>, problem: Problem): Rex =
-        rex(CompilerType(PType.typeDynamic(), isMissingValue = true), rexOpErr(problem, causes))
+        rex(CompilerType(PType.dynamic(), isMissingValue = true), rexOpErr(problem, causes))
 
     fun errorRex(trace: Rex.Op, problem: Problem): Rex =
-        rex(CompilerType(PType.typeDynamic(), isMissingValue = true), rexOpErr(problem, listOf(trace)))
+        rex(CompilerType(PType.dynamic(), isMissingValue = true), rexOpErr(problem, listOf(trace)))
 
     /**
      * TODO CURRENT TESTS HAVE IDENTIFIERS AS NORMALIZED UPPER.

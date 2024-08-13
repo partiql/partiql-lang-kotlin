@@ -22,7 +22,7 @@ internal class RelScanIndexed(
                 close()
                 throw TypeCheckException()
             }
-            PType.Kind.LIST, PType.Kind.SEXP -> r.iterator()
+            PType.Kind.ARRAY, PType.Kind.SEXP -> r.iterator()
             else -> {
                 close()
                 throw TypeCheckException()
@@ -38,7 +38,7 @@ internal class RelScanIndexed(
         val i = index
         val v = iterator.next()
         index += 1
-        return Record.of(v, Datum.bigInt(i))
+        return Record.of(v, Datum.bigint(i))
     }
 
     override fun close() {}

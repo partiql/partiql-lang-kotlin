@@ -3,9 +3,6 @@ package org.partiql.types;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This represents a PartiQL type, whether it be a PartiQL primitive or user-defined.
@@ -58,8 +55,8 @@ public interface PType {
      * The decimal precision of the type
      * @return decimal precision
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#DECIMAL}, {@link Kind#TIMESTAMP_WITH_TZ}, {@link Kind#TIMESTAMP_WITHOUT_TZ}, {@link Kind#TIME_WITH_TZ},
-     * {@link Kind#TIME_WITHOUT_TZ}, {@link Kind#REAL}, {@link Kind#DOUBLE_PRECISION}
+     * {@link Kind#DECIMAL}, {@link Kind#TIMESTAMPZ}, {@link Kind#TIMESTAMP}, {@link Kind#TIMEZ},
+     * {@link Kind#TIME}, {@link Kind#REAL}, {@link Kind#DOUBLE}
      */
     default int getPrecision() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
@@ -89,7 +86,7 @@ public interface PType {
      * The type parameter of the type. Example: <code>BAG(&lt;param&gt;)</code>
      * @return type parameter of the type
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#LIST}, {@link Kind#BAG}, {@link Kind#SEXP}
+     * {@link Kind#ARRAY}, {@link Kind#BAG}
      */
     @NotNull
     default PType getTypeParameter() throws UnsupportedOperationException {
@@ -158,7 +155,7 @@ public interface PType {
          * <br>
          * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
          */
-        INT,
+        INTEGER,
 
         /**
          * PartiQL's big integer type.
@@ -171,16 +168,14 @@ public interface PType {
         BIGINT,
 
         /**
-         * PartiQL's big integer type.
+         * NUMERIC represents an integer with arbitrary precision. It is equivalent to Ion’s integer type, and is conformant to SQL-99s rules for the NUMERIC type. In SQL-99, if a scale is omitted then we choose zero — and if a precision is omitted then the precision is implementation defined. For PartiQL, we define this precision to be inf — aka arbitrary precision.
          * <br>
          * <br>
          * <b>Type Syntax</b>: <code>TO_BE_DETERMINED</code>
          * <br>
          * <b>Applicable methods</b>: NONE
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
-        @Deprecated
-        INT_ARBITRARY,
+        NUMERIC,
 
         /**
          * SQL's decimal type.
@@ -189,21 +184,8 @@ public interface PType {
          * <b>Type Syntax</b>: <code>DECIMAL(&lt;precision&gt;, &lt;scale&gt;)</code>, <code>DECIMAL(&lt;precision&gt;)</code>
          * <br>
          * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         DECIMAL,
-
-        /**
-         * Ion's arbitrary precision and scale decimal type.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>TO_BE_DETERMINED</code>
-         * <br>
-         * <b>Applicable methods</b>: NONE
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-         */
-        @Deprecated
-        DECIMAL_ARBITRARY,
 
         /**
          * SQL's real type.
@@ -216,14 +198,16 @@ public interface PType {
         REAL,
 
         /**
-         * SQL's double precision type.
+         * DOUBLE PRECISION represents an IEEE-754 64-bit floating point number.
+         * It is PartiQL’s implementation-defined choice of SQL’s DOUBLE PRECISION.
+         * It corresponds to the Ion float type and has the ISL constraint eee74_float: binary64 .
          * <br>
          * <br>
          * <b>Type Syntax</b>: <code>DOUBLE PRECISION</code>
          * <br>
          * <b>Applicable methods</b>: {@link PType#getPrecision()}
          */
-        DOUBLE_PRECISION,
+        DOUBLE,
 
         /**
          * SQL's character type.
@@ -258,16 +242,16 @@ public interface PType {
         STRING,
 
         /**
-         * Ion's symbol type.
+         * SQL's clob type.
          * <br>
          * <br>
-         * <b>Type Syntax</b>: <code>TO_BE_DETERMINED</code>
+         * <b>Type Syntax</b>: <code>CLOB</code>, <code>CLOB(&lt;large object length&gt;)</code>,
+         * <code>CHAR LARGE OBJECT</code>, <code>CHAR LARGE OBJECT(&lt;large object length&gt;)</code>
+         * <code>CHARACTER LARGE OBJECT</code>, <code>CHARACTER LARGE OBJECT(&lt;large object length&gt;)</code>
          * <br>
-         * <b>Applicable methods</b>: NONE
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
+         * <b>Applicable methods</b>: {@link PType#getLength()}
          */
-        @Deprecated
-        SYMBOL,
+        CLOB,
 
         /**
          * SQL's blob type.
@@ -277,24 +261,8 @@ public interface PType {
          * <code>BINARY LARGE OBJECT</code>, <code>BINARY LARGE OBJECT(&lt;large object length&gt;)</code>
          * <br>
          * <b>Applicable methods</b>: {@link PType#getLength()}
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
-        @Deprecated
         BLOB,
-
-        /**
-         * SQL's clob type.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>CLOB</code>, <code>CLOB(&lt;large object length&gt;)</code>,
-         * <code>CHAR LARGE OBJECT</code>, <code>CHAR LARGE OBJECT(&lt;large object length&gt;)</code>
-         * <code>CHARACTER LARGE OBJECT</code>, <code>CHARACTER LARGE OBJECT(&lt;large object length&gt;)</code>
-         * <br>
-         * <b>Applicable methods</b>: {@link PType#getLength()}
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-         */
-        @Deprecated
-        CLOB,
 
         /**
          * SQL's date type.
@@ -307,16 +275,6 @@ public interface PType {
         DATE,
 
         /**
-         * SQL's time with timezone type.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>TIME WITH TIME ZONE</code>, <code>TIME(&lt;precision&gt;) WITH TIME ZONE</code>
-         * <br>
-         * <b>Applicable methods</b>: NONE
-         */
-        TIME_WITH_TZ,
-
-        /**
          * SQL's time without timezone type.
          * <br>
          * <br>
@@ -325,17 +283,17 @@ public interface PType {
          * <br>
          * <b>Applicable methods</b>: NONE
          */
-        TIME_WITHOUT_TZ,
+        TIME,
 
         /**
-         * SQL's timestamp with timezone type.
+         * SQL's time with timezone type.
          * <br>
          * <br>
-         * <b>Type Syntax</b>: <code>TIMESTAMP WITH TIME ZONE</code>, <code>TIMESTAMP(&lt;precision&gt;) WITH TIME ZONE</code>
+         * <b>Type Syntax</b>: <code>TIME WITH TIME ZONE</code>, <code>TIME(&lt;precision&gt;) WITH TIME ZONE</code>
          * <br>
          * <b>Applicable methods</b>: NONE
          */
-        TIMESTAMP_WITH_TZ,
+        TIMEZ,
 
         /**
          * SQL's timestamp without timezone type.
@@ -346,57 +304,65 @@ public interface PType {
          * <br>
          * <b>Applicable methods</b>: NONE
          */
-        TIMESTAMP_WITHOUT_TZ,
+        TIMESTAMP,
 
         /**
-         * PartiQL's bag type. There is no size limit.
+         * SQL's timestamp with timezone type.
          * <br>
          * <br>
-         * <b>Type Syntax</b>: <code>BAG</code>, <code>BAG(&lt;type&gt;)</code>
+         * <b>Type Syntax</b>: <code>TIMESTAMP WITH TIME ZONE</code>, <code>TIMESTAMP(&lt;precision&gt;) WITH TIME ZONE</code>
+         * <br>
+         * <b>Applicable methods</b>: NONE
+         */
+        TIMESTAMPZ,
+
+        /**
+         * ARRAY (LIST) represents an ordered collection of elements with type T.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>
+         * <ul>
+         *    <li><code>ARRAY</code></li>
+         *    <li><code>T ARRAY[N]</code></li>
+         *    <li><code>ARRAY<T>[N]</T></code></li>
+         * </ul>
+         * <br>
+         * <br>
+         * <b>Equivalences</b>
+         * <ol>
+         *    <li><code>T ARRAY[N] <=> ARRAY<T>[N]</code></li>
+         *    <li><code>ARRAY[N] <=> DYNAMIC ARRAY[N] <=> ARRAY<DYNAMIC>[N]</code></li>
+         *    <li><code>ARRAY <=> DYNAMIC ARRAY <=> ARRAY<DYNAMIC> <=> LIST</code></li>
+         * </ol>
+         * <br>
+         * <b>Applicable methods</b>:
+         * {@link PType#getTypeParameter()}
+         */
+        ARRAY,
+
+        /**
+         * BAG represents an unordered collection of elements with type T.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>
+         * <ul>
+         *    <li><code>BAG</code></li>
+         *    <li><code>T BAG[N]</code></li>
+         *    <li><code>BAG<T>[N]</T></code></li>
+         * </ul>
+         * <br>
+         * <br>
+         * <b>Equivalences</b>
+         * <ol>
+         *    <li><code>T BAG[N] <=> BAG<T>[N]</code></li>
+         *    <li><code>BAG[N] <=> DYNAMIC BAG[N] <=> BAG<DYNAMIC>[N]</code></li>
+         *    <li><code>BAG <=> DYNAMIC BAG <=> BAG<DYNAMIC></code></li>
+         * </ol>
          * <br>
          * <b>Applicable methods</b>:
          * {@link PType#getTypeParameter()}
          */
         BAG,
-
-        /**
-         * Ion's list type. There is no size limit.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>LIST</code>, <code>LIST(&lt;type&gt;)</code>
-         * <br>
-         * <b>Applicable methods</b>:
-         * {@link PType#getTypeParameter()}
-         */
-        LIST,
-
-        /**
-         * SQL's row type. Characterized as a closed, ordered collection of fields.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>ROW(&lt;str&gt;: &lt;type&gt;, ...)</code>
-         * <br>
-         * <b>Applicable methods</b>:
-         * {@link PType#getFields()}
-         *
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-         */
-        @Deprecated
-        ROW,
-
-        /**
-         * Ion's s-expression type. There is no size limit.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>SEXP</code>, <code>SEXP(&lt;type&gt;)</code>
-         * <br>
-         * <b>Applicable methods</b>:
-         * {@link PType#getTypeParameter()}
-         *
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-         */
-        @Deprecated
-        SEXP,
 
         /**
          * Ion's struct type. Characterized as an open, unordered collection of fields (duplicates allowed).
@@ -407,6 +373,17 @@ public interface PType {
          * <b>Applicable methods</b>: NONE
          */
         STRUCT,
+
+        /**
+         * SQL's row type. Characterized as a closed, ordered collection of fields.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>: <code>ROW(&lt;str&gt;: &lt;type&gt;, ...)</code>
+         * <br>
+         * <b>Applicable methods</b>:
+         * {@link PType#getFields()}
+         */
+        ROW,
 
         /**
          * PartiQL's unknown type. This temporarily represents literal null and missing values.
@@ -421,96 +398,39 @@ public interface PType {
         UNKNOWN
     }
 
+    //
+    // DYNAMIC
+    //
+
     /**
      * @return a PartiQL dynamic type
      */
     @NotNull
-    static PType typeDynamic() {
+    static PType dynamic() {
         return new PTypePrimitive(Kind.DYNAMIC);
     }
 
-    /**
-     * @return a PartiQL list type with a component type of dynamic
-     */
-    @NotNull
-    static PType typeList() {
-        return new PTypeCollection(Kind.LIST, PType.typeDynamic());
-    }
-
-    /**
-     * @return a PartiQL list type with a component type of {@code typeParam}
-     */
-    @NotNull
-    static PType typeList(@NotNull PType typeParam) {
-        return new PTypeCollection(Kind.LIST, typeParam);
-    }
-
-    /**
-     * @return a PartiQL bag type with a component type of dynamic
-     */
-    @NotNull
-    static PType typeBag() {
-        return new PTypeCollection(Kind.BAG, PType.typeDynamic());
-    }
-
-    /**
-     * @return a PartiQL bag type with a component type of {@code typeParam}
-     */
-    @NotNull
-    static PType typeBag(@NotNull PType typeParam) {
-        return new PTypeCollection(Kind.BAG, typeParam);
-    }
-
-    /**
-     * @return a PartiQL sexp type containing a component type of dynamic.
-     * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-     */
-    @Deprecated
-    @NotNull
-    static PType typeSexp() {
-        return new PTypeCollection(Kind.SEXP, PType.typeDynamic());
-    }
-
-    /**
-     *
-     * @param typeParam the component type to be used
-     * @return a PartiQL sexp type containing a component type of {@code typeParam}.
-     * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    static PType typeSexp(@NotNull PType typeParam) {
-        return new PTypeCollection(Kind.SEXP, typeParam);
-    }
+    //
+    // BOOLEAN
+    //
 
     /**
      * @return a PartiQL boolean type
      */
     @NotNull
-    static PType typeBool() {
+    static PType bool() {
         return new PTypePrimitive(Kind.BOOL);
     }
 
-    /**
-     * @return a PartiQL real type.
-     */
-    @NotNull
-    static PType typeReal() {
-        return new PTypePrimitive(Kind.REAL);
-    }
-
-    /**
-     * @return a PartiQL double precision type
-     */
-    @NotNull
-    static PType typeDoublePrecision() {
-        return new PTypePrimitive(Kind.DOUBLE_PRECISION);
-    }
+    //
+    // NUMERIC
+    //
 
     /**
      * @return a PartiQL tiny integer type
      */
     @NotNull
-    static PType typeTinyInt() {
+    static PType tinyint() {
         return new PTypePrimitive(Kind.TINYINT);
     }
 
@@ -518,7 +438,7 @@ public interface PType {
      * @return a PartiQL small integer type
      */
     @NotNull
-    static PType typeSmallInt() {
+    static PType smallint() {
         return new PTypePrimitive(Kind.SMALLINT);
     }
 
@@ -526,51 +446,215 @@ public interface PType {
      * @return a PartiQL integer type
      */
     @NotNull
-    static PType typeInt() {
-        return new PTypePrimitive(Kind.INT);
+    static PType integer() {
+        return new PTypePrimitive(Kind.INTEGER);
     }
 
     /**
      * @return a PartiQL big integer type
      */
     @NotNull
-    static PType typeBigInt() {
+    static PType bigint() {
         return new PTypePrimitive(Kind.BIGINT);
     }
 
     /**
      * @return a PartiQL int (arbitrary precision) type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    @Deprecated
-    static PType typeIntArbitrary() {
-        return new PTypePrimitive(Kind.INT_ARBITRARY);
+    static PType numeric() {
+        return new PTypePrimitive(Kind.NUMERIC);
     }
 
     /**
+     * Exact numeric type with arbitrary precision and arbitrary scale. It is equivalent to Ion’s decimal type.
+     *
      * @return a PartiQL decimal (arbitrary precision/scale) type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType typeDecimalArbitrary() {
-        return new PTypePrimitive(Kind.DECIMAL_ARBITRARY);
+    static PType decimal() {
+        return new PTypePrimitive(Kind.DECIMAL);
     }
 
     /**
      * @return a PartiQL decimal type
      */
     @NotNull
-    static PType typeDecimal(int precision, int scale) {
+    static PType decimal(int precision) {
+        return new PTypeDecimal(precision, 0);
+    }
+
+    /**
+     * @return a PartiQL decimal type
+     */
+    @NotNull
+    static PType decimal(int precision, int scale) {
         return new PTypeDecimal(precision, scale);
     }
 
     /**
-     * @return a PartiQL row type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
+     * PartiQL’s implementation-defined choice of SQL’s REAL is the IEEE-754 32-bit floating point number.
+     *
+     * @return a PartiQL real type.
      */
     @NotNull
-    static PType typeRow(@NotNull Collection<Field> fields) {
+    static PType real() {
+        return new PTypePrimitive(Kind.REAL);
+    }
+
+    /**
+     * PartiQL’s implementation-defined choice of SQL’s REAL is the IEEE-754 32-bit floating point number.
+     *
+     * @return a PartiQL double precision type
+     */
+    @NotNull
+    static PType doublePrecision() {
+        return new PTypePrimitive(Kind.DOUBLE);
+    }
+
+    //
+    // CHARACTER STRINGS
+    //
+
+    /**
+     * @return a PartiQL CHAR(1) type
+     */
+    @NotNull
+    static PType character() {
+        return new PTypeWithMaxLength(Kind.CHAR, 1);
+    }
+
+    /**
+     * @return a PartiQL CHAR(length) type
+     */
+    @NotNull
+    static PType character(int length) {
+        return new PTypeWithMaxLength(Kind.CHAR, length);
+    }
+
+    /**
+     * @return a PartiQL VARCHAR(length) type
+     */
+    @NotNull
+    static PType varchar(int length) {
+        return new PTypeWithMaxLength(Kind.VARCHAR, length);
+    }
+
+    /**
+     * @return a PartiQL string type
+     */
+    @NotNull
+    static PType string() {
+        return new PTypePrimitive(Kind.STRING);
+    }
+
+    /**
+     * @return a PartiQL clob type
+     */
+    @NotNull
+    static PType clob(int length) {
+        return new PTypeWithMaxLength(Kind.CLOB, length);
+    }
+
+    //
+    // BIT STRINGS
+    //
+    // TODO, BIT and BIT VARYING
+    //
+
+    /**
+     * @return a PartiQL blob type
+     */
+    @NotNull
+    static PType blob(int length) {
+        return new PTypeWithMaxLength(Kind.BLOB, length);
+    }
+
+    //
+    // DATETIME
+    //
+
+    /**
+     * @return a PartiQL date type
+     */
+    @NotNull
+    static PType date() {
+        return new PTypePrimitive(Kind.DATE);
+    }
+
+    /**
+     * @return a PartiQL time without timezone type
+     */
+    @NotNull
+    static PType time(int precision) {
+        return new PTypeWithPrecisionOnly(Kind.TIME, precision);
+    }
+
+    /**
+     * @return a PartiQL time with timezone type
+     */
+    @NotNull
+    static PType timez(int precision) {
+        return new PTypeWithPrecisionOnly(Kind.TIMEZ, precision);
+    }
+
+    /**
+     * @return a PartiQL timestamp without timezone type
+     */
+    @NotNull
+    static PType timestamp(int precision) {
+        return new PTypeWithPrecisionOnly(Kind.TIMESTAMP, precision);
+    }
+
+    /**
+     * @return a PartiQL timestamp with timezone type
+     */
+    @NotNull
+    static PType timestampz(int precision) {
+        return new PTypeWithPrecisionOnly(Kind.TIMESTAMPZ, precision);
+    }
+
+    //
+    // COLLECTIONS
+    //
+
+    /**
+     * @return a PartiQL list type with a component type of dynamic
+     */
+    @NotNull
+    static PType array() {
+        return new PTypeCollection(Kind.ARRAY, PType.dynamic());
+    }
+
+    /**
+     * @return a PartiQL list type with a component type of {@code typeParam}
+     */
+    @NotNull
+    static PType array(@NotNull PType typeParam) {
+        return new PTypeCollection(Kind.ARRAY, typeParam);
+    }
+
+    /**
+     * @return a PartiQL bag type with a component type of dynamic
+     */
+    @NotNull
+    static PType bag() {
+        return new PTypeCollection(Kind.BAG, PType.dynamic());
+    }
+
+    /**
+     * @return a PartiQL bag type with a component type of {@code typeParam}
+     */
+    @NotNull
+    static PType bag(@NotNull PType typeParam) {
+        return new PTypeCollection(Kind.BAG, typeParam);
+    }
+
+    /**
+     * @return a PartiQL row type
+     */
+    @NotNull
+    static PType row(@NotNull Collection<Field> fields) {
         return new PTypeRow(fields);
     }
 
@@ -578,100 +662,8 @@ public interface PType {
      * @return a PartiQL struct type
      */
     @NotNull
-    static PType typeStruct() {
+    static PType struct() {
         return new PTypePrimitive(Kind.STRUCT);
-    }
-
-    /**
-     * @return a PartiQL timestamp with timezone type
-     */
-    @NotNull
-    static PType typeTimestampWithTZ(int precision) {
-        return new PTypeWithPrecisionOnly(Kind.TIMESTAMP_WITH_TZ, precision);
-    }
-
-    /**
-     * @return a PartiQL timestamp without timezone type
-     */
-    @NotNull
-    static PType typeTimestampWithoutTZ(int precision) {
-        return new PTypeWithPrecisionOnly(Kind.TIMESTAMP_WITHOUT_TZ, precision);
-    }
-
-    /**
-     * @return a PartiQL time with timezone type
-     */
-    @NotNull
-    static PType typeTimeWithTZ(int precision) {
-        return new PTypeWithPrecisionOnly(Kind.TIME_WITH_TZ, precision);
-    }
-
-    /**
-     * @return a PartiQL time without timezone type
-     */
-    @NotNull
-    static PType typeTimeWithoutTZ(int precision) {
-        return new PTypeWithPrecisionOnly(Kind.TIME_WITHOUT_TZ, precision);
-    }
-
-    /**
-     * @return a PartiQL string type
-     */
-    @NotNull
-    static PType typeString() {
-        return new PTypePrimitive(Kind.STRING);
-    }
-
-    /**
-     * @return a PartiQL string type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    @Deprecated
-    static PType typeSymbol() {
-        return new PTypePrimitive(Kind.SYMBOL);
-    }
-
-    /**
-     * @return a PartiQL blob type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    static PType typeBlob(int length) {
-        return new PTypeWithMaxLength(Kind.BLOB, length);
-    }
-
-    /**
-     * @return a PartiQL clob type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    static PType typeClob(int length) {
-        return new PTypeWithMaxLength(Kind.CLOB, length);
-    }
-
-    /**
-     * @return a PartiQL char type
-     */
-    @NotNull
-    static PType typeChar(int length) {
-        return new PTypeWithMaxLength(Kind.CHAR, length);
-    }
-
-    /**
-     * @return a PartiQL char type
-     */
-    @NotNull
-    static PType typeVarChar(int length) {
-        return new PTypeWithMaxLength(Kind.CHAR, length);
-    }
-
-    /**
-     * @return a PartiQL date type
-     */
-    @NotNull
-    static PType typeDate() {
-        return new PTypePrimitive(Kind.DATE);
     }
 
     /**
@@ -679,101 +671,7 @@ public interface PType {
      * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType typeUnknown() {
+    static PType unknown() {
         return new PTypePrimitive(Kind.UNKNOWN);
-    }
-
-    /**
-     * @return a corresponding PType from a {@link StaticType}
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice. This is
-     * meant for use internally by the PartiQL library. Public consumers should not use this API.
-     */
-    @NotNull
-    @Deprecated
-    static PType fromStaticType(@NotNull StaticType type) {
-        if (type instanceof AnyType) {
-            return PType.typeDynamic();
-        } else if (type instanceof AnyOfType) {
-            HashSet<StaticType> allTypes = new HashSet<>(type.flatten().getAllTypes());
-            if (allTypes.isEmpty()) {
-                return PType.typeDynamic();
-            } else if (allTypes.size() == 1) {
-                return fromStaticType(allTypes.stream().findFirst().get());
-            } else {
-                return PType.typeDynamic();
-            }
-//            if (allTypes.stream().allMatch((subType) -> subType instanceof CollectionType)) {}
-        } else if (type instanceof BagType) {
-            PType elementType = fromStaticType(((BagType) type).getElementType());
-            return PType.typeBag(elementType);
-        } else if (type instanceof BlobType) {
-            return PType.typeBlob(Integer.MAX_VALUE); // TODO: Update this
-        } else if (type instanceof BoolType) {
-            return PType.typeBool();
-        } else if (type instanceof ClobType) {
-            return PType.typeClob(Integer.MAX_VALUE); // TODO: Update this
-        } else if (type instanceof DateType) {
-            return PType.typeDate();
-        } else if (type instanceof DecimalType) {
-            DecimalType.PrecisionScaleConstraint precScale = ((DecimalType) type).getPrecisionScaleConstraint();
-            if (precScale instanceof DecimalType.PrecisionScaleConstraint.Unconstrained) {
-                return PType.typeDecimalArbitrary();
-            } else if (precScale instanceof DecimalType.PrecisionScaleConstraint.Constrained) {
-                DecimalType.PrecisionScaleConstraint.Constrained precisionScaleConstraint = (DecimalType.PrecisionScaleConstraint.Constrained) precScale;
-                return PType.typeDecimal(precisionScaleConstraint.getPrecision(), precisionScaleConstraint.getScale());
-            } else {
-                throw new IllegalStateException();
-            }
-        } else if (type instanceof FloatType) {
-            return PType.typeDoublePrecision();
-        } else if (type instanceof IntType) {
-            IntType.IntRangeConstraint cons = ((IntType) type).getRangeConstraint();
-            if (cons == IntType.IntRangeConstraint.INT4) {
-                return PType.typeInt();
-            } else if (cons == IntType.IntRangeConstraint.SHORT) {
-                return PType.typeSmallInt();
-            } else if (cons == IntType.IntRangeConstraint.LONG) {
-                return PType.typeBigInt();
-            } else if (cons == IntType.IntRangeConstraint.UNCONSTRAINED) {
-                return PType.typeIntArbitrary();
-            } else {
-                throw new IllegalStateException();
-            }
-        } else if (type instanceof ListType) {
-            PType elementType = fromStaticType(((ListType) type).getElementType());
-            return PType.typeList(elementType);
-        } else if (type instanceof SexpType) {
-            PType elementType = fromStaticType(((SexpType) type).getElementType());
-            return PType.typeSexp(elementType);
-        } else if (type instanceof StringType) {
-            return PType.typeString();
-        } else if (type instanceof StructType) {
-            boolean isOrdered = ((StructType) type).getConstraints().contains(TupleConstraint.Ordered.INSTANCE);
-            boolean isClosed = ((StructType) type).getContentClosed();
-            List<Field> fields = ((StructType) type).getFields().stream().map((field) -> Field.of(field.getKey(), PType.fromStaticType(field.getValue()))).collect(Collectors.toList());
-            if (isClosed && isOrdered) {
-                return PType.typeRow(fields);
-            } else if (isClosed) {
-                return PType.typeRow(fields); // TODO: We currently use ROW when closed.
-            } else {
-                return PType.typeStruct();
-            }
-        } else if (type instanceof SymbolType) {
-            return PType.typeSymbol();
-        } else if (type instanceof TimeType) {
-            Integer precision = ((TimeType) type).getPrecision();
-            if (precision == null) {
-                precision = 6;
-            }
-            return PType.typeTimeWithoutTZ(precision);
-        } else if (type instanceof TimestampType) {
-            Integer precision = ((TimestampType) type).getPrecision();
-            if (precision == null) {
-                precision = 6;
-            }
-            return PType.typeTimestampWithoutTZ(precision);
-        } else {
-            throw new IllegalStateException("Unsupported type: " + type);
-        }
     }
 }

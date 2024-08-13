@@ -24,7 +24,7 @@ internal object Fn_ABS__INT8__INT8 : Fn {
     override fun invoke(args: Array<Datum>): Datum {
         @Suppress("DEPRECATION")
         val value = args[0].byte
-        return if (value < 0) Datum.tinyInt(value.times(-1).toByte()) else Datum.tinyInt(value)
+        return if (value < 0) Datum.tinyint(value.times(-1).toByte()) else Datum.tinyint(value)
     }
 }
 
@@ -32,8 +32,8 @@ internal object Fn_ABS__INT16__INT16 : Fn {
 
     override val signature = FnSignature(
         name = "abs",
-        returns = PType.typeSmallInt(),
-        parameters = listOf(FnParameter("value", PType.typeSmallInt())),
+        returns = PType.smallint(),
+        parameters = listOf(FnParameter("value", PType.smallint())),
         isNullCall = true,
         isNullable = false,
     )
@@ -48,8 +48,8 @@ internal object Fn_ABS__INT32__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "abs",
-        returns = PType.typeInt(),
-        parameters = listOf(FnParameter("value", PType.typeInt())),
+        returns = PType.integer(),
+        parameters = listOf(FnParameter("value", PType.integer())),
         isNullCall = true,
         isNullable = false,
     )
@@ -64,15 +64,15 @@ internal object Fn_ABS__INT64__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "abs",
-        returns = PType.typeBigInt(),
-        parameters = listOf(FnParameter("value", PType.typeBigInt())),
+        returns = PType.bigint(),
+        parameters = listOf(FnParameter("value", PType.bigint())),
         isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<Datum>): Datum {
         val value = args[0].long
-        return Datum.bigInt(value.absoluteValue)
+        return Datum.bigint(value.absoluteValue)
     }
 }
 
@@ -80,15 +80,15 @@ internal object Fn_ABS__INT__INT : Fn {
 
     override val signature = FnSignature(
         name = "abs",
-        returns = PType.typeIntArbitrary(),
-        parameters = listOf(FnParameter("value", PType.typeIntArbitrary())),
+        returns = PType.numeric(),
+        parameters = listOf(FnParameter("value", PType.numeric())),
         isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<Datum>): Datum {
         val value = args[0].bigInteger
-        return Datum.intArbitrary(value.abs())
+        return Datum.numeric(value.abs())
     }
 }
 
@@ -96,15 +96,15 @@ internal object Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 
     override val signature = FnSignature(
         name = "abs",
-        returns = PType.typeDecimalArbitrary(),
-        parameters = listOf(FnParameter("value", PType.typeDecimalArbitrary())),
+        returns = PType.decimal(),
+        parameters = listOf(FnParameter("value", PType.decimal())),
         isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<Datum>): Datum {
         val value = args[0].bigDecimal
-        return Datum.decimalArbitrary(value.abs())
+        return Datum.decimal(value.abs())
     }
 }
 
@@ -112,8 +112,8 @@ internal object Fn_ABS__FLOAT32__FLOAT32 : Fn {
 
     override val signature = FnSignature(
         name = "abs",
-        returns = PType.typeReal(),
-        parameters = listOf(FnParameter("value", PType.typeReal())),
+        returns = PType.real(),
+        parameters = listOf(FnParameter("value", PType.real())),
         isNullCall = true,
         isNullable = false,
     )
@@ -128,8 +128,8 @@ internal object Fn_ABS__FLOAT64__FLOAT64 : Fn {
 
     override val signature = FnSignature(
         name = "abs",
-        returns = PType.typeDoublePrecision(),
-        parameters = listOf(FnParameter("value", PType.typeDoublePrecision())),
+        returns = PType.doublePrecision(),
+        parameters = listOf(FnParameter("value", PType.doublePrecision())),
         isNullCall = true,
         isNullable = false,
     )

@@ -11,7 +11,7 @@ import org.partiql.eval.value.Datum
 import org.partiql.eval.value.Datum.bag
 import org.partiql.eval.value.Datum.bool
 import org.partiql.eval.value.Datum.integer
-import org.partiql.eval.value.Datum.list
+import org.partiql.eval.value.Datum.array
 import org.partiql.eval.value.Datum.string
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
@@ -68,7 +68,7 @@ class ExprCallDynamicTest {
                 object : Fn {
                     override val signature: FnSignature = FnSignature(
                         name = "example_function",
-                        returns = PType.typeInt(),
+                        returns = PType.integer(),
                         parameters = listOf(
                             FnParameter("first", type = it.first.toPType()),
                             FnParameter("second", type = it.second.toPType()),
@@ -92,8 +92,8 @@ class ExprCallDynamicTest {
                 expectedIndex = 4
             ),
             DynamicTestCase(
-                lhs = list(emptyList()),
-                rhs = list(emptyList()),
+                lhs = array(emptyList()),
+                rhs = array(emptyList()),
                 expectedIndex = 0
             ),
             DynamicTestCase(
@@ -108,7 +108,7 @@ class ExprCallDynamicTest {
             ),
             DynamicTestCase(
                 lhs = string("hello"),
-                rhs = list(emptyList()),
+                rhs = array(emptyList()),
                 expectedIndex = 7
             ),
             DynamicTestCase(
@@ -122,7 +122,7 @@ class ExprCallDynamicTest {
                 expectedIndex = 9
             ),
             DynamicTestCase(
-                lhs = list(emptyList()),
+                lhs = array(emptyList()),
                 rhs = string("hello"),
                 expectedIndex = 11
             ),

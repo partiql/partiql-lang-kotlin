@@ -26,7 +26,7 @@ public sealed interface Function {
     /**
      * Compute a [PType] from the given arguments.
      */
-    public fun computeReturnType(args: List<PType>): PType = SqlTypes.from(getReturnType())
+    public fun computeReturnType(args: List<PType>): PType = TODO("computeReturnType not implemented")
 
     /**
      * !! DO NOT OVERRIDE !!

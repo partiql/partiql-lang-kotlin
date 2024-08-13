@@ -12,7 +12,7 @@ public interface RexSelect : Rex {
 
     public fun getConstructor(): Rex
 
-    public override fun getType(): PType = PType.typeBag(getConstructor().getType())
+    public override fun getType(): PType = PType.bag(getConstructor().getType())
 
     public override fun getOperands(): List<Rex> = listOf(getConstructor())
 
@@ -27,7 +27,7 @@ public interface RexSelect : Rex {
 
         public override fun getConstructor(): Rex = _constructor
 
-        public override fun getType(): PType = PType.typeBag(_constructor.getType())
+        public override fun getType(): PType = PType.bag(_constructor.getType())
 
         public override fun getOperands(): List<Rex> = listOf(_constructor)
 

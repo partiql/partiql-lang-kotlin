@@ -52,7 +52,7 @@ internal class ExprSelect(
     override fun eval(env: Environment): Datum {
         val elements = Elements(input, constructor, env)
         return when (ordered) {
-            true -> Datum.list(elements)
+            true -> Datum.array(elements)
             false -> Datum.bag(elements)
         }
     }

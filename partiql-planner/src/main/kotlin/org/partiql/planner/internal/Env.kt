@@ -119,7 +119,7 @@ internal class Env(private val session: Session) {
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper
-                Rex(CompilerType(PType.typeDynamic()), Rex.Op.Call.Dynamic(args, candidates))
+                Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Dynamic(args, candidates))
             }
             is FnMatch.Static -> {
                 // Create an internal typed reference
@@ -132,11 +132,11 @@ internal class Env(private val session: Session) {
                 val coercions: List<Rex> = args.mapIndexed { i, arg ->
                     when (val cast = match.mapping[i]) {
                         null -> arg
-                        else -> Rex(CompilerType(PType.typeDynamic()), Rex.Op.Cast.Resolved(cast, arg))
+                        else -> Rex(CompilerType(PType.dynamic()), Rex.Op.Cast.Resolved(cast, arg))
                     }
                 }
                 // Rewrite as a static call to be typed by PlanTyper
-                Rex(CompilerType(PType.typeDynamic()), Rex.Op.Call.Static(ref, coercions))
+                Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Static(ref, coercions))
             }
         }
     }

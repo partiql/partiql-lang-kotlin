@@ -13,10 +13,10 @@ internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "and",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeBool()),
-            FnParameter("rhs", PType.typeBool()),
+            FnParameter("lhs", PType.bool()),
+            FnParameter("rhs", PType.bool()),
         ),
         isNullable = true,
         isNullCall = false,
@@ -29,9 +29,9 @@ internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
         val rhs = args[1]
         // SQL:1999 Section 6.30 Table 13
         return when {
-            lhs.isNull && rhs.isNull -> Datum.nullValue(PType.typeBool())
-            lhs.boolean && rhs.isNull -> Datum.nullValue(PType.typeBool())
-            rhs.boolean && lhs.isNull -> Datum.nullValue(PType.typeBool())
+            lhs.isNull && rhs.isNull -> Datum.nullValue(PType.bool())
+            lhs.boolean && rhs.isNull -> Datum.nullValue(PType.bool())
+            rhs.boolean && lhs.isNull -> Datum.nullValue(PType.bool())
             !lhs.boolean || !rhs.boolean -> Datum.bool(false)
             else -> Datum.bool(true)
         }

@@ -651,11 +651,11 @@ internal object RelConverter {
 
     private fun syntheticAgg(i: Int) = "\$agg_$i"
 
-    private val ANY: CompilerType = CompilerType(PType.typeDynamic())
-    private val BOOL: CompilerType = CompilerType(PType.typeBool())
-    private val STRING: CompilerType = CompilerType(PType.typeString())
-    private val STRUCT: CompilerType = CompilerType(PType.typeStruct())
-    private val BAG: CompilerType = CompilerType(PType.typeBag())
-    private val LIST: CompilerType = CompilerType(PType.typeList())
-    private val INT: CompilerType = CompilerType(PType.typeIntArbitrary())
+    private val ANY: CompilerType = CompilerType(PType.dynamic())
+    private val BOOL: CompilerType = CompilerType(PType.bool())
+    private val STRING: CompilerType = CompilerType(PType.string())
+    private val STRUCT: CompilerType = CompilerType(PType.struct())
+    private val BAG: CompilerType = CompilerType(PType.bag())
+    private val LIST: CompilerType = CompilerType(PType.array())
+    private val INT: CompilerType = CompilerType(PType.numeric())
 }

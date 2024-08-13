@@ -16,7 +16,7 @@ internal class ExprCollection(
         return when (type.kind) {
             PType.Kind.BAG -> Datum.bag(values.map { it.eval(env) })
             PType.Kind.SEXP -> Datum.sexp(values.map { it.eval(env) })
-            PType.Kind.LIST -> Datum.list(values.map { it.eval(env) })
+            PType.Kind.ARRAY -> Datum.array(values.map { it.eval(env) })
             else -> error("Unsupported type for collection $type")
         }
     }

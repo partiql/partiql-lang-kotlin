@@ -109,14 +109,14 @@ internal class DynamicTyper {
      */
     @OptIn(PartiQLValueExperimental::class)
     fun mapping(): Pair<CompilerType, List<Mapping?>?> {
-        val s = supertype ?: return CompilerType(PType.typeDynamic()) to null
+        val s = supertype ?: return CompilerType(PType.dynamic()) to null
         val superTypeBase = s.kind
         // If at top supertype, then return union of all accumulated types
         if (superTypeBase == Kind.DYNAMIC) {
             return anyOf(types)!!.toCType() to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
-        if (superTypeBase in setOf(Kind.ROW, Kind.STRUCT, Kind.BAG, Kind.LIST, Kind.SEXP)) {
+        if (superTypeBase in setOf(Kind.ROW, Kind.STRUCT, Kind.BAG, Kind.ARRAY, Kind.SEXP)) {
             return anyOf(types)!!.toCType() to null
         }
         // If not initialized, then return null, missing, or null|missing.
@@ -150,7 +150,7 @@ internal class DynamicTyper {
         supertype = when {
             type.kind == Kind.DYNAMIC -> type
             s == type -> return // skip
-            else -> graph[s.kind.ordinal][type.kind.ordinal]?.toPType() ?: CompilerType(PType.typeDynamic()) // lookup, if missing then go to top.
+            else -> graph[s.kind.ordinal][type.kind.ordinal]?.toPType() ?: CompilerType(PType.dynamic()) // lookup, if missing then go to top.
         }
     }
 
@@ -194,101 +194,101 @@ internal class DynamicTyper {
             graph[Kind.TINYINT.ordinal] = edges(
                 Kind.TINYINT to Kind.TINYINT,
                 Kind.SMALLINT to Kind.SMALLINT,
-                Kind.INT to Kind.INT,
+                Kind.INTEGER to Kind.INTEGER,
                 Kind.BIGINT to Kind.BIGINT,
-                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
                 Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
             graph[Kind.SMALLINT.ordinal] = edges(
                 Kind.TINYINT to Kind.SMALLINT,
                 Kind.SMALLINT to Kind.SMALLINT,
-                Kind.INT to Kind.INT,
+                Kind.INTEGER to Kind.INTEGER,
                 Kind.BIGINT to Kind.BIGINT,
-                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
                 Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
-            graph[Kind.INT.ordinal] = edges(
-                Kind.TINYINT to Kind.INT,
-                Kind.SMALLINT to Kind.INT,
-                Kind.INT to Kind.INT,
+            graph[Kind.INTEGER.ordinal] = edges(
+                Kind.TINYINT to Kind.INTEGER,
+                Kind.SMALLINT to Kind.INTEGER,
+                Kind.INTEGER to Kind.INTEGER,
                 Kind.BIGINT to Kind.BIGINT,
-                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
                 Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
             graph[Kind.BIGINT.ordinal] = edges(
                 Kind.TINYINT to Kind.BIGINT,
                 Kind.SMALLINT to Kind.BIGINT,
-                Kind.INT to Kind.BIGINT,
+                Kind.INTEGER to Kind.BIGINT,
                 Kind.BIGINT to Kind.BIGINT,
-                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+                Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
                 Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
-            graph[Kind.INT_ARBITRARY.ordinal] = edges(
-                Kind.TINYINT to Kind.INT_ARBITRARY,
-                Kind.SMALLINT to Kind.INT_ARBITRARY,
-                Kind.INT to Kind.INT_ARBITRARY,
-                Kind.BIGINT to Kind.INT_ARBITRARY,
-                Kind.INT_ARBITRARY to Kind.INT_ARBITRARY,
+            graph[Kind.NUMERIC.ordinal] = edges(
+                Kind.TINYINT to Kind.NUMERIC,
+                Kind.SMALLINT to Kind.NUMERIC,
+                Kind.INTEGER to Kind.NUMERIC,
+                Kind.BIGINT to Kind.NUMERIC,
+                Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
                 Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
             graph[Kind.DECIMAL.ordinal] = edges(
                 Kind.TINYINT to Kind.DECIMAL,
                 Kind.SMALLINT to Kind.DECIMAL,
-                Kind.INT to Kind.DECIMAL,
+                Kind.INTEGER to Kind.DECIMAL,
                 Kind.BIGINT to Kind.DECIMAL,
-                Kind.INT_ARBITRARY to Kind.DECIMAL,
+                Kind.NUMERIC to Kind.DECIMAL,
                 Kind.DECIMAL to Kind.DECIMAL,
                 Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
             graph[Kind.DECIMAL_ARBITRARY.ordinal] = edges(
                 Kind.TINYINT to Kind.DECIMAL_ARBITRARY,
                 Kind.SMALLINT to Kind.DECIMAL_ARBITRARY,
-                Kind.INT to Kind.DECIMAL_ARBITRARY,
+                Kind.INTEGER to Kind.DECIMAL_ARBITRARY,
                 Kind.BIGINT to Kind.DECIMAL_ARBITRARY,
-                Kind.INT_ARBITRARY to Kind.DECIMAL_ARBITRARY,
+                Kind.NUMERIC to Kind.DECIMAL_ARBITRARY,
                 Kind.DECIMAL to Kind.DECIMAL_ARBITRARY,
                 Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
             graph[Kind.REAL.ordinal] = edges(
                 Kind.TINYINT to Kind.REAL,
                 Kind.SMALLINT to Kind.REAL,
-                Kind.INT to Kind.REAL,
+                Kind.INTEGER to Kind.REAL,
                 Kind.BIGINT to Kind.REAL,
-                Kind.INT_ARBITRARY to Kind.REAL,
+                Kind.NUMERIC to Kind.REAL,
                 Kind.DECIMAL to Kind.REAL,
                 Kind.DECIMAL_ARBITRARY to Kind.REAL,
                 Kind.REAL to Kind.REAL,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
-            graph[Kind.DOUBLE_PRECISION.ordinal] = edges(
-                Kind.TINYINT to Kind.DOUBLE_PRECISION,
-                Kind.SMALLINT to Kind.DOUBLE_PRECISION,
-                Kind.INT to Kind.DOUBLE_PRECISION,
-                Kind.BIGINT to Kind.DOUBLE_PRECISION,
-                Kind.INT_ARBITRARY to Kind.DOUBLE_PRECISION,
-                Kind.DECIMAL to Kind.DOUBLE_PRECISION,
-                Kind.DECIMAL_ARBITRARY to Kind.DOUBLE_PRECISION,
-                Kind.REAL to Kind.DOUBLE_PRECISION,
-                Kind.DOUBLE_PRECISION to Kind.DOUBLE_PRECISION,
+            graph[Kind.DOUBLE.ordinal] = edges(
+                Kind.TINYINT to Kind.DOUBLE,
+                Kind.SMALLINT to Kind.DOUBLE,
+                Kind.INTEGER to Kind.DOUBLE,
+                Kind.BIGINT to Kind.DOUBLE,
+                Kind.NUMERIC to Kind.DOUBLE,
+                Kind.DECIMAL to Kind.DOUBLE,
+                Kind.DECIMAL_ARBITRARY to Kind.DOUBLE,
+                Kind.REAL to Kind.DOUBLE,
+                Kind.DOUBLE to Kind.DOUBLE,
             )
             graph[Kind.CHAR.ordinal] = edges(
                 Kind.CHAR to Kind.CHAR,
@@ -331,30 +331,30 @@ internal class DynamicTyper {
                 Kind.SYMBOL to Kind.CLOB,
                 Kind.CLOB to Kind.CLOB,
             )
-            graph[Kind.TIME_WITHOUT_TZ.ordinal] = edges(
-                Kind.TIME_WITHOUT_TZ to Kind.TIME_WITHOUT_TZ,
+            graph[Kind.TIME.ordinal] = edges(
+                Kind.TIME to Kind.TIME,
             )
-            graph[Kind.TIME_WITH_TZ.ordinal] = edges(
-                Kind.TIME_WITH_TZ to Kind.TIME_WITH_TZ,
+            graph[Kind.TIMEZ.ordinal] = edges(
+                Kind.TIMEZ to Kind.TIMEZ,
             )
-            graph[Kind.TIMESTAMP_WITHOUT_TZ.ordinal] = edges(
-                Kind.TIMESTAMP_WITHOUT_TZ to Kind.TIMESTAMP_WITHOUT_TZ,
+            graph[Kind.TIMESTAMP.ordinal] = edges(
+                Kind.TIMESTAMP to Kind.TIMESTAMP,
             )
-            graph[Kind.TIMESTAMP_WITH_TZ.ordinal] = edges(
-                Kind.TIMESTAMP_WITH_TZ to Kind.TIMESTAMP_WITH_TZ,
+            graph[Kind.TIMESTAMPZ.ordinal] = edges(
+                Kind.TIMESTAMPZ to Kind.TIMESTAMPZ,
             )
-            graph[Kind.LIST.ordinal] = edges(
-                Kind.LIST to Kind.LIST,
+            graph[Kind.ARRAY.ordinal] = edges(
+                Kind.ARRAY to Kind.ARRAY,
                 Kind.SEXP to Kind.SEXP,
                 Kind.BAG to Kind.BAG,
             )
             graph[Kind.SEXP.ordinal] = edges(
-                Kind.LIST to Kind.SEXP,
+                Kind.ARRAY to Kind.SEXP,
                 Kind.SEXP to Kind.SEXP,
                 Kind.BAG to Kind.BAG,
             )
             graph[Kind.BAG.ordinal] = edges(
-                Kind.LIST to Kind.BAG,
+                Kind.ARRAY to Kind.BAG,
                 Kind.SEXP to Kind.BAG,
                 Kind.BAG to Kind.BAG,
             )
@@ -372,34 +372,34 @@ internal class DynamicTyper {
          *  of types.
          */
         private fun Kind.toPType(): CompilerType = when (this) {
-            Kind.BOOL -> PType.typeBool()
-            Kind.DYNAMIC -> PType.typeDynamic()
+            Kind.BOOL -> PType.bool()
+            Kind.DYNAMIC -> PType.dynamic()
             Kind.TINYINT -> PType.typeTinyInt()
-            Kind.SMALLINT -> PType.typeSmallInt()
-            Kind.INT -> PType.typeInt()
-            Kind.BIGINT -> PType.typeBigInt()
-            Kind.INT_ARBITRARY -> PType.typeIntArbitrary()
-            Kind.DECIMAL -> PType.typeDecimalArbitrary() // TODO: To be updated.
-            Kind.DECIMAL_ARBITRARY -> PType.typeDecimalArbitrary()
-            Kind.REAL -> PType.typeReal()
-            Kind.DOUBLE_PRECISION -> PType.typeDoublePrecision()
-            Kind.CHAR -> PType.typeChar(255) // TODO: To be updated
-            Kind.VARCHAR -> PType.typeVarChar(255) // TODO: To be updated
-            Kind.STRING -> PType.typeString()
-            Kind.SYMBOL -> PType.typeSymbol()
-            Kind.BLOB -> PType.typeBlob(Int.MAX_VALUE) // TODO: To be updated
-            Kind.CLOB -> PType.typeClob(Int.MAX_VALUE) // TODO: To be updated
-            Kind.DATE -> PType.typeDate()
-            Kind.TIME_WITH_TZ -> PType.typeTimeWithTZ(6) // TODO: To be updated
-            Kind.TIME_WITHOUT_TZ -> PType.typeTimeWithoutTZ(6) // TODO: To be updated
-            Kind.TIMESTAMP_WITH_TZ -> PType.typeTimestampWithTZ(6) // TODO: To be updated
-            Kind.TIMESTAMP_WITHOUT_TZ -> PType.typeTimestampWithoutTZ(6) // TODO: To be updated
-            Kind.BAG -> PType.typeBag() // TODO: To be updated
-            Kind.LIST -> PType.typeList() // TODO: To be updated
-            Kind.ROW -> PType.typeRow(emptyList()) // TODO: To be updated
+            Kind.SMALLINT -> PType.smallint()
+            Kind.INTEGER -> PType.integer()
+            Kind.BIGINT -> PType.bigint()
+            Kind.NUMERIC -> PType.numeric()
+            Kind.DECIMAL -> PType.decimal() // TODO: To be updated.
+            Kind.DECIMAL_ARBITRARY -> PType.decimal()
+            Kind.REAL -> PType.real()
+            Kind.DOUBLE -> PType.doublePrecision()
+            Kind.CHAR -> PType.character(255) // TODO: To be updated
+            Kind.VARCHAR -> PType.varchar(255) // TODO: To be updated
+            Kind.STRING -> PType.string()
+            Kind.SYMBOL -> PType.symbol()
+            Kind.BLOB -> PType.blob(Int.MAX_VALUE) // TODO: To be updated
+            Kind.CLOB -> PType.clob(Int.MAX_VALUE) // TODO: To be updated
+            Kind.DATE -> PType.date()
+            Kind.TIMEZ -> PType.timez(6) // TODO: To be updated
+            Kind.TIME -> PType.time(6) // TODO: To be updated
+            Kind.TIMESTAMPZ -> PType.timestampz(6) // TODO: To be updated
+            Kind.TIMESTAMP -> PType.timestamp(6) // TODO: To be updated
+            Kind.BAG -> PType.bag() // TODO: To be updated
+            Kind.ARRAY -> PType.array() // TODO: To be updated
+            Kind.ROW -> PType.row(emptyList()) // TODO: To be updated
             Kind.SEXP -> PType.typeSexp() // TODO: To be updated
-            Kind.STRUCT -> PType.typeStruct() // TODO: To be updated
-            Kind.UNKNOWN -> PType.typeUnknown() // TODO: To be updated
+            Kind.STRUCT -> PType.struct() // TODO: To be updated
+            Kind.UNKNOWN -> PType.unknown() // TODO: To be updated
         }.toCType()
 
         @OptIn(PartiQLValueExperimental::class)
@@ -409,13 +409,13 @@ internal class DynamicTyper {
                 Kind.BOOL -> boolValue(null)
                 Kind.TINYINT -> int8Value(null)
                 Kind.SMALLINT -> int16Value(null)
-                Kind.INT -> int32Value(null)
+                Kind.INTEGER -> int32Value(null)
                 Kind.BIGINT -> int64Value(null)
-                Kind.INT_ARBITRARY -> intValue(null)
+                Kind.NUMERIC -> intValue(null)
                 Kind.DECIMAL -> decimalValue(null)
                 Kind.DECIMAL_ARBITRARY -> decimalValue(null)
                 Kind.REAL -> float32Value(null)
-                Kind.DOUBLE_PRECISION -> float64Value(null)
+                Kind.DOUBLE -> float64Value(null)
                 Kind.CHAR -> charValue(null)
                 Kind.VARCHAR -> TODO("No implementation of VAR CHAR")
                 Kind.STRING -> stringValue(null)
@@ -423,12 +423,12 @@ internal class DynamicTyper {
                 Kind.BLOB -> blobValue(null)
                 Kind.CLOB -> clobValue(null)
                 Kind.DATE -> dateValue(null)
-                Kind.TIME_WITH_TZ,
-                Kind.TIME_WITHOUT_TZ -> timeValue(null)
-                Kind.TIMESTAMP_WITH_TZ,
-                Kind.TIMESTAMP_WITHOUT_TZ -> timestampValue(null)
+                Kind.TIMEZ,
+                Kind.TIME -> timeValue(null)
+                Kind.TIMESTAMPZ,
+                Kind.TIMESTAMP -> timestampValue(null)
                 Kind.BAG -> bagValue<PartiQLValue>(null)
-                Kind.LIST -> listValue<PartiQLValue>(null)
+                Kind.ARRAY -> listValue<PartiQLValue>(null)
                 Kind.ROW -> structValue<PartiQLValue>(null)
                 Kind.SEXP -> sexpValue<PartiQLValue>(null)
                 Kind.STRUCT -> structValue<PartiQLValue>()

@@ -1,168 +1,149 @@
 package org.partiql.planner.internal
 
+import org.partiql.types.AnyOfType
+import org.partiql.types.AnyType
+import org.partiql.types.BagType
+import org.partiql.types.BlobType
+import org.partiql.types.BoolType
+import org.partiql.types.ClobType
+import org.partiql.types.DateType
+import org.partiql.types.DecimalType
+import org.partiql.types.DecimalType.PrecisionScaleConstraint
 import org.partiql.types.Field
+import org.partiql.types.FloatType
+import org.partiql.types.IntType
+import org.partiql.types.IntType.IntRangeConstraint
+import org.partiql.types.ListType
 import org.partiql.types.PType
+import org.partiql.types.SexpType
+import org.partiql.types.StaticType
+import org.partiql.types.StringType
+import org.partiql.types.StructType
+import org.partiql.types.SymbolType
+import org.partiql.types.TimeType
+import org.partiql.types.TimestampType
+import org.partiql.types.TupleConstraint
+import java.util.stream.Collectors
 
 /**
- * A factory for single-source of truth for type creations — DO NOT CREATE PTYPE DIRECTLY.
- *
- * This allows us to raise an interface if we need custom type factories; for now just use defaults with static methods.
+ * PType conversion helper functions.
  */
 internal object SqlTypes {
 
-    private const val MAX_SIZE = Int.MAX_VALUE
-
-    //
-    // DYNAMIC
-    //
-
-    @JvmStatic
-    fun dynamic(): PType = PType.typeDynamic()
-
-    //
-    // BOOLEAN
-    //
-
-    @JvmStatic
-    fun bool(): PType = PType.typeBool()
-
-    //
-    // NUMERIC
-    //
-
-    @JvmStatic
-    fun tinyint(): PType = PType.typeTinyInt()
-
-    @JvmStatic
-    fun smallint(): PType = PType.typeSmallInt()
-
-    @JvmStatic
-    fun int(): PType = PType.typeInt()
-
-    @JvmStatic
-    fun bigint(): PType = PType.typeBigInt()
-
-    /**
-     * NUMERIC represents an integer with arbitrary precision. It is equivalent to Ion’s integer type, and is conformant to SQL-99s rules for the NUMERIC type. In SQL-99, if a scale is omitted then we choose zero — and if a precision is omitted then the precision is implementation defined. For PartiQL, we define this precision to be inf — aka arbitrary precision.
-     *
-     * @param precision     Defaults to inf.
-     * @param scale         Defaults to 0.
-     * @return
-     */
-    @JvmStatic
-    fun numeric(precision: Int? = null, scale: Int? = null): PType {
-        if (scale != null && precision == null) {
-            error("Precision can never be null while scale is specified.")
-        }
-        return when {
-            precision != null && scale != null -> PType.typeDecimal(precision, scale)
-            precision != null -> PType.typeDecimal(precision, 0)
-            else -> PType.typeIntArbitrary()
-        }
-    }
-
-    /**
-     * DECIMAL represents an exact numeric type with arbitrary precision and arbitrary scale. It is equivalent to Ion’s decimal type. For a DECIMAL with no given scale we choose inf rather than the SQL prescribed 0 (zero). Here we diverge from SQL-99 for Ion compatibility. Finally, SQL defines decimals as having precision equal to or greater than the given precision. Like other systems, we truncate extraneous precision so that NUMERIC(p,s) is equivalent to DECIMAL(p,s). The only difference between them is the default scale when it’s not specified — we follow SQL-99 for NUMERIC, and we follow Postgres for DECIMAL.
-     *
-     * @param precision     Defaults to inf.
-     * @param scale         Defaults to 0 when precision is given, otherwise inf.
-     * @return
-     */
-    @JvmStatic
-    fun decimal(precision: Int? = null, scale: Int? = null): PType {
-        if (scale != null && precision == null) {
-            error("Precision can never be null while scale is specified.")
-        }
-        return when {
-            precision != null && scale != null -> PType.typeDecimal(precision, scale)
-            precision != null -> PType.typeDecimal(precision, 0)
-            else -> PType.typeDecimalArbitrary()
-        }
-    }
-
-    @JvmStatic
-    fun real(): PType = PType.typeReal()
-
-    @JvmStatic
-    fun double(): PType = PType.typeDoublePrecision()
-
-    //
-    // CHARACTER STRINGS
-    //
-
-    @JvmStatic
-    fun char(length: Int? = null): PType = PType.typeChar(length ?: 1)
-
-    @JvmStatic
-    fun varchar(length: Int? = null): PType = PType.typeVarChar(length ?: MAX_SIZE)
-
-    @JvmStatic
-    fun string(): PType = PType.typeString()
-
-    @JvmStatic
-    fun clob(length: Int? = null) = PType.typeClob(length ?: MAX_SIZE)
-
-    //
-    // BIT STRINGS
-    //
-
-    @JvmStatic
-    fun blob(length: Int? = null) = PType.typeBlob(length ?: MAX_SIZE)
-
-    //
-    // DATETIME
-    //
-
-    @JvmStatic
-    fun date(): PType = TODO()
-
-    @JvmStatic
-    fun time(precision: Int? = null): PType = PType.typeTimeWithoutTZ(precision ?: 6)
-
-    @JvmStatic
-    fun timez(precision: Int? = null): PType = PType.typeTimeWithTZ(precision ?: 6)
-
-    @JvmStatic
-    fun timestamp(precision: Int? = null): PType = PType.typeTimeWithoutTZ(precision ?: 6)
-
-    @JvmStatic
-    fun timestampz(precision: Int? = null): PType = PType.typeTimestampWithTZ(precision ?: 6)
-
-    //
-    // COLLECTIONS
-    //
-
-    @JvmStatic
-    fun array(element: PType? = null, size: Int? = null): PType {
-        if (size != null) {
-            error("Fixed-length ARRAY [N] is not supported.")
-        }
-        return when (element) {
-            null -> PType.typeList()
-            else -> PType.typeList(element)
+    fun fromStaticType(type: StaticType): PType {
+        when (type) {
+            is AnyType -> {
+                return PType.dynamic()
+            }
+            is AnyOfType -> {
+                val allTypes = HashSet(type.flatten().allTypes)
+                return if (allTypes.isEmpty()) {
+                    PType.dynamic()
+                } else if (allTypes.size == 1) {
+                    fromStaticType(allTypes.stream().findFirst().get())
+                } else {
+                    PType.dynamic()
+                }
+                //            if (allTypes.stream().allMatch((subType) -> subType instanceof CollectionType)) {}
+            }
+            is BagType -> {
+                val elementType = fromStaticType(type.elementType)
+                return PType.bag(elementType)
+            }
+            is BlobType -> {
+                return PType.blob(Int.MAX_VALUE) // TODO: Update this
+            }
+            is BoolType -> {
+                return PType.bool()
+            }
+            is ClobType -> {
+                return PType.clob(Int.MAX_VALUE) // TODO: Update this
+            }
+            is DateType -> {
+                return PType.date()
+            }
+            is DecimalType -> {
+                val precScale = type.precisionScaleConstraint
+                if (precScale is PrecisionScaleConstraint.Unconstrained) {
+                    return PType.decimal()
+                } else if (precScale is PrecisionScaleConstraint.Constrained) {
+                    val precisionScaleConstraint = precScale
+                    return PType.decimal(precisionScaleConstraint.precision, precisionScaleConstraint.scale)
+                } else {
+                    throw IllegalStateException()
+                }
+            }
+            is FloatType -> {
+                return PType.doublePrecision()
+            }
+            is IntType -> {
+                val cons = type.rangeConstraint
+                return when (cons) {
+                    IntRangeConstraint.INT4 -> {
+                        PType.integer()
+                    }
+                    IntRangeConstraint.SHORT -> {
+                        PType.smallint()
+                    }
+                    IntRangeConstraint.LONG -> {
+                        PType.bigint()
+                    }
+                    IntRangeConstraint.UNCONSTRAINED -> {
+                        PType.numeric()
+                    }
+                    else -> {
+                        throw IllegalStateException()
+                    }
+                }
+            }
+            is ListType -> {
+                val elementType = fromStaticType(type.elementType)
+                return PType.array(elementType)
+            }
+            is SexpType -> {
+                error("PType does not support StaticType SexpType")
+            }
+            is StringType -> {
+                return PType.string()
+            }
+            is StructType -> {
+                val isOrdered = type.constraints.contains(TupleConstraint.Ordered)
+                val isClosed = type.contentClosed
+                val fields = type.fields.stream().map<Field> { field: StructType.Field ->
+                    Field.of(
+                        field.key, fromStaticType(field.value)
+                    )
+                }.collect(Collectors.toList<Field>())
+                return if (isClosed && isOrdered) {
+                    PType.row(fields)
+                } else if (isClosed) {
+                    PType.row(fields) // TODO: We currently use ROW when closed.
+                } else {
+                    PType.struct()
+                }
+            }
+            is SymbolType -> {
+                error("PType does not support StaticType SymbolType")
+            }
+            is TimeType -> {
+                var precision = type.precision
+                if (precision == null) {
+                    precision = 6
+                }
+                return PType.time(precision)
+            }
+            is TimestampType -> {
+                var precision = type.precision
+                if (precision == null) {
+                    precision = 6
+                }
+                return PType.timestamp(precision)
+            }
+            else -> {
+                throw IllegalStateException("Unsupported type: $type")
+            }
         }
     }
-
-    @JvmStatic
-    fun bag(element: PType? = null, size: Int? = null): PType {
-        if (size != null) {
-            error("Fixed-length BAG [N] is not supported.")
-        }
-        return when (element) {
-            null -> PType.typeBag()
-            else -> PType.typeBag(element)
-        }
-    }
-
-    //
-    // STRUCTURAL
-    //
-
-    @JvmStatic
-    fun struct(): PType = PType.typeStruct()
-
-    @JvmStatic
-    fun row(fields: List<Field>): PType = PType.typeRow(fields)
 
     // /**
     //  * Create PType from the AST type.
@@ -210,41 +191,4 @@ internal object SqlTypes {
     //     is Type.Struct -> struct()
     //     is Type.Custom -> TODO("Custom type not supported ")
     // }
-
-    @JvmStatic
-    fun from(kind: PType.Kind): PType = when (kind) {
-        PType.Kind.DYNAMIC -> dynamic()
-        PType.Kind.BOOL -> bool()
-        PType.Kind.TINYINT -> tinyint()
-        PType.Kind.SMALLINT -> smallint()
-        PType.Kind.INT -> int()
-        PType.Kind.BIGINT -> bigint()
-        PType.Kind.INT_ARBITRARY -> numeric()
-        PType.Kind.DECIMAL, PType.Kind.DECIMAL_ARBITRARY -> decimal()
-        PType.Kind.REAL -> real()
-        PType.Kind.DOUBLE_PRECISION -> double()
-        PType.Kind.CHAR -> char()
-        PType.Kind.VARCHAR -> varchar()
-        PType.Kind.STRING -> string()
-        PType.Kind.SYMBOL -> {
-            // TODO will we continue supporting symbol?
-            PType.typeSymbol()
-        }
-        PType.Kind.BLOB -> blob()
-        PType.Kind.CLOB -> clob()
-        PType.Kind.DATE -> date()
-        PType.Kind.TIME_WITH_TZ -> timez()
-        PType.Kind.TIME_WITHOUT_TZ -> time()
-        PType.Kind.TIMESTAMP_WITH_TZ -> timestampz()
-        PType.Kind.TIMESTAMP_WITHOUT_TZ -> timestamp()
-        PType.Kind.BAG -> bag()
-        PType.Kind.LIST -> array()
-        PType.Kind.ROW -> error("Cannot create a ROW from Kind")
-        PType.Kind.SEXP -> {
-            // TODO will we continue supporting sexp?
-            PType.typeSexp()
-        }
-        PType.Kind.STRUCT -> struct()
-        PType.Kind.UNKNOWN -> PType.typeUnknown()
-    }
 }

@@ -126,13 +126,13 @@ internal class PlannerErrorReportingTests {
                 "MISSING",
                 false,
                 assertOnProblemCount(0, 0),
-                expectedType = PType.typeUnknown().toCType()
+                expectedType = PType.unknown().toCType()
             ),
             TestCase(
                 "MISSING",
                 true,
                 assertOnProblemCount(0, 0),
-                expectedType = PType.typeUnknown().toCType()
+                expectedType = PType.unknown().toCType()
             ),
             // Unresolved variable always signals (10.1.3)
             TestCase(
@@ -146,7 +146,7 @@ internal class PlannerErrorReportingTests {
                 "1 + MISSING",
                 false,
                 assertOnProblemCount(1, 0),
-                expectedType = PType.typeInt().toCType()
+                expectedType = PType.integer().toCType()
             ),
             // This will be a non-resolved function error.
             // As plus does not contain a function that match argument type with
@@ -156,7 +156,7 @@ internal class PlannerErrorReportingTests {
                 "1 + MISSING",
                 true,
                 assertOnProblemCount(0, 1),
-                expectedType = PType.typeInt().toCType()
+                expectedType = PType.integer().toCType()
             ),
             // Attempting to do path navigation(symbol) on missing(which is not tuple)
             //  returns missing in quite mode, and error out in signal mode

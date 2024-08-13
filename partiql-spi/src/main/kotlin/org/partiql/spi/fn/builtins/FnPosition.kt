@@ -14,10 +14,10 @@ internal object Fn_POSITION__STRING_STRING__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "position",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("probe", PType.typeString()),
-            FnParameter("value", PType.typeString()),
+            FnParameter("probe", PType.string()),
+            FnParameter("value", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -27,7 +27,7 @@ internal object Fn_POSITION__STRING_STRING__INT64 : Fn {
         val s1 = args[0].string
         val s2 = args[1].string
         val result = s2.codepointPosition(s1)
-        return Datum.bigInt(result.toLong())
+        return Datum.bigint(result.toLong())
     }
 }
 
@@ -35,10 +35,10 @@ internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "position",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("probe", PType.typeSymbol()),
-            FnParameter("value", PType.typeSymbol()),
+            FnParameter("probe", PType.symbol()),
+            FnParameter("value", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -48,7 +48,7 @@ internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Fn {
         val s1 = args[0].string
         val s2 = args[1].string
         val result = s2.codepointPosition(s1)
-        return Datum.bigInt(result.toLong())
+        return Datum.bigint(result.toLong())
     }
 }
 
@@ -56,10 +56,10 @@ internal object Fn_POSITION__CLOB_CLOB__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "position",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("probe", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("probe", PType.clob(Int.MAX_VALUE)),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -69,6 +69,6 @@ internal object Fn_POSITION__CLOB_CLOB__INT64 : Fn {
         val s1 = args[0].bytes.toString(Charsets.UTF_8)
         val s2 = args[1].bytes.toString(Charsets.UTF_8)
         val result = s2.codepointPosition(s1)
-        return Datum.bigInt(result.toLong())
+        return Datum.bigint(result.toLong())
     }
 }

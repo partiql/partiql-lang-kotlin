@@ -15,7 +15,7 @@ internal class ExprPathIndex(
     override fun eval(env: Environment): Datum {
         val input = root.eval(env)
         val iterator = when (input.type.kind) {
-            PType.Kind.BAG, PType.Kind.LIST, PType.Kind.SEXP -> input.iterator()
+            PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> input.iterator()
             else -> throw TypeCheckException()
         }
 

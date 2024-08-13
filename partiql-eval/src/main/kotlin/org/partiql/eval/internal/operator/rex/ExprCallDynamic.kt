@@ -115,22 +115,22 @@ internal class ExprCallDynamic(
             return when (type) {
                 PType.Kind.TINYINT -> CoercionFamily.NUMBER
                 PType.Kind.SMALLINT -> CoercionFamily.NUMBER
-                PType.Kind.INT -> CoercionFamily.NUMBER
-                PType.Kind.INT_ARBITRARY -> CoercionFamily.NUMBER
+                PType.Kind.INTEGER -> CoercionFamily.NUMBER
+                PType.Kind.NUMERIC -> CoercionFamily.NUMBER
                 PType.Kind.BIGINT -> CoercionFamily.NUMBER
                 PType.Kind.REAL -> CoercionFamily.NUMBER
-                PType.Kind.DOUBLE_PRECISION -> CoercionFamily.NUMBER
+                PType.Kind.DOUBLE -> CoercionFamily.NUMBER
                 PType.Kind.DECIMAL -> CoercionFamily.NUMBER
                 PType.Kind.DECIMAL_ARBITRARY -> CoercionFamily.NUMBER
                 PType.Kind.STRING -> CoercionFamily.STRING
                 PType.Kind.BOOL -> CoercionFamily.BOOLEAN
-                PType.Kind.TIME_WITH_TZ -> CoercionFamily.TIME
-                PType.Kind.TIME_WITHOUT_TZ -> CoercionFamily.TIME
-                PType.Kind.TIMESTAMP_WITH_TZ -> CoercionFamily.TIMESTAMP
-                PType.Kind.TIMESTAMP_WITHOUT_TZ -> CoercionFamily.TIMESTAMP
+                PType.Kind.TIMEZ -> CoercionFamily.TIME
+                PType.Kind.TIME -> CoercionFamily.TIME
+                PType.Kind.TIMESTAMPZ -> CoercionFamily.TIMESTAMP
+                PType.Kind.TIMESTAMP -> CoercionFamily.TIMESTAMP
                 PType.Kind.DATE -> CoercionFamily.DATE
                 PType.Kind.STRUCT -> CoercionFamily.STRUCTURE
-                PType.Kind.LIST -> CoercionFamily.COLLECTION
+                PType.Kind.ARRAY -> CoercionFamily.COLLECTION
                 PType.Kind.SEXP -> CoercionFamily.COLLECTION
                 PType.Kind.BAG -> CoercionFamily.COLLECTION
                 PType.Kind.ROW -> CoercionFamily.STRUCTURE

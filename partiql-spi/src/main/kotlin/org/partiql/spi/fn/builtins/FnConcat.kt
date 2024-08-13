@@ -13,10 +13,10 @@ internal object Fn_CONCAT__STRING_STRING__STRING : Fn {
 
     override val signature = FnSignature(
         name = "concat",
-        returns = PType.typeString(),
+        returns = PType.string(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeString()),
-            FnParameter("rhs", PType.typeString()),
+            FnParameter("lhs", PType.string()),
+            FnParameter("rhs", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -33,10 +33,10 @@ internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "concat",
-        returns = PType.typeSymbol(),
+        returns = PType.symbol(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeSymbol()),
-            FnParameter("rhs", PType.typeSymbol()),
+            FnParameter("lhs", PType.symbol()),
+            FnParameter("rhs", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -53,10 +53,10 @@ internal object Fn_CONCAT__CLOB_CLOB__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "concat",
-        returns = PType.typeClob(Int.MAX_VALUE),
+        returns = PType.clob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("lhs", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("rhs", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("lhs", PType.clob(Int.MAX_VALUE)),
+            FnParameter("rhs", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

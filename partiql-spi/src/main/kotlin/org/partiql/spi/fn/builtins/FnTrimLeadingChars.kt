@@ -14,10 +14,10 @@ internal object Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING : Fn {
 
     override val signature = FnSignature(
         name = "trim_leading_chars",
-        returns = PType.typeString(),
+        returns = PType.string(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
-            FnParameter("chars", PType.typeString()),
+            FnParameter("value", PType.string()),
+            FnParameter("chars", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -35,10 +35,10 @@ internal object Fn_TRIM_LEADING_CHARS__SYMBOL_SYMBOL__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "trim_leading_chars",
-        returns = PType.typeSymbol(),
+        returns = PType.symbol(),
         parameters = listOf(
-            FnParameter("value", PType.typeSymbol()),
-            FnParameter("chars", PType.typeSymbol()),
+            FnParameter("value", PType.symbol()),
+            FnParameter("chars", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -56,10 +56,10 @@ internal object Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "trim_leading_chars",
-        returns = PType.typeClob(Int.MAX_VALUE),
+        returns = PType.clob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("chars", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
+            FnParameter("chars", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

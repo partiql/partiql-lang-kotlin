@@ -13,7 +13,7 @@ internal object Fn_GTE__INT8_INT8__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
             FnParameter("lhs", PType.typeTinyInt()),
             FnParameter("rhs", PType.typeTinyInt()),
@@ -33,10 +33,10 @@ internal object Fn_GTE__INT16_INT16__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeSmallInt()),
-            FnParameter("rhs", PType.typeSmallInt()),
+            FnParameter("lhs", PType.smallint()),
+            FnParameter("rhs", PType.smallint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -53,10 +53,10 @@ internal object Fn_GTE__INT32_INT32__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeInt()),
-            FnParameter("rhs", PType.typeInt()),
+            FnParameter("lhs", PType.integer()),
+            FnParameter("rhs", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -73,10 +73,10 @@ internal object Fn_GTE__INT64_INT64__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeBigInt()),
-            FnParameter("rhs", PType.typeBigInt()),
+            FnParameter("lhs", PType.bigint()),
+            FnParameter("rhs", PType.bigint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -93,10 +93,10 @@ internal object Fn_GTE__INT_INT__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("lhs", PType.typeIntArbitrary()),
-            @Suppress("DEPRECATION") FnParameter("rhs", PType.typeIntArbitrary()),
+            @Suppress("DEPRECATION") FnParameter("lhs", PType.numeric()),
+            @Suppress("DEPRECATION") FnParameter("rhs", PType.numeric()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -113,10 +113,10 @@ internal object Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("lhs", PType.typeDecimalArbitrary()),
-            @Suppress("DEPRECATION") FnParameter("rhs", PType.typeDecimalArbitrary()),
+            @Suppress("DEPRECATION") FnParameter("lhs", PType.decimal()),
+            @Suppress("DEPRECATION") FnParameter("rhs", PType.decimal()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -133,10 +133,10 @@ internal object Fn_GTE__FLOAT32_FLOAT32__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeReal()),
-            FnParameter("rhs", PType.typeReal()),
+            FnParameter("lhs", PType.real()),
+            FnParameter("rhs", PType.real()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -153,10 +153,10 @@ internal object Fn_GTE__FLOAT64_FLOAT64__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeDoublePrecision()),
-            FnParameter("rhs", PType.typeDoublePrecision()),
+            FnParameter("lhs", PType.doublePrecision()),
+            FnParameter("rhs", PType.doublePrecision()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -173,10 +173,10 @@ internal object Fn_GTE__STRING_STRING__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeString()),
-            FnParameter("rhs", PType.typeString()),
+            FnParameter("lhs", PType.string()),
+            FnParameter("rhs", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -193,10 +193,10 @@ internal object Fn_GTE__SYMBOL_SYMBOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeSymbol()),
-            FnParameter("rhs", PType.typeSymbol()),
+            FnParameter("lhs", PType.symbol()),
+            FnParameter("rhs", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -213,10 +213,10 @@ internal object Fn_GTE__DATE_DATE__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeDate()),
-            FnParameter("rhs", PType.typeDate()),
+            FnParameter("lhs", PType.date()),
+            FnParameter("rhs", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -233,10 +233,10 @@ internal object Fn_GTE__TIME_TIME__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeTimeWithoutTZ(6)),
-            FnParameter("rhs", PType.typeTimeWithoutTZ(6)),
+            FnParameter("lhs", PType.time(6)),
+            FnParameter("rhs", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -253,10 +253,10 @@ internal object Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeTimestampWithoutTZ(6)),
-            FnParameter("rhs", PType.typeTimestampWithoutTZ(6)),
+            FnParameter("lhs", PType.timestamp(6)),
+            FnParameter("rhs", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -273,10 +273,10 @@ internal object Fn_GTE__BOOL_BOOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "gte",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeBool()),
-            FnParameter("rhs", PType.typeBool()),
+            FnParameter("lhs", PType.bool()),
+            FnParameter("rhs", PType.bool()),
         ),
         isNullCall = true,
         isNullable = false,

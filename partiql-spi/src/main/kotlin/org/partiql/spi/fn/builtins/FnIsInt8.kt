@@ -13,8 +13,8 @@ internal object Fn_IS_INT8__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_int8",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
@@ -27,7 +27,7 @@ internal object Fn_IS_INT8__ANY__BOOL : Fn {
                 val v = arg.short
                 Datum.bool(Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE)
             }
-            PType.Kind.INT -> {
+            PType.Kind.INTEGER -> {
                 val v = arg.int
                 Datum.bool(Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE)
             }
@@ -35,7 +35,7 @@ internal object Fn_IS_INT8__ANY__BOOL : Fn {
                 val v = arg.long
                 Datum.bool(Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE)
             }
-            PType.Kind.INT_ARBITRARY -> {
+            PType.Kind.NUMERIC -> {
                 val v = arg.bigInteger
                 return try {
                     v.byteValueExact()

@@ -12,7 +12,7 @@ internal object Fn_CURRENT_USER____STRING : Fn {
 
     override val signature = FnSignature(
         name = "current_user",
-        returns = PType.typeString(),
+        returns = PType.string(),
         parameters = listOf(),
         isNullCall = false,
         isNullable = true,

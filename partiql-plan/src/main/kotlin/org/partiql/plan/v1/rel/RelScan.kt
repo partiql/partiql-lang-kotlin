@@ -13,7 +13,7 @@ public interface RelScan : Rel {
 
     override fun getInputs(): List<Rel> = emptyList()
 
-    override fun isOrdered(): Boolean = getInput().getType().kind == PType.Kind.LIST
+    override fun isOrdered(): Boolean = getInput().getType().kind == PType.Kind.ARRAY
 
     public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitScan(this, ctx)
 

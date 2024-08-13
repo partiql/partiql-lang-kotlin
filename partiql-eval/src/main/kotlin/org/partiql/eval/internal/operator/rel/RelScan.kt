@@ -16,7 +16,7 @@ internal class RelScan(
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Record.empty))
         records = when (r.type.kind) {
-            PType.Kind.LIST, PType.Kind.BAG, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
+            PType.Kind.ARRAY, PType.Kind.BAG, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
             else -> {
                 close()
                 throw TypeCheckException()

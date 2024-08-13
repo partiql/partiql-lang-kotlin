@@ -22,7 +22,7 @@ internal class RelScanIndexedPermissive(
                 isIndexable = false
                 r.iterator()
             }
-            PType.Kind.LIST, PType.Kind.SEXP -> r.iterator()
+            PType.Kind.ARRAY, PType.Kind.SEXP -> r.iterator()
             else -> {
                 isIndexable = false
                 iterator { yield(r) }
@@ -40,7 +40,7 @@ internal class RelScanIndexedPermissive(
             true -> {
                 val i = index
                 index += 1
-                Record.of(v, Datum.bigInt(i))
+                Record.of(v, Datum.bigint(i))
             }
             false -> Record.of(v, Datum.missing())
         }

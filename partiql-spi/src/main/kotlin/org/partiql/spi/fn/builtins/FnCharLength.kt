@@ -13,9 +13,9 @@ internal object Fn_CHAR_LENGTH__STRING__INT : Fn {
 
     override val signature = FnSignature(
         name = "char_length",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
+            FnParameter("value", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -31,9 +31,9 @@ internal object Fn_CHAR_LENGTH__SYMBOL__INT : Fn {
 
     override val signature = FnSignature(
         name = "char_length",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeSymbol()),
+            FnParameter("lhs", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -49,9 +49,9 @@ internal object Fn_CHAR_LENGTH__CLOB__INT : Fn {
 
     override val signature = FnSignature(
         name = "char_length",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("lhs", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

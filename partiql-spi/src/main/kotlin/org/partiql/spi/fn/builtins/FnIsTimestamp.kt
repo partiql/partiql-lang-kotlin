@@ -13,15 +13,15 @@ internal object Fn_IS_TIMESTAMP__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_timestamp",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<Datum>): Datum {
         val argKind = args[0].type.kind
-        return Datum.bool(argKind == PType.Kind.TIMESTAMP_WITH_TZ || argKind == PType.Kind.TIMESTAMP_WITHOUT_TZ)
+        return Datum.bool(argKind == PType.Kind.TIMESTAMPZ || argKind == PType.Kind.TIMESTAMP)
     }
 }
 
@@ -29,11 +29,11 @@ internal object Fn_IS_TIMESTAMP__BOOL_INT32_ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_timestamp",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("type_parameter_1", PType.typeBool()),
-            FnParameter("type_parameter_2", PType.typeInt()),
-            FnParameter("value", PType.typeDynamic()),
+            FnParameter("type_parameter_1", PType.bool()),
+            FnParameter("type_parameter_2", PType.integer()),
+            FnParameter("value", PType.dynamic()),
         ),
         isNullCall = false,
         isNullable = false,

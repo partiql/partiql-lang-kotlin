@@ -13,8 +13,8 @@ internal object Fn_IS_FLOAT32__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_float32",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
@@ -23,7 +23,7 @@ internal object Fn_IS_FLOAT32__ANY__BOOL : Fn {
         val arg = args[0]
         return when (arg.type.kind) {
             PType.Kind.REAL -> Datum.bool(true)
-            PType.Kind.DOUBLE_PRECISION -> {
+            PType.Kind.DOUBLE -> {
                 val v = arg.double
                 Datum.bool(Float.MIN_VALUE <= v && v <= Float.MAX_VALUE)
             }

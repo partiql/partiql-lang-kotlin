@@ -14,7 +14,7 @@ class DatumTime implements Datum {
 
     // TODO: Pass precision to constructor.
     // TODO: Create a variant specifically for without TZ
-    private final static PType _type = PType.typeTimeWithTZ(6);
+    private final static PType _type = PType.timez(6);
 
     DatumTime(@NotNull Time value) {
         _value = value;

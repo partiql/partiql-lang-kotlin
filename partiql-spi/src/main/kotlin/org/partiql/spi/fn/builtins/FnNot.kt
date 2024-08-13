@@ -13,8 +13,8 @@ internal object Fn_NOT__BOOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "not",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeBool())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.bool())),
         isNullable = false,
         isNullCall = true,
         isMissable = false,
