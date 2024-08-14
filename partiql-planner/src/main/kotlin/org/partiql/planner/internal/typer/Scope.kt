@@ -168,10 +168,10 @@ internal data class Scope(
         @OptIn(PartiQLValueExperimental::class)
         internal fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
             val op = when (step.case) {
-                BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(CompilerType(PType.typeString()), rexOpLit(stringValue(step.name))))
+                BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(CompilerType(PType.string()), rexOpLit(stringValue(step.name))))
                 BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
             }
-            rex(CompilerType(PType.typeDynamic()), op)
+            rex(CompilerType(PType.dynamic()), op)
         }
     }
 }

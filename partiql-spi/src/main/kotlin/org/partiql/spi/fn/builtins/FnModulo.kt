@@ -13,10 +13,10 @@ internal object Fn_MODULO__INT8_INT8__INT8 : Fn {
 
     override val signature = FnSignature(
         name = "modulo",
-        returns = PType.typeTinyInt(),
+        returns = PType.tinyint(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeTinyInt()),
-            FnParameter("rhs", PType.typeTinyInt()),
+            FnParameter("lhs", PType.tinyint()),
+            FnParameter("rhs", PType.tinyint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -25,7 +25,7 @@ internal object Fn_MODULO__INT8_INT8__INT8 : Fn {
     override fun invoke(args: Array<Datum>): Datum {
         @Suppress("DEPRECATION") val arg0 = args[0].byte
         @Suppress("DEPRECATION") val arg1 = args[1].byte
-        return Datum.tinyInt((arg0 % arg1).toByte())
+        return Datum.tinyint((arg0 % arg1).toByte())
     }
 }
 
@@ -33,10 +33,10 @@ internal object Fn_MODULO__INT16_INT16__INT16 : Fn {
 
     override val signature = FnSignature(
         name = "modulo",
-        returns = PType.typeSmallInt(),
+        returns = PType.smallint(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeSmallInt()),
-            FnParameter("rhs", PType.typeSmallInt()),
+            FnParameter("lhs", PType.smallint()),
+            FnParameter("rhs", PType.smallint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -45,7 +45,7 @@ internal object Fn_MODULO__INT16_INT16__INT16 : Fn {
     override fun invoke(args: Array<Datum>): Datum {
         val arg0 = args[0].short
         val arg1 = args[1].short
-        return Datum.smallInt((arg0 % arg1).toShort())
+        return Datum.smallint((arg0 % arg1).toShort())
     }
 }
 
@@ -53,10 +53,10 @@ internal object Fn_MODULO__INT32_INT32__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "modulo",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeInt()),
-            FnParameter("rhs", PType.typeInt()),
+            FnParameter("lhs", PType.integer()),
+            FnParameter("rhs", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -73,10 +73,10 @@ internal object Fn_MODULO__INT64_INT64__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "modulo",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeBigInt()),
-            FnParameter("rhs", PType.typeBigInt()),
+            FnParameter("lhs", PType.bigint()),
+            FnParameter("rhs", PType.bigint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -85,7 +85,7 @@ internal object Fn_MODULO__INT64_INT64__INT64 : Fn {
     override fun invoke(args: Array<Datum>): Datum {
         val arg0 = args[0].long
         val arg1 = args[1].long
-        return Datum.bigInt(arg0 % arg1)
+        return Datum.bigint(arg0 % arg1)
     }
 }
 
@@ -93,10 +93,10 @@ internal object Fn_MODULO__INT_INT__INT : Fn {
 
     override val signature = FnSignature(
         name = "modulo",
-        returns = PType.typeIntArbitrary(),
+        returns = PType.numeric(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("lhs", PType.typeIntArbitrary()),
-            @Suppress("DEPRECATION") FnParameter("rhs", PType.typeIntArbitrary()),
+            @Suppress("DEPRECATION") FnParameter("lhs", PType.numeric()),
+            @Suppress("DEPRECATION") FnParameter("rhs", PType.numeric()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -105,7 +105,7 @@ internal object Fn_MODULO__INT_INT__INT : Fn {
     override fun invoke(args: Array<Datum>): Datum {
         val arg0 = args[0].bigInteger
         val arg1 = args[1].bigInteger
-        return Datum.intArbitrary(arg0 % arg1)
+        return Datum.numeric(arg0 % arg1)
     }
 }
 
@@ -113,10 +113,10 @@ internal object Fn_MODULO__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRAR
 
     override val signature = FnSignature(
         name = "modulo",
-        returns = PType.typeDecimalArbitrary(),
+        returns = PType.decimal(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("lhs", PType.typeDecimalArbitrary()),
-            @Suppress("DEPRECATION") FnParameter("rhs", PType.typeDecimalArbitrary()),
+            @Suppress("DEPRECATION") FnParameter("lhs", PType.decimal()),
+            @Suppress("DEPRECATION") FnParameter("rhs", PType.decimal()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -125,7 +125,7 @@ internal object Fn_MODULO__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRAR
     override fun invoke(args: Array<Datum>): Datum {
         val arg0 = args[0].bigDecimal
         val arg1 = args[1].bigDecimal
-        return Datum.decimalArbitrary(arg0 % arg1)
+        return Datum.decimal(arg0 % arg1)
     }
 }
 
@@ -133,10 +133,10 @@ internal object Fn_MODULO__FLOAT32_FLOAT32__FLOAT32 : Fn {
 
     override val signature = FnSignature(
         name = "modulo",
-        returns = PType.typeReal(),
+        returns = PType.real(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeReal()),
-            FnParameter("rhs", PType.typeReal()),
+            FnParameter("lhs", PType.real()),
+            FnParameter("rhs", PType.real()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -153,10 +153,10 @@ internal object Fn_MODULO__FLOAT64_FLOAT64__FLOAT64 : Fn {
 
     override val signature = FnSignature(
         name = "modulo",
-        returns = PType.typeDoublePrecision(),
+        returns = PType.doublePrecision(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeDoublePrecision()),
-            FnParameter("rhs", PType.typeDoublePrecision()),
+            FnParameter("lhs", PType.doublePrecision()),
+            FnParameter("rhs", PType.doublePrecision()),
         ),
         isNullCall = true,
         isNullable = false,

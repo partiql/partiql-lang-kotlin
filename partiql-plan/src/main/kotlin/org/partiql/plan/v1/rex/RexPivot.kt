@@ -14,7 +14,7 @@ public interface RexPivot : Rex {
 
     public fun getValue(): Rex
 
-    public override fun getType(): PType = PType.typeStruct()
+    public override fun getType(): PType = PType.struct()
 
     public override fun getOperands(): List<Rex> = listOf(getKey(), getValue())
 
@@ -45,7 +45,7 @@ public interface RexPivot : Rex {
 
         public override fun getType(): PType {
             if (type == null) {
-                type = PType.typeStruct()
+                type = PType.struct()
             }
             return type!!
         }

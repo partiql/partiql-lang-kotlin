@@ -10,7 +10,7 @@ class DatumInt implements Datum {
 
     private final int _value;
 
-    private final static PType _type = PType.typeInt();
+    private final static PType _type = PType.integer();
 
     DatumInt(int value) {
         _value = value;

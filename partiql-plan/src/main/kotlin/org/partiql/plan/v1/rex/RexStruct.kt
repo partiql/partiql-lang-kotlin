@@ -18,7 +18,7 @@ public interface RexStruct : Rex {
         return operands
     }
 
-    public override fun getType(): PType = PType.typeStruct()
+    public override fun getType(): PType = PType.struct()
 
     public override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitStruct(this, ctx)
 

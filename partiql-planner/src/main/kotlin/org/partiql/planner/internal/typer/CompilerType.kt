@@ -79,13 +79,13 @@ internal class CompilerType(
 
     internal fun isNumeric(): Boolean {
         return this.kind in setOf(
-            Kind.INT,
-            Kind.INT_ARBITRARY,
+            Kind.INTEGER,
+            Kind.NUMERIC,
             Kind.BIGINT,
             Kind.TINYINT,
             Kind.SMALLINT,
             Kind.REAL,
-            Kind.DOUBLE_PRECISION,
+            Kind.DOUBLE,
             Kind.DECIMAL,
             Kind.DECIMAL_ARBITRARY
         )
@@ -98,7 +98,7 @@ internal class CompilerType(
      */
     internal fun getSymbol(field: String): Pair<Identifier.Part, CompilerType>? {
         if (this.kind == Kind.STRUCT) {
-            return Identifier.Part.regular(field) to CompilerType(PType.typeDynamic())
+            return Identifier.Part.regular(field) to CompilerType(PType.dynamic())
         }
         val fields = this.fields.mapNotNull {
             when (it.name.equals(field, true)) {
@@ -119,12 +119,12 @@ internal class CompilerType(
         @JvmStatic
         internal fun anyOf(types: Collection<CompilerType>): CompilerType {
             if (types.isEmpty()) {
-                return CompilerType(PType.typeDynamic())
+                return CompilerType(PType.dynamic())
             }
             val unique = types.toSet()
             return when (unique.size) {
                 1 -> unique.first()
-                else -> CompilerType(PType.typeDynamic())
+                else -> CompilerType(PType.dynamic())
             }
         }
     }

@@ -15,10 +15,10 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Fn {
 
     override val signature = FnSignature(
         name = "date_add_second",
-        returns = PType.typeTimeWithoutTZ(6),
+        returns = PType.time(6),
         parameters = listOf(
-            FnParameter("interval", PType.typeInt()),
-            FnParameter("datetime", PType.typeTimeWithoutTZ(6)),
+            FnParameter("interval", PType.integer()),
+            FnParameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -37,10 +37,10 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : Fn {
 
     override val signature = FnSignature(
         name = "date_add_second",
-        returns = PType.typeTimeWithoutTZ(6),
+        returns = PType.time(6),
         parameters = listOf(
-            FnParameter("interval", PType.typeBigInt()),
-            FnParameter("datetime", PType.typeTimeWithoutTZ(6)),
+            FnParameter("interval", PType.bigint()),
+            FnParameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -59,10 +59,10 @@ internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : Fn {
 
     override val signature = FnSignature(
         name = "date_add_second",
-        returns = PType.typeTimeWithoutTZ(6),
+        returns = PType.time(6),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("interval", PType.typeIntArbitrary()),
-            FnParameter("datetime", PType.typeTimeWithoutTZ(6)),
+            @Suppress("DEPRECATION") FnParameter("interval", PType.numeric()),
+            FnParameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -85,10 +85,10 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_second",
-        returns = PType.typeTimestampWithoutTZ(6),
+        returns = PType.timestamp(6),
         parameters = listOf(
-            FnParameter("interval", PType.typeInt()),
-            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
+            FnParameter("interval", PType.integer()),
+            FnParameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -107,10 +107,10 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_second",
-        returns = PType.typeTimestampWithoutTZ(6),
+        returns = PType.timestamp(6),
         parameters = listOf(
-            FnParameter("interval", PType.typeBigInt()),
-            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
+            FnParameter("interval", PType.bigint()),
+            FnParameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -129,10 +129,10 @@ internal object Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_second",
-        returns = PType.typeTimestampWithoutTZ(6),
+        returns = PType.timestamp(6),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("interval", PType.typeIntArbitrary()),
-            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
+            @Suppress("DEPRECATION") FnParameter("interval", PType.numeric()),
+            FnParameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,

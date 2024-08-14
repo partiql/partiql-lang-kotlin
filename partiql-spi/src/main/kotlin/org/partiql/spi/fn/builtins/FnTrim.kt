@@ -43,8 +43,8 @@ internal object Fn_TRIM__STRING__STRING : Fn {
 
     override val signature = FnSignature(
         name = "trim",
-        returns = PType.typeString(),
-        parameters = listOf(FnParameter("value", PType.typeString())),
+        returns = PType.string(),
+        parameters = listOf(FnParameter("value", PType.string())),
         isNullCall = true,
         isNullable = false,
     )
@@ -60,8 +60,8 @@ internal object Fn_TRIM__SYMBOL__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "trim",
-        returns = PType.typeSymbol(),
-        parameters = listOf(FnParameter("value", PType.typeSymbol())),
+        returns = PType.symbol(),
+        parameters = listOf(FnParameter("value", PType.symbol())),
         isNullCall = true,
         isNullable = false,
     )
@@ -77,8 +77,8 @@ internal object Fn_TRIM__CLOB__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "trim",
-        returns = PType.typeClob(Int.MAX_VALUE),
-        parameters = listOf(FnParameter("value", PType.typeClob(Int.MAX_VALUE))),
+        returns = PType.clob(Int.MAX_VALUE),
+        parameters = listOf(FnParameter("value", PType.clob(Int.MAX_VALUE))),
         isNullCall = true,
         isNullable = false,
     )

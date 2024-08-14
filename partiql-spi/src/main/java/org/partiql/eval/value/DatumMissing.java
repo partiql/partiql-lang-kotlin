@@ -12,7 +12,7 @@ class DatumMissing implements Datum {
     private final PType _type;
 
     DatumMissing() {
-        _type = PType.typeUnknown();
+        _type = PType.unknown();
     }
 
     DatumMissing(@NotNull PType type) {

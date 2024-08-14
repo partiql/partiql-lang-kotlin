@@ -33,11 +33,11 @@ class PlanTyperTest {
 
         private val root = this::class.java.getResource("/catalogs/default/pql")!!.toURI().toPath()
 
-        private val ANY = PType.typeDynamic().toCType()
-        private val STRING = PType.typeString().toCType()
-        private val INT4 = PType.typeInt().toCType()
-        private val DOUBLE_PRECISION = PType.typeDoublePrecision().toCType()
-        private val DECIMAL = PType.typeDecimalArbitrary().toCType()
+        private val ANY = PType.dynamic().toCType()
+        private val STRING = PType.string().toCType()
+        private val INT4 = PType.integer().toCType()
+        private val DOUBLE_PRECISION = PType.doublePrecision().toCType()
+        private val DECIMAL = PType.decimal().toCType()
 
         @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1 = rex(
@@ -62,14 +62,14 @@ class PlanTyperTest {
             )
         )
 
-        private val LITERAL_STRUCT_1_FIRST_KEY_TYPE = PType.typeRow(
+        private val LITERAL_STRUCT_1_FIRST_KEY_TYPE = PType.row(
             listOf(CompilerType.Field("sEcoNd_KEY", INT4)),
         ).toCType()
 
         @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1_TYPED: Rex
             get() {
-                val topLevelStruct = PType.typeRow(
+                val topLevelStruct = PType.row(
                     listOf(CompilerType.Field("FiRsT_KeY", LITERAL_STRUCT_1_FIRST_KEY_TYPE)),
                 ).toCType()
                 return rex(
@@ -95,7 +95,7 @@ class PlanTyperTest {
                 )
             }
 
-        private val ORDERED_DUPLICATES_STRUCT = PType.typeRow(
+        private val ORDERED_DUPLICATES_STRUCT = PType.row(
             listOf(
                 CompilerType.Field("definition", STRING),
                 CompilerType.Field("definition", DOUBLE_PRECISION),
@@ -103,7 +103,7 @@ class PlanTyperTest {
             ),
         ).toCType()
 
-        private val DUPLICATES_STRUCT = PType.typeRow(
+        private val DUPLICATES_STRUCT = PType.row(
             listOf(
                 CompilerType.Field("definition", STRING),
                 CompilerType.Field("definition", DOUBLE_PRECISION),
@@ -113,7 +113,7 @@ class PlanTyperTest {
 
         private val CLOSED_UNION_DUPLICATES_STRUCT = ANY
 
-        private val OPEN_DUPLICATES_STRUCT = PType.typeStruct().toCType()
+        private val OPEN_DUPLICATES_STRUCT = PType.struct().toCType()
 
         private fun getTyper(): PlanTyperWrapper {
             ProblemCollector()
@@ -204,7 +204,7 @@ class PlanTyperTest {
                 path = listOf("main", "closed_duplicates_struct"),
             ).pathSymbol(
                 "DEFINITION",
-                PType.typeDynamic().toCType()
+                PType.dynamic().toCType()
             )
         )
 
@@ -239,7 +239,7 @@ class PlanTyperTest {
                 path = listOf("main", "closed_duplicates_struct"),
             ).pathKey(
                 "definition",
-                PType.typeDynamic().toCType()
+                PType.dynamic().toCType()
             )
         )
 
@@ -274,7 +274,7 @@ class PlanTyperTest {
                 path = listOf("main", "closed_union_duplicates_struct"),
             ).pathSymbol(
                 "definition",
-                PType.typeDynamic().toCType()
+                PType.dynamic().toCType()
             )
         )
 
@@ -293,7 +293,7 @@ class PlanTyperTest {
                 path = listOf("main", "closed_union_duplicates_struct"),
             ).pathKey(
                 "definition",
-                PType.typeDynamic().toCType()
+                PType.dynamic().toCType()
             )
         )
 

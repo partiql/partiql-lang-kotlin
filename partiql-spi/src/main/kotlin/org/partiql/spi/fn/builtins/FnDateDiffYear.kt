@@ -13,10 +13,10 @@ internal object Fn_DATE_DIFF_YEAR__DATE_DATE__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "date_diff_year",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("datetime1", PType.typeDate()),
-            FnParameter("datetime2", PType.typeDate()),
+            FnParameter("datetime1", PType.date()),
+            FnParameter("datetime2", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -31,10 +31,10 @@ internal object Fn_DATE_DIFF_YEAR__TIMESTAMP_TIMESTAMP__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "date_diff_year",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("datetime1", PType.typeTimestampWithoutTZ(6)),
-            FnParameter("datetime2", PType.typeTimestampWithoutTZ(6)),
+            FnParameter("datetime1", PType.timestamp(6)),
+            FnParameter("datetime2", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,

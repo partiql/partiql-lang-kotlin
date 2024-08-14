@@ -48,12 +48,12 @@ internal class ScopeTest {
             ),
             Scope(
                 listOf(
-                    relBinding("A", struct("B" to PType.typeBool().toCType())),
-                    relBinding("a", struct("b" to PType.typeBool().toCType())),
+                    relBinding("A", struct("B" to PType.bool().toCType())),
+                    relBinding("a", struct("b" to PType.bool().toCType())),
                     relBinding("X", struct(open = true)),
-                    relBinding("x", struct("Y" to PType.typeBool().toCType(), open = false)), // We currently don't allow for partial schema structs
+                    relBinding("x", struct("Y" to PType.bool().toCType(), open = false)), // We currently don't allow for partial schema structs
                     relBinding("y", struct(open = true)),
-                    relBinding("T", struct("x" to PType.typeBool().toCType(), "x" to PType.typeBool().toCType())),
+                    relBinding("T", struct("x" to PType.bool().toCType(), "x" to PType.bool().toCType())),
                 ),
                 outer = emptyList()
             )
@@ -61,8 +61,8 @@ internal class ScopeTest {
 
         private fun struct(vararg fields: Pair<String, CompilerType>, open: Boolean = false): CompilerType {
             return when (open) {
-                true -> PType.typeStruct().toCType()
-                false -> PType.typeRow(fields.map { CompilerType.Field(it.first, it.second) }).toCType()
+                true -> PType.struct().toCType()
+                false -> PType.row(fields.map { CompilerType.Field(it.first, it.second) }).toCType()
             }
         }
 

@@ -171,10 +171,10 @@ internal fun CompilerType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOpti
     val type = this
     return steps.fold(type) { acc, step ->
         when (acc.kind) {
-            Kind.DYNAMIC -> CompilerType(PType.typeDynamic())
+            Kind.DYNAMIC -> CompilerType(PType.dynamic())
             Kind.ROW -> acc.excludeStruct(step, lastStepOptional)
             Kind.STRUCT -> acc
-            Kind.LIST, Kind.BAG, Kind.SEXP -> acc.excludeCollection(step, lastStepOptional)
+            Kind.ARRAY, Kind.BAG, Kind.SEXP -> acc.excludeCollection(step, lastStepOptional)
             else -> acc
         }
     }
@@ -222,7 +222,7 @@ internal fun CompilerType.excludeStruct(step: Rel.Op.Exclude.Step, lastStepOptio
             else -> field
         }
     }
-    return CompilerType(PType.typeRow(output))
+    return CompilerType(PType.row(output))
 }
 
 /**
@@ -256,9 +256,9 @@ internal fun CompilerType.excludeCollection(step: Rel.Op.Exclude.Step, lastStepO
         }
     }
     return when (this.kind) {
-        Kind.LIST -> PType.typeList(e).toCType()
-        Kind.BAG -> PType.typeBag(e).toCType()
-        Kind.SEXP -> PType.typeSexp(e).toCType()
+        Kind.ARRAY -> PType.array(e).toCType()
+        Kind.BAG -> PType.bag(e).toCType()
+        Kind.SEXP -> PType.sexp(e).toCType()
         else -> throw IllegalStateException()
     }
 }

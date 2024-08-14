@@ -17,30 +17,30 @@ internal object SqlTypes {
     //
 
     @JvmStatic
-    fun dynamic(): PType = PType.typeDynamic()
+    fun dynamic(): PType = PType.dynamic()
 
     //
     // BOOLEAN
     //
 
     @JvmStatic
-    fun bool(): PType = PType.typeBool()
+    fun bool(): PType = PType.bool()
 
     //
     // NUMERIC
     //
 
     @JvmStatic
-    fun tinyint(): PType = PType.typeTinyInt()
+    fun tinyint(): PType = PType.tinyint()
 
     @JvmStatic
-    fun smallint(): PType = PType.typeSmallInt()
+    fun smallint(): PType = PType.smallint()
 
     @JvmStatic
-    fun int(): PType = PType.typeInt()
+    fun int(): PType = PType.integer()
 
     @JvmStatic
-    fun bigint(): PType = PType.typeBigInt()
+    fun bigint(): PType = PType.bigint()
 
     /**
      * NUMERIC represents an integer with arbitrary precision. It is equivalent to Ion’s integer type, and is conformant to SQL-99s rules for the NUMERIC type. In SQL-99, if a scale is omitted then we choose zero — and if a precision is omitted then the precision is implementation defined. For PartiQL, we define this precision to be inf — aka arbitrary precision.
@@ -55,9 +55,9 @@ internal object SqlTypes {
             error("Precision can never be null while scale is specified.")
         }
         return when {
-            precision != null && scale != null -> PType.typeDecimal(precision, scale)
-            precision != null -> PType.typeDecimal(precision, 0)
-            else -> PType.typeIntArbitrary()
+            precision != null && scale != null -> PType.decimal(precision, scale)
+            precision != null -> PType.decimal(precision, 0)
+            else -> PType.numeric()
         }
     }
 
@@ -74,40 +74,40 @@ internal object SqlTypes {
             error("Precision can never be null while scale is specified.")
         }
         return when {
-            precision != null && scale != null -> PType.typeDecimal(precision, scale)
-            precision != null -> PType.typeDecimal(precision, 0)
-            else -> PType.typeDecimalArbitrary()
+            precision != null && scale != null -> PType.decimal(precision, scale)
+            precision != null -> PType.decimal(precision, 0)
+            else -> PType.decimal()
         }
     }
 
     @JvmStatic
-    fun real(): PType = PType.typeReal()
+    fun real(): PType = PType.real()
 
     @JvmStatic
-    fun double(): PType = PType.typeDoublePrecision()
+    fun double(): PType = PType.doublePrecision()
 
     //
     // CHARACTER STRINGS
     //
 
     @JvmStatic
-    fun char(length: Int? = null): PType = PType.typeChar(length ?: 1)
+    fun char(length: Int? = null): PType = PType.character(length ?: 1)
 
     @JvmStatic
-    fun varchar(length: Int? = null): PType = PType.typeVarChar(length ?: MAX_SIZE)
+    fun varchar(length: Int? = null): PType = PType.varchar(length ?: MAX_SIZE)
 
     @JvmStatic
-    fun string(): PType = PType.typeString()
+    fun string(): PType = PType.string()
 
     @JvmStatic
-    fun clob(length: Int? = null) = PType.typeClob(length ?: MAX_SIZE)
+    fun clob(length: Int? = null) = PType.clob(length ?: MAX_SIZE)
 
     //
     // BIT STRINGS
     //
 
     @JvmStatic
-    fun blob(length: Int? = null) = PType.typeBlob(length ?: MAX_SIZE)
+    fun blob(length: Int? = null) = PType.blob(length ?: MAX_SIZE)
 
     //
     // DATETIME
@@ -117,16 +117,16 @@ internal object SqlTypes {
     fun date(): PType = TODO()
 
     @JvmStatic
-    fun time(precision: Int? = null): PType = PType.typeTimeWithoutTZ(precision ?: 6)
+    fun time(precision: Int? = null): PType = PType.time(precision ?: 6)
 
     @JvmStatic
-    fun timez(precision: Int? = null): PType = PType.typeTimeWithTZ(precision ?: 6)
+    fun timez(precision: Int? = null): PType = PType.timez(precision ?: 6)
 
     @JvmStatic
-    fun timestamp(precision: Int? = null): PType = PType.typeTimeWithoutTZ(precision ?: 6)
+    fun timestamp(precision: Int? = null): PType = PType.time(precision ?: 6)
 
     @JvmStatic
-    fun timestampz(precision: Int? = null): PType = PType.typeTimestampWithTZ(precision ?: 6)
+    fun timestampz(precision: Int? = null): PType = PType.timestampz(precision ?: 6)
 
     //
     // COLLECTIONS
@@ -138,8 +138,8 @@ internal object SqlTypes {
             error("Fixed-length ARRAY [N] is not supported.")
         }
         return when (element) {
-            null -> PType.typeList()
-            else -> PType.typeList(element)
+            null -> PType.array()
+            else -> PType.array(element)
         }
     }
 
@@ -149,8 +149,8 @@ internal object SqlTypes {
             error("Fixed-length BAG [N] is not supported.")
         }
         return when (element) {
-            null -> PType.typeBag()
-            else -> PType.typeBag(element)
+            null -> PType.bag()
+            else -> PType.bag(element)
         }
     }
 
@@ -159,10 +159,10 @@ internal object SqlTypes {
     //
 
     @JvmStatic
-    fun struct(): PType = PType.typeStruct()
+    fun struct(): PType = PType.struct()
 
     @JvmStatic
-    fun row(fields: List<Field>): PType = PType.typeRow(fields)
+    fun row(fields: List<Field>): PType = PType.row(fields)
 
     // /**
     //  * Create PType from the AST type.
@@ -217,34 +217,34 @@ internal object SqlTypes {
         PType.Kind.BOOL -> bool()
         PType.Kind.TINYINT -> tinyint()
         PType.Kind.SMALLINT -> smallint()
-        PType.Kind.INT -> int()
+        PType.Kind.INTEGER -> int()
         PType.Kind.BIGINT -> bigint()
-        PType.Kind.INT_ARBITRARY -> numeric()
+        PType.Kind.NUMERIC -> numeric()
         PType.Kind.DECIMAL, PType.Kind.DECIMAL_ARBITRARY -> decimal()
         PType.Kind.REAL -> real()
-        PType.Kind.DOUBLE_PRECISION -> double()
+        PType.Kind.DOUBLE -> double()
         PType.Kind.CHAR -> char()
         PType.Kind.VARCHAR -> varchar()
         PType.Kind.STRING -> string()
         PType.Kind.SYMBOL -> {
             // TODO will we continue supporting symbol?
-            PType.typeSymbol()
+            PType.symbol()
         }
         PType.Kind.BLOB -> blob()
         PType.Kind.CLOB -> clob()
         PType.Kind.DATE -> date()
-        PType.Kind.TIME_WITH_TZ -> timez()
-        PType.Kind.TIME_WITHOUT_TZ -> time()
-        PType.Kind.TIMESTAMP_WITH_TZ -> timestampz()
-        PType.Kind.TIMESTAMP_WITHOUT_TZ -> timestamp()
+        PType.Kind.TIMEZ -> timez()
+        PType.Kind.TIME -> time()
+        PType.Kind.TIMESTAMPZ -> timestampz()
+        PType.Kind.TIMESTAMP -> timestamp()
         PType.Kind.BAG -> bag()
-        PType.Kind.LIST -> array()
+        PType.Kind.ARRAY -> array()
         PType.Kind.ROW -> error("Cannot create a ROW from Kind")
         PType.Kind.SEXP -> {
             // TODO will we continue supporting sexp?
-            PType.typeSexp()
+            PType.sexp()
         }
         PType.Kind.STRUCT -> struct()
-        PType.Kind.UNKNOWN -> PType.typeUnknown()
+        PType.Kind.UNKNOWN -> PType.unknown()
     }
 }

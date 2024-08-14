@@ -273,13 +273,13 @@ public final class org/partiql/errors/TypeCheckException : java/lang/RuntimeExce
 
 public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterable {
 	public static fun bag (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
-	public static fun bigInt (J)Lorg/partiql/eval/value/Datum;
+	public static fun bigint (J)Lorg/partiql/eval/value/Datum;
 	public static fun blob ([B)Lorg/partiql/eval/value/Datum;
 	public static fun bool (Z)Lorg/partiql/eval/value/Datum;
 	public static fun clob ([B)Lorg/partiql/eval/value/Datum;
 	public static fun date (Lorg/partiql/value/datetime/Date;)Lorg/partiql/eval/value/Datum;
+	public static fun decimal (Ljava/math/BigDecimal;)Lorg/partiql/eval/value/Datum;
 	public static fun decimal (Ljava/math/BigDecimal;II)Lorg/partiql/eval/value/Datum;
-	public static fun decimalArbitrary (Ljava/math/BigDecimal;)Lorg/partiql/eval/value/Datum;
 	public static fun doublePrecision (D)Lorg/partiql/eval/value/Datum;
 	public fun get (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
 	public fun getBigDecimal ()Ljava/math/BigDecimal;
@@ -300,7 +300,6 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public fun getTime ()Lorg/partiql/value/datetime/Time;
 	public fun getTimestamp ()Lorg/partiql/value/datetime/Timestamp;
 	public abstract fun getType ()Lorg/partiql/types/PType;
-	public static fun intArbitrary (Ljava/math/BigInteger;)Lorg/partiql/eval/value/Datum;
 	public static fun integer (I)Lorg/partiql/eval/value/Datum;
 	public fun isMissing ()Z
 	public fun isNull ()Z
@@ -310,16 +309,17 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public static fun missing (Lorg/partiql/types/PType;)Lorg/partiql/eval/value/Datum;
 	public static fun nullValue ()Lorg/partiql/eval/value/Datum;
 	public static fun nullValue (Lorg/partiql/types/PType;)Lorg/partiql/eval/value/Datum;
+	public static fun numeric (Ljava/math/BigInteger;)Lorg/partiql/eval/value/Datum;
 	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/eval/value/Datum;
 	public static fun real (F)Lorg/partiql/eval/value/Datum;
 	public static fun sexp (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
-	public static fun smallInt (S)Lorg/partiql/eval/value/Datum;
+	public static fun smallint (S)Lorg/partiql/eval/value/Datum;
 	public static fun string (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
 	public static fun struct (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
 	public static fun symbol (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
 	public static fun timeWithoutTZ (Lorg/partiql/value/datetime/Time;)Lorg/partiql/eval/value/Datum;
 	public static fun timestampWithoutTZ (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/eval/value/Datum;
-	public static fun tinyInt (B)Lorg/partiql/eval/value/Datum;
+	public static fun tinyint (B)Lorg/partiql/eval/value/Datum;
 	public fun toPartiQLValue ()Lorg/partiql/value/PartiQLValue;
 }
 

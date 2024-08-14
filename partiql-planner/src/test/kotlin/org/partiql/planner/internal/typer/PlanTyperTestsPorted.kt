@@ -3593,7 +3593,7 @@ internal class PlanTyperTestsPorted {
         val tc = SuccessTestCase(
             name = "DEV TEST",
             query = "CAST('' AS STRING) < CAST('' AS SYMBOL);",
-            expected = PType.typeBool().toCType()
+            expected = PType.bool().toCType()
         )
         runTest(tc)
     }
@@ -3615,7 +3615,7 @@ internal class PlanTyperTestsPorted {
         val tc = SuccessTestCase(
             name = "DEV TEST 4",
             query = "NULLIF([], [])",
-            expected = PType.typeList().toCType()
+            expected = PType.array().toCType()
         )
         runTest(tc)
     }

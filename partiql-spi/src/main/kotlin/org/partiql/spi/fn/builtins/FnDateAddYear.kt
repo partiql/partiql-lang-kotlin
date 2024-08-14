@@ -15,10 +15,10 @@ internal object Fn_DATE_ADD_YEAR__INT32_DATE__DATE : Fn {
 
     override val signature = FnSignature(
         name = "date_add_year",
-        returns = PType.typeDate(),
+        returns = PType.date(),
         parameters = listOf(
-            FnParameter("interval", PType.typeInt()),
-            FnParameter("datetime", PType.typeDate()),
+            FnParameter("interval", PType.integer()),
+            FnParameter("datetime", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -37,10 +37,10 @@ internal object Fn_DATE_ADD_YEAR__INT64_DATE__DATE : Fn {
 
     override val signature = FnSignature(
         name = "date_add_year",
-        returns = PType.typeDate(),
+        returns = PType.date(),
         parameters = listOf(
-            FnParameter("interval", PType.typeBigInt()),
-            FnParameter("datetime", PType.typeDate()),
+            FnParameter("interval", PType.bigint()),
+            FnParameter("datetime", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -59,10 +59,10 @@ internal object Fn_DATE_ADD_YEAR__INT_DATE__DATE : Fn {
 
     override val signature = FnSignature(
         name = "date_add_year",
-        returns = PType.typeDate(),
+        returns = PType.date(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("interval", PType.typeIntArbitrary()),
-            FnParameter("datetime", PType.typeDate()),
+            @Suppress("DEPRECATION") FnParameter("interval", PType.numeric()),
+            FnParameter("datetime", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -85,10 +85,10 @@ internal object Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_year",
-        returns = PType.typeTimestampWithoutTZ(6),
+        returns = PType.timestamp(6),
         parameters = listOf(
-            FnParameter("interval", PType.typeInt()),
-            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
+            FnParameter("interval", PType.integer()),
+            FnParameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -107,10 +107,10 @@ internal object Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_year",
-        returns = PType.typeTimestampWithoutTZ(6),
+        returns = PType.timestamp(6),
         parameters = listOf(
-            FnParameter("interval", PType.typeBigInt()),
-            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
+            FnParameter("interval", PType.bigint()),
+            FnParameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -129,10 +129,10 @@ internal object Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "date_add_year",
-        returns = PType.typeTimestampWithoutTZ(6),
+        returns = PType.timestamp(6),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("interval", PType.typeIntArbitrary()),
-            FnParameter("datetime", PType.typeTimestampWithoutTZ(6)),
+            @Suppress("DEPRECATION") FnParameter("interval", PType.numeric()),
+            FnParameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,

@@ -13,7 +13,7 @@ internal object Fn_UTCNOW____TIMESTAMP : Fn {
 
     override val signature = FnSignature(
         name = "utcnow",
-        returns = PType.typeTimestampWithoutTZ(6),
+        returns = PType.timestamp(6),
         parameters = listOf(),
         isNullCall = false,
         isNullable = false,

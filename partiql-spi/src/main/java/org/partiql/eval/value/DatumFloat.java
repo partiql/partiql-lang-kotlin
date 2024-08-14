@@ -10,7 +10,7 @@ class DatumFloat implements Datum {
 
     private final float _value;
 
-    private final static PType _type = PType.typeReal();
+    private final static PType _type = PType.real();
 
     DatumFloat(float value) {
         _value = value;

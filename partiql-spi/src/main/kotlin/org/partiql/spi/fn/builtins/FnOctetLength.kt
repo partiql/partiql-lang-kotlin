@@ -10,9 +10,9 @@ internal object Fn_OCTET_LENGTH__STRING__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "octet_length",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
+            FnParameter("value", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -29,9 +29,9 @@ internal object Fn_OCTET_LENGTH__SYMBOL__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "octet_length",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("value", PType.typeSymbol()),
+            FnParameter("value", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -48,9 +48,9 @@ internal object Fn_OCTET_LENGTH__CLOB__INT32 : Fn {
 
     override val signature = FnSignature(
         name = "octet_length",
-        returns = PType.typeInt(),
+        returns = PType.integer(),
         parameters = listOf(
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

@@ -13,8 +13,8 @@ internal object Fn_IS_CLOB__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_clob",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )

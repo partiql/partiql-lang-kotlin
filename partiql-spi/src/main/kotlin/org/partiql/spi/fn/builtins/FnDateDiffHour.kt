@@ -13,10 +13,10 @@ internal object Fn_DATE_DIFF_HOUR__TIME_TIME__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "date_diff_hour",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("datetime1", PType.typeTimeWithoutTZ(6)),
-            FnParameter("datetime2", PType.typeTimeWithoutTZ(6)),
+            FnParameter("datetime1", PType.time(6)),
+            FnParameter("datetime2", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -31,10 +31,10 @@ internal object Fn_DATE_DIFF_HOUR__TIMESTAMP_TIMESTAMP__INT64 : Fn {
 
     override val signature = FnSignature(
         name = "date_diff_hour",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("datetime1", PType.typeTimestampWithoutTZ(6)),
-            FnParameter("datetime2", PType.typeTimestampWithoutTZ(6)),
+            FnParameter("datetime1", PType.timestamp(6)),
+            FnParameter("datetime2", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,

@@ -18,11 +18,11 @@ internal object Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "like_escape",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
-            FnParameter("pattern", PType.typeString()),
-            FnParameter("escape", PType.typeString()),
+            FnParameter("value", PType.string()),
+            FnParameter("pattern", PType.string()),
+            FnParameter("escape", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -53,11 +53,11 @@ internal object Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "like_escape",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSymbol()),
-            FnParameter("pattern", PType.typeSymbol()),
-            FnParameter("escape", PType.typeSymbol()),
+            FnParameter("value", PType.symbol()),
+            FnParameter("pattern", PType.symbol()),
+            FnParameter("escape", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -88,11 +88,11 @@ internal object Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "like_escape",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("pattern", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("escape", PType.typeClob(Int.MAX_VALUE)),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
+            FnParameter("pattern", PType.clob(Int.MAX_VALUE)),
+            FnParameter("escape", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

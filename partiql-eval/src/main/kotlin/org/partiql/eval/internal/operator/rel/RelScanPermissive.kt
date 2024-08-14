@@ -15,7 +15,7 @@ internal class RelScanPermissive(
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Record.empty))
         records = when (r.type.kind) {
-            PType.Kind.BAG, PType.Kind.LIST, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
+            PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
             else -> iterator { yield(Record.of(r)) }
         }
     }

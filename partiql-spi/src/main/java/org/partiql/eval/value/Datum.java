@@ -356,18 +356,18 @@ public interface Datum extends Iterable<Datum> {
                 return this.isNull() ? PartiQL.int8Value(null) : PartiQL.int8Value(this.getByte());
             case SMALLINT:
                 return this.isNull() ? PartiQL.int16Value(null) : PartiQL.int16Value(this.getShort());
-            case INT:
+            case INTEGER:
                 return this.isNull() ? PartiQL.int32Value(null) : PartiQL.int32Value(this.getInt());
             case BIGINT:
                 return this.isNull() ? PartiQL.int64Value(null) : PartiQL.int64Value(this.getLong());
-            case INT_ARBITRARY:
+            case NUMERIC:
                 return this.isNull() ? PartiQL.intValue(null) : PartiQL.intValue(this.getBigInteger());
             case DECIMAL:
             case DECIMAL_ARBITRARY:
                 return this.isNull() ? PartiQL.decimalValue(null) : PartiQL.decimalValue(this.getBigDecimal());
             case REAL:
                 return this.isNull() ? PartiQL.float32Value(null) : PartiQL.float32Value(this.getFloat());
-            case DOUBLE_PRECISION:
+            case DOUBLE:
                 return this.isNull() ? PartiQL.float64Value(null) : PartiQL.float64Value(this.getDouble());
             case CHAR:
                 return this.isNull() ? PartiQL.charValue(null) : PartiQL.charValue(this.getString().charAt(0));
@@ -381,15 +381,15 @@ public interface Datum extends Iterable<Datum> {
                 return this.isNull() ? PartiQL.clobValue(null) : PartiQL.clobValue(this.getBytes());
             case DATE:
                 return this.isNull() ? PartiQL.dateValue(null) : PartiQL.dateValue(this.getDate());
-            case TIME_WITH_TZ:
-            case TIME_WITHOUT_TZ: // TODO
+            case TIMEZ:
+            case TIME: // TODO
                 return this.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(this.getTime());
-            case TIMESTAMP_WITH_TZ:
-            case TIMESTAMP_WITHOUT_TZ:
+            case TIMESTAMPZ:
+            case TIMESTAMP:
                 return this.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(this.getTimestamp());
             case BAG:
                 return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(this));
-            case LIST:
+            case ARRAY:
                 return this.isNull() ? PartiQL.listValue((Iterable<? extends PartiQLValue>) null) : PartiQL.listValue(new PQLToPartiQLIterable(this));
             case SEXP:
                 return this.isNull() ? PartiQL.sexpValue((Iterable<? extends PartiQLValue>) null) : PartiQL.sexpValue(new PQLToPartiQLIterable(this));
@@ -427,13 +427,13 @@ public interface Datum extends Iterable<Datum> {
                 return new DatumNull();
             case INT8:
                 org.partiql.value.Int8Value int8Value = (org.partiql.value.Int8Value) value;
-                return new DatumByte(Objects.requireNonNull(int8Value.getValue()), PType.typeTinyInt());
+                return new DatumByte(Objects.requireNonNull(int8Value.getValue()), PType.tinyint());
             case STRUCT:
                 @SuppressWarnings("unchecked") org.partiql.value.StructValue<PartiQLValue> STRUCTValue = (org.partiql.value.StructValue<PartiQLValue>) value;
                 return new DatumStruct(new PartiQLToPQLStruct(Objects.requireNonNull(STRUCTValue)));
             case STRING:
                 org.partiql.value.StringValue STRINGValue = (org.partiql.value.StringValue) value;
-                return new DatumString(Objects.requireNonNull(STRINGValue.getValue()), PType.typeString());
+                return new DatumString(Objects.requireNonNull(STRINGValue.getValue()), PType.string());
             case INT64:
                 org.partiql.value.Int64Value INT64Value = (org.partiql.value.Int64Value) value;
                 return new DatumLong(Objects.requireNonNull(INT64Value.getValue()));
@@ -445,10 +445,10 @@ public interface Datum extends Iterable<Datum> {
                 return new DatumShort(Objects.requireNonNull(INT16Value.getValue()));
             case SEXP:
                 @SuppressWarnings("unchecked") org.partiql.value.SexpValue<PartiQLValue> sexpValue = (org.partiql.value.SexpValue<PartiQLValue>) value;
-                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(sexpValue)), PType.typeSexp());
+                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(sexpValue)), PType.sexp());
             case LIST:
                 @SuppressWarnings("unchecked") org.partiql.value.ListValue<PartiQLValue> LISTValue = (org.partiql.value.ListValue<PartiQLValue>) value;
-                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(LISTValue)), PType.typeList());
+                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(LISTValue)), PType.array());
             case BOOL:
                 org.partiql.value.BoolValue BOOLValue = (org.partiql.value.BoolValue) value;
                 return new DatumBoolean(Objects.requireNonNull(BOOLValue.getValue()));
@@ -457,7 +457,7 @@ public interface Datum extends Iterable<Datum> {
                 return new DatumBigInteger(Objects.requireNonNull(INTValue.getValue()));
             case BAG:
                 @SuppressWarnings("unchecked") org.partiql.value.BagValue<PartiQLValue> BAGValue = (org.partiql.value.BagValue<PartiQLValue>) value;
-                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(BAGValue)), PType.typeBag());
+                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(BAGValue)), PType.bag());
             case BINARY:
                 throw new UnsupportedOperationException();
             case DATE:
@@ -480,25 +480,25 @@ public interface Datum extends Iterable<Datum> {
                 return new DatumDouble(Objects.requireNonNull(FLOAT64Value.getValue()));
             case DECIMAL:
                 org.partiql.value.DecimalValue DECIMALValue = (org.partiql.value.DecimalValue) value;
-                return new DatumDecimal(Objects.requireNonNull(DECIMALValue.getValue()), PType.typeDecimalArbitrary());
+                return new DatumDecimal(Objects.requireNonNull(DECIMALValue.getValue()), PType.decimal());
             case CHAR:
                 org.partiql.value.CharValue CHARValue = (org.partiql.value.CharValue) value;
                 String charString = Objects.requireNonNull(CHARValue.getValue()).toString();
                 return new DatumChars(charString, charString.length());
             case SYMBOL:
                 org.partiql.value.SymbolValue SYMBOLValue = (org.partiql.value.SymbolValue) value;
-                return new DatumString(Objects.requireNonNull(SYMBOLValue.getValue()), PType.typeSymbol());
+                return new DatumString(Objects.requireNonNull(SYMBOLValue.getValue()), PType.symbol());
             case CLOB:
                 org.partiql.value.ClobValue CLOBValue = (org.partiql.value.ClobValue) value;
-                return new DatumBytes(Objects.requireNonNull(CLOBValue.getValue()), PType.typeClob(Integer.MAX_VALUE)); // TODO
+                return new DatumBytes(Objects.requireNonNull(CLOBValue.getValue()), PType.clob(Integer.MAX_VALUE)); // TODO
             case BLOB:
                 org.partiql.value.BlobValue BLOBValue = (org.partiql.value.BlobValue) value;
-                return new DatumBytes(Objects.requireNonNull(BLOBValue.getValue()), PType.typeBlob(Integer.MAX_VALUE)); // TODO
+                return new DatumBytes(Objects.requireNonNull(BLOBValue.getValue()), PType.blob(Integer.MAX_VALUE)); // TODO
             case BYTE:
                 throw new UnsupportedOperationException();
             case DECIMAL_ARBITRARY:
                 org.partiql.value.DecimalValue DECIMAL_ARBITRARYValue = (org.partiql.value.DecimalValue) value;
-                return new DatumDecimal(Objects.requireNonNull(DECIMAL_ARBITRARYValue.getValue()), PType.typeDecimalArbitrary());
+                return new DatumDecimal(Objects.requireNonNull(DECIMAL_ARBITRARYValue.getValue()), PType.decimal());
             case ANY:
             default:
                 throw new NotImplementedError();
@@ -534,17 +534,19 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum bag(@NotNull Iterable<Datum> values) {
-        return new DatumCollection(values, PType.typeBag());
+    static Datum bool(boolean value) {
+        return new DatumBoolean(value);
+    }
+
+    // NUMERIC
+
+    @NotNull
+    static Datum tinyint(byte value) {
+        return new DatumByte(value, PType.tinyint());
     }
 
     @NotNull
-    static Datum tinyInt(byte value) {
-        return new DatumByte(value, PType.typeTinyInt());
-    }
-
-    @NotNull
-    static Datum smallInt(short value) {
+    static Datum smallint(short value) {
         return new DatumShort(value);
     }
 
@@ -554,13 +556,13 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum bigInt(long value) {
+    static Datum bigint(long value) {
         return new DatumLong(value);
     }
 
     @Deprecated
     @NotNull
-    static Datum intArbitrary(@NotNull BigInteger value) {
+    static Datum numeric(@NotNull BigInteger value) {
         return new DatumBigInteger(value);
     }
 
@@ -576,69 +578,77 @@ public interface Datum extends Iterable<Datum> {
 
     @Deprecated
     @NotNull
-    static Datum decimalArbitrary(@NotNull BigDecimal value) {
-        return new DatumDecimal(value, PType.typeDecimalArbitrary());
+    static Datum decimal(@NotNull BigDecimal value) {
+        return new DatumDecimal(value, PType.decimal());
     }
 
     @NotNull
     static Datum decimal(@NotNull BigDecimal value, int precision, int scale) {
-        return new DatumDecimal(value, PType.typeDecimal(precision, scale));
+        return new DatumDecimal(value, PType.decimal(precision, scale));
     }
 
-    @NotNull
-    static Datum bool(boolean value) {
-        return new DatumBoolean(value);
-    }
-
-    @NotNull
-    static Datum sexp(@NotNull Iterable<Datum> values) {
-        return new DatumCollection(values, PType.typeSexp());
-    }
-
-    @NotNull
-    static Datum list(@NotNull Iterable<Datum> values) {
-        return new DatumCollection(values, PType.typeList());
-    }
-
-    @NotNull
-    static Datum struct(@NotNull Iterable<Field> values) {
-        return new DatumStruct(values);
-    }
+    // CHARACTER STRINGS
 
     @NotNull
     static Datum string(@NotNull String value) {
-        return new DatumString(value, PType.typeString());
+        return new DatumString(value, PType.string());
     }
 
     @NotNull
     static Datum symbol(@NotNull String value) {
-        return new DatumString(value, PType.typeSymbol());
+        return new DatumString(value, PType.symbol());
     }
 
     @NotNull
     static Datum clob(@NotNull byte[] value) {
-        return new DatumBytes(value, PType.typeClob(Integer.MAX_VALUE));
+        return new DatumBytes(value, PType.clob(Integer.MAX_VALUE));
     }
+
+    // BYTE STRINGS
 
     @NotNull
     static Datum blob(@NotNull byte[] value) {
-        return new DatumBytes(value, PType.typeBlob(Integer.MAX_VALUE));
+        return new DatumBytes(value, PType.blob(Integer.MAX_VALUE));
     }
 
-    // time
+    // DATE/TIME
+
+    @NotNull
+    static Datum date(@NotNull Date value) {
+        return new DatumDate(value);
+    }
+
     @NotNull
     static Datum timeWithoutTZ(@NotNull Time value) {
         return new DatumTime(value);
     }
 
-    // time
     @NotNull
     static Datum timestampWithoutTZ(@NotNull Timestamp value) {
         return new DatumTimestamp(value);
     }
 
+    // COLLECTIONS
+
     @NotNull
-    static Datum date(@NotNull Date value) {
-        return new DatumDate(value);
+    static Datum bag(@NotNull Iterable<Datum> values) {
+        return new DatumCollection(values, PType.bag());
+    }
+
+    @NotNull
+    static Datum list(@NotNull Iterable<Datum> values) {
+        return new DatumCollection(values, PType.array());
+    }
+
+    @NotNull
+    static Datum sexp(@NotNull Iterable<Datum> values) {
+        return new DatumCollection(values, PType.sexp());
+    }
+
+    // STRUCTURAL
+
+    @NotNull
+    static Datum struct(@NotNull Iterable<Field> values) {
+        return new DatumStruct(values);
     }
 }

@@ -12,5 +12,5 @@ internal class AccumulatorEvery : Accumulator() {
         res = res?.let { Datum.bool(it.boolean && value.boolean) } ?: value
     }
 
-    override fun value(): Datum = res ?: Datum.nullValue(PType.typeBool())
+    override fun value(): Datum = res ?: Datum.nullValue(PType.bool())
 }

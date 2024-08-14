@@ -11,5 +11,5 @@ internal class AccumulatorCountStar : Agg.Accumulator {
         this.count += 1L
     }
 
-    override fun value(): Datum = Datum.bigInt(count)
+    override fun value(): Datum = Datum.bigint(count)
 }

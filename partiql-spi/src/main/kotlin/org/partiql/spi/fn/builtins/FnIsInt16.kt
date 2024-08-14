@@ -13,8 +13,8 @@ internal object Fn_IS_INT16__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_int16",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
@@ -24,7 +24,7 @@ internal object Fn_IS_INT16__ANY__BOOL : Fn {
         return when (arg.type.kind) {
             PType.Kind.TINYINT,
             PType.Kind.SMALLINT -> Datum.bool(true)
-            PType.Kind.INT -> {
+            PType.Kind.INTEGER -> {
                 val v = arg.int
                 Datum.bool(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
             }
@@ -32,7 +32,7 @@ internal object Fn_IS_INT16__ANY__BOOL : Fn {
                 val v = arg.long
                 Datum.bool(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
             }
-            PType.Kind.INT_ARBITRARY -> {
+            PType.Kind.NUMERIC -> {
                 val v = arg.bigInteger
                 return try {
                     v.shortValueExact()

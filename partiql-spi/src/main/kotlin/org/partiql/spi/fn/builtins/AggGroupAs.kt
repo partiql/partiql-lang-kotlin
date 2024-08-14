@@ -13,9 +13,9 @@ internal object Agg_GROUP_AS__ANY__ANY : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "group_as",
-        returns = PType.typeDynamic(),
+        returns = PType.dynamic(),
         parameters = listOf(
-            FnParameter("value", PType.typeDynamic()),
+            FnParameter("value", PType.dynamic()),
         ),
         isNullable = true,
         isDecomposable = true

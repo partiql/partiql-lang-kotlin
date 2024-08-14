@@ -261,7 +261,7 @@ internal class Compiler(
     }
 
     override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: PType?): Operator {
-        return ExprMissing(ctx ?: PType.typeUnknown()) // TODO: Pass a type
+        return ExprMissing(ctx ?: PType.unknown()) // TODO: Pass a type
     }
 
     // REL
