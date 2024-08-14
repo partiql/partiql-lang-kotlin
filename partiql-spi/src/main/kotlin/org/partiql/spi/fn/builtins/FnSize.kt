@@ -42,24 +42,6 @@ internal object Fn_SIZE__LIST__INT32 : Fn {
     }
 }
 
-internal object Fn_SIZE__SEXP__INT32 : Fn {
-
-    override val signature = FnSignature(
-        name = "size",
-        returns = PType.integer(),
-        parameters = listOf(
-            FnParameter("container", PType.typeSexp()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val container = args[0]
-        return Datum.integer(container.count())
-    }
-}
-
 internal object Fn_SIZE__STRUCT__INT32 : Fn {
 
     override val signature = FnSignature(

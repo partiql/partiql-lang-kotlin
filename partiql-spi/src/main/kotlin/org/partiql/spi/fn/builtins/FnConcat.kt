@@ -29,26 +29,6 @@ internal object Fn_CONCAT__STRING_STRING__STRING : Fn {
     }
 }
 
-internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Fn {
-
-    override val signature = FnSignature(
-        name = "concat",
-        returns = PType.symbol(),
-        parameters = listOf(
-            FnParameter("lhs", PType.symbol()),
-            FnParameter("rhs", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val arg0 = args[0].string
-        val arg1 = args[1].string
-        return Datum.symbol(arg0 + arg1)
-    }
-}
-
 internal object Fn_CONCAT__CLOB_CLOB__CLOB : Fn {
 
     override val signature = FnSignature(

@@ -14,6 +14,7 @@
 
 package org.partiql.spi.connector
 
+import org.partiql.planner.internal.SqlTypes
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 
@@ -39,6 +40,6 @@ public interface ConnectorObject {
      */
     public fun getPType(): PType {
         // TODO: Remove the default prior to release
-        return PType.fromStaticType(getType())
+        return SqlTypes.fromStaticType(getType())
     }
 }

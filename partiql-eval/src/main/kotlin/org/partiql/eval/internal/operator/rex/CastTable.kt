@@ -11,18 +11,15 @@ import org.partiql.types.PType.Kind.BAG
 import org.partiql.types.PType.Kind.BIGINT
 import org.partiql.types.PType.Kind.BOOL
 import org.partiql.types.PType.Kind.DECIMAL
-import org.partiql.types.PType.Kind.DECIMAL_ARBITRARY
 import org.partiql.types.PType.Kind.DOUBLE
 import org.partiql.types.PType.Kind.DYNAMIC
 import org.partiql.types.PType.Kind.INTEGER
 import org.partiql.types.PType.Kind.NUMERIC
 import org.partiql.types.PType.Kind.ARRAY
 import org.partiql.types.PType.Kind.REAL
-import org.partiql.types.PType.Kind.SEXP
 import org.partiql.types.PType.Kind.SMALLINT
 import org.partiql.types.PType.Kind.STRING
 import org.partiql.types.PType.Kind.STRUCT
-import org.partiql.types.PType.Kind.SYMBOL
 import org.partiql.types.PType.Kind.TIMESTAMP
 import org.partiql.types.PType.Kind.TIMESTAMPZ
 import org.partiql.types.PType.Kind.TINYINT
@@ -92,15 +89,12 @@ internal object CastTable {
         registerBigInt()
         registerIntArbitrary()
         registerDecimal()
-        registerDecimalArbitrary()
         registerReal()
         registerDoublePrecision()
         registerStruct()
         registerString()
-        registerSymbol()
         registerBag()
         registerList()
-        registerSexp()
         registerTimestamp()
     }
 
@@ -167,17 +161,12 @@ internal object CastTable {
             BOOL,
             DECIMAL
         ) { x, t -> Datum.decimal(if (x.boolean) BigDecimal.ONE else BigDecimal.ZERO, t.precision, t.scale) }
-        register(
-            BOOL,
-            DECIMAL_ARBITRARY
-        ) { x, _ -> Datum.decimal(if (x.boolean) BigDecimal.ONE else BigDecimal.ZERO) }
         register(BOOL, REAL) { x, _ -> Datum.real(if (x.boolean) 1F else 0F) }
         register(
             BOOL,
             DOUBLE
         ) { x, _ -> Datum.doublePrecision(if (x.boolean) 1.0 else 0.0) }
         register(BOOL, STRING) { x, _ -> Datum.string(if (x.boolean) "true" else "false") }
-        register(BOOL, SYMBOL) { x, _ -> Datum.string(if (x.boolean) "true" else "false") }
     }
 
     /**
@@ -202,15 +191,9 @@ internal object CastTable {
                 t.scale
             )
         }
-        register(TINYINT, DECIMAL_ARBITRARY) { x, _ ->
-            Datum.decimal(
-                x.byte.toInt().toBigDecimal()
-            )
-        }
         register(TINYINT, REAL) { x, _ -> Datum.real(x.byte.toFloat()) }
         register(TINYINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.byte.toDouble()) }
         register(TINYINT, STRING) { x, _ -> Datum.string(x.byte.toString()) }
-        register(TINYINT, SYMBOL) { x, _ -> Datum.string(x.byte.toString()) }
     }
 
     /**
@@ -235,15 +218,9 @@ internal object CastTable {
                 t.scale
             )
         }
-        register(SMALLINT, DECIMAL_ARBITRARY) { x, _ ->
-            Datum.decimal(
-                x.short.toInt().toBigDecimal()
-            )
-        }
         register(SMALLINT, REAL) { x, _ -> Datum.real(x.short.toFloat()) }
         register(SMALLINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.short.toDouble()) }
         register(SMALLINT, STRING) { x, _ -> Datum.string(x.short.toString()) }
-        register(SMALLINT, SYMBOL) { x, _ -> Datum.string(x.short.toString()) }
     }
 
     /**
@@ -264,11 +241,9 @@ internal object CastTable {
                 t.scale
             )
         }
-        register(INTEGER, DECIMAL_ARBITRARY) { x, _ -> Datum.decimal(x.int.toBigDecimal()) }
         register(INTEGER, REAL) { x, _ -> Datum.real(x.int.toFloat()) }
         register(INTEGER, DOUBLE) { x, _ -> Datum.doublePrecision(x.int.toDouble()) }
         register(INTEGER, STRING) { x, _ -> Datum.string(x.int.toString()) }
-        register(INTEGER, SYMBOL) { x, _ -> Datum.string(x.int.toString()) }
     }
 
     /**
@@ -289,14 +264,9 @@ internal object CastTable {
                 t.scale
             )
         }
-        register(
-            BIGINT,
-            DECIMAL_ARBITRARY
-        ) { x, _ -> Datum.decimal(x.long.toBigDecimal()) }
         register(BIGINT, REAL) { x, _ -> Datum.real(x.long.toFloat()) }
         register(BIGINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.long.toDouble()) }
         register(BIGINT, STRING) { x, _ -> Datum.string(x.long.toString()) }
-        register(BIGINT, SYMBOL) { x, _ -> Datum.string(x.long.toString()) }
     }
 
     /**
@@ -317,17 +287,12 @@ internal object CastTable {
                 t.scale
             )
         }
-        register(
-            NUMERIC,
-            DECIMAL_ARBITRARY
-        ) { x, _ -> Datum.decimal(x.bigInteger.toBigDecimal()) }
         register(NUMERIC, REAL) { x, _ -> datumReal(x.bigInteger) }
         register(
             NUMERIC,
             DOUBLE
         ) { x, _ -> datumDoublePrecision(x.bigInteger) }
         register(NUMERIC, STRING) { x, _ -> Datum.string(x.bigInteger.toString()) }
-        register(NUMERIC, SYMBOL) { x, _ -> Datum.string(x.bigInteger.toString()) }
     }
 
     /**
@@ -345,48 +310,12 @@ internal object CastTable {
             NUMERIC
         ) { x, _ -> datumIntArbitrary(x.bigDecimal) }
         register(DECIMAL, DECIMAL) { x, _ -> x }
-        register(DECIMAL, DECIMAL_ARBITRARY) { x, _ -> Datum.decimal(x.bigDecimal) }
         register(DECIMAL, REAL) { x, _ -> datumReal(x.bigDecimal) }
         register(
             DECIMAL,
             DOUBLE
         ) { x, _ -> datumDoublePrecision(x.bigDecimal) }
         register(DECIMAL, STRING) { x, _ -> Datum.string(x.bigDecimal.toString()) }
-        register(DECIMAL, SYMBOL) { x, _ -> Datum.string(x.bigDecimal.toString()) }
-    }
-
-    /**
-     * CAST(<decimal arbitrary> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
-     */
-    private fun registerDecimalArbitrary() {
-        register(
-            DECIMAL_ARBITRARY,
-            BOOL
-        ) { x, _ -> Datum.bool(x.bigDecimal != BigDecimal.ZERO) }
-        register(DECIMAL_ARBITRARY, TINYINT) { x, _ -> datumTinyInt(x.bigDecimal) }
-        register(DECIMAL_ARBITRARY, SMALLINT) { x, _ -> datumSmallInt(x.bigDecimal) }
-        register(DECIMAL_ARBITRARY, INTEGER) { x, _ -> datumInt(x.bigDecimal) }
-        register(DECIMAL_ARBITRARY, BIGINT) { x, _ -> datumBigInt(x.bigDecimal) }
-        register(
-            DECIMAL_ARBITRARY,
-            NUMERIC
-        ) { x, _ -> datumIntArbitrary(x.bigDecimal) }
-        register(DECIMAL_ARBITRARY, DECIMAL) { x, t ->
-            Datum.decimal(
-                x.bigDecimal,
-                t.precision,
-                t.scale
-            )
-        }
-        register(DECIMAL_ARBITRARY, DECIMAL_ARBITRARY) { x, _ -> x }
-        register(DECIMAL_ARBITRARY, REAL) { x, _ -> datumReal(x.bigDecimal) }
-        register(
-            DECIMAL_ARBITRARY,
-            DOUBLE
-        ) { x, _ -> datumDoublePrecision(x.bigDecimal) }
-        register(DECIMAL_ARBITRARY, STRING) { x, _ -> Datum.string(x.bigDecimal.toString()) }
-        register(DECIMAL_ARBITRARY, SYMBOL) { x, _ -> Datum.string(x.bigDecimal.toString()) }
     }
 
     /**
@@ -411,14 +340,9 @@ internal object CastTable {
                 t.scale
             )
         }
-        register(
-            REAL,
-            DECIMAL_ARBITRARY
-        ) { x, _ -> Datum.decimal(x.float.toBigDecimal()) }
         register(REAL, REAL) { x, _ -> x }
         register(REAL, DOUBLE) { x, _ -> Datum.doublePrecision(x.float.toDouble()) }
         register(REAL, STRING) { x, _ -> Datum.string(x.float.toString()) }
-        register(REAL, SYMBOL) { x, _ -> Datum.string(x.float.toString()) }
     }
 
     /**
@@ -445,14 +369,9 @@ internal object CastTable {
                 t.scale
             )
         }
-        register(
-            DOUBLE,
-            DECIMAL_ARBITRARY
-        ) { x, _ -> Datum.decimal(x.double.toBigDecimal()) }
         register(DOUBLE, REAL) { x, _ -> datumReal(x.double) }
         register(DOUBLE, DOUBLE) { x, _ -> x }
         register(DOUBLE, STRING) { x, _ -> Datum.string(x.double.toString()) }
-        register(DOUBLE, SYMBOL) { x, _ -> Datum.string(x.double.toString()) }
     }
 
     /**
@@ -480,53 +399,19 @@ internal object CastTable {
         register(STRING, BIGINT) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, NUMERIC) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, DECIMAL) { x, t -> cast(numberFromString(x.string), t) }
-        register(STRING, DECIMAL_ARBITRARY) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, REAL) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, DOUBLE) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, STRING) { x, _ -> x }
-        register(STRING, SYMBOL) { x, _ -> Datum.string(x.string) }
-    }
-    /**
-     * CAST(<string> AS <target>)
-     */
-    private fun registerSymbol() {
-        register(SYMBOL, BOOL) { x, _ ->
-            val str = x.string.lowercase()
-            when (str) {
-                "true " -> Datum.bool(true)
-                "false" -> Datum.bool(false)
-                else -> throw TypeCheckException()
-            }
-        }
-        register(SYMBOL, TINYINT) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, SMALLINT) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, INTEGER) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, BIGINT) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, NUMERIC) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, DECIMAL) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, DECIMAL_ARBITRARY) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, REAL) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, DOUBLE) { x, t -> cast(numberFromString(x.string), t) }
-        register(SYMBOL, STRING) { x, _ -> Datum.string(x.string) }
-        register(SYMBOL, SYMBOL) { x, _ -> x }
     }
 
     private fun registerBag() {
         register(BAG, BAG) { x, _ -> x }
         register(BAG, ARRAY) { x, _ -> Datum.array(x) }
-        register(BAG, SEXP) { x, _ -> Datum.sexp(x) }
     }
 
     private fun registerList() {
         register(ARRAY, BAG) { x, _ -> Datum.bag(x) }
         register(ARRAY, ARRAY) { x, _ -> x }
-        register(ARRAY, SEXP) { x, _ -> Datum.sexp(x) }
-    }
-
-    private fun registerSexp() {
-        register(SEXP, BAG) { x, _ -> Datum.bag(x) }
-        register(SEXP, ARRAY) { x, _ -> Datum.array(x) }
-        register(SEXP, SEXP) { x, _ -> x }
     }
 
     /**

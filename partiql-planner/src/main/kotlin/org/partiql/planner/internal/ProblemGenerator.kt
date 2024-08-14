@@ -75,7 +75,7 @@ internal object ProblemGenerator {
         problem(location, PlanningProblemDetails.UndefinedVariable(id, inScopeVariables))
 
     fun incompatibleTypesForOp(actualTypes: List<StaticType>, operator: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.IncompatibleTypesForOp(actualTypes.map { PType.fromStaticType(it) }, operator.uppercase()))
+        problem(location, PlanningProblemDetails.IncompatibleTypesForOp(actualTypes.map { SqlTypes.fromStaticType(it) }, operator.uppercase()))
 
     fun incompatibleTypesForOp(
         operator: String,
@@ -94,7 +94,7 @@ internal object ProblemGenerator {
         problem(location, PlanningProblemDetails.ExpressionAlwaysReturnsMissing(reason))
 
     fun unexpectedType(actualType: StaticType, expectedTypes: Set<StaticType>, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UnexpectedType(PType.fromStaticType(actualType), expectedTypes.map { PType.fromStaticType(it) }.toSet()))
+        problem(location, PlanningProblemDetails.UnexpectedType(SqlTypes.fromStaticType(actualType), expectedTypes.map { SqlTypes.fromStaticType(it) }.toSet()))
 
     fun unexpectedType(actualType: PType, expectedTypes: Set<PType>, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
         problem(location, PlanningProblemDetails.UnexpectedType(actualType, expectedTypes))

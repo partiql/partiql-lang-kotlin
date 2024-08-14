@@ -14,8 +14,8 @@ internal object Fn_NEG__INT8__INT8 : Fn {
 
     override val signature = FnSignature(
         name = "neg",
-        returns = PType.typeTinyInt(),
-        parameters = listOf(FnParameter("value", PType.typeTinyInt())),
+        returns = PType.tinyint(),
+        parameters = listOf(FnParameter("value", PType.tinyint())),
         isNullCall = true,
         isNullable = false,
     )

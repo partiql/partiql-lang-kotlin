@@ -95,7 +95,7 @@ internal class PlannerErrorReportingTests {
             isSignal: Boolean,
             assertion: (List<Problem>) -> Unit,
             expectedType: StaticType = StaticType.ANY
-        ) : this(query, isSignal, assertion, PType.fromStaticType(expectedType).toCType())
+        ) : this(query, isSignal, assertion, SqlTypes.fromStaticType(expectedType).toCType())
     }
 
     companion object {

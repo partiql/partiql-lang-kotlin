@@ -13,9 +13,9 @@ internal object Agg_MAX__INT8__INT8 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = PType.typeTinyInt(),
+        returns = PType.tinyint(),
         parameters = listOf(
-            FnParameter("value", PType.typeTinyInt()),
+            FnParameter("value", PType.tinyint()),
         ),
         isNullable = true,
         isDecomposable = true

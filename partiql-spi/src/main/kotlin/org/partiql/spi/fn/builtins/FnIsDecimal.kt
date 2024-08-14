@@ -57,7 +57,7 @@ internal object Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL : Fn {
      */
     override fun invoke(args: Array<Datum>): Datum {
         val v = args[2]
-        if (v.type.kind != PType.Kind.DECIMAL && v.type.kind != PType.Kind.DECIMAL_ARBITRARY) {
+        if (v.type.kind != PType.Kind.DECIMAL) {
             return Datum.bool(false)
         }
 

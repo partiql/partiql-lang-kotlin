@@ -31,27 +31,6 @@ internal object Fn_POSITION__STRING_STRING__INT64 : Fn {
     }
 }
 
-internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Fn {
-
-    override val signature = FnSignature(
-        name = "position",
-        returns = PType.bigint(),
-        parameters = listOf(
-            FnParameter("probe", PType.symbol()),
-            FnParameter("value", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val s1 = args[0].string
-        val s2 = args[1].string
-        val result = s2.codepointPosition(s1)
-        return Datum.bigint(result.toLong())
-    }
-}
-
 internal object Fn_POSITION__CLOB_CLOB__INT64 : Fn {
 
     override val signature = FnSignature(

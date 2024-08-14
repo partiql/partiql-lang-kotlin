@@ -43,7 +43,6 @@ internal object Coercions {
         Kind.REAL,
         Kind.DOUBLE,
         Kind.DECIMAL,
-        Kind.DECIMAL_ARBITRARY
     )
 
     private val TYPES_TEXT = setOf(
@@ -51,12 +50,10 @@ internal object Coercions {
         Kind.VARCHAR,
         Kind.STRING,
         Kind.CLOB,
-        Kind.SYMBOL
     )
 
     private val TYPES_COLLECTION = setOf(
         Kind.ARRAY,
-        Kind.SEXP,
         Kind.BAG
     )
 

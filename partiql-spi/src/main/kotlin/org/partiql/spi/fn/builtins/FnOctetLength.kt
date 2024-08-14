@@ -25,25 +25,6 @@ internal object Fn_OCTET_LENGTH__STRING__INT32 : Fn {
     }
 }
 
-internal object Fn_OCTET_LENGTH__SYMBOL__INT32 : Fn {
-
-    override val signature = FnSignature(
-        name = "octet_length",
-        returns = PType.integer(),
-        parameters = listOf(
-            FnParameter("value", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val length = value.toByteArray(Charsets.UTF_8).size
-        return Datum.integer(length)
-    }
-}
-
 internal object Fn_OCTET_LENGTH__CLOB__INT32 : Fn {
 
     override val signature = FnSignature(

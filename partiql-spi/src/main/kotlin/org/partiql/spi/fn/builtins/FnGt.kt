@@ -15,8 +15,8 @@ internal object Fn_GT__INT8_INT8__BOOL : Fn {
         name = "gt",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeTinyInt()),
-            FnParameter("rhs", PType.typeTinyInt()),
+            FnParameter("lhs", PType.tinyint()),
+            FnParameter("rhs", PType.tinyint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -177,26 +177,6 @@ internal object Fn_GT__STRING_STRING__BOOL : Fn {
         parameters = listOf(
             FnParameter("lhs", PType.string()),
             FnParameter("rhs", PType.string()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val lhs = args[0]
-        val rhs = args[1]
-        return Datum.bool(lhs.string > rhs.string)
-    }
-}
-
-internal object Fn_GT__SYMBOL_SYMBOL__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "gt",
-        returns = PType.bool(),
-        parameters = listOf(
-            FnParameter("lhs", PType.symbol()),
-            FnParameter("rhs", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,

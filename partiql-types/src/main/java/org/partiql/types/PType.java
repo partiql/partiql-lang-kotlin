@@ -324,15 +324,15 @@ public interface PType {
          * <ul>
          *    <li><code>ARRAY</code></li>
          *    <li><code>T ARRAY[N]</code></li>
-         *    <li><code>ARRAY<T>[N]</T></code></li>
+         *    <li><code>ARRAY{@literal <T>}[N]</code></li>
          * </ul>
          * <br>
          * <br>
          * <b>Equivalences</b>
          * <ol>
-         *    <li><code>T ARRAY[N] <=> ARRAY<T>[N]</code></li>
-         *    <li><code>ARRAY[N] <=> DYNAMIC ARRAY[N] <=> ARRAY<DYNAMIC>[N]</code></li>
-         *    <li><code>ARRAY <=> DYNAMIC ARRAY <=> ARRAY<DYNAMIC> <=> LIST</code></li>
+         *    <li><code>T ARRAY[N] {@literal <->} ARRAY{@literal <T>}[N]</code></li>
+         *    <li><code>ARRAY[N] {@literal <->} DYNAMIC ARRAY[N] {@literal <->} ARRAY{@literal <DYNAMIC>}[N]</code></li>
+         *    <li><code>ARRAY {@literal <->} DYNAMIC ARRAY {@literal <->} ARRAY{@literal <DYNAMIC>} {@literal <->} LIST</code></li>
          * </ol>
          * <br>
          * <b>Applicable methods</b>:
@@ -348,15 +348,15 @@ public interface PType {
          * <ul>
          *    <li><code>BAG</code></li>
          *    <li><code>T BAG[N]</code></li>
-         *    <li><code>BAG<T>[N]</T></code></li>
+         *    <li><code>BAG{@literal <T>}[N]</code></li>
          * </ul>
          * <br>
          * <br>
          * <b>Equivalences</b>
          * <ol>
-         *    <li><code>T BAG[N] <=> BAG<T>[N]</code></li>
-         *    <li><code>BAG[N] <=> DYNAMIC BAG[N] <=> BAG<DYNAMIC>[N]</code></li>
-         *    <li><code>BAG <=> DYNAMIC BAG <=> BAG<DYNAMIC></code></li>
+         *    <li><code>T BAG[N] {@literal <->} BAG{@literal <T>}[N]</code></li>
+         *    <li><code>BAG[N] {@literal <->} DYNAMIC BAG[N] {@literal <->} BAG{@literal <DYNAMIC>}[N]</code></li>
+         *    <li><code>BAG {@literal <->} DYNAMIC BAG {@literal <->} BAG{@literal <DYNAMIC>}</code></li>
          * </ol>
          * <br>
          * <b>Applicable methods</b>:

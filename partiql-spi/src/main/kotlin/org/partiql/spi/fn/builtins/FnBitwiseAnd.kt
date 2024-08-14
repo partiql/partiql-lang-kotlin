@@ -14,10 +14,10 @@ internal object Fn_BITWISE_AND__INT8_INT8__INT8 : Fn {
 
     override val signature = FnSignature(
         name = "bitwise_and",
-        returns = PType.typeTinyInt(),
+        returns = PType.tinyint(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeTinyInt()),
-            FnParameter("rhs", PType.typeTinyInt()),
+            FnParameter("lhs", PType.tinyint()),
+            FnParameter("rhs", PType.tinyint()),
         ),
         isNullCall = true,
         isNullable = false,

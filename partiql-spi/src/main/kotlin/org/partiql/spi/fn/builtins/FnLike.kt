@@ -39,33 +39,6 @@ internal object Fn_LIKE__STRING_STRING__BOOL : Fn {
     }
 }
 
-internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "like",
-        returns = PType.bool(),
-        parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("pattern", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val pattern = args[1].string
-        val likeRegexPattern = when {
-            pattern.isEmpty() -> Pattern.compile("")
-            else -> parsePattern(pattern, null)
-        }
-        return when (matchRegexPattern(value, likeRegexPattern)) {
-            true -> Datum.bool(true)
-            else -> Datum.bool(false)
-        }
-    }
-}
-
 internal object Fn_LIKE__CLOB_CLOB__BOOL : Fn {
 
     override val signature = FnSignature(

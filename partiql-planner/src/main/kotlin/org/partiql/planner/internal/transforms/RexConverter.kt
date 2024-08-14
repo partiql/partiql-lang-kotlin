@@ -566,7 +566,7 @@ internal object RexConverter {
                 Expr.Collection.Type.ARRAY -> LIST
                 Expr.Collection.Type.VALUES -> LIST
                 Expr.Collection.Type.LIST -> LIST
-                Expr.Collection.Type.SEXP -> SEXP
+                Expr.Collection.Type.SEXP -> error("SEXP not supported as a collection")
             }
             val values = node.values.map { visitExprCoerce(it, context) }
             val op = rexOpCollection(values)
@@ -840,7 +840,7 @@ internal object RexConverter {
                 is Type.NullType -> error("Casting to NULL is not supported.")
                 is Type.Missing -> error("Casting to MISSING is not supported.")
                 is Type.Bool -> PType.bool()
-                is Type.Tinyint -> PType.typeTinyInt()
+                is Type.Tinyint -> PType.tinyint()
                 is Type.Smallint, is Type.Int2 -> PType.smallint()
                 is Type.Int4 -> PType.integer()
                 is Type.Bigint, is Type.Int8 -> PType.bigint()
@@ -854,18 +854,16 @@ internal object RexConverter {
                     type.precision != null && type.scale == null -> PType.decimal(type.precision!!, 0)
                     else -> error("Precision can never be null while scale is specified.")
                 }
-
                 is Type.Numeric -> when {
-                    type.precision == null && type.scale == null -> PType.decimal()
+                    type.precision == null && type.scale == null -> PType.numeric()
                     type.precision != null && type.scale != null -> PType.decimal(type.precision!!, type.scale!!)
                     type.precision != null && type.scale == null -> PType.decimal(type.precision!!, 0)
                     else -> error("Precision can never be null while scale is specified.")
                 }
-
                 is Type.Char -> PType.character(type.length ?: 255) // TODO: What is default?
-                is Type.Varchar -> error("VARCHAR is not supported yet.")
+                is Type.Varchar -> PType.varchar(type.length ?: Int.MAX_VALUE)
                 is Type.String -> PType.string()
-                is Type.Symbol -> PType.symbol()
+                is Type.Symbol -> error("SYMBOL is not supported")
                 is Type.Bit -> error("BIT is not supported yet.")
                 is Type.BitVarying -> error("BIT VARYING is not supported yet.")
                 is Type.ByteString -> error("BINARY is not supported yet.")
@@ -878,7 +876,7 @@ internal object RexConverter {
                 is Type.TimestampWithTz -> PType.timestampz(type.precision ?: 6)
                 is Type.Interval -> error("INTERVAL is not supported yet.")
                 is Type.Bag -> PType.bag()
-                is Type.Sexp -> PType.typeSexp()
+                is Type.Sexp -> error("SEXP is not supported in PType.")
                 is Type.Any -> PType.dynamic()
                 is Type.Custom -> TODO("Custom type not supported ")
                 is Type.List -> PType.array()
@@ -992,7 +990,6 @@ internal object RexConverter {
         private val STRUCT: CompilerType = CompilerType(PType.struct())
         private val BAG: CompilerType = CompilerType(PType.bag())
         private val LIST: CompilerType = CompilerType(PType.array())
-        private val SEXP: CompilerType = CompilerType(PType.typeSexp())
         private val INT: CompilerType = CompilerType(PType.numeric())
         private val INT4: CompilerType = CompilerType(PType.integer())
         private val TIMESTAMP: CompilerType = CompilerType(PType.timestamp(6))

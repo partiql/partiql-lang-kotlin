@@ -31,27 +31,6 @@ internal object Fn_TRIM_CHARS__STRING_STRING__STRING : Fn {
     }
 }
 
-internal object Fn_TRIM_CHARS__SYMBOL_SYMBOL__SYMBOL : Fn {
-
-    override val signature = FnSignature(
-        name = "trim_chars",
-        returns = PType.symbol(),
-        parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("chars", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val chars = args[1].string
-        val result = value.codepointTrim(chars)
-        return Datum.symbol(result)
-    }
-}
-
 internal object Fn_TRIM_CHARS__CLOB_CLOB__CLOB : Fn {
 
     override val signature = FnSignature(

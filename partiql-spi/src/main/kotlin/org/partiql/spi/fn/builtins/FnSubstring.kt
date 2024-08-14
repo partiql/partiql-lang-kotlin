@@ -125,51 +125,6 @@ internal object Fn_SUBSTRING__STRING_INT32_INT32__STRING : Fn {
     }
 }
 
-internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Fn {
-
-    override val signature = FnSignature(
-        name = "substring",
-        returns = PType.symbol(),
-        parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("start", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val start = args[1].int
-        val result = value.codepointSubstring(start)
-        return Datum.symbol(result)
-    }
-}
-
-internal object Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL : Fn {
-
-    override val signature = FnSignature(
-        name = "substring",
-        returns = PType.symbol(),
-        parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("start", PType.integer()),
-            FnParameter("end", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val start = args[1].int
-        val end = args[1].int
-        if (end < 0) throw TypeCheckException()
-        val result = value.codepointSubstring(start, end)
-        return Datum.symbol(result)
-    }
-}
-
 internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
 
     override val signature = FnSignature(

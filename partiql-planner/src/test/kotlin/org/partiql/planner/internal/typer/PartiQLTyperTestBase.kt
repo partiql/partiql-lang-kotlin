@@ -30,7 +30,7 @@ abstract class PartiQLTyperTestBase {
     sealed class TestResult {
         data class Success(val expectedType: PType) : TestResult() {
 
-            constructor(expectedType: StaticType) : this(PType.fromStaticType(expectedType))
+            constructor(expectedType: StaticType) : this(SqlTypes.fromStaticType(expectedType))
 
             override fun toString(): String = "Success_$expectedType"
         }

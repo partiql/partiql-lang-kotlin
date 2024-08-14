@@ -76,7 +76,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath: List<String> = emptyList(),
                 expected: StaticType,
                 warnings: ProblemHandler? = null,
-            ) : this(name, key, query, catalog, catalogPath, PType.fromStaticType(expected).toCType(), warnings)
+            ) : this(name, key, query, catalog, catalogPath, SqlTypes.fromStaticType(expected).toCType(), warnings)
 
             override fun toString(): String {
                 if (key != null) {
@@ -106,7 +106,7 @@ internal class PlanTyperTestsPorted {
                 note: String? = null,
                 expected: StaticType? = null,
                 problemHandler: ProblemHandler? = null,
-            ) : this(name, key, query, catalog, catalogPath, note, expected?.let { PType.fromStaticType(it).toCType() }, problemHandler)
+            ) : this(name, key, query, catalog, catalogPath, note, expected?.let { SqlTypes.fromStaticType(it).toCType() }, problemHandler)
 
             override fun toString(): String = "$name : ${query ?: key}"
         }

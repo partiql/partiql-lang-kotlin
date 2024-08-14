@@ -42,24 +42,6 @@ internal object Fn_CARDINALITY__LIST__INT32 : Fn {
     }
 }
 
-internal object Fn_CARDINALITY__SEXP__INT32 : Fn {
-
-    override val signature = FnSignature(
-        name = "cardinality",
-        returns = PType.integer(),
-        parameters = listOf(
-            FnParameter("container", PType.typeSexp()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val container = args[0]
-        return Datum.integer(container.count())
-    }
-}
-
 internal object Fn_CARDINALITY__STRUCT__INT32 : Fn {
 
     override val signature = FnSignature(

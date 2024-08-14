@@ -13,9 +13,9 @@ internal object Agg_MIN__INT8__INT8 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "min",
-        returns = PType.typeTinyInt(),
+        returns = PType.tinyint(),
         parameters = listOf(
-            FnParameter("value", PType.typeTinyInt()),
+            FnParameter("value", PType.tinyint()),
         ),
         isNullable = true,
         isDecomposable = true

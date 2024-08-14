@@ -15,7 +15,7 @@ internal object Agg_AVG__INT8__INT8 : Agg {
         name = "avg",
         returns = PType.decimal(),
         parameters = listOf(
-            FnParameter("value", PType.typeTinyInt()),
+            FnParameter("value", PType.tinyint()),
         ),
         isNullable = true,
         isDecomposable = true

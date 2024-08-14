@@ -18,12 +18,17 @@ class DatumNull implements Datum {
     @NotNull
     private final PType _type;
 
+    @NotNull
+    private final PType.Kind _kind;
+
     DatumNull() {
         this._type = PType.unknown();
+        this._kind = _type.getKind();
     }
 
     DatumNull(@NotNull PType type) {
         this._type = type;
+        this._kind = type.getKind();
     }
 
     @Override
@@ -39,7 +44,7 @@ class DatumNull implements Datum {
 
     @Override
     public boolean getBoolean() {
-        if (_type.getKind() == PType.Kind.BOOL) {
+        if (_kind == PType.Kind.BOOL) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -48,7 +53,7 @@ class DatumNull implements Datum {
 
     @Override
     public short getShort() {
-        if (_type.getKind() == PType.Kind.SMALLINT) {
+        if (_kind == PType.Kind.SMALLINT) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -57,7 +62,7 @@ class DatumNull implements Datum {
 
     @Override
     public int getInt() {
-        if (_type.getKind() == PType.Kind.INTEGER) {
+        if (_kind == PType.Kind.INTEGER) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -66,7 +71,7 @@ class DatumNull implements Datum {
 
     @Override
     public long getLong() {
-        if (_type.getKind() == PType.Kind.BIGINT) {
+        if (_kind == PType.Kind.BIGINT) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -76,7 +81,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public BigInteger getBigInteger() {
-        if (_type.getKind() == PType.Kind.NUMERIC) {
+        if (_kind == PType.Kind.NUMERIC) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -86,7 +91,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public BigDecimal getBigDecimal() {
-        if (_type.getKind() == PType.Kind.DECIMAL || _type.getKind() == PType.Kind.DECIMAL_ARBITRARY) {
+        if (_kind == PType.Kind.DECIMAL) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -95,7 +100,7 @@ class DatumNull implements Datum {
 
     @Override
     public byte getByte() {
-        if (_type.getKind() == PType.Kind.TINYINT) {
+        if (_kind == PType.Kind.TINYINT) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -105,7 +110,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public byte[] getBytes() {
-        if (_type.getKind() == PType.Kind.BLOB || _type.getKind() == PType.Kind.CLOB) {
+        if (_kind == PType.Kind.BLOB || _kind == PType.Kind.CLOB) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -115,7 +120,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Date getDate() {
-        if (_type.getKind() == PType.Kind.DATE) {
+        if (_kind == PType.Kind.DATE) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -124,7 +129,7 @@ class DatumNull implements Datum {
 
     @Override
     public double getDouble() {
-        if (_type.getKind() == PType.Kind.DOUBLE) {
+        if (_kind == PType.Kind.DOUBLE) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -133,7 +138,7 @@ class DatumNull implements Datum {
 
     @Override
     public float getFloat() {
-        if (_type.getKind() == PType.Kind.REAL) {
+        if (_kind == PType.Kind.REAL) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -142,7 +147,7 @@ class DatumNull implements Datum {
 
     @Override
     public Iterator<Datum> iterator() {
-        if (_type.getKind() == PType.Kind.BAG || _type.getKind() == PType.Kind.ARRAY || _type.getKind() == PType.Kind.SEXP) {
+        if (_kind == PType.Kind.BAG || _kind == PType.Kind.ARRAY) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -152,7 +157,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Iterator<Field> getFields() {
-        if (_type.getKind() == PType.Kind.STRUCT || _type.getKind() == PType.Kind.ROW) {
+        if (_kind == PType.Kind.STRUCT || _kind == PType.Kind.ROW) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -162,7 +167,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public String getString() {
-        if (_type.getKind() == PType.Kind.STRING || _type.getKind() == PType.Kind.CHAR || _type.getKind() == PType.Kind.SYMBOL) {
+        if (_kind == PType.Kind.STRING || _kind == PType.Kind.CHAR) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -172,7 +177,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Time getTime() {
-        if (_type.getKind() == PType.Kind.TIMEZ || _type.getKind() == PType.Kind.TIME) {
+        if (_kind == PType.Kind.TIMEZ || _kind == PType.Kind.TIME) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -182,7 +187,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Timestamp getTimestamp() {
-        if (_type.getKind() == PType.Kind.TIMESTAMPZ || _type.getKind() == PType.Kind.TIMESTAMP) {
+        if (_kind == PType.Kind.TIMESTAMPZ || _kind == PType.Kind.TIMESTAMP) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();

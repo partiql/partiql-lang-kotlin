@@ -15,9 +15,9 @@ internal object Fn_BETWEEN__INT8_INT8_INT8__BOOL : Fn {
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTinyInt()),
-            FnParameter("lower", PType.typeTinyInt()),
-            FnParameter("upper", PType.typeTinyInt()),
+            FnParameter("value", PType.tinyint()),
+            FnParameter("lower", PType.tinyint()),
+            FnParameter("upper", PType.tinyint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -194,28 +194,6 @@ internal object Fn_BETWEEN__STRING_STRING_STRING__BOOL : Fn {
             FnParameter("value", PType.string()),
             FnParameter("lower", PType.string()),
             FnParameter("upper", PType.string()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val lower = args[1].string
-        val upper = args[2].string
-        return Datum.bool(value in lower..upper)
-    }
-}
-
-internal object Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "between",
-        returns = PType.bool(),
-        parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("lower", PType.symbol()),
-            FnParameter("upper", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,

@@ -13,15 +13,15 @@ internal object Agg_SUM__INT8__INT8 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "sum",
-        returns = PType.typeTinyInt(),
+        returns = PType.tinyint(),
         parameters = listOf(
-            FnParameter("value", PType.typeTinyInt()),
+            FnParameter("value", PType.tinyint()),
         ),
         isNullable = true,
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.typeTinyInt())
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(PType.tinyint())
 }
 
 internal object Agg_SUM__INT16__INT16 : Agg {

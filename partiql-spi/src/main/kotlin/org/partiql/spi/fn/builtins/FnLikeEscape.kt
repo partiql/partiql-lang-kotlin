@@ -49,41 +49,6 @@ internal object Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL : Fn {
     }
 }
 
-internal object Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "like_escape",
-        returns = PType.bool(),
-        parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("pattern", PType.symbol()),
-            FnParameter("escape", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val pattern = args[1].string
-        val escape = args[2].string
-        val (patternString, escapeChar) =
-            try {
-                checkPattern(pattern, escape)
-            } catch (e: IllegalStateException) {
-                throw TypeCheckException()
-            }
-        val likeRegexPattern = when {
-            patternString.isEmpty() -> Pattern.compile("")
-            else -> parsePattern(patternString, escapeChar)
-        }
-        return when (PatternUtils.matchRegexPattern(value, likeRegexPattern)) {
-            true -> Datum.bool(true)
-            else -> Datum.bool(false)
-        }
-    }
-}
-
 internal object Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL : Fn {
 
     override val signature = FnSignature(

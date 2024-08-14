@@ -120,8 +120,7 @@ internal class PlanTyper(private val env: Env) {
 
             // Collapse Collections
             if (unique.all { it.kind == Kind.ARRAY } ||
-                unique.all { it.kind == Kind.BAG } ||
-                unique.all { it.kind == Kind.SEXP }
+                unique.all { it.kind == Kind.BAG }
             ) {
                 return collapseCollection(unique, unique.first().kind)
             }
@@ -137,7 +136,6 @@ internal class PlanTyper(private val env: Env) {
             return when (type) {
                 Kind.ARRAY -> PType.array(typeParam)
                 Kind.BAG -> PType.array(typeParam)
-                Kind.SEXP -> PType.array(typeParam)
                 else -> error("This shouldn't have happened.")
             }
         }
@@ -179,7 +177,6 @@ internal class PlanTyper(private val env: Env) {
                 Kind.REAL,
                 Kind.DOUBLE,
                 Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY
             )
         }
     }
@@ -649,8 +646,8 @@ internal class PlanTyper(private val env: Env) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Index(root, key))
             }
 
-            // Check Root Type (LIST/SEXP)
-            if (root.type.kind != Kind.ARRAY && root.type.kind != Kind.SEXP) {
+            // Check Root Type (ARRAY)
+            if (root.type.kind != Kind.ARRAY) {
                 return ProblemGenerator.missingRex(
                     rexOpPathIndex(root, key),
                     ProblemGenerator.expressionAlwaysReturnsMissing("Path indexing must occur only on LIST/SEXP.")
@@ -997,10 +994,10 @@ internal class PlanTyper(private val env: Env) {
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: CompilerType?): Rex {
-            if (ctx!!.kind !in setOf(Kind.ARRAY, Kind.SEXP, Kind.BAG)) {
+            if (ctx!!.kind !in setOf(Kind.ARRAY, Kind.BAG)) {
                 return ProblemGenerator.missingRex(
                     node,
-                    ProblemGenerator.unexpectedType(ctx, setOf(PType.array(), PType.bag(), PType.typeSexp()))
+                    ProblemGenerator.unexpectedType(ctx, setOf(PType.array(), PType.bag()))
                 )
             }
             val values = node.values.map { visitRex(it, it.type) }
@@ -1011,7 +1008,6 @@ internal class PlanTyper(private val env: Env) {
             val type = when (ctx.kind) {
                 Kind.BAG -> PType.bag(t)
                 Kind.ARRAY -> PType.array(t)
-                Kind.SEXP -> PType.typeSexp(t)
                 else -> error("This is impossible.")
             }
             return rex(CompilerType(type), rexOpCollection(values))
@@ -1331,7 +1327,7 @@ internal class PlanTyper(private val env: Env) {
 
     private fun getElementTypeForFromSource(fromSourceType: CompilerType): CompilerType = when (fromSourceType.kind) {
         Kind.DYNAMIC -> CompilerType(PType.dynamic())
-        Kind.BAG, Kind.ARRAY, Kind.SEXP -> fromSourceType.typeParameter
+        Kind.BAG, Kind.ARRAY -> fromSourceType.typeParameter
         // TODO: Should we emit a warning?
         else -> fromSourceType
     }

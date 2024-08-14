@@ -26,25 +26,6 @@ internal object Fn_BIT_LENGTH__STRING__INT32 : Fn {
     }
 }
 
-internal object Fn_BIT_LENGTH__SYMBOL__INT32 : Fn {
-
-    override val signature = FnSignature(
-        name = "bit_length",
-        returns = PType.integer(),
-        parameters = listOf(
-            FnParameter("lhs", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val length = value.toByteArray(Charsets.UTF_8).size
-        return Datum.integer(length * 8)
-    }
-}
-
 internal object Fn_BIT_LENGTH__CLOB__INT32 : Fn {
 
     override val signature = FnSignature(

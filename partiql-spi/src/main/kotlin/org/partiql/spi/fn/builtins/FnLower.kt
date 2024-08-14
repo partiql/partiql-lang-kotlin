@@ -26,23 +26,6 @@ internal object Fn_LOWER__STRING__STRING : Fn {
     }
 }
 
-internal object Fn_LOWER__SYMBOL__SYMBOL : Fn {
-
-    override val signature = FnSignature(
-        name = "lower",
-        returns = PType.symbol(),
-        parameters = listOf(FnParameter("value", PType.symbol())),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val string = args[0].string
-        val result = string.lowercase()
-        return Datum.string(result)
-    }
-}
-
 internal object Fn_LOWER__CLOB__CLOB : Fn {
 
     override val signature = FnSignature(

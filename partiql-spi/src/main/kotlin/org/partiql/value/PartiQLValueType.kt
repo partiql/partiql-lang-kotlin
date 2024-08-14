@@ -71,15 +71,15 @@ public enum class PartiQLValueType {
     public fun toPType(): PType {
         return when (this) {
             DECIMAL, DECIMAL_ARBITRARY -> PType.decimal()
-            INT8 -> PType.typeTinyInt()
+            INT8 -> PType.tinyint()
             CHAR -> PType.character(255)
             TIMESTAMP -> PType.timestampz(6)
             DATE -> PType.date()
             BOOL -> PType.bool()
-            SYMBOL -> PType.symbol()
+            SYMBOL -> error("SYMBOL is not supported in PartiQL PType")
             STRING -> PType.string()
             STRUCT -> PType.struct()
-            SEXP -> PType.typeSexp()
+            SEXP -> error("SEXP is not supported in PartiQL PType")
             LIST -> PType.array()
             BAG -> PType.bag()
             FLOAT32 -> PType.real()
