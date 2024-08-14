@@ -20,7 +20,7 @@ class DatumStruct implements Datum {
     @NotNull
     private final HashMap<String, List<Datum>> _delegateNormalized;
 
-    private final static PType _type = PType.typeStruct();
+    private final static PType _type = PType.struct();
 
     DatumStruct(@NotNull Iterable<Field> fields) {
         _delegate = new HashMap<>();

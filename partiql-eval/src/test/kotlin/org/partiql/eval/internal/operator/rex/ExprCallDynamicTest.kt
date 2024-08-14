@@ -68,7 +68,7 @@ class ExprCallDynamicTest {
                 object : Fn {
                     override val signature: FnSignature = FnSignature(
                         name = "example_function",
-                        returns = PType.typeInt(),
+                        returns = PType.integer(),
                         parameters = listOf(
                             FnParameter("first", type = it.first.toPType()),
                             FnParameter("second", type = it.second.toPType()),

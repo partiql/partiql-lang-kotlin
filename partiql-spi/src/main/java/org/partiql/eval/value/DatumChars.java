@@ -16,7 +16,7 @@ class DatumChars implements Datum {
 
     DatumChars(@NotNull String value, int length) {
         _value = value;
-        _type = PType.typeChar(length);
+        _type = PType.character(length);
     }
 
     @Override

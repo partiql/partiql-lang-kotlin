@@ -13,10 +13,10 @@ internal object Fn_OR__BOOL_BOOL__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "or",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeBool()),
-            FnParameter("rhs", PType.typeBool()),
+            FnParameter("lhs", PType.bool()),
+            FnParameter("rhs", PType.bool()),
         ),
         isNullable = true,
         isNullCall = false,
@@ -25,7 +25,7 @@ internal object Fn_OR__BOOL_BOOL__BOOL : Fn {
     )
 
     override fun invoke(args: Array<Datum>): Datum {
-        if (args[0].isNull || args[1].isNull) return Datum.nullValue(PType.typeBool())
+        if (args[0].isNull || args[1].isNull) return Datum.nullValue(PType.bool())
         val lhs = args[0].boolean
         val rhs = args[1].boolean
         return Datum.bool(lhs || rhs)

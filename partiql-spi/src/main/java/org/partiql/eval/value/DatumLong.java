@@ -10,7 +10,7 @@ class DatumLong implements Datum {
 
     private final long _value;
 
-    private final static PType _type = PType.typeBigInt();
+    private final static PType _type = PType.bigint();
 
     DatumLong(long value) {
         _value = value;

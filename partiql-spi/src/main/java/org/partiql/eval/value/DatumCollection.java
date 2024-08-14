@@ -9,7 +9,7 @@ import java.util.Iterator;
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PType.Kind#LIST},
+ * {@link PType.Kind#ARRAY},
  * {@link PType.Kind#BAG},
  * {@link PType.Kind#SEXP}
  */

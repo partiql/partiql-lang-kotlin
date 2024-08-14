@@ -15,8 +15,8 @@ internal object Fn_IS_DECIMAL__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_decimal",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
@@ -30,11 +30,11 @@ internal object Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_decimal",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("type_parameter_1", PType.typeInt()),
-            FnParameter("type_parameter_2", PType.typeInt()),
-            FnParameter("value", PType.typeDynamic()),
+            FnParameter("type_parameter_1", PType.integer()),
+            FnParameter("type_parameter_2", PType.integer()),
+            FnParameter("value", PType.dynamic()),
         ),
         isNullCall = true,
         isNullable = false,

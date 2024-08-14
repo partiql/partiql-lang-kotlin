@@ -32,10 +32,10 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "eq",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.typeDynamic()),
-            FnParameter("rhs", PType.typeDynamic()),
+            FnParameter("lhs", PType.dynamic()),
+            FnParameter("rhs", PType.dynamic()),
         ),
         isNullable = true,
         isNullCall = true,
@@ -47,7 +47,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         val lhs = args[0]
         val rhs = args[1]
         if (lhs.isMissing || rhs.isMissing) {
-            return Datum.nullValue(PType.typeBool())
+            return Datum.nullValue(PType.bool())
         }
         @OptIn(PartiQLValueExperimental::class)
         @Suppress("DEPRECATION")

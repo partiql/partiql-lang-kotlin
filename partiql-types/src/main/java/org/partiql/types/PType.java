@@ -58,8 +58,8 @@ public interface PType {
      * The decimal precision of the type
      * @return decimal precision
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#DECIMAL}, {@link Kind#TIMESTAMP_WITH_TZ}, {@link Kind#TIMESTAMP_WITHOUT_TZ}, {@link Kind#TIME_WITH_TZ},
-     * {@link Kind#TIME_WITHOUT_TZ}, {@link Kind#REAL}, {@link Kind#DOUBLE_PRECISION}
+     * {@link Kind#DECIMAL}, {@link Kind#TIMESTAMPZ}, {@link Kind#TIMESTAMP}, {@link Kind#TIMEZ},
+     * {@link Kind#TIME}, {@link Kind#REAL}, {@link Kind#DOUBLE}
      */
     default int getPrecision() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
@@ -89,7 +89,7 @@ public interface PType {
      * The type parameter of the type. Example: <code>BAG(&lt;param&gt;)</code>
      * @return type parameter of the type
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#LIST}, {@link Kind#BAG}, {@link Kind#SEXP}
+     * {@link Kind#ARRAY}, {@link Kind#BAG}, {@link Kind#SEXP}
      */
     @NotNull
     default PType getTypeParameter() throws UnsupportedOperationException {
@@ -158,7 +158,7 @@ public interface PType {
          * <br>
          * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
          */
-        INT,
+        INTEGER,
 
         /**
          * PartiQL's big integer type.
@@ -174,13 +174,11 @@ public interface PType {
          * PartiQL's big integer type.
          * <br>
          * <br>
-         * <b>Type Syntax</b>: <code>TO_BE_DETERMINED</code>
+         * <b>Type Syntax</b>: <code>NUMERIC</code>
          * <br>
-         * <b>Applicable methods</b>: NONE
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
+         * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
          */
-        @Deprecated
-        INT_ARBITRARY,
+        NUMERIC,
 
         /**
          * SQL's decimal type.
@@ -189,7 +187,6 @@ public interface PType {
          * <b>Type Syntax</b>: <code>DECIMAL(&lt;precision&gt;, &lt;scale&gt;)</code>, <code>DECIMAL(&lt;precision&gt;)</code>
          * <br>
          * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         DECIMAL,
 
@@ -223,7 +220,7 @@ public interface PType {
          * <br>
          * <b>Applicable methods</b>: {@link PType#getPrecision()}
          */
-        DOUBLE_PRECISION,
+        DOUBLE,
 
         /**
          * SQL's character type.
@@ -307,16 +304,6 @@ public interface PType {
         DATE,
 
         /**
-         * SQL's time with timezone type.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>TIME WITH TIME ZONE</code>, <code>TIME(&lt;precision&gt;) WITH TIME ZONE</code>
-         * <br>
-         * <b>Applicable methods</b>: NONE
-         */
-        TIME_WITH_TZ,
-
-        /**
          * SQL's time without timezone type.
          * <br>
          * <br>
@@ -325,17 +312,17 @@ public interface PType {
          * <br>
          * <b>Applicable methods</b>: NONE
          */
-        TIME_WITHOUT_TZ,
+        TIME,
 
         /**
-         * SQL's timestamp with timezone type.
+         * SQL's time with timezone type.
          * <br>
          * <br>
-         * <b>Type Syntax</b>: <code>TIMESTAMP WITH TIME ZONE</code>, <code>TIMESTAMP(&lt;precision&gt;) WITH TIME ZONE</code>
+         * <b>Type Syntax</b>: <code>TIME WITH TIME ZONE</code>, <code>TIME(&lt;precision&gt;) WITH TIME ZONE</code>
          * <br>
          * <b>Applicable methods</b>: NONE
          */
-        TIMESTAMP_WITH_TZ,
+        TIMEZ,
 
         /**
          * SQL's timestamp without timezone type.
@@ -346,29 +333,65 @@ public interface PType {
          * <br>
          * <b>Applicable methods</b>: NONE
          */
-        TIMESTAMP_WITHOUT_TZ,
+        TIMESTAMP,
 
         /**
-         * PartiQL's bag type. There is no size limit.
+         * SQL's timestamp with timezone type.
          * <br>
          * <br>
-         * <b>Type Syntax</b>: <code>BAG</code>, <code>BAG(&lt;type&gt;)</code>
+         * <b>Type Syntax</b>: <code>TIMESTAMP WITH TIME ZONE</code>, <code>TIMESTAMP(&lt;precision&gt;) WITH TIME ZONE</code>
+         * <br>
+         * <b>Applicable methods</b>: NONE
+         */
+        TIMESTAMPZ,
+
+        /**
+         * ARRAY (LIST) represents an ordered collection of elements with type T.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>
+         * <ul>
+         *    <li><code>ARRAY</code></li>
+         *    <li><code>T ARRAY[N]</code></li>
+         *    <li><code>ARRAY{@literal <T>}[N]</code></li>
+         * </ul>
+         * <br>
+         * <br>
+         * <b>Equivalences</b>
+         * <ol>
+         *    <li><code>T ARRAY[N] {@literal <->} ARRAY{@literal <T>}[N]</code></li>
+         *    <li><code>ARRAY[N] {@literal <->} DYNAMIC ARRAY[N] {@literal <->} ARRAY{@literal <DYNAMIC>}[N]</code></li>
+         *    <li><code>ARRAY {@literal <->} DYNAMIC ARRAY {@literal <->} ARRAY{@literal <DYNAMIC>} {@literal <->} LIST</code></li>
+         * </ol>
+         * <br>
+         * <b>Applicable methods</b>:
+         * {@link PType#getTypeParameter()}
+         */
+        ARRAY,
+
+        /**
+         * BAG represents an unordered collection of elements with type T.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>
+         * <ul>
+         *    <li><code>BAG</code></li>
+         *    <li><code>T BAG[N]</code></li>
+         *    <li><code>BAG{@literal <T>}[N]</code></li>
+         * </ul>
+         * <br>
+         * <br>
+         * <b>Equivalences</b>
+         * <ol>
+         *    <li><code>T BAG[N] {@literal <->} BAG{@literal <T>}[N]</code></li>
+         *    <li><code>BAG[N] {@literal <->} DYNAMIC BAG[N] {@literal <->} BAG{@literal <DYNAMIC>}[N]</code></li>
+         *    <li><code>BAG {@literal <->} DYNAMIC BAG {@literal <->} BAG{@literal <DYNAMIC>}</code></li>
+         * </ol>
          * <br>
          * <b>Applicable methods</b>:
          * {@link PType#getTypeParameter()}
          */
         BAG,
-
-        /**
-         * Ion's list type. There is no size limit.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>LIST</code>, <code>LIST(&lt;type&gt;)</code>
-         * <br>
-         * <b>Applicable methods</b>:
-         * {@link PType#getTypeParameter()}
-         */
-        LIST,
 
         /**
          * SQL's row type. Characterized as a closed, ordered collection of fields.
@@ -425,92 +448,23 @@ public interface PType {
      * @return a PartiQL dynamic type
      */
     @NotNull
-    static PType typeDynamic() {
+    static PType dynamic() {
         return new PTypePrimitive(Kind.DYNAMIC);
-    }
-
-    /**
-     * @return a PartiQL list type with a component type of dynamic
-     */
-    @NotNull
-    static PType typeList() {
-        return new PTypeCollection(Kind.LIST, PType.typeDynamic());
-    }
-
-    /**
-     * @return a PartiQL list type with a component type of {@code typeParam}
-     */
-    @NotNull
-    static PType typeList(@NotNull PType typeParam) {
-        return new PTypeCollection(Kind.LIST, typeParam);
-    }
-
-    /**
-     * @return a PartiQL bag type with a component type of dynamic
-     */
-    @NotNull
-    static PType typeBag() {
-        return new PTypeCollection(Kind.BAG, PType.typeDynamic());
-    }
-
-    /**
-     * @return a PartiQL bag type with a component type of {@code typeParam}
-     */
-    @NotNull
-    static PType typeBag(@NotNull PType typeParam) {
-        return new PTypeCollection(Kind.BAG, typeParam);
-    }
-
-    /**
-     * @return a PartiQL sexp type containing a component type of dynamic.
-     * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-     */
-    @Deprecated
-    @NotNull
-    static PType typeSexp() {
-        return new PTypeCollection(Kind.SEXP, PType.typeDynamic());
-    }
-
-    /**
-     *
-     * @param typeParam the component type to be used
-     * @return a PartiQL sexp type containing a component type of {@code typeParam}.
-     * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    static PType typeSexp(@NotNull PType typeParam) {
-        return new PTypeCollection(Kind.SEXP, typeParam);
     }
 
     /**
      * @return a PartiQL boolean type
      */
     @NotNull
-    static PType typeBool() {
+    static PType bool() {
         return new PTypePrimitive(Kind.BOOL);
-    }
-
-    /**
-     * @return a PartiQL real type.
-     */
-    @NotNull
-    static PType typeReal() {
-        return new PTypePrimitive(Kind.REAL);
-    }
-
-    /**
-     * @return a PartiQL double precision type
-     */
-    @NotNull
-    static PType typeDoublePrecision() {
-        return new PTypePrimitive(Kind.DOUBLE_PRECISION);
     }
 
     /**
      * @return a PartiQL tiny integer type
      */
     @NotNull
-    static PType typeTinyInt() {
+    static PType tinyint() {
         return new PTypePrimitive(Kind.TINYINT);
     }
 
@@ -518,7 +472,7 @@ public interface PType {
      * @return a PartiQL small integer type
      */
     @NotNull
-    static PType typeSmallInt() {
+    static PType smallint() {
         return new PTypePrimitive(Kind.SMALLINT);
     }
 
@@ -526,15 +480,15 @@ public interface PType {
      * @return a PartiQL integer type
      */
     @NotNull
-    static PType typeInt() {
-        return new PTypePrimitive(Kind.INT);
+    static PType integer() {
+        return new PTypePrimitive(Kind.INTEGER);
     }
 
     /**
      * @return a PartiQL big integer type
      */
     @NotNull
-    static PType typeBigInt() {
+    static PType bigint() {
         return new PTypePrimitive(Kind.BIGINT);
     }
 
@@ -544,8 +498,8 @@ public interface PType {
      */
     @NotNull
     @Deprecated
-    static PType typeIntArbitrary() {
-        return new PTypePrimitive(Kind.INT_ARBITRARY);
+    static PType numeric() {
+        return new PTypePrimitive(Kind.NUMERIC);
     }
 
     /**
@@ -553,7 +507,7 @@ public interface PType {
      * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType typeDecimalArbitrary() {
+    static PType decimal() {
         return new PTypePrimitive(Kind.DECIMAL_ARBITRARY);
     }
 
@@ -561,64 +515,55 @@ public interface PType {
      * @return a PartiQL decimal type
      */
     @NotNull
-    static PType typeDecimal(int precision, int scale) {
+    static PType decimal(int precision) {
+        return new PTypeDecimal(precision, 0);
+    }
+
+    /**
+     * @return a PartiQL decimal type
+     */
+    @NotNull
+    static PType decimal(int precision, int scale) {
         return new PTypeDecimal(precision, scale);
     }
 
     /**
-     * @return a PartiQL row type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
+     * @return a PartiQL real type.
      */
     @NotNull
-    static PType typeRow(@NotNull Collection<Field> fields) {
-        return new PTypeRow(fields);
+    static PType real() {
+        return new PTypePrimitive(Kind.REAL);
     }
 
     /**
-     * @return a PartiQL struct type
+     * @return a PartiQL double precision type
      */
     @NotNull
-    static PType typeStruct() {
-        return new PTypePrimitive(Kind.STRUCT);
+    static PType doublePrecision() {
+        return new PTypePrimitive(Kind.DOUBLE);
     }
 
     /**
-     * @return a PartiQL timestamp with timezone type
+     * @return a PartiQL char type
      */
     @NotNull
-    static PType typeTimestampWithTZ(int precision) {
-        return new PTypeWithPrecisionOnly(Kind.TIMESTAMP_WITH_TZ, precision);
+    static PType character(int length) {
+        return new PTypeWithMaxLength(Kind.CHAR, length);
     }
 
     /**
-     * @return a PartiQL timestamp without timezone type
+     * @return a PartiQL char type
      */
     @NotNull
-    static PType typeTimestampWithoutTZ(int precision) {
-        return new PTypeWithPrecisionOnly(Kind.TIMESTAMP_WITHOUT_TZ, precision);
-    }
-
-    /**
-     * @return a PartiQL time with timezone type
-     */
-    @NotNull
-    static PType typeTimeWithTZ(int precision) {
-        return new PTypeWithPrecisionOnly(Kind.TIME_WITH_TZ, precision);
-    }
-
-    /**
-     * @return a PartiQL time without timezone type
-     */
-    @NotNull
-    static PType typeTimeWithoutTZ(int precision) {
-        return new PTypeWithPrecisionOnly(Kind.TIME_WITHOUT_TZ, precision);
+    static PType varchar(int length) {
+        return new PTypeWithMaxLength(Kind.CHAR, length);
     }
 
     /**
      * @return a PartiQL string type
      */
     @NotNull
-    static PType typeString() {
+    static PType string() {
         return new PTypePrimitive(Kind.STRING);
     }
 
@@ -628,17 +573,8 @@ public interface PType {
      */
     @NotNull
     @Deprecated
-    static PType typeSymbol() {
+    static PType symbol() {
         return new PTypePrimitive(Kind.SYMBOL);
-    }
-
-    /**
-     * @return a PartiQL blob type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    static PType typeBlob(int length) {
-        return new PTypeWithMaxLength(Kind.BLOB, length);
     }
 
     /**
@@ -646,32 +582,127 @@ public interface PType {
      * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType typeClob(int length) {
+    static PType clob(int length) {
         return new PTypeWithMaxLength(Kind.CLOB, length);
     }
 
     /**
-     * @return a PartiQL char type
+     * @return a PartiQL blob type
+     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType typeChar(int length) {
-        return new PTypeWithMaxLength(Kind.CHAR, length);
-    }
-
-    /**
-     * @return a PartiQL char type
-     */
-    @NotNull
-    static PType typeVarChar(int length) {
-        return new PTypeWithMaxLength(Kind.CHAR, length);
+    static PType blob(int length) {
+        return new PTypeWithMaxLength(Kind.BLOB, length);
     }
 
     /**
      * @return a PartiQL date type
      */
     @NotNull
-    static PType typeDate() {
+    static PType date() {
         return new PTypePrimitive(Kind.DATE);
+    }
+
+    /**
+     * @return a PartiQL time without timezone type
+     */
+    @NotNull
+    static PType time(int precision) {
+        return new PTypeWithPrecisionOnly(Kind.TIME, precision);
+    }
+
+    /**
+     * @return a PartiQL time with timezone type
+     */
+    @NotNull
+    static PType timez(int precision) {
+        return new PTypeWithPrecisionOnly(Kind.TIMEZ, precision);
+    }
+
+    /**
+     * @return a PartiQL timestamp without timezone type
+     */
+    @NotNull
+    static PType timestamp(int precision) {
+        return new PTypeWithPrecisionOnly(Kind.TIMESTAMP, precision);
+    }
+
+    /**
+     * @return a PartiQL timestamp with timezone type
+     */
+    @NotNull
+    static PType timestampz(int precision) {
+        return new PTypeWithPrecisionOnly(Kind.TIMESTAMPZ, precision);
+    }
+
+    /**
+     * @return a PartiQL list type with a component type of dynamic
+     */
+    @NotNull
+    static PType array() {
+        return new PTypeCollection(Kind.ARRAY, PType.dynamic());
+    }
+
+    /**
+     * @return a PartiQL list type with a component type of {@code typeParam}
+     */
+    @NotNull
+    static PType array(@NotNull PType typeParam) {
+        return new PTypeCollection(Kind.ARRAY, typeParam);
+    }
+
+    /**
+     * @return a PartiQL bag type with a component type of dynamic
+     */
+    @NotNull
+    static PType bag() {
+        return new PTypeCollection(Kind.BAG, PType.dynamic());
+    }
+
+    /**
+     * @return a PartiQL bag type with a component type of {@code typeParam}
+     */
+    @NotNull
+    static PType bag(@NotNull PType typeParam) {
+        return new PTypeCollection(Kind.BAG, typeParam);
+    }
+
+    /**
+     * @return a PartiQL sexp type containing a component type of dynamic.
+     * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
+     */
+    @Deprecated
+    @NotNull
+    static PType sexp() {
+        return new PTypeCollection(Kind.SEXP, PType.dynamic());
+    }
+
+    /**
+     *
+     * @param typeParam the component type to be used
+     * @return a PartiQL sexp type containing a component type of {@code typeParam}.
+     * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
+     */
+    @NotNull
+    static PType sexp(@NotNull PType typeParam) {
+        return new PTypeCollection(Kind.SEXP, typeParam);
+    }
+
+    /**
+     * @return a PartiQL row type
+     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
+     */
+    @NotNull
+    static PType row(@NotNull Collection<Field> fields) {
+        return new PTypeRow(fields);
+    }
+
+    /**
+     * @return a PartiQL struct type
+     */
+    @NotNull
+    static PType struct() {
+        return new PTypePrimitive(Kind.STRUCT);
     }
 
     /**
@@ -679,7 +710,7 @@ public interface PType {
      * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType typeUnknown() {
+    static PType unknown() {
         return new PTypePrimitive(Kind.UNKNOWN);
     }
 
@@ -692,86 +723,86 @@ public interface PType {
     @Deprecated
     static PType fromStaticType(@NotNull StaticType type) {
         if (type instanceof AnyType) {
-            return PType.typeDynamic();
+            return PType.dynamic();
         } else if (type instanceof AnyOfType) {
             HashSet<StaticType> allTypes = new HashSet<>(type.flatten().getAllTypes());
             if (allTypes.isEmpty()) {
-                return PType.typeDynamic();
+                return PType.dynamic();
             } else if (allTypes.size() == 1) {
                 return fromStaticType(allTypes.stream().findFirst().get());
             } else {
-                return PType.typeDynamic();
+                return PType.dynamic();
             }
 //            if (allTypes.stream().allMatch((subType) -> subType instanceof CollectionType)) {}
         } else if (type instanceof BagType) {
             PType elementType = fromStaticType(((BagType) type).getElementType());
-            return PType.typeBag(elementType);
+            return PType.bag(elementType);
         } else if (type instanceof BlobType) {
-            return PType.typeBlob(Integer.MAX_VALUE); // TODO: Update this
+            return PType.blob(Integer.MAX_VALUE); // TODO: Update this
         } else if (type instanceof BoolType) {
-            return PType.typeBool();
+            return PType.bool();
         } else if (type instanceof ClobType) {
-            return PType.typeClob(Integer.MAX_VALUE); // TODO: Update this
+            return PType.clob(Integer.MAX_VALUE); // TODO: Update this
         } else if (type instanceof DateType) {
-            return PType.typeDate();
+            return PType.date();
         } else if (type instanceof DecimalType) {
             DecimalType.PrecisionScaleConstraint precScale = ((DecimalType) type).getPrecisionScaleConstraint();
             if (precScale instanceof DecimalType.PrecisionScaleConstraint.Unconstrained) {
-                return PType.typeDecimalArbitrary();
+                return PType.decimal();
             } else if (precScale instanceof DecimalType.PrecisionScaleConstraint.Constrained) {
                 DecimalType.PrecisionScaleConstraint.Constrained precisionScaleConstraint = (DecimalType.PrecisionScaleConstraint.Constrained) precScale;
-                return PType.typeDecimal(precisionScaleConstraint.getPrecision(), precisionScaleConstraint.getScale());
+                return PType.decimal(precisionScaleConstraint.getPrecision(), precisionScaleConstraint.getScale());
             } else {
                 throw new IllegalStateException();
             }
         } else if (type instanceof FloatType) {
-            return PType.typeDoublePrecision();
+            return PType.doublePrecision();
         } else if (type instanceof IntType) {
             IntType.IntRangeConstraint cons = ((IntType) type).getRangeConstraint();
             if (cons == IntType.IntRangeConstraint.INT4) {
-                return PType.typeInt();
+                return PType.integer();
             } else if (cons == IntType.IntRangeConstraint.SHORT) {
-                return PType.typeSmallInt();
+                return PType.smallint();
             } else if (cons == IntType.IntRangeConstraint.LONG) {
-                return PType.typeBigInt();
+                return PType.bigint();
             } else if (cons == IntType.IntRangeConstraint.UNCONSTRAINED) {
-                return PType.typeIntArbitrary();
+                return PType.numeric();
             } else {
                 throw new IllegalStateException();
             }
         } else if (type instanceof ListType) {
             PType elementType = fromStaticType(((ListType) type).getElementType());
-            return PType.typeList(elementType);
+            return PType.array(elementType);
         } else if (type instanceof SexpType) {
             PType elementType = fromStaticType(((SexpType) type).getElementType());
-            return PType.typeSexp(elementType);
+            return PType.sexp(elementType);
         } else if (type instanceof StringType) {
-            return PType.typeString();
+            return PType.string();
         } else if (type instanceof StructType) {
             boolean isOrdered = ((StructType) type).getConstraints().contains(TupleConstraint.Ordered.INSTANCE);
             boolean isClosed = ((StructType) type).getContentClosed();
             List<Field> fields = ((StructType) type).getFields().stream().map((field) -> Field.of(field.getKey(), PType.fromStaticType(field.getValue()))).collect(Collectors.toList());
             if (isClosed && isOrdered) {
-                return PType.typeRow(fields);
+                return PType.row(fields);
             } else if (isClosed) {
-                return PType.typeRow(fields); // TODO: We currently use ROW when closed.
+                return PType.row(fields); // TODO: We currently use ROW when closed.
             } else {
-                return PType.typeStruct();
+                return PType.struct();
             }
         } else if (type instanceof SymbolType) {
-            return PType.typeSymbol();
+            return PType.symbol();
         } else if (type instanceof TimeType) {
             Integer precision = ((TimeType) type).getPrecision();
             if (precision == null) {
                 precision = 6;
             }
-            return PType.typeTimeWithoutTZ(precision);
+            return PType.time(precision);
         } else if (type instanceof TimestampType) {
             Integer precision = ((TimestampType) type).getPrecision();
             if (precision == null) {
                 precision = 6;
             }
-            return PType.typeTimestampWithoutTZ(precision);
+            return PType.timestamp(precision);
         } else {
             throw new IllegalStateException("Unsupported type: " + type);
         }

@@ -16,10 +16,10 @@ internal object Fn_IN_COLLECTION__ANY_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDynamic()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.dynamic()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -43,10 +43,10 @@ internal object Fn_IN_COLLECTION__ANY_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDynamic()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.dynamic()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -70,10 +70,10 @@ internal object Fn_IN_COLLECTION__ANY_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDynamic()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.dynamic()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -97,10 +97,10 @@ internal object Fn_IN_COLLECTION__BOOL_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBool()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.bool()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -124,10 +124,10 @@ internal object Fn_IN_COLLECTION__BOOL_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBool()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.bool()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -151,10 +151,10 @@ internal object Fn_IN_COLLECTION__BOOL_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBool()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.bool()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -178,10 +178,10 @@ internal object Fn_IN_COLLECTION__INT8_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTinyInt()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.tinyint()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -205,10 +205,10 @@ internal object Fn_IN_COLLECTION__INT8_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTinyInt()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.tinyint()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -232,10 +232,10 @@ internal object Fn_IN_COLLECTION__INT8_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTinyInt()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.tinyint()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -259,10 +259,10 @@ internal object Fn_IN_COLLECTION__INT16_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSmallInt()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.smallint()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -286,10 +286,10 @@ internal object Fn_IN_COLLECTION__INT16_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSmallInt()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.smallint()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -313,10 +313,10 @@ internal object Fn_IN_COLLECTION__INT16_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSmallInt()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.smallint()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -340,10 +340,10 @@ internal object Fn_IN_COLLECTION__INT32_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeInt()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.integer()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -367,10 +367,10 @@ internal object Fn_IN_COLLECTION__INT32_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeInt()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.integer()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -394,10 +394,10 @@ internal object Fn_IN_COLLECTION__INT32_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeInt()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.integer()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -421,10 +421,10 @@ internal object Fn_IN_COLLECTION__INT64_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBigInt()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.bigint()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -448,10 +448,10 @@ internal object Fn_IN_COLLECTION__INT64_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBigInt()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.bigint()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -475,10 +475,10 @@ internal object Fn_IN_COLLECTION__INT64_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBigInt()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.bigint()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -502,10 +502,10 @@ internal object Fn_IN_COLLECTION__INT_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.typeIntArbitrary()),
-            FnParameter("collection", PType.typeBag()),
+            @Suppress("DEPRECATION") FnParameter("value", PType.numeric()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -529,10 +529,10 @@ internal object Fn_IN_COLLECTION__INT_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.typeIntArbitrary()),
-            FnParameter("collection", PType.typeList()),
+            @Suppress("DEPRECATION") FnParameter("value", PType.numeric()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -556,10 +556,10 @@ internal object Fn_IN_COLLECTION__INT_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.typeIntArbitrary()),
-            FnParameter("collection", PType.typeSexp()),
+            @Suppress("DEPRECATION") FnParameter("value", PType.numeric()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -583,10 +583,10 @@ internal object Fn_IN_COLLECTION__DECIMAL_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDecimalArbitrary()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.decimal()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -610,10 +610,10 @@ internal object Fn_IN_COLLECTION__DECIMAL_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDecimalArbitrary()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.decimal()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -637,10 +637,10 @@ internal object Fn_IN_COLLECTION__DECIMAL_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDecimalArbitrary()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.decimal()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -664,10 +664,10 @@ internal object Fn_IN_COLLECTION__DECIMAL_ARBITRARY_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.typeDecimalArbitrary()),
-            FnParameter("collection", PType.typeBag()),
+            @Suppress("DEPRECATION") FnParameter("value", PType.decimal()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -691,10 +691,10 @@ internal object Fn_IN_COLLECTION__DECIMAL_ARBITRARY_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.typeDecimalArbitrary()),
-            FnParameter("collection", PType.typeList()),
+            @Suppress("DEPRECATION") FnParameter("value", PType.decimal()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -718,10 +718,10 @@ internal object Fn_IN_COLLECTION__DECIMAL_ARBITRARY_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.typeDecimalArbitrary()),
-            FnParameter("collection", PType.typeSexp()),
+            @Suppress("DEPRECATION") FnParameter("value", PType.decimal()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -745,10 +745,10 @@ internal object Fn_IN_COLLECTION__FLOAT32_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeReal()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.real()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -773,10 +773,10 @@ internal object Fn_IN_COLLECTION__FLOAT32_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeReal()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.real()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -800,10 +800,10 @@ internal object Fn_IN_COLLECTION__FLOAT32_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeReal()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.real()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -827,10 +827,10 @@ internal object Fn_IN_COLLECTION__FLOAT64_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDoublePrecision()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.doublePrecision()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -854,10 +854,10 @@ internal object Fn_IN_COLLECTION__FLOAT64_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDoublePrecision()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.doublePrecision()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -881,10 +881,10 @@ internal object Fn_IN_COLLECTION__FLOAT64_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDoublePrecision()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.doublePrecision()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -908,10 +908,10 @@ internal object Fn_IN_COLLECTION__CHAR_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeChar(255)),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.character(255)),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -935,10 +935,10 @@ internal object Fn_IN_COLLECTION__CHAR_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeChar(255)),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.character(255)),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -962,10 +962,10 @@ internal object Fn_IN_COLLECTION__CHAR_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeChar(255)),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.character(255)),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -989,10 +989,10 @@ internal object Fn_IN_COLLECTION__STRING_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.string()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1016,10 +1016,10 @@ internal object Fn_IN_COLLECTION__STRING_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.string()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1043,10 +1043,10 @@ internal object Fn_IN_COLLECTION__STRING_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.string()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1070,10 +1070,10 @@ internal object Fn_IN_COLLECTION__SYMBOL_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSymbol()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.symbol()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1097,10 +1097,10 @@ internal object Fn_IN_COLLECTION__SYMBOL_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSymbol()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.symbol()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1124,10 +1124,10 @@ internal object Fn_IN_COLLECTION__SYMBOL_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSymbol()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.symbol()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1151,10 +1151,10 @@ internal object Fn_IN_COLLECTION__BLOB_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBlob(Int.MAX_VALUE)),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.blob(Int.MAX_VALUE)),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1178,10 +1178,10 @@ internal object Fn_IN_COLLECTION__BLOB_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBlob(Int.MAX_VALUE)),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.blob(Int.MAX_VALUE)),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1205,10 +1205,10 @@ internal object Fn_IN_COLLECTION__BLOB_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBlob(Int.MAX_VALUE)),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.blob(Int.MAX_VALUE)),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1232,10 +1232,10 @@ internal object Fn_IN_COLLECTION__CLOB_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1259,10 +1259,10 @@ internal object Fn_IN_COLLECTION__CLOB_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1286,10 +1286,10 @@ internal object Fn_IN_COLLECTION__CLOB_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1313,10 +1313,10 @@ internal object Fn_IN_COLLECTION__DATE_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDate()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.date()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1340,10 +1340,10 @@ internal object Fn_IN_COLLECTION__DATE_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDate()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.date()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1367,10 +1367,10 @@ internal object Fn_IN_COLLECTION__DATE_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDate()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.date()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1394,10 +1394,10 @@ internal object Fn_IN_COLLECTION__TIME_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTimeWithoutTZ(6)),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.time(6)),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1421,10 +1421,10 @@ internal object Fn_IN_COLLECTION__TIME_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTimeWithoutTZ(6)),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.time(6)),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1448,10 +1448,10 @@ internal object Fn_IN_COLLECTION__TIME_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTimeWithoutTZ(6)),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.time(6)),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1475,10 +1475,10 @@ internal object Fn_IN_COLLECTION__TIMESTAMP_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTimestampWithoutTZ(6)),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.timestamp(6)),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1502,10 +1502,10 @@ internal object Fn_IN_COLLECTION__TIMESTAMP_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTimestampWithoutTZ(6)),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.timestamp(6)),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1529,10 +1529,10 @@ internal object Fn_IN_COLLECTION__TIMESTAMP_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeTimestampWithoutTZ(6)),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.timestamp(6)),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1556,10 +1556,10 @@ internal object Fn_IN_COLLECTION__BAG_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBag()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.bag()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1583,10 +1583,10 @@ internal object Fn_IN_COLLECTION__BAG_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBag()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.bag()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1610,10 +1610,10 @@ internal object Fn_IN_COLLECTION__BAG_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBag()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.bag()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1637,10 +1637,10 @@ internal object Fn_IN_COLLECTION__LIST_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeList()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.array()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1664,10 +1664,10 @@ internal object Fn_IN_COLLECTION__LIST_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeList()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.array()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1691,10 +1691,10 @@ internal object Fn_IN_COLLECTION__LIST_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeList()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.array()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1718,10 +1718,10 @@ internal object Fn_IN_COLLECTION__SEXP_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSexp()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.sexp()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1745,10 +1745,10 @@ internal object Fn_IN_COLLECTION__SEXP_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSexp()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.sexp()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1772,10 +1772,10 @@ internal object Fn_IN_COLLECTION__SEXP_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeSexp()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.sexp()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1799,10 +1799,10 @@ internal object Fn_IN_COLLECTION__STRUCT_BAG__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeStruct()),
-            FnParameter("collection", PType.typeBag()),
+            FnParameter("value", PType.struct()),
+            FnParameter("collection", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1826,10 +1826,10 @@ internal object Fn_IN_COLLECTION__STRUCT_LIST__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeStruct()),
-            FnParameter("collection", PType.typeList()),
+            FnParameter("value", PType.struct()),
+            FnParameter("collection", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -1853,10 +1853,10 @@ internal object Fn_IN_COLLECTION__STRUCT_SEXP__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "in_collection",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeStruct()),
-            FnParameter("collection", PType.typeSexp()),
+            FnParameter("value", PType.struct()),
+            FnParameter("collection", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,

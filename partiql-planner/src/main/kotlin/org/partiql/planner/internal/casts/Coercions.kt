@@ -37,11 +37,11 @@ internal object Coercions {
     private val TYPES_NUMBER = setOf(
         Kind.TINYINT,
         Kind.SMALLINT,
-        Kind.INT,
+        Kind.INTEGER,
         Kind.BIGINT,
-        Kind.INT_ARBITRARY,
+        Kind.NUMERIC,
         Kind.REAL,
-        Kind.DOUBLE_PRECISION,
+        Kind.DOUBLE,
         Kind.DECIMAL,
         Kind.DECIMAL_ARBITRARY
     )
@@ -55,7 +55,7 @@ internal object Coercions {
     )
 
     private val TYPES_COLLECTION = setOf(
-        Kind.LIST,
+        Kind.ARRAY,
         Kind.SEXP,
         Kind.BAG
     )
@@ -195,8 +195,8 @@ internal object Coercions {
         val t = target.kind
         return when {
             i == Kind.DATE && t == Kind.DATE -> true
-            (i == Kind.TIME_WITH_TZ || i == Kind.TIME_WITHOUT_TZ) && (t == Kind.TIME_WITH_TZ || t == Kind.TIME_WITHOUT_TZ) -> true
-            (i == Kind.TIMESTAMP_WITH_TZ || i == Kind.TIMESTAMP_WITHOUT_TZ) && (t == Kind.TIMESTAMP_WITH_TZ || t == Kind.TIMESTAMP_WITHOUT_TZ) -> true
+            (i == Kind.TIMEZ || i == Kind.TIME) && (t == Kind.TIMEZ || t == Kind.TIME) -> true
+            (i == Kind.TIMESTAMPZ || i == Kind.TIMESTAMP) && (t == Kind.TIMESTAMPZ || t == Kind.TIMESTAMP) -> true
             else -> false
         }
     }

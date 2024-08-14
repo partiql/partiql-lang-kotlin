@@ -13,8 +13,8 @@ internal object Fn_IS_INT64__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_int64",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
@@ -24,9 +24,9 @@ internal object Fn_IS_INT64__ANY__BOOL : Fn {
         return when (arg.type.kind) {
             PType.Kind.TINYINT,
             PType.Kind.SMALLINT,
-            PType.Kind.INT,
+            PType.Kind.INTEGER,
             PType.Kind.BIGINT -> Datum.bool(true)
-            PType.Kind.INT_ARBITRARY -> {
+            PType.Kind.NUMERIC -> {
                 val v = arg.bigInteger
                 return try {
                     v.longValueExact()

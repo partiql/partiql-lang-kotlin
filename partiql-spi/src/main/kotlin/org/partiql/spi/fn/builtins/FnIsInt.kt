@@ -13,8 +13,8 @@ internal object Fn_IS_INT__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_int",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
@@ -22,9 +22,9 @@ internal object Fn_IS_INT__ANY__BOOL : Fn {
     private val INT_TYPES = setOf(
         PType.Kind.TINYINT,
         PType.Kind.SMALLINT,
-        PType.Kind.INT,
+        PType.Kind.INTEGER,
         PType.Kind.BIGINT,
-        PType.Kind.INT_ARBITRARY
+        PType.Kind.NUMERIC
     )
 
     override fun invoke(args: Array<Datum>): Datum {

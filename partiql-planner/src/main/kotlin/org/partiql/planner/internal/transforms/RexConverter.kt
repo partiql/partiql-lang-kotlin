@@ -134,7 +134,7 @@ internal object RexConverter {
                 true -> {
                     val select = rex.op as Rex.Op.Select
                     rex(
-                        CompilerType(PType.typeDynamic()),
+                        CompilerType(PType.dynamic()),
                         rexOpSubquery(
                             constructor = select.constructor,
                             rel = select.rel,
@@ -839,51 +839,51 @@ internal object RexConverter {
             return when (type) {
                 is Type.NullType -> error("Casting to NULL is not supported.")
                 is Type.Missing -> error("Casting to MISSING is not supported.")
-                is Type.Bool -> PType.typeBool()
-                is Type.Tinyint -> PType.typeTinyInt()
-                is Type.Smallint, is Type.Int2 -> PType.typeSmallInt()
-                is Type.Int4 -> PType.typeInt()
-                is Type.Bigint, is Type.Int8 -> PType.typeBigInt()
-                is Type.Int -> PType.typeIntArbitrary()
-                is Type.Real -> PType.typeReal()
-                is Type.Float32 -> PType.typeReal()
-                is Type.Float64 -> PType.typeDoublePrecision()
+                is Type.Bool -> PType.bool()
+                is Type.Tinyint -> PType.tinyint()
+                is Type.Smallint, is Type.Int2 -> PType.smallint()
+                is Type.Int4 -> PType.integer()
+                is Type.Bigint, is Type.Int8 -> PType.bigint()
+                is Type.Int -> PType.numeric()
+                is Type.Real -> PType.real()
+                is Type.Float32 -> PType.real()
+                is Type.Float64 -> PType.doublePrecision()
                 is Type.Decimal -> when {
-                    type.precision == null && type.scale == null -> PType.typeDecimalArbitrary()
-                    type.precision != null && type.scale != null -> PType.typeDecimal(type.precision!!, type.scale!!)
-                    type.precision != null && type.scale == null -> PType.typeDecimal(type.precision!!, 0)
+                    type.precision == null && type.scale == null -> PType.decimal()
+                    type.precision != null && type.scale != null -> PType.decimal(type.precision!!, type.scale!!)
+                    type.precision != null && type.scale == null -> PType.decimal(type.precision!!, 0)
                     else -> error("Precision can never be null while scale is specified.")
                 }
 
                 is Type.Numeric -> when {
-                    type.precision == null && type.scale == null -> PType.typeDecimalArbitrary()
-                    type.precision != null && type.scale != null -> PType.typeDecimal(type.precision!!, type.scale!!)
-                    type.precision != null && type.scale == null -> PType.typeDecimal(type.precision!!, 0)
+                    type.precision == null && type.scale == null -> PType.decimal()
+                    type.precision != null && type.scale != null -> PType.decimal(type.precision!!, type.scale!!)
+                    type.precision != null && type.scale == null -> PType.decimal(type.precision!!, 0)
                     else -> error("Precision can never be null while scale is specified.")
                 }
 
-                is Type.Char -> PType.typeChar(type.length ?: 255) // TODO: What is default?
+                is Type.Char -> PType.character(type.length ?: 255) // TODO: What is default?
                 is Type.Varchar -> error("VARCHAR is not supported yet.")
-                is Type.String -> PType.typeString()
-                is Type.Symbol -> PType.typeSymbol()
+                is Type.String -> PType.string()
+                is Type.Symbol -> PType.symbol()
                 is Type.Bit -> error("BIT is not supported yet.")
                 is Type.BitVarying -> error("BIT VARYING is not supported yet.")
                 is Type.ByteString -> error("BINARY is not supported yet.")
-                is Type.Blob -> PType.typeBlob(type.length ?: Int.MAX_VALUE)
-                is Type.Clob -> PType.typeClob(type.length ?: Int.MAX_VALUE)
-                is Type.Date -> PType.typeDate()
-                is Type.Time -> PType.typeTimeWithoutTZ(type.precision ?: 6)
-                is Type.TimeWithTz -> PType.typeTimeWithTZ(type.precision ?: 6)
-                is Type.Timestamp -> PType.typeTimestampWithoutTZ(type.precision ?: 6)
-                is Type.TimestampWithTz -> PType.typeTimestampWithTZ(type.precision ?: 6)
+                is Type.Blob -> PType.blob(type.length ?: Int.MAX_VALUE)
+                is Type.Clob -> PType.clob(type.length ?: Int.MAX_VALUE)
+                is Type.Date -> PType.date()
+                is Type.Time -> PType.time(type.precision ?: 6)
+                is Type.TimeWithTz -> PType.timez(type.precision ?: 6)
+                is Type.Timestamp -> PType.timestamp(type.precision ?: 6)
+                is Type.TimestampWithTz -> PType.timestampz(type.precision ?: 6)
                 is Type.Interval -> error("INTERVAL is not supported yet.")
-                is Type.Bag -> PType.typeBag()
-                is Type.Sexp -> PType.typeSexp()
-                is Type.Any -> PType.typeDynamic()
+                is Type.Bag -> PType.bag()
+                is Type.Sexp -> PType.sexp()
+                is Type.Any -> PType.dynamic()
                 is Type.Custom -> TODO("Custom type not supported ")
-                is Type.List -> PType.typeList()
-                is Type.Tuple -> PType.typeStruct()
-                is Type.Struct -> PType.typeStruct()
+                is Type.List -> PType.array()
+                is Type.Tuple -> PType.struct()
+                is Type.Struct -> PType.struct()
             }.toCType()
         }
 
@@ -986,15 +986,15 @@ internal object RexConverter {
 
         private fun Int?.toRex() = rex(INT4, rexOpLit(int32Value(this)))
 
-        private val ANY: CompilerType = CompilerType(PType.typeDynamic())
-        private val BOOL: CompilerType = CompilerType(PType.typeBool())
-        private val STRING: CompilerType = CompilerType(PType.typeString())
-        private val STRUCT: CompilerType = CompilerType(PType.typeStruct())
-        private val BAG: CompilerType = CompilerType(PType.typeBag())
-        private val LIST: CompilerType = CompilerType(PType.typeList())
-        private val SEXP: CompilerType = CompilerType(PType.typeSexp())
-        private val INT: CompilerType = CompilerType(PType.typeIntArbitrary())
-        private val INT4: CompilerType = CompilerType(PType.typeInt())
-        private val TIMESTAMP: CompilerType = CompilerType(PType.typeTimestampWithoutTZ(6))
+        private val ANY: CompilerType = CompilerType(PType.dynamic())
+        private val BOOL: CompilerType = CompilerType(PType.bool())
+        private val STRING: CompilerType = CompilerType(PType.string())
+        private val STRUCT: CompilerType = CompilerType(PType.struct())
+        private val BAG: CompilerType = CompilerType(PType.bag())
+        private val LIST: CompilerType = CompilerType(PType.array())
+        private val SEXP: CompilerType = CompilerType(PType.sexp())
+        private val INT: CompilerType = CompilerType(PType.numeric())
+        private val INT4: CompilerType = CompilerType(PType.integer())
+        private val TIMESTAMP: CompilerType = CompilerType(PType.timestamp(6))
     }
 }

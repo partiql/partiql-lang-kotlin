@@ -35,9 +35,9 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
         @JvmStatic
         internal fun createSignature(name: String) = FnSignature(
             name = name,
-            returns = PType.typeDynamic(),
+            returns = PType.dynamic(),
             parameters = listOf(
-                FnParameter("value", PType.typeBag()),
+                FnParameter("value", PType.bag()),
             ),
             isNullCall = true,
             isNullable = true

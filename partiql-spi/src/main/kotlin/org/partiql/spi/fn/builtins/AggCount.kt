@@ -13,9 +13,9 @@ internal object Agg_COUNT__ANY__INT64 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "count",
-        returns = PType.typeBigInt(),
+        returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("value", PType.typeDynamic()),
+            FnParameter("value", PType.dynamic()),
         ),
         isNullable = false,
         isDecomposable = true

@@ -109,11 +109,11 @@ internal fun checkIsBooleanType(funcName: String, value: Datum) {
 internal fun Datum.numberValue(): Number = when (this.type.kind) {
     PType.Kind.TINYINT -> this.byte
     PType.Kind.SMALLINT -> this.short
-    PType.Kind.INT -> this.int
+    PType.Kind.INTEGER -> this.int
     PType.Kind.BIGINT -> this.long
-    PType.Kind.INT_ARBITRARY -> this.bigInteger
+    PType.Kind.NUMERIC -> this.bigInteger
     PType.Kind.REAL -> this.float
-    PType.Kind.DOUBLE_PRECISION -> this.double
+    PType.Kind.DOUBLE -> this.double
     PType.Kind.DECIMAL -> this.bigDecimal
     PType.Kind.DECIMAL_ARBITRARY -> this.bigDecimal
     else -> error("Cannot convert PartiQLValue ($this) to number.")
@@ -125,13 +125,13 @@ internal fun Datum.booleanValue(): Boolean = when (this.type.kind) {
 }
 
 internal fun PType.isNumber(): Boolean = when (this.kind) {
-    PType.Kind.INT,
+    PType.Kind.INTEGER,
     PType.Kind.TINYINT,
     PType.Kind.SMALLINT,
     PType.Kind.BIGINT,
-    PType.Kind.INT_ARBITRARY,
+    PType.Kind.NUMERIC,
     PType.Kind.REAL,
-    PType.Kind.DOUBLE_PRECISION,
+    PType.Kind.DOUBLE,
     PType.Kind.DECIMAL,
     PType.Kind.DECIMAL_ARBITRARY -> true
     else -> false
@@ -148,32 +148,32 @@ internal fun nullToTargetType(type: PType): Datum = Datum.nullValue(type)
 internal fun Number.toTargetType(type: PType): Datum = when (type.kind) {
     PType.Kind.DYNAMIC -> this.toDatum()
     PType.Kind.REAL -> Datum.real(this.toFloat())
-    PType.Kind.DOUBLE_PRECISION -> Datum.doublePrecision(this.toDouble())
+    PType.Kind.DOUBLE -> Datum.doublePrecision(this.toDouble())
     PType.Kind.DECIMAL, PType.Kind.DECIMAL_ARBITRARY -> {
         when (this) {
-            is BigDecimal -> Datum.decimalArbitrary(this)
-            is BigInteger -> Datum.decimalArbitrary(this.toBigDecimal())
-            else -> Datum.decimalArbitrary(BigDecimal.valueOf(this.toDouble()))
+            is BigDecimal -> Datum.decimal(this)
+            is BigInteger -> Datum.decimal(this.toBigDecimal())
+            else -> Datum.decimal(BigDecimal.valueOf(this.toDouble()))
         }
     }
-    PType.Kind.TINYINT -> Datum.tinyInt(this.toByte())
-    PType.Kind.SMALLINT -> Datum.smallInt(this.toShort())
-    PType.Kind.INT -> Datum.integer(this.toInt())
-    PType.Kind.BIGINT -> Datum.bigInt(this.toLong())
-    PType.Kind.INT_ARBITRARY -> when (this) {
-        is BigInteger -> Datum.intArbitrary(this)
-        is BigDecimal -> Datum.intArbitrary(this.toBigInteger())
-        else -> Datum.intArbitrary(BigInteger.valueOf(this.toLong()))
+    PType.Kind.TINYINT -> Datum.tinyint(this.toByte())
+    PType.Kind.SMALLINT -> Datum.smallint(this.toShort())
+    PType.Kind.INTEGER -> Datum.integer(this.toInt())
+    PType.Kind.BIGINT -> Datum.bigint(this.toLong())
+    PType.Kind.NUMERIC -> when (this) {
+        is BigInteger -> Datum.numeric(this)
+        is BigDecimal -> Datum.numeric(this.toBigInteger())
+        else -> Datum.numeric(BigInteger.valueOf(this.toLong()))
     }
     else -> TODO("Unsupported target type $type")
 }
 
 internal fun Number.toDatum(): Datum = when (this) {
     is Int -> Datum.integer(this)
-    is Long -> Datum.bigInt(this)
+    is Long -> Datum.bigint(this)
     is Double -> Datum.doublePrecision(this)
-    is BigDecimal -> Datum.decimalArbitrary(this)
-    is BigInteger -> Datum.intArbitrary(this)
+    is BigDecimal -> Datum.decimal(this)
+    is BigInteger -> Datum.numeric(this)
     else -> TODO("Could not convert $this to PartiQL Value")
 }
 

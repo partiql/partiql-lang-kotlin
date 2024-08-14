@@ -4,7 +4,7 @@ import org.partiql.eval.value.Datum
 import org.partiql.types.PType
 
 internal class AccumulatorSum(
-    private val targetType: PType = PType.typeDynamic(),
+    private val targetType: PType = PType.dynamic(),
 ) : Accumulator() {
 
     var sum: Number? = null

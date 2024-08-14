@@ -25,7 +25,7 @@ public interface Table {
     /**
      * The table's schema.
      */
-    public fun getSchema(): PType = PType.typeDynamic()
+    public fun getSchema(): PType = PType.dynamic()
 
     /**
      * Factory methods and builder.
@@ -36,7 +36,7 @@ public interface Table {
          * Create a simple table with a name and schema.
          */
         @JvmStatic
-        public fun of(name: String, schema: PType = PType.typeDynamic()): Table = object : Table {
+        public fun of(name: String, schema: PType = PType.dynamic()): Table = object : Table {
             override fun getName(): String = name
             override fun getSchema(): PType = schema
         }
@@ -54,7 +54,7 @@ public interface Table {
     public class Builder {
 
         private var name: String? = null
-        private var schema: PType = PType.typeDynamic()
+        private var schema: PType = PType.dynamic()
 
         public fun name(name: String): Builder {
             this.name = name

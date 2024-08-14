@@ -84,10 +84,10 @@ internal object Fn_SUBSTRING__STRING_INT32__STRING : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = PType.typeString(),
+        returns = PType.string(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
-            FnParameter("start", PType.typeInt()),
+            FnParameter("value", PType.string()),
+            FnParameter("start", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -105,11 +105,11 @@ internal object Fn_SUBSTRING__STRING_INT32_INT32__STRING : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = PType.typeString(),
+        returns = PType.string(),
         parameters = listOf(
-            FnParameter("value", PType.typeString()),
-            FnParameter("start", PType.typeInt()),
-            FnParameter("end", PType.typeInt()),
+            FnParameter("value", PType.string()),
+            FnParameter("start", PType.integer()),
+            FnParameter("end", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -129,10 +129,10 @@ internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = PType.typeSymbol(),
+        returns = PType.symbol(),
         parameters = listOf(
-            FnParameter("value", PType.typeSymbol()),
-            FnParameter("start", PType.typeInt()),
+            FnParameter("value", PType.symbol()),
+            FnParameter("start", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -150,11 +150,11 @@ internal object Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = PType.typeSymbol(),
+        returns = PType.symbol(),
         parameters = listOf(
-            FnParameter("value", PType.typeSymbol()),
-            FnParameter("start", PType.typeInt()),
-            FnParameter("end", PType.typeInt()),
+            FnParameter("value", PType.symbol()),
+            FnParameter("start", PType.integer()),
+            FnParameter("end", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -174,10 +174,10 @@ internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = PType.typeClob(Int.MAX_VALUE),
+        returns = PType.clob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("start", PType.typeInt()),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
+            FnParameter("start", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -195,11 +195,11 @@ internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Fn {
 
     override val signature = FnSignature(
         name = "substring",
-        returns = PType.typeClob(Int.MAX_VALUE),
+        returns = PType.clob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("value", PType.typeClob(Int.MAX_VALUE)),
-            FnParameter("start", PType.typeInt()),
-            FnParameter("end", PType.typeInt()),
+            FnParameter("value", PType.clob(Int.MAX_VALUE)),
+            FnParameter("start", PType.integer()),
+            FnParameter("end", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,

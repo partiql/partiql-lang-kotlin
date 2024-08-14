@@ -9,7 +9,7 @@ import org.partiql.types.PType;
 class DatumDouble implements Datum {
 
     private final double _value;
-    private final static PType _type = PType.typeDoublePrecision();
+    private final static PType _type = PType.doublePrecision();
 
     DatumDouble(double value) {
         _value = value;

@@ -13,9 +13,9 @@ internal object Agg_SOME__BOOL__BOOL : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "some",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeBool()),
+            FnParameter("value", PType.bool()),
         ),
         isNullable = true,
         isDecomposable = true
@@ -28,9 +28,9 @@ internal object Agg_SOME__ANY__BOOL : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "some",
-        returns = PType.typeBool(),
+        returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.typeDynamic()),
+            FnParameter("value", PType.dynamic()),
         ),
         isNullable = true,
         isDecomposable = true

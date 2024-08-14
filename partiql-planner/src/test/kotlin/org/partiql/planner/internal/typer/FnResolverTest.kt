@@ -22,14 +22,14 @@ class FnResolverTest {
         val variants = listOf(
             FnSignature(
                 name = "plus",
-                returns = PType.typeDoublePrecision(),
+                returns = PType.doublePrecision(),
                 parameters = listOf(
-                    FnParameter("arg-0", PType.typeDoublePrecision()),
-                    FnParameter("arg-1", PType.typeDoublePrecision()),
+                    FnParameter("arg-0", PType.doublePrecision()),
+                    FnParameter("arg-1", PType.doublePrecision()),
                 ),
             )
         )
-        val args = listOf(PType.typeInt().toCType(), PType.typeDoublePrecision().toCType())
+        val args = listOf(PType.integer().toCType(), PType.doublePrecision().toCType())
         val expectedImplicitCasts = listOf(true, false)
         val case = Case.Success(variants, args, expectedImplicitCasts)
         case.assert()
@@ -40,15 +40,15 @@ class FnResolverTest {
         val variants = listOf(
             FnSignature(
                 name = "split",
-                returns = PType.typeList(),
+                returns = PType.array(),
                 parameters = listOf(
-                    FnParameter("value", PType.typeString()),
-                    FnParameter("delimiter", PType.typeString()),
+                    FnParameter("value", PType.string()),
+                    FnParameter("delimiter", PType.string()),
                 ),
                 isNullable = false,
             )
         )
-        val args = listOf(PType.typeString().toCType(), PType.typeString().toCType())
+        val args = listOf(PType.string().toCType(), PType.string().toCType())
         val expectedImplicitCasts = listOf(false, false)
         val case = Case.Success(variants, args, expectedImplicitCasts)
         case.assert()

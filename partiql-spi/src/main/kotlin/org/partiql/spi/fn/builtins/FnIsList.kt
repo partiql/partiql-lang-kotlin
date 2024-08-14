@@ -13,13 +13,13 @@ internal object Fn_IS_LIST__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_list",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<Datum>): Datum {
-        return Datum.bool(args[0].type.kind == PType.Kind.LIST)
+        return Datum.bool(args[0].type.kind == PType.Kind.ARRAY)
     }
 }

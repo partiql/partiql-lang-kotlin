@@ -21,7 +21,7 @@ internal class ExprTupleUnion(
         // Return NULL if any arguments are NULL
         tuples.forEach {
             if (it.isNull) {
-                return Datum.nullValue(PType.typeStruct())
+                return Datum.nullValue(PType.struct())
             }
         }
 

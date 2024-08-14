@@ -13,8 +13,8 @@ internal object Fn_IS_NULL__ANY__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "is_null",
-        returns = PType.typeBool(),
-        parameters = listOf(FnParameter("value", PType.typeDynamic())),
+        returns = PType.bool(),
+        parameters = listOf(FnParameter("value", PType.dynamic())),
         isNullable = false,
         isNullCall = false,
         isMissable = false,

@@ -11,7 +11,7 @@ class DatumDate implements Datum {
     @NotNull
     private final org.partiql.value.datetime.Date _value;
 
-    private static final PType _type = PType.typeDate();
+    private static final PType _type = PType.date();
 
     DatumDate(@NotNull org.partiql.value.datetime.Date value) {
         _value = value;
