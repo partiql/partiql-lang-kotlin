@@ -1502,7 +1502,7 @@ public final class org/partiql/value/io/PartiQLValueWriterBuilder$Companion {
 
 public final class org/partiql/value/ion/IonDatum : org/partiql/eval/value/Datum {
 	public static final field Companion Lorg/partiql/value/ion/IonDatum$Companion;
-	public synthetic fun <init> (Lcom/amazon/ionelement/api/AnyElement;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/amazon/ionelement/api/AnyElement;Lorg/partiql/types/PType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun get (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
 	public fun getBigDecimal ()Ljava/math/BigDecimal;
 	public fun getBigInteger ()Ljava/math/BigInteger;
@@ -1518,11 +1518,11 @@ public final class org/partiql/value/ion/IonDatum : org/partiql/eval/value/Datum
 	public fun isMissing ()Z
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
-	public static final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/value/ion/IonDatum;
+	public static final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/eval/value/Datum;
 }
 
 public final class org/partiql/value/ion/IonDatum$Companion {
-	public final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/value/ion/IonDatum;
+	public final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/eval/value/Datum;
 }
 
 public final class org/partiql/value/util/NumberExtensionsKt {

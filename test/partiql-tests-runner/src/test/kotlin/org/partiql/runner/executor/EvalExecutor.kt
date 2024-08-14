@@ -26,7 +26,6 @@ import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
-import org.partiql.value.ion.IonDatum
 import org.partiql.value.toIon
 import org.partiql.planner.catalog.Session as PlannerSession
 
@@ -190,7 +189,6 @@ class EvalExecutor(
 
                 // NO SHIM (343 failures)
                 // val datum = IonDatum.of(f.value)
-
 
                 val table = MemoryTable.of(
                     name = name,
