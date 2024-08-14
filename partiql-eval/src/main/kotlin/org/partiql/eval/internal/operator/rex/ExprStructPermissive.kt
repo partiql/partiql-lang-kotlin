@@ -12,7 +12,7 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
             if (key.isNull) {
                 return Datum.nullValue()
             }
-            val keyString = key.getTextOrNull() ?: return Datum.struct(emptyList())
+            val keyString = key.getTextOrNull() ?: return@mapNotNull null
             val value = it.value.eval(env)
             when (value.isMissing) {
                 true -> null
@@ -27,6 +27,7 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
          * @throws NullPointerException if the value itself is null
          * @return the underlying string value of a textual value; null if the type is not a textual value.
          */
+        @JvmStatic
         fun Datum.getTextOrNull(): String? {
             return when (this.type.kind) {
                 PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
