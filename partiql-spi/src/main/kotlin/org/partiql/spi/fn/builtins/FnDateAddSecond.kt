@@ -29,7 +29,7 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Fn {
         val datetime = args[1].time
         val datetimeValue = datetime
         val intervalValue = interval.toLong()
-        return Datum.timeWithoutTZ(datetimeValue.plusSeconds(intervalValue))
+        return Datum.time(datetimeValue.plusSeconds(intervalValue))
     }
 }
 
@@ -51,7 +51,7 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : Fn {
         val datetime = args[1].time
         val datetimeValue = datetime
         val intervalValue = interval
-        return Datum.timeWithoutTZ(datetimeValue.plusSeconds(intervalValue))
+        return Datum.time(datetimeValue.plusSeconds(intervalValue))
     }
 }
 
@@ -77,7 +77,7 @@ internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : Fn {
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return Datum.timeWithoutTZ(datetimeValue.plusSeconds(intervalValue))
+        return Datum.time(datetimeValue.plusSeconds(intervalValue))
     }
 }
 
@@ -99,7 +99,7 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : Fn {
         val datetime = args[1].timestamp
         val datetimeValue = datetime
         val intervalValue = interval.toLong()
-        return Datum.timestampWithoutTZ(datetimeValue.plusSeconds(intervalValue))
+        return Datum.timestamp(datetimeValue.plusSeconds(intervalValue))
     }
 }
 
@@ -121,7 +121,7 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : Fn {
         val datetime = args[1].timestamp
         val datetimeValue = datetime
         val intervalValue = interval
-        return Datum.timestampWithoutTZ(datetimeValue.plusSeconds(intervalValue))
+        return Datum.timestamp(datetimeValue.plusSeconds(intervalValue))
     }
 }
 
@@ -147,6 +147,6 @@ internal object Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP : Fn {
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return Datum.timestampWithoutTZ(datetimeValue.plusSeconds(intervalValue))
+        return Datum.timestamp(datetimeValue.plusSeconds(intervalValue))
     }
 }

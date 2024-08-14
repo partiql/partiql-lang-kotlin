@@ -29,7 +29,7 @@ internal object Fn_DATE_ADD_HOUR__INT32_TIME__TIME : Fn {
         val datetime = args[1]
         val datetimeValue = datetime.time
         val intervalValue = interval.toLong()
-        return Datum.timeWithoutTZ(datetimeValue.plusHours(intervalValue))
+        return Datum.time(datetimeValue.plusHours(intervalValue))
     }
 }
 
@@ -51,7 +51,7 @@ internal object Fn_DATE_ADD_HOUR__INT64_TIME__TIME : Fn {
         val datetime = args[1]
         val datetimeValue = datetime.time
         val intervalValue = interval.long
-        return Datum.timeWithoutTZ(datetimeValue.plusHours(intervalValue))
+        return Datum.time(datetimeValue.plusHours(intervalValue))
     }
 }
 
@@ -77,7 +77,7 @@ internal object Fn_DATE_ADD_HOUR__INT_TIME__TIME : Fn {
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return Datum.timeWithoutTZ(datetimeValue.plusHours(intervalValue))
+        return Datum.time(datetimeValue.plusHours(intervalValue))
     }
 }
 
@@ -99,7 +99,7 @@ internal object Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP : Fn {
         val datetime = args[1]
         val datetimeValue = datetime.timestamp
         val intervalValue = interval.toLong()
-        return Datum.timestampWithoutTZ(datetimeValue.plusHours(intervalValue))
+        return Datum.timestamp(datetimeValue.plusHours(intervalValue))
     }
 }
 
@@ -121,7 +121,7 @@ internal object Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP : Fn {
         val datetime = args[1]
         val datetimeValue = datetime.timestamp
         val intervalValue = interval.long
-        return Datum.timestampWithoutTZ(datetimeValue.plusHours(intervalValue))
+        return Datum.timestamp(datetimeValue.plusHours(intervalValue))
     }
 }
 
@@ -147,6 +147,6 @@ internal object Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP : Fn {
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return Datum.timestampWithoutTZ(datetimeValue.plusHours(intervalValue))
+        return Datum.timestamp(datetimeValue.plusHours(intervalValue))
     }
 }

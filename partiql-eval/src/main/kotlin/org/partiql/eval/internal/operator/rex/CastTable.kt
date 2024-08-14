@@ -533,7 +533,7 @@ internal object CastTable {
      * TODO: Flush this out.
      */
     private fun registerTimestamp() {
-        register(TIMESTAMPZ, TIMESTAMP) { x, _ -> Datum.timestampWithoutTZ(x.timestamp) }
+        register(TIMESTAMPZ, TIMESTAMP) { x, _ -> Datum.timestamp(x.timestamp) }
     }
 
     private fun register(source: PType.Kind, target: PType.Kind, cast: (Datum, PType) -> Datum) {

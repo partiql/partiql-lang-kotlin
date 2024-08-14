@@ -619,12 +619,12 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum timeWithoutTZ(@NotNull Time value) {
+    static Datum time(@NotNull Time value) {
         return new DatumTime(value);
     }
 
     @NotNull
-    static Datum timestampWithoutTZ(@NotNull Timestamp value) {
+    static Datum timestamp(@NotNull Timestamp value) {
         return new DatumTimestamp(value);
     }
 

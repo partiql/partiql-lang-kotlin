@@ -317,8 +317,8 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public static fun string (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
 	public static fun struct (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
 	public static fun symbol (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;
-	public static fun timeWithoutTZ (Lorg/partiql/value/datetime/Time;)Lorg/partiql/eval/value/Datum;
-	public static fun timestampWithoutTZ (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/eval/value/Datum;
+	public static fun time (Lorg/partiql/value/datetime/Time;)Lorg/partiql/eval/value/Datum;
+	public static fun timestamp (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/eval/value/Datum;
 	public static fun tinyint (B)Lorg/partiql/eval/value/Datum;
 	public fun toPartiQLValue ()Lorg/partiql/value/PartiQLValue;
 }

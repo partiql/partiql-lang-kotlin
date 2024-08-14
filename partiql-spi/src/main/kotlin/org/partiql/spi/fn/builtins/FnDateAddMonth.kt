@@ -99,7 +99,7 @@ internal object Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP : Fn {
         val datetime = args[1].timestamp
         val datetimeValue = datetime
         val intervalValue = interval.toLong()
-        return Datum.timestampWithoutTZ(datetimeValue.plusMonths(intervalValue))
+        return Datum.timestamp(datetimeValue.plusMonths(intervalValue))
     }
 }
 
@@ -121,7 +121,7 @@ internal object Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP : Fn {
         val datetime = args[1].timestamp
         val datetimeValue = datetime
         val intervalValue = interval
-        return Datum.timestampWithoutTZ(datetimeValue.plusMonths(intervalValue))
+        return Datum.timestamp(datetimeValue.plusMonths(intervalValue))
     }
 }
 
@@ -147,6 +147,6 @@ internal object Fn_DATE_ADD_MONTH__INT_TIMESTAMP__TIMESTAMP : Fn {
         } catch (e: DataException) {
             throw TypeCheckException()
         }
-        return Datum.timestampWithoutTZ(datetimeValue.plusMonths(intervalValue))
+        return Datum.timestamp(datetimeValue.plusMonths(intervalValue))
     }
 }

@@ -21,6 +21,6 @@ internal object Fn_UTCNOW____TIMESTAMP : Fn {
 
     override fun invoke(args: Array<Datum>): Datum {
         val now = TimestampWithTimeZone.nowZ()
-        return Datum.timestampWithoutTZ(now)
+        return Datum.timestamp(now)
     }
 }
