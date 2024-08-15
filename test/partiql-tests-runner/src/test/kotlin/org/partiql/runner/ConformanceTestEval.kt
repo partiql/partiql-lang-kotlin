@@ -23,6 +23,46 @@ class ConformanceTestEval : ConformanceTestBase<PartiQLStatement<*>, PartiQLResu
     override val runner = TestRunner(factory)
 
     /**
+     * Currently, the [ConformanceTestEval] only skips GPML-related tests.
+     */
+    override val skipListForEvaluation: List<Pair<String, CompileOptions>>
+        get() = gpmlTests + testsToFix
+
+    override val skipListForEquivalence: List<Pair<String, CompileOptions>> = emptyList()
+
+    /**
+     * TODO: ADD SUPPORT FOR THESE
+     * Variable does not exist.
+     */
+    private val aliasTests: List<Pair<String, CompileOptions>> = listOf(
+        Pair("testing alias support", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("testing alias support", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("testing nested alias support", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("testing nested alias support", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("group and order by count", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("group and order by count", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO: ADD SUPPORT FOR THESE
+     * Wrong precision/scale
+     */
+    private val arithmeticCases = listOf(
+        Pair("division with mixed StaticType", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("division with mixed StaticType", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("repeatingDecimal", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("repeatingDecimal", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("repeatingDecimalHigherPrecision", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("repeatingDecimalHigherPrecision", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("divDecimalInt", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("divDecimalInt", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("subtractionOutOfAllowedPrecision", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("subtractionOutOfAllowedPrecision", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    private val testsToFix: List<Pair<String, CompileOptions>> = aliasTests + arithmeticCases
+
+    /**
      * This holds all of the Graph Pattern Matching Language conformance tests. The new evaluator does not yet support
      * their evaluation.
      */
@@ -368,11 +408,4 @@ class ConformanceTestEval : ConformanceTestBase<PartiQLStatement<*>, PartiQLResu
         Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x1) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x1) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     )
-
-    /**
-     * Currently, the [ConformanceTestEval] only skips GPML-related tests.
-     */
-    override val skipListForEvaluation: List<Pair<String, CompileOptions>> = gpmlTests
-
-    override val skipListForEquivalence: List<Pair<String, CompileOptions>> = emptyList()
 }

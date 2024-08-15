@@ -25,9 +25,18 @@ internal object Fn_OR__BOOL_BOOL__BOOL : Fn {
     )
 
     override fun invoke(args: Array<Datum>): Datum {
-        if (args[0].isNull || args[1].isNull) return Datum.nullValue(PType.bool())
-        val lhs = args[0].boolean
-        val rhs = args[1].boolean
-        return Datum.bool(lhs || rhs)
+        val lhs = args[0]
+        val rhs = args[1]
+        val lhsIsUnknown = lhs.isNull || lhs.isMissing
+        val rhsIsUnknown = rhs.isNull || rhs.isMissing
+
+        // SQL:1999 Section 6.30 Table 13
+        return when {
+            lhsIsUnknown && rhsIsUnknown -> Datum.nullValue(PType.bool())
+            !lhsIsUnknown && !rhsIsUnknown -> Datum.bool(lhs.boolean || rhs.boolean)
+            lhsIsUnknown && rhs.boolean -> Datum.bool(true)
+            rhsIsUnknown && lhs.boolean -> Datum.bool(true)
+            else -> Datum.nullValue(PType.bool())
+        }
     }
 }
