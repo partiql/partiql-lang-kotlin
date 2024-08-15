@@ -19,7 +19,7 @@ internal class RelScan(
             PType.Kind.ARRAY, PType.Kind.BAG, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
             else -> {
                 close()
-                throw TypeCheckException()
+                throw TypeCheckException("Unexpected type for scan: ${r.type}")
             }
         }
     }

@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.helpers.ValueUtility.getText
+import org.partiql.eval.internal.helpers.ValueUtility.getTextOrNull
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 
@@ -12,7 +12,7 @@ internal class ExprStruct(private val fields: List<Field>) : Operator.Expr {
             if (key.isNull) {
                 return Datum.nullValue()
             }
-            val keyString = key.getText()
+            val keyString = key.getTextOrNull() ?: return Datum.struct(emptyList())
             val value = it.value.eval(env)
             when (value.isMissing) {
                 true -> null
