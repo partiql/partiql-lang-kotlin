@@ -1090,7 +1090,7 @@ internal class PlanTyper(private val env: Env) {
          */
         private fun visitRexOpSubqueryScalar(subquery: Rex.Op.Subquery, cons: CompilerType): Rex {
             if (cons.kind == Kind.DYNAMIC) {
-                return Rex(PType.typeDynamic().toCType(), subquery)
+                return Rex(PType.dynamic().toCType(), subquery)
             }
             if (cons.kind != Kind.ROW) {
                 error("Subquery with non-SQL SELECT cannot be coerced to a scalar. Found constructor type: $cons")
