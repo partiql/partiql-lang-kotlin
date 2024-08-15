@@ -36,3 +36,7 @@ include(
     "test:sprout-tests",
     "examples",
 )
+include("test:benchmarks")
+findProject(":test:benchmarks")?.name = "benchmarks"
+include("test:v1.0.0-perf.1")
+findProject(":test:v1.0.0-perf.1")?.name = "v1.0.0-perf.1"

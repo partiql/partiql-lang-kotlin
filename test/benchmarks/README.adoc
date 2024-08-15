@@ -1,0 +1,33 @@
+= PartiQL Benchmarks
+
+These benchmarks are meant for cross-version benchmarking.
+
+== Prerequisites
+
+[source, shell]
+.Terminal
+----
+git checkout v1.0.0-perf.1
+
+# MANUALLY ADD
+# Add publishing plugin to the memory plugin
+# MANUALLY ADD
+
+./gradlew publishToMavenLocal
+----
+
+== Assemble & Run
+
+To assemble:
+[source, shell]
+.Terminal
+----
+./gradlew :test:benchmarks:assemble
+----
+
+To run:
+[source, shell]
+.Terminal
+----
+./gradlew :test:benchmarks:jmh
+----
