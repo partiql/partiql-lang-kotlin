@@ -41,7 +41,9 @@ import org.partiql.eval.internal.operator.rex.ExprPermissive
 import org.partiql.eval.internal.operator.rex.ExprPivot
 import org.partiql.eval.internal.operator.rex.ExprPivotPermissive
 import org.partiql.eval.internal.operator.rex.ExprSelect
-import org.partiql.eval.internal.operator.rex.ExprStruct
+import org.partiql.eval.internal.operator.rex.ExprStructField
+import org.partiql.eval.internal.operator.rex.ExprStructPermissive
+import org.partiql.eval.internal.operator.rex.ExprStructStrict
 import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVarLocal
@@ -110,9 +112,12 @@ internal class Compiler(
     override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: PType?): Operator {
         val fields = node.fields.map {
             val value = visitRex(it.v, ctx).modeHandled()
-            ExprStruct.Field(visitRex(it.k, ctx), value)
+            ExprStructField(visitRex(it.k, ctx), value)
         }
-        return ExprStruct(fields)
+        return when (session.mode) {
+            PartiQLEngine.Mode.STRICT -> ExprStructStrict(fields)
+            PartiQLEngine.Mode.PERMISSIVE -> ExprStructPermissive(fields)
+        }
     }
 
     override fun visitRexOpSelect(node: Rex.Op.Select, ctx: PType?): Operator {

@@ -1,18 +1,18 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.helpers.ValueUtility.getTextOrNull
+import org.partiql.eval.internal.helpers.ValueUtility.getText
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 
-internal class ExprStruct(private val fields: List<Field>) : Operator.Expr {
+internal class ExprStructStrict(private val fields: List<ExprStructField>) : Operator.Expr {
     override fun eval(env: Environment): Datum {
         val fields = fields.mapNotNull {
             val key = it.key.eval(env)
             if (key.isNull) {
                 return Datum.nullValue()
             }
-            val keyString = key.getTextOrNull() ?: return Datum.struct(emptyList())
+            val keyString = key.getText()
             val value = it.value.eval(env)
             when (value.isMissing) {
                 true -> null
@@ -21,6 +21,4 @@ internal class ExprStruct(private val fields: List<Field>) : Operator.Expr {
         }
         return Datum.struct(fields)
     }
-
-    internal class Field(val key: Operator.Expr, val value: Operator.Expr)
 }

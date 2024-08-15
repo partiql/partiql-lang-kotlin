@@ -50,17 +50,9 @@ internal object ValueUtility {
      * @throws TypeCheckException if the value's type is not a text type (string, symbol, char)
      */
     fun Datum.getText(): String {
-        return this.getTextOrNull() ?: throw TypeCheckException("Expected text, but received ${this.type}.")
-    }
-
-    /**
-     * @throw NullPointerException if the value itself is null
-     * @return the underlying string value of a textual value; null if the type is not a textual value.
-     */
-    fun Datum.getTextOrNull(): String? {
         return when (this.type.kind) {
             PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
-            else -> null
+            else -> throw TypeCheckException("Expected text, but received ${this.type}.")
         }
     }
 

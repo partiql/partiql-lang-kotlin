@@ -537,7 +537,7 @@ internal object RexConverter {
          * TODO: This could be better suited as a dedicated node in the future.
          */
         private fun visitExprCallExists(node: Expr.Call, context: Env): Rex {
-            val type = (STRUCT)
+            val type = (BOOL)
             if (node.args.size != 1) {
                 error("EXISTS requires a single argument.")
             }
