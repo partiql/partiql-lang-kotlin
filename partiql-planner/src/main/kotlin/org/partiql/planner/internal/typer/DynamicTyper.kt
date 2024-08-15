@@ -3,7 +3,10 @@
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.types.DecimalType
+import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
+import org.partiql.types.StringType
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValueExperimental
@@ -34,6 +37,7 @@ import org.partiql.value.PartiQLValueType.STRUCT
 import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
+import kotlin.math.max
 
 /**
  * Graph of super types for quick lookup because we don't have a tree.
@@ -127,20 +131,59 @@ internal class DynamicTyper {
      * @return
      */
     fun mapping(): Pair<StaticType, List<Pair<PartiQLValueType, PartiQLValueType>>?> {
-        // If at top supertype, then return union of all accumulated types
-        if (supertype == ANY) {
-            return StaticType.unionOf(types).flatten() to null
+        // no coercion
+        val s = when (val superT = supertype) {
+            // If not initialized, then return null, missing, or null|missing.
+            null -> return StaticType.ANY to null
+            // If at top supertype, then return union of all accumulated types
+            ANY -> return StaticType.unionOf(types).flatten() to null
+            // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
+            STRUCT, BAG, LIST, SEXP -> return StaticType.unionOf(types) to null
+            DECIMAL -> {
+                val type = computeDecimal()
+                // coercion required. fall back
+                if (type == null) superT else return type to null
+            }
+            STRING -> {
+                val type = computeString()
+                // coercion required. fall back
+                if (type == null) superT else return type to null
+            }
+            else -> superT
         }
-        // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
-        if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {
-            return StaticType.unionOf(types) to null
-        }
-        // If not initialized, then return null, missing, or null|missing.
-        val s = supertype ?: return StaticType.ANY to null
+
         // Otherwise, return the supertype along with the coercion mapping
         val type = s.toStaticType()
         val mapping = args.map { it to s }
         return type to mapping
+    }
+
+    private fun computeDecimal(): DecimalType? {
+        val (precision, scale) = types.fold((0 to 0)) { acc, staticType ->
+            val decimalType = staticType as? DecimalType ?: return null
+            val constr = decimalType.precisionScaleConstraint as DecimalType.PrecisionScaleConstraint.Constrained
+            val precision = max(constr.precision, acc.first)
+            val scale = max(constr.scale, acc.second)
+            precision to scale
+        }
+        return DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(precision, scale))
+    }
+
+    private fun computeString(): StringType? {
+        val (length, isVarchar) = types.fold((0 to false)) { acc, staticType ->
+            staticType as? StringType ?: return null
+            when (val constr = staticType.lengthConstraint) {
+                is StringType.StringLengthConstraint.Constrained -> return@fold when (val l = constr.length) {
+                    is NumberConstraint.Equals -> max(acc.first, l.value) to acc.second
+                    is NumberConstraint.UpTo -> max(acc.first, l.value) to true
+                }
+                StringType.StringLengthConstraint.Unconstrained -> return StaticType.STRING
+            }
+        }
+        return when (isVarchar) {
+            true -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(length)))
+            false -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(length)))
+        }
     }
 
     private fun calculate(type: PartiQLValueType) {
