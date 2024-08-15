@@ -9,9 +9,6 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
     override fun eval(env: Environment): Datum {
         val fields = fields.mapNotNull {
             val key = it.key.eval(env)
-            if (key.isNull) {
-                return Datum.nullValue()
-            }
             val keyString = key.getTextOrNull() ?: return@mapNotNull null
             val value = it.value.eval(env)
             when (value.isMissing) {
@@ -24,11 +21,14 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
 
     companion object {
         /**
-         * @throws NullPointerException if the value itself is null
-         * @return the underlying string value of a textual value; null if the type is not a textual value.
+         * @return the underlying string value of a textual value; null if the type is not a textual value or if the
+         * value itself is absent.
          */
         @JvmStatic
         fun Datum.getTextOrNull(): String? {
+            if (this.isNull || this.isMissing) {
+                return null
+            }
             return when (this.type.kind) {
                 PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
                 else -> null

@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getText
 import org.partiql.eval.internal.operator.Operator
@@ -9,8 +10,8 @@ internal class ExprStructStrict(private val fields: List<ExprStructField>) : Ope
     override fun eval(env: Environment): Datum {
         val fields = fields.mapNotNull {
             val key = it.key.eval(env)
-            if (key.isNull) {
-                return Datum.nullValue()
+            if (key.isNull || key.isMissing) {
+                throw TypeCheckException("Struct key was absent.")
             }
             val keyString = key.getText()
             val value = it.value.eval(env)
