@@ -5,6 +5,7 @@ import com.amazon.ionelement.api.ListElement
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.SymbolElement
+import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
@@ -23,6 +24,7 @@ import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
+import org.partiql.types.NumberConstraint
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StringType
@@ -101,6 +103,8 @@ public fun StructElement.toStaticType(): StaticType {
         "list" -> toListType()
         "sexp" -> toSexpType()
         "struct" -> toStructType()
+        "decimal" -> toDecimalType()
+        "string" -> toStringType()
         else -> error("Unknown complex type $type")
     }
 }
@@ -149,6 +153,27 @@ public fun StructElement.toStructType(): StaticType {
     return StructType(fields, contentClosed, constraints = constraints)
 }
 
+public fun StructElement.toDecimalType(): StaticType {
+    val precision = get("precision").bigIntegerValue.intValueExact()
+    val scale = get("scale").bigIntegerValue.intValueExact()
+    val precisionScaleConstraint = DecimalType.PrecisionScaleConstraint.Constrained(precision, scale)
+    return DecimalType(precisionScaleConstraint)
+}
+
+public fun StructElement.toStringType(): StaticType {
+    return when {
+        getOptional("min_length") != null -> {
+            val length = get("min_length")
+            assert(length == get("max_length")) { "type declaration error: max_length/min_length mismatch" }
+            StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(length.bigIntegerValue.intValueExact())))
+        }
+        else -> {
+            val length = get("max_length")
+            StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(length.bigIntegerValue.intValueExact())))
+        }
+    }
+}
+
 public fun StaticType.toIon(): IonElement = when (this) {
     is AnyOfType -> this.toIon()
     is AnyType -> ionString("any")
@@ -159,7 +184,7 @@ public fun StaticType.toIon(): IonElement = when (this) {
     is ListType -> this.toIon()
     is SexpType -> this.toIon()
     is DateType -> ionString("date")
-    is DecimalType -> ionString("decimal")
+    is DecimalType -> this.toIon()
     is FloatType -> ionString("float64")
     is GraphType -> ionString("graph")
     is IntType -> when (this.rangeConstraint) {
@@ -168,9 +193,9 @@ public fun StaticType.toIon(): IonElement = when (this) {
         IntType.IntRangeConstraint.LONG -> ionString("int64")
         IntType.IntRangeConstraint.UNCONSTRAINED -> ionString("int")
     }
+    is StringType -> this.toIon()
     MissingType -> ionString("missing")
     is NullType -> ionString("null")
-    is StringType -> ionString("string") // TODO char
     is StructType -> this.toIon()
     is SymbolType -> ionString("symbol")
     is TimeType -> ionString("time")
@@ -220,4 +245,28 @@ private fun StructType.toIon(): IonElement {
         "fields" to ionListOf(fieldTypes),
         "constraints" to ionListOf(constraintSymbols),
     )
+}
+
+private fun DecimalType.toIon(): IonElement = when (val contr = this.precisionScaleConstraint) {
+    is DecimalType.PrecisionScaleConstraint.Constrained -> ionStructOf(
+        "type" to ionString("decimal"),
+        "precision" to ionInt(contr.precision.toLong()),
+        "scale" to ionInt(contr.scale.toLong())
+    )
+    DecimalType.PrecisionScaleConstraint.Unconstrained -> ionString("decimal")
+}
+
+private fun StringType.toIon(): IonElement = when (val constr = this.lengthConstraint) {
+    is StringType.StringLengthConstraint.Constrained -> when (val l = constr.length) {
+        is NumberConstraint.Equals -> ionStructOf(
+            "type" to ionString("string"),
+            "max_length" to ionInt(l.value.toLong()),
+            "min_length" to ionInt(l.value.toLong())
+        )
+        is NumberConstraint.UpTo -> ionStructOf(
+            "type" to ionString("string"),
+            "max_length" to ionInt(l.value.toLong()),
+        )
+    }
+    StringType.StringLengthConstraint.Unconstrained -> ionString("string")
 }

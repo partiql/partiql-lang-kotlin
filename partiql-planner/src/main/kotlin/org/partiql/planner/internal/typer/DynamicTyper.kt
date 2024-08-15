@@ -2,9 +2,12 @@
 
 package org.partiql.planner.internal.typer
 
+import org.partiql.types.DecimalType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
+import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
+import org.partiql.types.StringType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -35,6 +38,7 @@ import org.partiql.value.PartiQLValueType.STRUCT
 import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
+import kotlin.math.max
 
 /**
  * Graph of super types for quick lookup because we don't have a tree.
@@ -127,19 +131,27 @@ internal class DynamicTyper {
         val modifiers = mutableSetOf<StaticType>()
         if (nullable) modifiers.add(StaticType.NULL)
         if (missable) modifiers.add(StaticType.MISSING)
-        // If at top supertype, then return union of all accumulated types
-        if (supertype == ANY) {
-            return StaticType.unionOf(types + modifiers).flatten() to null
-        }
-        // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
-        if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {
-            return StaticType.unionOf(types + modifiers) to null
-        }
-        // If not initialized, then return null, missing, or null|missing.
-        val s = supertype
-        if (s == null) {
-            val t = if (modifiers.isEmpty()) StaticType.MISSING else StaticType.unionOf(modifiers).flatten()
-            return t to null
+        val s = when (val superT = supertype) {
+            // If not initialized, then return null, missing, or null|missing.
+            null -> {
+                val t = if (modifiers.isEmpty()) StaticType.MISSING else StaticType.unionOf(modifiers).flatten()
+                return t to null
+            }
+            // If at top supertype, then return union of all accumulated types
+            ANY -> return StaticType.unionOf(types + modifiers).flatten() to null
+            // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
+            STRUCT, BAG, LIST, SEXP -> return StaticType.unionOf(types + modifiers) to null
+            DECIMAL -> {
+                val type = computeDecimal()
+                // coercion required. fall back
+                if (type == null) superT else return StaticType.unionOf(setOf(type) + modifiers).flatten() to null
+            }
+            STRING -> {
+                val type = computeString()
+                // coercion required. fall back
+                if (type == null) superT else return StaticType.unionOf(setOf(type) + modifiers).flatten() to null
+            }
+            else -> superT
         }
         // Otherwise, return the supertype along with the coercion mapping
         val type = s.toNonNullStaticType()
@@ -148,6 +160,34 @@ internal class DynamicTyper {
             type to mapping
         } else {
             StaticType.unionOf(setOf(type) + modifiers).flatten() to mapping
+        }
+    }
+
+    private fun computeDecimal(): DecimalType? {
+        val (precision, scale) = types.fold((0 to 0)) { acc, staticType ->
+            val decimalType = staticType as? DecimalType ?: return null
+            val constr = decimalType.precisionScaleConstraint as DecimalType.PrecisionScaleConstraint.Constrained
+            val precision = max(constr.precision, acc.first)
+            val scale = max(constr.scale, acc.second)
+            precision to scale
+        }
+        return DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(precision, scale))
+    }
+
+    private fun computeString(): StringType? {
+        val (length, isVarchar) = types.fold((0 to false)) { acc, staticType ->
+            staticType as? StringType ?: return null
+            when (val constr = staticType.lengthConstraint) {
+                is StringType.StringLengthConstraint.Constrained -> return@fold when (val l = constr.length) {
+                    is NumberConstraint.Equals -> max(acc.first, l.value) to acc.second
+                    is NumberConstraint.UpTo -> max(acc.first, l.value) to true
+                }
+                StringType.StringLengthConstraint.Unconstrained -> return StaticType.STRING
+            }
+        }
+        return when (isVarchar) {
+            true -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(length)))
+            false -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(length)))
         }
     }
 
