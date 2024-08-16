@@ -484,15 +484,8 @@ expr::[
     rhs:    expr,
   },
 
-  // PartiQL special form `[OUTER] (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
-  bag_op::{
-    type:   '.set_op',
-    lhs:    expr,
-    rhs:    expr,
-  },
-
   query_set::{
-    body: query_expr,
+    body: query_body,
     order_by: optional::order_by,
     limit:    optional::expr,
     offset:   optional::expr,
@@ -518,7 +511,7 @@ expr::[
   },
 ]
 
-query_expr::[
+query_body::[
   // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
   s_f_w::{
     select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
@@ -530,12 +523,13 @@ query_expr::[
     having:   optional::expr,
   },
 
-  // SQL UNION (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
+  // PartiQL bag op / SQL set op [OUTER] (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
   set_op::{
-    type:   '.set_op',
-    lhs:    '.expr.query_set',
-    rhs:    '.expr.query_set',
-  },
+    type:     '.set_op',
+    is_outer: bool,
+    lhs:      expr,
+    rhs:      expr,
+  }
 ]
 
 // PartiQL SELECT Clause Variants — https://partiql.org/dql/select.html

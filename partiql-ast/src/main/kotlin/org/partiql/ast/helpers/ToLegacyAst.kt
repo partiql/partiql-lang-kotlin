@@ -27,7 +27,7 @@ import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Path
-import org.partiql.ast.QueryExpr
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
@@ -622,19 +622,6 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         call("date_diff", operands, metas)
     }
 
-    override fun visitExprBagOp(node: Expr.BagOp, ctx: Ctx) = translate(node) { metas ->
-        val lhs = visitExpr(node.lhs, ctx)
-        val rhs = visitExpr(node.rhs, ctx)
-        val op = when (node.type.type) {
-            SetOp.Type.UNION -> outerUnion()
-            SetOp.Type.INTERSECT -> outerIntersect()
-            SetOp.Type.EXCEPT -> outerExcept()
-        }
-        val setq = node.type.setq?.toLegacySetQuantifier() ?: distinct()
-        val operands = listOf(lhs, rhs)
-        bagOp(op, setq, operands, metas)
-    }
-
     override fun visitExprMatch(node: Expr.Match, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
         val match = visitGraphMatch(node.pattern, ctx)
@@ -672,7 +659,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val limit = node.limit?.let { visitExpr(it, ctx) }
         val offset = node.offset?.let { visitExpr(it, ctx) }
         when (val body = node.body) {
-            is QueryExpr.SFW -> {
+            is QueryBody.SFW -> {
                 var setq = when (val s = body.select) {
                     is Select.Pivot -> null
                     is Select.Project -> s.setq?.toLegacySetQuantifier()
@@ -692,13 +679,26 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
                 val having = body.having?.let { visitExpr(it, ctx) }
                 select(setq, project, exclude, from, fromLet, where, groupBy, having, orderBy, limit, offset, metas)
             }
-            is QueryExpr.SetOp -> {
+            is QueryBody.SetOp -> {
                 val lhs = visitExpr(body.lhs, ctx)
                 val rhs = visitExpr(body.rhs, ctx)
+                val outer = body.isOuter
                 val op = when (body.type.type) {
-                    SetOp.Type.UNION -> union()
-                    SetOp.Type.INTERSECT -> intersect()
-                    SetOp.Type.EXCEPT -> except()
+                    SetOp.Type.UNION -> if (outer) {
+                        outerUnion()
+                    } else {
+                        union()
+                    }
+                    SetOp.Type.INTERSECT -> if (outer) {
+                        outerIntersect()
+                    } else {
+                        intersect()
+                    }
+                    SetOp.Type.EXCEPT -> if (outer) {
+                        outerExcept()
+                    } else {
+                        except()
+                    }
                 }
                 val setq = body.type.setq?.toLegacySetQuantifier() ?: distinct()
                 val operands = listOf(lhs, rhs)

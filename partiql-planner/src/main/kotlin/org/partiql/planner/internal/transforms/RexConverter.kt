@@ -19,9 +19,8 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
-import org.partiql.ast.QueryExpr
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Select
-import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
@@ -288,7 +287,7 @@ internal object RexConverter {
         private fun isSqlSelect(node: Expr): Boolean {
             return if (node is Expr.QuerySet) {
                 val body = node.body
-                body is QueryExpr.SFW && (body.select is Select.Project || body.select is Select.Star)
+                body is QueryBody.SFW && (body.select is Select.Project || body.select is Select.Star)
             } else {
                 false
             }
@@ -953,24 +952,6 @@ internal object RexConverter {
         }
 
         override fun visitExprQuerySet(node: Expr.QuerySet, context: Env): Rex = RelConverter.apply(node, context)
-
-        override fun visitExprBagOp(node: Expr.BagOp, ctx: Env): Rex {
-            val lhs = visitExpr(node.lhs, ctx)
-            val rhs = visitExpr(node.rhs, ctx)
-            val quantifier = when (node.type.setq) {
-                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
-                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
-            }
-            val op = when (node.type.type) {
-                SetOp.Type.UNION -> Rex.Op.Union(quantifier, lhs, rhs)
-                SetOp.Type.EXCEPT -> Rex.Op.Except(quantifier, lhs, rhs)
-                SetOp.Type.INTERSECT -> Rex.Op.Intersect(quantifier, lhs, rhs)
-            }
-            return Rex(
-                type = ANY,
-                op = op
-            )
-        }
 
         // Helpers
 

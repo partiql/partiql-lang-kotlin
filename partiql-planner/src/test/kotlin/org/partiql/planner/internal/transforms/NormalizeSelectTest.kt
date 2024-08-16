@@ -129,7 +129,7 @@ class NormalizeSelectTest {
 
     private fun select(vararg items: Select.Project.Item) = ast {
         exprQuerySet {
-            body = queryExprSFW {
+            body = queryBodySFW {
                 select = selectProject {
                     this.items += items
                 }
@@ -144,7 +144,7 @@ class NormalizeSelectTest {
     @OptIn(PartiQLValueExperimental::class)
     private fun selectValue(vararg items: Pair<String, Expr>) = ast {
         exprQuerySet {
-            body = queryExprSFW {
+            body = queryBodySFW {
                 select = selectValue {
                     constructor = exprStruct {
                         for ((k, v) in items) {

@@ -31,10 +31,6 @@ import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprCollection
-import org.partiql.eval.internal.operator.rex.ExprExceptAll
-import org.partiql.eval.internal.operator.rex.ExprExceptDistinct
-import org.partiql.eval.internal.operator.rex.ExprIntersectAll
-import org.partiql.eval.internal.operator.rex.ExprIntersectDistinct
 import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
@@ -50,8 +46,6 @@ import org.partiql.eval.internal.operator.rex.ExprStructPermissive
 import org.partiql.eval.internal.operator.rex.ExprStructStrict
 import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
-import org.partiql.eval.internal.operator.rex.ExprUnionAll
-import org.partiql.eval.internal.operator.rex.ExprUnionDistinct
 import org.partiql.eval.internal.operator.rex.ExprVarLocal
 import org.partiql.eval.internal.operator.rex.ExprVarOuter
 import org.partiql.eval.value.Datum
@@ -273,33 +267,6 @@ internal class Compiler(
 
     override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: PType?): Operator {
         return ExprMissing(ctx ?: PType.unknown()) // TODO: Pass a type
-    }
-
-    override fun visitRexOpUnion(node: Rex.Op.Union, ctx: PType?): Operator {
-        val lhs = visitRex(node.lhs, ctx)
-        val rhs = visitRex(node.rhs, ctx)
-        return when (node.setq) {
-            SetQuantifier.ALL -> ExprUnionAll(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
-            SetQuantifier.DISTINCT -> ExprUnionDistinct(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
-        }
-    }
-
-    override fun visitRexOpExcept(node: Rex.Op.Except, ctx: PType?): Operator {
-        val lhs = visitRex(node.lhs, ctx)
-        val rhs = visitRex(node.rhs, ctx)
-        return when (node.setq) {
-            SetQuantifier.ALL -> ExprExceptAll(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
-            SetQuantifier.DISTINCT -> ExprExceptDistinct(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
-        }
-    }
-
-    override fun visitRexOpIntersect(node: Rex.Op.Intersect, ctx: PType?): Operator {
-        val lhs = visitRex(node.lhs, ctx)
-        val rhs = visitRex(node.rhs, ctx)
-        return when (node.setq) {
-            SetQuantifier.ALL -> ExprIntersectAll(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
-            SetQuantifier.DISTINCT -> ExprIntersectDistinct(lhs, rhs, session.mode == PartiQLEngine.Mode.PERMISSIVE)
-        }
     }
 
     // REL

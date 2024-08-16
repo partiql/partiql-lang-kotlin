@@ -23,7 +23,7 @@ import org.partiql.ast.From
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.OrderBy
-import org.partiql.ast.QueryExpr
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
@@ -91,7 +91,7 @@ internal object RelConverter {
     internal fun apply(qSet: Expr.QuerySet, env: Env): Rex {
         val newQSet = NormalizeSelect.normalize(qSet)
         val rex = when (val body = newQSet.body) {
-            is QueryExpr.SFW -> {
+            is QueryBody.SFW -> {
                 val rel = newQSet.accept(ToRel(env), nil)
                 when (val projection = body.select) {
                     // PIVOT ... FROM
@@ -126,7 +126,7 @@ internal object RelConverter {
                     }
                 }
             }
-            is QueryExpr.SetOp -> {
+            is QueryBody.SetOp -> {
                 val rel = newQSet.accept(ToRel(env), nil)
                 val constructor = rex(ANY, rexOpVarLocal(0, 0))
                 val op = rexOpSelect(constructor, rel)
@@ -161,7 +161,7 @@ internal object RelConverter {
             val limit = node.limit
             val offset = node.offset
             when (body) {
-                is QueryExpr.SFW -> {
+                is QueryBody.SFW -> {
                     var sel = body
                     var rel = visitFrom(sel.from, nil)
                     rel = convertWhere(rel, sel.where)
@@ -189,7 +189,7 @@ internal object RelConverter {
                     }
                     return rel
                 }
-                is QueryExpr.SetOp -> {
+                is QueryBody.SetOp -> {
                     var rel = convertSetOp(body)
                     rel = convertOrderBy(rel, orderBy)
                     // offset should precede limit
@@ -372,7 +372,7 @@ internal object RelConverter {
          *         2. Rel which has the appropriate Rex.Agg calls and groups
          */
         @OptIn(PartiQLValueExperimental::class)
-        private fun convertAgg(input: Rel, select: QueryExpr.SFW, groupBy: GroupBy?): Pair<QueryExpr.SFW, Rel> {
+        private fun convertAgg(input: Rel, select: QueryBody.SFW, groupBy: GroupBy?): Pair<QueryBody.SFW, Rel> {
             // Rewrite and extract all aggregations in the SELECT clause
             val (sel, aggregations) = AggregationTransform.apply(select)
 
@@ -471,21 +471,34 @@ internal object RelConverter {
             return rel(type, op)
         }
 
+        private fun visitIfQuerySet(expr: Expr): Rel {
+            return when (expr) {
+                is Expr.QuerySet -> visit(expr, nil)
+                else -> {
+                    val rex = RexConverter.applyRel(expr, env)
+                    val op = relOpScan(rex)
+                    val type = Rel.Type(listOf(Rel.Binding("_1", ANY)), props = emptySet())
+                    return rel(type, op)
+                }
+            }
+        }
+
         /**
          * Append SQL set operator if present
          */
-        private fun convertSetOp(setExpr: QueryExpr.SetOp): Rel {
-            val lhs = visit(setExpr.lhs, nil)
-            val rhs = visit(setExpr.rhs, nil)
-            val type = nil.type
+        private fun convertSetOp(setExpr: QueryBody.SetOp): Rel {
+            val lhs = visitIfQuerySet(setExpr.lhs)
+            val rhs = visitIfQuerySet(setExpr.rhs)
+            val type = Rel.Type(listOf(Rel.Binding("_0", ANY)), props = emptySet())
             val quantifier = when (setExpr.type.setq) {
                 SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
                 null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
             }
+            val outer = setExpr.isOuter
             val op = when (setExpr.type.type) {
-                SetOp.Type.UNION -> Rel.Op.Union(quantifier, lhs, rhs)
-                SetOp.Type.EXCEPT -> Rel.Op.Except(quantifier, lhs, rhs)
-                SetOp.Type.INTERSECT -> Rel.Op.Intersect(quantifier, lhs, rhs)
+                SetOp.Type.UNION -> Rel.Op.Union(quantifier, outer, lhs, rhs)
+                SetOp.Type.EXCEPT -> Rel.Op.Except(quantifier, outer, lhs, rhs)
+                SetOp.Type.INTERSECT -> Rel.Op.Intersect(quantifier, outer, lhs, rhs)
             }
             return rel(type, op)
         }
@@ -629,11 +642,11 @@ internal object RelConverter {
             val keys: List<GroupBy.Key>
         )
 
-        fun apply(node: QueryExpr.SFW): Pair<QueryExpr.SFW, List<Expr.Call>> {
+        fun apply(node: QueryBody.SFW): Pair<QueryBody.SFW, List<Expr.Call>> {
             val aggs = mutableListOf<Expr.Call>()
             val keys = node.groupBy?.keys ?: emptyList()
             val context = Context(aggs, keys)
-            val select = super.visitQueryExprSFW(node, context) as QueryExpr.SFW
+            val select = super.visitQueryBodySFW(node, context) as QueryBody.SFW
             return Pair(select, aggs)
         }
 
@@ -646,7 +659,7 @@ internal object RelConverter {
         }
 
         // only rewrite top-level SFW
-        override fun visitQueryExprSFW(node: QueryExpr.SFW, ctx: Context): AstNode = node
+        override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: Context): AstNode = node
 
         override fun visitExprCall(node: Expr.Call, ctx: Context) = ast {
             // TODO replace w/ proper function resolution to determine whether a function call is a scalar or aggregate.

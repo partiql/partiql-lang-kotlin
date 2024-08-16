@@ -246,24 +246,6 @@ internal class PlanTransform(
             override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Unit) =
                 org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
 
-            override fun visitRexOpExcept(node: Rex.Op.Except, ctx: Unit) = org.partiql.plan.Rex.Op.Except(
-                lhs = visitRex(node.lhs, ctx),
-                rhs = visitRex(node.rhs, ctx),
-                setq = visitSetQuantifier(node.setq)
-            )
-
-            override fun visitRexOpIntersect(node: Rex.Op.Intersect, ctx: Unit) = org.partiql.plan.Rex.Op.Intersect(
-                lhs = visitRex(node.lhs, ctx),
-                rhs = visitRex(node.rhs, ctx),
-                setq = visitSetQuantifier(node.setq)
-            )
-
-            override fun visitRexOpUnion(node: Rex.Op.Union, ctx: Unit) = org.partiql.plan.Rex.Op.Union(
-                lhs = visitRex(node.lhs, ctx),
-                rhs = visitRex(node.rhs, ctx),
-                setq = visitSetQuantifier(node.setq)
-            )
-
             override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): PlanNode {
                 // track the error in call back
                 val trace = node.causes.map { visitRexOp(it, ctx) }

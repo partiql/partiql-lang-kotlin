@@ -925,43 +925,55 @@ class SqlDialectTest {
                 }
             },
             expect("x OUTER UNION y") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = null
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        isOuter = true
+                        lhs = v("x")
+                        rhs = v("y")
                     }
-                    lhs = v("x")
-                    rhs = v("y")
                 }
             },
             expect("x OUTER UNION ALL y") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = SetQuantifier.ALL
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = SetQuantifier.ALL
+                        }
+                        isOuter = true
+                        lhs = v("x")
+                        rhs = v("y")
                     }
-                    lhs = v("x")
-                    rhs = v("y")
                 }
             },
             expect("x OUTER UNION y") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = null
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        isOuter = true
+                        lhs = v("x")
+                        rhs = v("y")
                     }
-                    lhs = v("x")
-                    rhs = v("y")
                 }
             },
             expect("x OUTER UNION ALL y") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = SetQuantifier.ALL
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = SetQuantifier.ALL
+                        }
+                        isOuter = true
+                        lhs = v("x")
+                        rhs = v("y")
                     }
-                    lhs = v("x")
-                    rhs = v("y")
                 }
             },
         )
@@ -994,7 +1006,7 @@ class SqlDialectTest {
         fun selectClauseCases() = listOf(
             expect("SELECT a FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectProject {
                             items += selectProjectItemExpression(v("a"))
                         }
@@ -1004,7 +1016,7 @@ class SqlDialectTest {
             },
             expect("SELECT a AS x FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectProject {
                             items += selectProjectItemExpression(v("a"), id("x"))
                         }
@@ -1014,7 +1026,7 @@ class SqlDialectTest {
             },
             expect("SELECT a AS x, b AS y FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectProject {
                             items += selectProjectItemExpression(v("a"), id("x"))
                             items += selectProjectItemExpression(v("b"), id("y"))
@@ -1025,7 +1037,7 @@ class SqlDialectTest {
             },
             expect("SELECT ALL a FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectProject {
                             setq = SetQuantifier.ALL
                             items += selectProjectItemExpression(v("a"))
@@ -1036,7 +1048,7 @@ class SqlDialectTest {
             },
             expect("SELECT DISTINCT a FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectProject {
                             setq = SetQuantifier.DISTINCT
                             items += selectProjectItemExpression(v("a"))
@@ -1047,7 +1059,7 @@ class SqlDialectTest {
             },
             expect("SELECT a.* FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectProject {
                             items += selectProjectItemAll(v("a"))
                         }
@@ -1057,7 +1069,7 @@ class SqlDialectTest {
             },
             expect("SELECT * FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectStar()
                         from = table("T")
                     }
@@ -1065,7 +1077,7 @@ class SqlDialectTest {
             },
             expect("SELECT DISTINCT * FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectStar(SetQuantifier.DISTINCT)
                         from = table("T")
                     }
@@ -1073,7 +1085,7 @@ class SqlDialectTest {
             },
             expect("SELECT ALL * FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectStar(SetQuantifier.ALL)
                         from = table("T")
                     }
@@ -1081,7 +1093,7 @@ class SqlDialectTest {
             },
             expect("SELECT VALUE a FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectValue {
                             constructor = v("a")
                         }
@@ -1091,7 +1103,7 @@ class SqlDialectTest {
             },
             expect("SELECT ALL VALUE a FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectValue {
                             setq = SetQuantifier.ALL
                             constructor = v("a")
@@ -1102,7 +1114,7 @@ class SqlDialectTest {
             },
             expect("SELECT DISTINCT VALUE a FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectValue {
                             setq = SetQuantifier.DISTINCT
                             constructor = v("a")
@@ -1113,7 +1125,7 @@ class SqlDialectTest {
             },
             expect("PIVOT a AT b FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = selectPivot(v("a"), v("b"))
                         from = table("T")
                     }
@@ -1125,7 +1137,7 @@ class SqlDialectTest {
         fun excludeClauseCases() = listOf(
             expect("SELECT a EXCLUDE t.a FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1142,7 +1154,7 @@ class SqlDialectTest {
             },
             expect("SELECT a EXCLUDE a.b, c.d, e.f, g.h FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1171,7 +1183,7 @@ class SqlDialectTest {
             },
             expect("SELECT a EXCLUDE t.a.\"b\".*[*].c, \"s\"[0].d.\"e\"[*].f.* FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1217,7 +1229,7 @@ class SqlDialectTest {
         fun fromClauseCases() = listOf(
             expect("SELECT a FROM T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1228,7 +1240,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T AS x") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1240,7 +1252,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T AS x AT y") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1253,7 +1265,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T AS x AT y BY z") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1267,7 +1279,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM UNPIVOT T") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1278,7 +1290,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM UNPIVOT T AS x") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1290,7 +1302,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM UNPIVOT T AS x AT y") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1303,7 +1315,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM UNPIVOT T AS x AT y BY z") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromValue {
                             expr = v("T")
@@ -1321,7 +1333,7 @@ class SqlDialectTest {
         fun joinClauseCases() = listOf(
             expect("SELECT a FROM T JOIN S") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromJoin {
                             lhs = table("T")
@@ -1332,7 +1344,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T INNER JOIN S") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromJoin {
                             type = From.Join.Type.INNER
@@ -1364,7 +1376,7 @@ class SqlDialectTest {
             // },
             expect("SELECT a FROM T JOIN S ON NULL") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromJoin {
                             lhs = table("T")
@@ -1376,7 +1388,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T INNER JOIN S ON NULL") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = fromJoin {
                             type = From.Join.Type.INNER
@@ -1394,7 +1406,7 @@ class SqlDialectTest {
         private fun otherClausesCases() = listOf(
             expect("SELECT a FROM T LET x AS i") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         let = let(mutableListOf()) {
@@ -1405,7 +1417,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T LET x AS i, y AS j") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         let = let(mutableListOf()) {
@@ -1417,7 +1429,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T WHERE x") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         where = v("x")
@@ -1426,7 +1438,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T LIMIT 1") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1435,7 +1447,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T OFFSET 2") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1444,7 +1456,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T LIMIT 1 OFFSET 2") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1454,7 +1466,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP BY x HAVING y") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1471,7 +1483,7 @@ class SqlDialectTest {
         private fun groupByClauseCases() = listOf(
             expect("SELECT a FROM T GROUP BY x") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1483,7 +1495,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP BY x AS i") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1495,7 +1507,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP BY x, y") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1508,7 +1520,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP BY x AS i, y AS j") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1521,7 +1533,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP BY x GROUP AS g") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1534,7 +1546,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP BY x AS i GROUP AS g") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1547,7 +1559,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP BY x, y GROUP AS g") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1561,7 +1573,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP BY x AS i, y AS j GROUP AS g") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1575,7 +1587,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T GROUP PARTIAL BY x") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                         groupBy = groupBy {
@@ -1591,7 +1603,7 @@ class SqlDialectTest {
         private fun orderByClauseCases() = listOf(
             expect("SELECT a FROM T ORDER BY x") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1602,7 +1614,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x ASC") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1613,7 +1625,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x DESC") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1624,7 +1636,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x NULLS FIRST") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1635,7 +1647,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x NULLS LAST") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1646,7 +1658,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x ASC NULLS FIRST") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1657,7 +1669,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x ASC NULLS LAST") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1668,7 +1680,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x DESC NULLS FIRST") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1679,7 +1691,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x DESC NULLS LAST") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1690,7 +1702,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x, y") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1702,7 +1714,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x ASC, y DESC") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1714,7 +1726,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x NULLS FIRST, y NULLS LAST") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1726,7 +1738,7 @@ class SqlDialectTest {
             },
             expect("SELECT a FROM T ORDER BY x ASC NULLS FIRST, y DESC NULLS LAST") {
                 exprQuerySet {
-                    body = queryExprSFW {
+                    body = queryBodySFW {
                         select = select("a")
                         from = table("T")
                     }
@@ -1742,19 +1754,20 @@ class SqlDialectTest {
         fun unionClauseCases() = listOf(
             expect("(SELECT a FROM T) UNION (SELECT b FROM S)") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp {
                             type = SetOp.Type.UNION
                             setq = null
                         }
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("a")
                                 from = table("T")
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("b")
                                 from = table("S")
                             }
@@ -1764,16 +1777,17 @@ class SqlDialectTest {
             },
             expect("(SELECT a FROM T) UNION ALL (SELECT b FROM S)") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, SetQuantifier.ALL)
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("a")
                                 from = table("T")
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("b")
                                 from = table("S")
                             }
@@ -1783,16 +1797,17 @@ class SqlDialectTest {
             },
             expect("(SELECT a FROM T) UNION DISTINCT (SELECT b FROM S)") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, SetQuantifier.DISTINCT)
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("a")
                                 from = table("T")
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("b")
                                 from = table("S")
                             }
@@ -1802,16 +1817,17 @@ class SqlDialectTest {
             },
             expect("(SELECT a FROM T) UNION (SELECT b FROM S) LIMIT 1") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("a")
                                 from = table("T")
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("b")
                                 from = table("S")
                             }
@@ -1822,16 +1838,17 @@ class SqlDialectTest {
             },
             expect("(SELECT a FROM T) UNION (SELECT b FROM S LIMIT 1)") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("a")
                                 from = table("T")
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("b")
                                 from = table("S")
                                 limit = exprLit(int32Value(1)) // LIMIT associated with rhs SFW query
@@ -1842,16 +1859,17 @@ class SqlDialectTest {
             },
             expect("(SELECT a FROM T) UNION (SELECT b FROM S) ORDER BY x") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("a")
                                 from = table("T")
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("b")
                                 from = table("S")
                             }
@@ -1864,16 +1882,17 @@ class SqlDialectTest {
             },
             expect("(SELECT a FROM T) UNION (SELECT b FROM S ORDER BY x)") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("a")
                                 from = table("T")
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("b")
                                 from = table("S")
                                 orderBy = orderBy {
@@ -1886,25 +1905,27 @@ class SqlDialectTest {
             },
             expect("(SELECT a FROM T) UNION ((SELECT b FROM S) UNION (SELECT c FROM R))") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("a")
                                 from = table("T")
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSetOp {
+                            body = queryBodySetOp {
                                 type = setOp(SetOp.Type.UNION, null)
+                                isOuter = false
                                 lhs = exprQuerySet {
-                                    body = queryExprSFW {
+                                    body = queryBodySFW {
                                         select = select("b")
                                         from = table("S")
                                     }
                                 }
                                 rhs = exprQuerySet {
-                                    body = queryExprSFW {
+                                    body = queryBodySFW {
                                         select = select("c")
                                         from = table("R")
                                     }
@@ -1916,19 +1937,21 @@ class SqlDialectTest {
             },
             expect("((SELECT a FROM T) UNION (SELECT b FROM S)) UNION (SELECT c FROM R)") {
                 exprQuerySet {
-                    body = queryExprSetOp {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
+                        isOuter = false
                         lhs = exprQuerySet {
-                            body = queryExprSetOp {
+                            body = queryBodySetOp {
                                 type = setOp(SetOp.Type.UNION, null)
+                                isOuter = false
                                 lhs = exprQuerySet {
-                                    body = queryExprSFW {
+                                    body = queryBodySFW {
                                         select = select("a")
                                         from = table("T")
                                     }
                                 }
                                 rhs = exprQuerySet {
-                                    body = queryExprSFW {
+                                    body = queryBodySFW {
                                         select = select("b")
                                         from = table("S")
                                     }
@@ -1936,7 +1959,7 @@ class SqlDialectTest {
                             }
                         }
                         rhs = exprQuerySet {
-                            body = queryExprSFW {
+                            body = queryBodySFW {
                                 select = select("c")
                                 from = table("R")
                             }
@@ -1954,7 +1977,7 @@ class SqlDialectTest {
                     symbol = "="
                     lhs = exprLit(int32Value(1))
                     rhs = exprQuerySet {
-                        body = queryExprSFW {
+                        body = queryBodySFW {
                             select = select("a")
                             from = table("T")
                         }
@@ -1970,7 +1993,7 @@ class SqlDialectTest {
                         values += exprLit(int32Value(2))
                     }
                     rhs = exprQuerySet {
-                        body = queryExprSFW {
+                        body = queryBodySFW {
                             select = select("a")
                             from = table("T")
                         }

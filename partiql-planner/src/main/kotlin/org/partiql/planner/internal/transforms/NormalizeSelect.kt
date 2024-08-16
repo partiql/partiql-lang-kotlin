@@ -18,7 +18,7 @@ import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
-import org.partiql.ast.QueryExpr
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Select
 import org.partiql.ast.exprCall
 import org.partiql.ast.exprCase
@@ -100,15 +100,15 @@ internal object NormalizeSelect {
 
     internal fun normalize(node: Expr.QuerySet): Expr.QuerySet {
         return when (val body = node.body) {
-            is QueryExpr.SFW -> {
+            is QueryBody.SFW -> {
                 val sfw = Visitor.visitSFW(body, newCtx())
                 node.copy(
                     body = sfw
                 )
             }
-            is QueryExpr.SetOp -> {
-                val lhs = normalize(body.lhs)
-                val rhs = normalize(body.rhs)
+            is QueryBody.SetOp -> {
+                val lhs = body.lhs.normalizeOrIdentity()
+                val rhs = body.rhs.normalizeOrIdentity()
                 node.copy(
                     body = body.copy(
                         lhs = lhs,
@@ -116,6 +116,13 @@ internal object NormalizeSelect {
                     )
                 )
             }
+        }
+    }
+
+    private fun Expr.normalizeOrIdentity(): Expr {
+        return when (this) {
+            is Expr.QuerySet -> normalize(this)
+            else -> this
         }
     }
 
@@ -154,8 +161,8 @@ internal object NormalizeSelect {
          */
         private val col = { index: Int -> "_${index + 1}" }
 
-        internal fun visitSFW(node: QueryExpr.SFW, ctx: () -> Int): QueryExpr.SFW {
-            val sfw = super.visitQueryExprSFW(node, ctx) as QueryExpr.SFW
+        internal fun visitSFW(node: QueryBody.SFW, ctx: () -> Int): QueryBody.SFW {
+            val sfw = super.visitQueryBodySFW(node, ctx) as QueryBody.SFW
             return when (val select = sfw.select) {
                 is Select.Star -> {
                     val selectValue = when (val group = sfw.groupBy) {
@@ -168,7 +175,7 @@ internal object NormalizeSelect {
             }
         }
 
-        override fun visitQueryExprSFW(node: QueryExpr.SFW, ctx: () -> Int): QueryExpr.SFW {
+        override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: () -> Int): QueryBody.SFW {
             return node
         }
 

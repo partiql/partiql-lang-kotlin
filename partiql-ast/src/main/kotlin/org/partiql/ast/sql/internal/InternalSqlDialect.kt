@@ -23,7 +23,7 @@ import org.partiql.ast.Identifier
 import org.partiql.ast.Let
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Path
-import org.partiql.ast.QueryExpr
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
@@ -578,26 +578,6 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         return t
     }
 
-    override fun visitExprBagOp(node: Expr.BagOp, tail: InternalSqlBlock): InternalSqlBlock {
-        // [OUTER] [UNION|INTERSECT|EXCEPT] [ALL|DISTINCT]
-        val op = mutableListOf("OUTER")
-        when (node.type.type) {
-            SetOp.Type.UNION -> op.add("UNION")
-            SetOp.Type.INTERSECT -> op.add("INTERSECT")
-            SetOp.Type.EXCEPT -> op.add("EXCEPT")
-        }
-        when (node.type.setq) {
-            SetQuantifier.ALL -> op.add("ALL")
-            SetQuantifier.DISTINCT -> op.add("DISTINCT")
-            null -> {}
-        }
-        var t = tail
-        t = visitExprWrapped(node.lhs, t)
-        t = t concat " ${op.joinToString(" ")} "
-        t = visitExprWrapped(node.rhs, t)
-        return t
-    }
-
     override fun visitExprQuerySet(node: Expr.QuerySet, tail: InternalSqlBlock): InternalSqlBlock {
         var t = tail
         // visit body (SFW or other SQL set op)
@@ -613,7 +593,7 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
 
     // SELECT-FROM-WHERE
 
-    override fun visitQueryExprSFW(node: QueryExpr.SFW, tail: InternalSqlBlock): InternalSqlBlock {
+    override fun visitQueryBodySFW(node: QueryBody.SFW, tail: InternalSqlBlock): InternalSqlBlock {
         var t = tail
         // SELECT
         t = visit(node.select, t)
@@ -632,8 +612,12 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         return t
     }
 
-    override fun visitQueryExprSetOp(node: QueryExpr.SetOp, tail: InternalSqlBlock): InternalSqlBlock {
+    override fun visitQueryBodySetOp(node: QueryBody.SetOp, tail: InternalSqlBlock): InternalSqlBlock {
         val op = mutableListOf<String>()
+        when (node.isOuter) {
+            true -> op.add("OUTER")
+            else -> {}
+        }
         when (node.type.type) {
             SetOp.Type.UNION -> op.add("UNION")
             SetOp.Type.INTERSECT -> op.add("INTERSECT")

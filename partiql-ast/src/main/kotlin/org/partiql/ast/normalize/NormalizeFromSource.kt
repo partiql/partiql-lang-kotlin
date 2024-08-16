@@ -17,7 +17,7 @@ package org.partiql.ast.normalize
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.From
-import org.partiql.ast.QueryExpr
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Statement
 import org.partiql.ast.fromJoin
 import org.partiql.ast.helpers.toBinder
@@ -33,7 +33,7 @@ internal object NormalizeFromSource : AstPass {
     private object Visitor : AstRewriter<Int>() {
 
         // Each SFW starts the ctx count again.
-        override fun visitQueryExprSFW(node: QueryExpr.SFW, ctx: Int): AstNode = super.visitQueryExprSFW(node, 0)
+        override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: Int): AstNode = super.visitQueryBodySFW(node, 0)
 
         override fun visitStatementDMLBatchLegacy(node: Statement.DML.BatchLegacy, ctx: Int): AstNode =
             super.visitStatementDMLBatchLegacy(node, 0)

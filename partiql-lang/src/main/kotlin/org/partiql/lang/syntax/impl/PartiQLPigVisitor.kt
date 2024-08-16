@@ -765,21 +765,6 @@ internal class PartiQLPigVisitor(
      *
      */
 
-    /**
-     * Verifies if all of the [args] are
-     * 1. [PartiqlAst.Expr.Select] or
-     * 2. [PartiqlAst.Expr.BagOp] and is a SQL Set op (i.e. not an `OUTER` bag op)
-     */
-    private fun argsAreSFW(args: List<PartiqlAst.Expr>): Boolean {
-        return args.all { arg ->
-            arg is PartiqlAst.Expr.Select || (arg is PartiqlAst.Expr.BagOp && !isOuter(arg.op))
-        }
-    }
-
-    private fun isOuter(op: PartiqlAst.BagOpType): Boolean {
-        return op is PartiqlAst.BagOpType.OuterUnion || op is PartiqlAst.BagOpType.OuterExcept || op is PartiqlAst.BagOpType.OuterIntersect
-    }
-
     override fun visitBagOp(ctx: PartiQLParser.BagOpContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
@@ -788,7 +773,7 @@ internal class PartiQLPigVisitor(
             ctx.DISTINCT() != null -> distinct()
             else -> distinct()
         }
-        val outer = ctx.OUTER() != null || !argsAreSFW(listOf(lhs, rhs))
+        val outer = ctx.OUTER() != null
         val (op, metas) = when (ctx.op.type) {
             PartiQLParser.UNION -> if (outer) {
                 outerUnion() to ctx.UNION().getSourceMetaContainer()

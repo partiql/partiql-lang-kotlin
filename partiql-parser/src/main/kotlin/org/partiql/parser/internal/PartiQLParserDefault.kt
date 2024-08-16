@@ -58,7 +58,6 @@ import org.partiql.ast.excludeStepCollWildcard
 import org.partiql.ast.excludeStepStructField
 import org.partiql.ast.excludeStepStructWildcard
 import org.partiql.ast.exprAnd
-import org.partiql.ast.exprBagOp
 import org.partiql.ast.exprBetween
 import org.partiql.ast.exprCall
 import org.partiql.ast.exprCanCast
@@ -133,8 +132,8 @@ import org.partiql.ast.orderBy
 import org.partiql.ast.path
 import org.partiql.ast.pathStepIndex
 import org.partiql.ast.pathStepSymbol
-import org.partiql.ast.queryExprSFW
-import org.partiql.ast.queryExprSetOp
+import org.partiql.ast.queryBodySFW
+import org.partiql.ast.queryBodySetOp
 import org.partiql.ast.returning
 import org.partiql.ast.returningColumn
 import org.partiql.ast.returningColumnValueExpression
@@ -940,7 +939,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val limit = visitOrNull<Expr>(ctx.limit?.arg)
             val offset = visitOrNull<Expr>(ctx.offset?.arg)
             exprQuerySet(
-                body = queryExprSFW(
+                body = queryBodySFW(
                     select, exclude, from, let, where, groupBy, having
                 ),
                 orderBy = orderBy,
@@ -1143,36 +1142,20 @@ internal class PartiQLParserDefault : PartiQLParser {
             val lhs = visitAs<Expr>(ctx.lhs)
             val rhs = visitAs<Expr>(ctx.rhs)
             val outer = ctx.OUTER() != null
-            if (!outer && lhs is Expr.QuerySet && rhs is Expr.QuerySet) {
-                val orderBy = ctx.order?.let { visitOrderByClause(it) }
-                val limit = ctx.limit?.let { visitAs<Expr>(it) }
-                val offset = ctx.offset?.let { visitAs<Expr>(it) }
-                exprQuerySet(
-                    body = queryExprSetOp(
-                        type = op,
-                        lhs = lhs,
-                        rhs = rhs
-                    ),
-                    orderBy = orderBy,
-                    limit = limit,
-                    offset = offset,
-                )
-            } else {
-                if (ctx.order != null) {
-                    throw error(ctx.order, "ORDER BY not supported for bag ops")
-                }
-                if (ctx.limit != null) {
-                    throw error(ctx.limit, "LIMIT not supported for bag ops")
-                }
-                if (ctx.offset != null) {
-                    throw error(ctx.offset, "OFFSET not supported for bag ops")
-                }
-                exprBagOp(
+            val orderBy = ctx.order?.let { visitOrderByClause(it) }
+            val limit = ctx.limit?.let { visitAs<Expr>(it) }
+            val offset = ctx.offset?.let { visitAs<Expr>(it) }
+            exprQuerySet(
+                body = queryBodySetOp(
                     type = op,
+                    isOuter = outer,
                     lhs = lhs,
                     rhs = rhs
-                )
-            }
+                ),
+                orderBy = orderBy,
+                limit = limit,
+                offset = offset,
+            )
         }
 
         /**

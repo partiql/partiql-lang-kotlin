@@ -9,7 +9,7 @@ import org.partiql.ast.Identifier
 import org.partiql.ast.Let
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Path
-import org.partiql.ast.QueryExpr
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
@@ -553,26 +553,6 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         return h
     }
 
-    override fun visitExprBagOp(node: Expr.BagOp, head: SqlBlock): SqlBlock {
-        // [OUTER] [UNION|INTERSECT|EXCEPT] [ALL|DISTINCT]
-        val op = mutableListOf("OUTER")
-        when (node.type.type) {
-            SetOp.Type.UNION -> op.add("UNION")
-            SetOp.Type.INTERSECT -> op.add("INTERSECT")
-            SetOp.Type.EXCEPT -> op.add("EXCEPT")
-        }
-        when (node.type.setq) {
-            SetQuantifier.ALL -> op.add("ALL")
-            SetQuantifier.DISTINCT -> op.add("DISTINCT")
-            null -> {}
-        }
-        var h = head
-        h = visitExprWrapped(node.lhs, h)
-        h = h concat r(" ${op.joinToString(" ")} ")
-        h = visitExprWrapped(node.rhs, h)
-        return h
-    }
-
     override fun visitExprQuerySet(node: Expr.QuerySet, head: SqlBlock): SqlBlock {
         var h = head
         // visit body (SFW or other SQL set op)
@@ -588,7 +568,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     // SELECT-FROM-WHERE
 
-    override fun visitQueryExprSFW(node: QueryExpr.SFW, head: SqlBlock): SqlBlock {
+    override fun visitQueryBodySFW(node: QueryBody.SFW, head: SqlBlock): SqlBlock {
         var h = head
         // SELECT
         h = visit(node.select, h)
@@ -607,8 +587,12 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         return h
     }
 
-    override fun visitQueryExprSetOp(node: QueryExpr.SetOp, head: SqlBlock): SqlBlock {
+    override fun visitQueryBodySetOp(node: QueryBody.SetOp, head: SqlBlock): SqlBlock {
         val op = mutableListOf<String>()
+        when (node.isOuter) {
+            true -> op.add("OUTER")
+            else -> {}
+        }
         when (node.type.type) {
             SetOp.Type.UNION -> op.add("UNION")
             SetOp.Type.INTERSECT -> op.add("INTERSECT")
