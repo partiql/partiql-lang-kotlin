@@ -142,7 +142,7 @@ internal class DynamicTyper {
             // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
             STRUCT, BAG, LIST, SEXP -> return StaticType.unionOf(types + modifiers) to null
             DECIMAL -> {
-                val type = computeDecimal()
+                val type = computeConstrainedDecimal()
                 // coercion required. fall back
                 if (type == null) superT else return StaticType.unionOf(setOf(type) + modifiers).flatten() to null
             }
@@ -163,10 +163,11 @@ internal class DynamicTyper {
         }
     }
 
-    private fun computeDecimal(): DecimalType? {
+    private fun computeConstrainedDecimal(): DecimalType? {
         val (precision, scale) = types.fold((0 to 0)) { acc, staticType ->
             val decimalType = staticType as? DecimalType ?: return null
-            val constr = decimalType.precisionScaleConstraint as DecimalType.PrecisionScaleConstraint.Constrained
+            val constr = decimalType.precisionScaleConstraint as? DecimalType.PrecisionScaleConstraint.Constrained
+                ?: throw IllegalStateException("Expected a constrained decimal type")
             val precision = max(constr.precision, acc.first)
             val scale = max(constr.scale, acc.second)
             precision to scale
