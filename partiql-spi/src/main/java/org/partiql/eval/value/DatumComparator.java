@@ -34,11 +34,13 @@ abstract class DatumComparator implements Comparator<Datum> {
     private static final int TYPE_KINDS_LENGTH = TYPE_KINDS.length;
 
     /**
-     * This array defines the precedence of types when comparing values of different types.
-     * The lower the index, the higher the precedence. However, this is used for generating the BASELINE precedence.
-     * This may be overridden by families of types. For example, all number values are compared by their mathematical
-     * representation (not their {@link PType.Kind}. Therefore, when comparing two numbers of different types, this
-     * precedence array will not be used.
+     * This array defines the precedence of type families when comparing values of different types. The lower the index,
+     * the higher the precedence. Please see
+     * <a href="https://partiql.org/partiql-lang/#sec:order-by-less-than">PartiQL Specification Section 12.2</a> for
+     * more information.
+     * <p>
+     * This is only used for aiding in the initialization of the {@link #COMPARISON_TABLE}.
+     * </p>
      */
     @NotNull
     private static final Map<PType.Kind, Integer> TYPE_PRECEDENCE = initializeTypePrecedence();
@@ -180,6 +182,18 @@ abstract class DatumComparator implements Comparator<Datum> {
         return precedence;
     }
 
+    /**
+     * This essentially operates in two passes.
+     * <ol>
+     * <li>Initialize the comparisons for the cartesian product of all type kinds based solely on
+     * the {@link #TYPE_PRECEDENCE}.</li>
+     * <li>Rewrite the comparisons where the values themselves will need to be compared. For example, all PartiQL numbers
+     * need to have their JVM primitives extracted before making comparison judgements.</li>
+     * </ol>
+     * @return the 2D comparison table
+     * @see #initializeComparatorArray(PType.Kind)
+     * @see #fillIntComparator(DatumComparison[])
+     */
     @SuppressWarnings("deprecation")
     private static DatumComparison[][] initializeComparators() {
         // Initialize Table

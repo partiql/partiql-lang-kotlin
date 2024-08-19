@@ -655,8 +655,19 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * Comparator for PartiQL's scalar comparison operator.
+     * Comparator for PartiQL values.
+     * <p>
+     * This may be used for the comparison operators, GROUP BY, ORDER BY, and DISTINCT. The conventional use
+     * of {@link java.util.HashMap}, {@link java.util.HashSet}, {@link Object#hashCode()}, and
+     * {@link Object#equals(Object)} will not work outright with Datum to implement the before-mentioned operations due
+     * to requirements by the PartiQL and SQL Specifications. One may use {@link java.util.TreeMap} and
+     * {@link java.util.TreeSet} in combination with this {@link Comparator} to implement the before-mentioned
+     * operations.
+     * </p>
      * @return the default comparator for {@link Datum}. The comparator orders null values first.
+     * @see Datum
+     * @see java.util.TreeSet
+     * @see java.util.TreeMap
      */
     @NotNull
     static Comparator<Datum> comparator() {
@@ -664,9 +675,20 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * Comparator for PartiQL's scalar comparison operator.
+     * Comparator for PartiQL values.
+     * <p>
+     * This may be used for the comparison operators, GROUP BY, ORDER BY, and DISTINCT. The conventional use
+     * of {@link java.util.HashMap}, {@link java.util.HashSet}, {@link Object#hashCode()}, and
+     * {@link Object#equals(Object)} will not work outright with Datum to implement the before-mentioned operations due
+     * to requirements by the PartiQL and SQL Specifications. One may use {@link java.util.TreeMap} and
+     * {@link java.util.TreeSet} in combination with this {@link Comparator} to implement the before-mentioned
+     * operations.
+     * </p>
      * @param nullsFirst if true, nulls are ordered before non-null values, otherwise after.
      * @return the default comparator for {@link Datum}.
+     * @see Datum
+     * @see java.util.TreeSet
+     * @see java.util.TreeMap
      */
     @NotNull
     static Comparator<Datum> comparator(boolean nullsFirst) {
