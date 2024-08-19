@@ -13,7 +13,11 @@ class DatumFloat implements Datum {
     private final static PType _type = PType.real();
 
     DatumFloat(float value) {
-        _value = value;
+        if (value == -0e0f) {
+            _value = 0e0f;
+        } else {
+            _value = value;
+        }
     }
 
     @Override
@@ -25,5 +29,10 @@ class DatumFloat implements Datum {
     @Override
     public PType getType() {
         return _type;
+    }
+
+    @Override
+    public String toString() {
+        return "r::" + _value;
     }
 }

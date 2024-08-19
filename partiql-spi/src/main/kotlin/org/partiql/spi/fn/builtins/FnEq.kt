@@ -8,8 +8,6 @@ import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * According to SQL:1999:
@@ -27,8 +25,7 @@ import org.partiql.value.PartiQLValueExperimental
  */
 internal object Fn_EQ__ANY_ANY__BOOL : Fn {
 
-    @OptIn(PartiQLValueExperimental::class)
-    private val comparator = PartiQLValue.comparator()
+    private val comparator = Datum.comparator()
 
     override val signature = FnSignature(
         name = "eq",
@@ -49,8 +46,6 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         if (lhs.isMissing || rhs.isMissing) {
             return Datum.nullValue(PType.bool())
         }
-        @OptIn(PartiQLValueExperimental::class)
-        @Suppress("DEPRECATION")
-        return Datum.bool(comparator.compare(lhs.toPartiQLValue(), rhs.toPartiQLValue()) == 0)
+        return Datum.bool(comparator.compare(lhs, rhs) == 0)
     }
 }

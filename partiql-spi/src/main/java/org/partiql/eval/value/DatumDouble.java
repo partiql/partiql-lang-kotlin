@@ -12,7 +12,11 @@ class DatumDouble implements Datum {
     private final static PType _type = PType.doublePrecision();
 
     DatumDouble(double value) {
-        _value = value;
+        if (value == -0.0) {
+            _value = 0.0;
+        } else {
+            _value = value;
+        }
     }
 
     @Override
@@ -24,5 +28,10 @@ class DatumDouble implements Datum {
     @Override
     public PType getType() {
         return _type;
+    }
+
+    @Override
+    public String toString() {
+        return "dp::" + _value;
     }
 }
