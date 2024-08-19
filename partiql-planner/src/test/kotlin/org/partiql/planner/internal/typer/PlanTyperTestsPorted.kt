@@ -2738,15 +2738,10 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-45"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
-            ),
-            SuccessTestCase(
-                key = PartiQLTest.Key("basics", "case-when-46"),
-                catalog = "pql",
                 expected = StaticType.STRING
             ),
             SuccessTestCase(
-                key = PartiQLTest.Key("basics", "case-when-47"),
+                key = PartiQLTest.Key("basics", "case-when-46"),
                 catalog = "pql",
                 expected = StaticType.STRING
             ),

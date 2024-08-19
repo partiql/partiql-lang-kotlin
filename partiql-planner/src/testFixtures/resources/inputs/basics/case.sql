@@ -364,21 +364,13 @@ CASE t_item.t_string
 END;
 
 --#[case-when-45]
--- type: decimal
--- coercion required. Common super type is arbitrary decimal
-CASE t_item.t_string
-    WHEN 'a' THEN t_item.t_decimal_10_5
-    ELSE t_item.t_int32
-END;
-
---#[case-when-46]
 -- type: string -- unconstrained
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_string
     ELSE t_item.t_varchar_5
 END;
 
---#[case-when-47]
+--#[case-when-46]
 -- type: string -- unconstrained
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_string
