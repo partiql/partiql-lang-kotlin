@@ -35,11 +35,13 @@ import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
 import org.partiql.types.ListType
+import org.partiql.types.NumberConstraint
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.unionOf
+import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.util.stream.Stream
@@ -2682,6 +2684,66 @@ class PlanTyperTestsPorted {
                 key = PartiQLTest.Key("basics", "case-when-34"),
                 catalog = "pql",
                 expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-35"),
+                catalog = "pql",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10, 5)).asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-36"),
+                catalog = "pql",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10, 5))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-37"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10))).asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-38"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-39"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(10))).asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-40"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-41"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-42"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-43"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-44"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-45"),
+                catalog = "pql",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-46"),
+                catalog = "pql",
+                expected = StaticType.STRING
             ),
         )
 

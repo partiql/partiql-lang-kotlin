@@ -179,6 +179,53 @@
     {
       name: "t_str",
       type: [ "clob", "string" ],
-    }
+    },
+    // fixed precision decimal
+    {
+      name: "t_decimal_10_5",
+      type: {
+        type: "decimal",
+        precision: 10,
+        scale: 5
+      }
+    },
+    {
+      name: "t_decimal_5_3",
+      type: {
+        type: "decimal",
+        precision: 10,
+        scale: 5
+      }
+    },
+    {
+      name: "t_varchar_10",
+      type: {
+        type: "string",
+        max_length: 10,
+      }
+    },
+    {
+      name: "t_varchar_5",
+      type: {
+        type: "string",
+        max_length: 5,
+      }
+    },
+    {
+      name: "t_char_10",
+      type: {
+        type: "string",
+        max_length: 10,
+        min_length: 10,
+      }
+    },
+    {
+      name: "t_char_5",
+      type: {
+        type: "string",
+        max_length: 5,
+        min_length: 5,
+      }
+    },
   ]
 }

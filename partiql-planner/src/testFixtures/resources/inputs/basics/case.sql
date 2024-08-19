@@ -292,6 +292,92 @@ CASE t_item.t_string
     ELSE t_item.t_any
 END;
 
+--#[case-when-35]
+-- type: decimal(10,5)|null
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_decimal_10_5
+    ELSE null
+END;
+
+--#[case-when-36]
+-- type: decimal(10,5)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_decimal_10_5
+    ELSE t_item.t_decimal_5_3
+END;
+
+--#[case-when-37]
+-- type: varchar(10)|null
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_varchar_10
+    ELSE null
+END;
+
+--#[case-when-38]
+-- type: varchar(10)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_varchar_10
+    ELSE t_item.t_varchar_5
+END;
+
+--#[case-when-39]
+-- type: char(10)|null
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_char_10
+    ELSE null
+END;
+
+--#[case-when-40]
+-- type: char(10)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_char_10
+    ELSE t_item.t_char_5
+END;
+
+--#[case-when-41]
+-- type: varchar(10)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_char_10
+    ELSE t_item.t_varchar_10
+END;
+
+--#[case-when-42]
+-- type: varchar(10)|null
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_char_10
+    ELSE t_item.t_varchar_5
+END;
+
+--#[case-when-43]
+-- type: decimal
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_decimal_10_5
+    ELSE t_item.t_decimal
+END;
+
+--#[case-when-44]
+-- type: decimal
+-- coercion required. Common super type is arbitrary decimal
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_decimal_10_5
+    ELSE t_item.t_int32
+END;
+
+--#[case-when-45]
+-- type: string -- unconstrained
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_string
+    ELSE t_item.t_varchar_5
+END;
+
+--#[case-when-46]
+-- type: string -- unconstrained
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_string
+    ELSE t_item.t_char_5
+END;
+
+
 -- -----------------------------
 --  (Unused) old tests
 -- -----------------------------
