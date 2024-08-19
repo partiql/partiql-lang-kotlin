@@ -2720,6 +2720,36 @@ class PlanTyperTestsPorted {
                 catalog = "pql",
                 expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
             ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-42"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-43"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-44"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-45"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-46"),
+                catalog = "pql",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-47"),
+                catalog = "pql",
+                expected = StaticType.STRING
+            ),
         )
 
         @JvmStatic
