@@ -7,7 +7,6 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.eval.value.Field
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * The unpivot operator produces a bag of records from a struct.
@@ -15,8 +14,7 @@ import org.partiql.value.PartiQLValueExperimental
  *  Input:   { k_0: v_0, ..., k_i: v_i }
  *  Output:  [ k_0, v_0 ] ... [ k_i, v_i ]
  */
-@OptIn(PartiQLValueExperimental::class)
-internal sealed class RelUnpivot : Operator.Relation {
+internal sealed class RelOpUnpivot : Operator.Relation {
 
     /**
      * Iterator of the struct fields.
@@ -56,7 +54,7 @@ internal sealed class RelUnpivot : Operator.Relation {
      *
      * @property expr
      */
-    class Strict(private val expr: Operator.Expr) : RelUnpivot() {
+    class Strict(private val expr: Operator.Expr) : RelOpUnpivot() {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Record.empty))
@@ -76,7 +74,7 @@ internal sealed class RelUnpivot : Operator.Relation {
      *
      * @property expr
      */
-    class Permissive(private val expr: Operator.Expr) : RelUnpivot() {
+    class Permissive(private val expr: Operator.Expr) : RelOpUnpivot() {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Record.empty))

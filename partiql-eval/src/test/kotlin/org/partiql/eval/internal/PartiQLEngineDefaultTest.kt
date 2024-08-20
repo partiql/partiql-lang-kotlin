@@ -42,7 +42,7 @@ import java.math.BigInteger
 import kotlin.test.assertNotNull
 
 /**
- * This holds sanity tests during the development of the [PartiQLEngine.default] implementation.
+ * This holds sanity tests during the development of the [PartiQLEngine.standard] implementation.
  */
 @OptIn(PartiQLValueExperimental::class)
 class PartiQLEngineDefaultTest {

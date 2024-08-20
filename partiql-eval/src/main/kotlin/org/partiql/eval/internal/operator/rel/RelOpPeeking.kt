@@ -9,15 +9,15 @@ import org.partiql.eval.internal.operator.Operator
  * For [Operator.Relation]'s that MUST materialize data in order to execute [hasNext], this abstract class caches the
  * result of [peek] to implement both [hasNext] and [next].
  */
-internal abstract class RelPeeking : Operator.Relation, IteratorPeeking<Record>() {
+internal abstract class RelOpPeeking : Operator.Relation, IteratorPeeking<Record>() {
 
     /**
-     * This shall have the same functionality as [open]. Implementers of [RelPeeking] shall not override [open].
+     * This shall have the same functionality as [open]. Implementers of [RelOpPeeking] shall not override [open].
      */
     abstract fun openPeeking(env: Environment)
 
     /**
-     * This shall have the same functionality as [close]. Implementers of [RelPeeking] shall not override [close].
+     * This shall have the same functionality as [close]. Implementers of [RelOpPeeking] shall not override [close].
      */
     abstract fun closePeeking()
 

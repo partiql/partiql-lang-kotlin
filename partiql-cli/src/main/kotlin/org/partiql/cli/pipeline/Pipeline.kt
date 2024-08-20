@@ -91,14 +91,14 @@ internal class Pipeline private constructor(
         fun default(): Pipeline {
             val parser = PartiQLParser.default()
             val planner = PartiQLPlanner.standard()
-            val engine = PartiQLEngine.default()
+            val engine = PartiQLEngine.standard()
             return Pipeline(parser, planner, engine)
         }
 
         fun strict(): Pipeline {
             val parser = PartiQLParser.default()
             val planner = PartiQLPlanner.builder().signal().build()
-            val engine = PartiQLEngine.default()
+            val engine = PartiQLEngine.standard()
             return Pipeline(parser, planner, engine)
         }
     }

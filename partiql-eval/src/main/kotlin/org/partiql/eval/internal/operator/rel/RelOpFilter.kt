@@ -5,10 +5,10 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
 
-internal class RelFilter(
+internal class RelOpFilter(
     val input: Operator.Relation,
     val expr: Operator.Expr
-) : RelPeeking() {
+) : RelOpPeeking() {
 
     private lateinit var env: Environment
 

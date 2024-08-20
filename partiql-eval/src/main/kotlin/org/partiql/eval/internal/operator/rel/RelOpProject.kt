@@ -4,7 +4,7 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
-internal class RelProject(
+internal class RelOpProject(
     private val input: Operator.Relation,
     private val projections: List<Operator.Expr>
 ) : Operator.Relation {

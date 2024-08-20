@@ -13,12 +13,12 @@ import org.partiql.plan.Rel
  *
  * Right Outer Join cannot be lateral according to PartiQL Specification Section 5.5.
  */
-internal class RelJoinOuterRight(
+internal class RelOpJoinOuterRight(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
     private val condition: Operator.Expr,
     lhsType: Rel.Type
-) : RelPeeking() {
+) : RelOpPeeking() {
 
     private val lhsPadded = Record(
         Array(lhsType.schema.size) { Datum.nullValue(lhsType.schema[it].type) }

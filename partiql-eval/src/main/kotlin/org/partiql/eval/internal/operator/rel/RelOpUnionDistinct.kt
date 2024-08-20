@@ -7,10 +7,10 @@ import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
 import java.util.TreeSet
 
-internal class RelUnionDistinct(
+internal class RelOpUnionDistinct(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : RelPeeking() {
+) : RelOpPeeking() {
 
     private val seen = TreeSet(DatumArrayComparator)
 

@@ -4,15 +4,14 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
-import java.util.TreeMap
+import java.util.TreeSet
 
-internal class RelIntersectAll(
+internal class RelOpIntersectDistinct(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : RelPeeking() {
+) : RelOpPeeking() {
 
-    private val seen = TreeMap<Array<Datum>, Int>(DatumArrayComparator)
+    private val seen = TreeSet(DatumArrayComparator)
     private var init: Boolean = false
 
     override fun openPeeking(env: Environment) {
@@ -28,9 +27,7 @@ internal class RelIntersectAll(
         }
         for (row in rhs) {
             row.values.coerceMissing()
-            val remaining = seen[row.values] ?: 0
-            if (remaining > 0) {
-                seen[row.values] = remaining - 1
+            if (seen.remove(row.values)) {
                 return Record(row.values)
             }
         }
@@ -50,8 +47,7 @@ internal class RelIntersectAll(
         init = true
         for (row in lhs) {
             row.values.coerceMissing()
-            val alreadySeen = seen[row.values] ?: 0
-            seen[row.values] = alreadySeen + 1
+            seen.add(row.values)
         }
     }
 }

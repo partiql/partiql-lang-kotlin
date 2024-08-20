@@ -5,9 +5,9 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import java.util.TreeSet
 
-internal class RelDistinct(
+internal class RelOpDistinct(
     val input: Operator.Relation
-) : RelPeeking() {
+) : RelOpPeeking() {
 
     private val seen = TreeSet(DatumArrayComparator)
 

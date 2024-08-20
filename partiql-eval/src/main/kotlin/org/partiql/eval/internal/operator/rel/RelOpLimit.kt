@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValueExperimental
 import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class)
-internal class RelLimit(
+internal class RelOpLimit(
     private val input: Operator.Relation,
     private val limit: Operator.Expr,
 ) : Operator.Relation {

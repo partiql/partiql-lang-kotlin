@@ -6,28 +6,33 @@ import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
 import java.util.TreeSet
 
-internal class RelIntersectDistinct(
+/**
+ * Non-communicative, this performs better when [lhs] is larger than [rhs].
+ *
+ * @property lhs
+ * @property rhs
+ */
+internal class RelOpExceptDistinct(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : RelPeeking() {
+) : RelOpPeeking() {
 
-    private val seen = TreeSet(DatumArrayComparator)
+    private var seen = TreeSet(DatumArrayComparator)
     private var init: Boolean = false
 
     override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         init = false
-        seen.clear()
     }
 
     override fun peek(): Record? {
         if (!init) {
             seed()
         }
-        for (row in rhs) {
+        for (row in lhs) {
             row.values.coerceMissing()
-            if (seen.remove(row.values)) {
+            if (!seen.contains(row.values)) {
                 return Record(row.values)
             }
         }
@@ -41,11 +46,11 @@ internal class RelIntersectDistinct(
     }
 
     /**
-     * Read the entire left-hand-side into our search structure.
+     * Read the entire right-hand-side into our search structure.
      */
     private fun seed() {
         init = true
-        for (row in lhs) {
+        for (row in rhs) {
             row.values.coerceMissing()
             seen.add(row.values)
         }

@@ -33,3 +33,8 @@ public final class org/partiql/planner/builder/PartiQLPlannerBuilder {
 	public static synthetic fun signal$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 }
 
+public final class org/partiql/planner/internal/SqlPlannerV1 {
+	public static final field INSTANCE Lorg/partiql/planner/internal/SqlPlannerV1;
+	public final fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/planner/catalog/Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/v1/PartiQLPlan;
+}
+

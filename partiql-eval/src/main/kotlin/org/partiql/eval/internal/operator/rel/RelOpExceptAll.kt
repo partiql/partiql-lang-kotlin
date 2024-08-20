@@ -7,10 +7,10 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import java.util.TreeMap
 
-internal class RelExceptAll(
+internal class RelOpExceptAll(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : RelPeeking() {
+) : RelOpPeeking() {
 
     private val seen = TreeMap<Array<Datum>, Int>(DatumArrayComparator)
     private var init: Boolean = false

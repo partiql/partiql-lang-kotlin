@@ -8,7 +8,7 @@ import org.partiql.spi.fn.Agg
 import java.util.TreeMap
 import java.util.TreeSet
 
-internal class RelAggregate(
+internal class RelOpAggregate(
     val input: Operator.Relation,
     private val keys: List<Operator.Expr>,
     private val functions: List<Operator.Aggregation>

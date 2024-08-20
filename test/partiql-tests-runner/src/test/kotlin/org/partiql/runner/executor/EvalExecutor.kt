@@ -112,7 +112,7 @@ class EvalExecutor(
     companion object {
         val parser = PartiQLParser.default()
         val planner = PartiQLPlanner.standard()
-        val engine = PartiQLEngine.default()
+        val engine = PartiQLEngine.standard()
         val comparator = PartiQLValue.comparator()
     }
 

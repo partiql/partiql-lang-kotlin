@@ -12,11 +12,11 @@ import org.partiql.value.PartiQLValueExperimental
  * Note: This is currently the lateral version of the inner join. In the future, the two implementations
  * (lateral vs non-lateral) may be separated for performance improvements.
  */
-internal class RelJoinInner(
+internal class RelOpJoinInner(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
     private val condition: Operator.Expr,
-) : RelPeeking() {
+) : RelOpPeeking() {
 
     private lateinit var env: Environment
     private lateinit var iterator: Iterator<Record>

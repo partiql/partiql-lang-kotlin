@@ -14,10 +14,9 @@ import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
-internal class RelExclude(
+internal class RelOpExclude(
     private val input: Operator.Relation,
     private val exclusions: List<Rel.Op.Exclude.Path>
 ) : Operator.Relation {
@@ -30,7 +29,6 @@ internal class RelExclude(
         return input.hasNext()
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun next(): Record {
         val record = input.next()
         exclusions.forEach { path ->

@@ -15,12 +15,12 @@ import org.partiql.value.PartiQLValueExperimental
  * Note: This is currently the lateral version of the left outer join. In the future, the two implementations
  * (lateral vs non-lateral) may be separated for performance improvements.
  */
-internal class RelJoinOuterLeft(
+internal class RelOpJoinOuterLeft(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
     private val condition: Operator.Expr,
     rhsType: Rel.Type
-) : RelPeeking() {
+) : RelOpPeeking() {
 
     private val rhsPadded = Record(
         Array(rhsType.schema.size) { Datum.nullValue(rhsType.schema[it].type) }

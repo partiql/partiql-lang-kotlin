@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValueExperimental
 import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class)
-internal class RelOffset(
+internal class RelOpOffset(
     private val input: Operator.Relation,
     private val offset: Operator.Expr,
 ) : Operator.Relation {

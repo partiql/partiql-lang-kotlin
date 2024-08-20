@@ -5,7 +5,7 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
 
-internal class RelUnionAll(
+internal class RelOpUnionAll(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
 ) : Operator.Relation {

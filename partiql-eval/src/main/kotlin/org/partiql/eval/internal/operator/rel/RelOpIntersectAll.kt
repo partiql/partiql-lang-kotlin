@@ -4,35 +4,33 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
-import java.util.TreeSet
+import org.partiql.eval.value.Datum
+import java.util.TreeMap
 
-/**
- * Non-communicative, this performs better when [lhs] is larger than [rhs].
- *
- * @property lhs
- * @property rhs
- */
-internal class RelExceptDistinct(
+internal class RelOpIntersectAll(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : RelPeeking() {
+) : RelOpPeeking() {
 
-    private var seen = TreeSet(DatumArrayComparator)
+    private val seen = TreeMap<Array<Datum>, Int>(DatumArrayComparator)
     private var init: Boolean = false
 
     override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         init = false
+        seen.clear()
     }
 
     override fun peek(): Record? {
         if (!init) {
             seed()
         }
-        for (row in lhs) {
+        for (row in rhs) {
             row.values.coerceMissing()
-            if (!seen.contains(row.values)) {
+            val remaining = seen[row.values] ?: 0
+            if (remaining > 0) {
+                seen[row.values] = remaining - 1
                 return Record(row.values)
             }
         }
@@ -46,13 +44,14 @@ internal class RelExceptDistinct(
     }
 
     /**
-     * Read the entire right-hand-side into our search structure.
+     * Read the entire left-hand-side into our search structure.
      */
     private fun seed() {
         init = true
-        for (row in rhs) {
+        for (row in lhs) {
             row.values.coerceMissing()
-            seen.add(row.values)
+            val alreadySeen = seen[row.values] ?: 0
+            seen[row.values] = alreadySeen + 1
         }
     }
 }
