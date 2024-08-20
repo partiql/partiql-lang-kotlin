@@ -209,9 +209,8 @@ public class IonDatum private constructor(value: AnyElement, type: PType) : Datu
         }
         // TODO handle multiple/ambiguous field names?
         val v = _value.asStruct().getOptional(name)
-        // TODO handle nulls?
         return if (v == null) {
-            Datum.nullValue()
+            Datum.missing()
         } else {
             of(v)
         }
@@ -228,7 +227,6 @@ public class IonDatum private constructor(value: AnyElement, type: PType) : Datu
                 return of(field.value)
             }
         }
-        // TODO handle missing fields?
-        return Datum.nullValue()
+        return Datum.missing()
     }
 }

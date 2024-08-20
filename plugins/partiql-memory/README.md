@@ -9,7 +9,7 @@ This is a plugin for defining namespaces and tables in memory.
 val catalog = MemoryCatalog.builder()
     .name("hello")
     .defineTable("pi", MemoryTable(
-        type = PType.typeFloat32(),
+        type = PType.real(),
         data = ionFloat(3.14),
     ))
     .build()

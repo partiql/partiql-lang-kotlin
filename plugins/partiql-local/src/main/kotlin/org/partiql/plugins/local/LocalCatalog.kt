@@ -34,7 +34,7 @@ internal class LocalCatalog(
 
     override fun getTable(session: Session, name: Name): Table? {
         val path = toPath(name.getNamespace()).resolve(name.getName() + EXT)
-        if (path.notExists() || !path.isDirectory()) {
+        if (path.notExists() || path.isDirectory()) {
             return null
         }
         return LocalTable(name, path)
@@ -82,7 +82,7 @@ internal class LocalCatalog(
 
     override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
         val path = toPath(namespace)
-        if (path.notExists() || path.isDirectory()) {
+        if (path.notExists() || !path.isDirectory()) {
             // throw exception?
             return emptyList()
         }
