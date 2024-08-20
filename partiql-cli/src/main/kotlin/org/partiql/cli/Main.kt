@@ -230,7 +230,7 @@ internal class MainCommand : Runnable {
             .define(
                 MemoryTable.of(
                     name = Name.of("stdin"),
-                    schema = PType.typeDynamic(),
+                    schema = PType.dynamic(),
                     datum = IonDatum.of(value.asAnyElement())
                 )
             )

@@ -21,7 +21,7 @@ public class MemoryTable private constructor(
         @JvmStatic
         public fun empty(name: String): MemoryTable = MemoryTable(
             name = Name.of(name),
-            schema = PType.typeDynamic(),
+            schema = PType.dynamic(),
             datum = Datum.nullValue(),
         )
 
@@ -31,7 +31,7 @@ public class MemoryTable private constructor(
         @JvmStatic
         public fun empty(name: Name): MemoryTable = MemoryTable(
             name = name,
-            schema = PType.typeDynamic(),
+            schema = PType.dynamic(),
             datum = Datum.nullValue(),
         )
 
@@ -58,7 +58,7 @@ public class MemoryTable private constructor(
         @JvmStatic
         public fun of(name: Name, datum: Datum): MemoryTable = MemoryTable(
             name = name,
-            schema = PType.typeDynamic(),
+            schema = PType.dynamic(),
             datum = datum,
         )
 

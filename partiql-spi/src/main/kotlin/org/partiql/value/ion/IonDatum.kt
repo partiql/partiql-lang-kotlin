@@ -69,63 +69,63 @@ public class IonDatum private constructor(value: AnyElement, type: PType) : Datu
             val type = when (value.type) {
                 NULL -> return when (tag) {
                     Annotation.MISSING -> Datum.missing()
-                    Annotation.BAG -> Datum.nullValue(PType.typeBag())
-                    Annotation.DATE -> Datum.nullValue(PType.typeDate())
-                    Annotation.TIME -> Datum.nullValue(PType.typeTimeWithoutTZ(6))
-                    Annotation.TIMESTAMP -> Datum.nullValue(PType.typeTimeWithoutTZ(6))
+                    Annotation.BAG -> Datum.nullValue(PType.bag())
+                    Annotation.DATE -> Datum.nullValue(PType.date())
+                    Annotation.TIME -> Datum.nullValue(PType.time(6))
+                    Annotation.TIMESTAMP -> Datum.nullValue(PType.time(6))
                     Annotation.GRAPH -> error("Datum does not support GRAPH type.")
                     null -> Datum.nullValue()
                 }
                 BOOL -> when (tag) {
-                    null -> PType.typeBool()
+                    null -> PType.bool()
                     else -> error("Unexpected type annotation for Ion BOOL: $tag")
                 }
                 INT -> when (tag) {
-                    null -> PType.typeIntArbitrary()
+                    null -> PType.numeric()
                     else -> error("Unexpected type annotation for Ion INT: $tag")
                 }
                 FLOAT -> when (tag) {
-                    null -> PType.typeDoublePrecision()
+                    null -> PType.doublePrecision()
                     else -> error("Unexpected type annotation for Ion FLOAT: $tag")
                 }
                 DECIMAL -> when (tag) {
-                    null -> PType.typeDecimalArbitrary()
+                    null -> PType.decimal()
                     else -> error("Unexpected type annotation for Ion DECIMAL: $tag")
                 }
                 STRING -> when (tag) {
-                    null -> PType.typeString()
+                    null -> PType.string()
                     else -> error("Unexpected type annotation for Ion STRING: $tag")
                 }
                 CLOB -> when (tag) {
-                    null -> PType.typeClob(Int.MAX_VALUE)
+                    null -> PType.clob(Int.MAX_VALUE)
                     else -> error("Unexpected type annotation for Ion CLOB: $tag")
                 }
                 BLOB -> when (tag) {
-                    null -> PType.typeBlob(Int.MAX_VALUE)
+                    null -> PType.blob(Int.MAX_VALUE)
                     else -> error("Unexpected type annotation for Ion BLOB: $tag")
                 }
                 LIST -> when (tag) {
-                    Annotation.BAG -> PType.typeBag()
-                    null -> PType.typeList()
+                    Annotation.BAG -> PType.bag()
+                    null -> PType.array()
                     else -> error("Unexpected type annotation for Ion LIST: $tag")
                 }
                 STRUCT -> when (tag) {
-                    null -> PType.typeStruct()
+                    null -> PType.struct()
                     Annotation.DATE -> TODO("IonDatum for DATE not supported")
                     Annotation.TIME -> TODO("IonDatum for TIME not supported")
                     Annotation.TIMESTAMP -> TODO("IonDatum for TIMESTAMP not supported")
                     else -> error("Unexpected type annotation for Ion STRUCT: $tag")
                 }
                 SEXP -> when (tag) {
-                    null -> PType.typeSexp()
+                    null -> PType.sexp()
                     else -> error("Unexpected type annotation for Ion SEXP: $tag")
                 }
                 SYMBOL -> when (tag) {
-                    null -> PType.typeSymbol()
+                    null -> PType.symbol()
                     else -> error("Unexpected type annotation for Ion SYMBOL: $tag")
                 }
                 TIMESTAMP -> when (tag) {
-                    null -> PType.typeTimestampWithoutTZ(6)
+                    null -> PType.timestamp(6)
                     else -> error("Unexpected type annotation for Ion TIMESTAMP: $tag")
                 }
             }

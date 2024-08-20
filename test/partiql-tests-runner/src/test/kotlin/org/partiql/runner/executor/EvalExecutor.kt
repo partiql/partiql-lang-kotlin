@@ -192,7 +192,7 @@ class EvalExecutor(
 
                 val table = MemoryTable.of(
                     name = name,
-                    schema = PType.typeDynamic(),
+                    schema = PType.dynamic(),
                     datum = datum,
                 )
                 define(table)
