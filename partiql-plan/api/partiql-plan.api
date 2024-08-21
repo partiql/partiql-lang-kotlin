@@ -3414,12 +3414,6 @@ public final class org/partiql/plan/v1/operator/rex/RexVisitor$DefaultImpls {
 	public static fun visitVar (Lorg/partiql/plan/v1/operator/rex/RexVisitor;Lorg/partiql/plan/v1/operator/rex/RexVar;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public abstract interface class org/partiql/plan/v1/serde/PlanReader {
-}
-
-public abstract interface class org/partiql/plan/v1/serde/PlanWriter {
-}
-
 public abstract class org/partiql/plan/visitor/PlanBaseVisitor : org/partiql/plan/visitor/PlanVisitor {
 	public fun <init> ()V
 	public abstract fun defaultReturn (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;
