@@ -1,17 +1,18 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.eval.internal.Record
 import org.partiql.eval.value.Datum
 
 internal object RecordUtility {
     /**
-     * Converts the [Record] into an array of Datum, while coercing any missing values into null values.
+     * Coerces missing values into null values. Currently used when the [Datum.comparator] is used in a TreeSet/TreeMap
+     * (treats null and missing as the same value) and we need to deterministically return a value. Here we use coerce
+     * to null to follow the PartiQL spec's grouping function.
      */
-    fun Record.toDatumArrayCoerceMissing(): Array<Datum> = Array(this.values.size) {
-        val d = this@toDatumArrayCoerceMissing.values[it]
-        when (d.isMissing) {
-            true -> Datum.nullValue()
-            else -> d
+    fun Array<Datum>.coerceMissing() {
+        for (i in indices) {
+            if (this[i].isMissing) {
+                this[i] = Datum.nullValue()
+            }
         }
     }
 }

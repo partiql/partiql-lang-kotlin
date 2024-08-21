@@ -3,7 +3,7 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.IteratorChain
-import org.partiql.eval.internal.helpers.RecordUtility.toDatumArrayCoerceMissing
+import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
 import java.util.TreeSet
 
@@ -25,10 +25,10 @@ internal class RelUnionDistinct(
 
     override fun peek(): Record? {
         for (record in input) {
-            val partiqlRow = record.toDatumArrayCoerceMissing()
-            if (!seen.contains(partiqlRow)) {
-                seen.add(partiqlRow)
-                return Record.of(*partiqlRow)
+            record.values.coerceMissing()
+            if (!seen.contains(record.values)) {
+                seen.add(record.values)
+                return Record(record.values)
             }
         }
         return null

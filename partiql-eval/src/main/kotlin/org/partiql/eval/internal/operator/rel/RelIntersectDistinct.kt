@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.helpers.RecordUtility.toDatumArrayCoerceMissing
+import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
 import java.util.TreeSet
 
@@ -26,9 +26,9 @@ internal class RelIntersectDistinct(
             seed()
         }
         for (row in rhs) {
-            val partiqlRow = row.toDatumArrayCoerceMissing()
-            if (seen.remove(partiqlRow)) {
-                return Record.of(*partiqlRow)
+            row.values.coerceMissing()
+            if (seen.remove(row.values)) {
+                return Record(row.values)
             }
         }
         return null
@@ -46,8 +46,8 @@ internal class RelIntersectDistinct(
     private fun seed() {
         init = true
         for (row in lhs) {
-            val partiqlRow = row.toDatumArrayCoerceMissing()
-            seen.add(partiqlRow)
+            row.values.coerceMissing()
+            seen.add(row.values)
         }
     }
 }

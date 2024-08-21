@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.helpers.RecordUtility.toDatumArrayCoerceMissing
+import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import java.util.TreeMap
@@ -27,13 +27,13 @@ internal class RelExceptAll(
             seed()
         }
         for (row in lhs) {
-            val partiqlRow = row.toDatumArrayCoerceMissing()
-            val remaining = seen[partiqlRow] ?: 0
+            row.values.coerceMissing()
+            val remaining = seen[row.values] ?: 0
             if (remaining > 0) {
-                seen[partiqlRow] = remaining - 1
+                seen[row.values] = remaining - 1
                 continue
             }
-            return Record.of(*partiqlRow)
+            return Record(row.values)
         }
         return null
     }
@@ -50,9 +50,9 @@ internal class RelExceptAll(
     private fun seed() {
         init = true
         for (row in rhs) {
-            val partiqlRow = row.toDatumArrayCoerceMissing()
-            val n = seen[partiqlRow] ?: 0
-            seen[partiqlRow] = n + 1
+            row.values.coerceMissing()
+            val n = seen[row.values] ?: 0
+            seen[row.values] = n + 1
         }
     }
 }
