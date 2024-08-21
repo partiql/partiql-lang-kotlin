@@ -484,27 +484,8 @@ expr::[
     rhs:    expr,
   },
 
-  // PartiQL special form `[OUTER] (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
-  bag_op::{
-    type:   '.set_op',
-    lhs:    expr,
-    rhs:    expr,
-    outer:  optional::bool,
-  },
-
-  // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
-  s_f_w::{
-    select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
-    exclude:  optional::exclude,
-    from:     from,
-    let:      optional::let,
-    where:    optional::expr,
-    group_by: optional::group_by,
-    having:   optional::expr,
-    set_op:   optional::{
-      type:    '.set_op',
-      operand: '.expr.s_f_w',
-    },
+  query_set::{
+    body: query_body,
     order_by: optional::order_by,
     limit:    optional::expr,
     offset:   optional::expr,
@@ -528,6 +509,27 @@ expr::[
       sorts:      optional::list::[sort],
     },
   },
+]
+
+query_body::[
+  // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
+  s_f_w::{
+    select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
+    exclude:  optional::exclude,
+    from:     from,
+    let:      optional::let,
+    where:    optional::expr,
+    group_by: optional::group_by,
+    having:   optional::expr,
+  },
+
+  // PartiQL bag op / SQL set op [OUTER] (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
+  set_op::{
+    type:     '.set_op',
+    is_outer: bool,
+    lhs:      expr,
+    rhs:      expr,
+  }
 ]
 
 // PartiQL SELECT Clause Variants — https://partiql.org/dql/select.html

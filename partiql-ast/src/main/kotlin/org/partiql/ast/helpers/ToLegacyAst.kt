@@ -27,6 +27,7 @@ import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Path
+import org.partiql.ast.QueryBody
 import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
@@ -621,26 +622,6 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         call("date_diff", operands, metas)
     }
 
-    override fun visitExprBagOp(node: Expr.BagOp, ctx: Ctx) = translate(node) { metas ->
-        val lhs = visitExpr(node.lhs, ctx)
-        val rhs = visitExpr(node.rhs, ctx)
-        val op = when (node.outer) {
-            true -> when (node.type.type) {
-                SetOp.Type.UNION -> outerUnion()
-                SetOp.Type.INTERSECT -> outerIntersect()
-                SetOp.Type.EXCEPT -> outerExcept()
-            }
-            else -> when (node.type.type) {
-                SetOp.Type.UNION -> union()
-                SetOp.Type.INTERSECT -> intersect()
-                SetOp.Type.EXCEPT -> except()
-            }
-        }
-        val setq = node.type.setq?.toLegacySetQuantifier() ?: distinct()
-        val operands = listOf(lhs, rhs)
-        bagOp(op, setq, operands, metas)
-    }
-
     override fun visitExprMatch(node: Expr.Match, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
         val match = visitGraphMatch(node.pattern, ctx)
@@ -673,36 +654,62 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     /**
      * SELECT-FROM-WHERE
      */
-
-    override fun visitExprSFW(node: Expr.SFW, ctx: Ctx) = translate(node) { metas ->
-        var setq = when (val s = node.select) {
-            is Select.Pivot -> null
-            is Select.Project -> s.setq?.toLegacySetQuantifier()
-            is Select.Star -> s.setq?.toLegacySetQuantifier()
-            is Select.Value -> s.setq?.toLegacySetQuantifier()
-        }
-        // Legacy AST removes (setq (all))
-        if (setq != null && setq is PartiqlAst.SetQuantifier.All) {
-            setq = null
-        }
-        val project = visitSelect(node.select, ctx)
-        val from = visitFrom(node.from, ctx)
-        val exclude = node.exclude?.let { visitExclude(it, ctx) }
-        val fromLet = node.let?.let { visitLet(it, ctx) }
-        val where = node.where?.let { visitExpr(it, ctx) }
-        val groupBy = node.groupBy?.let { visitGroupBy(it, ctx) }
-        val having = node.having?.let { visitExpr(it, ctx) }
+    override fun visitExprQuerySet(node: Expr.QuerySet, ctx: Ctx) = translate(node) { metas ->
         val orderBy = node.orderBy?.let { visitOrderBy(it, ctx) }
         val limit = node.limit?.let { visitExpr(it, ctx) }
         val offset = node.offset?.let { visitExpr(it, ctx) }
-        select(setq, project, exclude, from, fromLet, where, groupBy, having, orderBy, limit, offset, metas)
+        when (val body = node.body) {
+            is QueryBody.SFW -> {
+                var setq = when (val s = body.select) {
+                    is Select.Pivot -> null
+                    is Select.Project -> s.setq?.toLegacySetQuantifier()
+                    is Select.Star -> s.setq?.toLegacySetQuantifier()
+                    is Select.Value -> s.setq?.toLegacySetQuantifier()
+                }
+                // Legacy AST removes (setq (all))
+                if (setq != null && setq is PartiqlAst.SetQuantifier.All) {
+                    setq = null
+                }
+                val project = visitSelect(body.select, ctx)
+                val from = visitFrom(body.from, ctx)
+                val exclude = body.exclude?.let { visitExclude(it, ctx) }
+                val fromLet = body.let?.let { visitLet(it, ctx) }
+                val where = body.where?.let { visitExpr(it, ctx) }
+                val groupBy = body.groupBy?.let { visitGroupBy(it, ctx) }
+                val having = body.having?.let { visitExpr(it, ctx) }
+                select(setq, project, exclude, from, fromLet, where, groupBy, having, orderBy, limit, offset, metas)
+            }
+            is QueryBody.SetOp -> {
+                val lhs = visitExpr(body.lhs, ctx)
+                val rhs = visitExpr(body.rhs, ctx)
+                val outer = body.isOuter
+                val op = when (body.type.type) {
+                    SetOp.Type.UNION -> if (outer) {
+                        outerUnion()
+                    } else {
+                        union()
+                    }
+                    SetOp.Type.INTERSECT -> if (outer) {
+                        outerIntersect()
+                    } else {
+                        intersect()
+                    }
+                    SetOp.Type.EXCEPT -> if (outer) {
+                        outerExcept()
+                    } else {
+                        except()
+                    }
+                }
+                val setq = body.type.setq?.toLegacySetQuantifier() ?: distinct()
+                val operands = listOf(lhs, rhs)
+                bagOp(op, setq, operands, metas)
+            }
+        }
     }
 
     /**
      * UNSUPPORTED in legacy AST
      */
-    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, ctx: Ctx) = defaultVisit(node, ctx)
-
     override fun visitSelect(node: Select, ctx: Ctx) = super.visitSelect(node, ctx) as PartiqlAst.Projection
 
     override fun visitSelectStar(node: Select.Star, ctx: Ctx) = translate(node) { metas ->

@@ -42,7 +42,7 @@ internal object AstToPlan {
 
         override fun visitStatementQuery(node: AstStatement.Query, env: Env): PlanStatement {
             val rex = when (val expr = node.expr) {
-                is Expr.SFW -> RelConverter.apply(expr, env)
+                is Expr.QuerySet -> RelConverter.apply(expr, env)
                 else -> RexConverter.apply(expr, env)
             }
             return statementQuery(rex)

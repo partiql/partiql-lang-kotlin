@@ -1,12 +1,18 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.eval.internal.Record
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.value.Datum
 
 internal object RecordUtility {
-    @OptIn(PartiQLValueExperimental::class)
-    fun Record.toPartiQLValueList(): List<PartiQLValue> = List(this.values.size) {
-        this.values[it].toPartiQLValue()
+    /**
+     * Coerces missing values into null values. Currently used when the [Datum.comparator] is used in a TreeSet/TreeMap
+     * (treats null and missing as the same value) and we need to deterministically return a value. Here we use coerce
+     * to null to follow the PartiQL spec's grouping function.
+     */
+    fun Array<Datum>.coerceMissing() {
+        for (i in indices) {
+            if (this[i].isMissing) {
+                this[i] = Datum.nullValue()
+            }
+        }
     }
 }

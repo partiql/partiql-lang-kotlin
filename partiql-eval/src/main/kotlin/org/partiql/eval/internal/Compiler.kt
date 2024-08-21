@@ -55,13 +55,13 @@ import org.partiql.plan.PlanNode
 import org.partiql.plan.Ref
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
+import org.partiql.plan.SetQuantifier
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Agg
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
-import java.lang.IllegalStateException
 
 internal class Compiler(
     private val plan: PartiQLPlan,
@@ -185,9 +185,9 @@ internal class Compiler(
 
     override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: PType?): Operator.Aggregation {
         val args = node.args.map { visitRex(it, it.type).modeHandled() }
-        val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setQuantifier) {
-            Rel.Op.Aggregate.Call.SetQuantifier.ALL -> Operator.Aggregation.SetQuantifier.ALL
-            Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT -> Operator.Aggregation.SetQuantifier.DISTINCT
+        val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setq) {
+            SetQuantifier.ALL -> Operator.Aggregation.SetQuantifier.ALL
+            SetQuantifier.DISTINCT -> Operator.Aggregation.SetQuantifier.DISTINCT
         }
         val agg = symbols.getAgg(node.agg)
         return object : Operator.Aggregation {
@@ -304,30 +304,30 @@ internal class Compiler(
         }
     }
 
-    override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: PType?): Operator {
+    override fun visitRelOpExcept(node: Rel.Op.Except, ctx: PType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
-        return when (node.quantifier) {
-            Rel.Op.Set.Quantifier.ALL -> RelExceptAll(lhs, rhs)
-            Rel.Op.Set.Quantifier.DISTINCT -> RelExceptDistinct(lhs, rhs)
+        return when (node.setq) {
+            SetQuantifier.ALL -> RelExceptAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> RelExceptDistinct(lhs, rhs)
         }
     }
 
-    override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: PType?): Operator {
+    override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: PType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
-        return when (node.quantifier) {
-            Rel.Op.Set.Quantifier.ALL -> RelIntersectAll(lhs, rhs)
-            Rel.Op.Set.Quantifier.DISTINCT -> RelIntersectDistinct(lhs, rhs)
+        return when (node.setq) {
+            SetQuantifier.ALL -> RelIntersectAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> RelIntersectDistinct(lhs, rhs)
         }
     }
 
-    override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: PType?): Operator {
+    override fun visitRelOpUnion(node: Rel.Op.Union, ctx: PType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
-        return when (node.quantifier) {
-            Rel.Op.Set.Quantifier.ALL -> RelUnionAll(lhs, rhs)
-            Rel.Op.Set.Quantifier.DISTINCT -> RelUnionDistinct(lhs, rhs)
+        return when (node.setq) {
+            SetQuantifier.ALL -> RelUnionAll(lhs, rhs)
+            SetQuantifier.DISTINCT -> RelUnionDistinct(lhs, rhs)
         }
     }
 

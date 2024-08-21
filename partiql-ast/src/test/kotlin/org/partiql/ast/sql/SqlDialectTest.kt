@@ -924,48 +924,56 @@ class SqlDialectTest {
                     rhs = v("y")
                 }
             },
-            expect("x UNION y") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = null
-                    }
-                    outer = false
-                    lhs = v("x")
-                    rhs = v("y")
-                }
-            },
-            expect("x UNION ALL y") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = SetQuantifier.ALL
-                    }
-                    outer = false
-                    lhs = v("x")
-                    rhs = v("y")
-                }
-            },
             expect("x OUTER UNION y") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = null
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        isOuter = true
+                        lhs = v("x")
+                        rhs = v("y")
                     }
-                    outer = true
-                    lhs = v("x")
-                    rhs = v("y")
                 }
             },
             expect("x OUTER UNION ALL y") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = SetQuantifier.ALL
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = SetQuantifier.ALL
+                        }
+                        isOuter = true
+                        lhs = v("x")
+                        rhs = v("y")
                     }
-                    outer = true
-                    lhs = v("x")
-                    rhs = v("y")
+                }
+            },
+            expect("x OUTER UNION y") {
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        isOuter = true
+                        lhs = v("x")
+                        rhs = v("y")
+                    }
+                }
+            },
+            expect("x OUTER UNION ALL y") {
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = SetQuantifier.ALL
+                        }
+                        isOuter = true
+                        lhs = v("x")
+                        rhs = v("y")
+                    }
                 }
             },
         )
@@ -997,104 +1005,130 @@ class SqlDialectTest {
         @JvmStatic
         fun selectClauseCases() = listOf(
             expect("SELECT a FROM T") {
-                exprSFW {
-                    select = selectProject {
-                        items += selectProjectItemExpression(v("a"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectProject {
+                            items += selectProjectItemExpression(v("a"))
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("SELECT a AS x FROM T") {
-                exprSFW {
-                    select = selectProject {
-                        items += selectProjectItemExpression(v("a"), id("x"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectProject {
+                            items += selectProjectItemExpression(v("a"), id("x"))
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("SELECT a AS x, b AS y FROM T") {
-                exprSFW {
-                    select = selectProject {
-                        items += selectProjectItemExpression(v("a"), id("x"))
-                        items += selectProjectItemExpression(v("b"), id("y"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectProject {
+                            items += selectProjectItemExpression(v("a"), id("x"))
+                            items += selectProjectItemExpression(v("b"), id("y"))
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("SELECT ALL a FROM T") {
-                exprSFW {
-                    select = selectProject {
-                        setq = SetQuantifier.ALL
-                        items += selectProjectItemExpression(v("a"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectProject {
+                            setq = SetQuantifier.ALL
+                            items += selectProjectItemExpression(v("a"))
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("SELECT DISTINCT a FROM T") {
-                exprSFW {
-                    select = selectProject {
-                        setq = SetQuantifier.DISTINCT
-                        items += selectProjectItemExpression(v("a"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectProject {
+                            setq = SetQuantifier.DISTINCT
+                            items += selectProjectItemExpression(v("a"))
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("SELECT a.* FROM T") {
-                exprSFW {
-                    select = selectProject {
-                        items += selectProjectItemAll(v("a"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectProject {
+                            items += selectProjectItemAll(v("a"))
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("SELECT * FROM T") {
-                exprSFW {
-                    select = selectStar()
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectStar()
+                        from = table("T")
+                    }
                 }
             },
             expect("SELECT DISTINCT * FROM T") {
-                exprSFW {
-                    select = selectStar(SetQuantifier.DISTINCT)
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectStar(SetQuantifier.DISTINCT)
+                        from = table("T")
+                    }
                 }
             },
             expect("SELECT ALL * FROM T") {
-                exprSFW {
-                    select = selectStar(SetQuantifier.ALL)
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectStar(SetQuantifier.ALL)
+                        from = table("T")
+                    }
                 }
             },
             expect("SELECT VALUE a FROM T") {
-                exprSFW {
-                    select = selectValue {
-                        constructor = v("a")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectValue {
+                            constructor = v("a")
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("SELECT ALL VALUE a FROM T") {
-                exprSFW {
-                    select = selectValue {
-                        setq = SetQuantifier.ALL
-                        constructor = v("a")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectValue {
+                            setq = SetQuantifier.ALL
+                            constructor = v("a")
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("SELECT DISTINCT VALUE a FROM T") {
-                exprSFW {
-                    select = selectValue {
-                        setq = SetQuantifier.DISTINCT
-                        constructor = v("a")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectValue {
+                            setq = SetQuantifier.DISTINCT
+                            constructor = v("a")
+                        }
+                        from = table("T")
                     }
-                    from = table("T")
                 }
             },
             expect("PIVOT a AT b FROM T") {
-                exprSFW {
-                    select = selectPivot(v("a"), v("b"))
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = selectPivot(v("a"), v("b"))
+                        from = table("T")
+                    }
                 }
             },
         )
@@ -1102,75 +1136,81 @@ class SqlDialectTest {
         @JvmStatic
         fun excludeClauseCases() = listOf(
             expect("SELECT a EXCLUDE t.a FROM T") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.SCAN
-                    }
-                    exclude = exclude {
-                        items += excludeItem {
-                            root = v("t")
-                            steps += insensitiveExcludeStructField("a")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.SCAN
+                        }
+                        exclude = exclude {
+                            items += excludeItem {
+                                root = v("t")
+                                steps += insensitiveExcludeStructField("a")
+                            }
                         }
                     }
                 }
             },
             expect("SELECT a EXCLUDE a.b, c.d, e.f, g.h FROM T") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.SCAN
-                    }
-                    exclude = exclude {
-                        items += excludeItem {
-                            root = v("a")
-                            steps += insensitiveExcludeStructField("b")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.SCAN
                         }
-                        items += excludeItem {
-                            root = v("c")
-                            steps += insensitiveExcludeStructField("d")
-                        }
-                        items += excludeItem {
-                            root = v("e")
-                            steps += insensitiveExcludeStructField("f")
-                        }
-                        items += excludeItem {
-                            root = v("g")
-                            steps += insensitiveExcludeStructField("h")
+                        exclude = exclude {
+                            items += excludeItem {
+                                root = v("a")
+                                steps += insensitiveExcludeStructField("b")
+                            }
+                            items += excludeItem {
+                                root = v("c")
+                                steps += insensitiveExcludeStructField("d")
+                            }
+                            items += excludeItem {
+                                root = v("e")
+                                steps += insensitiveExcludeStructField("f")
+                            }
+                            items += excludeItem {
+                                root = v("g")
+                                steps += insensitiveExcludeStructField("h")
+                            }
                         }
                     }
                 }
             },
             expect("SELECT a EXCLUDE t.a.\"b\".*[*].c, \"s\"[0].d.\"e\"[*].f.* FROM T") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.SCAN
-                    }
-                    exclude = exclude {
-                        items += excludeItem {
-                            root = v("t")
-                            steps += mutableListOf(
-                                insensitiveExcludeStructField("a"),
-                                sensitiveExcludeStructField("b"),
-                                excludeStepStructWildcard(),
-                                excludeStepCollWildcard(),
-                                insensitiveExcludeStructField("c"),
-                            )
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.SCAN
                         }
-                        items += excludeItem {
-                            root = exprVar(id("s", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
-                            steps += mutableListOf(
-                                excludeStepCollIndex(0),
-                                insensitiveExcludeStructField("d"),
-                                sensitiveExcludeStructField("e"),
-                                excludeStepCollWildcard(),
-                                insensitiveExcludeStructField("f"),
-                                excludeStepStructWildcard(),
-                            )
+                        exclude = exclude {
+                            items += excludeItem {
+                                root = v("t")
+                                steps += mutableListOf(
+                                    insensitiveExcludeStructField("a"),
+                                    sensitiveExcludeStructField("b"),
+                                    excludeStepStructWildcard(),
+                                    excludeStepCollWildcard(),
+                                    insensitiveExcludeStructField("c"),
+                                )
+                            }
+                            items += excludeItem {
+                                root = exprVar(id("s", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
+                                steps += mutableListOf(
+                                    excludeStepCollIndex(0),
+                                    insensitiveExcludeStructField("d"),
+                                    sensitiveExcludeStructField("e"),
+                                    excludeStepCollWildcard(),
+                                    insensitiveExcludeStructField("f"),
+                                    excludeStepStructWildcard(),
+                                )
+                            }
                         }
                     }
                 }
@@ -1188,86 +1228,102 @@ class SqlDialectTest {
         @JvmStatic
         fun fromClauseCases() = listOf(
             expect("SELECT a FROM T") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.SCAN
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.SCAN
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T AS x") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.SCAN
-                        asAlias = id("x")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.SCAN
+                            asAlias = id("x")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T AS x AT y") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.SCAN
-                        asAlias = id("x")
-                        atAlias = id("y")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.SCAN
+                            asAlias = id("x")
+                            atAlias = id("y")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T AS x AT y BY z") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.SCAN
-                        asAlias = id("x")
-                        atAlias = id("y")
-                        byAlias = id("z")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.SCAN
+                            asAlias = id("x")
+                            atAlias = id("y")
+                            byAlias = id("z")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM UNPIVOT T") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.UNPIVOT
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.UNPIVOT
+                        }
                     }
                 }
             },
             expect("SELECT a FROM UNPIVOT T AS x") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.UNPIVOT
-                        asAlias = id("x")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.UNPIVOT
+                            asAlias = id("x")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM UNPIVOT T AS x AT y") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.UNPIVOT
-                        asAlias = id("x")
-                        atAlias = id("y")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.UNPIVOT
+                            asAlias = id("x")
+                            atAlias = id("y")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM UNPIVOT T AS x AT y BY z") {
-                exprSFW {
-                    select = select("a")
-                    from = fromValue {
-                        expr = v("T")
-                        type = From.Value.Type.UNPIVOT
-                        asAlias = id("x")
-                        atAlias = id("y")
-                        byAlias = id("z")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromValue {
+                            expr = v("T")
+                            type = From.Value.Type.UNPIVOT
+                            asAlias = id("x")
+                            atAlias = id("y")
+                            byAlias = id("z")
+                        }
                     }
                 }
             },
@@ -1276,21 +1332,25 @@ class SqlDialectTest {
         @JvmStatic
         fun joinClauseCases() = listOf(
             expect("SELECT a FROM T JOIN S") {
-                exprSFW {
-                    select = select("a")
-                    from = fromJoin {
-                        lhs = table("T")
-                        rhs = table("S")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromJoin {
+                            lhs = table("T")
+                            rhs = table("S")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T INNER JOIN S") {
-                exprSFW {
-                    select = select("a")
-                    from = fromJoin {
-                        type = From.Join.Type.INNER
-                        lhs = table("T")
-                        rhs = table("S")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromJoin {
+                            type = From.Join.Type.INNER
+                            lhs = table("T")
+                            rhs = table("S")
+                        }
                     }
                 }
             },
@@ -1315,23 +1375,27 @@ class SqlDialectTest {
             //     }
             // },
             expect("SELECT a FROM T JOIN S ON NULL") {
-                exprSFW {
-                    select = select("a")
-                    from = fromJoin {
-                        lhs = table("T")
-                        rhs = table("S")
-                        condition = NULL
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromJoin {
+                            lhs = table("T")
+                            rhs = table("S")
+                            condition = NULL
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T INNER JOIN S ON NULL") {
-                exprSFW {
-                    select = select("a")
-                    from = fromJoin {
-                        type = From.Join.Type.INNER
-                        lhs = table("T")
-                        rhs = table("S")
-                        condition = NULL
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = fromJoin {
+                            type = From.Join.Type.INNER
+                            lhs = table("T")
+                            rhs = table("S")
+                            condition = NULL
+                        }
                     }
                 }
             },
@@ -1341,62 +1405,76 @@ class SqlDialectTest {
         @JvmStatic
         private fun otherClausesCases() = listOf(
             expect("SELECT a FROM T LET x AS i") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    let = let(mutableListOf()) {
-                        bindings += letBinding(v("x"), id("i"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        let = let(mutableListOf()) {
+                            bindings += letBinding(v("x"), id("i"))
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T LET x AS i, y AS j") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    let = let(mutableListOf()) {
-                        bindings += letBinding(v("x"), id("i"))
-                        bindings += letBinding(v("y"), id("j"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        let = let(mutableListOf()) {
+                            bindings += letBinding(v("x"), id("i"))
+                            bindings += letBinding(v("y"), id("j"))
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T WHERE x") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    where = v("x")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        where = v("x")
+                    }
                 }
             },
             expect("SELECT a FROM T LIMIT 1") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     limit = exprLit(int32Value(1))
                 }
             },
             expect("SELECT a FROM T OFFSET 2") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     offset = exprLit(int32Value(2))
                 }
             },
             expect("SELECT a FROM T LIMIT 1 OFFSET 2") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     limit = exprLit(int32Value(1))
                     offset = exprLit(int32Value(2))
                 }
             },
             expect("SELECT a FROM T GROUP BY x HAVING y") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"))
+                        }
+                        having = v("y")
                     }
-                    having = v("y")
                 }
             },
         )
@@ -1404,100 +1482,118 @@ class SqlDialectTest {
         @JvmStatic
         private fun groupByClauseCases() = listOf(
             expect("SELECT a FROM T GROUP BY x") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"))
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T GROUP BY x AS i") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"), id("i"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"), id("i"))
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T GROUP BY x, y") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"))
-                        keys += groupByKey(v("y"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"))
+                            keys += groupByKey(v("y"))
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T GROUP BY x AS i, y AS j") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"), id("i"))
-                        keys += groupByKey(v("y"), id("j"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"), id("i"))
+                            keys += groupByKey(v("y"), id("j"))
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T GROUP BY x GROUP AS g") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"))
-                        asAlias = id("g")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"))
+                            asAlias = id("g")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T GROUP BY x AS i GROUP AS g") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"), id("i"))
-                        asAlias = id("g")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"), id("i"))
+                            asAlias = id("g")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T GROUP BY x, y GROUP AS g") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"))
-                        keys += groupByKey(v("y"))
-                        asAlias = id("g")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"))
+                            keys += groupByKey(v("y"))
+                            asAlias = id("g")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T GROUP BY x AS i, y AS j GROUP AS g") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.FULL
-                        keys += groupByKey(v("x"), id("i"))
-                        keys += groupByKey(v("y"), id("j"))
-                        asAlias = id("g")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.FULL
+                            keys += groupByKey(v("x"), id("i"))
+                            keys += groupByKey(v("y"), id("j"))
+                            asAlias = id("g")
+                        }
                     }
                 }
             },
             expect("SELECT a FROM T GROUP PARTIAL BY x") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    groupBy = groupBy {
-                        strategy = GroupBy.Strategy.PARTIAL
-                        keys += groupByKey(v("x"))
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                        groupBy = groupBy {
+                            strategy = GroupBy.Strategy.PARTIAL
+                            keys += groupByKey(v("x"))
+                        }
                     }
                 }
             },
@@ -1506,90 +1602,110 @@ class SqlDialectTest {
         @JvmStatic
         private fun orderByClauseCases() = listOf(
             expect("SELECT a FROM T ORDER BY x") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), null, null)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x ASC") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), Sort.Dir.ASC, null)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x DESC") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), Sort.Dir.DESC, null)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x NULLS FIRST") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), null, Sort.Nulls.FIRST)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x NULLS LAST") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), null, Sort.Nulls.LAST)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x ASC NULLS FIRST") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), Sort.Dir.ASC, Sort.Nulls.FIRST)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x ASC NULLS LAST") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), Sort.Dir.ASC, Sort.Nulls.LAST)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x DESC NULLS FIRST") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), Sort.Dir.DESC, Sort.Nulls.FIRST)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x DESC NULLS LAST") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), Sort.Dir.DESC, Sort.Nulls.LAST)
                     }
                 }
             },
             expect("SELECT a FROM T ORDER BY x, y") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), null, null)
                         sorts += sort(v("y"), null, null)
@@ -1597,9 +1713,11 @@ class SqlDialectTest {
                 }
             },
             expect("SELECT a FROM T ORDER BY x ASC, y DESC") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), Sort.Dir.ASC, null)
                         sorts += sort(v("y"), Sort.Dir.DESC, null)
@@ -1607,9 +1725,11 @@ class SqlDialectTest {
                 }
             },
             expect("SELECT a FROM T ORDER BY x NULLS FIRST, y NULLS LAST") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), null, Sort.Nulls.FIRST)
                         sorts += sort(v("y"), null, Sort.Nulls.LAST)
@@ -1617,9 +1737,11 @@ class SqlDialectTest {
                 }
             },
             expect("SELECT a FROM T ORDER BY x ASC NULLS FIRST, y DESC NULLS LAST") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
+                exprQuerySet {
+                    body = queryBodySFW {
+                        select = select("a")
+                        from = table("T")
+                    }
                     orderBy = orderBy {
                         sorts += sort(v("x"), Sort.Dir.ASC, Sort.Nulls.FIRST)
                         sorts += sort(v("y"), Sort.Dir.DESC, Sort.Nulls.LAST)
@@ -1630,100 +1752,216 @@ class SqlDialectTest {
 
         @JvmStatic
         fun unionClauseCases() = listOf(
-            expect("SELECT a FROM T UNION (SELECT b FROM S)") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    setOp = exprSFWSetOp {
-                        type = setOp(SetOp.Type.UNION, null)
-                        operand = exprSFW {
-                            select = select("b")
-                            from = table("S")
+            expect("(SELECT a FROM T) UNION (SELECT b FROM S)") {
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("a")
+                                from = table("T")
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("b")
+                                from = table("S")
+                            }
                         }
                     }
                 }
             },
-            expect("SELECT a FROM T UNION ALL (SELECT b FROM S)") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    setOp = exprSFWSetOp {
+            expect("(SELECT a FROM T) UNION ALL (SELECT b FROM S)") {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, SetQuantifier.ALL)
-                        operand = exprSFW {
-                            select = select("b")
-                            from = table("S")
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("a")
+                                from = table("T")
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("b")
+                                from = table("S")
+                            }
                         }
                     }
                 }
             },
-            expect("SELECT a FROM T UNION DISTINCT (SELECT b FROM S)") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    setOp = exprSFWSetOp {
+            expect("(SELECT a FROM T) UNION DISTINCT (SELECT b FROM S)") {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, SetQuantifier.DISTINCT)
-                        operand = exprSFW {
-                            select = select("b")
-                            from = table("S")
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("a")
+                                from = table("T")
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("b")
+                                from = table("S")
+                            }
                         }
                     }
                 }
             },
-            expect("SELECT a FROM T UNION (SELECT b FROM S) LIMIT 1") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    setOp = exprSFWSetOp {
+            expect("(SELECT a FROM T) UNION (SELECT b FROM S) LIMIT 1") {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
-                        operand = exprSFW {
-                            select = select("b")
-                            from = table("S")
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("a")
+                                from = table("T")
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("b")
+                                from = table("S")
+                            }
                         }
                     }
-                    limit = exprLit(int32Value(1))
+                    limit = exprLit(int32Value(1)) // LIMIT associated with SQL set op
                 }
             },
-            expect("SELECT a FROM T UNION (SELECT b FROM S LIMIT 1)") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    setOp = exprSFWSetOp {
+            expect("(SELECT a FROM T) UNION (SELECT b FROM S LIMIT 1)") {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
-                        operand = exprSFW {
-                            select = select("b")
-                            from = table("S")
-                            limit = exprLit(int32Value(1))
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("a")
+                                from = table("T")
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("b")
+                                from = table("S")
+                                limit = exprLit(int32Value(1)) // LIMIT associated with rhs SFW query
+                            }
                         }
                     }
                 }
             },
-            expect("SELECT a FROM T UNION (SELECT b FROM S) ORDER BY x") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    setOp = exprSFWSetOp {
+            expect("(SELECT a FROM T) UNION (SELECT b FROM S) ORDER BY x") {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
-                        operand = exprSFW {
-                            select = select("b")
-                            from = table("S")
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("a")
+                                from = table("T")
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("b")
+                                from = table("S")
+                            }
                         }
                     }
                     orderBy = orderBy {
-                        sorts += sort(v("x"), null, null)
+                        sorts += sort(v("x"), null, null) // ORDER BY associated with SQL set op
                     }
                 }
             },
-            expect("SELECT a FROM T UNION (SELECT b FROM S ORDER BY x)") {
-                exprSFW {
-                    select = select("a")
-                    from = table("T")
-                    setOp = exprSFWSetOp {
+            expect("(SELECT a FROM T) UNION (SELECT b FROM S ORDER BY x)") {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp(SetOp.Type.UNION, null)
-                        operand = exprSFW {
-                            select = select("b")
-                            from = table("S")
-                            orderBy = orderBy {
-                                sorts += sort(v("x"), null, null)
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("a")
+                                from = table("T")
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("b")
+                                from = table("S")
+                                orderBy = orderBy {
+                                    sorts += sort(v("x"), null, null) // ORDER BY associated with SFW
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            expect("(SELECT a FROM T) UNION ((SELECT b FROM S) UNION (SELECT c FROM R))") {
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp(SetOp.Type.UNION, null)
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("a")
+                                from = table("T")
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySetOp {
+                                type = setOp(SetOp.Type.UNION, null)
+                                isOuter = false
+                                lhs = exprQuerySet {
+                                    body = queryBodySFW {
+                                        select = select("b")
+                                        from = table("S")
+                                    }
+                                }
+                                rhs = exprQuerySet {
+                                    body = queryBodySFW {
+                                        select = select("c")
+                                        from = table("R")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            expect("((SELECT a FROM T) UNION (SELECT b FROM S)) UNION (SELECT c FROM R)") {
+                exprQuerySet {
+                    body = queryBodySetOp {
+                        type = setOp(SetOp.Type.UNION, null)
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySetOp {
+                                type = setOp(SetOp.Type.UNION, null)
+                                isOuter = false
+                                lhs = exprQuerySet {
+                                    body = queryBodySFW {
+                                        select = select("a")
+                                        from = table("T")
+                                    }
+                                }
+                                rhs = exprQuerySet {
+                                    body = queryBodySFW {
+                                        select = select("b")
+                                        from = table("S")
+                                    }
+                                }
+                            }
+                        }
+                        rhs = exprQuerySet {
+                            body = queryBodySFW {
+                                select = select("c")
+                                from = table("R")
                             }
                         }
                     }
@@ -1738,9 +1976,11 @@ class SqlDialectTest {
                 exprOperator {
                     symbol = "="
                     lhs = exprLit(int32Value(1))
-                    rhs = exprSFW {
-                        select = select("a")
-                        from = table("T")
+                    rhs = exprQuerySet {
+                        body = queryBodySFW {
+                            select = select("a")
+                            from = table("T")
+                        }
                     }
                 }
             },
@@ -1752,9 +1992,11 @@ class SqlDialectTest {
                         values += exprLit(int32Value(1))
                         values += exprLit(int32Value(2))
                     }
-                    rhs = exprSFW {
-                        select = select("a")
-                        from = table("T")
+                    rhs = exprQuerySet {
+                        body = queryBodySFW {
+                            select = select("a")
+                            from = table("T")
+                        }
                     }
                 }
             },

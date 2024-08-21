@@ -765,37 +765,34 @@ internal class PartiQLPigVisitor(
      *
      */
 
-    override fun visitIntersect(ctx: PartiQLParser.IntersectContext) = PartiqlAst.build {
+    override fun visitBagOp(ctx: PartiQLParser.BagOpContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
-        val quantifier = if (ctx.ALL() != null) all() else distinct()
-        val (intersect, metas) = when (ctx.OUTER()) {
-            null -> intersect() to ctx.INTERSECT().getSourceMetaContainer()
-            else -> outerIntersect() to ctx.OUTER().getSourceMetaContainer()
+        val setq = when {
+            ctx.ALL() != null -> all()
+            ctx.DISTINCT() != null -> distinct()
+            else -> distinct()
         }
-        bagOp(intersect, quantifier, listOf(lhs, rhs), metas)
-    }
-
-    override fun visitExcept(ctx: PartiQLParser.ExceptContext) = PartiqlAst.build {
-        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
-        val rhs = visit(ctx.rhs) as PartiqlAst.Expr
-        val quantifier = if (ctx.ALL() != null) all() else distinct()
-        val (except, metas) = when (ctx.OUTER()) {
-            null -> except() to ctx.EXCEPT().getSourceMetaContainer()
-            else -> outerExcept() to ctx.OUTER().getSourceMetaContainer()
+        val outer = ctx.OUTER() != null
+        val (op, metas) = when (ctx.op.type) {
+            PartiQLParser.UNION -> if (outer) {
+                outerUnion() to ctx.UNION().getSourceMetaContainer()
+            } else {
+                union() to ctx.UNION().getSourceMetaContainer()
+            }
+            PartiQLParser.INTERSECT -> if (outer) {
+                outerIntersect() to ctx.OUTER().getSourceMetaContainer()
+            } else {
+                intersect() to ctx.INTERSECT().getSourceMetaContainer()
+            }
+            PartiQLParser.EXCEPT -> if (outer) {
+                outerExcept() to ctx.OUTER().getSourceMetaContainer()
+            } else {
+                except() to ctx.EXCEPT().getSourceMetaContainer()
+            }
+            else -> error("Unsupported bag op token ${ctx.op}")
         }
-        bagOp(except, quantifier, listOf(lhs, rhs), metas)
-    }
-
-    override fun visitUnion(ctx: PartiQLParser.UnionContext) = PartiqlAst.build {
-        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
-        val rhs = visit(ctx.rhs) as PartiqlAst.Expr
-        val quantifier = if (ctx.ALL() != null) all() else distinct()
-        val (union, metas) = when (ctx.OUTER()) {
-            null -> union() to ctx.UNION().getSourceMetaContainer()
-            else -> outerUnion() to ctx.OUTER().getSourceMetaContainer()
-        }
-        bagOp(union, quantifier, listOf(lhs, rhs), metas)
+        bagOp(op, setq, listOf(lhs, rhs), metas)
     }
 
     /**

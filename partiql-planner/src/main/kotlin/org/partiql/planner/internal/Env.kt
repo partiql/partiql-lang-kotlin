@@ -10,6 +10,7 @@ import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.refAgg
 import org.partiql.planner.internal.ir.refFn
 import org.partiql.planner.internal.ir.relOpAggregateCallResolved
@@ -161,7 +162,7 @@ internal class Env(private val session: Session) {
         }
     }
 
-    fun resolveAgg(path: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+    fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
         val catalog = session.getCatalog()
         val name = path.lowercase()

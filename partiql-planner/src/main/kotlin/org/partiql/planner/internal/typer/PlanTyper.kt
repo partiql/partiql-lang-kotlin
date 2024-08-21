@@ -271,11 +271,11 @@ internal class PlanTyper(private val env: Env) {
             return rel(type, op)
         }
 
-        override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: Rel.Type?): Rel {
+        override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility
-            if (!setOpSchemaSizesMatch(lhs, rhs)) {
+            if (!node.isOuter && !setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
             if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
@@ -286,11 +286,11 @@ internal class PlanTyper(private val env: Env) {
             return Rel(type, node.copy(lhs = lhs, rhs = rhs))
         }
 
-        override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: Rel.Type?): Rel {
+        override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility
-            if (!setOpSchemaSizesMatch(lhs, rhs)) {
+            if (!node.isOuter && !setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
             if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
@@ -301,11 +301,11 @@ internal class PlanTyper(private val env: Env) {
             return Rel(type, node.copy(lhs = lhs, rhs = rhs))
         }
 
-        override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: Rel.Type?): Rel {
+        override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             // Check for Compatibility
-            if (!setOpSchemaSizesMatch(lhs, rhs)) {
+            if (!node.isOuter && !setOpSchemaSizesMatch(lhs, rhs)) {
                 return createRelErrForSetOpMismatchSizes()
             }
             if (!node.isOuter && !setOpSchemaTypesMatch(lhs, rhs)) {
@@ -1246,10 +1246,10 @@ internal class PlanTyper(private val env: Env) {
         fun resolveAgg(node: Rel.Op.Aggregate.Call.Unresolved): Pair<Rel.Op.Aggregate.Call, CompilerType> {
             // Type the arguments
             val args = node.args.map { visitRex(it, null) }
-            val argsResolved = Rel.Op.Aggregate.Call.Unresolved(node.name, node.setQuantifier, args)
+            val argsResolved = Rel.Op.Aggregate.Call.Unresolved(node.name, node.setq, args)
 
             // Resolve the function
-            val call = env.resolveAgg(node.name, node.setQuantifier, args) ?: return argsResolved to CompilerType(PType.dynamic())
+            val call = env.resolveAgg(node.name, node.setq, args) ?: return argsResolved to CompilerType(PType.dynamic())
             return call to CompilerType(call.agg.signature.returns)
         }
     }
