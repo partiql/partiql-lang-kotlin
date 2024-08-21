@@ -1,12 +1,17 @@
 package org.partiql.eval.internal.helpers
 
 import org.partiql.eval.internal.Record
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.value.Datum
 
 internal object RecordUtility {
-    @OptIn(PartiQLValueExperimental::class)
-    fun Record.toPartiQLValueList(): List<PartiQLValue> = List(this.values.size) {
-        this.values[it].toPartiQLValue()
+    /**
+     * Converts the [Record] into an array of Datum, while coercing any missing values into null values.
+     */
+    fun Record.toDatumArrayCoerceMissing(): Array<Datum> = Array(this.values.size) {
+        val d = this@toDatumArrayCoerceMissing.values[it]
+        when (d.isMissing) {
+            true -> Datum.nullValue()
+            else -> d
+        }
     }
 }
