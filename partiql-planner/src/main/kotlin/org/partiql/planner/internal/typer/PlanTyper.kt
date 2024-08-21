@@ -16,7 +16,6 @@
 
 package org.partiql.planner.internal.typer
 
-import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.exclude.ExcludeRepr
@@ -52,9 +51,6 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.planner.internal.utils.PlanUtils
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -168,20 +164,6 @@ internal class PlanTyper(private val env: Env) {
         }
 
         fun List<PType>.toCType(): List<CompilerType> = this.map { it.toCType() }
-
-        fun CompilerType.isNumeric(): Boolean {
-            return this.kind in setOf(
-                Kind.INTEGER,
-                Kind.NUMERIC,
-                Kind.BIGINT,
-                Kind.TINYINT,
-                Kind.SMALLINT,
-                Kind.REAL,
-                Kind.DOUBLE,
-                Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY
-            )
-        }
     }
 
     /**
@@ -505,8 +487,7 @@ internal class PlanTyper(private val env: Env) {
                         // resolve `root` to local binding
                         val locals = Scope(input.type.schema, outer)
                         val typeEnv = TypeEnv(env, locals)
-                        val path = root.identifier.toBindingPath()
-                        val resolved = typeEnv.resolve(path)
+                        val resolved = typeEnv.resolve(root.identifier)
                         if (resolved == null) {
                             ProblemGenerator.missingRex(
                                 emptyList(),
@@ -609,12 +590,11 @@ internal class PlanTyper(private val env: Env) {
         }
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: CompilerType?): Rex {
-            val path = node.identifier.toBindingPath()
             val strategy = when (node.scope) {
                 Rex.Op.Var.Scope.DEFAULT -> strategy
                 Rex.Op.Var.Scope.LOCAL -> Strategy.LOCAL
             }
-            val resolvedVar = typeEnv.resolve(path, strategy)
+            val resolvedVar = typeEnv.resolve(node.identifier, strategy)
             if (resolvedVar == null) {
                 val id = PlanUtils.externalize(node.identifier)
                 val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
@@ -787,8 +767,7 @@ internal class PlanTyper(private val env: Env) {
             // Type the arguments
             val args = node.args.map { visitRex(it, null) }
             // Attempt to resolve in the environment
-            val path = node.identifier.toBindingPath()
-            val rex = env.resolveFn(path, args)
+            val rex = env.resolveFn(node.identifier, args)
             if (rex == null) {
                 return ProblemGenerator.errorRex(
                     causes = args.map { it.op },
@@ -1310,27 +1289,7 @@ internal class PlanTyper(private val env: Env) {
         return this.copy(schema = schema.mapIndexed { i, binding -> binding.copy(type = types[i]) })
     }
 
-    /**
-     * Convert an identifier into a binding path.
-     */
-    private fun Identifier.toBindingPath() = BindingPath(
-        map {
-            BindingName(
-                name = it.getText(),
-                case = when (it.isRegular()) {
-                    true -> BindingCase.INSENSITIVE
-                    else -> BindingCase.SENSITIVE
-                }
-            )
-        }
-    )
-
     private fun Rel.isOrdered(): Boolean = type.props.contains(Rel.Prop.ORDERED)
-
-    /**
-     * Produce a union type from all the
-     */
-    private fun List<Rex>.toUnionType(): PType = anyOf(map { it.type }.toSet()) ?: PType.dynamic()
 
     private fun getElementTypeForFromSource(fromSourceType: CompilerType): CompilerType = when (fromSourceType.kind) {
         Kind.DYNAMIC -> CompilerType(PType.dynamic())

@@ -10,23 +10,19 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
+import org.partiql.eval.value.Datum
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.TypingMode
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.memory.MemoryCatalog
+import org.partiql.planner.catalog.Name
 import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.plugins.memory.MemoryObject
+import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.PType
-import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
@@ -36,7 +32,7 @@ import org.partiql.planner.catalog.Session as PlannerSession
 @OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(
     private val plannerSession: PlannerSession,
-    private val evalSession: PartiQLEngine.Session
+    private val evalSession: PartiQLEngine.Session,
 ) : TestExecutor<PartiQLStatement<*>, PartiQLResult> {
 
     override fun prepare(statement: String): PartiQLStatement<*> {
@@ -112,6 +108,7 @@ class EvalExecutor(
         }
         return false
     }
+
     companion object {
         val parser = PartiQLParser.default()
         val planner = PartiQLPlanner.standard()
@@ -129,12 +126,7 @@ class EvalExecutor(
 
             val session = PlannerSession.builder()
                 .catalog(catalog)
-                .catalogs(
-                    "default" to connector.getMetadata(object : ConnectorSession {
-                        override fun getQueryId(): String = "query"
-                        override fun getUserId(): String = "user"
-                    })
-                )
+                .catalogs(connector.getCatalog())
                 .build()
 
             val mode = when (options.typingMode) {
@@ -162,22 +154,20 @@ class EvalExecutor(
             env.fields.forEach {
                 map[it.name] = inferEnv(it.value)
             }
-            val catalog = MemoryCatalog.builder().name("default").build()
-            catalog.load(env)
-            return MemoryConnector(catalog)
+            return MemoryConnector.builder()
+                .name("default")
+                .apply { load(env) }
+                .build()
         }
 
+        /**
+         * Uses the planner to infer the type of the environment.
+         */
         private fun inferEnv(env: AnyElement): PType {
-            val catalog = MemoryCatalog.builder().name("conformance_test").build()
-            val connector = MemoryConnector(catalog)
+            val catalog = MemoryConnector.builder().name("default").build().getCatalog()
             val session = PlannerSession.builder()
                 .catalog("default")
-                .catalogs(
-                    "default" to connector.getMetadata(object : ConnectorSession {
-                        override fun getQueryId(): String = "query"
-                        override fun getUserId(): String = "user"
-                    })
-                )
+                .catalogs(catalog)
                 .build()
             val stmt = parser.parse("`$env`").root
             val plan = planner.plan(stmt, session)
@@ -189,17 +179,23 @@ class EvalExecutor(
          *
          * TODO until this point, PartiQL Kotlin has only done top-level bindings.
          */
-        private fun MemoryCatalog.load(env: StructElement) {
+        private fun MemoryConnector.Builder.load(env: StructElement) {
             for (f in env.fields) {
-                val k = f.name
-                val v = f.value
-                // convert to binding
-                val path = BindingPath(steps = listOf(BindingName(k, BindingCase.SENSITIVE)))
-                val item = MemoryObject(
-                    type = StaticType.ANY,
-                    value = PartiQLValueIonReaderBuilder.standard().build(v).read(),
+                val name = Name.of(f.name)
+
+                // WITH SHIM (233 failures)
+                val value = PartiQLValueIonReaderBuilder.standard().build(f.value).read()
+                val datum = Datum.of(value)
+
+                // NO SHIM (343 failures)
+                // val datum = IonDatum.of(f.value)
+
+                val table = MemoryTable.of(
+                    name = name,
+                    schema = PType.dynamic(),
+                    datum = datum,
                 )
-                this.insert(path, item)
+                define(table)
             }
         }
     }

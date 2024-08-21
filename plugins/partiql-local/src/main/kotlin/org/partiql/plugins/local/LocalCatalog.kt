@@ -1,109 +1,109 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- *  A copy of the License is located at:
- *
- *       http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
 package org.partiql.plugins.local
 
-import com.amazon.ionelement.api.loadSingleElement
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.types.StaticType
-import java.io.File
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Function
+import org.partiql.planner.catalog.Identifier
+import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Namespace
+import org.partiql.planner.catalog.Session
+import org.partiql.planner.catalog.Table
 import java.nio.file.Path
-
-private sealed class FsTree(val name: String) {
-
-    // "Directory" node
-    class D(name: String, val children: List<FsTree>) : FsTree(name)
-
-    // Type node
-    class T(name: String, val type: StaticType) : FsTree(name)
-}
+import kotlin.io.path.isDirectory
+import kotlin.io.path.nameWithoutExtension
+import kotlin.io.path.notExists
 
 /**
- * Build a memoized catalog tree from local schema definitions.
+ * Implementation of [Catalog] where dirs are namespaces and files are table metadata.
  */
-internal class LocalCatalog private constructor(private val root: FsTree.D) {
+internal class LocalCatalog(
+    private val name: String,
+    private val root: Path,
+) : Catalog {
+
+    private companion object {
+        private const val EXT = ".ion"
+    }
+
+    init {
+        assert(root.isDirectory()) { "LocalNamespace must be a directory" }
+    }
+
+    override fun getName(): String {
+        return name
+    }
+
+    override fun getTable(session: Session, name: Name): Table? {
+        val path = toPath(name.getNamespace()).resolve(name.getName() + EXT)
+        if (path.notExists() || path.isDirectory()) {
+            return null
+        }
+        return LocalTable(name, path)
+    }
 
     /**
-     * Search the tree for the type.
+     * TODO this doesn't handle ambiguous binding errors or back-tracking for longest prefix searching.
      */
-    public fun lookup(path: BindingPath): LocalObject? {
-        val match = mutableListOf<String>()
-        var curr: FsTree? = root
-        for (step in path.steps) {
-            if (curr == null) return null
-            when (curr) {
-                is FsTree.T -> break
-                is FsTree.D -> {
-                    curr = curr.children.firstOrNull { step.matches(it.name) }
-                    if (curr != null) match.add(curr.name)
+    override fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? {
+        val matched = mutableListOf<String>()
+        var curr = root
+        for (part in identifier) {
+            var next: Path? = null
+            for (child in curr.toFile().listFiles()!!) {
+                // TODO ambiguous bindings errors
+                if (part.matches(child.nameWithoutExtension)) {
+                    next = child.toPath()
+                    break
                 }
             }
+            if (next == null) {
+                break
+            }
+            curr = next
+            matched.add(curr.nameWithoutExtension)
         }
-        // All steps matched and we're at a leaf
-        if (curr is FsTree.T) {
-            return LocalObject(match, curr.type)
+        // Does this table exist?
+        val path = curr
+        if (path.notExists() || path.isDirectory()) {
+            return null
         }
-        return null
+        // Remove the extension
+        val name = Name.of(matched)
+        return Table.Handle(name, LocalTable(name, path))
     }
 
-    /**
-     * Provide a list of all objects in this catalog.
-     */
-    public fun listObjects(): List<BindingPath> = sequence { search(emptyList(), root) }.toList()
-
-    private suspend fun SequenceScope<BindingPath>.search(acc: List<BindingName>, node: FsTree) =
-        when (node) {
-            is FsTree.D -> search(acc, node)
-            is FsTree.T -> search(acc, node)
+    override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
+        val path = toPath(namespace)
+        if (path.notExists()) {
+            // throw exception?
+            return emptyList()
         }
-
-    private suspend fun SequenceScope<BindingPath>.search(acc: List<BindingName>, node: FsTree.D) {
-        val steps = acc + BindingName(node.name, BindingCase.INSENSITIVE)
-        for (child in node.children) {
-            search(steps, child)
-        }
+        return super.listTables(session, namespace)
     }
 
-    private suspend fun SequenceScope<BindingPath>.search(acc: List<BindingName>, node: FsTree.T) {
-        val steps = acc + BindingName(node.name, BindingCase.INSENSITIVE)
-        this.yield(BindingPath(steps))
+    override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
+        val path = toPath(namespace)
+        if (path.notExists() || !path.isDirectory()) {
+            // throw exception?
+            return emptyList()
+        }
+        // List all child directories
+        return path.toFile()
+            .listFiles()!!
+            .filter { it.isDirectory }
+            .map { toNamespace(it.toPath()) }
     }
 
-    companion object {
+    override fun getFunctions(session: Session, name: Name): Collection<Function> = emptyList()
 
-        /**
-         * Builds a FsTree from the given root.
-         */
-        public fun load(root: Path): LocalCatalog = LocalCatalog(root.toFile().tree() as FsTree.D)
-
-        private fun File.tree(): FsTree = when (this.isDirectory) {
-            true -> d()
-            else -> t()
+    private fun toPath(namespace: Namespace): Path {
+        var curr = root
+        for (level in namespace) {
+            curr = curr.resolve(level)
         }
+        return curr
+    }
 
-        private fun File.d(): FsTree.D {
-            val children = listFiles()!!.map { it.tree() }
-            return FsTree.D(name, children)
-        }
-
-        private fun File.t(): FsTree.T {
-            val text = readText()
-            val ion = loadSingleElement(text)
-            val type = ion.toStaticType()
-            return FsTree.T(nameWithoutExtension, type)
-        }
+    private fun toNamespace(path: Path): Namespace {
+        return Namespace.of(path.relativize(root).map { it.toString() })
     }
 }

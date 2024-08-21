@@ -24,12 +24,14 @@ import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
-import org.partiql.plugins.memory.MemoryCatalog
+import org.partiql.planner.catalog.Name
 import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.connector.Connector
-import org.partiql.types.StaticType
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
+import org.partiql.value.ion.IonDatum
 import picocli.CommandLine
 import java.io.File
 import java.io.InputStream
@@ -223,16 +225,18 @@ internal class MainCommand : Runnable {
         } else {
             ionNull()
         }
-        val catalog = MemoryCatalog.builder()
+        val connector = MemoryConnector.builder()
             .name("default")
             .define(
-                name = "stdin",
-                type = StaticType.ANY,
-                value = value,
+                MemoryTable.of(
+                    name = Name.of("stdin"),
+                    schema = PType.dynamic(),
+                    datum = IonDatum.of(value.asAnyElement())
+                )
             )
             .build()
         return mapOf(
-            "default" to MemoryConnector(catalog)
+            "default" to connector
         )
     }
 

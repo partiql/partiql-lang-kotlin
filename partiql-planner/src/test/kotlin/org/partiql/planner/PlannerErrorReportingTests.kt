@@ -11,9 +11,7 @@ import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
 import org.partiql.types.PType
 import org.partiql.types.StaticType
@@ -27,7 +25,7 @@ internal class PlannerErrorReportingTests {
     val userId = "test-user"
     val queryId = "query"
 
-    val catalog = MemoryCatalog
+    val catalog = MemoryConnector
         .builder()
         .name(catalogName)
         .define("missing_binding", StaticType.ANY)
@@ -41,18 +39,11 @@ internal class PlannerErrorReportingTests {
                 StructType.Field("f1", StaticType.INT2),
             )
         )
-        .build()
-
-    val metadata = MemoryConnector(catalog).getMetadata(
-        object : ConnectorSession {
-            override fun getQueryId(): String = "q"
-            override fun getUserId(): String = "s"
-        }
-    )
+        .build().getCatalog()
 
     val session = Session.builder()
         .catalog(catalogName)
-        .catalogs(catalogName to metadata)
+        .catalogs(catalog)
         .build()
 
     val parser = PartiQLParserBuilder().build()

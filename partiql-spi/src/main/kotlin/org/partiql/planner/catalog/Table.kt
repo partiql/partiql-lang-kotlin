@@ -20,7 +20,7 @@ public interface Table {
     /**
      * The table's name.
      */
-    public fun getName(): String
+    public fun getName(): Name
 
     /**
      * The table's schema.
@@ -37,7 +37,7 @@ public interface Table {
          */
         @JvmStatic
         public fun of(name: String, schema: PType = PType.dynamic()): Table = object : Table {
-            override fun getName(): String = name
+            override fun getName(): Name = Name.of(name)
             override fun getSchema(): PType = schema
         }
 
@@ -71,7 +71,7 @@ public interface Table {
             val name = this.name ?: throw IllegalStateException("Table name cannot be null")
             // Default implementation
             return object : Table {
-                override fun getName(): String = name
+                override fun getName(): Name = Name.of(name)
                 override fun getSchema(): PType = schema
             }
         }

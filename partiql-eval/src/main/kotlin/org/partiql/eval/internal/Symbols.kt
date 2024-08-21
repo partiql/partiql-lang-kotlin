@@ -6,8 +6,8 @@ import org.partiql.eval.internal.operator.rex.ExprVarGlobal
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Ref
+import org.partiql.planner.catalog.Name
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.SqlFnProvider
@@ -27,8 +27,8 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
     ) {
 
         // TEMPORARY FOR DEPENDENCY REASONS
-        fun getFn(path: ConnectorPath, specific: String): Fn? = SqlFnProvider.getFn(specific)
-        fun getAgg(path: ConnectorPath, specific: String): Agg? = SqlFnProvider.getAgg(specific)
+        fun getFn(name: Name, specific: String): Fn? = SqlFnProvider.getFn(specific)
+        fun getAgg(name: Name, specific: String): Agg? = SqlFnProvider.getAgg(specific)
 
         override fun toString(): String = name
     }
@@ -39,8 +39,8 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         if (item == null || item !is Catalog.Item.Value) {
             error("Invalid reference $ref; missing value entry for catalog `$catalog`.")
         }
-        val path = ConnectorPath(item.path)
-        return ExprVarGlobal(path, catalog.bindings)
+        val name = Name.of(item.path)
+        return ExprVarGlobal(name, catalog.bindings)
     }
 
     fun getFn(ref: Ref): Fn {
@@ -50,8 +50,8 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
             error("Invalid reference $ref; missing function entry for catalog `$catalog`.")
         }
         // Lookup in connector
-        val path = ConnectorPath(item.path)
-        return catalog.getFn(path, item.specific)
+        val name = Name.of(item.path)
+        return catalog.getFn(name, item.specific)
             ?: error("Catalog `$catalog` has no entry for function $item")
     }
 
@@ -62,8 +62,8 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
             error("Invalid reference $ref; missing aggregation entry for catalog `$catalog`.")
         }
         // Lookup in connector
-        val path = ConnectorPath(item.path)
-        return catalog.getAgg(path, item.specific)
+        val name = Name.of(item.path)
+        return catalog.getAgg(name, item.specific)
             ?: error("Catalog `$catalog` has no entry for aggregation function $item")
     }
 

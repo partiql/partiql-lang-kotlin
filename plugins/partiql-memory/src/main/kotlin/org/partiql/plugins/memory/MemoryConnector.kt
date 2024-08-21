@@ -16,30 +16,105 @@
 package org.partiql.plugins.memory
 
 import com.amazon.ionelement.api.StructElement
+import org.partiql.planner.catalog.Catalog
+import org.partiql.planner.catalog.Identifier
+import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Session
+import org.partiql.planner.catalog.Table
 import org.partiql.spi.connector.Connector
+import org.partiql.spi.connector.ConnectorBinding
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorSession
+import org.partiql.types.PType
+import org.partiql.types.StaticType
 
 /**
  * This is a plugin used for testing and is not a versioned API per semver.
  */
-public class MemoryConnector(private val catalog: MemoryCatalog) : Connector {
-
-    private val bindings = MemoryBindings(catalog)
+public class MemoryConnector private constructor(
+    private val name: String,
+    private val tables: Map<Name, MemoryTable>,
+) : Connector {
 
     override fun getBindings(): ConnectorBindings = bindings
 
-    override fun getMetadata(session: ConnectorSession): ConnectorMetadata = MemoryMetadata(catalog)
+    override fun getCatalog(): Catalog = catalog
 
-    internal class Factory(private val catalogs: List<MemoryCatalog>) : Connector.Factory {
+    /**
+     * For use with ServiceLoader to instantiate a connector from an Ion config.
+     */
+    internal class Factory : Connector.Factory {
 
         override val name: String = "memory"
 
-        override fun create(catalogName: String, config: StructElement?): MemoryConnector {
-            val catalog = catalogs.firstOrNull { it.name == catalogName }
-                ?: error("Catalog $catalogName is not registered in the MemoryPlugin")
-            return MemoryConnector(catalog)
+        override fun create(config: StructElement): Connector {
+            TODO("Instantiation of a MemoryConnector via the factory is currently not supported")
+        }
+    }
+
+    public companion object {
+
+        @JvmStatic
+        public fun builder(): Builder = Builder()
+    }
+
+    public class Builder internal constructor() {
+
+        private var name: String? = null
+        private var tables: MutableMap<Name, MemoryTable> = mutableMapOf()
+
+        public fun name(name: String): Builder = apply { this.name = name }
+
+        // TODO REMOVE AFTER CREATE TABLE IS ADDED TO CATALOG
+        public fun define(name: String, type: StaticType): Builder {
+            val table = MemoryTable.empty(name, PType.fromStaticType(type))
+            return define(table)
+        }
+
+        // TODO REMOVE AFTER CREATE TABLE IS ADDED TO CATALOG
+        public fun define(table: MemoryTable): Builder = apply { tables[table.getName()] = table }
+
+        public fun build(): MemoryConnector = MemoryConnector(name!!, tables)
+    }
+
+    /**
+     * Implement [ConnectorBindings] over the tables map.
+     */
+    private val bindings = object : ConnectorBindings {
+        override fun getBinding(name: Name): ConnectorBinding? = tables[name]
+    }
+
+    /**
+     * Implement [Catalog] over the tables map.
+     */
+    private val catalog = object : Catalog {
+
+        override fun getName(): String = name
+
+        override fun getTable(session: Session, name: Name): Table? {
+            if (name.hasNamespace()) {
+                error("MemoryCatalog does not support namespaces")
+            }
+            return tables[name]
+        }
+
+        /**
+         * TODO implement "longest match" on identifier searching.
+         */
+        override fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? {
+            // TODO memory connector does not handle qualified identifiers and longest match
+            val first = identifier.first()
+            for ((name, table) in tables) {
+                val str = name.getName() // only use single identifiers for now
+                if (first.matches(str)) {
+                    // TODO emit errors on ambiguous table names
+                    return Table.Handle(name, table)
+                }
+            }
+            return super.getTableHandle(session, identifier)
+        }
+
+        override fun listTables(session: Session): Collection<Name> {
+            return tables.keys.map { it }
         }
     }
 }
