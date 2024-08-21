@@ -140,6 +140,7 @@ class DatumNull implements Datum {
         }
     }
 
+    @NotNull
     @Override
     public Iterator<Datum> iterator() {
         if (_type.getKind() == PType.Kind.BAG || _type.getKind() == PType.Kind.ARRAY || _type.getKind() == PType.Kind.SEXP) {

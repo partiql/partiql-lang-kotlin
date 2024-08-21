@@ -12,8 +12,6 @@
  * language governing permissions and limitations under the License.
  */
 
-@file:OptIn(PartiQLValueExperimental::class)
-
 package org.partiql.spi.fn.builtins.internal
 
 import com.amazon.ion.Decimal
@@ -21,9 +19,6 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Agg
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import org.partiql.value.util.coerceNumbers
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -41,7 +36,7 @@ internal abstract class Accumulator : Agg.Accumulator {
     abstract fun nextValue(value: Datum)
 }
 
-internal fun comparisonAccumulator(comparator: Comparator<PartiQLValue>): (PartiQLValue?, PartiQLValue) -> PartiQLValue =
+internal fun comparisonAccumulator(comparator: Comparator<Datum>): (Datum?, Datum) -> Datum =
     { left, right ->
         when {
             left == null || comparator.compare(left, right) > 0 -> right
@@ -102,7 +97,7 @@ private fun Long.checkOverflowPlus(other: Long): Number {
 
 internal fun checkIsBooleanType(funcName: String, value: Datum) {
     if (value.type.kind != PType.Kind.BOOL) {
-        throw TypeCheckException("Expected ${PartiQLValueType.BOOL} but received ${value.type}.")
+        throw TypeCheckException("Expected ${PType.Kind.BOOL} but received ${value.type}.")
     }
 }
 

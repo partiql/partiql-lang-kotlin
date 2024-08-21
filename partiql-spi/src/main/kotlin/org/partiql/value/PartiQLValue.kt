@@ -85,6 +85,7 @@ public sealed interface PartiQLValue {
          */
         @JvmStatic
         @JvmOverloads
+        @Deprecated("This will be removed in a future major-version release.")
         public fun comparator(nullsFirst: Boolean = true): Comparator<PartiQLValue> = PartiQLValueComparatorInternal(nullsFirst)
     }
 }

@@ -2,7 +2,7 @@ package org.partiql.eval.internal
 
 import org.partiql.eval.value.Datum
 
-internal data class Record(val values: Array<Datum>) {
+internal class Record(val values: Array<Datum>) {
 
     companion object {
         val empty = Record(emptyArray())
