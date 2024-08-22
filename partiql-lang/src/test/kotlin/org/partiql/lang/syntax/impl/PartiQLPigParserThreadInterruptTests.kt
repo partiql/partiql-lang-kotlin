@@ -17,10 +17,6 @@ package org.partiql.lang.syntax.impl
 import com.amazon.ionelement.api.ionInt
 import io.mockk.every
 import io.mockk.spyk
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonToken
-import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.TokenSource
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution

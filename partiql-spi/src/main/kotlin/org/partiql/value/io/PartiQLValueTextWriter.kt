@@ -18,6 +18,7 @@ import org.partiql.value.BagValue
 import org.partiql.value.BoolValue
 import org.partiql.value.CharValue
 import org.partiql.value.CollectionValue
+import org.partiql.value.DateValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value
 import org.partiql.value.Float64Value
@@ -35,9 +36,17 @@ import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
+import org.partiql.value.TimeValue
+import org.partiql.value.TimestampValue
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.util.PartiQLValueBaseVisitor
 import java.io.OutputStream
 import java.io.PrintStream
+import java.math.BigDecimal
+import kotlin.math.abs
 
 /**
  * [PartiQLValueWriter] which outputs PartiQL text.
@@ -190,6 +199,74 @@ public class PartiQLValueTextWriter(
                 null -> "null" // null.symbol
                 else -> value
             }
+        }
+
+        override fun visitDate(v: DateValue, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.date
+                else -> sqlString(value)
+            }
+        }
+
+        private fun padZeros(v: Int, totalDigits: Int): String = String.format("%0${totalDigits}d", v)
+
+        private fun sqlString(d: Date): String {
+            val yyyy = padZeros(d.year, 4)
+            val mm = padZeros(d.month, 2)
+            val dd = padZeros(d.day, 2)
+            return "DATE '$yyyy-$mm-$dd'"
+        }
+
+        override fun visitTime(v: TimeValue, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.time
+                else -> sqlString(value)
+            }
+        }
+
+        private fun sqlString(tz: TimeZone?): String {
+            return when (tz) {
+                null -> ""
+                is TimeZone.UnknownTimeZone -> "-00:00"
+                is TimeZone.UtcOffset -> {
+                    val sign = if (tz.totalOffsetMinutes < 0) {
+                        "-"
+                    } else {
+                        "+"
+                    }
+                    val hh = padZeros(abs(tz.tzHour), 2)
+                    val mm = padZeros(abs(tz.tzMinute), 2)
+                    "$sign$hh:$mm"
+                }
+            }
+        }
+
+        private fun sqlString(t: Time): String {
+            val hh = padZeros(t.hour, 2)
+            val mm = padZeros(t.minute, 2)
+            val ss = padZeros(t.decimalSecond.toInt(), 2)
+            val frac = t.decimalSecond.remainder(BigDecimal.ONE).toString().substring(1) // drop leading 0
+            val timeZone = sqlString(t.timeZone)
+            return "TIME '$hh:$mm:$ss$frac$timeZone'"
+        }
+
+        override fun visitTimestamp(v: TimestampValue, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.timestamp
+                else -> sqlString(value)
+            }
+        }
+
+        private fun sqlString(t: Timestamp): String {
+            val yyyy = padZeros(t.year, 4)
+            val mon = padZeros(t.month, 2)
+            val dd = padZeros(t.day, 2)
+            val hh = padZeros(t.hour, 2)
+            val min = padZeros(t.minute, 2)
+            val ss = padZeros(t.decimalSecond.toInt(), 2)
+            val frac = t.decimalSecond.remainder(BigDecimal.ONE).toString().substring(1) // drop leading 0
+            val timeZone = sqlString(t.timeZone)
+            return "TIMESTAMP '$yyyy-$mon-$dd $hh:$min:$ss$frac$timeZone'"
         }
 
         override fun visitBag(v: BagValue<*>, format: Format?) = collection(v, format, "<<" to ">>")

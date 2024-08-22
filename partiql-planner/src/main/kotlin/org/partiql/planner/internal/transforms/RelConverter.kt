@@ -83,7 +83,7 @@ import org.partiql.value.stringValue
 internal object RelConverter {
 
     // IGNORE — so we don't have to non-null assert on operator inputs
-    private val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
+    internal val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
 
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
@@ -146,7 +146,7 @@ internal object RelConverter {
     private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
-    private class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
+    internal class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
 
         override fun defaultReturn(node: AstNode, input: Rel): Rel =
             throw IllegalArgumentException("unsupported rel $node")
@@ -198,6 +198,35 @@ internal object RelConverter {
                     return rel
                 }
             }
+        }
+
+        // Create a SQL set op
+        override fun visitExprBagOp(node: Expr.BagOp, ctx: Rel): Rel {
+            // Assumes parser correctly only allows Expr.SFW or other Expr.BagOps with Expr.SFW arguments when
+            // converting to the SQL set op
+            assert(node.lhs is Expr.SFW || node.lhs is Expr.BagOp) {
+                "Expect LHS of bag op to be a Expr.SFW or a Expr.BagOp. " +
+                    "However, it is ${node.lhs}."
+            }
+            assert(node.rhs is Expr.SFW || node.rhs is Expr.BagOp) {
+                "Expect RHS of bag op to be a Expr.SFW or a Expr.BagOp. " +
+                    "However, it is ${node.lhs}."
+            }
+            val setq = when (node.type.setq) {
+                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
+                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+            }
+            val lhsRel = visitExpr(node.lhs, ctx)
+            val rhsRel = visitExpr(node.rhs, ctx)
+            val op = when (node.type.type) {
+                SetOp.Type.UNION -> Rel.Op.Union(setq, lhsRel, rhsRel)
+                SetOp.Type.EXCEPT -> Rel.Op.Except(setq, lhsRel, rhsRel)
+                SetOp.Type.INTERSECT -> Rel.Op.Intersect(setq, lhsRel, rhsRel)
+            }
+            return Rel(
+                type = nil.type,
+                op = op
+            )
         }
 
         /**

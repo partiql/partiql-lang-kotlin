@@ -14,19 +14,6 @@
 
 package org.partiql.lang.syntax.impl
 
-import org.antlr.v4.runtime.BailErrorStrategy
-import org.antlr.v4.runtime.BaseErrorListener
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.RecognitionException
-import org.antlr.v4.runtime.Recognizer
-import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.TokenSource
-import org.antlr.v4.runtime.TokenStream
-import org.antlr.v4.runtime.atn.PredictionMode
-import org.antlr.v4.runtime.misc.ParseCancellationException
-import org.antlr.v4.runtime.tree.ParseTree
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap

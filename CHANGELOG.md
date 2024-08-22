@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [Unreleased]
+## [0.14.8]
 
 ### Added
 
@@ -54,6 +54,43 @@ been deprecated:
   - `org.partiql.value.PartiQLValueType.MISSING`
 
 ### Fixed
+- Case When Branch inference will preserve type constraint for String Type and Decimal Type, if no coercion is required. 
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [0.14.7]
+
+### Fixed
+- `partiql-lang`'s `PartiQLParserBuilder.standard()` will use the ANTLR dependency from `partiql-parser` to
+prevent `NoSuchMethodError`s
+
+## [0.14.6]
+
+### Added
+- Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
+- Shades ANTLR dependency to avoid dependency conflicts.
+
+### Changed
+- **Behavioral change**: The `INTEGER/INT` type is now an alias to the `INT4` type. Previously the INTEGER type was
+unconstrained which is not SQL-conformant and is causing issues in integrating with other systems. This release makes
+INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
+integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
+org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
+- **Breaking change**: partiql-plan: adds a set quantifier field to SQL set operators `UNION`, `INTERSECT`, and `EXCEPT`
+- partiql-plan: adds a dedicated Rex node for PartiQL bag operators `UNION`, `INTERSECT`, and `EXCEPT`
+- partiql-planner: Adds typing support for set operators
+- partiql-parser: parses non-SFW expressions to be PartiQL `OUTER` bag operators
+- partiql-ast: fixes missing parens from `bag_op` when printing using `SqlDialect`
+
+### Deprecated
+
+### Fixed
+- Fixed classpath conflict for IsStaticTypeMeta
+- Fixes ANTLR parser grammar file naming.
 
 ### Removed
 
@@ -62,6 +99,10 @@ been deprecated:
 ### Contributors
 Thank you to all who have contributed!
 - @<your-username>
+
+- @rchowell
+- @alancai98
+- @johnedquinn
 
 ## [0.14.5]
 

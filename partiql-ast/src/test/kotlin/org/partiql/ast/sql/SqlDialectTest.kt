@@ -27,6 +27,9 @@ import org.partiql.ast.builder.ast
 import org.partiql.ast.exprLit
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
+import org.partiql.value.dateValue
+import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.datetime.TimeZone
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -39,6 +42,8 @@ import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
 import org.partiql.value.symbolValue
+import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertFails
@@ -403,6 +408,16 @@ class SqlDialectTest {
             expect("""hello""") {
                 exprLit(symbolValue("hello"))
             },
+            expect("DATE '0001-02-03'") {
+                exprLit(dateValue(DateTimeValue.date(1, 2, 3)))
+            },
+            expect("TIME '01:02:03.456-00:30'") {
+                exprLit(timeValue(DateTimeValue.time(1, 2, BigDecimal.valueOf(3.456), TimeZone.UtcOffset.of(-30))))
+            },
+            expect("TIMESTAMP '0001-02-03 04:05:06.78-00:30'") {
+                exprLit(timestampValue(DateTimeValue.timestamp(1, 2, 3, 4, 5, BigDecimal.valueOf(6.78), TimeZone.UtcOffset.of(-30))))
+            },
+
             // expect("""{{ '''Hello'''    '''World''' }}""") {
             //     exprLit(clobValue("HelloWorld".toByteArray()))
             // },
@@ -973,6 +988,120 @@ class SqlDialectTest {
                         isOuter = true
                         lhs = v("x")
                         rhs = v("y")
+                    }
+                }
+            },
+            expect("(x UNION y) UNION z") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.UNION
+                        setq = null
+                    }
+                    outer = false
+                    lhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("x")
+                        rhs = v("y")
+                    }
+                    rhs = v("z")
+                }
+            },
+            expect("x UNION (y UNION z)") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.UNION
+                        setq = null
+                    }
+                    outer = false
+                    lhs = v("x")
+                    rhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.UNION
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("y")
+                        rhs = v("z")
+                    }
+                }
+            },
+            expect("(x EXCEPT y) EXCEPT z") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.EXCEPT
+                        setq = null
+                    }
+                    outer = false
+                    lhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.EXCEPT
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("x")
+                        rhs = v("y")
+                    }
+                    rhs = v("z")
+                }
+            },
+            expect("x EXCEPT (y EXCEPT z)") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.EXCEPT
+                        setq = null
+                    }
+                    outer = false
+                    lhs = v("x")
+                    rhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.EXCEPT
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("y")
+                        rhs = v("z")
+                    }
+                }
+            },
+            expect("(x INTERSECT y) INTERSECT z") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.INTERSECT
+                        setq = null
+                    }
+                    outer = false
+                    lhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.INTERSECT
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("x")
+                        rhs = v("y")
+                    }
+                    rhs = v("z")
+                }
+            },
+            expect("x INTERSECT (y INTERSECT z)") {
+                exprBagOp {
+                    type = setOp {
+                        type = SetOp.Type.INTERSECT
+                        setq = null
+                    }
+                    outer = false
+                    lhs = v("x")
+                    rhs = exprBagOp {
+                        type = setOp {
+                            type = SetOp.Type.INTERSECT
+                            setq = null
+                        }
+                        outer = false
+                        lhs = v("y")
+                        rhs = v("z")
                     }
                 }
             },

@@ -64,6 +64,12 @@ set_quantifier::[
   DISTINCT,
 ]
 
+// [ ALL | DISTINCT ]
+set_quantifier::[
+  ALL,
+  DISTINCT,
+]
+
 // Rex
 rex::{
   type: static_type,

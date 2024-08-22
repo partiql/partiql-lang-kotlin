@@ -65,6 +65,13 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             h = h concat ")"
             h
         }
+        is Expr.BagOp -> {
+            var h = head
+            h = h concat "("
+            h = visitExprBagOp(node, h)
+            h = h concat ")"
+            h
+        }
         else -> visitExpr(node, head)
     }
 

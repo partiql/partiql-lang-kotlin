@@ -26,8 +26,6 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.loadSingleElement
 import com.amazon.ionelement.api.toIonValue
-import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
