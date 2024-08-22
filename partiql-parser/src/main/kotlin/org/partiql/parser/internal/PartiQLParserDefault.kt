@@ -41,9 +41,7 @@ import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Let
-import org.partiql.ast.OnConflict
 import org.partiql.ast.Path
-import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
@@ -122,22 +120,12 @@ import org.partiql.ast.identifierQualified
 import org.partiql.ast.identifierSymbol
 import org.partiql.ast.let
 import org.partiql.ast.letBinding
-import org.partiql.ast.onConflict
-import org.partiql.ast.onConflictActionDoNothing
-import org.partiql.ast.onConflictActionDoReplace
-import org.partiql.ast.onConflictActionDoUpdate
-import org.partiql.ast.onConflictTargetConstraint
-import org.partiql.ast.onConflictTargetSymbols
 import org.partiql.ast.orderBy
 import org.partiql.ast.path
 import org.partiql.ast.pathStepIndex
 import org.partiql.ast.pathStepSymbol
 import org.partiql.ast.queryBodySFW
 import org.partiql.ast.queryBodySetOp
-import org.partiql.ast.returning
-import org.partiql.ast.returningColumn
-import org.partiql.ast.returningColumnValueExpression
-import org.partiql.ast.returningColumnValueWildcard
 import org.partiql.ast.selectPivot
 import org.partiql.ast.selectProject
 import org.partiql.ast.selectProjectItemAll
@@ -150,22 +138,6 @@ import org.partiql.ast.statementDDLCreateIndex
 import org.partiql.ast.statementDDLCreateTable
 import org.partiql.ast.statementDDLDropIndex
 import org.partiql.ast.statementDDLDropTable
-import org.partiql.ast.statementDMLBatchLegacy
-import org.partiql.ast.statementDMLBatchLegacyOpDelete
-import org.partiql.ast.statementDMLBatchLegacyOpInsert
-import org.partiql.ast.statementDMLBatchLegacyOpInsertLegacy
-import org.partiql.ast.statementDMLBatchLegacyOpRemove
-import org.partiql.ast.statementDMLBatchLegacyOpSet
-import org.partiql.ast.statementDMLDelete
-import org.partiql.ast.statementDMLDeleteTarget
-import org.partiql.ast.statementDMLInsert
-import org.partiql.ast.statementDMLInsertLegacy
-import org.partiql.ast.statementDMLRemove
-import org.partiql.ast.statementDMLReplace
-import org.partiql.ast.statementDMLUpdate
-import org.partiql.ast.statementDMLUpdateAssignment
-import org.partiql.ast.statementDMLUpsert
-import org.partiql.ast.statementExec
 import org.partiql.ast.statementExplain
 import org.partiql.ast.statementExplainTargetDomain
 import org.partiql.ast.statementQuery
@@ -512,7 +484,9 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitQueryDql(ctx: GeneratedParser.QueryDqlContext): AstNode = visitDql(ctx.dql())
 
-        override fun visitQueryDml(ctx: GeneratedParser.QueryDmlContext): AstNode = visit(ctx.dml())
+        override fun visitQueryDml(ctx: GeneratedParser.QueryDmlContext): AstNode = translate(ctx) {
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
+        }
 
         override fun visitRoot(ctx: GeneratedParser.RootContext) = translate(ctx) {
             when (ctx.EXPLAIN()) {
@@ -661,20 +635,16 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
-        override fun visitQueryExec(ctx: GeneratedParser.QueryExecContext) = visitExecCommand(ctx.execCommand())
+        override fun visitQueryExec(ctx: GeneratedParser.QueryExecContext) = translate(ctx) {
+            throw error(ctx, "EXEC no longer supported in the default PartiQLParser.")
+        }
 
         /**
          * TODO EXEC accepts an `expr` as the procedure name so we have to unpack the string.
          *  - https://github.com/partiql/partiql-lang-kotlin/issues/707
          */
         override fun visitExecCommand(ctx: GeneratedParser.ExecCommandContext) = translate(ctx) {
-            val expr = visitExpr(ctx.name)
-            if (expr !is Expr.Var || expr.identifier !is Identifier.Symbol) {
-                throw error(ctx, "EXEC procedure must be a symbol identifier")
-            }
-            val procedure = (expr.identifier as Identifier.Symbol).symbol
-            val args = visitOrEmpty<Expr>(ctx.args)
-            statementExec(procedure, args)
+            throw error(ctx, "EXEC no longer supported in the default PartiQLParser.")
         }
 
         /**
@@ -688,63 +658,31 @@ internal class PartiQLParserDefault : PartiQLParser {
          * This function unwraps DML commands to the more limited DML.BatchLegacy.Op commands.
          */
         override fun visitDmlBaseWrapper(ctx: GeneratedParser.DmlBaseWrapperContext) = translate(ctx) {
-            val table = when {
-                ctx.updateClause() != null -> ctx.updateClause().tableBaseReference()
-                ctx.fromClause() != null -> ctx.fromClause().tableReference()
-                else -> throw error(ctx, "Expected UPDATE <table> or FROM <table>")
-            }
-            val from = visitOrNull<From>(table)
-            var returning: Returning? = null
-            val ops = ctx.dmlBaseCommand().map {
-                val op = visitDmlBaseCommand(it)
-                when (op) {
-                    is Statement.DML.Update -> statementDMLBatchLegacyOpSet(op.assignments)
-                    is Statement.DML.Remove -> statementDMLBatchLegacyOpRemove(op.target)
-                    is Statement.DML.Delete -> statementDMLBatchLegacyOpDelete()
-                    is Statement.DML.Insert -> statementDMLBatchLegacyOpInsert(
-                        op.target, op.values, op.asAlias, op.onConflict
-                    )
-                    is Statement.DML.InsertLegacy -> statementDMLBatchLegacyOpInsertLegacy(
-                        op.target, op.value, op.index, op.conflictCondition
-                    )
-                    is Statement.DML.BatchLegacy -> {
-                        // UNPACK InsertLegacy with returning
-                        assert(op.ops.size == 1) { "wrapped batch op can only have one item" }
-                        returning = op.returning
-                        op.ops[0]
-                    }
-                    else -> throw error(ctx, "Invalid DML operator in BatchLegacy update")
-                }
-            }
-            val where = ctx.whereClause()?.let { visitExpr(it.expr()) }
-            // outer returning
-            if (ctx.returningClause() != null) {
-                returning = visitReturningClause(ctx.returningClause()!!)
-            }
-            statementDMLBatchLegacy(ops, from, where, returning)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
-        override fun visitDmlDelete(ctx: GeneratedParser.DmlDeleteContext) = visitDeleteCommand(ctx.deleteCommand())
+        override fun visitDmlDelete(ctx: GeneratedParser.DmlDeleteContext) = translate(ctx) {
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
+        }
 
-        override fun visitDmlInsertReturning(ctx: GeneratedParser.DmlInsertReturningContext): Statement.DML =
-            super.visit(ctx.insertCommandReturning()) as Statement.DML
+        override fun visitDmlInsertReturning(ctx: GeneratedParser.DmlInsertReturningContext) = translate(ctx) {
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
+        }
 
-        override fun visitDmlBase(ctx: GeneratedParser.DmlBaseContext) =
-            super.visitDmlBaseCommand(ctx.dmlBaseCommand()) as Statement.DML
+        override fun visitDmlBase(ctx: GeneratedParser.DmlBaseContext) = translate(ctx) {
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
+        }
 
-        override fun visitDmlBaseCommand(ctx: GeneratedParser.DmlBaseCommandContext) =
-            super.visitDmlBaseCommand(ctx) as Statement.DML
+        override fun visitDmlBaseCommand(ctx: GeneratedParser.DmlBaseCommandContext) = translate(ctx) {
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
+        }
 
         override fun visitRemoveCommand(ctx: GeneratedParser.RemoveCommandContext) = translate(ctx) {
-            val target = visitPathSimple(ctx.pathSimple())
-            statementDMLRemove(target)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitDeleteCommand(ctx: GeneratedParser.DeleteCommandContext) = translate(ctx) {
-            val from = visitAs<Statement.DML.Delete.Target>(ctx.fromClauseSimple())
-            val where = ctx.whereClause()?.let { visitExpr(it.arg) }
-            val returning = ctx.returningClause()?.let { visitReturningClause(it) }
-            statementDMLDelete(from, where, returning)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         /**
@@ -756,111 +694,58 @@ internal class PartiQLParserDefault : PartiQLParser {
          *  - https://github.com/partiql/partiql-lang-kotlin/issues/708
          */
         override fun visitInsertCommandReturning(ctx: GeneratedParser.InsertCommandReturningContext) = translate(ctx) {
-            val target = visitPathSimple(ctx.pathSimple())
-            val value = visitExpr(ctx.value)
-            val index = visitOrNull<Expr>(ctx.pos)
-            val conflictCondition = ctx.onConflictLegacy()?.let { visitOnConflictLegacy(it) }
-            if (ctx.returningClause() != null) {
-                val returning = visitReturningClause(ctx.returningClause()!!)
-                val insert = statementDMLBatchLegacyOpInsertLegacy(target, value, index, conflictCondition)
-                statementDMLBatchLegacy(listOf(insert), null, null, returning)
-            } else {
-                statementDMLInsertLegacy(target, value, index, conflictCondition)
-            }
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitInsertStatementLegacy(ctx: GeneratedParser.InsertStatementLegacyContext) = translate(ctx) {
-            val target = visitPathSimple(ctx.pathSimple())
-            val value = visitExpr(ctx.value)
-            val index = visitOrNull<Expr>(ctx.pos)
-            val conflictCondition = ctx.onConflictLegacy()?.let { visitOnConflictLegacy(it) }
-            statementDMLInsertLegacy(target, value, index, conflictCondition)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitInsertStatement(ctx: GeneratedParser.InsertStatementContext) = translate(ctx) {
-            val target = visitSymbolPrimitive(ctx.symbolPrimitive())
-            val values = visitExpr(ctx.value)
-            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
-            val onConflict = ctx.onConflict()?.let { visitOnConflictClause(it) }
-            statementDMLInsert(target, values, asAlias, onConflict)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitReplaceCommand(ctx: GeneratedParser.ReplaceCommandContext) = translate(ctx) {
-            val target = visitSymbolPrimitive(ctx.symbolPrimitive())
-            val values = visitExpr(ctx.value)
-            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
-            statementDMLReplace(target, values, asAlias)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitUpsertCommand(ctx: GeneratedParser.UpsertCommandContext) = translate(ctx) {
-            val target = visitSymbolPrimitive(ctx.symbolPrimitive())
-            val values = visitExpr(ctx.value)
-            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
-            statementDMLUpsert(target, values, asAlias)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitReturningClause(ctx: GeneratedParser.ReturningClauseContext) = translate(ctx) {
-            val columns = visitOrEmpty<Returning.Column>(ctx.returningColumn())
-            returning(columns)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitReturningColumn(ctx: GeneratedParser.ReturningColumnContext) = translate(ctx) {
-            val status = when (ctx.status.type) {
-                GeneratedParser.MODIFIED -> Returning.Column.Status.MODIFIED
-                GeneratedParser.ALL -> Returning.Column.Status.ALL
-                else -> throw error(ctx.status, "Expected MODIFIED or ALL")
-            }
-            val age = when (ctx.age.type) {
-                GeneratedParser.OLD -> Returning.Column.Age.OLD
-                GeneratedParser.NEW -> Returning.Column.Age.NEW
-                else -> throw error(ctx.status, "Expected OLD or NEW")
-            }
-            val value = when (ctx.ASTERISK()) {
-                null -> returningColumnValueExpression(visitExpr(ctx.expr()))
-                else -> returningColumnValueWildcard()
-            }
-            returningColumn(status, age, value)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
-        private fun visitOnConflictClause(ctx: GeneratedParser.OnConflictContext) = ctx.accept(this) as OnConflict
-
         override fun visitOnConflict(ctx: GeneratedParser.OnConflictContext) = translate(ctx) {
-            val target = ctx.conflictTarget()?.let { visitConflictTarget(it) }
-            val action = visitConflictAction(ctx.conflictAction())
-            onConflict(target, action)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         /**
          * TODO Remove this when we remove INSERT LEGACY as no other conflict actions are allowed in PartiQL.g4.
          */
         override fun visitOnConflictLegacy(ctx: GeneratedParser.OnConflictLegacyContext) = translate(ctx) {
-            visitExpr(ctx.expr())
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitConflictTarget(ctx: GeneratedParser.ConflictTargetContext) = translate(ctx) {
-            if (ctx.constraintName() != null) {
-                onConflictTargetConstraint(visitSymbolPrimitive(ctx.constraintName().symbolPrimitive()))
-            } else {
-                val symbols = ctx.symbolPrimitive().map { visitSymbolPrimitive(it) }
-                onConflictTargetSymbols(symbols)
-            }
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
-        override fun visitConflictAction(ctx: GeneratedParser.ConflictActionContext) = when {
-            ctx.NOTHING() != null -> translate(ctx) { onConflictActionDoNothing() }
-            ctx.REPLACE() != null -> visitDoReplace(ctx.doReplace())
-            ctx.UPDATE() != null -> visitDoUpdate(ctx.doUpdate())
-            else -> throw error(ctx, "ON CONFLICT only supports `DO REPLACE` and `DO NOTHING` actions at the moment.")
+        override fun visitConflictAction(ctx: GeneratedParser.ConflictActionContext) = translate(ctx) {
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitDoReplace(ctx: GeneratedParser.DoReplaceContext) = translate(ctx) {
-            val condition = ctx.condition?.let { visitExpr(it) }
-            onConflictActionDoReplace(condition)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitDoUpdate(ctx: GeneratedParser.DoUpdateContext) = translate(ctx) {
-            val condition = ctx.condition?.let { visitExpr(it) }
-            onConflictActionDoUpdate(condition)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitPathSimple(ctx: GeneratedParser.PathSimpleContext) = translate(ctx) {
@@ -899,19 +784,11 @@ internal class PartiQLParserDefault : PartiQLParser {
          * TODO current PartiQL.g4 grammar models a SET with no UPDATE target as valid DML command.
          */
         override fun visitSetCommand(ctx: GeneratedParser.SetCommandContext) = translate(ctx) {
-            // We put a blank target, because we'll have to unpack this.
-            val target = path(
-                root = identifierSymbol("_blank", Identifier.CaseSensitivity.INSENSITIVE),
-                steps = emptyList(),
-            )
-            val assignments = visitOrEmpty<Statement.DML.Update.Assignment>(ctx.setAssignment())
-            statementDMLUpdate(target, assignments)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         override fun visitSetAssignment(ctx: GeneratedParser.SetAssignmentContext) = translate(ctx) {
-            val target = visitPathSimple(ctx.pathSimple())
-            val value = visitExpr(ctx.expr())
-            statementDMLUpdateAssignment(target, value)
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
         /**
@@ -1381,24 +1258,16 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * TODO Remove as/at/by aliases from DELETE command grammar in PartiQL.g4
          */
-        override fun visitFromClauseSimpleExplicit(ctx: GeneratedParser.FromClauseSimpleExplicitContext) =
-            translate(ctx) {
-                val path = visitPathSimple(ctx.pathSimple())
-                val asAlias = ctx.asIdent()?.let { visitAsIdent(it) }
-                val atAlias = ctx.atIdent()?.let { visitAtIdent(it) }
-                val byAlias = ctx.byIdent()?.let { visitByIdent(it) }
-                statementDMLDeleteTarget(path, asAlias, atAlias, byAlias)
-            }
+        override fun visitFromClauseSimpleExplicit(ctx: GeneratedParser.FromClauseSimpleExplicitContext) = translate(ctx) {
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
+        }
 
         /**
          * TODO Remove fromClauseSimple rule from DELETE command grammar in PartiQL.g4
          */
-        override fun visitFromClauseSimpleImplicit(ctx: GeneratedParser.FromClauseSimpleImplicitContext) =
-            translate(ctx) {
-                val path = visitPathSimple(ctx.pathSimple())
-                val asAlias = visitSymbolPrimitive(ctx.symbolPrimitive())
-                statementDMLDeleteTarget(path, asAlias, null, null)
-            }
+        override fun visitFromClauseSimpleImplicit(ctx: GeneratedParser.FromClauseSimpleImplicitContext) = translate(ctx) {
+            throw error(ctx, "DML no longer supported in the default PartiQLParser.")
+        }
 
         override fun visitTableUnpivot(ctx: GeneratedParser.TableUnpivotContext) = translate(ctx) {
             val expr = visitAs<Expr>(ctx.expr())

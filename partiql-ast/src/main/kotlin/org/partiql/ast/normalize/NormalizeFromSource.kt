@@ -35,9 +35,6 @@ internal object NormalizeFromSource : AstPass {
         // Each SFW starts the ctx count again.
         override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: Int): AstNode = super.visitQueryBodySFW(node, 0)
 
-        override fun visitStatementDMLBatchLegacy(node: Statement.DML.BatchLegacy, ctx: Int): AstNode =
-            super.visitStatementDMLBatchLegacy(node, 0)
-
         override fun visitFrom(node: From, ctx: Int) = super.visitFrom(node, ctx) as From
 
         override fun visitFromJoin(node: From.Join, ctx: Int): From {

@@ -12,98 +12,6 @@ statement::[
   },
 
   // Data Manipulation Language
-  d_m_l::[
-
-    // INSERT INTO <target> [AS <alias>] <values> [<on conflict>]
-    insert::{
-      target:       identifier,
-      values:       expr,
-      as_alias:     optional::'.identifier.symbol',
-      on_conflict:  optional::on_conflict,
-    },
-
-    // INSERT INTO <path> VALUE <expr> [AT <expr>] [<on conflict legacy>]
-    insert_legacy::{
-      target:             path,
-      value:              expr,
-      index:              optional::expr,
-      conflict_condition: optional::expr,
-    },
-
-    // UPSERT INTO <target> [<alias>] <values>
-    upsert::{
-      target:   identifier,
-      values:   expr,
-      as_alias: optional::'.identifier.symbol',
-    },
-
-    // REPLACE INTO <target> [AS <alias>] <values>
-    replace::{
-      target:   identifier,
-      values:   expr,
-      as_alias: optional::'.identifier.symbol',
-    },
-
-    // UPDATE <target> SET <set clause list> WHERE <expr>
-    update::{
-      target:      path,
-      assignments: list::[assignment],
-      _: [
-        assignment::{
-          target: path,
-          value:  expr,
-        },
-      ],
-    },
-
-    // REMOVE <path>
-    remove::{
-      target: path,
-    },
-
-    // DELETE [FROM [AS <symbol>] [AT <symbol>] [BY <symbol>]] <path> [ WHERE <expr> ] RETURNING ...
-    delete::{
-      target: {
-        path:     path,
-        as_alias: optional::'.identifier.symbol',
-        at_alias: optional::'.identifier.symbol',
-        by_alias: optional::'.identifier.symbol',
-      },
-      where:      optional::expr,
-      returning:  optional::returning,
-    },
-
-    // [UPDATE|FROM] <target> <dml base op>+ WHERE <expr> RETURNING <returning>
-    batch_legacy::{
-      ops:        list::[op],
-      target:     optional::from,
-      where:      optional::expr,
-      returning:  optional::returning,
-      _: [
-        op::[
-          insert::{
-            target:       identifier,
-            values:       expr,
-            as_alias:     optional::'.identifier.symbol',
-            on_conflict:  optional::on_conflict,
-          },
-          insert_legacy::{
-            target:             path,
-            value:              expr,
-            index:              optional::expr,
-            conflict_condition: optional::expr,
-          },
-          set::{
-            assignments: list::[assignment],
-          },
-          remove::{
-            target: path,
-          },
-          delete::{},
-        ],
-      ],
-    },
-  ],
 
   // Data Definition Language
   d_d_l::[
@@ -132,12 +40,6 @@ statement::[
       table:  identifier, // <identifier>[1]
     },
   ],
-
-  // EXEC <symbol> [<expr>.*]
-  exec::{
-    procedure: string,
-    args: list::[expr],
-  },
 
   // EXPLAIN
   explain::{
@@ -732,55 +634,6 @@ graph_match::{
       conj::{lhs: label, rhs: label},  // as in `MATCH (x: City&Country)` - Monaco can do
       disj::{lhs: label, rhs: label},  // as in `MATCH (x: City|Country)` - either Paris or Germany will do
     ],
-  ],
-}
-
-// LEGACY `ON CONFLICT WHERE <expr> <conflict_action>`
-//        `ON CONFLICT [<target>] <conflict_action>`
-on_conflict::{
-  target: optional::target,
-  action: action,
-
-  _: [
-    // <conflict target> ::= ( <index target> [, <index target>]... )
-    //                     | ( { <primary key> | <composite primary key> } )
-    //                     | ON CONSTRAINT <constraint name>
-    target::[
-      symbols::{
-        symbols: list::[identifier],
-      },
-      constraint::{
-        constraint: identifier,
-      },
-    ],
-
-    // <conflict action> ::= DO NOTHING
-    //                     | DO UPDATE <do update>
-    //                     | DO REPLACE <do replace>
-    action::[
-      do_nothing::{},
-      do_replace::{
-        condition: optional::expr,
-      },
-      do_update::{
-        condition: optional::expr,
-      },
-    ],
-  ]
-}
-
-// RETURNING returningColumn ( COMMA returningColumn )*
-returning::{
-  columns: list::[column],
-  _: [
-    column::{
-      status: [ MODIFIED, ALL ],
-      age:    [ OLD, NEW ],
-      value:  [
-        wildcard::{},
-        expression::{ expr: expr }
-      ],
-    },
   ],
 }
 
