@@ -1389,22 +1389,18 @@ class PartiQLEngineDefaultTest {
     }
 
     @Test
-    @Disabled
+    // @Disabled
     fun developmentTest() {
         val tc = SuccessTestCase(
             input = """
-                SELECT VALUE
-                    CASE x + 1
-                        WHEN NULL THEN 'shouldnt be null'
-                        WHEN MISSING THEN 'shouldnt be missing'
-                        WHEN i THEN 'ONE'
-                        WHEN f THEN 'TWO'
-                        WHEN d THEN 'THREE'
-                        ELSE '?'
+                    CASE
+                        WHEN NULL THEN 'isNull'
+                        WHEN MISSING THEN 'isMissing'
+                        WHEN FALSE THEN 'isFalse'
                     END
-                FROM << i, f, d, null, missing >> AS x
+                    ;
             """,
-            expected = boolValue(true),
+            expected = stringValue(null),
             globals = listOf(
                 SuccessTestCase.Global("i", "1"),
                 SuccessTestCase.Global("f", "2e0"),

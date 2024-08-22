@@ -83,13 +83,6 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
             t = t concat ")"
             t
         }
-        is Expr.BagOp -> {
-            var t = tail
-            t = t concat "("
-            t = visitExprBagOp(node, t)
-            t = t concat ")"
-            t
-        }
         else -> visitExpr(node, tail)
     }
 

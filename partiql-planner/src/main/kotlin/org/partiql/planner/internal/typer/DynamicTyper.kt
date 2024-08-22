@@ -109,7 +109,7 @@ internal class DynamicTyper {
      */
     @OptIn(PartiQLValueExperimental::class)
     fun mapping(): Pair<CompilerType, List<Mapping?>?> {
-        val s = supertype ?: return CompilerType(PType.dynamic()) to null
+        var s = supertype ?: return CompilerType(PType.dynamic()) to null
         val superTypeBase = s.kind
         // If at top supertype, then return union of all accumulated types
         if (superTypeBase == Kind.DYNAMIC) {
@@ -118,6 +118,20 @@ internal class DynamicTyper {
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
         if (superTypeBase in setOf(Kind.ROW, Kind.STRUCT, Kind.BAG, Kind.ARRAY, Kind.SEXP)) {
             return anyOf(types)!!.toCType() to null
+        }
+        // Decimal
+        if (superTypeBase == Kind.DECIMAL) {
+            val type = computeDecimal()
+            if (type != null) {
+                s = type
+            }
+        }
+        // Text
+        if (superTypeBase in setOf(Kind.CHAR, Kind.VARCHAR, Kind.STRING)) {
+            val type = computeText()
+            if (type != null) {
+                s = type
+            }
         }
         // If not initialized, then return null, missing, or null|missing.
         // Otherwise, return the supertype along with the coercion mapping
@@ -130,6 +144,47 @@ internal class DynamicTyper {
             }
         }
         return s to mapping
+    }
+
+    private fun computeDecimal(): CompilerType? {
+        val (precision, scale) = types.fold((0 to 0)) { acc, type ->
+            if (type.kind != Kind.DECIMAL) {
+                return null
+            }
+            val precision = Math.max(type.precision, acc.first)
+            val scale = Math.max(type.scale, acc.second)
+            precision to scale
+        }
+        return PType.decimal(precision, scale).toCType()
+    }
+
+    private fun computeText(): CompilerType? {
+        var containsString = false
+        var containsVarChar = false
+        val length = types.fold(0) { acc, type ->
+            if (type.kind !in setOf(Kind.VARCHAR, Kind.CHAR, Kind.STRING)) {
+                return null
+            }
+            when (type.kind) {
+                Kind.STRING -> {
+                    containsString = true
+                    Int.MAX_VALUE
+                }
+                Kind.VARCHAR -> {
+                    containsVarChar = true
+                    Math.max(acc, type.length)
+                }
+                Kind.CHAR -> {
+                    Math.max(acc, type.length)
+                }
+                else -> error("Received type: $type")
+            }
+        }
+        return when {
+            containsString -> PType.string()
+            containsVarChar -> PType.varchar(length)
+            else -> PType.character(length)
+        }.toCType()
     }
 
     internal sealed interface Mapping {

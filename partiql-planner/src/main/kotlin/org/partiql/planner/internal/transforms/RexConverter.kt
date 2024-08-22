@@ -953,40 +953,6 @@ internal object RexConverter {
 
         override fun visitExprQuerySet(node: Expr.QuerySet, context: Env): Rex = RelConverter.apply(node, context)
 
-        override fun visitExprBagOp(node: Expr.BagOp, ctx: Env): Rex {
-            if (node.outer == true) {
-                // PartiQL bag op; create bag op rex
-                val lhs = visitExpr(node.lhs, ctx)
-                val rhs = visitExpr(node.rhs, ctx)
-                val setq = when (node.type.setq) {
-                    SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
-                    null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
-                }
-                val op = when (node.type.type) {
-                    SetOp.Type.UNION -> Rex.Op.Union(setq, lhs, rhs)
-                    SetOp.Type.EXCEPT -> Rex.Op.Except(setq, lhs, rhs)
-                    SetOp.Type.INTERSECT -> Rex.Op.Intersect(setq, lhs, rhs)
-                }
-                return Rex(
-                    type = StaticType.ANY,
-                    op = op
-                )
-            } else {
-                // SQL set op; create set op rel
-                val rel = node.accept(RelConverter.ToRel(ctx), nil)
-                return Rex(
-                    type = StaticType.ANY,
-                    op = Rex.Op.Select(
-                        constructor = Rex(
-                            StaticType.ANY,
-                            rexOpVarResolved(0)
-                        ),
-                        rel = rel
-                    )
-                )
-            }
-        }
-
         // Helpers
 
         private fun negate(call: Rex.Op): Rex.Op.Call {

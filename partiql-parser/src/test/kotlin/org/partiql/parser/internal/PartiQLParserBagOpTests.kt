@@ -20,25 +20,27 @@ class PartiQLParserBagOpTests {
     private fun query(block: AstBuilder.() -> Expr) = ast { statementQuery { expr = block() } }
 
     @OptIn(PartiQLValueExperimental::class)
-    private fun createSFW(i: Int): Expr.SFW =
+    private fun createSFW(i: Int): Expr.QuerySet =
         ast {
-            exprSFW {
-                select = selectStar()
-                from = fromValue {
-                    expr = exprCollection {
-                        type = Expr.Collection.Type.BAG
-                        values = mutableListOf(
-                            exprStruct {
-                                fields = mutableListOf(
-                                    exprStructField {
-                                        name = exprLit { value = stringValue("a") }
-                                        value = exprLit { value = int32Value(i) }
-                                    }
-                                )
-                            }
-                        )
+            exprQuerySet {
+                body = queryBodySFW {
+                    select = selectStar()
+                    from = fromValue {
+                        expr = exprCollection {
+                            type = Expr.Collection.Type.BAG
+                            values = mutableListOf(
+                                exprStruct {
+                                    fields = mutableListOf(
+                                        exprStructField {
+                                            name = exprLit { value = stringValue("a") }
+                                            value = exprLit { value = int32Value(i) }
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                        type = From.Value.Type.SCAN
                     }
-                    type = From.Value.Type.SCAN
                 }
             }
         }
@@ -51,13 +53,15 @@ class PartiQLParserBagOpTests {
     fun sqlUnion() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> UNION SELECT * FROM <<{'a': 2}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.UNION
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.UNION
+                    }
+                    lhs = createSFW(1)
+                    rhs = createSFW(2)
+                    isOuter = false
                 }
-                lhs = createSFW(1)
-                rhs = createSFW(2)
-                outer = false
             }
         }
     )
@@ -66,22 +70,26 @@ class PartiQLParserBagOpTests {
     fun sqlUnionMultiple() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> UNION ALL SELECT * FROM <<{'a': 2}>> UNION DISTINCT SELECT * FROM <<{'a': 3}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.UNION
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.UNION
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createSFW(1)
-                    rhs = createSFW(2)
-                    outer = false
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.UNION
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createSFW(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createSFW(3)
+                    isOuter = false
                 }
-                rhs = createSFW(3)
-                outer = false
             }
         }
     )
@@ -90,22 +98,26 @@ class PartiQLParserBagOpTests {
     fun sqlUnionMultipleRight() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> UNION ALL (SELECT * FROM <<{'a': 2}>> UNION DISTINCT SELECT * FROM <<{'a': 3}>>)",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.UNION
-                    setq = SetQuantifier.ALL
-                }
-                lhs = createSFW(1)
-                rhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.UNION
-                        setq = SetQuantifier.DISTINCT
+                        setq = SetQuantifier.ALL
                     }
-                    lhs = createSFW(2)
-                    rhs = createSFW(3)
-                    outer = false
+                    lhs = createSFW(1)
+                    rhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.UNION
+                                setq = SetQuantifier.DISTINCT
+                            }
+                            lhs = createSFW(2)
+                            rhs = createSFW(3)
+                            isOuter = false
+                        }
+                        isOuter = false
+                    }
                 }
-                outer = false
             }
         }
     )
@@ -115,13 +127,15 @@ class PartiQLParserBagOpTests {
     fun outerUnion() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> OUTER UNION SELECT * FROM <<{'a': 2}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.UNION
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.UNION
+                    }
+                    lhs = createSFW(1)
+                    rhs = createSFW(2)
+                    isOuter = true
                 }
-                lhs = createSFW(1)
-                rhs = createSFW(2)
-                outer = true
             }
         }
     )
@@ -130,13 +144,15 @@ class PartiQLParserBagOpTests {
     fun outerUnionNonSpecified() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> UNION 2",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.UNION
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.UNION
+                    }
+                    lhs = createSFW(1)
+                    rhs = createLit(2)
+                    isOuter = false
                 }
-                lhs = createSFW(1)
-                rhs = createLit(2)
-                outer = true
             }
         }
     )
@@ -145,22 +161,26 @@ class PartiQLParserBagOpTests {
     fun sqlUnionAndOuterUnion() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> UNION ALL SELECT * FROM <<{'a': 2}>> UNION DISTINCT 3",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.UNION
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.UNION
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createSFW(1)
-                    rhs = createSFW(2)
-                    outer = false
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.UNION
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createSFW(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createLit(3)
+                    isOuter = false
                 }
-                rhs = createLit(3)
-                outer = true // outer
             }
         }
     )
@@ -169,22 +189,26 @@ class PartiQLParserBagOpTests {
     fun outerUnionAndSQLUnion() = assertExpression(
         "1 UNION ALL SELECT * FROM <<{'a': 2}>> UNION DISTINCT SELECT * FROM <<{'a': 3}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.UNION
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.UNION
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createLit(1)
-                    rhs = createSFW(2)
-                    outer = true // outer
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.UNION
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createLit(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createSFW(3)
+                    isOuter = false
                 }
-                rhs = createSFW(3)
-                outer = true // also outer
             }
         }
     )
@@ -194,13 +218,15 @@ class PartiQLParserBagOpTests {
     fun sqlExcept() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> EXCEPT SELECT * FROM <<{'a': 2}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.EXCEPT
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.EXCEPT
+                    }
+                    lhs = createSFW(1)
+                    rhs = createSFW(2)
+                    isOuter = false
                 }
-                lhs = createSFW(1)
-                rhs = createSFW(2)
-                outer = false
             }
         }
     )
@@ -209,22 +235,26 @@ class PartiQLParserBagOpTests {
     fun sqlExceptMultiple() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> EXCEPT ALL SELECT * FROM <<{'a': 2}>> EXCEPT DISTINCT SELECT * FROM <<{'a': 3}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.EXCEPT
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.EXCEPT
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createSFW(1)
-                    rhs = createSFW(2)
-                    outer = false
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.EXCEPT
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createSFW(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createSFW(3)
+                    isOuter = false
                 }
-                rhs = createSFW(3)
-                outer = false
             }
         }
     )
@@ -233,22 +263,26 @@ class PartiQLParserBagOpTests {
     fun sqlExceptMultipleRight() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> EXCEPT ALL (SELECT * FROM <<{'a': 2}>> EXCEPT DISTINCT SELECT * FROM <<{'a': 3}>>)",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.EXCEPT
-                    setq = SetQuantifier.ALL
-                }
-                lhs = createSFW(1)
-                rhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.EXCEPT
-                        setq = SetQuantifier.DISTINCT
+                        setq = SetQuantifier.ALL
                     }
-                    lhs = createSFW(2)
-                    rhs = createSFW(3)
-                    outer = false
+                    lhs = createSFW(1)
+                    rhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.EXCEPT
+                                setq = SetQuantifier.DISTINCT
+                            }
+                            lhs = createSFW(2)
+                            rhs = createSFW(3)
+                            isOuter = false
+                        }
+                    }
+                    isOuter = false
                 }
-                outer = false
             }
         }
     )
@@ -258,13 +292,15 @@ class PartiQLParserBagOpTests {
     fun outerExcept() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> OUTER EXCEPT SELECT * FROM <<{'a': 2}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.EXCEPT
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.EXCEPT
+                    }
+                    lhs = createSFW(1)
+                    rhs = createSFW(2)
+                    isOuter = true
                 }
-                lhs = createSFW(1)
-                rhs = createSFW(2)
-                outer = true
             }
         }
     )
@@ -273,13 +309,15 @@ class PartiQLParserBagOpTests {
     fun outerExceptNonSpecified() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> EXCEPT 2",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.EXCEPT
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.EXCEPT
+                    }
+                    lhs = createSFW(1)
+                    rhs = createLit(2)
+                    isOuter = false
                 }
-                lhs = createSFW(1)
-                rhs = createLit(2)
-                outer = true
             }
         }
     )
@@ -288,22 +326,26 @@ class PartiQLParserBagOpTests {
     fun sqlExceptAndOuterExcept() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> EXCEPT ALL SELECT * FROM <<{'a': 2}>> EXCEPT DISTINCT 3",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.EXCEPT
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.EXCEPT
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createSFW(1)
-                    rhs = createSFW(2)
-                    outer = false
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.EXCEPT
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createSFW(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createLit(3)
+                    isOuter = false
                 }
-                rhs = createLit(3)
-                outer = true // outer
             }
         }
     )
@@ -312,22 +354,26 @@ class PartiQLParserBagOpTests {
     fun outerExceptAndSQLExcept() = assertExpression(
         "1 EXCEPT ALL SELECT * FROM <<{'a': 2}>> EXCEPT DISTINCT SELECT * FROM <<{'a': 3}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.EXCEPT
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.EXCEPT
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createLit(1)
-                    rhs = createSFW(2)
-                    outer = true // outer
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.EXCEPT
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createLit(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createSFW(3)
+                    isOuter = false
                 }
-                rhs = createSFW(3)
-                outer = true // also outer
             }
         }
     )
@@ -337,13 +383,15 @@ class PartiQLParserBagOpTests {
     fun sqlIntersect() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> INTERSECT SELECT * FROM <<{'a': 2}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.INTERSECT
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.INTERSECT
+                    }
+                    lhs = createSFW(1)
+                    rhs = createSFW(2)
+                    isOuter = false
                 }
-                lhs = createSFW(1)
-                rhs = createSFW(2)
-                outer = false
             }
         }
     )
@@ -352,22 +400,26 @@ class PartiQLParserBagOpTests {
     fun sqlIntersectMultiple() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> INTERSECT ALL SELECT * FROM <<{'a': 2}>> INTERSECT DISTINCT SELECT * FROM <<{'a': 3}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.INTERSECT
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.INTERSECT
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createSFW(1)
-                    rhs = createSFW(2)
-                    outer = false
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.INTERSECT
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createSFW(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createSFW(3)
+                    isOuter = false
                 }
-                rhs = createSFW(3)
-                outer = false
             }
         }
     )
@@ -376,22 +428,26 @@ class PartiQLParserBagOpTests {
     fun sqlIntersectMultipleRight() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> INTERSECT ALL (SELECT * FROM <<{'a': 2}>> INTERSECT DISTINCT SELECT * FROM <<{'a': 3}>>)",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.INTERSECT
-                    setq = SetQuantifier.ALL
-                }
-                lhs = createSFW(1)
-                rhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.INTERSECT
-                        setq = SetQuantifier.DISTINCT
+                        setq = SetQuantifier.ALL
                     }
-                    lhs = createSFW(2)
-                    rhs = createSFW(3)
-                    outer = false
+                    lhs = createSFW(1)
+                    rhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.INTERSECT
+                                setq = SetQuantifier.DISTINCT
+                            }
+                            lhs = createSFW(2)
+                            rhs = createSFW(3)
+                            isOuter = false
+                        }
+                    }
+                    isOuter = false
                 }
-                outer = false
             }
         }
     )
@@ -401,13 +457,15 @@ class PartiQLParserBagOpTests {
     fun outerIntersect() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> OUTER INTERSECT SELECT * FROM <<{'a': 2}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.INTERSECT
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.INTERSECT
+                    }
+                    lhs = createSFW(1)
+                    rhs = createSFW(2)
+                    isOuter = true
                 }
-                lhs = createSFW(1)
-                rhs = createSFW(2)
-                outer = true
             }
         }
     )
@@ -416,13 +474,15 @@ class PartiQLParserBagOpTests {
     fun outerIntersectNonSpecified() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> INTERSECT 2",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.INTERSECT
+            exprQuerySet {
+                body = queryBodySetOp {
+                    type = setOp {
+                        type = SetOp.Type.INTERSECT
+                    }
+                    lhs = createSFW(1)
+                    rhs = createLit(2)
+                    isOuter = false
                 }
-                lhs = createSFW(1)
-                rhs = createLit(2)
-                outer = true
             }
         }
     )
@@ -431,22 +491,26 @@ class PartiQLParserBagOpTests {
     fun sqlIntersectAndOuterIntersect() = assertExpression(
         "SELECT * FROM <<{'a': 1}>> INTERSECT ALL SELECT * FROM <<{'a': 2}>> INTERSECT DISTINCT 3",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.INTERSECT
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.INTERSECT
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createSFW(1)
-                    rhs = createSFW(2)
-                    outer = false
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.INTERSECT
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createSFW(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createLit(3)
+                    isOuter = false
                 }
-                rhs = createLit(3)
-                outer = true // outer
             }
         }
     )
@@ -455,22 +519,26 @@ class PartiQLParserBagOpTests {
     fun outerIntersectAndSQLIntersect() = assertExpression(
         "1 INTERSECT ALL SELECT * FROM <<{'a': 2}>> INTERSECT DISTINCT SELECT * FROM <<{'a': 3}>>",
         query {
-            exprBagOp {
-                type = setOp {
-                    type = SetOp.Type.INTERSECT
-                    setq = SetQuantifier.DISTINCT
-                }
-                lhs = exprBagOp {
+            exprQuerySet {
+                body = queryBodySetOp {
                     type = setOp {
                         type = SetOp.Type.INTERSECT
-                        setq = SetQuantifier.ALL
+                        setq = SetQuantifier.DISTINCT
                     }
-                    lhs = createLit(1)
-                    rhs = createSFW(2)
-                    outer = true // outer
+                    lhs = exprQuerySet {
+                        body = queryBodySetOp {
+                            type = setOp {
+                                type = SetOp.Type.INTERSECT
+                                setq = SetQuantifier.ALL
+                            }
+                            lhs = createLit(1)
+                            rhs = createSFW(2)
+                            isOuter = false
+                        }
+                    }
+                    rhs = createSFW(3)
+                    isOuter = false
                 }
-                rhs = createSFW(3)
-                outer = true // also outer
             }
         }
     )

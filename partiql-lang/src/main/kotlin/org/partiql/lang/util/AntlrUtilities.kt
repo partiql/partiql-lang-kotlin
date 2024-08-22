@@ -31,6 +31,8 @@ import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.syntax.ParserException
 import org.partiql.parser.internal.antlr.PartiQLParser
+import org.partiql.parser.thirdparty.antlr.v4.runtime.Token
+import org.partiql.parser.thirdparty.antlr.v4.runtime.tree.TerminalNode
 import java.math.BigInteger
 
 // workaround until ErrorAndErrorContexts no longer uses IonSystem

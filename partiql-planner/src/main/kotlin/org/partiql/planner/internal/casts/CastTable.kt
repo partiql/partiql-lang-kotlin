@@ -237,6 +237,8 @@ internal class CastTable private constructor(
                 cast(Kind.INTEGER)
                 cast(Kind.BIGINT)
                 cast(Kind.NUMERIC)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
                 cast(Kind.STRING)
                 cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)

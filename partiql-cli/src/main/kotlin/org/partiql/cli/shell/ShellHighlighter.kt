@@ -20,6 +20,11 @@ import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.partiql.parser.internal.antlr.PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLTokens
+import org.partiql.parser.thirdparty.antlr.v4.runtime.BaseErrorListener
+import org.partiql.parser.thirdparty.antlr.v4.runtime.CharStreams
+import org.partiql.parser.thirdparty.antlr.v4.runtime.CommonTokenStream
+import org.partiql.parser.thirdparty.antlr.v4.runtime.RecognitionException
+import org.partiql.parser.thirdparty.antlr.v4.runtime.Recognizer
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 

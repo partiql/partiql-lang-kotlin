@@ -4102,7 +4102,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a UNION b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterUnion(),
+            op = PartiqlAst.BagOpType.Union(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 id("a"),
@@ -4116,7 +4116,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a UNION DISTINCT b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterUnion(),
+            op = PartiqlAst.BagOpType.Union(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 id("a"),
@@ -4130,7 +4130,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a UNION ALL b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterUnion(),
+            op = PartiqlAst.BagOpType.Union(),
             quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 id("a"),
@@ -4144,7 +4144,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a INTERSECT b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterIntersect(),
+            op = PartiqlAst.BagOpType.Intersect(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 id("a"),
@@ -4158,7 +4158,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a INTERSECT DISTINCT b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterIntersect(),
+            op = PartiqlAst.BagOpType.Intersect(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 id("a"),
@@ -4172,7 +4172,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a INTERSECT ALL b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterIntersect(),
+            op = PartiqlAst.BagOpType.Intersect(),
             quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 id("a"),
@@ -4186,7 +4186,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a EXCEPT b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterExcept(),
+            op = PartiqlAst.BagOpType.Except(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 id("a"),
@@ -4200,7 +4200,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a EXCEPT DISTINCT b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterExcept(),
+            op = PartiqlAst.BagOpType.Except(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 id("a"),
@@ -4214,7 +4214,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a EXCEPT ALL b"
     ) {
         bagOp(
-            op = PartiqlAst.BagOpType.OuterExcept(),
+            op = PartiqlAst.BagOpType.Except(),
             quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 id("a"),

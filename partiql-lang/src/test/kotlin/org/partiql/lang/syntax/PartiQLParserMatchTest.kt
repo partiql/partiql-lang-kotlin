@@ -109,7 +109,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         "(MyGraph MATCH (x)) UNION SELECT * FROM tbl1"
     ) {
         bagOp(
-            op = outerUnion(), // TODO decide if graph match set op maps to PartiQL or SQL
+            op = union(),
             quantifier = distinct(),
             operands = listOf(
                 astMygraphMatchAllNodes,
@@ -142,7 +142,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         "SELECT * FROM tbl1 UNION (MyGraph MATCH (x))"
     ) {
         bagOp(
-            op = outerUnion(), // TODO decide if graph match set op maps to PartiQL or SQL
+            op = union(),
             quantifier = distinct(),
             operands = listOf(
                 astSelectStarFromTbl1,

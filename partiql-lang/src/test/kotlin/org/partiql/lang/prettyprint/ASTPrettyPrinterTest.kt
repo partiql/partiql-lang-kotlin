@@ -539,7 +539,7 @@ class ASTPrettyPrinterTest {
         checkPrettyPrintAst(
             "a UNION b",
             """
-                OuterUnion
+                Union
                     Id a (case_insensitive) (unqualified)
                     Id b (case_insensitive) (unqualified)
             """.trimIndent()
@@ -551,7 +551,7 @@ class ASTPrettyPrinterTest {
         checkPrettyPrintAst(
             "a EXCEPT b",
             """
-                OuterExcept
+                Except
                     Id a (case_insensitive) (unqualified)
                     Id b (case_insensitive) (unqualified)
             """.trimIndent()
@@ -563,7 +563,7 @@ class ASTPrettyPrinterTest {
         checkPrettyPrintAst(
             "a INTERSECT b",
             """
-                OuterIntersect
+                Intersect
                     Id a (case_insensitive) (unqualified)
                     Id b (case_insensitive) (unqualified)
             """.trimIndent()

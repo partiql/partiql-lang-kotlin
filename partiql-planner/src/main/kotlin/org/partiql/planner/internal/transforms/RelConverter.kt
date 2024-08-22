@@ -200,35 +200,6 @@ internal object RelConverter {
             }
         }
 
-        // Create a SQL set op
-        override fun visitExprBagOp(node: Expr.BagOp, ctx: Rel): Rel {
-            // Assumes parser correctly only allows Expr.SFW or other Expr.BagOps with Expr.SFW arguments when
-            // converting to the SQL set op
-            assert(node.lhs is Expr.SFW || node.lhs is Expr.BagOp) {
-                "Expect LHS of bag op to be a Expr.SFW or a Expr.BagOp. " +
-                    "However, it is ${node.lhs}."
-            }
-            assert(node.rhs is Expr.SFW || node.rhs is Expr.BagOp) {
-                "Expect RHS of bag op to be a Expr.SFW or a Expr.BagOp. " +
-                    "However, it is ${node.lhs}."
-            }
-            val setq = when (node.type.setq) {
-                SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
-                null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
-            }
-            val lhsRel = visitExpr(node.lhs, ctx)
-            val rhsRel = visitExpr(node.rhs, ctx)
-            val op = when (node.type.type) {
-                SetOp.Type.UNION -> Rel.Op.Union(setq, lhsRel, rhsRel)
-                SetOp.Type.EXCEPT -> Rel.Op.Except(setq, lhsRel, rhsRel)
-                SetOp.Type.INTERSECT -> Rel.Op.Intersect(setq, lhsRel, rhsRel)
-            }
-            return Rel(
-                type = nil.type,
-                op = op
-            )
-        }
-
         /**
          * Given a non-null [setQuantifier], this will return a [Rel] of [Rel.Op.Distinct] wrapping the [input].
          * If [setQuantifier] is null or ALL, this will return the [input].

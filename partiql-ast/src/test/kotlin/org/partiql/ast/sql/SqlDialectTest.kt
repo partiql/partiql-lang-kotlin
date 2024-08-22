@@ -992,116 +992,140 @@ class SqlDialectTest {
                 }
             },
             expect("(x UNION y) UNION z") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = null
-                    }
-                    outer = false
-                    lhs = exprBagOp {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp {
                             type = SetOp.Type.UNION
                             setq = null
                         }
-                        outer = false
-                        lhs = v("x")
-                        rhs = v("y")
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySetOp {
+                                type = setOp {
+                                    type = SetOp.Type.UNION
+                                    setq = null
+                                }
+                                isOuter = false
+                                lhs = v("x")
+                                rhs = v("y")
+                            }
+                        }
+                        rhs = v("z")
                     }
-                    rhs = v("z")
                 }
             },
             expect("x UNION (y UNION z)") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.UNION
-                        setq = null
-                    }
-                    outer = false
-                    lhs = v("x")
-                    rhs = exprBagOp {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp {
                             type = SetOp.Type.UNION
                             setq = null
                         }
-                        outer = false
-                        lhs = v("y")
-                        rhs = v("z")
+                        isOuter = false
+                        lhs = v("x")
+                        rhs = exprQuerySet {
+                            body = queryBodySetOp {
+                                type = setOp {
+                                    type = SetOp.Type.UNION
+                                    setq = null
+                                }
+                                isOuter = false
+                                lhs = v("y")
+                                rhs = v("z")
+                            }
+                        }
                     }
                 }
             },
             expect("(x EXCEPT y) EXCEPT z") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.EXCEPT
-                        setq = null
-                    }
-                    outer = false
-                    lhs = exprBagOp {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp {
                             type = SetOp.Type.EXCEPT
                             setq = null
                         }
-                        outer = false
-                        lhs = v("x")
-                        rhs = v("y")
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySetOp {
+                                type = setOp {
+                                    type = SetOp.Type.EXCEPT
+                                    setq = null
+                                }
+                                isOuter = false
+                                lhs = v("x")
+                                rhs = v("y")
+                            }
+                            rhs = v("z")
+                        }
                     }
-                    rhs = v("z")
                 }
             },
             expect("x EXCEPT (y EXCEPT z)") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.EXCEPT
-                        setq = null
-                    }
-                    outer = false
-                    lhs = v("x")
-                    rhs = exprBagOp {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp {
                             type = SetOp.Type.EXCEPT
                             setq = null
                         }
-                        outer = false
-                        lhs = v("y")
-                        rhs = v("z")
+                        isOuter = false
+                        lhs = v("x")
+                        rhs = exprQuerySet {
+                            body = queryBodySetOp {
+                                type = setOp {
+                                    type = SetOp.Type.EXCEPT
+                                    setq = null
+                                }
+                                isOuter = false
+                                lhs = v("y")
+                                rhs = v("z")
+                            }
+                        }
                     }
                 }
             },
             expect("(x INTERSECT y) INTERSECT z") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.INTERSECT
-                        setq = null
-                    }
-                    outer = false
-                    lhs = exprBagOp {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp {
                             type = SetOp.Type.INTERSECT
                             setq = null
                         }
-                        outer = false
-                        lhs = v("x")
-                        rhs = v("y")
+                        isOuter = false
+                        lhs = exprQuerySet {
+                            body = queryBodySetOp {
+                                type = setOp {
+                                    type = SetOp.Type.INTERSECT
+                                    setq = null
+                                }
+                                isOuter = false
+                                lhs = v("x")
+                                rhs = v("y")
+                            }
+                        }
+                        rhs = v("z")
                     }
-                    rhs = v("z")
                 }
             },
             expect("x INTERSECT (y INTERSECT z)") {
-                exprBagOp {
-                    type = setOp {
-                        type = SetOp.Type.INTERSECT
-                        setq = null
-                    }
-                    outer = false
-                    lhs = v("x")
-                    rhs = exprBagOp {
+                exprQuerySet {
+                    body = queryBodySetOp {
                         type = setOp {
                             type = SetOp.Type.INTERSECT
                             setq = null
                         }
-                        outer = false
-                        lhs = v("y")
-                        rhs = v("z")
+                        isOuter = false
+                        lhs = v("x")
+                        rhs = exprQuerySet {
+                            body = queryBodySetOp {
+                                type = setOp {
+                                    type = SetOp.Type.INTERSECT
+                                    setq = null
+                                }
+                                isOuter = false
+                                lhs = v("y")
+                                rhs = v("z")
+                            }
+                        }
                     }
                 }
             },
