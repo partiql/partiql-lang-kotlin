@@ -29,7 +29,7 @@ internal class RexSubqueryInImpl(args: List<Rex>, rel: Rel) : RexSubqueryIn {
 
     override fun getRel(): Rel = _rel
 
-    override fun getOperands(): List<Rex> = _args
+    override fun getChildren(): Collection<Rex> = _args
 
     // TODO hashcode/equals?
 }

@@ -47,7 +47,7 @@ internal class RexSubqueryTestImpl(test: Test, rel: Rel) : RexSubqueryTest {
 
     override fun getRel(): Rel = _rel
 
-    override fun getOperands(): List<Rex> = emptyList()
+    override fun getChildren(): Collection<Rex> = emptyList()
 
     // TODO hashcode/equals?
 }

@@ -6,6 +6,8 @@ import org.partiql.plan.v1.operator.rel.RelAggregate
 import org.partiql.plan.v1.operator.rel.RelAggregateCall
 import org.partiql.plan.v1.operator.rel.RelAggregateImpl
 import org.partiql.plan.v1.operator.rel.RelCollation
+import org.partiql.plan.v1.operator.rel.RelCorrelate
+import org.partiql.plan.v1.operator.rel.RelCorrelateImpl
 import org.partiql.plan.v1.operator.rel.RelDistinct
 import org.partiql.plan.v1.operator.rel.RelDistinctImpl
 import org.partiql.plan.v1.operator.rel.RelExcept
@@ -37,6 +39,10 @@ import org.partiql.plan.v1.operator.rel.RelUnionImpl
 import org.partiql.plan.v1.operator.rel.RelUnpivot
 import org.partiql.plan.v1.operator.rel.RelUnpivotImpl
 import org.partiql.plan.v1.operator.rex.Rex
+import org.partiql.plan.v1.operator.rex.RexArray
+import org.partiql.plan.v1.operator.rex.RexArrayImpl
+import org.partiql.plan.v1.operator.rex.RexBag
+import org.partiql.plan.v1.operator.rex.RexBagImpl
 import org.partiql.plan.v1.operator.rex.RexCall
 import org.partiql.plan.v1.operator.rex.RexCallImpl
 import org.partiql.plan.v1.operator.rex.RexCase
@@ -45,8 +51,6 @@ import org.partiql.plan.v1.operator.rex.RexCast
 import org.partiql.plan.v1.operator.rex.RexCastImpl
 import org.partiql.plan.v1.operator.rex.RexCoalesce
 import org.partiql.plan.v1.operator.rex.RexCoalesceImpl
-import org.partiql.plan.v1.operator.rex.RexCollection
-import org.partiql.plan.v1.operator.rex.RexCollectionImpl
 import org.partiql.plan.v1.operator.rex.RexError
 import org.partiql.plan.v1.operator.rex.RexErrorImpl
 import org.partiql.plan.v1.operator.rex.RexLit
@@ -107,6 +111,25 @@ public interface PlanFactory {
      */
     public fun relAggregate(input: Rel, calls: List<RelAggregateCall>, groups: List<Rex>): RelAggregate =
         RelAggregateImpl(input, calls, groups)
+
+    /**
+     * Create a [RelCorrelate] instance for a lateral cross join.
+     *
+     * @param lhs
+     * @param rhs
+     * @return
+     */
+    public fun relCorrelate(lhs: Rel, rhs: Rel): RelCorrelate = relCorrelate(lhs, rhs, RelJoinType.INNER)
+
+    /**
+     * Create a [RelCorrelate] instance for a lateral join.
+     *
+     * @param lhs
+     * @param rhs
+     * @param joinType
+     * @return
+     */
+    public fun relCorrelate(lhs: Rel, rhs: Rel, joinType: RelJoinType): RelCorrelate = RelCorrelateImpl(lhs, rhs, joinType)
 
     /**
      * Create a [RelDistinct] instance.
@@ -179,7 +202,7 @@ public interface PlanFactory {
     public fun relIterate(input: Rex): RelIterate = RelIterateImpl(input)
 
     /**
-     * Create a [RelJoin] instance for a lateral cross join.
+     * Create a [RelJoin] instance for a cross join.
      *
      *   - <lhs>, <rhs>
      *   - <lhs> CROSS JOIN <rhs>
@@ -276,6 +299,22 @@ public interface PlanFactory {
     // --- REX OPERATORS ------------------------------------------------------------------------------------------------
 
     /**
+     * Create a [RexArray] instance.
+     *
+     * @param values
+     * @return
+     */
+    public fun rexArray(values: Collection<Rex>): RexArray = RexArrayImpl(values)
+
+    /**
+     * Create a [RexBag] instance.
+     *
+     * @param values
+     * @return
+     */
+    public fun rexBag(values: Collection<Rex>): RexBag = RexBagImpl(values)
+
+    /**
      * Create a [RexCall] instance.
      *
      * @param function
@@ -329,14 +368,6 @@ public interface PlanFactory {
      * @return
      */
     public fun rexCol(depth: Int, offset: Int): RexVar = RexVarImpl(depth, offset)
-
-    /**
-     * Create a [RexCollection] instance.
-     *
-     * @param values
-     * @return
-     */
-    public fun rexCollection(values: List<Rex>): RexCollection = RexCollectionImpl(values)
 
     /**
      * TODO AUDIT ME

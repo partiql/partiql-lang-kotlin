@@ -12,7 +12,7 @@ public interface RelFilter : Rel {
 
     public fun getPredicate(): Rex
 
-    override fun getInputs(): List<Rel> = listOf(getInput())
+    override fun getChildren(): Collection<Rel> = listOf(getInput())
 
     override fun getSchema(): Schema = getInput().getSchema()
 
@@ -28,17 +28,17 @@ internal class RelFilterImpl(input: Rel, predicate: Rex) : RelFilter {
 
     // DO NOT USE FINAL
     private var _input: Rel = input
-    private var _inputs: List<Rel>? = null
+    private var _children: List<Rel>? = null
     private var _predicate: Rex = predicate
     private var _ordered: Boolean = input.isOrdered()
 
     override fun getInput(): Rel = _input
 
-    override fun getInputs(): List<Rel> {
-        if (_inputs == null) {
-            _inputs = listOf(_input)
+    override fun getChildren(): Collection<Rel> {
+        if (_children == null) {
+            _children = listOf(_input)
         }
-        return _inputs!!
+        return _children!!
     }
 
     override fun getPredicate(): Rex = _predicate

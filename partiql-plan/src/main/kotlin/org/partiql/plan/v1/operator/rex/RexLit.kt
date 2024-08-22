@@ -10,7 +10,7 @@ public interface RexLit : Rex {
 
     public fun getValue(): Datum
 
-    override fun getOperands(): List<Rex> = emptyList()
+    override fun getChildren(): Collection<Rex> = emptyList()
 
     override fun getType(): PType = getValue().type
 

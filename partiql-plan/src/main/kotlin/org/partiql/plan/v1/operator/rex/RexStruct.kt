@@ -9,13 +9,13 @@ public interface RexStruct : Rex {
 
     public fun getFields(): List<Field>
 
-    override fun getOperands(): List<Rex> {
-        val operands = mutableListOf<Rex>()
+    override fun getChildren(): Collection<Rex> {
+        val children = mutableListOf<Rex>()
         for (field in getFields()) {
-            operands.add(field.getKey())
-            operands.add(field.getValue())
+            children.add(field.getKey())
+            children.add(field.getValue())
         }
-        return operands
+        return children
     }
 
     override fun getType(): PType = PType.struct()
@@ -38,15 +38,15 @@ internal class RexStructImpl(fields: List<RexStruct.Field>) : RexStruct {
 
     // DO NOT USE FINAL
     private var _fields = fields
-    private var _operands: List<Rex>? = null
+    private var _children: Collection<Rex>? = null
 
     override fun getFields(): List<RexStruct.Field> = _fields
 
-    override fun getOperands(): List<Rex> {
-        if (_operands == null) {
-            _operands = super.getOperands()
+    override fun getChildren(): Collection<Rex> {
+        if (_children == null) {
+            _children = super.getChildren()
         }
-        return _operands!!
+        return _children!!
     }
 
     override fun equals(other: Any?): Boolean {

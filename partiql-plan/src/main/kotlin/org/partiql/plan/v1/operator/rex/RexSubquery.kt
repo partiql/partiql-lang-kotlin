@@ -27,7 +27,7 @@ internal class RexSubqueryImpl(rel: Rel) : RexSubquery {
         TODO("Not yet implemented")
     }
 
-    override fun getOperands(): List<Rex> {
+    override fun getChildren(): Collection<Rex> {
         TODO("Not yet implemented")
     }
 

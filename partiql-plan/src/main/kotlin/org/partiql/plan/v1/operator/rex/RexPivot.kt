@@ -16,7 +16,7 @@ public interface RexPivot : Rex {
 
     override fun getType(): PType = PType.struct()
 
-    override fun getOperands(): List<Rex> = listOf(getKey(), getValue())
+    override fun getChildren(): Collection<Rex> = listOf(getKey(), getValue())
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPivot(this, ctx)
 }
@@ -31,7 +31,7 @@ internal class RexPivotImpl(input: Rel, key: Rex, value: Rex) : RexPivot {
     private var _key = key
     private var _value = value
 
-    private var operands: List<Rex>? = null
+    private var children: List<Rex>? = null
     private var type: PType? = null
 
     override fun getInput(): Rel = _input
@@ -47,11 +47,11 @@ internal class RexPivotImpl(input: Rel, key: Rex, value: Rex) : RexPivot {
         return type!!
     }
 
-    override fun getOperands(): List<Rex> {
-        if (operands == null) {
-            operands = listOf(getKey(), getValue())
+    override fun getChildren(): Collection<Rex> {
+        if (children == null) {
+            children = listOf(getKey(), getValue())
         }
-        return operands!!
+        return children!!
     }
 
     override fun equals(other: Any?): Boolean {

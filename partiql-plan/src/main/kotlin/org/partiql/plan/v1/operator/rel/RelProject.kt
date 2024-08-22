@@ -12,7 +12,7 @@ public interface RelProject : Rel {
 
     public fun getProjections(): List<Rex>
 
-    override fun getInputs(): List<Rel> = listOf(getInput())
+    override fun getChildren(): Collection<Rel> = listOf(getInput())
 
     override fun isOrdered(): Boolean = getInput().isOrdered()
 
@@ -36,7 +36,7 @@ public class RelProjectImpl(input: Rel, projections: List<Rex>) : RelProject {
         TODO("Not yet implemented")
     }
 
-    override fun getInputs(): List<Rel> = listOf(_input)
+    override fun getChildren(): Collection<Rel> = listOf(_input)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

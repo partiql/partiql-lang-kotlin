@@ -11,7 +11,7 @@ public interface RelExclude : Rel {
 
     public fun getPaths(): List<RelExcludePath>
 
-    override fun getInputs(): List<Rel> = listOf(getInput())
+    override fun getChildren(): Collection<Rel> = listOf(getInput())
 
     override fun isOrdered(): Boolean = getInput().isOrdered()
 
@@ -30,7 +30,7 @@ internal class RelExcludeImpl(input: Rel, paths: List<RelExcludePath>) : RelExcl
 
     override fun getInput(): Rel = _input
 
-    override fun getInputs(): List<Rel> = listOf(_input)
+    override fun getChildren(): Collection<Rel> = listOf(_input)
 
     override fun getPaths(): List<RelExcludePath> = _paths
 

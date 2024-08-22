@@ -9,7 +9,7 @@ public interface RexSpread : Rex {
 
     public fun getArgs(): List<Rex>
 
-    override fun getOperands(): List<Rex> = getArgs()
+    override fun getChildren(): Collection<Rex> = getArgs()
 
     override fun getType(): PType = PType.struct()
 

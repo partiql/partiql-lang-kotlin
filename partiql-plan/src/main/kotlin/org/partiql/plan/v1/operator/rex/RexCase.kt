@@ -15,22 +15,22 @@ public interface RexCase : Rex {
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCase(this, ctx)
 
-    override fun getOperands(): List<Rex> {
-        val operands = mutableListOf<Rex>()
+    override fun getChildren(): Collection<Rex> {
+        val children = mutableListOf<Rex>()
         val match = getMatch()
         val branches = getBranches()
         val default = getDefault()
         if (match != null) {
-            operands.add(match)
+            children.add(match)
         }
         for (branch in branches) {
-            operands.add(branch.getCondition())
-            operands.add(branch.getResult())
+            children.add(branch.getCondition())
+            children.add(branch.getResult())
         }
         if (default != null) {
-            operands.add(default)
+            children.add(default)
         }
-        return operands
+        return children
     }
 
     /**
@@ -51,7 +51,7 @@ internal class RexCaseImpl(match: Rex?, branches: List<RexCase.Branch>, default:
     private var _match = match
     private var _branches = branches
     private var _default = default
-    private var _operands: List<Rex>? = null
+    private var _children: Collection<Rex>? = null
 
     override fun getMatch(): Rex? = _match
 
@@ -59,11 +59,11 @@ internal class RexCaseImpl(match: Rex?, branches: List<RexCase.Branch>, default:
 
     override fun getDefault(): Rex? = _default
 
-    override fun getOperands(): List<Rex> {
-        if (_operands == null) {
-            _operands = super.getOperands()
+    override fun getChildren(): Collection<Rex> {
+        if (_children == null) {
+            _children = super.getChildren()
         }
-        return _operands!!
+        return _children!!
     }
 
     override fun getType(): PType {

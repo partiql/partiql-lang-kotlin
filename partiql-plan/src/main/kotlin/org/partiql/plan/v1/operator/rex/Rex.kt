@@ -9,7 +9,7 @@ public interface Rex {
 
     public fun getType(): PType
 
-    public fun getOperands(): List<Rex>
+    public fun getChildren(): Collection<Rex>
 
     public fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R
 }

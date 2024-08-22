@@ -11,7 +11,7 @@ public interface RelIterate : Rel {
 
     public fun getInput(): Rex
 
-    override fun getInputs(): List<Rel> = emptyList()
+    override fun getChildren(): Collection<Rel> = emptyList()
 
     override fun isOrdered(): Boolean = getInput().getType().kind == PType.Kind.ARRAY
 

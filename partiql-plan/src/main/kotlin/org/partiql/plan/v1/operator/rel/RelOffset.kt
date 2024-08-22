@@ -12,7 +12,7 @@ public interface RelOffset : Rel {
 
     public fun getOffset(): Rex
 
-    override fun getInputs(): List<Rel> = listOf(getInput())
+    override fun getChildren(): Collection<Rel> = listOf(getInput())
 
     override fun getSchema(): Schema = getInput().getSchema()
 
@@ -34,7 +34,7 @@ internal class RelOffsetImpl(input: Rel, offset: Rex) : RelOffset {
 
     override fun getOffset(): Rex = _offset
 
-    override fun getInputs(): List<Rel> = listOf(_input)
+    override fun getChildren(): Collection<Rel> = listOf(_input)
 
     override fun getSchema(): Schema = _input.getSchema()
 

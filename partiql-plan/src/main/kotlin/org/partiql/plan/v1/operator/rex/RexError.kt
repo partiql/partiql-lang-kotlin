@@ -12,7 +12,7 @@ public interface RexError : Rex {
         TODO("Not yet implemented")
     }
 
-    override fun getOperands(): List<Rex> = emptyList()
+    override fun getChildren(): Collection<Rex> = emptyList()
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitError(this, ctx)
 }
@@ -37,7 +37,7 @@ public interface RexMissing : Rex {
         TODO("Not yet implemented")
     }
 
-    override fun getOperands(): List<Rex> = emptyList()
+    override fun getChildren(): Collection<Rex> = emptyList()
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitMissing(this, ctx)
 }

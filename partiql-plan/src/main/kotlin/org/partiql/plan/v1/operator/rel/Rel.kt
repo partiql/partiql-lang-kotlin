@@ -7,11 +7,11 @@ import org.partiql.plan.v1.Schema
  */
 public interface Rel {
 
-    public fun getInputs(): List<Rel>
-
     public fun getSchema(): Schema
 
     public fun isOrdered(): Boolean
+
+    public fun getChildren(): Collection<Rel>
 
     public fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R
 }

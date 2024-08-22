@@ -14,9 +14,9 @@ public interface RelJoin : Rel {
 
     public fun getCondition(): Rex?
 
-    public fun getType(): RelJoinType
+    public fun getJoinType(): RelJoinType
 
-    override fun getInputs(): List<Rel> = listOf(getLeft(), getRight())
+    override fun getChildren(): Collection<Rel> = listOf(getLeft(), getRight())
 
     override fun isOrdered(): Boolean = false
 
@@ -26,15 +26,15 @@ public interface RelJoin : Rel {
 /**
  * Default [RelJoin] implementation.
  */
-internal class RelJoinImpl(left: Rel, right: Rel, condition: Rex?, type: RelJoinType) : RelJoin {
+internal class RelJoinImpl(left: Rel, right: Rel, condition: Rex?, joinType: RelJoinType) : RelJoin {
 
     // DO NOT USE FINAL
     private var _left = left
     private var _right = right
     private var _condition = condition
-    private var _type = type
+    private var _joinType = joinType
 
-    private var _inputs: List<Rel>? = null
+    private var _children: List<Rel>? = null
 
     override fun getLeft(): Rel = _left
 
@@ -42,13 +42,13 @@ internal class RelJoinImpl(left: Rel, right: Rel, condition: Rex?, type: RelJoin
 
     override fun getCondition(): Rex? = _condition
 
-    override fun getType(): RelJoinType = _type
+    override fun getJoinType(): RelJoinType = _joinType
 
-    override fun getInputs(): List<Rel> {
-        if (_inputs == null) {
-            _inputs = listOf(_left, _right)
+    override fun getChildren(): Collection<Rel> {
+        if (_children == null) {
+            _children = listOf(_left, _right)
         }
-        return _inputs!!
+        return _children!!
     }
 
     override fun getSchema(): Schema {
@@ -63,7 +63,7 @@ internal class RelJoinImpl(left: Rel, right: Rel, condition: Rex?, type: RelJoin
         if (_left != other.getLeft()) return false
         if (_right != other.getRight()) return false
         if (_condition != other.getCondition()) return false
-        if (_type != other.getType()) return false
+        if (_joinType != other.getJoinType()) return false
         return true
     }
 
@@ -72,7 +72,7 @@ internal class RelJoinImpl(left: Rel, right: Rel, condition: Rex?, type: RelJoin
         result = 31 * result + _left.hashCode()
         result = 31 * result + _right.hashCode()
         result = 31 * result + _condition.hashCode()
-        result = 31 * result + _type.hashCode()
+        result = 31 * result + _joinType.hashCode()
         return result
     }
 }

@@ -20,7 +20,7 @@ public interface RexCall : Rex {
      */
     public fun getArgs(): List<Rex>
 
-    override fun getOperands(): List<Rex> = getArgs()
+    override fun getChildren(): Collection<Rex> = getArgs()
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCall(this, ctx)
 }
@@ -42,5 +42,5 @@ internal class RexCallImpl(function: Fn, args: List<Rex>) : RexCall {
         TODO("Function .getType()")
     }
 
-    override fun getOperands(): List<Rex> = _args
+    override fun getChildren(): Collection<Rex> = _args
 }

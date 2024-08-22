@@ -18,7 +18,7 @@ public interface RexVar : Rex {
      */
     public fun getOffset(): Int
 
-    override fun getOperands(): List<Rex> = emptyList()
+    override fun getChildren(): Collection<Rex> = emptyList()
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitVar(this, ctx)
 }

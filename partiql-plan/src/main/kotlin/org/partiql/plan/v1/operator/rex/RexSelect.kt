@@ -14,7 +14,7 @@ public interface RexSelect : Rex {
 
     override fun getType(): PType = PType.bag(getConstructor().getType())
 
-    override fun getOperands(): List<Rex> = listOf(getConstructor())
+    override fun getChildren(): Collection<Rex> = listOf(getConstructor())
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSelect(this, ctx)
 }
@@ -30,7 +30,7 @@ internal class RexSelectImpl(input: Rel, constructor: Rex) : RexSelect {
 
     override fun getType(): PType = PType.bag(_constructor.getType())
 
-    override fun getOperands(): List<Rex> = listOf(_constructor)
+    override fun getChildren(): Collection<Rex> = listOf(_constructor)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

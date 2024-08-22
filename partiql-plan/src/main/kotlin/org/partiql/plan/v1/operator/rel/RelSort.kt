@@ -11,7 +11,7 @@ public interface RelSort : Rel {
 
     public fun getCollations(): List<RelCollation>
 
-    override fun getInputs(): List<Rel> = listOf(getInput())
+    override fun getChildren(): Collection<Rel> = listOf(getInput())
 
     override fun getSchema(): Schema = getInput().getSchema()
 
@@ -29,7 +29,7 @@ internal class RelSortImpl(input: Rel, collations: List<RelCollation>) : RelSort
     private var _input = input
     private var _collations = collations
 
-    private var _inputs: List<Rel>? = null
+    private var _children: List<Rel>? = null
 
     override fun getInput(): Rel = _input
 
@@ -37,11 +37,11 @@ internal class RelSortImpl(input: Rel, collations: List<RelCollation>) : RelSort
 
     override fun getSchema(): Schema = _input.getSchema()
 
-    override fun getInputs(): List<Rel> {
-        if (_inputs == null) {
-            _inputs = listOf(_input)
+    override fun getChildren(): Collection<Rel> {
+        if (_children == null) {
+            _children = listOf(_input)
         }
-        return _inputs!!
+        return _children!!
     }
 
     override fun equals(other: Any?): Boolean {

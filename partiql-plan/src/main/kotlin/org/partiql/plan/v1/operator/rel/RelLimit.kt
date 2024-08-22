@@ -12,7 +12,7 @@ public interface RelLimit : Rel {
 
     public fun getLimit(): Rex
 
-    override fun getInputs(): List<Rel> = listOf(getInput())
+    override fun getChildren(): Collection<Rel> = listOf(getInput())
 
     override fun getSchema(): Schema = getInput().getSchema()
 
@@ -34,7 +34,7 @@ internal class RelLimitImpl(input: Rel, limit: Rex) : RelLimit {
 
     override fun getLimit(): Rex = _limit
 
-    override fun getInputs(): List<Rel> = listOf(_input)
+    override fun getChildren(): Collection<Rel> = listOf(_input)
 
     override fun getSchema(): Schema = _input.getSchema()
 

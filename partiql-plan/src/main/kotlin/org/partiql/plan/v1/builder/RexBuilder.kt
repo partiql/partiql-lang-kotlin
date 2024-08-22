@@ -55,9 +55,10 @@ public class RexBuilder private constructor(rex: Builder) {
         public fun lit(value: Datum): RexBuilder = RexBuilder { it.rexLit(value) }
 
         @JvmStatic
-        public fun collection(values: List<Rex>): RexBuilder = RexBuilder {
-            it.rexCollection(values)
-        }
+        public fun array(values: Collection<Rex>): RexBuilder = RexBuilder { it.rexArray(values) }
+
+        @JvmStatic
+        public fun bag(values: Collection<Rex>): RexBuilder = RexBuilder { it.rexBag(values) }
 
         @JvmStatic
         public fun coalesce(args: List<Rex>): RexBuilder = RexBuilder {

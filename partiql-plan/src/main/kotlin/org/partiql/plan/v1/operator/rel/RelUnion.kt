@@ -13,7 +13,7 @@ public interface RelUnion : Rel {
 
     public fun getRight(): Rel
 
-    override fun getInputs(): List<Rel> = listOf(getLeft(), getRight())
+    override fun getChildren(): Collection<Rel> = listOf(getLeft(), getRight())
 
     override fun isOrdered(): Boolean = false
 
@@ -29,7 +29,7 @@ internal class RelUnionImpl(left: Rel, right: Rel, isAll: Boolean) : RelUnion {
     private var _isAll = isAll
     private var _left = left
     private var _right = right
-    private var _inputs: List<Rel>? = null
+    private var _children: List<Rel>? = null
 
     override fun isAll(): Boolean = _isAll
 
@@ -37,11 +37,11 @@ internal class RelUnionImpl(left: Rel, right: Rel, isAll: Boolean) : RelUnion {
 
     override fun getRight(): Rel = _right
 
-    override fun getInputs(): List<Rel> {
-        if (_inputs == null) {
-            _inputs = listOf(_left, _right)
+    override fun getChildren(): Collection<Rel> {
+        if (_children == null) {
+            _children = listOf(_left, _right)
         }
-        return _inputs!!
+        return _children!!
     }
 
     override fun isOrdered(): Boolean = false

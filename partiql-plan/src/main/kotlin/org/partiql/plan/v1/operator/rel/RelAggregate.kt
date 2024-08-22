@@ -15,7 +15,7 @@ public interface RelAggregate : Rel {
 
     public fun getGroups(): List<Rex>
 
-    override fun getInputs(): List<Rel> = listOf(getInput())
+    override fun getChildren(): Collection<Rel> = listOf(getInput())
 
     override fun isOrdered(): Boolean = false
 
@@ -33,7 +33,7 @@ internal class RelAggregateImpl(input: Rel, calls: List<RelAggregateCall>, group
     private var _calls = calls
     private var _groups = groups
 
-    private var _inputs: List<Rel>? = null
+    private var _children: List<Rel>? = null
 
     override fun getInput(): Rel = _input
 
@@ -41,11 +41,11 @@ internal class RelAggregateImpl(input: Rel, calls: List<RelAggregateCall>, group
 
     override fun getGroups(): List<Rex> = _groups
 
-    override fun getInputs(): List<Rel> {
-        if (_inputs == null) {
-            _inputs = listOf(_input)
+    override fun getChildren(): Collection<Rel> {
+        if (_children == null) {
+            _children = listOf(_input)
         }
-        return _inputs!!
+        return _children!!
     }
 
     override fun getSchema(): Schema {

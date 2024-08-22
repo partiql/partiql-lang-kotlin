@@ -7,7 +7,7 @@ import org.partiql.plan.v1.Schema
  */
 public class RelError(val message: String) : Rel {
 
-    override fun getInputs(): List<Rel> = emptyList()
+    override fun getChildren(): Collection<Rel> = emptyList()
 
     override fun getSchema(): Schema {
         TODO("Not yet implemented")

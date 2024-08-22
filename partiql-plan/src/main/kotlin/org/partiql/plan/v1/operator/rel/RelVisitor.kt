@@ -9,7 +9,7 @@ package org.partiql.plan.v1.operator.rel
 public interface RelVisitor<R, C> {
 
     public fun defaultVisit(rel: Rel, ctx: C): R {
-        for (child in rel.getInputs()) {
+        for (child in rel.getChildren()) {
             child.accept(this, ctx)
         }
         return defaultReturn(rel, ctx)
@@ -36,6 +36,8 @@ public interface RelVisitor<R, C> {
     public fun visitIterate(rel: RelIterate, ctx: C): R = defaultVisit(rel, ctx)
 
     public fun visitJoin(rel: RelJoin, ctx: C): R = defaultVisit(rel, ctx)
+
+    public fun visitCorrelate(rel: RelCorrelate, ctx: C): R = defaultVisit(rel, ctx)
 
     public fun visitLimit(rel: RelLimit, ctx: C): R = defaultVisit(rel, ctx)
 
