@@ -749,6 +749,7 @@ class ASTPrettyPrinterTest {
     }
 
     @Test
+    // TODO: delete this test ahead of `v1` release
     fun canLosslessCast() {
         checkPrettyPrintAst(
             "CAN_Lossless_CAST (1 AS STRING)",

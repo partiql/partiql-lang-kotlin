@@ -63,8 +63,6 @@ public data class CoverageStructure(
             LIKE,
             IS,
             IN,
-            CAN_CAST,
-            CAN_LOSSLESS_CAST
         }
         public enum class Outcome {
             TRUE,

@@ -534,26 +534,6 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         return t
     }
 
-    override fun visitExprCanCast(node: Expr.CanCast, tail: InternalSqlBlock): InternalSqlBlock {
-        var t = tail
-        t = t concat "CAN_CAST("
-        t = visitExprWrapped(node.value, t)
-        t = t concat " AS "
-        t = visitType(node.asType, t)
-        t = t concat ")"
-        return t
-    }
-
-    override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, tail: InternalSqlBlock): InternalSqlBlock {
-        var t = tail
-        t = t concat "CAN_LOSSLESS_CAST("
-        t = visitExprWrapped(node.value, t)
-        t = t concat " AS "
-        t = visitType(node.asType, t)
-        t = t concat ")"
-        return t
-    }
-
     override fun visitExprDateAdd(node: Expr.DateAdd, tail: InternalSqlBlock): InternalSqlBlock {
         var t = tail
         t = t concat "DATE_ADD("

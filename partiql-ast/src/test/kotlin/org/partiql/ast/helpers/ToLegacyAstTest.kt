@@ -505,8 +505,6 @@ class ToLegacyAstTest {
             // TODO overlay
             // TODO extract
             // TODO cast
-            // TODO can_cast
-            // TODO can_lossless_cast
             // TODO date_add
             // TODO date_diff
         )

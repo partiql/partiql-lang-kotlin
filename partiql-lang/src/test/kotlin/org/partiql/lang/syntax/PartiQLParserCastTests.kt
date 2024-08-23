@@ -149,12 +149,14 @@ class PartiQLParserCastTests : PartiQLParserTestBase() {
                 PartiqlAst.build { query(cast(ast.value, ast.asType, ast.metas)) }
             )
 
+        // TODO: delete these tests ahead of `v1` release
         fun toCanCastTest() =
             ConfiguredCastParseTest(
                 source.replaceFirst("CAST", "CAN_CAST"),
                 PartiqlAst.build { query(canCast(ast.value, ast.asType, ast.metas)) }
             )
 
+        // TODO: delete these tests ahead of `v1` release
         fun toCanLosslessCastTest() =
             ConfiguredCastParseTest(
                 source.replaceFirst("CAST", "CAN_LOSSLESS_CAST"),

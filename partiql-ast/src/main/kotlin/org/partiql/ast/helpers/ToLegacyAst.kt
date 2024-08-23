@@ -594,18 +594,6 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         cast(value, asType, metas)
     }
 
-    override fun visitExprCanCast(node: Expr.CanCast, ctx: Ctx) = translate(node) { metas ->
-        val value = visitExpr(node.value, ctx)
-        val asType = visitType(node.asType, ctx)
-        canCast(value, asType, metas)
-    }
-
-    override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, ctx: Ctx) = translate(node) { metas ->
-        val value = visitExpr(node.value, ctx)
-        val asType = visitType(node.asType, ctx)
-        canLosslessCast(value, asType, metas)
-    }
-
     override fun visitExprDateAdd(node: Expr.DateAdd, ctx: Ctx) = translate(node) { metas ->
         val field = node.field.toLegacyDatetimePart()
         val lhs = visitExpr(node.lhs, ctx)

@@ -624,8 +624,8 @@ exprPrimary
     | substring                  # ExprPrimaryBase
     | position                   # ExprPrimaryBase
     | overlay                    # ExprPrimaryBase
-    | canCast                    # ExprPrimaryBase
-    | canLosslessCast            # ExprPrimaryBase
+    | canCast                    # ExprPrimaryBase  // TODO remove ahead of `v1` release
+    | canLosslessCast            # ExprPrimaryBase  // TODO remove ahead of `v1` release
     | extract                    # ExprPrimaryBase
     | coalesce                   # ExprPrimaryBase
     | dateFunction               # ExprPrimaryBase
@@ -716,9 +716,11 @@ windowFunction
 cast
     : CAST PAREN_LEFT expr AS type PAREN_RIGHT;
 
+// TODO remove these ahead of `v1` release
 canLosslessCast
     : CAN_LOSSLESS_CAST PAREN_LEFT expr AS type PAREN_RIGHT;
 
+// TODO remove these ahead of `v1` release
 canCast
     : CAN_CAST PAREN_LEFT expr AS type PAREN_RIGHT;
 

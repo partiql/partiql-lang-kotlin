@@ -898,18 +898,6 @@ class SqlDialectTest {
                     asType = typeInt()
                 }
             },
-            expect("CAN_CAST(x AS INT)") {
-                exprCanCast {
-                    value = v("x")
-                    asType = typeInt()
-                }
-            },
-            expect("CAN_LOSSLESS_CAST(x AS INT)") {
-                exprCanLosslessCast {
-                    value = v("x")
-                    asType = typeInt()
-                }
-            },
             expect("DATE_ADD(MINUTE, x, y)") {
                 exprDateAdd {
                     field = DatetimeField.MINUTE

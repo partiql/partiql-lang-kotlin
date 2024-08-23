@@ -908,14 +908,6 @@ internal object RexConverter {
             }.toCType()
         }
 
-        override fun visitExprCanCast(node: Expr.CanCast, ctx: Env): Rex {
-            TODO("PartiQL Special Form CAN_CAST")
-        }
-
-        override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, ctx: Env): Rex {
-            TODO("PartiQL Special Form CAN_LOSSLESS_CAST")
-        }
-
         override fun visitExprDateAdd(node: Expr.DateAdd, ctx: Env): Rex {
             val type = TIMESTAMP
             // Args

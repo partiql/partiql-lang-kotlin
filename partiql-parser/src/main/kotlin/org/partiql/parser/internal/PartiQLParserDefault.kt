@@ -60,8 +60,6 @@ import org.partiql.ast.excludeStepStructWildcard
 import org.partiql.ast.exprAnd
 import org.partiql.ast.exprBetween
 import org.partiql.ast.exprCall
-import org.partiql.ast.exprCanCast
-import org.partiql.ast.exprCanLosslessCast
 import org.partiql.ast.exprCase
 import org.partiql.ast.exprCaseBranch
 import org.partiql.ast.exprCast
@@ -1735,15 +1733,11 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitCanCast(ctx: GeneratedParser.CanCastContext) = translate(ctx) {
-            val expr = visitExpr(ctx.expr())
-            val type = visitAs<Type>(ctx.type())
-            exprCanCast(expr, type)
+            throw error(ctx, "CAN_CAST is no longer supported in the default PartiQLParser")
         }
 
         override fun visitCanLosslessCast(ctx: GeneratedParser.CanLosslessCastContext) = translate(ctx) {
-            val expr = visitExpr(ctx.expr())
-            val type = visitAs<Type>(ctx.type())
-            exprCanLosslessCast(expr, type)
+            throw error(ctx, "CAN_LOSSLESS_CAST is no longer supported in the default PartiQLParser")
         }
 
         override fun visitFunctionCall(ctx: GeneratedParser.FunctionCallContext) = translate(ctx) {

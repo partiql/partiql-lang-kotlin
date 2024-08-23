@@ -593,8 +593,6 @@ public final class org/partiql/lang/eval/CoverageStructure$BranchCondition$Outco
 public final class org/partiql/lang/eval/CoverageStructure$BranchCondition$Type : java/lang/Enum {
 	public static final field AND Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
 	public static final field BETWEEN Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
-	public static final field CAN_CAST Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
-	public static final field CAN_LOSSLESS_CAST Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
 	public static final field EQ Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
 	public static final field GT Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
 	public static final field GTE Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;

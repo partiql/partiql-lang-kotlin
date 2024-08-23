@@ -31,6 +31,8 @@ import org.partiql.types.StructType
  * - `CAN_CAST(<value> AS ES_ANY)`
  * - `CAN_LOSSLESS_CAST(<value> AS ES_ANY)`
  * - `<value> IS ES_ANY`
+ *
+ * Note: `CAN_CAST` and `CAN_LOSSLESS_CAST` will not be in the `v1` release. Tests will not need ported over.
  */
 class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
     companion object {
@@ -155,6 +157,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
         }
 
         // TODO: these aren't bad for IS anymore.
+        // TODO: delete these tests for `v1` release
         private val badEsAnyTypeDefinitionsForCastAndCanCast: List<TypedOpParameter> =
             listOf(
                 // collection with constraint -- implicitly self-recursive element type limitation
@@ -186,6 +189,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(EsAnyCanCastConfiguredCases::class)
+    // TODO: delete these tests for `v1` release
     fun esAnyCanCast(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase()
     class EsAnyCanCastConfiguredCases : ArgumentsProviderBase() {
         override fun getParameters() = esAnyCastCases.map { case ->
@@ -195,6 +199,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(EsAnyCanLossLessCastConfiguredCases::class)
+    // TODO: delete these tests for `v1` release
     fun esAnyCanLosslessCast(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase()
     class EsAnyCanLossLessCastConfiguredCases : ArgumentsProviderBase() {
         override fun getParameters() = esAnyCastCases.map { case ->
@@ -301,11 +306,13 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                         listOf(
                             it,
                             it.copy(
+                                // TODO: delete these tests ahead of `v1` release
                                 castCase = it.castCase.copy(
                                     funcName = "CAN_CAST"
                                 )
                             ),
                             it.copy(
+                                // TODO: delete these tests ahead of `v1` release
                                 castCase = it.castCase.copy(
                                     funcName = "CAN_LOSSLESS_CAST"
                                 )
