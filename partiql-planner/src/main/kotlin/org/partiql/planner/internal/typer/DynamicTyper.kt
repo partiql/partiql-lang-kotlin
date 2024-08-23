@@ -146,6 +146,7 @@ internal class DynamicTyper {
         return s to mapping
     }
 
+    // TODO: Fix the computation of the supertype: https://github.com/partiql/partiql-lang-kotlin/issues/1566
     private fun computeDecimal(): CompilerType? {
         val (precision, scale) = types.fold((0 to 0)) { acc, type ->
             if (type.kind != Kind.DECIMAL) {
