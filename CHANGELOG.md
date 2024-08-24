@@ -23,37 +23,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [Unreleased]
+## [0.14.8]
 
 ### Added
 
 ### Changed
-- **Behavioral change**: The planner now does NOT support the NullType and MissingType variants of StaticType. The logic
-is that the null and missing values are part of *all* data types. Therefore, one must assume that the types returned by
-the planner allow for NULL and MISSING values. Similarly, the testFixtures Ion-encoded test resources
-representing the catalog do not use "null" or "missing".
+
+### Deprecated
+
+### Fixed
+- Case When Branch inference will preserve type constraint for String Type and Decimal Type, if no coercion is required.
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [0.14.7]
+
+### Fixed
+- `partiql-lang`'s `PartiQLParserBuilder.standard()` will use the ANTLR dependency from `partiql-parser` to
+prevent `NoSuchMethodError`s
+
+## [0.14.6]
+
+### Added
+- Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
+- Shades ANTLR dependency to avoid dependency conflicts.
+
+### Changed
 - **Behavioral change**: The `INTEGER/INT` type is now an alias to the `INT4` type. Previously the INTEGER type was
 unconstrained which is not SQL-conformant and is causing issues in integrating with other systems. This release makes
 INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
 integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
 org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
+- **Breaking change**: partiql-plan: adds a set quantifier field to SQL set operators `UNION`, `INTERSECT`, and `EXCEPT`
+- partiql-plan: adds a dedicated Rex node for PartiQL bag operators `UNION`, `INTERSECT`, and `EXCEPT`
+- partiql-planner: Adds typing support for set operators
+- partiql-parser: parses non-SFW expressions to be PartiQL `OUTER` bag operators
+- partiql-ast: fixes missing parens from `bag_op` when printing using `SqlDialect`
 
 ### Deprecated
-- We have deprecated `org.partiql.type.NullType` and `org.partiql.type.MissingType`. Please see the corresponding
-information in the "Changed" section. In relation to the deprecation of the above, the following APIs have also
-been deprecated:
-  - `org.partiql.type.StaticType.MISSING`
-  - `org.partiql.type.StaticType.NULL`
-  - `org.partiql.type.StaticType.NULL_OR_MISSING`
-  - `org.partiql.type.StaticType.asNullable()`
-  - `org.partiql.type.StaticType.isNullable()`
-  - `org.partiql.type.StaticType.isMissable()`
-  - `org.partiql.type.StaticType.asOptional()`
-  - `org.partiql.type.AnyOfType()`
-  - `org.partiql.value.PartiQLValueType.NULL`
-  - `org.partiql.value.PartiQLValueType.MISSING`
 
 ### Fixed
+- Fixed classpath conflict for IsStaticTypeMeta
+- Fixes ANTLR parser grammar file naming.
 
 ### Removed
 
@@ -62,6 +77,10 @@ been deprecated:
 ### Contributors
 Thank you to all who have contributed!
 - @<your-username>
+
+- @rchowell
+- @alancai98
+- @johnedquinn
 
 ## [0.14.5]
 
@@ -1102,7 +1121,10 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.5...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.8...HEAD
+[0.14.8]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.7...v0.14.8
+[0.14.7]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.6...v0.14.7
+[0.14.6]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.5...v0.14.6
 [0.14.5]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...v0.14.5
 [0.14.4]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.3...v0.14.4
 [0.14.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.2...v0.14.3

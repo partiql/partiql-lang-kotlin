@@ -22,6 +22,24 @@ CHAR_LENGTH(null)    -- `null`
 CHAR_LENGTH(missing) -- `null` (also returns `null`)
 ```
 
+
+### BIT_LENGTH -- since v0.10.0
+
+Returns the number of bits in the input string.
+
+Signature
+: `BIT_LENGTH: String —> Int`
+
+Header
+: `BIT_LENGTH(str)`
+
+Examples
+: 
+
+```sql
+bit_length('jose') -- 32
+```
+
 ### CAST -- since v0.1.0
 
 Given a value and a target data type, attempt to coerce the value to the target data type. 
@@ -652,6 +670,90 @@ NULLIF(null, null)       -- null
 NULLIF(missing, null)    -- null
 NULLIF(missing, missing) -- null
 ```
+
+### OCTET_LENGTH -- since v0.10.0
+
+Returns the number of bytes in the input string.
+
+Signature
+: `OCTET_LENGTH: String —> Int`
+
+Header
+: `OCTET_LENGTH(str)`
+
+Examples
+: 
+
+```sql
+octet_length('jose') -- 4
+```
+
+### OVERLAY -- since v0.10.0
+
+OVERLAY modifies a string argument by replacing a given substring of the string, which is specified by a given numeric
+starting position and a given numeric length, with another string (called the replacement string). When the length of
+the substring is zero, nothing is removed from the original string and the string returned by the
+function is the result of inserting the replacement string into the original string at the starting position.
+
+Signature
+: `OVERLAY: String, String, Int —> String`
+
+Header
+: `OVERLAY(str1 PLACING str2 FROM pos)`
+
+Signature
+: `OVERLAY: String, String, Int, Int —> String`
+
+Header
+: `OVERLAY(str1 PLACING str2 FROM pos FOR for)`
+
+Examples
+: 
+
+```sql
+overlay('hello' placing '' from 1)              -- "hello
+overlay('hello' placing '' from 2 for 3)         -- "ho
+overlay('hello' placing '' from 2 for 4)        -- "h
+overlay('hello' placing 'XX' from 1)            -- "XXllo
+overlay('hello' placing 'XX' from 1 for 3)      -- "XXlo
+overlay('hello' placing 'XX' from 1 for 1)      -- "XXello
+overlay('hello' placing 'XX' from 1 for 100)    -- "XX
+overlay('hello' placing 'XX' from 1 for 0)      -- "XXhello
+overlay('hello' placing 'XX' from 7)            -- "helloXX
+overlay('hello' placing 'XX' from 100 for 100)  -- "helloXX
+overlay('hello' placing 'XX' from 2 for 1)      -- "hXXllo
+overlay('hello' placing 'XX' from 2 for 3)      -- "hXXo
+```
+
+### POSITION -- since v0.10.0
+
+Position determines the first position (counting from 1), if any, at which one string, str1, occurs within
+another, str2. If str1 is of length zero, then it occurs at position 1 (one) for any value of str2. If str1
+does not occur in str2, then zero is returned. The declared type of a <position expression> is exact numeric
+
+Signature
+: `POSITION: String, String —> Int`
+
+Header
+: `POSITION(str1 IN str2)`
+
+Header
+: `POSITION(str1, str2)`
+
+Examples
+: 
+
+```sql
+position('foo' in 'hello')     -- 0
+position('' in 'hello')        -- 1
+position('h' in 'hello')       -- 1
+position('o' in 'hello')       -- 5
+position('ll' in 'hello')      -- 3
+position('lo' in 'hello')      -- 4
+position('hello' in 'hello')   -- 1
+position('xx' in 'xxyyxxyy')   -- 1
+position('yy' in 'xxyyxxyy')   -- 3
+```
     
 ### SUBSTRING -- since v0.1.0
 
@@ -692,6 +794,29 @@ SUBSTRING("1", 1, 0)           -- ""
 SUBSTRING("1", 1, 0)           -- ""
 SUBSTRING("1", -4, 0)          -- ""
 SUBSTRING("1234", 10, 10)      -- ""
+```
+
+### TEXT_REPLACE -- since v0.10.0
+
+In `string`, replaces all occurrences of substring `from` with another string `to`.
+
+Signature
+: `TEXT_REPLACE: String, String, String -> String`
+
+Header
+: `TEXT_REPLACE(string, from, to)`
+
+Examples
+:
+
+```sql
+text_replace('abcdefabcdef', 'cd', 'XX')       -- 'abXXefabXXef'
+text_replace('abcdefabcdef', 'xyz', 'XX')      -- 'abcdefabcdef'
+text_replace('abcdefabcdef', 'defab', '')      -- 'abccdef'
+text_replace('abcabcabcdef', 'abcabc', 'XXX')  -- 'XXXabcdef'
+text_replace('abcabcabcdef', '', 'X')          -- 'XaXbXcXaXbXcXaXbXcXdXeXfX'
+text_replace('', 'abc', 'XX')                  -- ''
+text_replace('', '', 'XX')                     -- 'XX'
 ```
     
 ### TO_STRING -- since v0.1.0
@@ -1208,131 +1333,6 @@ pow(`+inf`, `nan`) = `nan`;
 pow(`nan`, 0) = `1e0`
 pow(`nan`, 1) = `nan`
 pow(1, `+inf`) = `nan`
-```
-
-### BIT_LENGTH -- since v0.10.0
-
-Returns the number of bits in the input string.
-
-Signature
-: `BIT_LENGTH: String —> Int`
-
-Header
-: `BIT_LENGTH(str)`
-
-Examples
-: 
-
-```sql
-bit_length('jose') -- 32
-```
-
-### OCTET_LENGTH -- since v0.10.0
-
-Returns the number of bytes in the input string.
-
-Signature
-: `OCTET_LENGTH: String —> Int`
-
-Header
-: `OCTET_LENGTH(str)`
-
-Examples
-: 
-
-```sql
-octet_length('jose') -- 4
-```
-
-### POSITION -- since v0.10.0
-
-Position determines the first position (counting from 1), if any, at which one string, str1, occurs within
-another, str2. If str1 is of length zero, then it occurs at position 1 (one) for any value of str2. If str1
-does not occur in str2, then zero is returned. The declared type of a <position expression> is exact numeric
-
-Signature
-: `POSITION: String, String —> Int`
-
-Header
-: `POSITION(str1 IN str2)`
-
-Header
-: `POSITION(str1, str2)`
-
-Examples
-: 
-
-```sql
-position('foo' in 'hello')     -- 0
-position('' in 'hello')        -- 1
-position('h' in 'hello')       -- 1
-position('o' in 'hello')       -- 5
-position('ll' in 'hello')      -- 3
-position('lo' in 'hello')      -- 4
-position('hello' in 'hello')   -- 1
-position('xx' in 'xxyyxxyy')   -- 1
-position('yy' in 'xxyyxxyy')   -- 3
-```
-
-
-### OVERLAY -- since v0.10.0
-
-OVERLAY modifies a string argument by replacing a given substring of the string, which is specified by a given numeric 
-starting position and a given numeric length, with another string (called the replacement string). When the length of
-the substring is zero, nothing is removed from the original string and the string returned by the
-function is the result of inserting the replacement string into the original string at the starting position.
-
-Signature
-: `OVERLAY: String, String, Int —> String`
-
-Header
-: `OVERLAY(str1 PLACING str2 FROM pos)`
-
-Signature
-: `OVERLAY: String, String, Int, Int —> String`
-
-Header
-: `OVERLAY(str1 PLACING str2 FROM pos FOR for)`
-
-Examples
-: 
-
-```sql
-overlay('hello' placing '' from 1)              -- "hello
-overlay('hello' placing '' from 2 for 3)         -- "ho
-overlay('hello' placing '' from 2 for 4)        -- "h
-overlay('hello' placing 'XX' from 1)            -- "XXllo
-overlay('hello' placing 'XX' from 1 for 3)      -- "XXlo
-overlay('hello' placing 'XX' from 1 for 1)      -- "XXello
-overlay('hello' placing 'XX' from 1 for 100)    -- "XX
-overlay('hello' placing 'XX' from 1 for 0)      -- "XXhello
-overlay('hello' placing 'XX' from 7)            -- "helloXX
-overlay('hello' placing 'XX' from 100 for 100)  -- "helloXX
-overlay('hello' placing 'XX' from 2 for 1)      -- "hXXllo
-overlay('hello' placing 'XX' from 2 for 3)      -- "hXXo
-```
-
-### TEXT_REPLACE -- since v0.10.0
-
-In `string`, replaces all occurrences of substring `from` with another string `to`. 
-
-Signature
-: `TEXT_REPLACE: String, String, String -> String`
-
-Header
-: `TEXT_REPLACE(string, from, to)`
-
-Examples
-:
-
-```sql
-text_replace('abcdefabcdef', 'cd', 'XX')       -- 'abXXefabXXef'
-text_replace('abcdefabcdef', 'xyz', 'XX')      -- 'abcdefabcdef'
-text_replace('abcdefabcdef', 'defab', '')      -- 'abccdef'
-text_replace('abcabcabcdef', 'abcabc', 'XXX')  -- 'XXXabcdef'
-text_replace('abcabcabcdef', '', 'X')          -- 'XaXbXcXaXbXcXaXbXcXdXeXfX'
-text_replace('', 'abc', 'XX')                  -- ''
-text_replace('', '', 'XX')                     -- 'XX'
 ```
 
 <!--

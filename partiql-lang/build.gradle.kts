@@ -28,7 +28,7 @@ kotlin {
 
 dependencies {
     api(project(":partiql-ast"))
-    api(project(":partiql-parser"))
+    api(project(":partiql-parser", configuration = "shadow"))
     api(project(":partiql-plan"))
     api(project(":partiql-planner"))
     api(project(":partiql-spi"))
@@ -37,7 +37,6 @@ dependencies {
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.ionSchema)
-    shadow(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
     implementation(Deps.kotlinxCoroutines)
@@ -63,15 +62,8 @@ dependencies {
     testFixturesImplementation(Deps.mockk)
 }
 
-val relocations = mapOf(
-    "org.antlr" to "org.partiql.lang.thirdparty.antlr"
-)
-
 tasks.shadowJar {
     configurations = listOf(project.configurations.shadow.get())
-    for ((from, to) in relocations) {
-        relocate(from, to)
-    }
 }
 
 // Workaround for https://github.com/johnrengelman/shadow/issues/651

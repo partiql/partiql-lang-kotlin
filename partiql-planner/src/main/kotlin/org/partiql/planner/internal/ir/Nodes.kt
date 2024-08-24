@@ -768,11 +768,6 @@ internal data class Rex(
     }
 }
 
-internal enum class SetQuantifier {
-    ALL,
-    DISTINCT,
-}
-
 internal data class Rel(
     @JvmField internal val type: Type,
     @JvmField internal val op: Op,
@@ -989,7 +984,7 @@ internal data class Rel(
                 internal fun builder(): RelOpUnionBuilder = RelOpUnionBuilder()
             }
         }
-
+    
         internal data class Intersect(
             @JvmField
             internal val setq: SetQuantifier,
@@ -1016,7 +1011,7 @@ internal data class Rel(
                 internal fun builder(): RelOpIntersectBuilder = RelOpIntersectBuilder()
             }
         }
-
+    
         internal data class Except(
             @JvmField
             internal val setq: SetQuantifier,
@@ -1398,4 +1393,9 @@ internal data class Rel(
         @JvmStatic
         internal fun builder(): RelBuilder = RelBuilder()
     }
+}
+
+internal enum class SetQuantifier {
+    ALL,
+    DISTINCT,
 }

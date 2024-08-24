@@ -14,19 +14,6 @@
 
 package org.partiql.lang.syntax.impl
 
-import org.antlr.v4.runtime.BailErrorStrategy
-import org.antlr.v4.runtime.BaseErrorListener
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.RecognitionException
-import org.antlr.v4.runtime.Recognizer
-import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.TokenSource
-import org.antlr.v4.runtime.TokenStream
-import org.antlr.v4.runtime.atn.PredictionMode
-import org.antlr.v4.runtime.misc.ParseCancellationException
-import org.antlr.v4.runtime.tree.ParseTree
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
@@ -41,6 +28,19 @@ import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.lang.util.getIonValue
 import org.partiql.parser.internal.antlr.PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLTokens
+import org.partiql.parser.thirdparty.antlr.v4.runtime.BailErrorStrategy
+import org.partiql.parser.thirdparty.antlr.v4.runtime.BaseErrorListener
+import org.partiql.parser.thirdparty.antlr.v4.runtime.CharStreams
+import org.partiql.parser.thirdparty.antlr.v4.runtime.CommonTokenStream
+import org.partiql.parser.thirdparty.antlr.v4.runtime.ParserRuleContext
+import org.partiql.parser.thirdparty.antlr.v4.runtime.RecognitionException
+import org.partiql.parser.thirdparty.antlr.v4.runtime.Recognizer
+import org.partiql.parser.thirdparty.antlr.v4.runtime.Token
+import org.partiql.parser.thirdparty.antlr.v4.runtime.TokenSource
+import org.partiql.parser.thirdparty.antlr.v4.runtime.TokenStream
+import org.partiql.parser.thirdparty.antlr.v4.runtime.atn.PredictionMode
+import org.partiql.parser.thirdparty.antlr.v4.runtime.misc.ParseCancellationException
+import org.partiql.parser.thirdparty.antlr.v4.runtime.tree.ParseTree
 import java.io.InputStream
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets

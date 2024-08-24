@@ -83,7 +83,7 @@ import org.partiql.value.stringValue
 internal object RelConverter {
 
     // IGNORE — so we don't have to non-null assert on operator inputs
-    private val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
+    internal val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
 
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
@@ -146,7 +146,7 @@ internal object RelConverter {
     private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
-    private class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
+    internal class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
 
         override fun defaultReturn(node: AstNode, input: Rel): Rel =
             throw IllegalArgumentException("unsupported rel $node")

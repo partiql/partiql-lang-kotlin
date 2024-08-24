@@ -29,7 +29,6 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
-import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
 import org.jetbrains.dokka.gradle.DokkaPlugin
@@ -129,7 +128,7 @@ abstract class PublishPlugin : Plugin<Project> {
                             licenses {
                                 license {
                                     name.set("The Apache License, Version 2.0")
-                                    url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                                    url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
                                 }
                             }
                             developers {
@@ -164,17 +163,6 @@ abstract class PublishPlugin : Plugin<Project> {
                                     dependencyNode.appendNode("scope", "runtime")
                                 }
                             }
-                        }
-                    }
-                }
-                repositories {
-                    maven {
-                        url = uri("https://aws.oss.sonatype.org/service/local/staging/deploy/maven2")
-                        credentials {
-                            val ossrhUsername: String by rootProject
-                            val ossrhPassword: String by rootProject
-                            username = ossrhUsername
-                            password = ossrhPassword
                         }
                     }
                 }
