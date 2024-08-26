@@ -115,7 +115,7 @@ public class TestCatalog private constructor(
                 // upsert namespaces
                 curr = curr.getOrPut(part)
             }
-            curr.table = Table.of(name.getName(), schema)
+            curr.table = Table.empty(name.getName(), schema)
             return this
         }
 

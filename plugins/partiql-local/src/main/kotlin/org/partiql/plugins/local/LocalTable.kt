@@ -19,7 +19,6 @@ import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.eval.value.Datum
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Table
-import org.partiql.spi.connector.ConnectorBinding
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import java.nio.file.Path
@@ -32,7 +31,7 @@ import kotlin.io.path.reader
 internal class LocalTable(
     private val name: Name,
     private val path: Path,
-) : Table, ConnectorBinding {
+) : Table {
 
     init {
         assert(!path.isDirectory()) { "LocalTable path must be a file." }

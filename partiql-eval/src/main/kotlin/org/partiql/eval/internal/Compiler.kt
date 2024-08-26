@@ -45,6 +45,7 @@ import org.partiql.eval.internal.operator.rex.ExprStructField
 import org.partiql.eval.internal.operator.rex.ExprStructPermissive
 import org.partiql.eval.internal.operator.rex.ExprStructStrict
 import org.partiql.eval.internal.operator.rex.ExprSubquery
+import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVarLocal
 import org.partiql.eval.internal.operator.rex.ExprVarOuter
@@ -172,7 +173,10 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: PType?): Operator = symbols.getGlobal(node.ref)
+    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: PType?): Operator {
+        val table = symbols.getGlobal(node.ref)
+        return ExprTable(table)
+    }
 
     override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: PType?): Operator.Relation {
         val input = visitRel(node.input, ctx)

@@ -22,8 +22,6 @@ import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.ConnectorBinding
-import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 
@@ -34,8 +32,6 @@ public class MemoryConnector private constructor(
     private val name: String,
     private val tables: Map<Name, MemoryTable>,
 ) : Connector {
-
-    override fun getBindings(): ConnectorBindings = bindings
 
     override fun getCatalog(): Catalog = catalog
 
@@ -74,13 +70,6 @@ public class MemoryConnector private constructor(
         public fun define(table: MemoryTable): Builder = apply { tables[table.getName()] = table }
 
         public fun build(): MemoryConnector = MemoryConnector(name!!, tables)
-    }
-
-    /**
-     * Implement [ConnectorBindings] over the tables map.
-     */
-    private val bindings = object : ConnectorBindings {
-        override fun getBinding(name: Name): ConnectorBinding? = tables[name]
     }
 
     /**

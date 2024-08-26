@@ -588,25 +588,37 @@ public final class org/partiql/planner/catalog/Session$DefaultImpls {
 public abstract interface class org/partiql/planner/catalog/Table {
 	public static final field Companion Lorg/partiql/planner/catalog/Table$Companion;
 	public static fun builder ()Lorg/partiql/planner/catalog/Table$Builder;
+	public static fun empty (Ljava/lang/String;)Lorg/partiql/planner/catalog/Table;
+	public static fun empty (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
+	public static fun empty (Lorg/partiql/planner/catalog/Name;)Lorg/partiql/planner/catalog/Table;
+	public static fun empty (Lorg/partiql/planner/catalog/Name;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
+	public abstract fun getDatum ()Lorg/partiql/eval/value/Datum;
 	public abstract fun getName ()Lorg/partiql/planner/catalog/Name;
 	public abstract fun getSchema ()Lorg/partiql/types/PType;
-	public static fun of (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
+	public static fun of (Lorg/partiql/planner/catalog/Name;Lorg/partiql/eval/value/Datum;)Lorg/partiql/planner/catalog/Table;
+	public static fun of (Lorg/partiql/planner/catalog/Name;Lorg/partiql/eval/value/Datum;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
 }
 
 public final class org/partiql/planner/catalog/Table$Builder {
 	public fun <init> ()V
 	public final fun build ()Lorg/partiql/planner/catalog/Table;
+	public final fun datum (Lorg/partiql/eval/value/Datum;)Lorg/partiql/planner/catalog/Table$Builder;
 	public final fun name (Ljava/lang/String;)Lorg/partiql/planner/catalog/Table$Builder;
 	public final fun schema (Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table$Builder;
 }
 
 public final class org/partiql/planner/catalog/Table$Companion {
 	public final fun builder ()Lorg/partiql/planner/catalog/Table$Builder;
-	public final fun of (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
-	public static synthetic fun of$default (Lorg/partiql/planner/catalog/Table$Companion;Ljava/lang/String;Lorg/partiql/types/PType;ILjava/lang/Object;)Lorg/partiql/planner/catalog/Table;
+	public final fun empty (Ljava/lang/String;)Lorg/partiql/planner/catalog/Table;
+	public final fun empty (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
+	public final fun empty (Lorg/partiql/planner/catalog/Name;)Lorg/partiql/planner/catalog/Table;
+	public final fun empty (Lorg/partiql/planner/catalog/Name;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
+	public final fun of (Lorg/partiql/planner/catalog/Name;Lorg/partiql/eval/value/Datum;)Lorg/partiql/planner/catalog/Table;
+	public final fun of (Lorg/partiql/planner/catalog/Name;Lorg/partiql/eval/value/Datum;Lorg/partiql/types/PType;)Lorg/partiql/planner/catalog/Table;
 }
 
 public final class org/partiql/planner/catalog/Table$DefaultImpls {
+	public static fun getDatum (Lorg/partiql/planner/catalog/Table;)Lorg/partiql/eval/value/Datum;
 	public static fun getSchema (Lorg/partiql/planner/catalog/Table;)Lorg/partiql/types/PType;
 }
 
@@ -621,7 +633,6 @@ public abstract interface class org/partiql/spi/Plugin {
 }
 
 public abstract interface class org/partiql/spi/connector/Connector {
-	public abstract fun getBindings ()Lorg/partiql/spi/connector/ConnectorBindings;
 	public abstract fun getCatalog ()Lorg/partiql/planner/catalog/Catalog;
 }
 
@@ -632,14 +643,6 @@ public abstract interface class org/partiql/spi/connector/Connector$Factory {
 
 public final class org/partiql/spi/connector/Connector$Factory$DefaultImpls {
 	public static synthetic fun create$default (Lorg/partiql/spi/connector/Connector$Factory;Lcom/amazon/ionelement/api/StructElement;ILjava/lang/Object;)Lorg/partiql/spi/connector/Connector;
-}
-
-public abstract interface class org/partiql/spi/connector/ConnectorBinding {
-	public abstract fun getDatum ()Lorg/partiql/eval/value/Datum;
-}
-
-public abstract interface class org/partiql/spi/connector/ConnectorBindings {
-	public abstract fun getBinding (Lorg/partiql/planner/catalog/Name;)Lorg/partiql/spi/connector/ConnectorBinding;
 }
 
 public abstract interface class org/partiql/spi/fn/Agg {
