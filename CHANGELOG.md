@@ -38,6 +38,9 @@ unconstrained which is not SQL-conformant and is causing issues in integrating w
 INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
 integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
 org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
+- The deprecated SqlLayout and SqlDialect (which had stack overflow issues) has been replaced by the optimized version.
+The API is slightly different (append vs prepend) and generic method names have been replaced with more descriptive
+names (transform and print).
 
 ### Deprecated
 - We have deprecated `org.partiql.type.NullType` and `org.partiql.type.MissingType`. Please see the corresponding
