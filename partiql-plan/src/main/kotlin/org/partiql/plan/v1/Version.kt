@@ -3,7 +3,7 @@ package org.partiql.plan.v1
 /**
  * Marker interface for some version structure.
  */
-interface Version {
+public interface Version {
 
     /**
      * The only required method is toString.
