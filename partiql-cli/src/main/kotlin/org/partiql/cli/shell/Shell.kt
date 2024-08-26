@@ -269,7 +269,7 @@ internal class Shell(
                             is PartiQLResult.Error -> throw result.cause
                             is PartiQLResult.Value -> {
                                 val writer = PartiQLValueTextWriter(out)
-                                writer.append(result.value)
+                                writer.append(result.value.toPartiQLValue())
                                 out.appendLine()
                                 out.appendLine()
                                 out.info("OK!")

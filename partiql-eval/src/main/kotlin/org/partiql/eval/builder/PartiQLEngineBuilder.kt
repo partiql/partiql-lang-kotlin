@@ -1,7 +1,7 @@
 package org.partiql.eval.builder
 
 import org.partiql.eval.PartiQLEngine
-import org.partiql.eval.internal.SqlCompiler
+import org.partiql.eval.internal.SqlEngine
 
 class PartiQLEngineBuilder {
 
@@ -10,5 +10,5 @@ class PartiQLEngineBuilder {
      *
      * @return
      */
-    public fun build(): PartiQLEngine = SqlCompiler()
+    public fun build(): PartiQLEngine = SqlEngine()
 }

@@ -3,20 +3,20 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
-import org.partiql.plan.Rel
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 import java.util.Collections
 
-internal class RelSort(
+@OptIn(PartiQLValueExperimental::class)
+internal class RelOpSort(
     private val input: Operator.Relation,
-    private val specs: List<Pair<Operator.Expr, Rel.Op.Sort.Order>>
-
+    private val collations: List<Collation>,
 ) : Operator.Relation {
     private var records: Iterator<Record> = Collections.emptyIterator()
     private var init: Boolean = false
 
-    private val nullsFirstComparator = Datum.comparator(true)
-    private val nullsLastComparator = Datum.comparator(false)
+    private val nullsFirstComparator = PartiQLValue.comparator(nullsFirst = true)
+    private val nullsLastComparator = PartiQLValue.comparator(nullsFirst = false)
 
     private lateinit var env: Environment
 
@@ -29,17 +29,21 @@ internal class RelSort(
 
     private val comparator = object : Comparator<Record> {
         override fun compare(l: Record, r: Record): Int {
-            specs.forEach { spec ->
-                val lVal = spec.first.eval(env.push(l))
-                val rVal = spec.first.eval(env.push(r))
+            collations.forEach { spec ->
+                // TODO: Write comparator for PQLValue
+                val lVal = spec.expr.eval(env.push(l)).toPartiQLValue()
+                val rVal = spec.expr.eval(env.push(r)).toPartiQLValue()
 
                 // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
                 // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)
-                val cmpResult = when (spec.second) {
-                    Rel.Op.Sort.Order.ASC_NULLS_FIRST -> nullsFirstComparator.compare(lVal, rVal)
-                    Rel.Op.Sort.Order.ASC_NULLS_LAST -> nullsLastComparator.compare(lVal, rVal)
-                    Rel.Op.Sort.Order.DESC_NULLS_FIRST -> nullsLastComparator.compare(rVal, lVal)
-                    Rel.Op.Sort.Order.DESC_NULLS_LAST -> nullsFirstComparator.compare(rVal, lVal)
+
+                val cmp = when (spec.last) {
+                    true -> nullsLastComparator
+                    else -> nullsFirstComparator
+                }
+                val cmpResult = when (spec.desc) {
+                    true -> cmp.compare(rVal, lVal)
+                    else -> cmp.compare(lVal, rVal)
                 }
                 if (cmpResult != 0) {
                     return cmpResult
@@ -70,4 +74,17 @@ internal class RelSort(
         init = false
         input.close()
     }
+
+    /**
+     * DO NOT USE FINAL.
+     *
+     * @property expr   The expression to sort by..
+     * @property desc   True iff DESC sort, otherwise ASC.
+     * @property last   True iff NULLS LAST sort, otherwise NULLS FIRST.
+     */
+    class Collation(
+        @JvmField var expr: Operator.Expr,
+        @JvmField var desc: Boolean,
+        @JvmField var last: Boolean,
+    )
 }

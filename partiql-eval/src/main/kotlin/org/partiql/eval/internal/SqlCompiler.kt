@@ -49,11 +49,12 @@ import org.partiql.plan.v1.operator.rel.RelUnion
 import org.partiql.plan.v1.operator.rel.RelUnpivot
 import org.partiql.plan.v1.operator.rel.RelVisitor
 import org.partiql.plan.v1.operator.rex.Rex
+import org.partiql.plan.v1.operator.rex.RexArray
+import org.partiql.plan.v1.operator.rex.RexBag
 import org.partiql.plan.v1.operator.rex.RexCall
 import org.partiql.plan.v1.operator.rex.RexCase
 import org.partiql.plan.v1.operator.rex.RexCast
 import org.partiql.plan.v1.operator.rex.RexCoalesce
-import org.partiql.plan.v1.operator.rex.RexCollection
 import org.partiql.plan.v1.operator.rex.RexError
 import org.partiql.plan.v1.operator.rex.RexLit
 import org.partiql.plan.v1.operator.rex.RexMissing
@@ -75,8 +76,8 @@ import org.partiql.planner.catalog.Session
  * The V1 implementation of a
  */
 internal class SqlCompiler(
-    @JvmField val mode: PartiQLEngine.Mode,
-    @JvmField val session: Session,
+    @JvmField var mode: PartiQLEngine.Mode,
+    @JvmField var session: Session,
 ) {
 
     private val relCompiler = RelCompiler()
@@ -160,12 +161,11 @@ internal class SqlCompiler(
             val lhsType = relType(emptyList(), emptySet())
             val rhsType = relType(emptyList(), emptySet())
 
-            return when (rel.getType()) {
+            return when (rel.getJoinType()) {
                 RelJoinType.INNER -> RelOpJoinInner(lhs, rhs, condition)
                 RelJoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType)
                 RelJoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType)
                 RelJoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType, rhsType)
-                RelJoinType.OTHER -> error("Unknown join type `OTHER`")
             }
         }
 
@@ -237,6 +237,14 @@ internal class SqlCompiler(
             TODO("Not yet implemented")
         }
 
+        override fun visitArray(rex: RexArray, ctx: Unit): Operator.Expr {
+            return super.visitArray(rex, ctx)
+        }
+
+        override fun visitBag(rex: RexBag, ctx: Unit): Operator.Expr {
+            return super.visitBag(rex, ctx)
+        }
+
         override fun visitCall(rex: RexCall, ctx: Unit): Operator.Expr {
             return super.visitCall(rex, ctx)
         }
@@ -251,10 +259,6 @@ internal class SqlCompiler(
 
         override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): Operator.Expr {
             return super.visitCoalesce(rex, ctx)
-        }
-
-        override fun visitCollection(rex: RexCollection, ctx: Unit): Operator.Expr {
-            return super.visitCollection(rex, ctx)
         }
 
         override fun visitError(rex: RexError, ctx: Unit): Operator.Expr {
