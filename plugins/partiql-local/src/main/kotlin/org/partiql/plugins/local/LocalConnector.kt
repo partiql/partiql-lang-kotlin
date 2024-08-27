@@ -17,7 +17,6 @@ package org.partiql.plugins.local
 import com.amazon.ionelement.api.StructElement
 import org.partiql.planner.catalog.Catalog
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.ConnectorBindings
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory
@@ -64,8 +63,6 @@ public class LocalConnector private constructor(
             public fun build(): LocalConnector = LocalConnector(name!!, root!!)
         }
     }
-
-    override fun getBindings(): ConnectorBindings = LocalBindings
 
     override fun getCatalog(): Catalog = catalog
 

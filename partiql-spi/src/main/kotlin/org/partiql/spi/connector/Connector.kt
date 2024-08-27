@@ -10,11 +10,6 @@ import org.partiql.planner.catalog.Catalog
 public interface Connector {
 
     /**
-     * Returns a [ConnectorBindings] which the engine uses to load values.
-     */
-    public fun getBindings(): ConnectorBindings
-
-    /**
      * Returns a [Catalog] which the planner uses to load catalog metadata.
      */
     public fun getCatalog(): Catalog

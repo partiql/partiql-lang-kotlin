@@ -2,45 +2,48 @@
 package org.partiql.eval.internal
 
 import org.partiql.eval.PartiQLEngine
-import org.partiql.eval.internal.operator.rex.ExprVarGlobal
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Ref
 import org.partiql.planner.catalog.Name
-import org.partiql.spi.connector.ConnectorBindings
+import org.partiql.planner.catalog.Session
+import org.partiql.planner.catalog.Table
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.SqlFnProvider
+import org.partiql.planner.catalog.Catalog as Cat
 
 /**
- *
- *
- * @property catalogs
+ * TODO Symbols will be removed in the V1 plan as it is no longer necessary.
  */
-
 internal class Symbols private constructor(private val catalogs: Array<C>) {
 
     private class C(
         val name: String,
-        val bindings: ConnectorBindings,
+        val catalog: Cat,
         val items: Array<Catalog.Item>,
     ) {
 
+        // TEMPORARY UNTIL ENGINE USES V1 PLANS
+        private val session: Session = Session.empty(catalog.getName())
+
         // TEMPORARY FOR DEPENDENCY REASONS
+        fun getTable(name: Name): Table? = catalog.getTable(session, name)
         fun getFn(name: Name, specific: String): Fn? = SqlFnProvider.getFn(specific)
         fun getAgg(name: Name, specific: String): Agg? = SqlFnProvider.getAgg(specific)
 
         override fun toString(): String = name
     }
 
-    fun getGlobal(ref: Ref): ExprVarGlobal {
+    fun getGlobal(ref: Ref): Table {
         val catalog = catalogs[ref.catalog]
         val item = catalog.items.getOrNull(ref.symbol)
         if (item == null || item !is Catalog.Item.Value) {
             error("Invalid reference $ref; missing value entry for catalog `$catalog`.")
         }
         val name = Name.of(item.path)
-        return ExprVarGlobal(name, catalog.bindings)
+        return catalog.getTable(name)
+            ?: error("Catalog `$catalog` has no entry for table $item")
     }
 
     fun getFn(ref: Ref): Fn {
@@ -83,10 +86,11 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
                     ?: error("The plan contains a catalog `${it.name}`, but this was absent from the engine's session")
                 C(
                     name = it.name,
-                    bindings = connector.getBindings(),
-                    items = it.items.toTypedArray()
+                    catalog = connector.getCatalog(),
+                    items = it.items.toTypedArray(),
                 )
             }.toTypedArray()
+
             return Symbols(catalogs)
         }
     }

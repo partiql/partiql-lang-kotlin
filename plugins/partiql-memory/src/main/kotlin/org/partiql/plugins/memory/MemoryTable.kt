@@ -3,14 +3,13 @@ package org.partiql.plugins.memory
 import org.partiql.eval.value.Datum
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Table
-import org.partiql.spi.connector.ConnectorBinding
 import org.partiql.types.PType
 
 public class MemoryTable private constructor(
     private val name: Name,
     private val schema: PType,
     private val datum: Datum,
-) : Table, ConnectorBinding {
+) : Table {
 
     override fun getName(): Name = name
     override fun getSchema(): PType = schema
