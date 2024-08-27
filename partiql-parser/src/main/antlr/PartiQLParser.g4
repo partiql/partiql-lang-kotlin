@@ -18,7 +18,7 @@ statement
     : dql COLON_SEMI? EOF          # QueryDql
     | dml COLON_SEMI? EOF          # QueryDml
     | ddl COLON_SEMI? EOF          # QueryDdl
-    | execCommand COLON_SEMI? EOF  # QueryExec
+    | execCommand COLON_SEMI? EOF  # QueryExec  // TODO delete in `v1` release
     ;
 
 /**
@@ -118,7 +118,8 @@ columnConstraintDef
  * DATA MANIPULATION LANGUAGE (DML)
  *
  */
-
+// TODO delete / rewrite rules ahead of `v1` release. Legacy DML rules can be deleted. Spec'd rules (e.g. PartiQL RFC
+//  and SQL spec) should be easier to rewrite once the legacy DML rules are deleted.
 dml
     : updateClause dmlBaseCommand+ whereClause? returningClause?  # DmlBaseWrapper
     | fromClause whereClause? dmlBaseCommand+ returningClause?    # DmlBaseWrapper
