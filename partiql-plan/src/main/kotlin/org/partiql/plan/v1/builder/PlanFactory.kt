@@ -441,10 +441,12 @@ public interface PlanFactory {
     /**
      * Create a [RexSubquery] instance.
      *
+     * TODO REMOVE constructor AND asScalar – TEMPORARY UNTIL SUBQUERIES ARE FIXED IN THE PLANNER.
+     *
      * @param rel
      * @return
      */
-    public fun rexSubquery(rel: Rel): RexSubquery = RexSubqueryImpl(rel)
+    public fun rexSubquery(rel: Rel, constructor: Rex, asScalar: Boolean): RexSubquery = RexSubqueryImpl(rel, constructor, asScalar)
 
     /**
      * Create a [RexSubqueryComp] instance.

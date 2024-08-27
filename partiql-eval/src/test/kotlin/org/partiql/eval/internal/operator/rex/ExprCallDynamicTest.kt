@@ -38,7 +38,7 @@ class ExprCallDynamicTest {
             val expr = ExprCallDynamic(
                 name = "example_function",
                 candidateFns = candidates,
-                args = arrayOf(ExprLiteral(lhs), ExprLiteral(rhs)),
+                args = arrayOf(ExprLit(lhs), ExprLit(rhs)),
             )
             val result = expr.eval(Environment.empty).check(PartiQLValueType.INT32)
             assertEquals(expectedIndex, result.int)

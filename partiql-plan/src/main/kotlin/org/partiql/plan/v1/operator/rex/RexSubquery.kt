@@ -10,18 +10,30 @@ public interface RexSubquery : Rex {
 
     public fun getRel(): Rel
 
+    // TODO REMOVE ME – TEMPORARY UNTIL PLANNER PROPERLY HANDLES SUBQUERIES
+    public fun getConstructor(): Rex
+
+    // TODO REMOVE ME – TEMPORARY UNTIL PLANNER PROPERLY HANDLES SUBQUERIES
+    public fun asScalar(): Boolean
+
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubquery(this, ctx)
 }
 
 /**
  * Implementation of scalar subquery coercion.
  */
-internal class RexSubqueryImpl(rel: Rel) : RexSubquery {
+internal class RexSubqueryImpl(rel: Rel, constructor: Rex, asScalar: Boolean) : RexSubquery {
 
     // DO NOT USE FINAL
     private var _rel = rel
+    private var _constructor = constructor
+    private var _asScalar = asScalar
 
     override fun getRel(): Rel = _rel
+
+    override fun getConstructor(): Rex = _constructor
+
+    override fun asScalar(): Boolean = _asScalar
 
     override fun getType(): PType {
         TODO("Not yet implemented")

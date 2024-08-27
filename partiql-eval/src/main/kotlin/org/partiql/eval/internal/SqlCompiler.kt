@@ -24,8 +24,24 @@ import org.partiql.eval.internal.operator.rel.RelOpSort
 import org.partiql.eval.internal.operator.rel.RelOpUnionAll
 import org.partiql.eval.internal.operator.rel.RelOpUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelOpUnpivot
-import org.partiql.eval.internal.operator.rex.ExprLiteral
+import org.partiql.eval.internal.operator.rex.ExprArray
+import org.partiql.eval.internal.operator.rex.ExprBag
+import org.partiql.eval.internal.operator.rex.ExprCast
+import org.partiql.eval.internal.operator.rex.ExprLit
+import org.partiql.eval.internal.operator.rex.ExprMissing
+import org.partiql.eval.internal.operator.rex.ExprPathIndex
+import org.partiql.eval.internal.operator.rex.ExprPathKey
+import org.partiql.eval.internal.operator.rex.ExprPathSymbol
 import org.partiql.eval.internal.operator.rex.ExprPermissive
+import org.partiql.eval.internal.operator.rex.ExprPivot
+import org.partiql.eval.internal.operator.rex.ExprSelect
+import org.partiql.eval.internal.operator.rex.ExprStructField
+import org.partiql.eval.internal.operator.rex.ExprStructPermissive
+import org.partiql.eval.internal.operator.rex.ExprStructStrict
+import org.partiql.eval.internal.operator.rex.ExprSubquery
+import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
+import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.eval.internal.operator.rex.ExprVarGlobal
 import org.partiql.eval.value.Datum
 import org.partiql.plan.relType
 import org.partiql.plan.v1.operator.rel.Rel
@@ -71,9 +87,10 @@ import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVisitor
 import org.partiql.planner.catalog.Session
+import org.partiql.types.PType
 
 /**
- * The V1 implementation of a
+ * See https://github.com/partiql/partiql-lang-kotlin/blob/v1/partiql-eval/src/main/kotlin/org/partiql/eval/internal/Compiler.kt
  */
 internal class SqlCompiler(
     @JvmField var mode: PartiQLEngine.Mode,
@@ -155,7 +172,7 @@ internal class SqlCompiler(
         override fun visitJoin(rel: RelJoin, ctx: Unit): Operator.Relation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
-            val condition = rel.getCondition()?.let { compile(it, ctx) } ?: ExprLiteral(Datum.bool(true))
+            val condition = rel.getCondition()?.let { compile(it, ctx) } ?: ExprLit(Datum.bool(true))
 
             // TODO JOIN SCHEMAS
             val lhsType = relType(emptyList(), emptySet())
@@ -229,6 +246,9 @@ internal class SqlCompiler(
      */
     private inner class RexCompiler : RexVisitor<Operator.Expr, Unit> {
 
+        //
+        private val unknown = PType.unknown()
+
         override fun defaultVisit(rex: Rex, ctx: Unit): Operator.Expr {
             return super.defaultVisit(rex, ctx)
         }
@@ -237,12 +257,20 @@ internal class SqlCompiler(
             TODO("Not yet implemented")
         }
 
+        override fun visitError(rex: RexError, ctx: Unit): Operator.Expr {
+            return super.visitError(rex, ctx)
+        }
+
+        // OPERATORS
+
         override fun visitArray(rex: RexArray, ctx: Unit): Operator.Expr {
-            return super.visitArray(rex, ctx)
+            val values = rex.getValues().map { compile(it, ctx) }
+            return ExprArray(values)
         }
 
         override fun visitBag(rex: RexBag, ctx: Unit): Operator.Expr {
-            return super.visitBag(rex, ctx)
+            val values = rex.getValues().map { compile(it, ctx) }
+            return ExprBag(values)
         }
 
         override fun visitCall(rex: RexCall, ctx: Unit): Operator.Expr {
@@ -254,67 +282,86 @@ internal class SqlCompiler(
         }
 
         override fun visitCast(rex: RexCast, ctx: Unit): Operator.Expr {
-            return super.visitCast(rex, ctx)
+            val operand = compile(rex.getOperand(), ctx)
+            val target = rex.getTarget()
+            return ExprCast(operand, target)
         }
 
         override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): Operator.Expr {
             return super.visitCoalesce(rex, ctx)
         }
 
-        override fun visitError(rex: RexError, ctx: Unit): Operator.Expr {
-            return super.visitError(rex, ctx)
-        }
-
         override fun visitLit(rex: RexLit, ctx: Unit): Operator.Expr {
-            return super.visitLit(rex, ctx)
+            return ExprLit(rex.getValue())
         }
 
         override fun visitMissing(rex: RexMissing, ctx: Unit): Operator.Expr {
-            return super.visitMissing(rex, ctx)
-        }
-
-        override fun visitPath(rex: RexPath, ctx: Unit): Operator.Expr {
-            return super.visitPath(rex, ctx)
+            return ExprMissing(unknown)
         }
 
         override fun visitPathIndex(rex: RexPath.Index, ctx: Unit): Operator.Expr {
-            return super.visitPathIndex(rex, ctx)
+            val root = compile(rex.getRoot(), ctx)
+            val index = compile(rex.getIndex(), ctx)
+            return ExprPathIndex(root, index)
         }
 
         override fun visitPathKey(rex: RexPath.Key, ctx: Unit): Operator.Expr {
-            return super.visitPathKey(rex, ctx)
+            val root = compile(rex.getRoot(), ctx)
+            val key = compile(rex.getKey(), ctx)
+            return ExprPathKey(root, key)
         }
 
         override fun visitPathSymbol(rex: RexPath.Symbol, ctx: Unit): Operator.Expr {
-            return super.visitPathSymbol(rex, ctx)
+            val root = compile(rex.getRoot(), ctx)
+            val symbol = rex.getSymbol()
+            return ExprPathSymbol(root, symbol)
         }
 
         override fun visitPivot(rex: RexPivot, ctx: Unit): Operator.Expr {
-            return super.visitPivot(rex, ctx)
+            val input = compile(rex.getInput(), ctx)
+            val key = compile(rex.getKey(), ctx)
+            val value = compile(rex.getValue(), ctx)
+            return ExprPivot(input, key, value)
         }
 
         override fun visitSelect(rex: RexSelect, ctx: Unit): Operator.Expr {
-            return super.visitSelect(rex, ctx)
+            val input = compile(rex.getInput(), ctx)
+            val constructor = compile(rex.getConstructor(), ctx)
+            val ordered = rex.getInput().isOrdered()
+            return ExprSelect(input, constructor, ordered)
         }
 
         override fun visitStruct(rex: RexStruct, ctx: Unit): Operator.Expr {
-            return super.visitStruct(rex, ctx)
+            val fields = rex.getFields().map {
+                val k = compile(it.getKey(), ctx)
+                val v = compile(it.getValue(), ctx).catch()
+                ExprStructField(k, v)
+            }
+            return when (mode) {
+                PartiQLEngine.Mode.PERMISSIVE -> ExprStructPermissive(fields)
+                PartiQLEngine.Mode.STRICT -> ExprStructStrict(fields)
+            }
         }
 
         override fun visitSubquery(rex: RexSubquery, ctx: Unit): Operator.Expr {
-            return super.visitSubquery(rex, ctx)
+            val rel = compile(rex.getRel(), ctx)
+            val constructor = compile(rex.getConstructor(), ctx)
+            return when (rex.asScalar()) {
+                true -> ExprSubquery(rel, constructor)
+                else -> ExprSubqueryRow(rel, constructor)
+            }
         }
 
         override fun visitSubqueryComp(rex: RexSubqueryComp, ctx: Unit): Operator.Expr {
-            return super.visitSubqueryComp(rex, ctx)
+            TODO("<exists predicate> and <unique predicate>")
         }
 
         override fun visitSubqueryIn(rex: RexSubqueryIn, ctx: Unit): Operator.Expr {
-            return super.visitSubqueryIn(rex, ctx)
+            TODO("<in predicate>")
         }
 
         override fun visitSubqueryTest(rex: RexSubqueryTest, ctx: Unit): Operator.Expr {
-            return super.visitSubqueryTest(rex, ctx)
+            TODO("<exists predicate> and <unique predicate>")
         }
 
         override fun visitSpread(rex: RexSpread, ctx: Unit): Operator.Expr {
@@ -322,11 +369,13 @@ internal class SqlCompiler(
         }
 
         override fun visitTable(rex: RexTable, ctx: Unit): Operator.Expr {
-            return super.visitTable(rex, ctx)
+            TODO("<table>")
         }
 
         override fun visitVar(rex: RexVar, ctx: Unit): Operator.Expr {
-            return super.visitVar(rex, ctx)
+            val depth = rex.getDepth()
+            val offset = rex.getOffset()
+            return ExprVar(depth, offset)
         }
     }
 

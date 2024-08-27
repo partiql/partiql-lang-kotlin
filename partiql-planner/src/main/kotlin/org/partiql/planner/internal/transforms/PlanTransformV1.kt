@@ -111,8 +111,8 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         override fun visitRexOpSubquery(node: IRex.Op.Subquery, ctx: PType): Any {
             val input = visitRel(node.rel, ctx)
             val constructor = visitRex(node.constructor, ctx)
-            val select = factory.relProject(input, listOf(constructor))
-            return factory.rexSubquery(select)
+            val isScalar = node.coercion == IRex.Op.Subquery.Coercion.SCALAR
+            return factory.rexSubquery(input, constructor, isScalar)
         }
 
         override fun visitRexOpPivot(node: IRex.Op.Pivot, ctx: PType): Any {
