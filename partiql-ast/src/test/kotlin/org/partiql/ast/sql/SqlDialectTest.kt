@@ -191,7 +191,7 @@ class SqlDialectTest {
             expect("SMALLINT") { typeSmallint() },
             expect("INT") { typeInt() },
             expect("REAL") { typeReal() },
-            expect("FLOAT32") { typeFloat32() },
+            expect("REAL") { typeFloat32() },
             expect("DOUBLE PRECISION") { typeFloat64() },
             expect("DECIMAL") { typeDecimal() },
             expect("DECIMAL(2)") { typeDecimal(2) },
@@ -870,7 +870,7 @@ class SqlDialectTest {
                     value = v("x")
                 }
             },
-            expect("TRIM(BOTH x)") {
+            expect("TRIM(BOTH FROM x)") {
                 exprTrim {
                     value = v("x")
                     spec = Expr.Trim.Spec.BOTH
