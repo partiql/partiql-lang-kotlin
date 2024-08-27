@@ -77,6 +77,7 @@ import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexTableImpl
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVarImpl
+import org.partiql.planner.catalog.Table
 import org.partiql.spi.fn.Fn
 import org.partiql.types.PType
 
@@ -505,9 +506,8 @@ public interface PlanFactory {
     /**
      * Create a [RexTable] instance.
      *
-     * @param catalog
-     * @param name
+     * @param table
      * @return
      */
-    public fun rexTable(catalog: String, name: String): RexTable = RexTableImpl(catalog, name)
+    public fun rexTable(table: Table): RexTable = RexTableImpl(table)
 }

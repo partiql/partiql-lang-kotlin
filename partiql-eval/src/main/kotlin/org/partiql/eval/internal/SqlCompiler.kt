@@ -26,7 +26,10 @@ import org.partiql.eval.internal.operator.rel.RelOpUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelOpUnpivot
 import org.partiql.eval.internal.operator.rex.ExprArray
 import org.partiql.eval.internal.operator.rex.ExprBag
+import org.partiql.eval.internal.operator.rex.ExprCaseBranch
+import org.partiql.eval.internal.operator.rex.ExprCaseSearched
 import org.partiql.eval.internal.operator.rex.ExprCast
+import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprLit
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
@@ -40,8 +43,9 @@ import org.partiql.eval.internal.operator.rex.ExprStructPermissive
 import org.partiql.eval.internal.operator.rex.ExprStructStrict
 import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
+import org.partiql.eval.internal.operator.rex.ExprTable
+import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVar
-import org.partiql.eval.internal.operator.rex.ExprVarGlobal
 import org.partiql.eval.value.Datum
 import org.partiql.plan.relType
 import org.partiql.plan.v1.operator.rel.Rel
@@ -249,16 +253,12 @@ internal class SqlCompiler(
         //
         private val unknown = PType.unknown()
 
-        override fun defaultVisit(rex: Rex, ctx: Unit): Operator.Expr {
-            return super.defaultVisit(rex, ctx)
-        }
-
         override fun defaultReturn(rex: Rex, ctx: Unit): Operator.Expr {
             TODO("Not yet implemented")
         }
 
         override fun visitError(rex: RexError, ctx: Unit): Operator.Expr {
-            return super.visitError(rex, ctx)
+            throw IllegalStateException(rex.getMessage())
         }
 
         // OPERATORS
@@ -274,11 +274,20 @@ internal class SqlCompiler(
         }
 
         override fun visitCall(rex: RexCall, ctx: Unit): Operator.Expr {
-            return super.visitCall(rex, ctx)
+            TODO("<call>")
         }
 
         override fun visitCase(rex: RexCase, ctx: Unit): Operator.Expr {
-            return super.visitCase(rex, ctx)
+            if (rex.getMatch() != null) {
+                TODO("<case> expression")
+            }
+            val branches = rex.getBranches().map {
+                val value = compile(it.getCondition(), ctx)
+                val result = compile(it.getResult(), ctx)
+                ExprCaseBranch(value, result)
+            }
+            val default = rex.getDefault()?.let { compile(it, ctx) }
+            return ExprCaseSearched(branches, default)
         }
 
         override fun visitCast(rex: RexCast, ctx: Unit): Operator.Expr {
@@ -288,7 +297,8 @@ internal class SqlCompiler(
         }
 
         override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): Operator.Expr {
-            return super.visitCoalesce(rex, ctx)
+            val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
+            return ExprCoalesce(args)
         }
 
         override fun visitLit(rex: RexLit, ctx: Unit): Operator.Expr {
@@ -365,11 +375,12 @@ internal class SqlCompiler(
         }
 
         override fun visitSpread(rex: RexSpread, ctx: Unit): Operator.Expr {
-            return super.visitSpread(rex, ctx)
+            val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
+            return ExprTupleUnion(args)
         }
 
         override fun visitTable(rex: RexTable, ctx: Unit): Operator.Expr {
-            TODO("<table>")
+            return ExprTable(rex.getTable())
         }
 
         override fun visitVar(rex: RexVar, ctx: Unit): Operator.Expr {
