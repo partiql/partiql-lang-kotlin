@@ -8,8 +8,6 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprAnd (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$And;
 	public static final fun exprBetween (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$Between;
 	public static final fun exprCall (Lorg/partiql/ast/Identifier;Ljava/util/List;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/Expr$Call;
-	public static final fun exprCanCast (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)Lorg/partiql/ast/Expr$CanCast;
-	public static final fun exprCanLosslessCast (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)Lorg/partiql/ast/Expr$CanLosslessCast;
 	public static final fun exprCase (Lorg/partiql/ast/Expr;Ljava/util/List;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Case;
 	public static final fun exprCaseBranch (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Case$Branch;
 	public static final fun exprCast (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)Lorg/partiql/ast/Expr$Cast;
@@ -379,48 +377,6 @@ public final class org/partiql/ast/Expr$Call : org/partiql/ast/Expr {
 
 public final class org/partiql/ast/Expr$Call$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/ExprCallBuilder;
-}
-
-public final class org/partiql/ast/Expr$CanCast : org/partiql/ast/Expr {
-	public static final field Companion Lorg/partiql/ast/Expr$CanCast$Companion;
-	public final field asType Lorg/partiql/ast/Type;
-	public final field value Lorg/partiql/ast/Expr;
-	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/ExprCanCastBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Expr;
-	public final fun component2 ()Lorg/partiql/ast/Type;
-	public final fun copy (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)Lorg/partiql/ast/Expr$CanCast;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$CanCast;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;ILjava/lang/Object;)Lorg/partiql/ast/Expr$CanCast;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Expr$CanCast$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/ExprCanCastBuilder;
-}
-
-public final class org/partiql/ast/Expr$CanLosslessCast : org/partiql/ast/Expr {
-	public static final field Companion Lorg/partiql/ast/Expr$CanLosslessCast$Companion;
-	public final field asType Lorg/partiql/ast/Type;
-	public final field value Lorg/partiql/ast/Expr;
-	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/ExprCanLosslessCastBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Expr;
-	public final fun component2 ()Lorg/partiql/ast/Type;
-	public final fun copy (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)Lorg/partiql/ast/Expr$CanLosslessCast;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$CanLosslessCast;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;ILjava/lang/Object;)Lorg/partiql/ast/Expr$CanLosslessCast;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Expr$CanLosslessCast$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/ExprCanLosslessCastBuilder;
 }
 
 public final class org/partiql/ast/Expr$Case : org/partiql/ast/Expr {
@@ -3864,10 +3820,6 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun exprBetween$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Between;
 	public final fun exprCall (Lorg/partiql/ast/Identifier;Ljava/util/List;Lorg/partiql/ast/SetQuantifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Call;
 	public static synthetic fun exprCall$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Ljava/util/List;Lorg/partiql/ast/SetQuantifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Call;
-	public final fun exprCanCast (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$CanCast;
-	public static synthetic fun exprCanCast$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$CanCast;
-	public final fun exprCanLosslessCast (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$CanLosslessCast;
-	public static synthetic fun exprCanLosslessCast$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$CanLosslessCast;
 	public final fun exprCase (Lorg/partiql/ast/Expr;Ljava/util/List;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Case;
 	public static synthetic fun exprCase$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Ljava/util/List;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Case;
 	public final fun exprCaseBranch (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Case$Branch;
@@ -4277,32 +4229,6 @@ public final class org/partiql/ast/builder/ExprCallBuilder {
 	public final fun setFunction (Lorg/partiql/ast/Identifier;)V
 	public final fun setSetq (Lorg/partiql/ast/SetQuantifier;)V
 	public final fun setq (Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/builder/ExprCallBuilder;
-}
-
-public final class org/partiql/ast/builder/ExprCanCastBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun asType (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/ExprCanCastBuilder;
-	public final fun build ()Lorg/partiql/ast/Expr$CanCast;
-	public final fun getAsType ()Lorg/partiql/ast/Type;
-	public final fun getValue ()Lorg/partiql/ast/Expr;
-	public final fun setAsType (Lorg/partiql/ast/Type;)V
-	public final fun setValue (Lorg/partiql/ast/Expr;)V
-	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprCanCastBuilder;
-}
-
-public final class org/partiql/ast/builder/ExprCanLosslessCastBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun asType (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/ExprCanLosslessCastBuilder;
-	public final fun build ()Lorg/partiql/ast/Expr$CanLosslessCast;
-	public final fun getAsType ()Lorg/partiql/ast/Type;
-	public final fun getValue ()Lorg/partiql/ast/Expr;
-	public final fun setAsType (Lorg/partiql/ast/Type;)V
-	public final fun setValue (Lorg/partiql/ast/Expr;)V
-	public final fun value (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ExprCanLosslessCastBuilder;
 }
 
 public final class org/partiql/ast/builder/ExprCaseBranchBuilder {
@@ -6156,10 +6082,6 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/A
 	public fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/Expr$Call;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public synthetic fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public synthetic fun visitExprCanLosslessCast (Lorg/partiql/ast/Expr$CanLosslessCast;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprCanLosslessCast (Lorg/partiql/ast/Expr$CanLosslessCast;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprCase (Lorg/partiql/ast/Expr$Case;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCase (Lorg/partiql/ast/Expr$Case;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprCaseBranch (Lorg/partiql/ast/Expr$Case$Branch;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6415,10 +6337,6 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitExprCanLosslessCast (Lorg/partiql/ast/Expr$CanLosslessCast;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprCanLosslessCast (Lorg/partiql/ast/Expr$CanLosslessCast;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprCase (Lorg/partiql/ast/Expr$Case;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCase (Lorg/partiql/ast/Expr$Case;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprCaseBranch (Lorg/partiql/ast/Expr$Case$Branch;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6741,8 +6659,6 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitExprAnd (Lorg/partiql/ast/Expr$And;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprCanLosslessCast (Lorg/partiql/ast/Expr$CanLosslessCast;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCase (Lorg/partiql/ast/Expr$Case;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCaseBranch (Lorg/partiql/ast/Expr$Case$Branch;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCast (Lorg/partiql/ast/Expr$Cast;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6930,8 +6846,6 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitExprAnd (Lorg/partiql/ast/Expr$And;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprBetween (Lorg/partiql/ast/Expr$Between;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCall (Lorg/partiql/ast/Expr$Call;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprCanCast (Lorg/partiql/ast/Expr$CanCast;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprCanLosslessCast (Lorg/partiql/ast/Expr$CanLosslessCast;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCase (Lorg/partiql/ast/Expr$Case;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCaseBranch (Lorg/partiql/ast/Expr$Case$Branch;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCast (Lorg/partiql/ast/Expr$Cast;Ljava/lang/Object;)Ljava/lang/Object;

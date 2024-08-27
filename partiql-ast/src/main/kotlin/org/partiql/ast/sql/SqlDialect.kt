@@ -509,26 +509,6 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         return h
     }
 
-    override fun visitExprCanCast(node: Expr.CanCast, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("CAN_CAST(")
-        h = visitExprWrapped(node.value, h)
-        h = h concat r(" AS ")
-        h = visitType(node.asType, h)
-        h = h concat r(")")
-        return h
-    }
-
-    override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("CAN_LOSSLESS_CAST(")
-        h = visitExprWrapped(node.value, h)
-        h = h concat r(" AS ")
-        h = visitType(node.asType, h)
-        h = h concat r(")")
-        return h
-    }
-
     override fun visitExprDateAdd(node: Expr.DateAdd, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("DATE_ADD(")

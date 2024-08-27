@@ -131,6 +131,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
         }
         override fun toString(): String = "$expression -> ${expected ?: expectedErrorCode}"
 
+        // TODO: delete these tests ahead of `v1` release
         fun toCanCast(): CastCase {
             return when (expectedErrorCode?.category) {
                 // semantic and parser errors are compilation failures - so they should behave the same
@@ -150,6 +151,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             }
         }
 
+        // TODO: delete these tests ahead of `v1` release
         fun toCanLosslessCast(): CastCase {
             return when (expectedErrorCode?.category) {
                 // semantic errors are compilation failures - so they should behave the same
@@ -184,6 +186,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     }
 
                     copy(
+                        // TODO: delete these tests ahead of `v1` release
                         funcName = "CAN_LOSSLESS_CAST",
                         expected = newExpected,
                         expectedErrorCode = null,
@@ -1364,6 +1367,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 Pair(case.castCase.source, case.compileOptionBlock)
             }
 
+        // TODO: delete these tests ahead of `v1` release
         private val canCastAndIsToAnyConfiguredTestCases = castToAnyConfiguredTestCases.map { case ->
             val newCastCase = when (case.castCase.expectedErrorCode) {
                 null -> case.castCase.toCanCast()
@@ -1385,6 +1389,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             )
         }
 
+        // TODO: delete these tests ahead of `v1` release
         private val canCastConfiguredTestCases = honorParamCastTestCases.flatMap { case ->
             typingModes.map { (typingModeName, typingModeConfig) ->
                 ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName") {
@@ -1394,6 +1399,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             }
         }
 
+        // TODO: delete these tests ahead of `v1` release
         private val canLosslessCastConfiguredTestCases = honorParamCastTestCases.flatMap { case ->
             typingModes.map { (typingModeName, typingModeConfig) ->
                 ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName") {
@@ -1424,6 +1430,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             }
         }
 
+        // TODO: delete these tests ahead of `v1` release
         private val canCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->
             ConfiguredCastCase(case.toCanCast(), "LEGACY_ERROR_MODE") {
                 legacyTypingMode()
@@ -1438,6 +1445,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             }
         }
 
+        // TODO: delete these tests ahead of `v1` release
         private val canLosslessCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->
             ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_ERROR_MODE") {
                 legacyTypingMode()

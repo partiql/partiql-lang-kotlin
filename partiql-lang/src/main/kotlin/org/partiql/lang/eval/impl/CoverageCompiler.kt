@@ -168,14 +168,6 @@ internal class CoverageCompiler(
         super.compileIn(expr, metas)
     }
 
-    override fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.CAN_CAST, metas) {
-        super.compileCanCast(expr, metas)
-    }
-
-    override fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.CAN_LOSSLESS_CAST, metas) {
-        super.compileCanLosslessCast(expr, metas)
-    }
-
     override fun compileLt(expr: PartiqlAst.Expr.Lt, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.LT, metas) {
         super.compileLt(expr, metas)
     }

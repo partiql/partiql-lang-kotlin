@@ -458,18 +458,6 @@ expr::[
     as_type:  '.type',
   },
 
-  // PartiQL special form `CAN_CAST`
-  can_cast::{
-    value:    expr,
-    as_type:  '.type',
-  },
-
-  // PartiQL special form `CAN_LOSSLESS_CAST`
-  can_lossless_cast::{
-    value:    expr,
-    as_type:  '.type',
-  },
-
   // PartiQL special form `DATE_ADD ( <datetime field> , <expr> , <expr>)`
   date_add::{
     field:  datetime_field,

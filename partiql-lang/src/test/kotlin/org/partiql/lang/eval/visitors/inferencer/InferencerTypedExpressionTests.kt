@@ -164,6 +164,7 @@ class InferencerTypedExpressionTests {
                     )
                 )
             ),
+            // TODO: delete this test ahead of `v1` release
             TestCase(
                 name = "can_lossless_cast int as decimal",
                 originalSql = "CAN_LOSSLESS_CAST(an_int AS DECIMAL)",

@@ -559,11 +559,13 @@ class QueryPrettyPrinterTest {
     }
 
     @Test
+    // TODO: delete this test ahead of `v1` release
     fun canCast() {
         checkPrettyPrintQuery("CAN_CAST (1 AS STRING)", "CAN_CAST (1 AS STRING)")
     }
 
     @Test
+    // TODO: delete this test ahead of `v1` release
     fun canLosslessCast() {
         checkPrettyPrintQuery("CAN_LOSSLESS_CAST (1 AS STRING)", "CAN_LOSSLESS_CAST (1 AS STRING)")
     }
