@@ -18,6 +18,7 @@ class ReportAnalyzer(
         const val ICON_X = ":x:"
         const val ICON_CHECK = ":white_check_mark:"
         const val ICON_CIRCLE_RED = ":o:"
+        const val ICON_DIAMOND_ORANGE = ":large_orange_diamond:"
         const val BASE = "BASE"
         const val TARGET = "TARGET"
     }
@@ -63,7 +64,7 @@ class ReportAnalyzer(
         out.appendLine(tableRow("% Passing", firstPassingPercent, secondPassingPercent))
         out.appendLine(tableRow("Passing", firstPassingSize, secondPassingSize, true))
         out.appendLine(tableRow("Failing", firstFailingSize, secondFailingSize, false))
-        out.appendLine(tableRow("Ignored", firstIgnoreSize, secondIgnoreSize, false))
+        out.appendLine(tableRow("Ignored", firstIgnoreSize, secondIgnoreSize, false, badIcon = ICON_DIAMOND_ORANGE))
         out.appendLine(tableRow("Total Tests", firstTotalSize, secondTotalSize, true))
     }
 
@@ -71,23 +72,23 @@ class ReportAnalyzer(
         val firstString = "%.2f".format(first)
         val secondString = "%.2f".format(second)
         val delta = second - first
-        val deltaIcon = getIconForComparison(first, second, true)
+        val deltaIcon = getIconForComparison(first, second, true, ICON_CHECK, ICON_CIRCLE_RED)
         val deltaString = "%.2f".format(delta)
         return "| $name | $firstString% | $secondString% | $deltaString% $deltaIcon |"
     }
 
-    private fun tableRow(name: String, first: Int, second: Int, positiveDeltaGood: Boolean): String {
+    private fun tableRow(name: String, first: Int, second: Int, positiveDeltaGood: Boolean, goodIcon: String = ICON_CHECK, badIcon: String = ICON_CIRCLE_RED): String {
         val delta = second - first
-        val deltaIcon = getIconForComparison(first, second, positiveDeltaGood)
+        val deltaIcon = getIconForComparison(first, second, positiveDeltaGood, goodIcon, badIcon)
         return "| $name | $first | $second | $delta $deltaIcon |"
     }
 
-    private fun <T> getIconForComparison(first: Comparable<T>, second: T, positiveDeltaGood: Boolean): String {
+    private fun <T> getIconForComparison(first: Comparable<T>, second: T, positiveDeltaGood: Boolean, goodIcon: String, badIcon: String): String {
         val comparison = first.compareTo(second)
         return when {
-            comparison < 0 -> if (positiveDeltaGood) ICON_CHECK else ICON_CIRCLE_RED
-            comparison == 0 -> ICON_CHECK
-            else -> if (positiveDeltaGood) ICON_CIRCLE_RED else ICON_CHECK
+            comparison < 0 -> if (positiveDeltaGood) goodIcon else badIcon
+            comparison == 0 -> goodIcon
+            else -> if (positiveDeltaGood) badIcon else goodIcon
         }
     }
 

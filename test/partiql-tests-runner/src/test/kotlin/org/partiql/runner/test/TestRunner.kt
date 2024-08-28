@@ -1,5 +1,6 @@
 package org.partiql.runner.test
 
+import org.junit.jupiter.api.Assumptions
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.runner.schema.Assertion
 import org.partiql.runner.schema.TestCase
@@ -10,18 +11,14 @@ import org.partiql.runner.schema.TestCase
 class TestRunner<T, V>(private val factory: TestExecutor.Factory<T, V>) {
 
     fun test(case: TestCase.Eval, skipList: List<Pair<String, CompileOptions>>) {
-        if (skipList.contains((Pair(case.name, case.compileOptions)))) {
-            return
-        }
+        Assumptions.assumeFalse(skipList.contains((Pair(case.name, case.compileOptions))))
         val executor = factory.create(case.env, case.compileOptions)
         val input = case.statement
         run(input, case, executor)
     }
 
     fun test(case: TestCase.Equiv, skipList: List<Pair<String, CompileOptions>>) {
-        if (skipList.contains((Pair(case.name, case.compileOptions)))) {
-            return
-        }
+        Assumptions.assumeFalse(skipList.contains((Pair(case.name, case.compileOptions))))
         val executor = factory.create(case.env, case.compileOptions)
         case.statements.forEach { run(it, case, executor) }
     }

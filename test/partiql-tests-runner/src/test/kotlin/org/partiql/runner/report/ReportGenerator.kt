@@ -9,13 +9,22 @@ import java.io.File
 import java.nio.file.Files
 import kotlin.io.path.Path
 
-class ReportGenerator(val engine: String) : TestWatcher, AfterAllCallback {
-    var failingTests = emptySet<String>()
-    var passingTests = emptySet<String>()
-    var ignoredTests = emptySet<String>()
+class ReportGenerator(
+    private val engine: String
+) : TestWatcher, AfterAllCallback {
+
+    private var failingTests = emptySet<String>()
+    private var passingTests = emptySet<String>()
+    private var ignoredTests = emptySet<String>()
+
     override fun testFailed(context: ExtensionContext?, cause: Throwable?) {
         failingTests += context?.displayName ?: ""
         super.testFailed(context, cause)
+    }
+
+    override fun testAborted(context: ExtensionContext?, cause: Throwable?) {
+        ignoredTests += context?.displayName ?: ""
+        super.testAborted(context, cause)
     }
 
     override fun testSuccessful(context: ExtensionContext?) {
