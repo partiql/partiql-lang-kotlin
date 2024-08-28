@@ -78,7 +78,9 @@ import org.partiql.plan.v1.operator.rex.RexCoalesce
 import org.partiql.plan.v1.operator.rex.RexError
 import org.partiql.plan.v1.operator.rex.RexLit
 import org.partiql.plan.v1.operator.rex.RexMissing
-import org.partiql.plan.v1.operator.rex.RexPath
+import org.partiql.plan.v1.operator.rex.RexPathIndex
+import org.partiql.plan.v1.operator.rex.RexPathKey
+import org.partiql.plan.v1.operator.rex.RexPathSymbol
 import org.partiql.plan.v1.operator.rex.RexPivot
 import org.partiql.plan.v1.operator.rex.RexSelect
 import org.partiql.plan.v1.operator.rex.RexSpread
@@ -309,22 +311,22 @@ internal class SqlCompiler(
             return ExprMissing(unknown)
         }
 
-        override fun visitPathIndex(rex: RexPath.Index, ctx: Unit): Operator.Expr {
-            val root = compile(rex.getRoot(), ctx)
+        override fun visitPathIndex(rex: RexPathIndex, ctx: Unit): Operator.Expr {
+            val operand = compile(rex.getOperand(), ctx)
             val index = compile(rex.getIndex(), ctx)
-            return ExprPathIndex(root, index)
+            return ExprPathIndex(operand, index)
         }
 
-        override fun visitPathKey(rex: RexPath.Key, ctx: Unit): Operator.Expr {
-            val root = compile(rex.getRoot(), ctx)
+        override fun visitPathKey(rex: RexPathKey, ctx: Unit): Operator.Expr {
+            val operand = compile(rex.getOperand(), ctx)
             val key = compile(rex.getKey(), ctx)
-            return ExprPathKey(root, key)
+            return ExprPathKey(operand, key)
         }
 
-        override fun visitPathSymbol(rex: RexPath.Symbol, ctx: Unit): Operator.Expr {
-            val root = compile(rex.getRoot(), ctx)
+        override fun visitPathSymbol(rex: RexPathSymbol, ctx: Unit): Operator.Expr {
+            val operand = compile(rex.getOperand(), ctx)
             val symbol = rex.getSymbol()
-            return ExprPathSymbol(root, symbol)
+            return ExprPathSymbol(operand, symbol)
         }
 
         override fun visitPivot(rex: RexPivot, ctx: Unit): Operator.Expr {

@@ -37,13 +37,11 @@ public interface RexVisitor<R, C> {
 
     public fun visitMissing(rex: RexMissing, ctx: C): R = defaultVisit(rex, ctx)
 
-    public fun visitPath(rex: RexPath, ctx: C): R = rex.accept(this, ctx)
+    public fun visitPathIndex(rex: RexPathIndex, ctx: C): R = defaultVisit(rex, ctx)
 
-    public fun visitPathIndex(rex: RexPath.Index, ctx: C): R = defaultVisit(rex, ctx)
+    public fun visitPathKey(rex: RexPathKey, ctx: C): R = defaultVisit(rex, ctx)
 
-    public fun visitPathKey(rex: RexPath.Key, ctx: C): R = defaultVisit(rex, ctx)
-
-    public fun visitPathSymbol(rex: RexPath.Symbol, ctx: C): R = defaultVisit(rex, ctx)
+    public fun visitPathSymbol(rex: RexPathSymbol, ctx: C): R = defaultVisit(rex, ctx)
 
     public fun visitPivot(rex: RexPivot, ctx: C): R = defaultVisit(rex, ctx)
 

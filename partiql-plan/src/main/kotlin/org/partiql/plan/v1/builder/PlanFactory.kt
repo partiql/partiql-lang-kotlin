@@ -57,6 +57,12 @@ import org.partiql.plan.v1.operator.rex.RexLit
 import org.partiql.plan.v1.operator.rex.RexLitImpl
 import org.partiql.plan.v1.operator.rex.RexMissing
 import org.partiql.plan.v1.operator.rex.RexMissingImpl
+import org.partiql.plan.v1.operator.rex.RexPathIndex
+import org.partiql.plan.v1.operator.rex.RexPathIndexImpl
+import org.partiql.plan.v1.operator.rex.RexPathKey
+import org.partiql.plan.v1.operator.rex.RexPathKeyImpl
+import org.partiql.plan.v1.operator.rex.RexPathSymbol
+import org.partiql.plan.v1.operator.rex.RexPathSymbolImpl
 import org.partiql.plan.v1.operator.rex.RexPivot
 import org.partiql.plan.v1.operator.rex.RexPivotImpl
 import org.partiql.plan.v1.operator.rex.RexSelect
@@ -203,11 +209,7 @@ public interface PlanFactory {
     public fun relIterate(input: Rex): RelIterate = RelIterateImpl(input)
 
     /**
-<<<<<<< HEAD
      * Create a [RelJoin] instance for a cross join.
-=======
-     * Create a [RelJoin] instance for a lateral cross join.
->>>>>>> e786d49b (Adds V1 DataFrame style builders)
      *
      *   - <lhs>, <rhs>
      *   - <lhs> CROSS JOIN <rhs>
@@ -402,7 +404,32 @@ public interface PlanFactory {
      */
     public fun rexLit(value: Datum): RexLit = RexLitImpl(value)
 
-    // TODO PATHS
+    /**
+     * Create a [RexPathIndex] instance.
+     *
+     * @param operand
+     * @param index
+     * @return
+     */
+    public fun rexPathIndex(operand: Rex, index: Rex): RexPathIndex = RexPathIndexImpl(operand, index)
+
+    /**
+     * Create a [RexPathKey] instance.
+     *
+     * @param operand
+     * @param key
+     * @return
+     */
+    public fun rexPathKey(operand: Rex, key: Rex): RexPathKey = RexPathKeyImpl(operand, key)
+
+    /**
+     * Create a [RexPathSymbol] instance.
+     *
+     * @param operand
+     * @param symbol
+     * @return
+     */
+    public fun rexPathSymbol(operand: Rex, symbol: String): RexPathSymbol = RexPathSymbolImpl(operand, symbol)
 
     /**
      * Create a [RexPivot] instance.
