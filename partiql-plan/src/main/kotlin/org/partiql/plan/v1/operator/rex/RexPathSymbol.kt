@@ -17,13 +17,13 @@ public interface RexPathSymbol : Rex {
 /**
  * Standard internal implementation for [RexPathSymbol].
  */
-internal class RexPathSymbolImpl(root: Rex, symbol: String) : RexPathSymbol {
+internal class RexPathSymbolImpl(operand: Rex, symbol: String) : RexPathSymbol {
 
     // DO NOT USE FINAL
-    private var _root = root
+    private var _operand = operand
     private var _symbol = symbol
 
-    override fun getOperand() = _root
+    override fun getOperand() = _operand
 
     override fun getSymbol() = _symbol
 
@@ -31,5 +31,5 @@ internal class RexPathSymbolImpl(root: Rex, symbol: String) : RexPathSymbol {
         TODO("Not yet implemented")
     }
 
-    override fun getChildren(): Collection<Rex> = listOf(_root)
+    override fun getChildren(): Collection<Rex> = listOf(_operand)
 }
