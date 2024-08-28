@@ -60,7 +60,207 @@ class ConformanceTestEval : ConformanceTestBase<PartiQLStatement<*>, PartiQLResu
         Pair("subtractionOutOfAllowedPrecision", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     )
 
-    private val testsToFix: List<Pair<String, CompileOptions>> = aliasTests + arithmeticCases
+    /**
+     * TODO: Fix these once https://github.com/partiql/partiql-tests/pull/124 is decided upon.
+     */
+    private val undefinedVariableCases = listOf(
+        Pair("GROUP BY binding referenced in FROM clause", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("GROUP BY binding referenced in WHERE clause", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("GROUP AS binding referenced in FROM clause", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("GROUP AS binding referenced in WHERE clause", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair(
+            "GROUP BY with JOIN : SELECT supplierName, COUNT(*) as the_count FROM suppliers AS s INNER JOIN products AS p ON s.supplierId = p.supplierId GROUP BY supplierName",
+            COERCE_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "GROUP BY with JOIN : SELECT supplierName, COUNT(*) as the_count FROM suppliers AS s INNER JOIN products AS p ON s.supplierId = p.supplierId GROUP BY supplierName",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "SELECT col1, g FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g",
+            COERCE_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "SELECT col1, g FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g",
+            COERCE_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "SELECT col1, g FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g",
+            COERCE_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "SELECT col1, g FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g",
+            COERCE_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair("select fld3,period from t1,t2 where fld1 = 011401", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("select fld3,period from t2,t1 where companynr*10 = 37*10", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair(
+            "undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing",
+            COERCE_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing",
+            COERCE_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair("MYSQL_SELECT_20", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("MYSQL_SELECT_20", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("MYSQL_SELECT_21", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("MYSQL_SELECT_21", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val negativeOffset = listOf(
+        Pair("offset -1", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("offset -1", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("offset 1-2", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val mistypedCollAggs = listOf(
+        Pair("COLL_MAX non-collection", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("COLL_AVG non-collection", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("COLL_COUNT non-collection", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("COLL_SUM non-collection", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("COLL_MIN non-collection", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("COLL_ANY non-collection", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("COLL_SOME non-collection", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("COLL_EVERY non-collection", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val miscellaneousCases = listOf(
+        Pair("subscript with non-existent variable in lowercase", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("subscript with non-existent variable in uppercase", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair(
+            "repeated field on struct is ambiguous{identifier:\"REPEATED\",cn:9,bn:\"REPEATED\"}",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "repeated field on struct is ambiguous{identifier:\" \\\"repeated\\\" \",cn:10,bn:\"repeated\"}",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair("invalid extract year from time", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("invalid extract month from time", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("invalid extract day from time", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("invalid extract month from time with time zone", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("invalid extract day from time with time zone", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val mistypedFunctions = listOf(
+        Pair("MOD(MISSING, 'some string')", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("MOD('some string', MISSING)", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("MOD(NULL, 'some string')", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("MOD('some string', NULL)", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("MOD(3, 'some string')", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("MOD('some string', 3)", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("CARDINALITY('foo') type mismatch", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("OCTET_LENGTH invalid type", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("CHARACTER_LENGTH invalid type", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("ABS('foo')", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("POSITION invalid type in string", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("POSITION string in invalid type", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("BIT_LENGTH invalid type", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val invalidCasts = listOf(
+        Pair(
+            "cast to int invalid target type{value:\"`2017T`\",target:\"TIMESTAMP\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "cast to int invalid target type{value:\" `{{\\\"\\\"}}` \",target:\"CLOB\"}",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair(
+            "cast to int invalid target type{value:\" `{{\\\"1\\\"}}` \",target:\"CLOB\"}",
+            ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair("cast to int invalid target type{value:\"`{{}}`\",target:\"BLOB\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"[1, 2]\",target:\"LIST\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"[1]\",target:\"LIST\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"[]\",target:\"LIST\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"`(1 2)`\",target:\"SEXP\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"`(1)`\",target:\"SEXP\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"`()`\",target:\"SEXP\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"{'a': 1}\",target:\"STRUCT\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair(
+            "cast to int invalid target type{value:\"{'a': '12'}\",target:\"STRUCT\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS
+        ),
+        Pair("cast to int invalid target type{value:\"{}\",target:\"STRUCT\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"<<1, 2>>\",target:\"BAG\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"<<1>>\",target:\"BAG\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("cast to int invalid target type{value:\"<<>>\",target:\"BAG\"}", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val specialForms = listOf(
+        Pair("More than one character given for ESCAPE", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("LIKE bad value type", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("LIKE bad pattern type", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("LIKE bad escape type", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val operators = listOf(
+        Pair("array navigation with wrongly typed array index", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("data type mismatch in comparison expression", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("data type mismatch in logical expression", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val bagOps = listOf(
+        Pair("Example 6 - Value Coercion not union-compatible", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("Example 6 - Value Coercion not union-compatible", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO: Determine whether SEXP should be treated as a first-class collection.
+     *  See: https://github.com/partiql/partiql-tests/pull/126#discussion_r1710271573
+     */
+    private val sexpTests = listOf(
+        Pair("projectOfSexp", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+        Pair("projectOfSexp", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    )
+
+    /**
+     * TODO
+     */
+    private val testsToFix: List<Pair<String, CompileOptions>> =
+        aliasTests + arithmeticCases + undefinedVariableCases + sexpTests + negativeOffset + mistypedFunctions + invalidCasts + miscellaneousCases + mistypedCollAggs + specialForms + operators + bagOps
 
     /**
      * This holds all of the Graph Pattern Matching Language conformance tests. The new evaluator does not yet support
