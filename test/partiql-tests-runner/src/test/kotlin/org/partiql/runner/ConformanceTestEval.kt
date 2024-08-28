@@ -159,7 +159,7 @@ class ConformanceTestEval : ConformanceTestBase<PartiQLStatement<*>, PartiQLResu
             ERROR_EVAL_MODE_COMPILE_OPTIONS
         ),
         Pair(
-            "repeated field on struct is ambiguous{identifier:\" \"repeated\" \",cn:10,bn:\"repeated\"}",
+            "repeated field on struct is ambiguous{identifier:\" \\\"repeated\\\" \",cn:10,bn:\"repeated\"}",
             ERROR_EVAL_MODE_COMPILE_OPTIONS
         ),
         Pair("invalid extract year from time", ERROR_EVAL_MODE_COMPILE_OPTIONS),
