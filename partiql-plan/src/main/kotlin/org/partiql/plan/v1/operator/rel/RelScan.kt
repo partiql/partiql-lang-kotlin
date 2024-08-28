@@ -2,7 +2,6 @@ package org.partiql.plan.v1.operator.rel
 
 import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.operator.rex.Rex
-import org.partiql.types.PType
 
 /**
  * Logical scan corresponding to the clause `FROM <expression> AS <v>`.
@@ -13,7 +12,7 @@ public interface RelScan : Rel {
 
     override fun getChildren(): Collection<Rel> = emptyList()
 
-    override fun isOrdered(): Boolean = getInput().getType().kind == PType.Kind.ARRAY
+    override fun isOrdered(): Boolean = false
 
     override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitScan(this, ctx)
 }

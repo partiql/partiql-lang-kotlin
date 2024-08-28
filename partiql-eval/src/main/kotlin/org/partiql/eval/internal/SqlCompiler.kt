@@ -26,6 +26,8 @@ import org.partiql.eval.internal.operator.rel.RelOpUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelOpUnpivot
 import org.partiql.eval.internal.operator.rex.ExprArray
 import org.partiql.eval.internal.operator.rex.ExprBag
+import org.partiql.eval.internal.operator.rex.ExprCallDynamic
+import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCaseBranch
 import org.partiql.eval.internal.operator.rex.ExprCaseSearched
 import org.partiql.eval.internal.operator.rex.ExprCast
@@ -71,7 +73,8 @@ import org.partiql.plan.v1.operator.rel.RelVisitor
 import org.partiql.plan.v1.operator.rex.Rex
 import org.partiql.plan.v1.operator.rex.RexArray
 import org.partiql.plan.v1.operator.rex.RexBag
-import org.partiql.plan.v1.operator.rex.RexCall
+import org.partiql.plan.v1.operator.rex.RexCallDynamic
+import org.partiql.plan.v1.operator.rex.RexCallStatic
 import org.partiql.plan.v1.operator.rex.RexCase
 import org.partiql.plan.v1.operator.rex.RexCast
 import org.partiql.plan.v1.operator.rex.RexCoalesce
@@ -154,7 +157,7 @@ internal class SqlCompiler(
 
         override fun visitFilter(rel: RelFilter, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
-            val predicate = compile(rel.getPredicate(), ctx)
+            val predicate = compile(rel.getPredicate(), ctx).catch()
             return RelOpFilter(input, predicate)
         }
 
@@ -266,17 +269,56 @@ internal class SqlCompiler(
         // OPERATORS
 
         override fun visitArray(rex: RexArray, ctx: Unit): Operator.Expr {
-            val values = rex.getValues().map { compile(it, ctx) }
+            val values = rex.getValues().map { compile(it, ctx).catch() }
             return ExprArray(values)
         }
 
         override fun visitBag(rex: RexBag, ctx: Unit): Operator.Expr {
-            val values = rex.getValues().map { compile(it, ctx) }
+            val values = rex.getValues().map { compile(it, ctx).catch() }
             return ExprBag(values)
         }
 
-        override fun visitCall(rex: RexCall, ctx: Unit): Operator.Expr {
-            TODO("<call>")
+        override fun visitCallDynamic(rex: RexCallDynamic, ctx: Unit): Operator.Expr {
+            // Check candidate name and arity for uniformity
+            var arity: Int = -1
+            var name = "unknown"
+            // Check the candidate list size
+            val functions = rex.getFunctions()
+            if (functions.isEmpty()) {
+                error("Rex.Op.Call.Dynamic had an empty candidates list: $rex.")
+            }
+            // Compile the candidates
+            val candidates = Array(functions.size) {
+                val fn = functions[it]
+                val fnArity = fn.signature.parameters.size
+                val fnName = fn.signature.name.uppercase()
+                if (arity == -1) {
+                    arity = fnArity
+                    name = fnName
+                } else {
+                    if (fnArity != arity) {
+                        error("Dynamic call candidate had different arity than others; found $fnArity but expected $arity")
+                    }
+                    if (fnName != name) {
+                        error("Dynamic call candidate had different name than others; found $fnName but expected $name")
+                    }
+                }
+                fn
+            }
+            val args = rex.getArgs().map { compile(it, ctx).catch() }.toTypedArray()
+            return ExprCallDynamic(name, candidates, args)
+        }
+
+        override fun visitCallStatic(rex: RexCallStatic, ctx: Unit): Operator.Expr {
+            val fn = rex.getFunction()
+            val args = rex.getArgs().map { compile(it, ctx) }
+            val fnTakesInMissing = fn.signature.parameters.any {
+                it.type.kind == PType.Kind.DYNAMIC // TODO: Is this needed?
+            }
+            return when (fnTakesInMissing) {
+                true -> ExprCallStatic(fn, args.map { it.catch() }.toTypedArray())
+                else -> ExprCallStatic(fn, args.toTypedArray())
+            }
         }
 
         override fun visitCase(rex: RexCase, ctx: Unit): Operator.Expr {
@@ -284,7 +326,7 @@ internal class SqlCompiler(
                 TODO("<case> expression")
             }
             val branches = rex.getBranches().map {
-                val value = compile(it.getCondition(), ctx)
+                val value = compile(it.getCondition(), ctx).catch()
                 val result = compile(it.getResult(), ctx)
                 ExprCaseBranch(value, result)
             }
@@ -338,7 +380,7 @@ internal class SqlCompiler(
 
         override fun visitSelect(rex: RexSelect, ctx: Unit): Operator.Expr {
             val input = compile(rex.getInput(), ctx)
-            val constructor = compile(rex.getConstructor(), ctx)
+            val constructor = compile(rex.getConstructor(), ctx).catch()
             val ordered = rex.getInput().isOrdered()
             return ExprSelect(input, constructor, ordered)
         }

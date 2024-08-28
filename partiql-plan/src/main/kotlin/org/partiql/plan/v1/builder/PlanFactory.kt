@@ -43,8 +43,10 @@ import org.partiql.plan.v1.operator.rex.RexArray
 import org.partiql.plan.v1.operator.rex.RexArrayImpl
 import org.partiql.plan.v1.operator.rex.RexBag
 import org.partiql.plan.v1.operator.rex.RexBagImpl
-import org.partiql.plan.v1.operator.rex.RexCall
-import org.partiql.plan.v1.operator.rex.RexCallImpl
+import org.partiql.plan.v1.operator.rex.RexCallDynamic
+import org.partiql.plan.v1.operator.rex.RexCallDynamicImpl
+import org.partiql.plan.v1.operator.rex.RexCallStatic
+import org.partiql.plan.v1.operator.rex.RexCallStaticImpl
 import org.partiql.plan.v1.operator.rex.RexCase
 import org.partiql.plan.v1.operator.rex.RexCaseImpl
 import org.partiql.plan.v1.operator.rex.RexCast
@@ -322,13 +324,22 @@ public interface PlanFactory {
     public fun rexBag(values: Collection<Rex>): RexBag = RexBagImpl(values)
 
     /**
-     * Create a [RexCall] instance.
+     * Create a [RexCallStatic] instance.
      *
      * @param function
      * @param args
      * @return
      */
-    public fun rexCall(function: Fn, args: List<Rex>): RexCall = RexCallImpl(function, args)
+    public fun rexCall(function: Fn, args: List<Rex>): RexCallStatic = RexCallStaticImpl(function, args)
+
+    /**
+     * Create a [RexCallDynamic] instance.
+     *
+     * @param functions
+     * @param args
+     * @return
+     */
+    public fun rexCall(functions: List<Fn>, args: List<Rex>): RexCallDynamic = RexCallDynamicImpl(functions, args)
 
     /**
      * Create a [RexCase] instance for a searched case-when.

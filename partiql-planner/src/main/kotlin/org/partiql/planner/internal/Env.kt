@@ -90,7 +90,7 @@ internal class Env(private val session: Session) {
         val refCatalog = catalog.getName()
         val refName = handle.name
         val refType = CompilerType(handle.table.getSchema())
-        val ref = Ref.Obj(refCatalog, refName, refType)
+        val ref = Ref.Obj(refCatalog, refName, refType, handle.table)
 
         // Convert any remaining identifier parts to a path expression
         val root = Rex(ref.type, rexOpVarGlobal(ref))

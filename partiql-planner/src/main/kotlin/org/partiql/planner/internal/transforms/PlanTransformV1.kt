@@ -15,8 +15,10 @@ import org.partiql.plan.v1.operator.rex.RexCase
 import org.partiql.plan.v1.operator.rex.RexStruct
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
@@ -68,7 +70,16 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
 
         override fun visitRexOpMissing(node: IRex.Op.Missing, ctx: PType): Any {
             val trace = node.causes.map { visitRexOp(it, ctx) }
-            return err(node.problem, trace)
+            return when (signal) {
+                true -> {
+                    onProblem.invoke(ProblemGenerator.asError(node.problem))
+                    err(node.problem, trace)
+                }
+                false -> {
+                    onProblem.invoke(ProblemGenerator.asWarning(node.problem))
+                    factory.rexMissing(node.problem.toString(), trace)
+                }
+            }
         }
 
         override fun visitRexOpErr(node: IRex.Op.Err, ctx: PType): Any {
@@ -86,7 +97,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
 
         // EXPRESSIONS
 
-        override fun visitRex(node: IRex, ctx: PType): Rex = super.visitRexOp(node.op, ctx) as Rex
+        override fun visitRex(node: IRex, ctx: PType): Rex = super.visitRexOp(node.op, node.type) as Rex
 
         override fun visitRexOp(node: IRex.Op, ctx: PType): Rex = super.visitRexOp(node, ctx) as Rex
 
@@ -132,7 +143,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
             return when (ctx.kind) {
                 PType.Kind.ARRAY -> factory.rexArray(values)
                 PType.Kind.BAG -> factory.rexBag(values)
-                else -> error("Expected bag or array, found ${ctx.kind}")
+                else -> error("Expected bag or array, found ${ctx.kind.name.lowercase()}")
             }
         }
 
@@ -152,12 +163,13 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
-            TODO("Dynamic function not supported")
+            val fns = node.candidates.map { getFn(it.fn) }
+            val args = node.args.map { visitRex(it, ctx) }
+            return factory.rexCall(fns, args)
         }
 
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
-            val fn = SqlFnProvider.getFn(node.fn.signature.specific)
-                ?: error("Function not found: ${node.fn.signature.specific}")
+            val fn = getFn(node.fn)
             val args = node.args.map { visitRex(it, ctx) }
             return factory.rexCall(fn, args)
         }
@@ -179,7 +191,16 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
          */
         override fun visitRexOpCastUnresolved(node: IRex.Op.Cast.Unresolved, ctx: PType): Any {
             val problem = ProblemGenerator.undefinedCast(node.arg.type, node.target)
-            return err(problem, emptyList())
+            return when (signal) {
+                true -> {
+                    onProblem.invoke(problem)
+                    err(problem, emptyList())
+                }
+                false -> {
+                    onProblem.invoke(ProblemGenerator.asWarning(problem))
+                    factory.rexMissing(problem.toString(), emptyList())
+                }
+            }
         }
 
         override fun visitRexOpCastResolved(node: IRex.Op.Cast.Resolved, ctx: PType): Any {
@@ -189,15 +210,25 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpPathSymbol(node: IRex.Op.Path.Symbol, ctx: PType): Any {
-            TODO("Path symbol")
+            val operand = visitRex(node.root, ctx)
+            val symbol = node.key
+            return factory.rexPathSymbol(operand, symbol)
         }
 
         override fun visitRexOpPathKey(node: IRex.Op.Path.Key, ctx: PType): Any {
-            TODO("Path key")
+            val operand = visitRex(node.root, ctx)
+            val key = visitRex(node.key, ctx)
+            return factory.rexPathKey(operand, key)
         }
 
         override fun visitRexOpPathIndex(node: IRex.Op.Path.Index, ctx: PType): Any {
-            TODO("Path index")
+            val operand = visitRex(node.root, ctx)
+            val index = visitRex(node.key, ctx)
+            return factory.rexPathKey(operand, index)
+        }
+
+        override fun visitRexOpVarGlobal(node: IRex.Op.Var.Global, ctx: PType): Any {
+            return factory.rexTable(node.ref.table)
         }
 
         override fun visitRexOpVarUnresolved(node: IRex.Op.Var.Unresolved, ctx: PType): Any {
@@ -350,6 +381,14 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
                 onProblem(ProblemGenerator.asWarning(problem))
                 factory.rexMissing(message = problem.toString(), trace)
             }
+        }
+
+        /**
+         * TEMPORARY!
+         */
+        private fun getFn(ref: Ref.Fn): Fn {
+            val specific = ref.signature.specific
+            return SqlFnProvider.getFn(specific) ?: error("Function not found: $specific")
         }
     }
 }

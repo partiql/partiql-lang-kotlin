@@ -17,6 +17,8 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.catalog.Name
+import org.partiql.planner.catalog.Session
+import org.partiql.planner.internal.SqlPlannerV1
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.ION
@@ -27,22 +29,22 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
-import org.partiql.planner.catalog.Session as PlannerSession
 
 @OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(
-    private val plannerSession: PlannerSession,
-    private val evalSession: PartiQLEngine.Session,
-) : TestExecutor<PartiQLStatement<*>, PartiQLResult> {
+    private val session: Session,
+    private val mode: PartiQLEngine.Mode,
+) : TestExecutor<PartiQLStatement, PartiQLResult> {
 
-    override fun prepare(statement: String): PartiQLStatement<*> {
+    override fun prepare(statement: String): PartiQLStatement {
         val stmt = parser.parse(statement).root
-        val plan = planner.plan(stmt, plannerSession)
-        return engine.prepare(plan.plan, evalSession)
+        // TODO TEMPORARY REMOVE SqlPlannerV1 once existing public plan is removed.
+        val plan = SqlPlannerV1.plan(stmt, session) {}
+        return engine.prepare(plan, mode, session)
     }
 
-    override fun execute(statement: PartiQLStatement<*>): PartiQLResult {
-        return engine.execute(statement)
+    override fun execute(statement: PartiQLStatement): PartiQLResult {
+        return statement.execute(session)
     }
 
     override fun fromIon(value: IonValue): PartiQLResult {
@@ -116,31 +118,21 @@ class EvalExecutor(
         val comparator = PartiQLValue.comparator()
     }
 
-    object Factory : TestExecutor.Factory<PartiQLStatement<*>, PartiQLResult> {
+    object Factory : TestExecutor.Factory<PartiQLStatement, PartiQLResult> {
 
-        override fun create(env: IonStruct, options: CompileOptions): TestExecutor<PartiQLStatement<*>, PartiQLResult> {
-
+        override fun create(env: IonStruct, options: CompileOptions): TestExecutor<PartiQLStatement, PartiQLResult> {
             // infer catalog from conformance test `env`
             val catalog = "default"
             val connector = infer(env.toIonElement() as StructElement)
-
-            val session = PlannerSession.builder()
+            val session = Session.builder()
                 .catalog(catalog)
                 .catalogs(connector.getCatalog())
                 .build()
-
             val mode = when (options.typingMode) {
                 TypingMode.PERMISSIVE -> PartiQLEngine.Mode.PERMISSIVE
                 TypingMode.LEGACY -> PartiQLEngine.Mode.STRICT
             }
-
-            val evalSession = PartiQLEngine.Session(
-                catalogs = mutableMapOf(
-                    "default" to connector
-                ),
-                mode = mode
-            )
-            return EvalExecutor(session, evalSession)
+            return EvalExecutor(session, mode)
         }
 
         /**
@@ -165,7 +157,7 @@ class EvalExecutor(
          */
         private fun inferEnv(env: AnyElement): PType {
             val catalog = MemoryConnector.builder().name("default").build().getCatalog()
-            val session = PlannerSession.builder()
+            val session = Session.builder()
                 .catalog("default")
                 .catalogs(catalog)
                 .build()
@@ -183,11 +175,11 @@ class EvalExecutor(
             for (f in env.fields) {
                 val name = Name.of(f.name)
 
-                // WITH SHIM (233 failures)
+                // TODO REMOVE SHIM
                 val value = PartiQLValueIonReaderBuilder.standard().build(f.value).read()
                 val datum = Datum.of(value)
 
-                // NO SHIM (343 failures)
+                // TODO REMOVE SHIM
                 // val datum = IonDatum.of(f.value)
 
                 val table = MemoryTable.of(

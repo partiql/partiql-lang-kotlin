@@ -179,7 +179,7 @@ internal class MainCommand : Runnable {
             }
             is PartiQLResult.Value -> {
                 val writer = PartiQLValueTextWriter(System.out)
-                writer.append(result.value.toPartiQLValue())
+                writer.append(result.value)
                 println()
             }
         }
