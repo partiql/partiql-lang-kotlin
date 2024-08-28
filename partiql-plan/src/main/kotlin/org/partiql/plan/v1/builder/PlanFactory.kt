@@ -209,11 +209,7 @@ public interface PlanFactory {
     public fun relIterate(input: Rex): RelIterate = RelIterateImpl(input)
 
     /**
-<<<<<<< HEAD
      * Create a [RelJoin] instance for a cross join.
-=======
-     * Create a [RelJoin] instance for a lateral cross join.
->>>>>>> e786d49b (Adds V1 DataFrame style builders)
      *
      *   - <lhs>, <rhs>
      *   - <lhs> CROSS JOIN <rhs>
