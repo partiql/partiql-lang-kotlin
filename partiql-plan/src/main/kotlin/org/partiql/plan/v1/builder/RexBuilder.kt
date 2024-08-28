@@ -86,8 +86,9 @@ public class RexBuilder private constructor(rex: Builder) {
          */
         @JvmStatic
         public fun subquery(rel: RelBuilder): RexBuilder = RexBuilder {
-            val _rel = rel.build(it)
-            it.rexSubquery(_rel)
+            error("subquery builders are removed until they are fixed in partiql-planner")
+            // val _rel = rel.build(it)
+            // it.rexSubquery(_rel)
         }
 
         /**

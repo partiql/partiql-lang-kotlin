@@ -57,6 +57,12 @@ import org.partiql.plan.v1.operator.rex.RexLit
 import org.partiql.plan.v1.operator.rex.RexLitImpl
 import org.partiql.plan.v1.operator.rex.RexMissing
 import org.partiql.plan.v1.operator.rex.RexMissingImpl
+import org.partiql.plan.v1.operator.rex.RexPathIndex
+import org.partiql.plan.v1.operator.rex.RexPathIndexImpl
+import org.partiql.plan.v1.operator.rex.RexPathKey
+import org.partiql.plan.v1.operator.rex.RexPathKeyImpl
+import org.partiql.plan.v1.operator.rex.RexPathSymbol
+import org.partiql.plan.v1.operator.rex.RexPathSymbolImpl
 import org.partiql.plan.v1.operator.rex.RexPivot
 import org.partiql.plan.v1.operator.rex.RexPivotImpl
 import org.partiql.plan.v1.operator.rex.RexSelect
@@ -77,6 +83,7 @@ import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexTableImpl
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVarImpl
+import org.partiql.planner.catalog.Table
 import org.partiql.spi.fn.Fn
 import org.partiql.types.PType
 
@@ -397,7 +404,32 @@ public interface PlanFactory {
      */
     public fun rexLit(value: Datum): RexLit = RexLitImpl(value)
 
-    // TODO PATHS
+    /**
+     * Create a [RexPathIndex] instance.
+     *
+     * @param operand
+     * @param index
+     * @return
+     */
+    public fun rexPathIndex(operand: Rex, index: Rex): RexPathIndex = RexPathIndexImpl(operand, index)
+
+    /**
+     * Create a [RexPathKey] instance.
+     *
+     * @param operand
+     * @param key
+     * @return
+     */
+    public fun rexPathKey(operand: Rex, key: Rex): RexPathKey = RexPathKeyImpl(operand, key)
+
+    /**
+     * Create a [RexPathSymbol] instance.
+     *
+     * @param operand
+     * @param symbol
+     * @return
+     */
+    public fun rexPathSymbol(operand: Rex, symbol: String): RexPathSymbol = RexPathSymbolImpl(operand, symbol)
 
     /**
      * Create a [RexPivot] instance.
@@ -437,10 +469,12 @@ public interface PlanFactory {
     /**
      * Create a [RexSubquery] instance.
      *
+     * TODO REMOVE constructor AND asScalar – TEMPORARY UNTIL SUBQUERIES ARE FIXED IN THE PLANNER.
+     *
      * @param rel
      * @return
      */
-    public fun rexSubquery(rel: Rel): RexSubquery = RexSubqueryImpl(rel)
+    public fun rexSubquery(rel: Rel, constructor: Rex, asScalar: Boolean): RexSubquery = RexSubqueryImpl(rel, constructor, asScalar)
 
     /**
      * Create a [RexSubqueryComp] instance.
@@ -499,9 +533,8 @@ public interface PlanFactory {
     /**
      * Create a [RexTable] instance.
      *
-     * @param catalog
-     * @param name
+     * @param table
      * @return
      */
-    public fun rexTable(catalog: String, name: String): RexTable = RexTableImpl(catalog, name)
+    public fun rexTable(table: Table): RexTable = RexTableImpl(table)
 }
