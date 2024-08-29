@@ -6,6 +6,7 @@ import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
 import org.partiql.eval.internal.operator.rel.RelOpExceptAll
 import org.partiql.eval.internal.operator.rel.RelOpExceptDistinct
+import org.partiql.eval.internal.operator.rel.RelOpExclude
 import org.partiql.eval.internal.operator.rel.RelOpFilter
 import org.partiql.eval.internal.operator.rel.RelOpIntersectAll
 import org.partiql.eval.internal.operator.rel.RelOpIntersectDistinct
@@ -41,13 +42,13 @@ import org.partiql.eval.internal.operator.rex.ExprPathSymbol
 import org.partiql.eval.internal.operator.rex.ExprPermissive
 import org.partiql.eval.internal.operator.rex.ExprPivot
 import org.partiql.eval.internal.operator.rex.ExprSelect
+import org.partiql.eval.internal.operator.rex.ExprSpread
 import org.partiql.eval.internal.operator.rex.ExprStructField
 import org.partiql.eval.internal.operator.rex.ExprStructPermissive
 import org.partiql.eval.internal.operator.rex.ExprStructStrict
 import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
-import org.partiql.eval.internal.operator.rex.ExprSpread
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.eval.value.Datum
 import org.partiql.plan.v1.operator.rel.Rel
@@ -166,7 +167,8 @@ internal class SqlCompiler(
 
         override fun visitExclude(rel: RelExclude, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
-            TODO("EXCLUDE paths in compiler")
+            val paths = rel.getPaths()
+            return RelOpExclude(input, paths)
         }
 
         override fun visitFilter(rel: RelFilter, ctx: Unit): Operator.Relation {

@@ -11,10 +11,13 @@ import org.partiql.plan.v1.operator.rel.Rel
 import org.partiql.plan.v1.operator.rel.RelAggregateCall
 import org.partiql.plan.v1.operator.rel.RelCollation
 import org.partiql.plan.v1.operator.rel.RelError
+import org.partiql.plan.v1.operator.rel.RelExcludePath
+import org.partiql.plan.v1.operator.rel.RelExcludeStep
 import org.partiql.plan.v1.operator.rel.RelJoinType
 import org.partiql.plan.v1.operator.rex.Rex
 import org.partiql.plan.v1.operator.rex.RexCase
 import org.partiql.plan.v1.operator.rex.RexStruct
+import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.Ref
@@ -290,6 +293,29 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
                 IRel.Op.Join.Type.FULL -> RelJoinType.FULL
             }
             return factory.relJoin(lhs, rhs, condition, type, lhsType, rhsType)
+        }
+
+        override fun visitRelOpExclude(node: IRel.Op.Exclude, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val paths = node.paths.map { visitRelOpExcludePath(it, ctx) as RelExcludePath }
+            return factory.relExclude(input, paths)
+        }
+
+        override fun visitRelOpExcludePath(node: IRel.Op.Exclude.Path, ctx: PType): Any {
+            val root = visitRexOp(node.root, ctx) as RexVar
+            val steps = node.steps.map { visitRelOpExcludeStep(it, ctx) as RelExcludeStep }
+            return RelExcludePath.of(root, steps)
+        }
+
+        override fun visitRelOpExcludeStep(node: IRel.Op.Exclude.Step, ctx: PType): Any {
+            val substeps = node.substeps.map { visitRelOpExcludeStep(it, ctx) as RelExcludeStep }
+            return when (node.type) {
+                is IRel.Op.Exclude.Type.CollIndex -> RelExcludeStep.index(node.type.index, substeps)
+                is IRel.Op.Exclude.Type.CollWildcard -> RelExcludeStep.collection(substeps)
+                is IRel.Op.Exclude.Type.StructKey -> RelExcludeStep.key(node.type.key, substeps)
+                is IRel.Op.Exclude.Type.StructSymbol -> RelExcludeStep.symbol(node.type.symbol, substeps)
+                is IRel.Op.Exclude.Type.StructWildcard -> RelExcludeStep.struct(substeps)
+            }
         }
 
         override fun visitRelOpProject(node: IRel.Op.Project, ctx: PType): Any {

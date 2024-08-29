@@ -2501,6 +2501,11 @@ public abstract interface class org/partiql/plan/v1/PartiQLPlan {
 public abstract interface class org/partiql/plan/v1/Schema {
 	public abstract fun getField (Ljava/lang/String;)Lorg/partiql/types/Field;
 	public abstract fun getFields ()Ljava/util/List;
+	public abstract fun getSize ()I
+}
+
+public final class org/partiql/plan/v1/Schema$DefaultImpls {
+	public static fun getSize (Lorg/partiql/plan/v1/Schema;)I
 }
 
 public abstract interface class org/partiql/plan/v1/Statement {
@@ -2530,7 +2535,7 @@ public abstract interface class org/partiql/plan/v1/builder/PlanFactory {
 	public abstract fun relIntersect (Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;Z)Lorg/partiql/plan/v1/operator/rel/RelIntersect;
 	public abstract fun relIterate (Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rel/RelIterate;
 	public abstract fun relJoin (Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rel/RelJoin;
-	public abstract fun relJoin (Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/RelJoinType;)Lorg/partiql/plan/v1/operator/rel/RelJoin;
+	public abstract fun relJoin (Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/RelJoinType;Lorg/partiql/plan/v1/Schema;Lorg/partiql/plan/v1/Schema;)Lorg/partiql/plan/v1/operator/rel/RelJoin;
 	public abstract fun relLimit (Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rel/RelLimit;
 	public abstract fun relOffset (Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rel/RelOffset;
 	public abstract fun relProject (Lorg/partiql/plan/v1/operator/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelProject;
@@ -2547,7 +2552,6 @@ public abstract interface class org/partiql/plan/v1/builder/PlanFactory {
 	public abstract fun rexCase (Lorg/partiql/plan/v1/operator/rex/Rex;Ljava/util/List;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rex/RexCase;
 	public abstract fun rexCast (Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/types/PType;)Lorg/partiql/plan/v1/operator/rex/RexCast;
 	public abstract fun rexCoalesce (Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexCoalesce;
-	public abstract fun rexCol (II)Lorg/partiql/plan/v1/operator/rex/RexVar;
 	public abstract fun rexError (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexError;
 	public abstract fun rexLit (Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/operator/rex/RexLit;
 	public abstract fun rexMissing (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexMissing;
@@ -2566,6 +2570,7 @@ public abstract interface class org/partiql/plan/v1/builder/PlanFactory {
 	public abstract fun rexSubqueryIn (Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryIn;
 	public abstract fun rexSubqueryTest (Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest;
 	public abstract fun rexTable (Lorg/partiql/planner/catalog/Table;)Lorg/partiql/plan/v1/operator/rex/RexTable;
+	public abstract fun rexVar (II)Lorg/partiql/plan/v1/operator/rex/RexVar;
 }
 
 public final class org/partiql/plan/v1/builder/PlanFactory$Companion {
@@ -2587,7 +2592,8 @@ public final class org/partiql/plan/v1/builder/PlanFactory$DefaultImpls {
 	public static fun relIntersect (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;Z)Lorg/partiql/plan/v1/operator/rel/RelIntersect;
 	public static fun relIterate (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rel/RelIterate;
 	public static fun relJoin (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rel/RelJoin;
-	public static fun relJoin (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/RelJoinType;)Lorg/partiql/plan/v1/operator/rel/RelJoin;
+	public static fun relJoin (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/RelJoinType;Lorg/partiql/plan/v1/Schema;Lorg/partiql/plan/v1/Schema;)Lorg/partiql/plan/v1/operator/rel/RelJoin;
+	public static synthetic fun relJoin$default (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/RelJoinType;Lorg/partiql/plan/v1/Schema;Lorg/partiql/plan/v1/Schema;ILjava/lang/Object;)Lorg/partiql/plan/v1/operator/rel/RelJoin;
 	public static fun relLimit (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rel/RelLimit;
 	public static fun relOffset (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rel/Rel;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rel/RelOffset;
 	public static fun relProject (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rel/Rel;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelProject;
@@ -2604,7 +2610,6 @@ public final class org/partiql/plan/v1/builder/PlanFactory$DefaultImpls {
 	public static fun rexCase (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/Rex;Ljava/util/List;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rex/RexCase;
 	public static fun rexCast (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/types/PType;)Lorg/partiql/plan/v1/operator/rex/RexCast;
 	public static fun rexCoalesce (Lorg/partiql/plan/v1/builder/PlanFactory;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexCoalesce;
-	public static fun rexCol (Lorg/partiql/plan/v1/builder/PlanFactory;II)Lorg/partiql/plan/v1/operator/rex/RexVar;
 	public static fun rexError (Lorg/partiql/plan/v1/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexError;
 	public static fun rexLit (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/operator/rex/RexLit;
 	public static fun rexMissing (Lorg/partiql/plan/v1/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexMissing;
@@ -2623,6 +2628,7 @@ public final class org/partiql/plan/v1/builder/PlanFactory$DefaultImpls {
 	public static fun rexSubqueryIn (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryIn;
 	public static fun rexSubqueryTest (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest;
 	public static fun rexTable (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/planner/catalog/Table;)Lorg/partiql/plan/v1/operator/rex/RexTable;
+	public static fun rexVar (Lorg/partiql/plan/v1/builder/PlanFactory;II)Lorg/partiql/plan/v1/operator/rex/RexVar;
 }
 
 public final class org/partiql/plan/v1/builder/RelBuilder {
@@ -2822,30 +2828,55 @@ public final class org/partiql/plan/v1/operator/rel/RelExclude$DefaultImpls {
 	public static fun isOrdered (Lorg/partiql/plan/v1/operator/rel/RelExclude;)Z
 }
 
-public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludePath {
-	public abstract fun getRoot ()Lorg/partiql/plan/v1/operator/rex/RexVar;
-	public abstract fun getSteps ()Lorg/partiql/plan/v1/operator/rel/RelExcludeStep;
+public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeCollectionWildcard : org/partiql/plan/v1/operator/rel/RelExcludeStep {
 }
 
-public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStep {
-	public abstract fun getSubsteps ()Ljava/util/List;
-}
-
-public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStep$CollectionWildcard : org/partiql/plan/v1/operator/rel/RelExcludeStep {
-}
-
-public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStep$Index : org/partiql/plan/v1/operator/rel/RelExcludeStep {
+public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeIndex : org/partiql/plan/v1/operator/rel/RelExcludeStep {
 	public abstract fun getIndex ()I
 }
 
-public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStep$Key : org/partiql/plan/v1/operator/rel/RelExcludeStep {
+public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeKey : org/partiql/plan/v1/operator/rel/RelExcludeStep {
 	public abstract fun getKey ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStep$StructWildcard : org/partiql/plan/v1/operator/rel/RelExcludeStep {
+public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludePath {
+	public static final field Companion Lorg/partiql/plan/v1/operator/rel/RelExcludePath$Companion;
+	public abstract fun getRoot ()Lorg/partiql/plan/v1/operator/rex/RexVar;
+	public abstract fun getSteps ()Ljava/util/Collection;
+	public static fun of (Lorg/partiql/plan/v1/operator/rex/RexVar;Ljava/util/Collection;)Lorg/partiql/plan/v1/operator/rel/RelExcludePath;
 }
 
-public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStep$Symbol : org/partiql/plan/v1/operator/rel/RelExcludeStep {
+public final class org/partiql/plan/v1/operator/rel/RelExcludePath$Companion {
+	public final fun of (Lorg/partiql/plan/v1/operator/rex/RexVar;Ljava/util/Collection;)Lorg/partiql/plan/v1/operator/rel/RelExcludePath;
+}
+
+public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStep {
+	public static final field Companion Lorg/partiql/plan/v1/operator/rel/RelExcludeStep$Companion;
+	public static fun collection (Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeCollectionWildcard;
+	public abstract fun getSubsteps ()Ljava/util/List;
+	public static fun index (ILjava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeIndex;
+	public static fun key (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeKey;
+	public static fun struct (Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeStructWildcard;
+	public static fun symbol (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeSymbol;
+}
+
+public final class org/partiql/plan/v1/operator/rel/RelExcludeStep$Companion {
+	public final fun collection (Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeCollectionWildcard;
+	public static synthetic fun collection$default (Lorg/partiql/plan/v1/operator/rel/RelExcludeStep$Companion;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/v1/operator/rel/RelExcludeCollectionWildcard;
+	public final fun index (ILjava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeIndex;
+	public static synthetic fun index$default (Lorg/partiql/plan/v1/operator/rel/RelExcludeStep$Companion;ILjava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/v1/operator/rel/RelExcludeIndex;
+	public final fun key (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeKey;
+	public static synthetic fun key$default (Lorg/partiql/plan/v1/operator/rel/RelExcludeStep$Companion;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/v1/operator/rel/RelExcludeKey;
+	public final fun struct (Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeStructWildcard;
+	public static synthetic fun struct$default (Lorg/partiql/plan/v1/operator/rel/RelExcludeStep$Companion;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/v1/operator/rel/RelExcludeStructWildcard;
+	public final fun symbol (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeSymbol;
+	public static synthetic fun symbol$default (Lorg/partiql/plan/v1/operator/rel/RelExcludeStep$Companion;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/v1/operator/rel/RelExcludeSymbol;
+}
+
+public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStructWildcard : org/partiql/plan/v1/operator/rel/RelExcludeStep {
+}
+
+public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeSymbol : org/partiql/plan/v1/operator/rel/RelExcludeStep {
 	public abstract fun getSymbol ()Ljava/lang/String;
 }
 
@@ -2899,7 +2930,9 @@ public abstract interface class org/partiql/plan/v1/operator/rel/RelJoin : org/p
 	public abstract fun getCondition ()Lorg/partiql/plan/v1/operator/rex/Rex;
 	public abstract fun getJoinType ()Lorg/partiql/plan/v1/operator/rel/RelJoinType;
 	public abstract fun getLeft ()Lorg/partiql/plan/v1/operator/rel/Rel;
+	public abstract fun getLeftSchema ()Lorg/partiql/plan/v1/Schema;
 	public abstract fun getRight ()Lorg/partiql/plan/v1/operator/rel/Rel;
+	public abstract fun getRightSchema ()Lorg/partiql/plan/v1/Schema;
 	public abstract fun isOrdered ()Z
 }
 

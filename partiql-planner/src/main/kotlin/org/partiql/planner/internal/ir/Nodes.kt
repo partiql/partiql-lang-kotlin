@@ -1240,6 +1240,23 @@ internal data class Rel(
                         internal fun builder(): RelOpExcludeTypeStructSymbolBuilder =
                             RelOpExcludeTypeStructSymbolBuilder()
                     }
+
+                    // Explicitly override `equals` and `hashcode` for case-insensitivity
+                    override fun equals(other: Any?): Boolean {
+                        if (this === other) return true
+                        if (javaClass != other?.javaClass) return false
+
+                        other as StructSymbol
+
+                        if (!symbol.equals(other.symbol, ignoreCase = true)) return false
+                        if (children != other.children) return false
+
+                        return true
+                    }
+
+                    override fun hashCode(): Int {
+                        return symbol.lowercase().hashCode()
+                    }
                 }
 
                 internal data class StructKey(
