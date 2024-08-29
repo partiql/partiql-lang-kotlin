@@ -8,7 +8,7 @@ import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
-internal class ExprTupleUnion(
+internal class ExprSpread(
     val args: Array<Operator.Expr>
 ) : Operator.Expr {
 

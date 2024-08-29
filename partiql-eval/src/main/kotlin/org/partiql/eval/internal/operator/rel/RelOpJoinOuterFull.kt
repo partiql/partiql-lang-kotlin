@@ -5,7 +5,7 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.plan.Rel
+import org.partiql.plan.v1.Schema
 
 /**
  * Full Outer Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true. For all
@@ -18,17 +18,15 @@ internal class RelOpJoinOuterFull(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
     private val condition: Operator.Expr,
-    lhsType: Rel.Type,
-    rhsType: Rel.Type
+    lhsType: Schema,
+    rhsType: Schema,
 ) : RelOpPeeking() {
 
-    private val lhsPadded = Record(
-        Array(rhsType.schema.size) { Datum.nullValue(lhsType.schema[it].type) }
-    )
-
-    private val rhsPadded = Record(
-        Array(rhsType.schema.size) { Datum.nullValue(rhsType.schema[it].type) }
-    )
+    // TODO BETTER MECHANISM FOR NULL PADDING
+    private val r = rhsType.getFields().toTypedArray()
+    private val l = lhsType.getFields().toTypedArray()
+    private val lhsPadded: Record = Record(r.indices.map { Datum.nullValue(l[it].type) }.toTypedArray())
+    private val rhsPadded: Record = Record(r.indices.map { Datum.nullValue(r[it].type) }.toTypedArray())
 
     private lateinit var env: Environment
     private lateinit var iterator: Iterator<Record>

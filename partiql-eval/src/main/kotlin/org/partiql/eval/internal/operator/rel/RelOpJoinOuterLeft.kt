@@ -5,7 +5,7 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.plan.Rel
+import org.partiql.plan.v1.Schema
 import org.partiql.value.PartiQLValueExperimental
 
 /**
@@ -19,12 +19,11 @@ internal class RelOpJoinOuterLeft(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
     private val condition: Operator.Expr,
-    rhsType: Rel.Type
+    rhsType: Schema,
 ) : RelOpPeeking() {
 
-    private val rhsPadded = Record(
-        Array(rhsType.schema.size) { Datum.nullValue(rhsType.schema[it].type) }
-    )
+    // TODO BETTER MECHANISM FOR NULL PADDING
+    private val rhsPadded = Record(rhsType.getFields().map { Datum.nullValue(it.type) }.toTypedArray())
 
     private lateinit var env: Environment
     private lateinit var iterator: Iterator<Record>

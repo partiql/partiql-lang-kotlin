@@ -34,6 +34,7 @@ import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprLit
 import org.partiql.eval.internal.operator.rex.ExprMissing
+import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
 import org.partiql.eval.internal.operator.rex.ExprPathKey
 import org.partiql.eval.internal.operator.rex.ExprPathSymbol
@@ -46,10 +47,9 @@ import org.partiql.eval.internal.operator.rex.ExprStructStrict
 import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
-import org.partiql.eval.internal.operator.rex.ExprTupleUnion
+import org.partiql.eval.internal.operator.rex.ExprSpread
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.eval.value.Datum
-import org.partiql.plan.relType
 import org.partiql.plan.v1.operator.rel.Rel
 import org.partiql.plan.v1.operator.rel.RelAggregate
 import org.partiql.plan.v1.operator.rel.RelCollation
@@ -81,6 +81,7 @@ import org.partiql.plan.v1.operator.rex.RexCoalesce
 import org.partiql.plan.v1.operator.rex.RexError
 import org.partiql.plan.v1.operator.rex.RexLit
 import org.partiql.plan.v1.operator.rex.RexMissing
+import org.partiql.plan.v1.operator.rex.RexNullIf
 import org.partiql.plan.v1.operator.rex.RexPathIndex
 import org.partiql.plan.v1.operator.rex.RexPathKey
 import org.partiql.plan.v1.operator.rex.RexPathSymbol
@@ -96,6 +97,7 @@ import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVisitor
 import org.partiql.planner.catalog.Session
+import org.partiql.spi.fn.Agg
 import org.partiql.types.PType
 
 /**
@@ -132,7 +134,19 @@ internal class SqlCompiler(
         override fun visitAggregate(rel: RelAggregate, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
             val keys = rel.getGroups().map { compile(it, ctx).catch() }
-            val aggs = rel.getCalls().map { TODO() }
+            val aggs = rel.getCalls().map { call ->
+                val agg = call.getAgg()
+                val args = call.getArgs().map { compile(it, ctx).catch() }
+                val setq = when (call.isDistinct()) {
+                    true -> Operator.Aggregation.SetQuantifier.DISTINCT
+                    else -> Operator.Aggregation.SetQuantifier.ALL
+                }
+                object : Operator.Aggregation {
+                    override val delegate: Agg = agg
+                    override val args: List<Operator.Expr> = args
+                    override val setQuantifier: Operator.Aggregation.SetQuantifier = setq
+                }
+            }
             return RelOpAggregate(input, keys, aggs)
         }
 
@@ -184,14 +198,14 @@ internal class SqlCompiler(
             val condition = rel.getCondition()?.let { compile(it, ctx) } ?: ExprLit(Datum.bool(true))
 
             // TODO JOIN SCHEMAS
-            val lhsType = relType(emptyList(), emptySet())
-            val rhsType = relType(emptyList(), emptySet())
+            val lhsType = rel.getLeftSchema()
+            val rhsType = rel.getRightSchema()
 
             return when (rel.getJoinType()) {
                 RelJoinType.INNER -> RelOpJoinInner(lhs, rhs, condition)
-                RelJoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType)
-                RelJoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType)
-                RelJoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType, rhsType)
+                RelJoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType!!)
+                RelJoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType!!)
+                RelJoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType!!, rhsType!!)
             }
         }
 
@@ -353,6 +367,12 @@ internal class SqlCompiler(
             return ExprMissing(unknown)
         }
 
+        override fun visitNullIf(rex: RexNullIf, ctx: Unit): Operator.Expr {
+            val value = compile(rex.getValue(), ctx)
+            val nullifier = compile(rex.getNullifier(), ctx)
+            return ExprNullIf(value, nullifier)
+        }
+
         override fun visitPathIndex(rex: RexPathIndex, ctx: Unit): Operator.Expr {
             val operand = compile(rex.getOperand(), ctx)
             val index = compile(rex.getIndex(), ctx)
@@ -420,7 +440,7 @@ internal class SqlCompiler(
 
         override fun visitSpread(rex: RexSpread, ctx: Unit): Operator.Expr {
             val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
-            return ExprTupleUnion(args)
+            return ExprSpread(args)
         }
 
         override fun visitTable(rex: RexTable, ctx: Unit): Operator.Expr {

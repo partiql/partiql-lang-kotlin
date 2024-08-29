@@ -39,6 +39,8 @@ public interface RexVisitor<R, C> {
 
     public fun visitMissing(rex: RexMissing, ctx: C): R = defaultVisit(rex, ctx)
 
+    public fun visitNullIf(rex: RexNullIf, ctx: C): R = defaultVisit(rex, ctx)
+
     public fun visitPathIndex(rex: RexPathIndex, ctx: C): R = defaultVisit(rex, ctx)
 
     public fun visitPathKey(rex: RexPathKey, ctx: C): R = defaultVisit(rex, ctx)

@@ -4,9 +4,11 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.eval.value.Datum
 import org.partiql.plan.v1.PartiQLPlan
+import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.Statement
 import org.partiql.plan.v1.builder.PlanFactory
 import org.partiql.plan.v1.operator.rel.Rel
+import org.partiql.plan.v1.operator.rel.RelAggregateCall
 import org.partiql.plan.v1.operator.rel.RelCollation
 import org.partiql.plan.v1.operator.rel.RelError
 import org.partiql.plan.v1.operator.rel.RelJoinType
@@ -18,8 +20,10 @@ import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.SqlFnProvider
+import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
@@ -153,7 +157,9 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpNullif(node: IRex.Op.Nullif, ctx: PType): Any {
-            TODO("NULLIF should be a scalar function")
+            val value = visitRex(node.value, ctx)
+            val nullifier = visitRex(node.nullifier, ctx)
+            return factory.rexNullIf(value, nullifier)
         }
 
         override fun visitRexOpCase(node: IRex.Op.Case, ctx: PType): Any {
@@ -236,7 +242,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpVarLocal(node: IRex.Op.Var.Local, ctx: PType): Any {
-            return factory.rexCol(depth = node.depth, offset = node.ref)
+            return factory.rexVar(depth = node.depth, offset = node.ref)
         }
 
         @OptIn(PartiQLValueExperimental::class)
@@ -250,17 +256,40 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
 
         override fun visitRelOp(node: IRel.Op, ctx: PType): Rel = super.visitRelOp(node, ctx) as Rel
 
+        override fun visitRelOpAggregate(node: IRel.Op.Aggregate, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val calls = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregateCall }
+            val groups = node.groups.map { visitRex(it, ctx) }
+            return factory.relAggregate(input, calls, groups)
+        }
+
+        override fun visitRelOpAggregateCallUnresolved(node: IRel.Op.Aggregate.Call.Unresolved, ctx: PType): Any {
+            error("Unresolved aggregate call $node")
+        }
+
+        override fun visitRelOpAggregateCallResolved(node: IRel.Op.Aggregate.Call.Resolved, ctx: PType): Any {
+            val agg = getAgg(node.agg)
+            val args = node.args.map { visitRex(it, ctx) }
+            val isDistinct = node.setq == SetQuantifier.DISTINCT
+            return factory.relAggregateCall(agg, args, isDistinct)
+        }
+
         override fun visitRelOpJoin(node: IRel.Op.Join, ctx: PType): Any {
             val lhs = visitRel(node.lhs, ctx)
             val rhs = visitRel(node.rhs, ctx)
             val condition = visitRex(node.rex, ctx)
+
+            // TODO CLEANUP JOIN SCHEMA
+            val lhsType = toSchema(node.lhs.type)
+            val rhsType = toSchema(node.rhs.type)
+
             val type = when (node.type) {
                 IRel.Op.Join.Type.INNER -> RelJoinType.INNER
                 IRel.Op.Join.Type.LEFT -> RelJoinType.LEFT
                 IRel.Op.Join.Type.RIGHT -> RelJoinType.RIGHT
                 IRel.Op.Join.Type.FULL -> RelJoinType.FULL
             }
-            return factory.relJoin(lhs, rhs, condition, type)
+            return factory.relJoin(lhs, rhs, condition, type, lhsType, rhsType)
         }
 
         override fun visitRelOpProject(node: IRel.Op.Project, ctx: PType): Any {
@@ -384,11 +413,28 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         }
 
         /**
-         * TEMPORARY!
+         * TODO TEMPORARY!
          */
         private fun getFn(ref: Ref.Fn): Fn {
             val specific = ref.signature.specific
             return SqlFnProvider.getFn(specific) ?: error("Function not found: $specific")
+        }
+
+        /**
+         * TODO TEMPORARY!
+         */
+        private fun getAgg(ref: Ref.Agg): Agg {
+            val specific = ref.signature.specific
+            return SqlFnProvider.getAgg(specific) ?: error("Aggregation not found: $specific")
+        }
+
+        /**
+         * TODO TEMPORARY!
+         */
+        private fun toSchema(type: IRel.Type): Schema = object : Schema {
+            private val fields = type.schema.map { Field.of(it.name, it.type) }
+            override fun getFields(): List<Field> = fields
+            override fun getField(name: String): Field = fields.first { it.name == name }
         }
     }
 }

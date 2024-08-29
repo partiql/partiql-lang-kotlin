@@ -10,7 +10,13 @@ public interface RelJoin : Rel {
 
     public fun getLeft(): Rel
 
+    // TODO REMOVE ME TEMPORARY
+    public fun getLeftSchema(): Schema?
+
     public fun getRight(): Rel
+
+    // TODO REMOVE ME TEMPORARY
+    public fun getRightSchema(): Schema?
 
     public fun getCondition(): Rex?
 
@@ -26,13 +32,22 @@ public interface RelJoin : Rel {
 /**
  * Default [RelJoin] implementation.
  */
-internal class RelJoinImpl(left: Rel, right: Rel, condition: Rex?, joinType: RelJoinType) : RelJoin {
+internal class RelJoinImpl(
+    left: Rel,
+    right: Rel,
+    condition: Rex?,
+    joinType: RelJoinType,
+    leftSchema: Schema?,
+    rightSchema: Schema?,
+) : RelJoin {
 
     // DO NOT USE FINAL
     private var _left = left
     private var _right = right
     private var _condition = condition
     private var _joinType = joinType
+    private var _leftSchema = leftSchema
+    private var _rightSchema = rightSchema
 
     private var _children: List<Rel>? = null
 
@@ -43,6 +58,10 @@ internal class RelJoinImpl(left: Rel, right: Rel, condition: Rex?, joinType: Rel
     override fun getCondition(): Rex? = _condition
 
     override fun getJoinType(): RelJoinType = _joinType
+
+    override fun getLeftSchema(): Schema? = _leftSchema
+
+    override fun getRightSchema(): Schema? = _rightSchema
 
     override fun getChildren(): Collection<Rel> {
         if (_children == null) {

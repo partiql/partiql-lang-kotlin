@@ -36,7 +36,7 @@ public class RexBuilder private constructor(rex: Builder) {
 
         @JvmStatic
         public fun col(depth: Int, offset: Int): RexBuilder = RexBuilder {
-            it.rexCol(depth, offset)
+            it.rexVar(depth, offset)
         }
 
         @JvmStatic

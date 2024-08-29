@@ -22,7 +22,7 @@ public object SqlPlannerV1 {
     public fun plan(
         statement: Statement,
         session: Session,
-        onProblem: ProblemCallback,
+        onProblem: ProblemCallback = {},
     ): PartiQLPlan {
 
         // 0. Initialize the planning environment

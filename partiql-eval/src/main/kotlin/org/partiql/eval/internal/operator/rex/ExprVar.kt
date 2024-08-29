@@ -3,7 +3,6 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Implementation for variable lookup; walks up environments if necessary, otherwise lookup using tuple offset.
@@ -14,7 +13,6 @@ internal class ExprVar(depth: Int, offset: Int) : Operator.Expr {
     private var _depth = depth
     private var _offset = offset
 
-    @PartiQLValueExperimental
     override fun eval(env: Environment): Datum {
         // shortcut for depth 0
         if (_depth == 0) {

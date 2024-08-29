@@ -1,9 +1,11 @@
 package org.partiql.plan.v1.builder
 
 import org.partiql.eval.value.Datum
+import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.operator.rel.Rel
 import org.partiql.plan.v1.operator.rel.RelAggregate
 import org.partiql.plan.v1.operator.rel.RelAggregateCall
+import org.partiql.plan.v1.operator.rel.RelAggregateCallImpl
 import org.partiql.plan.v1.operator.rel.RelAggregateImpl
 import org.partiql.plan.v1.operator.rel.RelCollation
 import org.partiql.plan.v1.operator.rel.RelCorrelate
@@ -59,6 +61,8 @@ import org.partiql.plan.v1.operator.rex.RexLit
 import org.partiql.plan.v1.operator.rex.RexLitImpl
 import org.partiql.plan.v1.operator.rex.RexMissing
 import org.partiql.plan.v1.operator.rex.RexMissingImpl
+import org.partiql.plan.v1.operator.rex.RexNullIf
+import org.partiql.plan.v1.operator.rex.RexNullIfImpl
 import org.partiql.plan.v1.operator.rex.RexPathIndex
 import org.partiql.plan.v1.operator.rex.RexPathIndexImpl
 import org.partiql.plan.v1.operator.rex.RexPathKey
@@ -86,6 +90,7 @@ import org.partiql.plan.v1.operator.rex.RexTableImpl
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVarImpl
 import org.partiql.planner.catalog.Table
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.types.PType
 
@@ -122,6 +127,17 @@ public interface PlanFactory {
         RelAggregateImpl(input, calls, groups)
 
     /**
+     * Create a [RelAggregateCall] instance.
+     *
+     * @param aggregation
+     * @param args
+     * @param isDistinct
+     * @return
+     */
+    public fun relAggregateCall(aggregation: Agg, args: List<Rex>, isDistinct: Boolean = false): RelAggregateCall =
+        RelAggregateCallImpl(aggregation, args, isDistinct)
+
+    /**
      * Create a [RelCorrelate] instance for a lateral cross join.
      *
      * @param lhs
@@ -138,7 +154,8 @@ public interface PlanFactory {
      * @param joinType
      * @return
      */
-    public fun relCorrelate(lhs: Rel, rhs: Rel, joinType: RelJoinType): RelCorrelate = RelCorrelateImpl(lhs, rhs, joinType)
+    public fun relCorrelate(lhs: Rel, rhs: Rel, joinType: RelJoinType): RelCorrelate =
+        RelCorrelateImpl(lhs, rhs, joinType)
 
     /**
      * Create a [RelDistinct] instance.
@@ -232,8 +249,8 @@ public interface PlanFactory {
      * @param type
      * @return
      */
-    public fun relJoin(lhs: Rel, rhs: Rel, condition: Rex?, type: RelJoinType): RelJoin =
-        RelJoinImpl(lhs, rhs, condition, type)
+    public fun relJoin(lhs: Rel, rhs: Rel, condition: Rex?, type: RelJoinType, lhsSchema: Schema? = null, rhsSchema: Schema? = null): RelJoin =
+        RelJoinImpl(lhs, rhs, condition, type, lhsSchema, rhsSchema)
 
     /**
      * Create a [RelLimit] instance.
@@ -385,7 +402,7 @@ public interface PlanFactory {
      * @param offset
      * @return
      */
-    public fun rexCol(depth: Int, offset: Int): RexVar = RexVarImpl(depth, offset)
+    public fun rexVar(depth: Int, offset: Int): RexVar = RexVarImpl(depth, offset)
 
     /**
      * TODO AUDIT ME
@@ -414,6 +431,11 @@ public interface PlanFactory {
      * @return
      */
     public fun rexLit(value: Datum): RexLit = RexLitImpl(value)
+
+    /**
+     * TODO REMOVE ME
+     */
+    public fun rexNullIf(value: Rex, nullifier: Rex): RexNullIf = RexNullIfImpl(value, nullifier)
 
     /**
      * Create a [RexPathIndex] instance.
@@ -485,7 +507,8 @@ public interface PlanFactory {
      * @param rel
      * @return
      */
-    public fun rexSubquery(rel: Rel, constructor: Rex, asScalar: Boolean): RexSubquery = RexSubqueryImpl(rel, constructor, asScalar)
+    public fun rexSubquery(rel: Rel, constructor: Rex, asScalar: Boolean): RexSubquery =
+        RexSubqueryImpl(rel, constructor, asScalar)
 
     /**
      * Create a [RexSubqueryComp] instance.
