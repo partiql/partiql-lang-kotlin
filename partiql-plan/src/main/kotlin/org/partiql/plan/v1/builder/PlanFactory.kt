@@ -1,9 +1,11 @@
 package org.partiql.plan.v1.builder
 
 import org.partiql.eval.value.Datum
+import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.operator.rel.Rel
 import org.partiql.plan.v1.operator.rel.RelAggregate
 import org.partiql.plan.v1.operator.rel.RelAggregateCall
+import org.partiql.plan.v1.operator.rel.RelAggregateCallImpl
 import org.partiql.plan.v1.operator.rel.RelAggregateImpl
 import org.partiql.plan.v1.operator.rel.RelCollation
 import org.partiql.plan.v1.operator.rel.RelCorrelate
@@ -43,8 +45,10 @@ import org.partiql.plan.v1.operator.rex.RexArray
 import org.partiql.plan.v1.operator.rex.RexArrayImpl
 import org.partiql.plan.v1.operator.rex.RexBag
 import org.partiql.plan.v1.operator.rex.RexBagImpl
-import org.partiql.plan.v1.operator.rex.RexCall
-import org.partiql.plan.v1.operator.rex.RexCallImpl
+import org.partiql.plan.v1.operator.rex.RexCallDynamic
+import org.partiql.plan.v1.operator.rex.RexCallDynamicImpl
+import org.partiql.plan.v1.operator.rex.RexCallStatic
+import org.partiql.plan.v1.operator.rex.RexCallStaticImpl
 import org.partiql.plan.v1.operator.rex.RexCase
 import org.partiql.plan.v1.operator.rex.RexCaseImpl
 import org.partiql.plan.v1.operator.rex.RexCast
@@ -57,6 +61,8 @@ import org.partiql.plan.v1.operator.rex.RexLit
 import org.partiql.plan.v1.operator.rex.RexLitImpl
 import org.partiql.plan.v1.operator.rex.RexMissing
 import org.partiql.plan.v1.operator.rex.RexMissingImpl
+import org.partiql.plan.v1.operator.rex.RexNullIf
+import org.partiql.plan.v1.operator.rex.RexNullIfImpl
 import org.partiql.plan.v1.operator.rex.RexPathIndex
 import org.partiql.plan.v1.operator.rex.RexPathIndexImpl
 import org.partiql.plan.v1.operator.rex.RexPathKey
@@ -84,6 +90,7 @@ import org.partiql.plan.v1.operator.rex.RexTableImpl
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVarImpl
 import org.partiql.planner.catalog.Table
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.types.PType
 
@@ -120,6 +127,17 @@ public interface PlanFactory {
         RelAggregateImpl(input, calls, groups)
 
     /**
+     * Create a [RelAggregateCall] instance.
+     *
+     * @param aggregation
+     * @param args
+     * @param isDistinct
+     * @return
+     */
+    public fun relAggregateCall(aggregation: Agg, args: List<Rex>, isDistinct: Boolean = false): RelAggregateCall =
+        RelAggregateCallImpl(aggregation, args, isDistinct)
+
+    /**
      * Create a [RelCorrelate] instance for a lateral cross join.
      *
      * @param lhs
@@ -136,7 +154,8 @@ public interface PlanFactory {
      * @param joinType
      * @return
      */
-    public fun relCorrelate(lhs: Rel, rhs: Rel, joinType: RelJoinType): RelCorrelate = RelCorrelateImpl(lhs, rhs, joinType)
+    public fun relCorrelate(lhs: Rel, rhs: Rel, joinType: RelJoinType): RelCorrelate =
+        RelCorrelateImpl(lhs, rhs, joinType)
 
     /**
      * Create a [RelDistinct] instance.
@@ -230,8 +249,8 @@ public interface PlanFactory {
      * @param type
      * @return
      */
-    public fun relJoin(lhs: Rel, rhs: Rel, condition: Rex?, type: RelJoinType): RelJoin =
-        RelJoinImpl(lhs, rhs, condition, type)
+    public fun relJoin(lhs: Rel, rhs: Rel, condition: Rex?, type: RelJoinType, lhsSchema: Schema? = null, rhsSchema: Schema? = null): RelJoin =
+        RelJoinImpl(lhs, rhs, condition, type, lhsSchema, rhsSchema)
 
     /**
      * Create a [RelLimit] instance.
@@ -322,13 +341,22 @@ public interface PlanFactory {
     public fun rexBag(values: Collection<Rex>): RexBag = RexBagImpl(values)
 
     /**
-     * Create a [RexCall] instance.
+     * Create a [RexCallStatic] instance.
      *
      * @param function
      * @param args
      * @return
      */
-    public fun rexCall(function: Fn, args: List<Rex>): RexCall = RexCallImpl(function, args)
+    public fun rexCall(function: Fn, args: List<Rex>): RexCallStatic = RexCallStaticImpl(function, args)
+
+    /**
+     * Create a [RexCallDynamic] instance.
+     *
+     * @param functions
+     * @param args
+     * @return
+     */
+    public fun rexCall(functions: List<Fn>, args: List<Rex>): RexCallDynamic = RexCallDynamicImpl(functions, args)
 
     /**
      * Create a [RexCase] instance for a searched case-when.
@@ -374,7 +402,7 @@ public interface PlanFactory {
      * @param offset
      * @return
      */
-    public fun rexCol(depth: Int, offset: Int): RexVar = RexVarImpl(depth, offset)
+    public fun rexVar(depth: Int, offset: Int): RexVar = RexVarImpl(depth, offset)
 
     /**
      * TODO AUDIT ME
@@ -405,6 +433,14 @@ public interface PlanFactory {
     public fun rexLit(value: Datum): RexLit = RexLitImpl(value)
 
     /**
+<<<<<<< HEAD
+=======
+     * TODO REMOVE ME
+     */
+    public fun rexNullIf(value: Rex, nullifier: Rex): RexNullIf = RexNullIfImpl(value, nullifier)
+
+    /**
+>>>>>>> c2cc48d5 (Ports evaluation changes to v1 plans)
      * Create a [RexPathIndex] instance.
      *
      * @param operand
@@ -474,7 +510,8 @@ public interface PlanFactory {
      * @param rel
      * @return
      */
-    public fun rexSubquery(rel: Rel, constructor: Rex, asScalar: Boolean): RexSubquery = RexSubqueryImpl(rel, constructor, asScalar)
+    public fun rexSubquery(rel: Rel, constructor: Rex, asScalar: Boolean): RexSubquery =
+        RexSubqueryImpl(rel, constructor, asScalar)
 
     /**
      * Create a [RexSubqueryComp] instance.
