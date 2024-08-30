@@ -233,7 +233,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         override fun visitRexOpPathIndex(node: IRex.Op.Path.Index, ctx: PType): Any {
             val operand = visitRex(node.root, ctx)
             val index = visitRex(node.key, ctx)
-            return factory.rexPathKey(operand, index)
+            return factory.rexPathIndex(operand, index)
         }
 
         override fun visitRexOpVarGlobal(node: IRex.Op.Var.Global, ctx: PType): Any {
@@ -333,7 +333,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         override fun visitRelOpLimit(node: IRel.Op.Limit, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
             val limit = visitRex(node.limit, ctx)
-            return factory.relOffset(input, limit)
+            return factory.relLimit(input, limit)
         }
 
         override fun visitRelOpIntersect(node: IRel.Op.Intersect, ctx: PType): Any {

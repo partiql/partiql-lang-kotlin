@@ -36,14 +36,12 @@ internal class RelOpSort(
 
                 // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
                 // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)
-
-                val cmp = when (spec.last) {
-                    true -> nullsLastComparator
-                    else -> nullsFirstComparator
-                }
-                val cmpResult = when (spec.desc) {
-                    true -> cmp.compare(rVal, lVal)
-                    else -> cmp.compare(lVal, rVal)
+                val cmpResult = when {
+                    !spec.desc && !spec.last -> nullsFirstComparator.compare(lVal, rVal)
+                    !spec.desc && spec.last -> nullsLastComparator.compare(lVal, rVal)
+                    spec.desc && !spec.last -> nullsLastComparator.compare(rVal, lVal)
+                    spec.desc && spec.last -> nullsFirstComparator.compare(rVal, lVal)
+                    else -> 0 // unreachable
                 }
                 if (cmpResult != 0) {
                     return cmpResult

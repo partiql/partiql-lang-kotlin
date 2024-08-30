@@ -1,12 +1,13 @@
 package org.partiql.eval.internal
 
+// OLD IMPORTS FOR EXCLUDE
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
 import org.partiql.eval.internal.operator.rel.RelOpExceptAll
 import org.partiql.eval.internal.operator.rel.RelOpExceptDistinct
-import org.partiql.eval.internal.operator.rel.RelOpExclude
+import org.partiql.eval.internal.operator.rel.RelOpExcludeOld
 import org.partiql.eval.internal.operator.rel.RelOpFilter
 import org.partiql.eval.internal.operator.rel.RelOpIntersectAll
 import org.partiql.eval.internal.operator.rel.RelOpIntersectDistinct
@@ -41,6 +42,7 @@ import org.partiql.eval.internal.operator.rex.ExprPathKey
 import org.partiql.eval.internal.operator.rex.ExprPathSymbol
 import org.partiql.eval.internal.operator.rex.ExprPermissive
 import org.partiql.eval.internal.operator.rex.ExprPivot
+import org.partiql.eval.internal.operator.rex.ExprPivotPermissive
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprSpread
 import org.partiql.eval.internal.operator.rex.ExprStructField
@@ -51,6 +53,14 @@ import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.eval.value.Datum
+import org.partiql.plan.relOpExcludePath
+import org.partiql.plan.relOpExcludeStep
+import org.partiql.plan.relOpExcludeTypeCollIndex
+import org.partiql.plan.relOpExcludeTypeCollWildcard
+import org.partiql.plan.relOpExcludeTypeStructKey
+import org.partiql.plan.relOpExcludeTypeStructSymbol
+import org.partiql.plan.relOpExcludeTypeStructWildcard
+import org.partiql.plan.rexOpVar
 import org.partiql.plan.v1.operator.rel.Rel
 import org.partiql.plan.v1.operator.rel.RelAggregate
 import org.partiql.plan.v1.operator.rel.RelCollation
@@ -58,6 +68,13 @@ import org.partiql.plan.v1.operator.rel.RelDistinct
 import org.partiql.plan.v1.operator.rel.RelError
 import org.partiql.plan.v1.operator.rel.RelExcept
 import org.partiql.plan.v1.operator.rel.RelExclude
+import org.partiql.plan.v1.operator.rel.RelExcludeCollectionWildcard
+import org.partiql.plan.v1.operator.rel.RelExcludeIndex
+import org.partiql.plan.v1.operator.rel.RelExcludeKey
+import org.partiql.plan.v1.operator.rel.RelExcludePath
+import org.partiql.plan.v1.operator.rel.RelExcludeStep
+import org.partiql.plan.v1.operator.rel.RelExcludeStructWildcard
+import org.partiql.plan.v1.operator.rel.RelExcludeSymbol
 import org.partiql.plan.v1.operator.rel.RelFilter
 import org.partiql.plan.v1.operator.rel.RelIntersect
 import org.partiql.plan.v1.operator.rel.RelIterate
@@ -100,6 +117,7 @@ import org.partiql.plan.v1.operator.rex.RexVisitor
 import org.partiql.planner.catalog.Session
 import org.partiql.spi.fn.Agg
 import org.partiql.types.PType
+import org.partiql.plan.Rel as IRel
 
 /**
  * See https://github.com/partiql/partiql-lang-kotlin/blob/v1/partiql-eval/src/main/kotlin/org/partiql/eval/internal/Compiler.kt
@@ -113,9 +131,11 @@ internal class SqlCompiler(
 
     private val rexCompiler = RexCompiler()
 
-    fun compile(rel: Rel, ctx: Unit): Operator.Relation = rel.accept(relCompiler, ctx)
+    fun compile(rex: Rex): Operator.Expr = compile(rex, Unit).catch()
 
-    fun compile(rex: Rex, ctx: Unit): Operator.Expr = rex.accept(rexCompiler, ctx)
+    private fun compile(rel: Rel, ctx: Unit): Operator.Relation = rel.accept(relCompiler, ctx)
+
+    private fun compile(rex: Rex, ctx: Unit): Operator.Expr = rex.accept(rexCompiler, ctx)
 
     /**
      * Transforms plan relation operators into the internal physical operators.
@@ -167,8 +187,38 @@ internal class SqlCompiler(
 
         override fun visitExclude(rel: RelExclude, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
-            val paths = rel.getPaths()
-            return RelOpExclude(input, paths)
+
+            // !! TEMPORARY BLOCK !!
+            //
+            // TODO REPLACE ME WITH NEW IMPLEMENTATION IN LATER PR
+            //
+            fun translate(step: RelExcludeStep): IRel.Op.Exclude.Step {
+                val type = when (step) {
+                    is RelExcludeKey -> relOpExcludeTypeStructKey(step.getKey())
+                    is RelExcludeIndex -> relOpExcludeTypeCollIndex(step.getIndex())
+                    is RelExcludeSymbol -> relOpExcludeTypeStructSymbol(step.getSymbol())
+                    is RelExcludeCollectionWildcard -> relOpExcludeTypeCollWildcard()
+                    is RelExcludeStructWildcard -> relOpExcludeTypeStructWildcard()
+                    else -> error("Unsupported exclude step: $step")
+                }
+                val substeps = step.getSubsteps().map { translate(it) }
+                return relOpExcludeStep(type, substeps)
+            }
+
+            fun translate(path: RelExcludePath): IRel.Op.Exclude.Path {
+                val root = path.getRoot()
+                val steps = path.getSteps().map { translate(it) }
+                return relOpExcludePath(
+                    root = rexOpVar(root.getDepth(), root.getOffset()),
+                    steps = steps
+                )
+            }
+
+            val paths = rel.getPaths().map { translate(it) }
+            //
+            // !! TEMPORARY BLOCK !!
+
+            return RelOpExcludeOld(input, paths)
         }
 
         override fun visitFilter(rel: RelFilter, ctx: Unit): Operator.Relation {
@@ -397,7 +447,10 @@ internal class SqlCompiler(
             val input = compile(rex.getInput(), ctx)
             val key = compile(rex.getKey(), ctx)
             val value = compile(rex.getValue(), ctx)
-            return ExprPivot(input, key, value)
+            return when (mode) {
+                PartiQLEngine.Mode.PERMISSIVE -> ExprPivotPermissive(input, key, value)
+                PartiQLEngine.Mode.STRICT -> ExprPivot(input, key, value)
+            }
         }
 
         override fun visitSelect(rex: RexSelect, ctx: Unit): Operator.Expr {
