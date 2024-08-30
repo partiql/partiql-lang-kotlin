@@ -119,6 +119,26 @@ internal sealed class Ref : PlanNode() {
 
         override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRefObj(this, ctx)
 
+        // !! MANUALLY OVERRIDE EQUALS/HASHCODE BECAUSE OF THE `table`
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Obj) return false
+
+            if (catalog != other.catalog) return false
+            if (name != other.name) return false
+            if (type != other.type) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = catalog.hashCode()
+            result = 31 * result + name.hashCode()
+            result = 31 * result + type.hashCode()
+            return result
+        }
+
         internal companion object {
             @JvmStatic
             internal fun builder(): RefObjBuilder = RefObjBuilder()
