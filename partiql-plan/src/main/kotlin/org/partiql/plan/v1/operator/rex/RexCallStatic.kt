@@ -4,9 +4,9 @@ import org.partiql.spi.fn.Fn
 import org.partiql.types.PType
 
 /**
- * Scalar function calls.
+ * Logical operator for a scalar function call.
  */
-public interface RexCall : Rex {
+public interface RexCallStatic : Rex {
 
     /**
      * Returns the function to invoke.
@@ -22,13 +22,13 @@ public interface RexCall : Rex {
 
     override fun getChildren(): Collection<Rex> = getArgs()
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCall(this, ctx)
+    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCallStatic(this, ctx)
 }
 
 /**
- * Default [RexCall] implementation meant for extension.
+ * Default [RexCallStatic] implementation meant for extension.
  */
-internal class RexCallImpl(function: Fn, args: List<Rex>) : RexCall {
+internal class RexCallStaticImpl(function: Fn, args: List<Rex>) : RexCallStatic {
 
     // DO NOT USE FINAL
     private var _function = function
