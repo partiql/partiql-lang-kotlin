@@ -53,15 +53,27 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * NOTE: These have been serialized as Ion.
+ * TODO: Delete this file once errors have a better serialization.
+ * @see PrintPlanTyperTestsPorted
+ * @see TyperTests
+ */
 internal class PlanTyperTestsPorted {
 
     sealed class TestCase {
+        abstract val name: String?
+        abstract val key: PartiQLTest.Key?
+        abstract val query: String?
+        abstract val catalog: String
+        abstract val catalogPath: List<String>
+
         class SuccessTestCase(
-            val name: String? = null,
-            val key: PartiQLTest.Key? = null,
-            val query: String? = null,
-            val catalog: String = "pql",
-            val catalogPath: List<String> = emptyList(),
+            override val name: String? = null,
+            override val key: PartiQLTest.Key? = null,
+            override val query: String? = null,
+            override val catalog: String = "pql",
+            override val catalogPath: List<String> = emptyList(),
             val expected: CompilerType,
             val warnings: ProblemHandler? = null,
         ) : TestCase() {
@@ -84,14 +96,14 @@ internal class PlanTyperTestsPorted {
         }
 
         class ErrorTestCase(
-            val name: String,
-            val key: PartiQLTest.Key?,
-            val query: String?,
-            val catalog: String = "pql",
-            val catalogPath: List<String> = emptyList(),
+            override val name: String,
+            override val key: PartiQLTest.Key?,
+            override val query: String?,
+            override val catalog: String = "pql",
+            override val catalogPath: List<String> = emptyList(),
             val note: String?,
             val expected: CompilerType?,
-            val problemHandler: ProblemHandler?,
+            val problemHandler: AssertProblemExists?,
         ) : TestCase() {
 
             constructor(
@@ -102,20 +114,21 @@ internal class PlanTyperTestsPorted {
                 catalogPath: List<String> = emptyList(),
                 note: String? = null,
                 expected: StaticType? = null,
-                problemHandler: ProblemHandler? = null,
+                problemHandler: AssertProblemExists? = null,
             ) : this(name, key, query, catalog, catalogPath, note, expected?.let { PType.fromStaticType(it).toCType() }, problemHandler)
 
             override fun toString(): String = "$name : ${query ?: key}"
         }
 
         class ThrowingExceptionTestCase(
-            val name: String,
-            val query: String,
-            val catalog: String = "pql",
-            val catalogPath: List<String> = emptyList(),
+            override val name: String,
+            override val query: String,
+            override val catalog: String = "pql",
+            override val catalogPath: List<String> = emptyList(),
             val note: String? = null,
             val expectedThrowable: KClass<out Throwable>,
         ) : TestCase() {
+            override val key: PartiQLTest.Key? = null
             override fun toString(): String {
                 return "$name : $query"
             }
@@ -127,19 +140,21 @@ internal class PlanTyperTestsPorted {
         private val parser = PartiQLParser.default()
         private val planner = PartiQLPlanner.builder().signal().build()
 
-        private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
-            val message = buildString {
-                appendLine("Expected problems to include: $problem")
-                appendLine("Received: [")
-                problems.forEach {
-                    append("\t")
-                    appendLine(it)
+        class AssertProblemExists(val problem: Problem) : ProblemHandler {
+            override fun handle(problems: List<Problem>, ignoreSourceLocation: Boolean) {
+                val message = buildString {
+                    appendLine("Expected problems to include: $problem")
+                    appendLine("Received: [")
+                    problems.forEach {
+                        append("\t")
+                        appendLine(it)
+                    }
+                    appendLine("]")
                 }
-                appendLine("]")
-            }
-            when (ignoreSourceLocation) {
-                true -> assertTrue(message) { problems.any { it.details == problem.details } }
-                false -> assertTrue(message) { problems.any { it == problem } }
+                when (ignoreSourceLocation) {
+                    true -> assertTrue(message) { problems.any { it.details == problem.details } }
+                    false -> assertTrue(message) { problems.any { it == problem } }
+                }
             }
         }
 
@@ -754,7 +769,7 @@ internal class PlanTyperTestsPorted {
                         CURRENT_DATE AS "curr_date",
                         CURRENT_USER || ' is my name.' AS name_desc
                     FROM << 0, 1 >>;
-                """.trimIndent(),
+                """,
                 expected = BagType(
                     StructType(
                         fields = listOf(
@@ -777,7 +792,7 @@ internal class PlanTyperTestsPorted {
                 name = "Current User (String) PLUS String",
                 query = "CURRENT_USER + 'hello'",
                 expected = ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(
                             StaticType.STRING,
@@ -850,7 +865,7 @@ internal class PlanTyperTestsPorted {
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
                 expected = INT4,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
                 )
             ),
@@ -858,7 +873,7 @@ internal class PlanTyperTestsPorted {
                 name = "BITWISE_AND_NON_INT_OPERAND",
                 query = "1 & 'NOT AN INT'",
                 expected = StaticType.ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.INT4, StaticType.STRING),
                         "BITWISE_AND",
@@ -1014,7 +1029,7 @@ internal class PlanTyperTestsPorted {
                         )
                     )
                 ),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("a"), setOf("t1", "t2"))
                 )
             ),
@@ -1025,7 +1040,7 @@ internal class PlanTyperTestsPorted {
                     FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
                     LEFT OUTER JOIN lhs AS rhs
                     ON lhs[2] = rhs
-                """.trimIndent(),
+                """,
                 expected = BagType(INT4)
             ),
             SuccessTestCase(
@@ -1035,7 +1050,7 @@ internal class PlanTyperTestsPorted {
                     FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
                     INNER JOIN lhs AS rhs
                     ON lhs[2] = rhs
-                """.trimIndent(),
+                """,
                 expected = BagType(INT4)
             ),
             ErrorTestCase(
@@ -1045,8 +1060,8 @@ internal class PlanTyperTestsPorted {
                     FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
                     RIGHT OUTER JOIN lhs AS rhs
                     ON lhs[2] = rhs
-                """.trimIndent(),
-                problemHandler = assertProblemExists(
+                """,
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("lhs"), setOf())
                 )
             ),
@@ -1057,8 +1072,8 @@ internal class PlanTyperTestsPorted {
                     FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
                     FULL OUTER JOIN lhs AS rhs
                     ON lhs[2] = rhs
-                """.trimIndent(),
-                problemHandler = assertProblemExists(
+                """,
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("lhs"), setOf())
                 )
             ),
@@ -2127,7 +2142,7 @@ internal class PlanTyperTestsPorted {
                         )
                     )
                 ),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.unresolvedExcludedExprRoot("nonsense")
                 )
             ),
@@ -2214,7 +2229,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets ORDER BY unknown_col",
                 expected = TABLE_AWS_DDB_PETS_LIST,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("unknown_col"), setOf("pets"))
                 )
             ),
@@ -3139,7 +3154,7 @@ internal class PlanTyperTestsPorted {
                     SELECT VALUE 1 FROM "pql"."main"['employer'] AS e;
                 """,
                 expected = BagType(StaticType.INT4),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(
                         id(sensitive("pql"), sensitive("main"))
                     )
@@ -3151,7 +3166,7 @@ internal class PlanTyperTestsPorted {
                     SELECT VALUE 1 FROM "pql"['main']."employer" AS e;
                 """,
                 expected = BagType(StaticType.INT4),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(sensitive("pql"))
                 )
             ),
@@ -3169,7 +3184,7 @@ internal class PlanTyperTestsPorted {
                     { 'aBc': 1, 'AbC': 2.0 }['Ab' || 'C'];
                 """,
                 expected = ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.expressionAlwaysReturnsMissing("Collections must be indexed with integers, found STRING")
                 )
             ),
@@ -3362,7 +3377,7 @@ internal class PlanTyperTestsPorted {
                                 FROM T3 AS T3_mapping
                             )
                     ;
-                """.trimIndent(),
+                """,
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -3390,7 +3405,7 @@ internal class PlanTyperTestsPorted {
                         { 'a': CAST(1 AS INT8) },
                         { 'a': CAST(1 AS INT4) }
                     >> AS t
-                """.trimIndent(),
+                """,
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -3414,7 +3429,7 @@ internal class PlanTyperTestsPorted {
                         { 'a': CAST(1 AS INT4) },
                         { }
                     >> AS t
-                """.trimIndent(),
+                """,
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -3438,7 +3453,7 @@ internal class PlanTyperTestsPorted {
                         { 'a': CAST(1 AS INT4) },
                         { 'a': 'hello world!' }
                     >> AS t
-                """.trimIndent(),
+                """,
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -3462,7 +3477,7 @@ internal class PlanTyperTestsPorted {
                         { 'a': CAST(1 AS INT4), 'b': TRUE },
                         { 'a': 'hello world!!', 'b': DATE '2023-01-01' }
                     >> AS t
-                """.trimIndent(),
+                """,
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -3481,15 +3496,15 @@ internal class PlanTyperTestsPorted {
                 name = """
                     unary plus on non-compatible type -- this cannot resolve to a dynamic call since no function
                     will ever be invoked.
-                """.trimIndent(),
+                """,
                 query = """
                     SELECT VALUE +t.a
                     FROM <<
                         { 'a': 'hello world!'  }
                     >> AS t
-                """.trimIndent(),
+                """,
                 expected = BagType(ANY),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.STRING),
                         "POS",
@@ -3499,29 +3514,29 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = """
                     unary plus on dynamic types
-                """.trimIndent(),
+                """,
                 query = """
                     SELECT VALUE +t.a
                     FROM <<
                         { 'a': 'hello world!'  },
                         { 'a': <<>> }
                     >> AS t
-                """.trimIndent(),
+                """,
                 expected = BagType(ANY),
             ),
             ErrorTestCase(
                 name = """
                     unary plus on missing type -- this cannot resolve to a dynamic call since no function
                     will ever be invoked.
-                """.trimIndent(),
+                """,
                 query = """
                     SELECT VALUE +t.a
                     FROM <<
                         { 'NOT_A': 1 }
                     >> AS t
-                """.trimIndent(),
+                """,
                 expected = BagType(ANY),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(
                         Identifier.Symbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                         setOf("t"),
@@ -3532,12 +3547,12 @@ internal class PlanTyperTestsPorted {
                 name = """
                     unary plus on missing type -- this cannot resolve to a dynamic call since no function
                     will ever be invoked.
-                """.trimIndent(),
+                """,
                 query = """
                     +MISSING
-                """.trimIndent(),
+                """,
                 expected = StaticType.DECIMAL, // This is due to it being the highest precedence type
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
                 )
             ),
@@ -3677,7 +3692,7 @@ internal class PlanTyperTestsPorted {
                         { 'a': 3, 'b': 4 },
                         { 'a': 5, 'b': NULL }
                     >> GROUP BY a
-            """.trimIndent(),
+            """,
             expected = BagType(
                 StructType(
                     fields = mapOf(
@@ -4010,7 +4025,7 @@ internal class PlanTyperTestsPorted {
                         ),
                     )
                 ),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("pets"))
                 )
             ),
@@ -4040,7 +4055,7 @@ internal class PlanTyperTestsPorted {
                         ),
                     )
                 ),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("pets"))
                 )
             ),
@@ -4104,7 +4119,7 @@ internal class PlanTyperTestsPorted {
                         ),
                     )
                 ),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(id(insensitive("ddb"), insensitive("pets")))
                 )
             ),
@@ -4260,7 +4275,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id IN 'hello'",
                 expected = ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.INT4, StaticType.STRING),
                         "" +
@@ -4281,7 +4296,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id BETWEEN 1 AND 'a'",
                 expected = ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(
                             StaticType.INT4,
@@ -4305,7 +4320,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.ship_option LIKE 3",
                 expected = ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.STRING, StaticType.INT4),
                         "LIKE",
@@ -4365,7 +4380,7 @@ internal class PlanTyperTestsPorted {
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
                 expected = StaticType.BOOL,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("non_existing_column"), emptySet())
                 )
             ),
@@ -4375,7 +4390,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 1 AND 1",
                 expected = ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.BOOL, StaticType.INT4),
                         "AND",
@@ -4388,7 +4403,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "1 AND order_info.customer_id = 1",
                 expected = ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.INT4, StaticType.BOOL),
                         "AND",
@@ -4413,7 +4428,7 @@ internal class PlanTyperTestsPorted {
                         )
                     )
                 ),
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("unknown_col"), setOf("orders"))
                 )
             ),
@@ -4430,7 +4445,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT '5'",
                 expected = TABLE_AWS_DDB_PETS,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.unexpectedType(
                         StaticType.STRING, setOf(StaticType.INT)
                     )
@@ -4449,7 +4464,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT 1 OFFSET '5'",
                 expected = TABLE_AWS_DDB_PETS,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.unexpectedType(StaticType.STRING, setOf(StaticType.INT))
                 )
             ),
@@ -4597,7 +4612,7 @@ internal class PlanTyperTestsPorted {
                 name = "TRIM_2_error",
                 query = "trim(2 FROM ' Hello, World! ')",
                 expected = ANY,
-                problemHandler = assertProblemExists(
+                problemHandler = AssertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.STRING, StaticType.INT4),
                         "TRIM_CHARS",

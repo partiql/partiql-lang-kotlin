@@ -23,6 +23,7 @@ import kotlin.io.path.toPath
  * The PartiQLTestProvider is a simple utility for indexing SQL statements within files for re-use across library tests.
  */
 class PartiQLTestProvider {
+    // TODO: Rename this to StatementProvider to better reflect its purpose
 
     /**
      * Backing map for test input lookup.

@@ -1,0 +1,6717 @@
+
+test::{
+  name:"Pets should not be accessible #1",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable pets does not exist in the database environment and is not an attribute of the following in-scope variables [].'''
+    )
+  }
+}
+test::{
+  name:"Pets should not be accessible #2",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets",
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable pets does not exist in the database environment and is not an attribute of the following in-scope variables [].'''
+    )
+  }
+}
+test::{
+  name:"Project all explicitly",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "id"
+        INTEGER
+        "breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Project all implicitly",
+  type:"type",
+  body:{
+    statement:"SELECT id, breed FROM pets",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "id"
+        INTEGER
+        "breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Test #4",
+  type:"type",
+  body:{
+    statement:"b",
+    session:{
+      catalog:"b",
+      cwd:[
+        "b"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ROW
+      "b"
+      (
+      ROW
+        "b"
+        INTEGER
+      )
+      "c"
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Test #5",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM b",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "identifier"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Test #6",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM b",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "b"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "identifier"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"Test #7",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM ddb.pets",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable ddb.pets does not exist in the database environment and is not an attribute of the following in-scope variables [].'''
+    )
+  }
+}
+test::{
+  name:"Test #10",
+  type:"type",
+  body:{
+    statement:"b.b",
+    session:{
+      catalog:"b",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ROW
+      "b"
+      (
+      ROW
+        "b"
+        INTEGER
+      )
+      "c"
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Test #11",
+  type:"type",
+  body:{
+    statement:"b.b",
+    session:{
+      catalog:"b",
+      cwd:[
+        "b"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ROW
+      "b"
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Test #12",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM b",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "identifier"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Test #13",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM ddb.b",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "identifier"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Test #14",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM aws.ddb.pets",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "id"
+        INTEGER
+        "breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Test #15",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM aws.b.b",
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "identifier"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"Test #16",
+  type:"type",
+  body:{
+    statement:"b.b.b",
+    session:{
+      catalog:"b",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ROW
+      "b"
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Test #17",
+  type:"type",
+  body:{
+    statement:"b.b.c",
+    session:{
+      catalog:"b",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Test #18",
+  type:"type",
+  body:{
+    statement:"b.b.b",
+    session:{
+      catalog:"b",
+      cwd:[
+        "b"
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Test #19",
+  type:"type",
+  body:{
+    statement:"b.b.b.c",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Test #20",
+  type:"type",
+  body:{
+    statement:"b.b.b.b",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ROW
+      "b"
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Test #21",
+  type:"type",
+  body:{
+    statement:"b.b.b.b",
+    session:{
+      catalog:"b",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Test #22",
+  type:"type",
+  body:{
+    statement:"b.b.c",
+    session:{
+      catalog:"b",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Test #23",
+  type:"type",
+  body:{
+    statement:"b.b.b",
+    session:{
+      catalog:"b",
+      cwd:[
+        "b"
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Test #24",
+  type:"type",
+  body:{
+    statement:"b.b.b.b.b",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Test #25",
+  type:"type",
+  body:{
+    statement:"b.b.b.b",
+    session:{
+      catalog:"b",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"EQ",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id = 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"NEQ",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id <> 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"GEQ",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id >= 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"GT",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id > 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"LEQ",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id <= 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"LT",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id < 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"IN",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id IN (1, 2, 3)",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"IN Failure",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id IN 'hello'",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''INTEGER, STRING is/are incompatible data types for the \'IN_COLLECTION\' operator.'''
+    )
+  }
+}
+test::{
+  name:"BETWEEN",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id BETWEEN 1 AND 2",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"BETWEEN Failure",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id BETWEEN 1 AND 'a'",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''INTEGER, INTEGER, STRING is/are incompatible data types for the \'BETWEEN\' operator.'''
+    )
+  }
+}
+test::{
+  name:"LIKE",
+  type:"type",
+  body:{
+    statement:"order_info.ship_option LIKE '%ABC%'",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"LIKE Failure",
+  type:"type",
+  body:{
+    statement:"order_info.ship_option LIKE 3",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''STRING, INTEGER is/are incompatible data types for the \'LIKE\' operator.'''
+    )
+  }
+}
+test::{
+  name:"Case Insensitive success",
+  type:"type",
+  body:{
+    statement:"order_info.CUSTOMER_ID = 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"Case Sensitive failure",
+  type:"type",
+  body:{
+    statement:"order_info.\"CUSTOMER_ID\" = 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:FAILURE
+  }
+}
+test::{
+  name:"Case Sensitive success",
+  type:"type",
+  body:{
+    statement:"order_info.\"customer_id\" = 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"1-Level Junction",
+  type:"type",
+  body:{
+    statement:'''(order_info.customer_id = 1) AND (order_info.marketplace_id = 2)''',
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"2-Level Junction",
+  type:"type",
+  body:{
+    statement:'''(order_info.customer_id = 1) AND (order_info.marketplace_id = 2) OR (order_info.customer_id = 3) AND (order_info.marketplace_id = 4)''',
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"INT and STR Comparison",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id = 'something'",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"Nonexisting Comparison",
+  type:"type",
+  body:{
+    statement:"non_existing_column = 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable non_existing_column does not exist in the database environment and is not an attribute of the following in-scope variables [].'''
+    )
+  }
+}
+test::{
+  name:"Bad comparison",
+  type:"type",
+  body:{
+    statement:"order_info.customer_id = 1 AND 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''BOOL, INTEGER is/are incompatible data types for the \'AND\' operator.'''
+    )
+  }
+}
+test::{
+  name:"Bad comparison",
+  type:"type",
+  body:{
+    statement:"1 AND order_info.customer_id = 1",
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''INTEGER, BOOL is/are incompatible data types for the \'AND\' operator.'''
+    )
+  }
+}
+test::{
+  name:"Unknown column",
+  type:"type",
+  body:{
+    statement:'''SELECT unknown_col FROM orders WHERE customer_id = 1''',
+    session:{
+      catalog:"db",
+      cwd:[
+        "markets"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable unknown_col does not exist in the database environment and is not an attribute of the following in-scope variables [orders].'''
+    )
+  }
+}
+test::{
+  name:"LIMIT INT",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets LIMIT 5",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "id"
+        INTEGER
+        "breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"LIMIT STR",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets LIMIT '5'",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      "Unexpected type STRING, expected one of NUMERIC"
+    )
+  }
+}
+test::{
+  name:"OFFSET INT",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets LIMIT 1 OFFSET 5",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "id"
+        INTEGER
+        "breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"OFFSET STR",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets LIMIT 1 OFFSET '5'",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      "Unexpected type STRING, expected one of NUMERIC"
+    )
+  }
+}
+test::{
+  name:"CAST",
+  type:"type",
+  body:{
+    statement:"SELECT CAST(breed AS INT) AS cast_breed FROM pets",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "cast_breed"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"UPPER",
+  type:"type",
+  body:{
+    statement:"SELECT UPPER(breed) AS upper_breed FROM pets",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "upper_breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Non-tuples",
+  type:"type",
+  body:{
+    statement:"SELECT a FROM << [ 1, 1.0 ] >> AS a",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          DYNAMIC
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"Non-tuples in SELECT VALUE",
+  type:"type",
+  body:{
+    statement:"SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ARRAY
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:"SELECT VALUE",
+  type:"type",
+  body:{
+    statement:"SELECT VALUE [1, 1.0] FROM <<>>",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ARRAY
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:"Duplicate fields in struct",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT t.a AS a
+                    FROM <<
+                        { \'a\': 1, \'a\': \'hello\' }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:"Duplicate fields in struct",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT a AS a
+                    FROM <<
+                        { \'a\': 1, \'a\': \'hello\' }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:"Current User",
+  type:"type",
+  body:{
+    statement:"CURRENT_USER",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"Trim",
+  type:"type",
+  body:{
+    statement:"trim(' ')",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"Current User Concat",
+  type:"type",
+  body:{
+    statement:"CURRENT_USER || 'hello'",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"Current User Concat in WHERE",
+  type:"type",
+  body:{
+    statement:'''SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = \'hello\'''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"TRIM_2",
+  type:"type",
+  body:{
+    statement:"trim(' ' FROM ' Hello, World! ')",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"TRIM_1",
+  type:"type",
+  body:{
+    statement:"trim(' Hello, World! ')",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"TRIM_3",
+  type:"type",
+  body:{
+    statement:"trim(LEADING ' ' FROM ' Hello, World! ')",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"TRIM_2_error",
+  type:"type",
+  body:{
+    statement:"trim(2 FROM ' Hello, World! ')",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''STRING, INTEGER is/are incompatible data types for the \'TRIM_CHARS\' operator.'''
+    )
+  }
+}
+test::{
+  name:"Collection BAG<INT4>",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "collections-01"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Collection LIST<INT4>",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "collections-02"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ARRAY
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Collection LIST<INT4>",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "collections-03"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ARRAY
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Collection SEXP<INT4>",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "collections-04"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    SEXP
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"SELECT from array",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "collections-05"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"SELECT from array",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "collections-06"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "x"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"cast decimal",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS DECIMAL)",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"cast decimal(1)",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS DECIMAL(1))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      1
+      0
+    )
+  }
+}
+test::{
+  name:"cast decimal(1,0)",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS DECIMAL(1,0))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      1
+      0
+    )
+  }
+}
+test::{
+  name:"cast decimal(1,1)",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS DECIMAL(1,1))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      1
+      1
+    )
+  }
+}
+test::{
+  name:"cast decimal(38)",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS DECIMAL(38))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      38
+      0
+    )
+  }
+}
+test::{
+  name:"cast decimal(38,0)",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS DECIMAL(38,0))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      38
+      0
+    )
+  }
+}
+test::{
+  name:"cast decimal(38,38)",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS DECIMAL(38,38))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      38
+      38
+    )
+  }
+}
+test::{
+  name:"cast decimal string",
+  type:"type",
+  body:{
+    statement:"CAST('1' AS DECIMAL)",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"cast decimal(1) string",
+  type:"type",
+  body:{
+    statement:"CAST('1' AS DECIMAL(1))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      1
+      0
+    )
+  }
+}
+test::{
+  name:"cast decimal(1,0) string",
+  type:"type",
+  body:{
+    statement:"CAST('1' AS DECIMAL(1,0))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      1
+      0
+    )
+  }
+}
+test::{
+  name:"cast decimal(1,1) string",
+  type:"type",
+  body:{
+    statement:"CAST('1' AS DECIMAL(1,1))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      1
+      1
+    )
+  }
+}
+test::{
+  name:"cast decimal(38) string",
+  type:"type",
+  body:{
+    statement:"CAST('1' AS DECIMAL(38))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      38
+      0
+    )
+  }
+}
+test::{
+  name:"cast decimal(38,0) string",
+  type:"type",
+  body:{
+    statement:"CAST('1' AS DECIMAL(38,0))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      38
+      0
+    )
+  }
+}
+test::{
+  name:"cast decimal(38,38) string",
+  type:"type",
+  body:{
+    statement:"CAST('1' AS DECIMAL(38,38))",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      38
+      38
+    )
+  }
+}
+test::{
+  name:"Test #8",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM ddb.pets",
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "id"
+        INTEGER
+        "breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Test #9",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM b.b",
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "identifier"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"Select star with join",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "sanity-05"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "name"
+        (
+        ROW
+          "first"
+          STRING
+          "last"
+          STRING
+        )
+        "ssn"
+        STRING
+        "employer"
+        STRING
+        "name"
+        STRING
+        "tax_id"
+        BIGINT
+        "address"
+        (
+        ROW
+          "street"
+          STRING
+          "zip"
+          INTEGER
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"Select star",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "sanity-06"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "first"
+        STRING
+        "last"
+        STRING
+        "full_name"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Current User",
+  type:"type",
+  body:{
+    statement:"CURRENT_USER",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"Current User Concat",
+  type:"type",
+  body:{
+    statement:"CURRENT_USER || 'hello'",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"Current User in WHERE",
+  type:"type",
+  body:{
+    statement:'''SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = \'hello\'''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Current User in WHERE",
+  type:"type",
+  body:{
+    statement:'''SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Testing CURRENT_USER and CURRENT_DATE Binders",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT
+                        CURRENT_USER,
+                        CURRENT_DATE,
+                        CURRENT_USER AS "curr_user",
+                        CURRENT_DATE AS "curr_date",
+                        CURRENT_USER || \' is my name.\' AS name_desc
+                    FROM << 0, 1 >>;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "CURRENT_USER"
+        STRING
+        "CURRENT_DATE"
+        DATE
+        "curr_user"
+        STRING
+        "curr_date"
+        DATE
+        "name_desc"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Current User (String) PLUS String",
+  type:"type",
+  body:{
+    statement:"CURRENT_USER + 'hello'",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''STRING, STRING is/are incompatible data types for the \'PLUS\' operator.'''
+    )
+  }
+}
+test::{
+  name:"BITWISE_AND_1",
+  type:"type",
+  body:{
+    statement:"1 & 2",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"BITWISE_AND_2",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS INT2) & CAST(2 AS INT2)",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:SMALLINT
+  }
+}
+test::{
+  name:"BITWISE_AND_3",
+  type:"type",
+  body:{
+    statement:"1 & 2",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"BITWISE_AND_4",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS INT8) & CAST(2 AS INT8)",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"BITWISE_AND_5",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS INT2) & 2",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"BITWISE_AND_6",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS INT2) & CAST(2 AS INT8)",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"BITWISE_AND_7",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS INT2) & 2",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"BITWISE_AND_8",
+  type:"type",
+  body:{
+    statement:"1 & CAST(2 AS INT8)",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"BITWISE_AND_9",
+  type:"type",
+  body:{
+    statement:"1 & 2",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"BITWISE_AND_10",
+  type:"type",
+  body:{
+    statement:"CAST(1 AS INT8) & 2",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"BITWISE_AND_NULL_OPERAND",
+  type:"type",
+  body:{
+    statement:"1 & NULL",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"BITWISE_AND_MISSING_OPERAND",
+  type:"type",
+  body:{
+    statement:"1 & MISSING",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Expression always returns missing: caused by Static function always receives MISSING arguments.'''
+    )
+  }
+}
+test::{
+  name:"BITWISE_AND_NON_INT_OPERAND",
+  type:"type",
+  body:{
+    statement:"1 & 'NOT AN INT'",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''INTEGER, STRING is/are incompatible data types for the \'BITWISE_AND\' operator.'''
+    )
+  }
+}
+test::{
+  name:"UNPIVOT",
+  type:"type",
+  body:{
+    statement:'''SELECT VALUE v FROM UNPIVOT { \'a\': 2 } AS v AT attr WHERE attr = \'a\'''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"CROSS JOIN",
+  type:"type",
+  body:{
+    statement:'''SELECT * FROM <<{ \'a\': 1 }>> AS t1, <<{ \'b\': 2.0 }>> AS t2''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "b"
+        DECIMAL
+      )
+    )
+  }
+}
+test::{
+  name:"LEFT JOIN",
+  type:"type",
+  body:{
+    statement:'''SELECT * FROM <<{ \'a\': 1 }>> AS t1 LEFT JOIN <<{ \'b\': 2.0 }>> AS t2 ON TRUE''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "b"
+        DECIMAL
+      )
+    )
+  }
+}
+test::{
+  name:"LEFT JOIN",
+  type:"type",
+  body:{
+    statement:'''SELECT b, a FROM <<{ \'a\': 1 }>> AS t1 LEFT JOIN <<{ \'b\': 2.0 }>> AS t2 ON TRUE''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "b"
+        DECIMAL
+        "a"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"LEFT JOIN",
+  type:"type",
+  body:{
+    statement:'''SELECT t1.a, t2.a FROM <<{ \'a\': 1 }>> AS t1 LEFT JOIN <<{ \'a\': 2.0 }>> AS t2 ON t1.a = t2.a''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "a"
+        DECIMAL
+      )
+    )
+  }
+}
+test::{
+  name:"LEFT JOIN ALL",
+  type:"type",
+  body:{
+    statement:'''SELECT * FROM <<{ \'a\': 1 }>> AS t1 LEFT JOIN <<{ \'a\': 2.0 }>> AS t2 ON t1.a = t2.a''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "a"
+        DECIMAL
+      )
+    )
+  }
+}
+test::{
+  name:"LEFT JOIN ALL",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT *
+                    FROM
+                            <<{ \'a\': 1 }>> AS t1
+                        LEFT JOIN
+                            <<{ \'a\': 2.0 }>> AS t2
+                        ON t1.a = t2.a
+                        LEFT JOIN
+                            <<{ \'a\': \'hello, world\' }>> AS t3
+                        ON t3.a = \'hello\'
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "a"
+        DECIMAL
+        "a"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"LEFT JOIN Ambiguous Reference in ON",
+  type:"type",
+  body:{
+    statement:'''SELECT * FROM <<{ \'a\': 1 }>> AS t1 LEFT JOIN <<{ \'a\': 2.0 }>> AS t2 ON a = 3''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable a does not exist in the database environment and is not an attribute of the following in-scope variables [t1, t2].'''
+    )
+  }
+}
+test::{
+  name:"LEFT JOIN (Lateral references)",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    LEFT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"INNER JOIN (Lateral references)",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    INNER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"RIGHT JOIN (Doesn't support lateral references)",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    RIGHT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable lhs does not exist in the database environment and is not an attribute of the following in-scope variables [].'''
+    )
+  }
+}
+test::{
+  name:"FULL JOIN (Doesn't support lateral references)",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    FULL OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable lhs does not exist in the database environment and is not an attribute of the following in-scope variables [].'''
+    )
+  }
+}
+test::{
+  name:"EXCLUDE SELECT star",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-01"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "name"
+        STRING
+        "custId"
+        INTEGER
+        "address"
+        (
+        ROW
+          "city"
+          STRING
+          "zipcode"
+          INTEGER
+          "street"
+          STRING
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE SELECT star multiple paths",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-02"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "name"
+        STRING
+        "custId"
+        INTEGER
+        "address"
+        (
+        ROW
+          "city"
+          STRING
+          "zipcode"
+          INTEGER
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''EXCLUDE SELECT star list index and list index field''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-03"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "b"
+          (
+          ROW
+            "c"
+            (
+            ARRAY
+              (
+              ROW
+                "field"
+                INTEGER
+              )
+            )
+          )
+        )
+        "foo"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE SELECT star collection index as last step",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-04"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "b"
+          (
+          ROW
+            "c"
+            (
+            ARRAY
+              INTEGER
+            )
+          )
+        )
+        "foo"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:'''EXCLUDE SELECT star collection wildcard as last step''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-05"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          INTEGER
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE SELECT star list wildcard",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-06"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "b"
+          (
+          ROW
+            "c"
+            (
+            ARRAY
+              (
+              ROW
+                "field_y"
+                INTEGER
+              )
+            )
+          )
+        )
+        "foo"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE SELECT star tuple wildcard as last step",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-07"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "b"
+          (
+          ROW
+            "c"
+            (
+            ARRAY
+              (
+              ROW
+              )
+            )
+          )
+        )
+        "foo"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE SELECT star order by",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-08"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ARRAY
+      (
+      ROW
+        "foo"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE SELECT star with JOIN",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-09"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "b"
+        INTEGER
+        "c"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"SELECT t.b EXCLUDE ex 1",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-10"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "b"
+        (
+        ARRAY
+          (
+          ROW
+            "b_2"
+            INTEGER
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"SELECT * EXCLUDE ex 2",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-11"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "a_1"
+          INTEGER
+          "a_2"
+          INTEGER
+        )
+        "b"
+        (
+        ARRAY
+          (
+          ROW
+            "b_2"
+            INTEGER
+          )
+        )
+        "c"
+        INTEGER
+        "d"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"SELECT VALUE t.b EXCLUDE",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-12"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ARRAY
+        (
+        ROW
+          "b_2"
+          INTEGER
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''SELECT * EXCLUDE collection wildcard and nested tuple attr''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-13"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            (
+            ROW
+              "d"
+              STRING
+            )
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''SELECT * EXCLUDE collection index and nested tuple attr''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-14"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            (
+            ROW
+              "c"
+              INTEGER
+              "d"
+              STRING
+            )
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''SELECT * EXCLUDE collection wildcard and nested tuple wildcard''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-15"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            (
+            ROW
+            )
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''SELECT * EXCLUDE collection index and nested tuple wildcard''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-16"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            (
+            ROW
+              "c"
+              INTEGER
+              "d"
+              STRING
+            )
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''SELECT * EXCLUDE collection wildcard and nested collection wildcard''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-17"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            (
+            ROW
+              "c"
+              INTEGER
+              "d"
+              (
+              ARRAY
+                (
+                ROW
+                  "f"
+                  BOOL
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''SELECT * EXCLUDE collection index and nested collection wildcard''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-18"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            (
+            ROW
+              "c"
+              INTEGER
+              "d"
+              (
+              ARRAY
+                (
+                ROW
+                  "e"
+                  STRING
+                  "f"
+                  BOOL
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''SELECT * EXCLUDE collection index and nested collection index''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-19"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            (
+            ROW
+              "c"
+              INTEGER
+              "d"
+              (
+              ARRAY
+                (
+                ROW
+                  "e"
+                  STRING
+                  "f"
+                  BOOL
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE case sensitive lookup",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-20"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "B"
+          (
+          ROW
+            "d"
+            STRING
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''EXCLUDE case sensitive lookup with capitalized and uncapitalized attr''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-21"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "B"
+          (
+          ROW
+            "C"
+            BOOL
+            "d"
+            STRING
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:'''EXCLUDE case sensitive lookup with both capitalized and uncapitalized removed''',
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-22"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "B"
+          (
+          ROW
+            "d"
+            STRING
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE with both duplicates",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-23"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "B"
+          (
+          ROW
+            "d"
+            STRING
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE with removed attribute later referenced",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-24"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "c"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"EXCLUDE with non-existent attribute reference",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-25"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"exclude union of types",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-26"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "t"
+        (
+        ROW
+          "a"
+          (
+          ROW
+            "c"
+            STRING
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"exclude union of types exclude same type",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-27"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "t"
+        (
+        ROW
+          "a"
+          (
+          ROW
+            "c"
+            STRING
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"exclude union of types exclude different type",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-28"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "t"
+        (
+        ROW
+          "a"
+          (
+          ROW
+            "b"
+            INTEGER
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"invalid exclude collection wildcard",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-29"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "b"
+          (
+          ROW
+            "c"
+            INTEGER
+            "d"
+            STRING
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"invalid exclude collection index",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-30"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ROW
+          "b"
+          (
+          ROW
+            "c"
+            INTEGER
+            "d"
+            STRING
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"invalid exclude tuple attr",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-31"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            INTEGER
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"invalid exclude tuple wildcard",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-32"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            INTEGER
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"invalid exclude tuple attr step",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-33"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        BAG
+          (
+          ROW
+            "b"
+            INTEGER
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"invalid exclude root",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-34"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Exclude expression given an unresolvable root \'nonsense\''''
+    )
+  }
+}
+test::{
+  name:"exclude with unions and last step collection index",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "exclude-35"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        (
+        ARRAY
+          (
+          ROW
+            "b"
+            INTEGER
+            "c"
+            DYNAMIC
+          )
+        )
+      )
+    )
+  }
+}
+test::{
+  name:"ORDER BY int",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets ORDER BY id",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ARRAY
+      (
+      ROW
+        "id"
+        INTEGER
+        "breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"ORDER BY str",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets ORDER BY breed",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ARRAY
+      (
+      ROW
+        "id"
+        INTEGER
+        "breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"ORDER BY str",
+  type:"type",
+  body:{
+    statement:"SELECT * FROM pets ORDER BY unknown_col",
+    session:{
+      catalog:"aws",
+      cwd:[
+        "ddb"
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable unknown_col does not exist in the database environment and is not an attribute of the following in-scope variables [pets].'''
+    )
+  }
+}
+test::{
+  name:"Empty Tuple Union",
+  type:"type",
+  body:{
+    statement:"TUPLEUNION()",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ROW
+    )
+  }
+}
+test::{
+  name:"Tuple Union with Literal Struct",
+  type:"type",
+  body:{
+    statement:"TUPLEUNION({ 'a': 1, 'b': 'hello' })",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ROW
+      "a"
+      INTEGER
+      "b"
+      STRING
+    )
+  }
+}
+test::{
+  name:"Tuple Union with Literal Struct AND Duplicates",
+  type:"type",
+  body:{
+    statement:"TUPLEUNION({ 'a': 1, 'a': 'hello' })",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ROW
+      "a"
+      INTEGER
+      "a"
+      STRING
+    )
+  }
+}
+test::{
+  name:"Tuple Union with Nested Struct",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE TUPLEUNION(
+                      t.a
+                    ) FROM <<
+                        { \'a\': { \'b\': 1 } }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "b"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"Tuple Union with Heterogeneous Data",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE TUPLEUNION(
+                      t.a
+                    ) FROM <<
+                        { \'a\': { \'b\': 1 } },
+                        { \'a\': 1 }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      DYNAMIC
+    )
+  }
+}
+test::{
+  name:"Tuple Union with Heterogeneous Data (2)",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE TUPLEUNION(
+                      t.a
+                    ) FROM <<
+                        { \'a\': { \'b\': 1 } },
+                        { \'a\': { \'b\': \'hello\' } },
+                        { \'a\': \'world\' },
+                        { \'a\': 4.5 },
+                        { }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      DYNAMIC
+    )
+  }
+}
+test::{
+  name:"Tuple Union with Heterogeneous Data (3)",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE TUPLEUNION(
+                      p.name
+                    ) FROM aws.ddb.persons AS p
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      DYNAMIC
+    )
+  }
+}
+test::{
+  name:"Complex Tuple Union with Heterogeneous Data",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE TUPLEUNION(
+                      p.name,
+                      p.name
+                    ) FROM aws.ddb.persons AS p
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      DYNAMIC
+    )
+  }
+}
+test::{
+  name:"AGGREGATE over INTS, without alias",
+  type:"type",
+  body:{
+    statement:'''SELECT a, COUNT(*), COUNT(a), SUM(a), MIN(b), MAX(a) FROM << {\'a\': 1, \'b\': 2} >> GROUP BY a''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "_1"
+        BIGINT
+        "_2"
+        BIGINT
+        "_3"
+        INTEGER
+        "_4"
+        INTEGER
+        "_5"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"AGGREGATE over INTS, with alias",
+  type:"type",
+  body:{
+    statement:'''SELECT a, COUNT(*) AS c_s, COUNT(a) AS c, SUM(a) AS s, MIN(b) AS m FROM << {\'a\': 1, \'b\': 2} >> GROUP BY a''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "c_s"
+        BIGINT
+        "c"
+        BIGINT
+        "s"
+        INTEGER
+        "m"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"AGGREGATE over DECIMALS",
+  type:"type",
+  body:{
+    statement:'''SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {\'a\': 1.0, \'b\': 2.0}, {\'a\': 1.0, \'b\': 2.0} >> GROUP BY a''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        DECIMAL
+        "c"
+        BIGINT
+        "s"
+        DECIMAL
+        "m"
+        DECIMAL
+      )
+    )
+  }
+}
+test::{
+  name:"AGGREGATE over nullable integers",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT T1.a
+                    FROM T1
+                        LEFT JOIN T2 AS T2_1
+                            ON T2_1.d =
+                            (
+                                SELECT
+                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
+                                FROM T3 AS T3_mapping
+                            )
+                        LEFT JOIN T2 AS T2_2
+                            ON T2_2.d =
+                            (
+                                SELECT
+                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
+                                FROM T3 AS T3_mapping
+                            )
+                    ;
+                ''',
+    session:{
+      catalog:"aggregations",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        BOOL
+      )
+    )
+  }
+}
+test::{
+  name:"UPPER on binding tuple of literal string",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT
+                        UPPER(some_str) AS upper_str
+                    FROM
+                        << { \'some_str\': \'hello world!\' } >>
+                        AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "upper_str"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"UPPER on literal string",
+  type:"type",
+  body:{
+    statement:'''
+                    UPPER(\'hello world\')
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"UPPER on global string",
+  type:"type",
+  body:{
+    statement:"\n                    UPPER(os)\n                ",
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"UPPER on global string",
+  type:"type",
+  body:{
+    statement:"\n                    UPPER(os)\n                ",
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"UPPER on global struct",
+  type:"type",
+  body:{
+    statement:'''
+                    UPPER(person.ssn)
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"UPPER on global nested struct",
+  type:"type",
+  body:{
+    statement:'''
+                    UPPER(person.name."first")
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"UPPER on global table",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT UPPER(breed) AS upper_breed
+                    FROM dogs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "upper_breed"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Distinct SQL Select",
+  type:"type",
+  body:{
+    statement:'''SELECT DISTINCT a, b FROM << { \'a\': 1, \'b\': \'Hello, world!\' } >>;''',
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "b"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Distinct SQL Select with Ordering",
+  type:"type",
+  body:{
+    statement:'''SELECT DISTINCT a, b FROM << { \'a\': 1, \'b\': \'Hello, world!\' } >> ORDER BY a;''',
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ARRAY
+      (
+      ROW
+        "a"
+        INTEGER
+        "b"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Distinct SQL Select *",
+  type:"type",
+  body:{
+    statement:'''SELECT DISTINCT * FROM << { \'a\': 1, \'b\': \'Hello, world!\' } >>;''',
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        INTEGER
+        "b"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Distinct SQL Select * with Ordering",
+  type:"type",
+  body:{
+    statement:'''SELECT DISTINCT * FROM << { \'a\': 1, \'b\': \'Hello, world!\' } >> ORDER BY a;''',
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ARRAY
+      (
+      ROW
+        "a"
+        INTEGER
+        "b"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Distinct PartiQL Select Value *",
+  type:"type",
+  body:{
+    statement:'''SELECT DISTINCT VALUE a FROM << { \'a\': 1, \'b\': \'Hello, world!\' } >>;''',
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Distinct PartiQL Select Value * with Ordering",
+  type:"type",
+  body:{
+    statement:'''SELECT DISTINCT VALUE a FROM << { \'a\': 1, \'b\': \'Hello, world!\' } >> ORDER BY a;''',
+    session:{
+      catalog:"aws",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    ARRAY
+      INTEGER
+    )
+  }
+}
+test::{
+  name:"Index on literal list",
+  type:"type",
+  body:{
+    statement:'''
+                    [0, 1, 2, 3][0]
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Index on global list",
+  type:"type",
+  body:{
+    statement:'''
+                    dogs[0].breed
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"Index on list attribute of global table",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT typical_allergies[0] AS main_allergy FROM dogs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "main_allergy"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:'''Pathing into resolved local variable without qualification''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT address.street AS s FROM employer;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "s"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:'''Pathing into resolved local variable without qualification and with sensitivity''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT address."street" AS s FROM employer;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "s"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:'''Pathing into resolved local variable without qualification and with indexing syntax''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT address[\'street\'] AS s FROM employer;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "s"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:'''Pathing into resolved local variable without qualification and with indexing syntax and fully-qualified FROM''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT e.address[\'street\'] AS s FROM "pql"."main"."employer" AS e;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "s"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:'''Show that we can\'t use [<string>] to reference a value in a schema. It can only be used on tuples.''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE 1 FROM "pql"."main"[\'employer\'] AS e;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable "pql"."main" does not exist in the database environment and is not an attribute of the following in-scope variables [].'''
+    )
+  }
+}
+test::{
+  name:'''Show that we can\'t use [<string>] to reference a schema in a catalog. It can only be used on tuples.''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE 1 FROM "pql"[\'main\']."employer" AS e;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable "pql" does not exist in the database environment and is not an attribute of the following in-scope variables []. Hint: did you intend to use single-quotes (\') here?  Remember that double-quotes (") denote quoted identifiers and single-quotes denote strings.'''
+    )
+  }
+}
+test::{
+  name:'''Tuple indexing syntax on literal tuple with literal string key''',
+  type:"type",
+  body:{
+    statement:'''
+                    { \'aBc\': 1, \'AbC\': 2.0 }[\'AbC\'];
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:'''Array indexing syntax on literal tuple with non-literal and non-cast key''',
+  type:"type",
+  body:{
+    statement:'''
+                    { \'aBc\': 1, \'AbC\': 2.0 }[\'Ab\' || \'C\'];
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Expression always returns missing: caused by Collections must be indexed with integers, found STRING'''
+    )
+  }
+}
+test::{
+  name:'''Tuple indexing syntax on literal tuple with explicit cast key''',
+  type:"type",
+  body:{
+    statement:'''
+                    { \'aBc\': 1, \'AbC\': 2.0 }[CAST(\'Ab\' || \'C\' AS STRING)];
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"Easy case when",
+  type:"type",
+  body:{
+    statement:'''
+                    CASE
+                        WHEN FALSE THEN 0
+                        WHEN TRUE THEN 1
+                        ELSE 2
+                    END;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"Folded case when to grab the true",
+  type:"type",
+  body:{
+    statement:'''
+                    CASE
+                        WHEN FALSE THEN 0
+                        WHEN TRUE THEN \'hello\'
+                    END;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"Boolean case when",
+  type:"type",
+  body:{
+    statement:'''
+                    CASE \'Hello World\'
+                        WHEN \'Hello World\' THEN TRUE
+                        ELSE FALSE
+                    END;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"Typing even with false condition",
+  type:"type",
+  body:{
+    statement:'''
+                    CASE
+                        WHEN FALSE THEN \'IMPOSSIBLE TO GET\'
+                        ELSE TRUE
+                    END;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"Folded out false without default",
+  type:"type",
+  body:{
+    statement:'''
+                    CASE
+                        WHEN FALSE THEN \'IMPOSSIBLE TO GET\'
+                    END;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"Not folded gives us a nullable without default",
+  type:"type",
+  body:{
+    statement:'''
+                    CASE 1
+                        WHEN 1 THEN TRUE
+                        WHEN 2 THEN FALSE
+                    END;
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:'''Not folded gives us a nullable without default for query''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT
+                        CASE breed
+                            WHEN \'golden retriever\' THEN \'fluffy dog\'
+                            WHEN \'pitbull\' THEN \'short-haired dog\'
+                        END AS breed_descriptor
+                    FROM dogs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "breed_descriptor"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Query",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT
+                        CASE breed
+                            WHEN \'golden retriever\' THEN \'fluffy dog\'
+                            WHEN \'pitbull\' THEN \'short-haired dog\'
+                            ELSE \'something else\'
+                        END AS breed_descriptor
+                    FROM dogs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "breed_descriptor"
+        STRING
+      )
+    )
+  }
+}
+test::{
+  name:"Query with heterogeneous data",
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT
+                        CASE breed
+                            WHEN \'golden retriever\' THEN \'fluffy dog\'
+                            WHEN \'pitbull\' THEN 2
+                            ELSE 2.0
+                        END AS breed_descriptor
+                    FROM dogs
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "breed_descriptor"
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:"no-name-found-204",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-00"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-205",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-02"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-206",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-03"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"no-name-found-207",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-04"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:NUMERIC
+  }
+}
+test::{
+  name:"no-name-found-208",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-05"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:NUMERIC
+  }
+}
+test::{
+  name:"no-name-found-209",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-06"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:NUMERIC
+  }
+}
+test::{
+  name:"no-name-found-210",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-07"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"no-name-found-211",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-09"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:NUMERIC
+  }
+}
+test::{
+  name:"no-name-found-212",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-10"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"no-name-found-213",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-11"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-214",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-12"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DOUBLE
+  }
+}
+test::{
+  name:"no-name-found-215",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-13"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DOUBLE
+  }
+}
+test::{
+  name:"no-name-found-216",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-14"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-217",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-15"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-218",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-16"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    CLOB
+      2147483647
+    )
+  }
+}
+test::{
+  name:"no-name-found-219",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-17"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    CLOB
+      2147483647
+    )
+  }
+}
+test::{
+  name:"no-name-found-220",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-18"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-221",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-19"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-222",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-20"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-223",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-21"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-224",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-24"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-225",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-25"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-226",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-26"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-227",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-27"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-228",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-28"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-229",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-29"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRUCT
+  }
+}
+test::{
+  name:"CASE-WHEN always MISSING",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-30"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-231",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-31"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-232",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-32"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-233",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-33"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-234",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-34"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-235",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-35"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      10
+      5
+    )
+  }
+}
+test::{
+  name:"no-name-found-236",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-36"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    DECIMAL
+      10
+      5
+    )
+  }
+}
+test::{
+  name:"no-name-found-237",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-37"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-238",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-38"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-239",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-39"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-240",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-40"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-241",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-41"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-242",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-42"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-243",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-43"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"no-name-found-244",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-44"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"no-name-found-245",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-45"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-246",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "case-when-46"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-247",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-00"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-248",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-01"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-249",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-02"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-250",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-03"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-251",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-04"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"no-name-found-252",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-05"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-253",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-06"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-254",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-07"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-255",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-08"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-256",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-09"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-257",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-11"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-258",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-12"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"no-name-found-259",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-13"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-260",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-14"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRING
+  }
+}
+test::{
+  name:"no-name-found-261",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-15"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-262",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-16"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-263",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-17"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-264",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "nullif-18"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-265",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-00"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-266",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-01"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-267",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-02"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"no-name-found-268",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-03"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"no-name-found-269",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-04"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"no-name-found-270",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-05"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
+test::{
+  name:"no-name-found-271",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-06"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-272",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-07"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"no-name-found-273",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-08"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"no-name-found-274",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-09"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"no-name-found-275",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-10"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"no-name-found-276",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-11"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-277",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-12"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-278",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-13"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-279",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-14"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-280",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-15"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-281",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-16"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"no-name-found-282",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "basics"
+      "coalesce-17"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DYNAMIC
+  }
+}
+test::{
+  name:"Subquery IN collection",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "subquery"
+      "subquery-00"
+    ),
+    session:{
+      catalog:"subqueries",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "x"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"Subquery scalar coercion",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "subquery"
+      "subquery-01"
+    ),
+    session:{
+      catalog:"subqueries",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "x"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"Subquery simple JOIN",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "subquery"
+      "subquery-02"
+    ),
+    session:{
+      catalog:"subqueries",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "x"
+        INTEGER
+        "y"
+        INTEGER
+        "z"
+        INTEGER
+        "a"
+        INTEGER
+        "b"
+        INTEGER
+        "c"
+        INTEGER
+      )
+    )
+  }
+}
+test::{
+  name:"Subquery scalar coercion",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "subquery"
+      "subquery-03"
+    ),
+    session:{
+      catalog:"subqueries",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:'''unary plus on varying numeric types -- this cannot return missing!''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT +t.a AS a
+                    FROM <<
+                        { \'a\': CAST(1 AS INT8) },
+                        { \'a\': CAST(1 AS INT4) }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:'''unary plus on varying numeric types including missing -- this may return missing''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT +t.a AS a
+                    FROM <<
+                        { \'a\': CAST(1 AS INT8) },
+                        { \'a\': CAST(1 AS INT4) },
+                        { }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:'''unary plus on varying numeric types including string -- this may return missing''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT +t.a AS a
+                    FROM <<
+                        { \'a\': CAST(1 AS INT8) },
+                        { \'a\': CAST(1 AS INT4) },
+                        { \'a\': \'hello world!\' }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "a"
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:'''binary plus on varying types -- this will return missing if one of the operands is not a number''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT t.a + t.b AS c
+                    FROM <<
+                        { \'a\': CAST(1 AS INT8), \'b\': CAST(1.0 AS DECIMAL) },
+                        { \'a\': CAST(1 AS INT4), \'b\': TRUE },
+                        { \'a\': \'hello world!!\', \'b\': DATE \'2023-01-01\' }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "c"
+        DYNAMIC
+      )
+    )
+  }
+}
+test::{
+  name:'''
+                    unary plus on non-compatible type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                ''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { \'a\': \'hello world!\'  }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''STRING is/are incompatible data types for the \'POS\' operator.'''
+    )
+  }
+}
+test::{
+  name:'''
+                    unary plus on dynamic types
+                ''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { \'a\': \'hello world!\'  },
+                        { \'a\': <<>> }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      DYNAMIC
+    )
+  }
+}
+test::{
+  name:'''
+                    unary plus on missing type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                ''',
+  type:"type",
+  body:{
+    statement:'''
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { \'NOT_A\': 1 }
+                    >> AS t
+                ''',
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Variable a does not exist in the database environment and is not an attribute of the following in-scope variables [t].'''
+    )
+  }
+}
+test::{
+  name:'''
+                    unary plus on missing type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                ''',
+  type:"type",
+  body:{
+    statement:"\n                    +MISSING\n                ",
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE,
+    assertProblemExists:(
+    ERROR
+      '''Expression always returns missing: caused by Static function always receives MISSING arguments.'''
+    )
+  }
+}
+test::{
+  name:"Basic Scan Indexed",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "sanity-07"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:(
+    BAG
+      (
+      ROW
+        "first"
+        STRING
+        "i"
+        BIGINT
+      )
+    )
+  }
+}
+test::{
+  name:"Basic PIVOT",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "pivot-00"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:STRUCT
+  }
+}
+test::{
+  name:"IS BOOL",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-00"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"IS INT",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-01"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"IS STRING",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-02"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+        "main"
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"IS NULL",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-03"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"MISSING IS NULL",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-04"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"NULL IS NULL",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-05"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"MISSING IS MISSING",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-06"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"NULL IS MISSING",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-07"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BOOL
+  }
+}
+test::{
+  name:"ERROR always MISSING",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "is-type-08"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:FAILURE
+  }
+}
+test::{
+  name:"DECIMAL AS INT2",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "cast-00"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:SMALLINT
+  }
+}
+test::{
+  name:"DECIMAL AS INT4",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "cast-01"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"DECIMAL AS INT8",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "cast-02"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"DECIMAL AS INT",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "cast-03"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:INTEGER
+  }
+}
+test::{
+  name:"DECIMAL AS BIGINT",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "cast-04"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:BIGINT
+  }
+}
+test::{
+  name:"DECIMAL_ARBITRARY AS DECIMAL",
+  type:"type",
+  body:{
+    statement:(
+      @
+      "$inputs"
+      "schema_inferencer"
+      "cast-05"
+    ),
+    session:{
+      catalog:"pql",
+      cwd:[
+      ]
+    },
+    status:SUCCESS,
+    expected:DECIMAL
+  }
+}
