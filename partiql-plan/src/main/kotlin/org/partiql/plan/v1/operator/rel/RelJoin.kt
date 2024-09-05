@@ -10,12 +10,12 @@ public interface RelJoin : Rel {
 
     public fun getLeft(): Rel
 
-    // TODO REMOVE ME TEMPORARY
+    // TODO REMOVE ME TEMPORARY – https://github.com/partiql/partiql-lang-kotlin/issues/1575
     public fun getLeftSchema(): Schema?
 
     public fun getRight(): Rel
 
-    // TODO REMOVE ME TEMPORARY
+    // TODO REMOVE ME TEMPORARY – https://github.com/partiql/partiql-lang-kotlin/issues/1575
     public fun getRightSchema(): Schema?
 
     public fun getCondition(): Rex?

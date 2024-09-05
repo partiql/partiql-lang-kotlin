@@ -3,7 +3,7 @@ package org.partiql.plan.v1.operator.rex
 import org.partiql.types.PType
 
 /**
- * TODO REMOVE ME AFTER EVALUATOR MERGE
+ * Logical operator for the SQL NULLIF special form.
  */
 public interface RexNullIf : Rex {
 
