@@ -3,6 +3,7 @@ package org.partiql.spi.value;
 import kotlin.NotImplementedError;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.partiql.errors.DataException;
 import org.partiql.types.PType;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
@@ -13,6 +14,8 @@ import org.partiql.value.datetime.Timestamp;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
@@ -585,8 +588,12 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum decimal(@NotNull BigDecimal value, int precision, int scale) {
-        return new DatumDecimal(value, PType.decimal(precision, scale));
+    static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws DataException {
+        BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
+        if (d.precision() > precision) {
+            throw new DataException("Value " + d + " could not fit into decimal with precision/scale.");
+        }
+        return new DatumDecimal(d, PType.decimal(precision, scale));
     }
 
     // CHARACTER STRINGS
@@ -596,6 +603,69 @@ public interface Datum extends Iterable<Datum> {
         return new DatumString(value, PType.string());
     }
 
+    /**
+     *
+     * @param value the string to place in the varchar
+     * @return a varchar value with a default length of 255
+     */
+    @NotNull
+    static Datum varchar(@NotNull String value) {
+        return varchar(value, 255);
+    }
+
+    /**
+     *
+     * @param value the string to place in the varchar
+     * @return a varchar value
+     * TODO: Error or coerce here? Right now coerce, though I think this should likely error.
+     */
+    @NotNull
+    static Datum varchar(@NotNull String value, int length) {
+        String newValue;
+        if (length <= 0) {
+            throw new DataException("VARCHAR of length " + length + " not allowed.");
+        }
+        if (value.length() < length) {
+            newValue = String.format("%-" + length + "." + length + "s", value);
+        } else if (value.length() == length) {
+            newValue = value;
+        } else {
+            newValue = value.substring(0, length);
+        }
+        return new DatumString(newValue, PType.varchar(length));
+    }
+
+    /**
+     *
+     * @param value the string to place in the varchar
+     * @return a varchar value with a default length of 255
+     */
+    @NotNull
+    static Datum character(@NotNull String value) {
+        return character(value, 255);
+    }
+
+    /**
+     *
+     * @param value the string to place in the varchar
+     * @return a varchar value
+     */
+    @NotNull
+    static Datum character(@NotNull String value, int length) {
+        String newValue;
+        if (length <= 0) {
+            throw new DataException("CHAR of length " + length + " not allowed.");
+        }
+        if (value.length() < length) {
+            newValue = String.format("%-" + length + "." + length + "s", value);
+        } else if (value.length() == length) {
+            newValue = value;
+        } else {
+            newValue = value.substring(0, length);
+        }
+        return new DatumString(newValue, PType.varchar(length));
+    }
+
     @NotNull
     static Datum symbol(@NotNull String value) {
         return new DatumString(value, PType.symbol());
@@ -603,7 +673,12 @@ public interface Datum extends Iterable<Datum> {
 
     @NotNull
     static Datum clob(@NotNull byte[] value) {
-        return new DatumBytes(value, PType.clob(Integer.MAX_VALUE));
+        return clob(value, Integer.MAX_VALUE);
+    }
+
+    @NotNull
+    static Datum clob(@NotNull byte[] value, int length) {
+        return new DatumBytes(value, PType.clob(length));
     }
 
     // BYTE STRINGS

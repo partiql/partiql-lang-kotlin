@@ -25,6 +25,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
+import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -877,7 +878,18 @@ internal object RexConverter {
                 is Type.Float64 -> PType.doublePrecision()
                 is Type.Decimal -> when {
                     type.precision == null && type.scale == null -> PType.decimal()
-                    type.precision != null && type.scale != null -> PType.decimal(type.precision!!, type.scale!!)
+                    type.precision != null && type.scale != null -> {
+                        if (type.precision!! < 0 || type.scale!! < 0) {
+                            throw TypeCheckException("Decimal precision/scale cannot be less than 0.")
+                        }
+                        if (type.precision == 0) {
+                            throw TypeCheckException("Decimal precision cannot be 0.")
+                        }
+                        if (type.scale!! > type.precision!!) {
+                            throw TypeCheckException("Decimal scale cannot be greater than precision.")
+                        }
+                        PType.decimal(type.precision!!, type.scale!!)
+                    }
                     type.precision != null && type.scale == null -> PType.decimal(type.precision!!, 0)
                     else -> error("Precision can never be null while scale is specified.")
                 }
@@ -889,8 +901,8 @@ internal object RexConverter {
                     else -> error("Precision can never be null while scale is specified.")
                 }
 
-                is Type.Char -> PType.character(type.length ?: 255) // TODO: What is default?
-                is Type.Varchar -> error("VARCHAR is not supported yet.")
+                is Type.Char -> PType.character(type.length ?: 1)
+                is Type.Varchar -> PType.varchar(type.length ?: 1)
                 is Type.String -> PType.string()
                 is Type.Symbol -> PType.symbol()
                 is Type.Bit -> error("BIT is not supported yet.")

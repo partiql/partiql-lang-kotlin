@@ -592,7 +592,10 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun bigint (J)Lorg/partiql/spi/value/Datum;
 	public static fun blob ([B)Lorg/partiql/spi/value/Datum;
 	public static fun bool (Z)Lorg/partiql/spi/value/Datum;
+	public static fun character (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
+	public static fun character (Ljava/lang/String;I)Lorg/partiql/spi/value/Datum;
 	public static fun clob ([B)Lorg/partiql/spi/value/Datum;
+	public static fun clob ([BI)Lorg/partiql/spi/value/Datum;
 	public static fun comparator ()Ljava/util/Comparator;
 	public static fun comparator (Z)Ljava/util/Comparator;
 	public static fun date (Lorg/partiql/value/datetime/Date;)Lorg/partiql/spi/value/Datum;
@@ -639,6 +642,8 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun timestamp (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/spi/value/Datum;
 	public static fun tinyint (B)Lorg/partiql/spi/value/Datum;
 	public fun toPartiQLValue ()Lorg/partiql/value/PartiQLValue;
+	public static fun varchar (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
+	public static fun varchar (Ljava/lang/String;I)Lorg/partiql/spi/value/Datum;
 }
 
 public abstract interface class org/partiql/spi/value/Field {

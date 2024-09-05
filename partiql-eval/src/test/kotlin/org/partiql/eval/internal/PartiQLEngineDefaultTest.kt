@@ -18,6 +18,7 @@ import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.value.Datum
 import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.types.StaticType
@@ -1288,7 +1289,7 @@ class PartiQLEngineDefaultTest {
                     throw returned.cause
                 }
             }
-            val output = result.value
+            val output = result.value.toPartiQLValue() // TODO: Assert directly on Datum
             assert(expected == output) {
                 comparisonString(expected, output, plan)
             }
@@ -1317,9 +1318,10 @@ class PartiQLEngineDefaultTest {
     public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
         val name: String,
         val input: String,
-        val expectedPermissive: PartiQLValue,
+        expectedPermissive: PartiQLValue,
     ) {
 
+        private val _expectedPermissive: Datum = Datum.of(expectedPermissive)
         private val engine = PartiQLEngine.builder().build()
         private val planner = PartiQLPlannerBuilder().build()
         private val parser = PartiQLParser.default()
@@ -1327,7 +1329,7 @@ class PartiQLEngineDefaultTest {
         internal fun assert() {
             val permissiveResult = run(mode = PartiQLEngine.Mode.PERMISSIVE)
             val assertionCondition = try {
-                expectedPermissive == permissiveResult.first
+                _expectedPermissive == permissiveResult.first
             } catch (t: Throwable) {
                 val str = buildString {
                     appendLine("Test Name: $name")
@@ -1337,7 +1339,7 @@ class PartiQLEngineDefaultTest {
                 throw RuntimeException(str, t)
             }
             assert(assertionCondition) {
-                comparisonString(expectedPermissive, permissiveResult.first, permissiveResult.second)
+                comparisonString(_expectedPermissive, permissiveResult.first, permissiveResult.second)
             }
             var error: Throwable? = null
             try {
@@ -1351,7 +1353,7 @@ class PartiQLEngineDefaultTest {
             assertNotNull(error)
         }
 
-        private fun run(mode: PartiQLEngine.Mode): Pair<PartiQLValue, PartiQLPlan> {
+        private fun run(mode: PartiQLEngine.Mode): Pair<Datum, PartiQLPlan> {
             val statement = parser.parse(input).root
             val catalog = MemoryCatalog.builder().name("memory").build()
             val session = Session.builder()
@@ -1374,16 +1376,18 @@ class PartiQLEngineDefaultTest {
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: PartiQLPlan): String {
+        private fun comparisonString(expected: Datum, actual: Datum, plan: PartiQLPlan): String {
+            val expectedValue = expected.toPartiQLValue()
+            val actualValue = actual.toPartiQLValue()
             val expectedBuffer = ByteArrayOutputStream()
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
-            expectedWriter.append(expected)
+            expectedWriter.append(expectedValue)
             return buildString {
                 // TODO pretty-print V1 plans!
                 appendLine(plan)
                 appendLine("Expected : $expectedBuffer")
                 expectedBuffer.reset()
-                expectedWriter.append(actual)
+                expectedWriter.append(actualValue)
                 appendLine("Actual   : $expectedBuffer")
             }
         }
