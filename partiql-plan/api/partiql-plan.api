@@ -2853,7 +2853,11 @@ public final class org/partiql/plan/v1/operator/rel/RelExcludePath$Companion {
 public abstract interface class org/partiql/plan/v1/operator/rel/RelExcludeStep {
 	public static final field Companion Lorg/partiql/plan/v1/operator/rel/RelExcludeStep$Companion;
 	public static fun collection (Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeCollectionWildcard;
+<<<<<<< HEAD
 	public abstract fun getSubsteps ()Ljava/util/Collection;
+=======
+	public abstract fun getSubsteps ()Ljava/util/List;
+>>>>>>> v1-plan-builders
 	public static fun index (ILjava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeIndex;
 	public static fun key (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeKey;
 	public static fun struct (Ljava/util/List;)Lorg/partiql/plan/v1/operator/rel/RelExcludeStructWildcard;

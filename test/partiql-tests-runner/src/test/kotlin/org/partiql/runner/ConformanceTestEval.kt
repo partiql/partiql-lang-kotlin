@@ -9,7 +9,7 @@ import org.partiql.runner.executor.EvalExecutor
 import org.partiql.runner.report.ReportGenerator
 import org.partiql.runner.test.TestRunner
 
-class ConformanceTestEval : ConformanceTestBase<PartiQLStatement<*>, PartiQLResult>() {
+class ConformanceTestEval : ConformanceTestBase<PartiQLStatement, PartiQLResult>() {
     companion object {
         @JvmStatic
         @RegisterExtension

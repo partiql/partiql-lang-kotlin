@@ -1,52 +1,36 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.CardinalityViolation
-import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
+import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.types.PType
 
 /**
- * Implementation of scalar subquery coercion.
- *
- * TODO REMOVE CONSTRUCTOR – TEMPORARY UNTIL SUBQUERIES ARE FIXED IN THE PLANNER.
+ * TODO REMOVE ME AFTER FIXING SUBQUERIES.
  */
-internal class ExprSubquery(input: Operator.Relation, constructor: Operator.Expr) : Operator.Expr {
+internal class ExprSubqueryRow(input: Operator.Relation, constructor: Operator.Expr) : Operator.Expr {
 
     // DO NOT USE FINAL
     private var _input = input
     private var _constructor = constructor
 
     private companion object {
+
         @JvmStatic
         private val STRUCT = PType.struct()
     }
 
-    /**
-     * TODO simplify
-     */
     override fun eval(env: Environment): Datum {
         val tuple = getFirst(env) ?: return Datum.nullValue()
-        val values = tuple.fields.asSequence().map { it.value }.iterator()
-        if (values.hasNext().not()) {
-            throw TypeCheckException()
-        }
-        val singleValue = values.next()
-        if (values.hasNext()) {
-            throw TypeCheckException()
-        }
-        return singleValue
+        val values = IteratorSupplier { tuple.fields }.map { it.value }
+        return Datum.list(values)
     }
 
     /**
-     * This grabs the first row of the input, asserts that the constructor evaluates to a TUPLE, and returns the
-     * constructed value.
-     *
-     * @return the constructed constructor. Returns null when no rows are returned from the input.
-     * @throws CardinalityViolation when more than one row is returned from the input.
-     * @throws TypeCheckException when the constructor is not a struct.
+     * @See [ExprSubquery.getFirst]
      */
     private fun getFirst(env: Environment): Datum? {
         _input.open(env)
