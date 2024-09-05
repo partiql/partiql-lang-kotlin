@@ -12,7 +12,7 @@ public interface RelIterate : Rel {
 
     override fun getChildren(): Collection<Rel> = emptyList()
 
-    override fun isOrdered(): Boolean = true
+    override fun isOrdered(): Boolean = false
 
     override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitIterate(this, ctx)
 }
