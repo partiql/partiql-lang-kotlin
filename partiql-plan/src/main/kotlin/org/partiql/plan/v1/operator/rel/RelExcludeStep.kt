@@ -5,7 +5,7 @@ package org.partiql.plan.v1.operator.rel
  */
 public interface RelExcludeStep {
 
-    public fun getSubsteps(): List<RelExcludeStep>
+    public fun getSubsteps(): Collection<RelExcludeStep>
 
     companion object {
 
@@ -42,7 +42,7 @@ private data class RelExcludeIndexImpl(
     private val index: Int,
     private val substeps: List<RelExcludeStep> = emptyList(),
 ) : RelExcludeIndex {
-    override fun getSubsteps(): List<RelExcludeStep> = substeps
+    override fun getSubsteps(): Collection<RelExcludeStep> = substeps
     override fun getIndex(): Int = index
 }
 
@@ -53,6 +53,15 @@ public interface RelExcludeKey : RelExcludeStep {
     public fun getKey(): String
 }
 
+// TODO hashcode/equals without data class
+private data class RelExcludeKeyImpl(
+    private val key: String,
+    private val substeps: List<RelExcludeStep> = emptyList(),
+) : RelExcludeKey {
+    override fun getSubsteps(): Collection<RelExcludeStep> = substeps
+    override fun getKey(): String = key
+}
+
 /**
  * Logical representation of an EXCLUDE path symbol step.
  */
@@ -60,10 +69,26 @@ public interface RelExcludeSymbol : RelExcludeStep {
     public fun getSymbol(): String
 }
 
+// TODO hashcode/equals without data class
+private data class RelExcludeSymbolImpl(
+    private val symbol: String,
+    private val substeps: List<RelExcludeStep> = emptyList(),
+) : RelExcludeSymbol {
+    override fun getSubsteps(): Collection<RelExcludeStep> = substeps
+    override fun getSymbol(): String = symbol
+}
+
 /**
  * Logical representation of an EXCLUDE struct wildcard step.
  */
 public interface RelExcludeStructWildcard : RelExcludeStep
+
+// TODO hashcode/equals without data class
+private data class RelExcludeStructWildcardImpl(
+    private val substeps: List<RelExcludeStep> = emptyList(),
+) : RelExcludeStructWildcard {
+    override fun getSubsteps(): Collection<RelExcludeStep> = substeps
+}
 
 /**
  * Logical representation of an EXCLUDE collection wildcard step.
@@ -71,33 +96,8 @@ public interface RelExcludeStructWildcard : RelExcludeStep
 public interface RelExcludeCollectionWildcard : RelExcludeStep
 
 // TODO hashcode/equals without data class
-private data class RelExcludeKeyImpl(
-    private val key: String,
-    private val substeps: List<RelExcludeStep> = emptyList(),
-) : RelExcludeKey {
-    override fun getSubsteps(): List<RelExcludeStep> = substeps
-    override fun getKey(): String = key
-}
-
-// TODO hashcode/equals without data class
-private data class RelExcludeSymbolImpl(
-    private val symbol: String,
-    private val substeps: List<RelExcludeStep> = emptyList(),
-) : RelExcludeSymbol {
-    override fun getSubsteps(): List<RelExcludeStep> = substeps
-    override fun getSymbol(): String = symbol
-}
-
-// TODO hashcode/equals without data class
-private data class RelExcludeStructWildcardImpl(
-    private val substeps: List<RelExcludeStep> = emptyList(),
-) : RelExcludeStructWildcard {
-    override fun getSubsteps(): List<RelExcludeStep> = substeps
-}
-
-// TODO hashcode/equals without data class
 private data class RelExcludeCollectionWildcardImpl(
     private val substeps: List<RelExcludeStep> = emptyList(),
 ) : RelExcludeCollectionWildcard {
-    override fun getSubsteps(): List<RelExcludeStep> = substeps
+    override fun getSubsteps(): Collection<RelExcludeStep> = substeps
 }
