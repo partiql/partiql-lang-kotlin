@@ -44,10 +44,10 @@ tasks.test {
     environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
 
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
-    exclude("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
+    // exclude("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
 
     // May 2023: Disabled conformance testing during regular project build, because fail lists are out of date.
-    exclude("org/partiql/runner/ConformanceTest.class")
+    // exclude("org/partiql/runner/ConformanceTest.class")
 }
 
 val createReportDir by tasks.registering {
