@@ -433,14 +433,11 @@ public interface PlanFactory {
     public fun rexLit(value: Datum): RexLit = RexLitImpl(value)
 
     /**
-<<<<<<< HEAD
-=======
-     * TODO REMOVE ME
+     * Create a [RexNullIf] instance.
      */
     public fun rexNullIf(value: Rex, nullifier: Rex): RexNullIf = RexNullIfImpl(value, nullifier)
 
     /**
->>>>>>> c2cc48d5 (Ports evaluation changes to v1 plans)
      * Create a [RexPathIndex] instance.
      *
      * @param operand
