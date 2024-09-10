@@ -76,6 +76,7 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
             is SingleType, is AnyType -> flattened.cast(targetType)
             is AnyOfType -> AnyOfType(flattened.types.map { it.cast(targetType) }.toSet()).flatten()
         }
+        else -> {}
     }
 
     // single source type
@@ -199,16 +200,21 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                 }
                 is ClobType -> when (this) {
                     is ClobType, is BlobType -> return targetType
+                    else -> {}
                 }
                 is BlobType -> when (this) {
                     is ClobType, is BlobType -> return targetType
+                    else -> {}
                 }
                 is CollectionType -> when (this) {
                     is CollectionType -> return targetType
+                    else -> {}
                 }
                 is StructType -> when (this) {
                     is StructType -> return targetType
+                    else -> {}
                 }
+                else -> {}
             }
             // TODO:  support non-permissive mode(s) here by throwing an exception to indicate cast is not possible
             return StaticType.MISSING

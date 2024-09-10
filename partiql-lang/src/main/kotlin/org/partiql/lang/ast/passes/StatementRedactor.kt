@@ -319,6 +319,7 @@ private class StatementRedactionVisitor(
                     if (!skipRedaction(it.first, safeFieldNames)) {
                         redactExpr(it.second)
                     } else { /* intentionally blank */ }
+                else -> {}
             }
         }
     }

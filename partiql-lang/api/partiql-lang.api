@@ -353,6 +353,7 @@ public final class org/partiql/lang/eval/BindingCase : java/lang/Enum {
 	public static final field Companion Lorg/partiql/lang/eval/BindingCase$Companion;
 	public static final field INSENSITIVE Lorg/partiql/lang/eval/BindingCase;
 	public static final field SENSITIVE Lorg/partiql/lang/eval/BindingCase;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun toSymbol (Lcom/amazon/ion/IonSystem;)Lcom/amazon/ion/IonSymbol;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/BindingCase;
 	public static fun values ()[Lorg/partiql/lang/eval/BindingCase;
@@ -552,6 +553,7 @@ public final class org/partiql/lang/eval/CoverageStructure$Branch {
 public final class org/partiql/lang/eval/CoverageStructure$Branch$Outcome : java/lang/Enum {
 	public static final field FALSE Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
 	public static final field TRUE Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
 	public static fun values ()[Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
 }
@@ -560,6 +562,7 @@ public final class org/partiql/lang/eval/CoverageStructure$Branch$Type : java/la
 	public static final field CASE_WHEN Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
 	public static final field HAVING Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
 	public static final field WHERE Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
 	public static fun values ()[Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
 }
@@ -586,6 +589,7 @@ public final class org/partiql/lang/eval/CoverageStructure$BranchCondition$Outco
 	public static final field MISSING Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
 	public static final field NULL Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
 	public static final field TRUE Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
 	public static fun values ()[Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
 }
@@ -604,6 +608,7 @@ public final class org/partiql/lang/eval/CoverageStructure$BranchCondition$Type 
 	public static final field NEQ Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
 	public static final field NOT Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
 	public static final field OR Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
 	public static fun values ()[Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
 }
@@ -821,6 +826,7 @@ public final class org/partiql/lang/eval/ExprValueType : java/lang/Enum {
 	public static final field SYMBOL Lorg/partiql/lang/eval/ExprValueType;
 	public static final field TIME Lorg/partiql/lang/eval/ExprValueType;
 	public static final field TIMESTAMP Lorg/partiql/lang/eval/ExprValueType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun isDirectlyComparableTo (Lorg/partiql/lang/eval/ExprValueType;)Z
 	public final fun isLob ()Z
 	public final fun isNumber ()Z
@@ -865,6 +871,7 @@ public final class org/partiql/lang/eval/NaturalExprValueComparators : java/lang
 	public static final field NULLS_LAST_DESC Lorg/partiql/lang/eval/NaturalExprValueComparators;
 	public synthetic fun compare (Ljava/lang/Object;Ljava/lang/Object;)I
 	public fun compare (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)I
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/NaturalExprValueComparators;
 	public static fun values ()[Lorg/partiql/lang/eval/NaturalExprValueComparators;
 }
@@ -962,6 +969,7 @@ public final class org/partiql/lang/eval/PartiqlAstExtensionsKt {
 public final class org/partiql/lang/eval/ProjectionIterationBehavior : java/lang/Enum {
 	public static final field FILTER_MISSING Lorg/partiql/lang/eval/ProjectionIterationBehavior;
 	public static final field UNFILTERED Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/ProjectionIterationBehavior;
 	public static fun values ()[Lorg/partiql/lang/eval/ProjectionIterationBehavior;
 }
@@ -1035,6 +1043,7 @@ public final class org/partiql/lang/eval/StandardNamesKt {
 public final class org/partiql/lang/eval/StructOrdering : java/lang/Enum {
 	public static final field ORDERED Lorg/partiql/lang/eval/StructOrdering;
 	public static final field UNORDERED Lorg/partiql/lang/eval/StructOrdering;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/StructOrdering;
 	public static fun values ()[Lorg/partiql/lang/eval/StructOrdering;
 }
@@ -1073,12 +1082,14 @@ public final class org/partiql/lang/eval/ThunkOptions$Companion {
 public final class org/partiql/lang/eval/ThunkReturnTypeAssertions : java/lang/Enum {
 	public static final field DISABLED Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
 	public static final field ENABLED Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
 	public static fun values ()[Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
 }
 
 public final class org/partiql/lang/eval/TypedOpBehavior : java/lang/Enum {
 	public static final field HONOR_PARAMETERS Lorg/partiql/lang/eval/TypedOpBehavior;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/TypedOpBehavior;
 	public static fun values ()[Lorg/partiql/lang/eval/TypedOpBehavior;
 }
@@ -1086,6 +1097,7 @@ public final class org/partiql/lang/eval/TypedOpBehavior : java/lang/Enum {
 public final class org/partiql/lang/eval/TypingMode : java/lang/Enum {
 	public static final field LEGACY Lorg/partiql/lang/eval/TypingMode;
 	public static final field PERMISSIVE Lorg/partiql/lang/eval/TypingMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/TypingMode;
 	public static fun values ()[Lorg/partiql/lang/eval/TypingMode;
 }
@@ -1093,6 +1105,7 @@ public final class org/partiql/lang/eval/TypingMode : java/lang/Enum {
 public final class org/partiql/lang/eval/UndefinedVariableBehavior : java/lang/Enum {
 	public static final field ERROR Lorg/partiql/lang/eval/UndefinedVariableBehavior;
 	public static final field MISSING Lorg/partiql/lang/eval/UndefinedVariableBehavior;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/UndefinedVariableBehavior;
 	public static fun values ()[Lorg/partiql/lang/eval/UndefinedVariableBehavior;
 }
@@ -1101,6 +1114,7 @@ public abstract class org/partiql/lang/eval/VisitorTransformMode : java/lang/Enu
 	public static final field DEFAULT Lorg/partiql/lang/eval/VisitorTransformMode;
 	public static final field NONE Lorg/partiql/lang/eval/VisitorTransformMode;
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/VisitorTransformMode;
 	public static fun values ()[Lorg/partiql/lang/eval/VisitorTransformMode;
 }
@@ -1184,6 +1198,7 @@ public final class org/partiql/lang/eval/io/DelimitedValues$ConversionMode : jav
 	public static final field NONE Lorg/partiql/lang/eval/io/DelimitedValues$ConversionMode;
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public abstract fun convert (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/io/DelimitedValues$ConversionMode;
 	public static fun values ()[Lorg/partiql/lang/eval/io/DelimitedValues$ConversionMode;
 }
@@ -1382,6 +1397,7 @@ public final class org/partiql/lang/eval/physical/operators/RelationalOperatorKi
 	public static final field SORT Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
 	public static final field UNPIVOT Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
 	public static final field WINDOW Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
 	public static fun values ()[Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
 }
@@ -1496,6 +1512,7 @@ public abstract interface class org/partiql/lang/eval/relation/RelationScope {
 public final class org/partiql/lang/eval/relation/RelationType : java/lang/Enum {
 	public static final field BAG Lorg/partiql/lang/eval/relation/RelationType;
 	public static final field LIST Lorg/partiql/lang/eval/relation/RelationType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/relation/RelationType;
 	public static fun values ()[Lorg/partiql/lang/eval/relation/RelationType;
 }
@@ -1605,6 +1622,7 @@ public final class org/partiql/lang/eval/visitors/StaticTypeVisitorTransform : o
 public final class org/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints : java/lang/Enum {
 	public static final field PREVENT_GLOBALS_EXCEPT_IN_FROM Lorg/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints;
 	public static final field PREVENT_GLOBALS_IN_NESTED_QUERIES Lorg/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints;
 	public static fun values ()[Lorg/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints;
 }
@@ -1652,6 +1670,7 @@ public final class org/partiql/lang/graph/DirSpec : java/lang/Enum {
 	public static final field Dir_UR Lorg/partiql/lang/graph/DirSpec;
 	public static final field Dir_U_ Lorg/partiql/lang/graph/DirSpec;
 	public static final field Dir__R Lorg/partiql/lang/graph/DirSpec;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getWantLeft ()Z
 	public final fun getWantRight ()Z
 	public final fun getWantUndir ()Z
@@ -1924,6 +1943,7 @@ public final class org/partiql/lang/planner/DmlAction : java/lang/Enum {
 	public static final field DELETE Lorg/partiql/lang/planner/DmlAction;
 	public static final field INSERT Lorg/partiql/lang/planner/DmlAction;
 	public static final field REPLACE Lorg/partiql/lang/planner/DmlAction;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/planner/DmlAction;
 	public static fun values ()[Lorg/partiql/lang/planner/DmlAction;
 }
@@ -2402,6 +2422,7 @@ public final class org/partiql/lang/types/TypedOpParameter {
 public final class org/partiql/lang/types/UnknownArguments : java/lang/Enum {
 	public static final field PASS_THRU Lorg/partiql/lang/types/UnknownArguments;
 	public static final field PROPAGATE Lorg/partiql/lang/types/UnknownArguments;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/types/UnknownArguments;
 	public static fun values ()[Lorg/partiql/lang/types/UnknownArguments;
 }

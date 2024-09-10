@@ -140,6 +140,7 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
                 is PartiqlAst.Projection.ProjectValue, is PartiqlAst.Projection.ProjectList -> {
                     // use of group by with SELECT & SELECT VALUE is supported
                 }
+                else -> {}
             }
         }
 
