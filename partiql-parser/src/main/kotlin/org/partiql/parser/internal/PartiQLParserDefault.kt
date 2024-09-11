@@ -674,8 +674,8 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitAlterTable(ctx: GeneratedParser.AlterTableContext) = translate(ctx) {
             val qualifiedName = visitQualifiedName(ctx.qualifiedName())
-            val op = visitAs<DdlOp.AlterTable.Operation>(ctx.alterOp())
-            ddlOpAlterTable(qualifiedName, listOf(op))
+            val ops = ctx.alterOp().map { op -> visitAs<DdlOp.AlterTable.Operation>(op) }
+            ddlOpAlterTable(qualifiedName, ops)
         }
 
         override fun visitChangeColumn(ctx: GeneratedParser.ChangeColumnContext) = translate(ctx) {
