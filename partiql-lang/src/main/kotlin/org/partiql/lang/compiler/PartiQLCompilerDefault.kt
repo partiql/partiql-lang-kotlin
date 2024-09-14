@@ -65,7 +65,9 @@ internal class PartiQLCompilerDefault(
 
     override fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement {
         return when (val stmt = statement.stmt) {
-            is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
+            is PartiqlPhysical.Statement.DmlDelete,
+            is PartiqlPhysical.Statement.DmlInsert,
+            is PartiqlPhysical.Statement.DmlUpdate -> TODO("DML compilation not supported.")
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> {
                 val expression = exprConverter.compile(statement)
@@ -77,7 +79,9 @@ internal class PartiQLCompilerDefault(
 
     override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
         return when (val stmt = statement.stmt) {
-            is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
+            is PartiqlPhysical.Statement.DmlDelete,
+            is PartiqlPhysical.Statement.DmlInsert,
+            is PartiqlPhysical.Statement.DmlUpdate -> TODO("DML compilation not supported.")
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> compile(statement)
             is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(stmt, details) }
@@ -93,18 +97,6 @@ internal class PartiQLCompilerDefault(
         LOGICAL_RESOLVED,
         PHYSICAL,
         PHYSICAL_TRANSFORMED
-    }
-
-    private fun compileDml(dml: PartiqlPhysical.Statement.Dml, localsSize: Int): PartiQLStatement {
-        val rows = exprConverter.compile(dml.rows, localsSize)
-        return PartiQLStatement { session ->
-            when (dml.operation) {
-                is PartiqlPhysical.DmlOperation.DmlReplace -> PartiQLResult.Replace(dml.uniqueId.text, rows.eval(session))
-                is PartiqlPhysical.DmlOperation.DmlInsert -> PartiQLResult.Insert(dml.uniqueId.text, rows.eval(session))
-                is PartiqlPhysical.DmlOperation.DmlDelete -> PartiQLResult.Delete(dml.uniqueId.text, rows.eval(session))
-                is PartiqlPhysical.DmlOperation.DmlUpdate -> TODO("DML Update compilation not supported yet.")
-            }
-        }
     }
 
     private fun compileExplain(statement: PartiqlPhysical.Statement.Explain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {

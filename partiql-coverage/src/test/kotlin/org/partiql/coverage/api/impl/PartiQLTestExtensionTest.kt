@@ -76,19 +76,9 @@ class PartiQLTestExtensionTest {
         fun test2(tc: PartiQLTestCase, result: PartiQLResult.Value) {
         }
 
-        @Disabled
-        @PartiQLTest(provider = MockProvider::class)
-        @JvmName("test3")
-        @Suppress("UNUSED")
-        fun test3(tc: ValidTestCase, result: PartiQLResult.Delete) {
-        }
-
-        class ValidTestCase(override val session: EvaluationSession) : PartiQLTestCase
-
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> = listOf(
             AbstractExtensionContext(ValidSignaturesProvider::class.java, "test1", PartiQLTestCase::class.java, PartiQLResult::class.java),
             AbstractExtensionContext(ValidSignaturesProvider::class.java, "test2", PartiQLTestCase::class.java, PartiQLResult.Value::class.java),
-            AbstractExtensionContext(ValidSignaturesProvider::class.java, "test3", ValidTestCase::class.java, PartiQLResult.Delete::class.java),
         ).map { Arguments.of(it) }.stream()
     }
 

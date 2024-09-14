@@ -802,54 +802,86 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
-        (include
-            // Indicates kind of DML operation.
-            (sum dml_operation
-                (dml_insert target_alias::var_decl)
-                (dml_delete)
-
-                // Represents the REPLACE statement as well as INSERT ... ON CONFLICT DO REPLACE ...
-                // [target-alias]: represents the alias for the table name. See the following syntactical example:
-                //  `INSERT INTO Table1 AS <alias> << { 'id': 1, 'name': 'Arash' } >> ON CONFLICT DO REPLACE ...`
-                // [condition]: represents the condition by which a row should be replaced. See the following syntactical example:
-                //  `INSERT INTO x << {'id': 1, 'name': 'John'}} >> ON CONFLICT DO REPLACE EXCLUDED WHERE <condition>`
-                // [row_alias]: represents the alias given to the rows meant to be inserted/replaced. It is made optional
-                //  since dml_replace is currently shared by REPLACE (which does not allow the aliasing of rows) and
-                //  INSERT ... ON CONFLICT DO REPLACE ... (which aliases the rows as "EXCLUDED" for use within the [condition]).
-                (dml_replace target_alias::var_decl condition::(? expr) row_alias::(? var_decl))
-
-                // Represents the UPSERT statement as well as INSERT ... ON CONFLICT DO UPDATE ...
-                // [target-alias]: represents the alias for the table name. See the following syntactical example:
-                //  `INSERT INTO Table1 AS <alias> << { 'id': 1, 'name': 'Arash' } >> ON CONFLICT DO UPDATE ...`
-                // [condition]: represents the condition by which a row should be replaced. See the following syntactical example:
-                //  `INSERT INTO x << {'id': 1, 'name': 'John'}} >> ON CONFLICT DO UPDATE EXCLUDED WHERE <condition>`
-                // [row_alias]: represents the alias given to the rows meant to be inserted/updated. It is made optional
-                //  since dml_update is currently shared by UPSERT (which does not allow the aliasing of rows) and
-                //  INSERT ... ON CONFLICT DO UPDATE ... (which aliases the rows as "EXCLUDED" for use within the [condition]).
-                (dml_update target_alias::var_decl condition::(? expr) row_alias::(? var_decl))
-            )
-        )
-
         // Redefine statement.dml to be a simpler subset of the full DML functionality expressed with PartiQL's DML
         // syntax.  Full functionality is out of scope for now.  This is factored minimally to support
         // `INSERT INTO` and `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when
         // `FROM ... UPDATE` and `UPDATE` is supported later.
         (with statement
-            (exclude dml)
-            (include
-                // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
-                (dml
-                    // The target is an expression that is indicates the table whose data is to be manipulated.
-                    // With current PartiQL Parser `SqlParser`, this can be an identifier or a simplified path expression
-                    // consisting of only literal path steps (and with no wildcard or unpivot operators).
-                    // Note: partiql_ast uses the `expr` sum type for this, which is too broad.  We're not
-                    // changing that at this time because `partiql_ast` is established public API.
-                    target::identifier
-                    operation::dml_operation
-                    rows::expr
-                )
-            )
+              (exclude dml)
+              (include
+                  // An `INSERT` DML operation, which is fundamentally different from UPDATE and DELETE
+                  // because it lacks a FROM and WHERE clause while also including an ON CONFLICT clause.
+                  //
+                  // Models: INSERT INTO <dml_target> [AS <target_alias>] <rows_to_isnert> [<on-conflict]
+                  (dml_insert
+                      // The target is an expression indicates the table whose data is to be manipulated.
+                      // With current PartiQL Parser `SqlParser`, this can be an identifier or a simplified path expression
+                      // consisting of only literal path steps (and with no wildcard or unpivot operators).
+                      // Note: partiql_ast uses the `expr` sum type for this, which is too broad.  We're not
+                      // changing that at this time because `partiql_ast` is established public API, but we can
+                      // use dml_target instead which has the proerly narrowed domain.
+                      (target dml_target)
+                      (target_alias var_decl)
+                      (rows_to_insert expr)
+                      (on_conflict (? on_conflict))
+                  )
+
+                  // Models: UPDATE <dml_target> [AS <target_alias>] SET <assignments> WHERE <where>
+                  (dml_update
+                      (target dml_target)
+                      (target_alias var_decl)
+                      (assignments (* set_assignment 0))
+                      (where (? expr))
+                  )
+
+                  // Models DELETE <from>
+                  (dml_delete (from bexpr)) // note: the bexpr includes filters, etc.
+              )
         )
+
+        (include
+            // represents simple paths, i.e. suitable for the left side of an `=` opeartor within a `SET` clause.
+            // Example `a_field.nested_field[42]`
+            (record simple_path
+                // The first element, `a_field` in the example above.
+                (root identifier)
+                // The subsequent elemnets, `nested_field` and `[42]` in the example above.
+                (steps (* simple_path_step 0))
+            )
+            (sum simple_path_step
+                 // for bracket paths steps, i.e. `[42]` in the simple_path example above.
+                (sps_literal (value ion))
+                 // for symbols, i.e. `nested_field` in the simple_path example above.l
+                (sps_identifier (identifier identifier))
+            )
+
+            // The "target" of a DML operation, i.e. the table targeted for manipulation with INSERT, UPDATE, etc.
+            // This is a discrete type so it can be permuted in later domains to affect every use.
+            (record dml_target (identifier identifier))
+
+            // An assignment within a SET clause.
+            (record set_assignment
+                // The target, left of `=`
+                (set_target simple_path)
+                // The new value for the target, right of `=`
+                (value expr)
+            )
+
+            // INSERT's ON CONFLICT Clause
+            (record on_conflict
+                (excluded_alias var_decl)
+                (condition (? expr))
+                (action on_conflict_action)
+            )
+
+            (sum on_conflict_action
+                 (do_update)
+                 (do_replace)
+            )
+
+        )
+
+
 
         // Nodes excluded below this line will eventually have a representation in the logical algebra, but not
         // initially.
@@ -934,11 +966,9 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
-        // Replace statement.dml.target with statement.dml.uniqueId (the "resolved" corollary).
-        (with statement
-            (exclude dml)
-            (include (dml uniqueId::symbol operation::dml_operation rows::expr))
-        )
+        // Replace statement.dml.uniqueId (the "resolved" corollary).
+        (exclude dml_target)
+        (include (record dml_target (uniqueId symbol)))
     )
 )
 

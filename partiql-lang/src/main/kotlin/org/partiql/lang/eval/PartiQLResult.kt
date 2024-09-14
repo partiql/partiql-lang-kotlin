@@ -42,36 +42,6 @@ sealed class PartiQLResult {
         override fun getCoverageStructure(): CoverageStructure? = coverageStructure.invoke()
     }
 
-    class Insert(
-        val target: String,
-        val rows: Iterable<ExprValue>,
-        private val coverageData: () -> CoverageData? = { null },
-        private val coverageStructure: () -> CoverageStructure? = { null }
-    ) : PartiQLResult() {
-        override fun getCoverageData(): CoverageData? = coverageData.invoke()
-        override fun getCoverageStructure(): CoverageStructure? = coverageStructure.invoke()
-    }
-
-    class Delete(
-        val target: String,
-        val rows: Iterable<ExprValue>,
-        private val coverageData: () -> CoverageData? = { null },
-        private val coverageStructure: () -> CoverageStructure? = { null }
-    ) : PartiQLResult() {
-        override fun getCoverageData(): CoverageData? = coverageData.invoke()
-        override fun getCoverageStructure(): CoverageStructure? = coverageStructure.invoke()
-    }
-
-    class Replace(
-        val target: String,
-        val rows: Iterable<ExprValue>,
-        private val coverageData: () -> CoverageData? = { null },
-        private val coverageStructure: () -> CoverageStructure? = { null }
-    ) : PartiQLResult() {
-        override fun getCoverageData(): CoverageData? = coverageData.invoke()
-        override fun getCoverageStructure(): CoverageStructure? = coverageStructure.invoke()
-    }
-
     sealed class Explain : PartiQLResult() {
         data class Domain(val value: DomainNode, val format: String?) : Explain() {
             override fun getCoverageData(): CoverageData? = null

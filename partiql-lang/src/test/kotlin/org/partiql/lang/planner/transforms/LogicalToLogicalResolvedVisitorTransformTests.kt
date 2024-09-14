@@ -873,9 +873,9 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(DmlStatements::class)
-    fun `dml statements`(tc: TestCase) = runTestCase(tc)
-    class DmlStatements : ArgumentsProviderBase() {
+    @ArgumentsSource(InsertStatements::class)
+    fun `insert statements`(tc: TestCase) = runTestCase(tc)
+    class InsertStatements : ArgumentsProviderBase() {
         val EXCLUDED = AstToLogicalVisitorTransform.EXCLUDED
         override fun getParameters() = listOf(
             TestCase(
@@ -955,6 +955,27 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(
                     ResolvedId(1, 74) { globalId("fake_uid_for_foo") },
                 ).withLocals(localVariable("f", 0), localVariable(EXCLUDED, 1))
+            ),
+        )
+    }
+    @ParameterizedTest
+    @ArgumentsSource(UpdateStatements::class)
+    fun `update statements`(tc: TestCase) = runTestCase(tc)
+    class UpdateStatements : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                """
+                    UPDATE foo AS f SET 
+                        bar = f.bat || f.baz,
+                        bor['bop'] = 'biz'
+                    WHERE 
+                        f.bork = 42
+                """,
+                Expectation.Success(
+                    ResolvedId(3, 32) { localId(0) },
+                    ResolvedId(3, 41) { localId(0) },
+                    ResolvedId(6, 25) { localId(0) },
+                ).withLocals(localVariable("f", 0))
             ),
         )
     }
