@@ -31,7 +31,6 @@ import org.partiql.coverage.api.PartiQLTest
 import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.PartiQLResult
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method

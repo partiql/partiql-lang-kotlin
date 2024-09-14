@@ -2,8 +2,6 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionBool
-import com.amazon.ionelement.api.ionInt
-import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
@@ -12,7 +10,6 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.util.ArgumentsProviderBase
-import kotlin.test.fail
 
 class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
     data class BexprTestCase(val input: PartiqlLogicalResolved.Bexpr, val expected: PartiqlPhysical.Bexpr)

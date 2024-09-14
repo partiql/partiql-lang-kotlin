@@ -462,7 +462,7 @@ internal class AstToLogicalVisitorTransform(
                     dmlUpdate(
                         target = target,
                         targetAlias = alias,
-                        assignments = setOperations.map { 
+                        assignments = setOperations.map {
                             setAssignment(
                                 it.assignment.target.toSimplePath(),
                                 transformExpr(it.assignment.value)
