@@ -1276,7 +1276,7 @@ class AstToLogicalVisitorTransformTests {
         )
     }
 
-            data class ProblemTestCase(val id: Int, val sql: String, val expectedProblem: Problem)
+    data class ProblemTestCase(val id: Int, val sql: String, val expectedProblem: Problem)
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForProblemTests::class)
