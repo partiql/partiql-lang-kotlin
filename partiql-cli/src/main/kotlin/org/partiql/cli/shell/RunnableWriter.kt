@@ -72,11 +72,6 @@ internal class RunnableWriter(
                 out.println(explain)
                 out.success("OK!")
             }
-            is PartiQLResult.Insert,
-            is PartiQLResult.Replace,
-            is PartiQLResult.Delete -> {
-                out.warn("Insert/Replace/Delete are not yet supported")
-            }
         }
     }
 

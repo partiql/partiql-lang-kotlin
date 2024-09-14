@@ -186,6 +186,10 @@ internal class AstToLogicalVisitorTransform(
         }
     }
 
+    override fun transformOnConflict(node: PartiqlAst.OnConflict): PartiqlLogical.OnConflict {
+        error("Something is wrong--transformation of PartiqlAst.OnConflict has to be handled elsewhere!")
+    }
+
     private fun convertGroupAsAlias(node: SymbolPrimitive, from: PartiqlAst.FromSource) = PartiqlLogical.build {
         val sourceAliases = getSourceAliases(from)
         val structFields = sourceAliases.map { alias ->
@@ -341,15 +345,11 @@ internal class AstToLogicalVisitorTransform(
     override fun transformStatementDml(node: PartiqlAst.Statement.Dml): PartiqlLogical.Statement {
         require(node.operations.ops.isNotEmpty())
 
-        // `INSERT` and `DELETE` statements are all that's needed for the current effort--and it just so
-        // happens that these never utilize more than one DML operation anyway.  We don't need to
-        // support more than one DML operation until we start supporting UPDATE statements.
-        if (node.operations.ops.size > 1) {
-            problemHandler.handleUnimplementedFeature(node, "more than one DML operation")
-        }
-
         return when (val dmlOp = node.operations.ops.first()) {
             is PartiqlAst.DmlOp.Insert -> {
+                if (node.operations.ops.size > 1) {
+                    error("Malformed AST: more than 1 INSERT DML operation!")
+                }
                 node.from?.let { problemHandler.handleUnimplementedFeature(dmlOp, "UPDATE / INSERT") }
                 // Check for and block `INSERT INTO <tbl> VALUES (...)`  This is *no* way to support this
                 // within without the optional comma separated list of columns that precedes `VALUES` since doing so
@@ -368,37 +368,23 @@ internal class AstToLogicalVisitorTransform(
                     }
                 }
 
-                val target = dmlOp.target.toDmlTargetId()
+                val target = dmlOp.target.toDmlTarget()
                 val alias = dmlOp.asAlias?.let {
                     PartiqlLogical.VarDecl(it)
-                } ?: PartiqlLogical.VarDecl(target.name)
+                } ?: PartiqlLogical.VarDecl(target.identifier.name)
 
-                val operation = when (val conflictAction = dmlOp.conflictAction) {
-                    null -> PartiqlLogical.DmlOperation.DmlInsert(targetAlias = alias)
-                    is PartiqlAst.ConflictAction.DoReplace -> when (conflictAction.value) {
-                        is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.DmlOperation.DmlReplace(
-                            targetAlias = alias,
-                            condition = conflictAction.condition?.let { transformExpr(it) },
-                            rowAlias = conflictAction.condition?.let { PartiqlLogical.VarDecl(SymbolPrimitive(EXCLUDED, emptyMetaContainer())) }
-                        )
-                    }
-                    is PartiqlAst.ConflictAction.DoUpdate -> when (conflictAction.value) {
-                        is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.DmlOperation.DmlUpdate(
-                            targetAlias = alias,
-                            condition = conflictAction.condition?.let { transformExpr(it) },
-                            rowAlias = conflictAction.condition?.let { PartiqlLogical.VarDecl(SymbolPrimitive(EXCLUDED, emptyMetaContainer())) }
-                        )
-                    }
-                    is PartiqlAst.ConflictAction.DoNothing -> TODO("`ON CONFLICT DO NOTHING` is not supported in logical plan yet.")
+                PartiqlLogical.build {
+                    dmlInsert(
+                        target = target,
+                        targetAlias = alias,
+                        rowsToInsert = transformExpr(dmlOp.values),
+                        metas = node.metas,
+                        onConflict = transformConflictAction(dmlOp.conflictAction)
+                    )
                 }
-
-                PartiqlLogical.Statement.Dml(
-                    target = target,
-                    operation = operation,
-                    rows = transformExpr(dmlOp.values),
-                    metas = node.metas
-                )
             }
+            // DL TODO: transformDmlUpdate
+
             // INSERT single row with VALUE is disallowed. (This variation of INSERT might be removed in a future
             // release of PartiQL.)
             is PartiqlAst.DmlOp.InsertValue -> {
@@ -410,7 +396,12 @@ internal class AstToLogicalVisitorTransform(
                 )
                 INVALID_STATEMENT
             }
+
             is PartiqlAst.DmlOp.Delete -> {
+                if (node.operations.ops.size > 1) {
+                    error("Malformed AST: more than 1 UPDATE DML operation!")
+                }
+
                 if (node.from == null) {
                     // unfortunately, the AST allows malformations such as this however the parser should
                     // never actually create an AST for a DELETE statement without a FROM clause.
@@ -427,52 +418,95 @@ internal class AstToLogicalVisitorTransform(
                             }
 
                             PartiqlLogical.build {
-                                dml(
-                                    target = from.expr.toDmlTargetId(),
-                                    operation = dmlDelete(),
-                                    // This query returns entire rows which are to be deleted, which is unfortunate
-                                    // unavoidable without knowledge of schema. PartiQL embedders may apply a
-                                    // pass over the resolved logical (or later) plan that changes this to only
-                                    // include the primary keys of the rows to be deleted.
-                                    rows = bindingsToValues(
-                                        exp = id(rowsSource.asDecl.name.text, caseSensitive(), unqualified()),
-                                        query = rows,
-                                    ),
-                                    metas = node.metas
-                                )
+                                dmlDelete(from = rows, metas = node.metas)
                             }
                         }
+
                         else -> {
                             problemHandler.handleProblem(
-                                Problem(
-                                    (from?.metas?.sourceLocationMetaOrUnknown?.toProblemLocation() ?: UNKNOWN_PROBLEM_LOCATION),
-                                    PlanningProblemDetails.InvalidDmlTarget
-                                )
+                                Problem((from?.metas?.sourceLocationMetaOrUnknown?.toProblemLocation() ?: UNKNOWN_PROBLEM_LOCATION), PlanningProblemDetails.InvalidDmlTarget)
                             )
                             INVALID_STATEMENT
                         }
                     }
                 }
             }
+
             is PartiqlAst.DmlOp.Remove -> {
                 problemHandler.handleProblem(
-                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown.toProblemLocation(), PlanningProblemDetails.UnimplementedFeature("REMOVE"))
+                    Problem(
+                        dmlOp.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
+                        PlanningProblemDetails.UnimplementedFeature("REMOVE")
+                    )
                 )
                 INVALID_STATEMENT
             }
+
             is PartiqlAst.DmlOp.Set -> {
-                problemHandler.handleProblem(
-                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown.toProblemLocation(), PlanningProblemDetails.UnimplementedFeature("SET"))
-                )
-                INVALID_STATEMENT
+                val setOperations = node.operations.ops.mapNotNull {
+                    val set = it as? PartiqlAst.DmlOp.Set
+                    set?.let {
+                        problemHandler.handleUnimplementedFeature(it, "UPDATE operation other than SET")
+                    }
+                    set
+                }
+
+                val scan = node.from as? PartiqlAst.FromSource.Scan
+                    ?: error("Malformed AST: UPDATE's FROM property was not a scan (this should never happen)")
+
+                val target = scan.expr.toDmlTarget()
+                val alias = scan.asAlias?.let { PartiqlLogical.VarDecl(it) }
+                    ?: PartiqlLogical.VarDecl(target.identifier.name)
+
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = target,
+                        targetAlias = alias,
+                        assignments = setOperations.map { 
+                            setAssignment(
+                                it.assignment.target.toSimplePath(),
+                                transformExpr(it.assignment.value)
+                            )
+                        },
+                        where = node.where?.let { transformExpr(it) },
+                        metas = node.metas,
+                    )
+                }
             }
         }
     }
 
-    private fun PartiqlAst.Expr.toDmlTargetId(): PartiqlLogical.Identifier {
-        val dmlTargetId = when (this) {
+    private fun transformConflictAction(conflictAction: PartiqlAst.ConflictAction?) =
+        when (conflictAction) {
+            null -> null
+            is PartiqlAst.ConflictAction.DoReplace -> when (conflictAction.value) {
+                is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.build {
+                    onConflict(
+                        excludedAlias = varDecl(EXCLUDED),
+                        condition = conflictAction.condition?.let { transformExpr(it) },
+                        action = doReplace(conflictAction.metas)
+                    )
+                }
+            }
+
+            is PartiqlAst.ConflictAction.DoUpdate -> when (conflictAction.value) {
+                is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.build {
+                    onConflict(
+                        excludedAlias = varDecl(EXCLUDED),
+                        condition = conflictAction.condition?.let { transformExpr(it) },
+                        action = doUpdate(conflictAction.metas)
+                    )
+                }
+            }
+
+            is PartiqlAst.ConflictAction.DoNothing ->
+                TODO("`ON CONFLICT DO NOTHING` is not supported in logical plan yet.")
+        }
+
+    private fun PartiqlAst.Expr.toDmlTarget(): PartiqlLogical.DmlTarget {
+        return when (this) {
             is PartiqlAst.Expr.Id -> PartiqlLogical.build {
-                identifier_(name, transformCaseSensitivity(case), metas)
+                dmlTarget(identifier_(name, transformCaseSensitivity(case), metas))
             }
             else -> {
                 problemHandler.handleProblem(
@@ -481,11 +515,42 @@ internal class AstToLogicalVisitorTransform(
                         PlanningProblemDetails.InvalidDmlTarget
                     )
                 )
-                INVALID_DML_TARGET_ID
+                PartiqlLogical.build { dmlTarget(INVALID_DML_TARGET_ID) }
             }
         }
-        return dmlTargetId
     }
+
+    private fun PartiqlAst.Expr.toSimplePath(): PartiqlLogical.SimplePath =
+        PartiqlLogical.build {
+            when (val path = this@toSimplePath) {
+                is PartiqlAst.Expr.Id -> {
+                    simplePath(root = identifier_(path.name, transformCaseSensitivity(path.case), metas))
+                }
+                is PartiqlAst.Expr.Path -> when (val root = path.root) {
+                    is PartiqlAst.Expr.Id -> simplePath(
+                        identifier_(root.name, transformCaseSensitivity(root.case), metas),
+                        steps = path.steps.map { step ->
+                            when (step) {
+                                is PartiqlAst.PathStep.PathExpr -> when (val index = step.index) {
+                                    is PartiqlAst.Expr.Lit -> {
+                                        val stepCase = transformCaseSensitivity(step.case)
+                                        if (index.value.type.isText) {
+                                            spsIdentifier(identifier(index.value.textValue, stepCase), step.metas)
+                                        } else {
+                                            spsLiteral(index.value, step.metas)
+                                        }
+                                    }
+                                    else -> error("Malformed AST: non-literal path step expression")
+                                }
+                                else -> error("Malformed AST: non-expression path step")
+                            }
+                        }
+                    )
+                    else -> error("Malformed AST: root expression was not an identifier")
+                }
+                else -> error("Malformed AST: non-path expression found as AST set-target")
+            }
+        }
 
     override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement {
         // It is an open question whether the planner will support DDL statements directly or if they must be handled by

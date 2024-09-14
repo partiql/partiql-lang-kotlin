@@ -241,7 +241,9 @@ internal class PhysicalPlanCompilerImpl(
         return when (ast) {
             is PartiqlPhysical.Statement.Query -> compileAstExpr(ast.expr)
             is PartiqlPhysical.Statement.Exec -> compileExec(ast)
-            is PartiqlPhysical.Statement.Dml,
+            is PartiqlPhysical.Statement.DmlDelete,
+            is PartiqlPhysical.Statement.DmlInsert,
+            is PartiqlPhysical.Statement.DmlUpdate -> TODO("DML compilation not supported.")
             is PartiqlPhysical.Statement.Explain -> {
                 val value = ExprValue.newBoolean(true)
                 thunkFactory.thunkEnv(emptyMetaContainer()) { value }
