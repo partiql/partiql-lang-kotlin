@@ -15,24 +15,21 @@
 package org.partiql.spi.fn
 
 /**
- * TODO !! TEMPORARY AS FUNCTIONS ARE MOVED FROM CONNECTORS TO PLANNER.
+ * TODO !! TEMPORARY AS FUNCTIONS ARE MOVED TO [Catalog] APIs.
  */
 public object SqlFnProvider {
 
-    private val fnNameIndex = SqlBuiltins.builtins.groupBy({ it.signature.name }, { it.signature })
+    private val fnNameIndex = SqlBuiltins.builtins.groupBy { it.signature.name }
     private val fnSpecIndex = SqlBuiltins.builtins.associateBy { it.signature.specific }
-    private val aggNameIndex = SqlBuiltins.aggregations.groupBy({ it.signature.name }, { it.signature })
+    private val aggNameIndex = SqlBuiltins.aggregations.groupBy { it.signature.name }
     private val aggSpecIndex = SqlBuiltins.aggregations.associateBy { it.signature.specific }
 
-    //
-    // INTERNAL PLANNER APIS
-    //
-    public fun lookupFn(name: String): List<FnSignature>? = fnNameIndex[name]
-    public fun lookupAgg(name: String): List<AggSignature>? = aggNameIndex[name]
+    internal fun lookupFn(name: String): List<Function> = fnNameIndex[name] ?: emptyList()
+    internal fun lookupAgg(name: String): List<Aggregation> = aggNameIndex[name] ?: emptyList()
 
     //
     // TEMPORARY PUBLIC EVALUATOR APIS
     //
-    public fun getFn(specific: String): Fn? = fnSpecIndex[specific]
-    public fun getAgg(specific: String): Agg? = aggSpecIndex[specific]
+    public fun getFn(specific: String): Function? = fnSpecIndex[specific]
+    public fun getAgg(specific: String): Aggregation? = aggSpecIndex[specific]
 }

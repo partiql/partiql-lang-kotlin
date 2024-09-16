@@ -13,9 +13,9 @@ import org.partiql.eval.value.Datum.bool
 import org.partiql.eval.value.Datum.integer
 import org.partiql.eval.value.Datum.list
 import org.partiql.eval.value.Datum.string
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -64,14 +64,14 @@ class ExprCallDynamicTest {
             )
 
             @OptIn(PartiQLValueExperimental::class)
-            internal val candidates: Array<Fn> = params.mapIndexed { index, it ->
-                object : Fn {
+            internal val candidates: Array<Function> = params.mapIndexed { index, it ->
+                object : Function {
                     override val signature: FnSignature = FnSignature(
                         name = "example_function",
                         returns = PType.integer(),
                         parameters = listOf(
-                            FnParameter("first", type = it.first.toPType()),
-                            FnParameter("second", type = it.second.toPType()),
+                            Parameter("first", type = it.first.toPType()),
+                            Parameter("second", type = it.second.toPType()),
                         )
                     )
 

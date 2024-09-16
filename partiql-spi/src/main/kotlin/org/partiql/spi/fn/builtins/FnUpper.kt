@@ -4,17 +4,17 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.types.PType
 
-internal object Fn_UPPER__STRING__STRING : Fn {
+internal object Fn_UPPER__STRING__STRING : Function {
 
     override val signature = FnSignature(
         name = "upper",
         returns = PType.string(),
-        parameters = listOf(FnParameter("value", PType.string())),
+        parameters = listOf(Parameter("value", PType.string())),
         isNullCall = true,
         isNullable = false,
     )
@@ -26,12 +26,12 @@ internal object Fn_UPPER__STRING__STRING : Fn {
     }
 }
 
-internal object Fn_UPPER__SYMBOL__SYMBOL : Fn {
+internal object Fn_UPPER__SYMBOL__SYMBOL : Function {
 
     override val signature = FnSignature(
         name = "upper",
         returns = PType.symbol(),
-        parameters = listOf(FnParameter("value", PType.symbol())),
+        parameters = listOf(Parameter("value", PType.symbol())),
         isNullCall = true,
         isNullable = false,
     )
@@ -43,12 +43,12 @@ internal object Fn_UPPER__SYMBOL__SYMBOL : Fn {
     }
 }
 
-internal object Fn_UPPER__CLOB__CLOB : Fn {
+internal object Fn_UPPER__CLOB__CLOB : Function {
 
     override val signature = FnSignature(
         name = "upper",
         returns = PType.clob(Int.MAX_VALUE),
-        parameters = listOf(FnParameter("value", PType.clob(Int.MAX_VALUE))),
+        parameters = listOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
         isNullCall = true,
         isNullable = false,
     )

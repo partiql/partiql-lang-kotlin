@@ -4,6 +4,9 @@ import org.partiql.types.PType
 
 /**
  *
+ * TODO THIS WILL BE REPLACED BY THE `Function` INTERFACE IN A SUBSEQUENT PR.
+ *  Right now the planner has a dependency on the signature which needs to be removed.
+ *
  * The signature includes the names of the function (which allows for function overloading),
  * the return type, a list of parameters, a flag indicating whether the function is deterministic
  * (i.e., always produces the same output given the same input), and an optional description.
@@ -21,7 +24,7 @@ import org.partiql.types.PType
 public data class FnSignature(
     @JvmField public val name: String,
     @JvmField public val returns: PType,
-    @JvmField public val parameters: List<FnParameter>,
+    @JvmField public val parameters: List<Parameter>,
     @JvmField public val description: String? = null,
     @JvmField public val isDeterministic: Boolean = true,
     @JvmField public val isNullable: Boolean = true,
@@ -36,55 +39,13 @@ public data class FnSignature(
     public val specific: String = buildString {
         append(name.uppercase())
         append("__")
-        append(parameters.joinToString("_") { it.type.toString() })
+        append(parameters.joinToString("_") { it.getType().kind.toString() })
         append("__")
         append(returns)
     }
 
     /**
      * Use the symbolic name for easy debugging
-     *
-     * @return
      */
     override fun toString(): String = specific
-
-    // Logic for writing a [FunctionSignature] using SQL `CREATE FUNCTION` syntax.
-
-    /**
-     * SQL-99 p.542 <deterministic characteristic>
-     */
-    private val deterministicCharacteristic = when (isDeterministic) {
-        true -> "DETERMINISTIC"
-        else -> "NOT DETERMINISTIC"
-    }
-
-    /**
-     * SQL-99 p.543 <null-call clause>
-     */
-    private val nullCallClause = when (isNullCall) {
-        true -> "RETURNS NULL ON NULL INPUT"
-        else -> "CALLED ON NULL INPUT"
-    }
-
-    public fun sql(): String = buildString {
-        val fn = name.uppercase()
-        val indent = "  "
-        append("CREATE FUNCTION \"$fn\" (")
-        if (parameters.isNotEmpty()) {
-            val extent = parameters.maxOf { it.name.length }
-            for (i in parameters.indices) {
-                val p = parameters[i]
-                val ws = (extent - p.name.length) + 1
-                appendLine()
-                append(indent).append(p.name.uppercase()).append(" ".repeat(ws)).append(p.type.toString())
-                if (i != parameters.size - 1) append(",")
-            }
-        }
-        appendLine(" )")
-        append(indent).appendLine("RETURNS $returns")
-        append(indent).appendLine("SPECIFIC $specific")
-        append(indent).appendLine(deterministicCharacteristic)
-        append(indent).appendLine(nullCallClause)
-        append(indent).appendLine("RETURN $fn ( ${parameters.joinToString { it.name.uppercase() }} ) ;")
-    }
 }

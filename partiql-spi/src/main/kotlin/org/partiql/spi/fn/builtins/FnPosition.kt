@@ -4,20 +4,20 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.fn.utils.StringUtils.codepointPosition
 import org.partiql.types.PType
 
-internal object Fn_POSITION__STRING_STRING__INT64 : Fn {
+internal object Fn_POSITION__STRING_STRING__INT64 : Function {
 
     override val signature = FnSignature(
         name = "position",
         returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("probe", PType.string()),
-            FnParameter("value", PType.string()),
+            Parameter("probe", PType.string()),
+            Parameter("value", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -31,14 +31,14 @@ internal object Fn_POSITION__STRING_STRING__INT64 : Fn {
     }
 }
 
-internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Fn {
+internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Function {
 
     override val signature = FnSignature(
         name = "position",
         returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("probe", PType.symbol()),
-            FnParameter("value", PType.symbol()),
+            Parameter("probe", PType.symbol()),
+            Parameter("value", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -52,14 +52,14 @@ internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Fn {
     }
 }
 
-internal object Fn_POSITION__CLOB_CLOB__INT64 : Fn {
+internal object Fn_POSITION__CLOB_CLOB__INT64 : Function {
 
     override val signature = FnSignature(
         name = "position",
         returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("probe", PType.clob(Int.MAX_VALUE)),
-            FnParameter("value", PType.clob(Int.MAX_VALUE)),
+            Parameter("probe", PType.clob(Int.MAX_VALUE)),
+            Parameter("value", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

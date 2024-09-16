@@ -1,6 +1,6 @@
 package org.partiql.plan.v1.operator.rex
 
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Function
 import org.partiql.types.PType
 
 /**
@@ -13,7 +13,7 @@ public interface RexCallStatic : Rex {
      *
      * @return
      */
-    public fun getFunction(): Fn
+    public fun getFunction(): Function
 
     /**
      * Returns the list of function arguments.
@@ -28,13 +28,13 @@ public interface RexCallStatic : Rex {
 /**
  * Default [RexCallStatic] implementation meant for extension.
  */
-internal class RexCallStaticImpl(function: Fn, args: List<Rex>) : RexCallStatic {
+internal class RexCallStaticImpl(function: Function, args: List<Rex>) : RexCallStatic {
 
     // DO NOT USE FINAL
     private var _function = function
     private var _args = args
 
-    override fun getFunction(): Fn = _function
+    override fun getFunction(): Function = _function
 
     override fun getArgs(): List<Rex> = _args
 

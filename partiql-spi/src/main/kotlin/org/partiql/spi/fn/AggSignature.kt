@@ -11,7 +11,7 @@ import org.partiql.types.PType
 public class AggSignature(
     @JvmField public val name: String,
     @JvmField public val returns: PType,
-    @JvmField public val parameters: List<FnParameter>,
+    @JvmField public val parameters: List<Parameter>,
     @JvmField public val description: String? = null,
     @JvmField public val isNullable: Boolean = true,
     @JvmField public val isDecomposable: Boolean = true,
@@ -23,7 +23,7 @@ public class AggSignature(
     public val specific: String = buildString {
         append(name.uppercase())
         append("__")
-        append(parameters.joinToString("_") { it.type.toString() })
+        append(parameters.joinToString("_") { it.getType().kind.name })
         append("__")
         append(returns)
     }
@@ -50,7 +50,7 @@ public class AggSignature(
         for (i in parameters.indices) {
             val p1 = parameters[i]
             val p2 = other.parameters[i]
-            if (p1.type != p2.type) return false
+            if (p1.getType() != p2.getType()) return false
         }
         return true
     }

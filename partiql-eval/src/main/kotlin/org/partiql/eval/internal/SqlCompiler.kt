@@ -115,7 +115,7 @@ import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVisitor
 import org.partiql.planner.catalog.Session
-import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.Aggregation
 import org.partiql.types.PType
 import org.partiql.plan.Rel as IRel
 
@@ -166,7 +166,7 @@ internal class SqlCompiler(
                     else -> Operator.Aggregation.SetQuantifier.ALL
                 }
                 object : Operator.Aggregation {
-                    override val delegate: Agg = agg
+                    override val delegate: Aggregation = agg
                     override val args: List<Operator.Expr> = args
                     override val setQuantifier: Operator.Aggregation.SetQuantifier = setq
                 }
@@ -382,7 +382,7 @@ internal class SqlCompiler(
             val fn = rex.getFunction()
             val args = rex.getArgs().map { compile(it, ctx) }
             val fnTakesInMissing = fn.signature.parameters.any {
-                it.type.kind == PType.Kind.DYNAMIC // TODO: Is this needed?
+                it.getType().kind == PType.Kind.DYNAMIC // TODO: Is this needed?
             }
             return when (fnTakesInMissing) {
                 true -> ExprCallStatic(fn, args.map { it.catch() }.toTypedArray())

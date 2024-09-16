@@ -1,9 +1,9 @@
 package org.partiql.spi.fn.builtins.internal
 
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.Aggregation
 
-internal class AccumulatorCountStar : Agg.Accumulator {
+internal class AccumulatorCountStar : Aggregation.Accumulator {
 
     var count: Long = 0L
 
