@@ -18,9 +18,9 @@
 
 object Versions {
     // Language
-    const val kotlin = "1.6.20"
-    const val kotlinLanguage = "1.6"
-    const val kotlinApi = "1.6"
+    const val kotlin = "1.9.20"
+    const val kotlinLanguage = "1.9"
+    const val kotlinApi = "1.9"
     const val jvmTarget = "1.8"
 
     // Dependencies
@@ -45,9 +45,9 @@ object Versions {
     const val kotlinxCollections = "0.3.5"
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
-    const val pig = "0.6.2"
-    const val kotlinxCoroutines = "1.6.0"
-    const val kotlinxCoroutinesJdk8 = "1.6.0"
+    const val pig = "0.6.3"
+    const val kotlinxCoroutines = "1.8.1"
+    const val kotlinxCoroutinesJdk8 = "1.8.1"
     const val ktlint = "0.42.1" // we're on an old version of ktlint. TODO upgrade https://github.com/partiql/partiql-lang-kotlin/issues/1418
 
     // Testing
@@ -59,7 +59,7 @@ object Versions {
     const val junit4Params = "1.1.1"
     const val mockito = "4.5.0"
     const val mockk = "1.11.0"
-    const val kotlinxCoroutinesTest = "1.6.0"
+    const val kotlinxCoroutinesTest = "1.8.1"
 }
 
 object Deps {

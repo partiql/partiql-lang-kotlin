@@ -25,11 +25,11 @@ repositories {
 object Versions {
     const val binaryCompatibilityValidator = "0.14.0"
     const val detekt = "1.20.0-RC2"
-    const val dokka = "1.6.10"
-    const val kotlin = "1.6.20"
+    const val dokka = "1.9.20"
+    const val kotlin = "1.9.20"
     const val ktlintGradle = "10.2.1"
     const val nexusPublish = "2.0.0"
-    const val pig = "0.6.1"
+    const val pig = "0.6.3"
     const val shadow = "8.1.1"
 }
 

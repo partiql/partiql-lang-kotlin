@@ -14,6 +14,7 @@ public final class org/partiql/eval/PartiQLEngine$Companion {
 public final class org/partiql/eval/PartiQLEngine$Mode : java/lang/Enum {
 	public static final field PERMISSIVE Lorg/partiql/eval/PartiQLEngine$Mode;
 	public static final field STRICT Lorg/partiql/eval/PartiQLEngine$Mode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/eval/PartiQLEngine$Mode;
 	public static fun values ()[Lorg/partiql/eval/PartiQLEngine$Mode;
 }

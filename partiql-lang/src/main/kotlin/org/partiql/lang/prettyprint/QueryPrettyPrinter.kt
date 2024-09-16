@@ -60,6 +60,7 @@ class QueryPrettyPrinter {
             is PartiqlAst.Statement.Ddl -> writeAstNode(node, sb)
             is PartiqlAst.Statement.Dml -> writeAstNode(node, sb)
             is PartiqlAst.Statement.Exec -> writeAstNode(node, sb)
+            else -> {}
         }
     }
 
@@ -655,6 +656,7 @@ class QueryPrettyPrinter {
         when (sortSpec.orderingSpec) {
             is PartiqlAst.OrderingSpec.Asc -> sb.append(" ASC")
             is PartiqlAst.OrderingSpec.Desc -> sb.append(" DESC")
+            else -> {}
         }
     }
 
@@ -857,7 +859,8 @@ class QueryPrettyPrinter {
             is PartiqlAst.Type.TimestampType -> sb.append("TIMESTAMP")
             is PartiqlAst.Type.TupleType -> sb.append("TUPLE")
             // TODO: Support formatting CustomType
-            is PartiqlAst.Type.CustomType -> error("CustomType is not supported yet. ")
+            is PartiqlAst.Type.CustomType -> error("CustomType is not supported yet.")
+            is PartiqlAst.Type.TimestampWithTimeZoneType -> error("TimestampWithTimeZoneType is not supported yet.")
         }
     }
 

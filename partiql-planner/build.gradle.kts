@@ -1,4 +1,5 @@
-import org.jetbrains.dokka.utilities.relativeTo
+import kotlin.io.path.relativeTo
+import kotlin.io.path.toPath
 
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -62,7 +63,7 @@ tasks.register("generateResourcePath") {
         resourceDir.walk().forEach { file ->
             if (!file.isDirectory) {
                 if (file.extension == "ion" || file.extension == "sql") {
-                    val toAppend = file.toURI().relativeTo(resourceDir.toURI())
+                    val toAppend = file.toURI().toPath().relativeTo(resourceDir.toURI().toPath())
                     pathFile.appendText("$toAppend\n")
                 }
             }
@@ -81,6 +82,12 @@ tasks.register("generateResourcePath") {
 tasks.processTestResources {
     dependsOn("generateResourcePath")
     from("src/testFixtures/resources")
+}
+
+tasks.compileTestFixturesKotlin {
+    kotlinOptions.jvmTarget = Versions.jvmTarget
+    kotlinOptions.apiVersion = Versions.kotlinApi
+    kotlinOptions.languageVersion = Versions.kotlinLanguage
 }
 
 publish {

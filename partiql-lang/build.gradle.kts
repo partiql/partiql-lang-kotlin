@@ -62,6 +62,12 @@ dependencies {
     testFixturesImplementation(Deps.mockk)
 }
 
+tasks.compileTestFixturesKotlin {
+    kotlinOptions.jvmTarget = Versions.jvmTarget
+    kotlinOptions.apiVersion = Versions.kotlinApi
+    kotlinOptions.languageVersion = Versions.kotlinLanguage
+}
+
 tasks.shadowJar {
     configurations = listOf(project.configurations.shadow.get())
 }

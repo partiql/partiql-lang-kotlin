@@ -93,6 +93,7 @@ public abstract class org/partiql/plan/Identifier : org/partiql/plan/PlanNode {
 public final class org/partiql/plan/Identifier$CaseSensitivity : java/lang/Enum {
 	public static final field INSENSITIVE Lorg/partiql/plan/Identifier$CaseSensitivity;
 	public static final field SENSITIVE Lorg/partiql/plan/Identifier$CaseSensitivity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Identifier$CaseSensitivity;
 	public static fun values ()[Lorg/partiql/plan/Identifier$CaseSensitivity;
 }
@@ -373,6 +374,7 @@ public final class org/partiql/plan/Rel$Op$Aggregate$Companion {
 public final class org/partiql/plan/Rel$Op$Aggregate$Strategy : java/lang/Enum {
 	public static final field FULL Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
 	public static final field PARTIAL Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
 	public static fun values ()[Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
 }
@@ -678,6 +680,7 @@ public final class org/partiql/plan/Rel$Op$Join$Type : java/lang/Enum {
 	public static final field INNER Lorg/partiql/plan/Rel$Op$Join$Type;
 	public static final field LEFT Lorg/partiql/plan/Rel$Op$Join$Type;
 	public static final field RIGHT Lorg/partiql/plan/Rel$Op$Join$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rel$Op$Join$Type;
 	public static fun values ()[Lorg/partiql/plan/Rel$Op$Join$Type;
 }
@@ -809,6 +812,7 @@ public final class org/partiql/plan/Rel$Op$Sort$Order : java/lang/Enum {
 	public static final field ASC_NULLS_LAST Lorg/partiql/plan/Rel$Op$Sort$Order;
 	public static final field DESC_NULLS_FIRST Lorg/partiql/plan/Rel$Op$Sort$Order;
 	public static final field DESC_NULLS_LAST Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rel$Op$Sort$Order;
 	public static fun values ()[Lorg/partiql/plan/Rel$Op$Sort$Order;
 }
@@ -878,6 +882,7 @@ public final class org/partiql/plan/Rel$Op$Unpivot$Companion {
 
 public final class org/partiql/plan/Rel$Prop : java/lang/Enum {
 	public static final field ORDERED Lorg/partiql/plan/Rel$Prop;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rel$Prop;
 	public static fun values ()[Lorg/partiql/plan/Rel$Prop;
 }
@@ -1370,6 +1375,7 @@ public final class org/partiql/plan/Rex$Op$Subquery : org/partiql/plan/Rex$Op {
 public final class org/partiql/plan/Rex$Op$Subquery$Coercion : java/lang/Enum {
 	public static final field ROW Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
 	public static final field SCALAR Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
 	public static fun values ()[Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
 }
@@ -1421,6 +1427,7 @@ public final class org/partiql/plan/Rex$Op$Var$Companion {
 public final class org/partiql/plan/SetQuantifier : java/lang/Enum {
 	public static final field ALL Lorg/partiql/plan/SetQuantifier;
 	public static final field DISTINCT Lorg/partiql/plan/SetQuantifier;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/SetQuantifier;
 	public static fun values ()[Lorg/partiql/plan/SetQuantifier;
 }
@@ -2748,6 +2755,7 @@ public final class org/partiql/plan/v1/operator/rel/RelCollation$Nulls : java/la
 	public static final field FIRST Lorg/partiql/plan/v1/operator/rel/RelCollation$Nulls;
 	public static final field LAST Lorg/partiql/plan/v1/operator/rel/RelCollation$Nulls;
 	public static final field OTHER Lorg/partiql/plan/v1/operator/rel/RelCollation$Nulls;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/operator/rel/RelCollation$Nulls;
 	public static fun values ()[Lorg/partiql/plan/v1/operator/rel/RelCollation$Nulls;
 }
@@ -2756,6 +2764,7 @@ public final class org/partiql/plan/v1/operator/rel/RelCollation$Order : java/la
 	public static final field ASC Lorg/partiql/plan/v1/operator/rel/RelCollation$Order;
 	public static final field DESC Lorg/partiql/plan/v1/operator/rel/RelCollation$Order;
 	public static final field OTHER Lorg/partiql/plan/v1/operator/rel/RelCollation$Order;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/operator/rel/RelCollation$Order;
 	public static fun values ()[Lorg/partiql/plan/v1/operator/rel/RelCollation$Order;
 }
@@ -2947,6 +2956,7 @@ public final class org/partiql/plan/v1/operator/rel/RelJoinType : java/lang/Enum
 	public static final field INNER Lorg/partiql/plan/v1/operator/rel/RelJoinType;
 	public static final field LEFT Lorg/partiql/plan/v1/operator/rel/RelJoinType;
 	public static final field RIGHT Lorg/partiql/plan/v1/operator/rel/RelJoinType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/operator/rel/RelJoinType;
 	public static fun values ()[Lorg/partiql/plan/v1/operator/rel/RelJoinType;
 }
@@ -3376,6 +3386,7 @@ public final class org/partiql/plan/v1/operator/rex/RexSubqueryComp$Comp : java/
 	public static final field LT Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Comp;
 	public static final field NE Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Comp;
 	public static final field OTHER Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Comp;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Comp;
 	public static fun values ()[Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Comp;
 }
@@ -3389,6 +3400,7 @@ public final class org/partiql/plan/v1/operator/rex/RexSubqueryComp$Quantifier :
 	public static final field ANY Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Quantifier;
 	public static final field OTHER Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Quantifier;
 	public static final field SOME Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Quantifier;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Quantifier;
 	public static fun values ()[Lorg/partiql/plan/v1/operator/rex/RexSubqueryComp$Quantifier;
 }
@@ -3417,6 +3429,7 @@ public final class org/partiql/plan/v1/operator/rex/RexSubqueryTest$Test : java/
 	public static final field EXISTS Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;
 	public static final field OTHER Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;
 	public static final field UNIQUE Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;
 	public static fun values ()[Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;
 }
