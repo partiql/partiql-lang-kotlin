@@ -14,23 +14,17 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.IonSexp
-import com.amazon.ion.IonValue
-import com.amazon.ionelement.api.SexpElement
-import com.amazon.ionelement.api.toIonElement
-import com.amazon.ionelement.api.toIonValue
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.TestBase
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.util.SexpAstPrettyPrinter
-import org.partiql.lang.util.asIonSexp
-import org.partiql.lang.util.checkErrorAndErrorContext
-import org.partiql.lang.util.softAssert
-import org.partiql.pig.runtime.toIonElement
 
 abstract class PartiQLParserTestBase : TestBase() {
+
+    companion object {
+        val testCache = mutableMapOf<String, ParserTest>()
+    }
 
     /**
      * We can change the parser target for an entire test suite by overriding this list.
@@ -47,20 +41,6 @@ abstract class PartiQLParserTestBase : TestBase() {
         EXPERIMENTAL(PartiQLParserBuilder.experimental().customTypes(CUSTOM_TEST_TYPES).build()),
     }
 
-    private fun assertSexpEquals(
-        expectedValue: IonValue,
-        actualValue: IonValue,
-        message: String = "",
-    ) {
-        if (!expectedValue.equals(actualValue)) {
-            fail(
-                "Expected and actual values do not match: $message\n" +
-                    "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
-                    "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
-            )
-        }
-    }
-
     /**
      * This method is used by test cases for parsing a string.
      * The test are performed with PIG AST.
@@ -70,16 +50,7 @@ abstract class PartiQLParserTestBase : TestBase() {
         source: String,
         expectedPigAst: String,
     ): Unit = forEachTarget {
-        val actualStatement = parser.parseAstStatement(source)
-        val expectedIonSexp = loadIonSexp(expectedPigAst)
-
-        // Check equals for actual value and expected value in IonSexp format
-        checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
-
-        val expectedElement = expectedIonSexp.toIonElement().asSexp()
-
-        // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
-        pigDomainAssert(actualStatement, expectedElement)
+        assert(ParserTest(source, source, true))
     }
 
     /**
@@ -91,62 +62,8 @@ abstract class PartiQLParserTestBase : TestBase() {
         source: String,
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode,
     ) {
-        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-
-        // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst)
+        assert(ParserTest(source, source, true))
     }
-
-    /**
-     * Converts the given PartiqlAst.Statement into an IonElement. If the given [statement] is a query, extracts
-     * just the expr component to be compatible with the SqlParser tests.
-     */
-    private fun unwrapQuery(statement: PartiqlAst.Statement): SexpElement {
-        return when (statement) {
-            is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
-            is PartiqlAst.Statement.Dml,
-            is PartiqlAst.Statement.Ddl,
-            is PartiqlAst.Statement.Exec,
-            -> statement.toIonElement()
-            is PartiqlAst.Statement.Explain -> statement.toIonElement()
-        }
-    }
-
-    /**
-     * First checks that parsing the [source] query string to a [PartiqlAst] and to an IonValue Sexp equals the [expectedIonSexp].
-     */
-    private fun checkEqualInIonSexp(actualStatement: PartiqlAst.Statement, expectedIonSexp: IonSexp, source: String) {
-        val actualElement = unwrapQuery(actualStatement)
-        val actualIonSexp = actualElement.toIonElement().asAnyElement().toIonValue(ion)
-
-        assertSexpEquals(expectedIonSexp, actualIonSexp, "AST, $source")
-    }
-
-    private fun pigDomainAssert(actualStatement: PartiqlAst.Statement, expectedElement: SexpElement) {
-        // Check equal for actual and expected in SexpElement format
-        val actualElement = unwrapQuery(actualStatement)
-        assertEquals(expectedElement, actualElement)
-
-        // Check equal after transformation: PIG AST -> SexpElement -> PIG AST
-        assertRoundTripPigAstToSexpElement(actualStatement)
-
-        // Check equal for actual and expected in transformed astStatement: astStatement -> SexpElement -> astStatement
-        val transformedActualStatement = PartiqlAst.transform(actualElement)
-        val transformedExpectedStatement = PartiqlAst.transform(expectedElement)
-        assertEquals(transformedExpectedStatement, transformedActualStatement)
-
-        // Check round trip for actual: SexpElement -> astStatement -> SexpElement
-        val reserializedActualElement = transformedActualStatement.toIonElement()
-        assertEquals(expectedElement, reserializedActualElement)
-    }
-
-    /**
-     * Check equal after transformation: PIG AST -> SexpElement -> PIG AST
-     */
-    private fun assertRoundTripPigAstToSexpElement(actualStatement: PartiqlAst.Statement) =
-        assertEquals(actualStatement, PartiqlAst.transform(actualStatement.toIonElement()) as PartiqlAst.Statement)
-
-    private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
 
     protected fun checkInputThrowingParserException(
         input: String,
@@ -154,19 +71,23 @@ abstract class PartiQLParserTestBase : TestBase() {
         expectErrorContextValues: Map<Property, Any>,
         assertContext: Boolean = true,
     ): Unit = forEachTarget {
-        softAssert {
-            try {
-                parser.parseAstStatement(input)
-                fail("Expected ParserException but there was no Exception")
-            } catch (ex: ParserException) {
-                // NOTE: only perform error code and error context checks for `ParserTarget.EXPERIMENTAL` (partiql-ast
-                // parser).
-                if (assertContext && (this@forEachTarget == ParserTarget.EXPERIMENTAL)) {
-                    checkErrorAndErrorContext(errorCode, ex, expectErrorContextValues)
-                }
-            } catch (ex: Exception) {
-                fail("Expected ParserException but a different exception was thrown \n\t  $ex")
-            }
+        assert(ParserTest(input, input, false))
+    }
+
+    protected fun assertFailure(input: String) = forEachTarget {
+        assert(ParserTest(input, input, false))
+    }
+
+    private fun assert(test: ParserTest) {
+        val cache = testCache[test.name]
+        if (cache != null) {
+            // If test exists, assert that the expectation is the same
+            assertEquals(test, cache)
+        } else {
+            // Print
+            test.write("all.ion")
+            // Insert into cache
+            testCache[test.name] = test
         }
     }
 }
