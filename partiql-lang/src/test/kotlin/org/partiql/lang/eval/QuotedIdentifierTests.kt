@@ -14,33 +14,85 @@
 
 package org.partiql.lang.eval
 
-import org.junit.Test
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
 class QuotedIdentifierTests : EvaluatorTestBase() {
 
-    private val simpleSession = mapOf(
-        "Abc" to "1",
-        "aBc" to "2",
-        "abC" to "3"
-    ).toSession()
+    companion object {
+        private val simpleSessionEnv = mapOf(
+            "Abc" to "1",
+            "aBc" to "2",
+            "abC" to "3"
+        )
 
-    private val sessionWithCaseVaryingTables = mapOf(
-        "Abc" to "[{n:1}]",
-        "aBc" to "[{n:2}]",
-        "abC" to "[{n:3}]"
-    ).toSession()
+        private val sessionWithCaseVaryingTablesEnv = mapOf(
+            "Def" to "[{n:1}]",
+            "dEf" to "[{n:2}]",
+            "deF" to "[{n:3}]"
+        )
 
-    private val simpleSessionWithTables = mapOf(
-        "a" to "[{n:1}]",
-        "b" to "[{n:2}]",
-        "c" to "[{n:3}]",
-        "" to "empty_variable_name_value"
-    ).toSession()
+        private val simpleSessionWithTablesEnv = mapOf(
+            "a" to "[{n:1}]",
+            "b" to "[{n:2}]",
+            "c" to "[{n:3}]",
+            "" to "empty_variable_name_value"
+        )
+
+        private val nestedStructsLowercase = mapOf("n" to "{b:{c:{d:{e:5,f:6}}}}")
+
+        private val globalHello = mapOf("s" to "\"hello\"")
+
+        private val env = simpleSessionEnv + sessionWithCaseVaryingTablesEnv + simpleSessionWithTablesEnv + nestedStructsLowercase + globalHello
+
+        private val FILE_PATH = "quoted-identifier.ion"
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            EvaluationTestCase.print(FILE_PATH, emptyList(), env)
+        }
+    }
+
+    private val simpleSession = simpleSessionEnv.toSession()
+    private val sessionWithCaseVaryingTables = sessionWithCaseVaryingTablesEnv.toSession()
+    private val simpleSessionWithTables = simpleSessionWithTablesEnv.toSession()
+
+    private fun runEvaluatorTestCase(
+        query: String,
+        session: EvaluationSession = EvaluationSession.standard(),
+        expectedResult: String,
+        target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES // This is ignored
+    ) {
+        val assertion = EvaluationTestCase.Assertion.Success(EvaluationTestCase.ALL_MODES, expectedResult)
+        val case = EvaluationTestCase(query, query, assertion)
+        case.append(FILE_PATH)
+    }
+
+    private fun runEvaluatorErrorTestCase(
+        query: String,
+        errorCode: ErrorCode,
+        properties: PropertyValueMap? = null, // This is ignored
+        expectedPermissiveModeResult: String? = null,
+        session: EvaluationSession = EvaluationSession.standard(),
+        target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES // This is intentionally ignored
+    ) {
+        val assertion = when (expectedPermissiveModeResult) {
+            null -> EvaluationTestCase.Assertion.Failure(EvaluationTestCase.ALL_MODES)
+            else -> EvaluationTestCase.Assertion.Multi(
+                EvaluationTestCase.Assertion.Failure(EvaluationTestCase.ERROR),
+                EvaluationTestCase.Assertion.SuccessPartiQL(EvaluationTestCase.COERCE, expectedPermissiveModeResult, env)
+            )
+        }
+        val case = EvaluationTestCase(query, query, EvaluationTestCase.Assertion.Failure(EvaluationTestCase.ALL_MODES))
+        case.append(FILE_PATH)
+    }
 
     private val undefinedVariableMissingCompileOptionBlock: CompileOptions.Builder.() -> Unit = {
         undefinedVariable(UndefinedVariableBehavior.MISSING)
@@ -123,9 +175,9 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun selectFromTablesQuotedIdsAreCaseSensitive() {
-        runEvaluatorTestCase("SELECT * FROM \"Abc\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:1}]")
-        runEvaluatorTestCase("SELECT * FROM \"aBc\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:2}]")
-        runEvaluatorTestCase("SELECT * FROM \"abC\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:3}]")
+        runEvaluatorTestCase("SELECT * FROM \"Def\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:1}]")
+        runEvaluatorTestCase("SELECT * FROM \"dEf\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:2}]")
+        runEvaluatorTestCase("SELECT * FROM \"deF\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:3}]")
     }
 
     @Test
@@ -169,8 +221,6 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     }
 
     // //////////////////////////////////////////
-    private val nestedStructsLowercase = mapOf("a" to "{b:{c:{d:{e:5,f:6}}}}")
-    private val globalHello = mapOf("s" to "\"hello\"")
 
     /**
      * Sample ion containing a collection of stores
@@ -237,26 +287,26 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun pathDotOnly_quotedId() =
-        runEvaluatorTestCase(""" "a"."b"."c"."d"."e" """, nestedStructsLowercase.toSession(), "5")
+        runEvaluatorTestCase(""" "n"."b"."c"."d"."e" """, nestedStructsLowercase.toSession(), "5")
 
     @Test
     fun pathDotOnly_mixedIds() =
-        runEvaluatorTestCase(""" "a".b."c".d."e" """, nestedStructsLowercase.toSession(), "5")
+        runEvaluatorTestCase(""" "n".b."c".d."e" """, nestedStructsLowercase.toSession(), "5")
     @Test
     fun pathDotOnly_mixedIds_Inverted() =
-        runEvaluatorTestCase(""" a."b".c."d".e """, nestedStructsLowercase.toSession(), "5")
+        runEvaluatorTestCase(""" n."b".c."d".e """, nestedStructsLowercase.toSession(), "5")
 
     @Test
     fun pathDotMissingAttribute_quotedId() =
-        runEvaluatorTestCase(""" "a"."z" IS MISSING """, nestedStructsLowercase.toSession(), "true")
+        runEvaluatorTestCase(""" "n"."z" IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
     fun pathDotMissingAttribute_mixedIds() =
-        runEvaluatorTestCase(""" a."z" IS MISSING """, nestedStructsLowercase.toSession(), "true")
+        runEvaluatorTestCase(""" n."z" IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
     fun pathDotMissingAttribute_Inverted() =
-        runEvaluatorTestCase(""" "a".z IS MISSING """, nestedStructsLowercase.toSession(), "true")
+        runEvaluatorTestCase(""" "n".z IS MISSING """, nestedStructsLowercase.toSession(), "true")
 
     @Test
     fun pathIndexing_quotedId() =

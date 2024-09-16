@@ -1,5 +1,6 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
@@ -11,7 +12,8 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
-    private val session = mapOf("foo" to "[ { 'a': 1 }, { 'a': 2 }, { 'a': 3 }, { 'a': 4 }, { 'a': 5 } ]").toSession()
+    private val env = mapOf("foo" to "[ { 'a': 1 }, { 'a': 2 }, { 'a': 3 }, { 'a': 4 }, { 'a': 5 } ]")
+    val session = env.toSession()
 
     class ArgsProviderValid : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -104,6 +106,13 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
                 target = EvaluatorTestTarget.COMPILER_PIPELINE // PlannerPipeline doesn't support PIVOT yet
             )
         )
+    }
+
+    @Test
+    fun validTestsPrint() {
+        val cases = ArgsProviderValid().getParameters().map { it as EvaluatorTestCase }.map { EvaluationTestCase.fromEvaluatorTestCase(it) }
+        val errorCases = ArgsProviderError().getParameters().map { it as EvaluatorErrorTestCase }.map { EvaluationTestCase.fromEvaluatorTestCase(it) }
+        EvaluationTestCase.print("offset.ion", cases + errorCases, env)
     }
 
     @ParameterizedTest

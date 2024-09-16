@@ -1,7 +1,10 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.ION
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -244,5 +247,17 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                 )
             ).flatten()
         }
+    }
+
+    @Test
+    @Disabled("We cannot serialize this because these tests dictate that the bindings are statically typed, which the conformance tests do not allow.")
+    fun print() {
+        val env = defaultEnv.globals.map { it.name to it.value.toIonValue(ION).toString() }.toMap()
+        val cases = IntOverflowTestCases().getParameters().map { it as TestCase }.map {
+            // If you look at the tests in this file, it's overriden to only run on permissive mode for some reason.
+            val assertion = EvaluationTestCase.Assertion.SuccessPartiQL(EvaluationTestCase.COERCE, it.expectedPermissiveModeResult, env)
+            EvaluationTestCase(it.sqlUnderTest, it.sqlUnderTest, assertion)
+        }
+        EvaluationTestCase.print("int-overflow.ion", cases, env)
     }
 }

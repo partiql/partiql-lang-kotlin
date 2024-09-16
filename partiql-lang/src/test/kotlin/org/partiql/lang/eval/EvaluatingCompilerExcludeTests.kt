@@ -1,5 +1,6 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
@@ -814,6 +815,20 @@ class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
                 """
             ),
         )
+    }
+
+    class ExcludeTestsPrint : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> = ExcludeTests().getParameters().map { tc ->
+            EvaluationTestCase.fromEvaluatorTestCase(tc as EvaluatorTestCase)
+        }
+    }
+
+    @Test
+    fun validExcludeTestsPrint() {
+        val cases = ExcludeTests().getParameters().map { tc ->
+            EvaluationTestCase.fromEvaluatorTestCase(tc as EvaluatorTestCase)
+        }
+        EvaluationTestCase.print("exclude.ion", cases, emptyMap())
     }
 
     @ParameterizedTest

@@ -1,5 +1,6 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
@@ -12,14 +13,15 @@ import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
 class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
-
-    private val session = mapOf(
+    private val env = mapOf(
         "A" to "[ { id : 1 } ]",
         "B" to "[ { id : 100 }, { id : 200 } ]",
         "C" to """[ { name: 'foo', region: 'NA' },
                     { name: 'foobar', region: 'EU' },
                     { name: 'foobarbaz', region: 'NA' } ]"""
-    ).toSession()
+    )
+
+    private val session = env.toSession()
 
     class ArgsProviderValid : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -111,6 +113,17 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                 """<< {'X': 2} >>"""
             )
         )
+    }
+
+    @Test
+    fun validTestsPrint() {
+        val cases = ArgsProviderValid().getParameters().map {
+            EvaluationTestCase.fromEvaluatorTestCase(it as EvaluatorTestCase)
+        }
+        val errorCases = ArgsProviderError().getParameters().map {
+            EvaluationTestCase.fromEvaluatorTestCase(it as EvaluatorErrorTestCase)
+        }
+        EvaluationTestCase.print("from-let.ion", cases + errorCases, env)
     }
 
     @ParameterizedTest

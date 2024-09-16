@@ -1,12 +1,13 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
-    private val session = mapOf(
+    private val env = mapOf(
         "simple_1" to "[{col1: 1, col2: 10}, {col1: 1, col2: 5}, {col1: 1, col2: 7}, {col1: 5, col2: 7}, {col1: 3, col2: 12}]",
         "suppliers" to """[
             { supplierId: 10, supplierName: "Umbrella" },
@@ -43,8 +44,9 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             { customerId: 789, sellerId: 1, productId: 99999, cost: 9 },
             { customerId: 100, sellerId: 2, productId: 10000, cost: 10 }
         ]"""
-    ).toSession()
+    )
 
+    private val session = env.toSession()
     class ArgsProviderValid : ArgumentsProviderBase() {
         private val differentDataTypes = """
             [
@@ -328,6 +330,14 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                 "<< { 'ordered': 1 } >>"
             ),
         )
+    }
+
+    @Test
+    fun print() {
+        val cases = (ArgsProviderValid().getParameters() + OrderBySubqueryTestsProvider().getParameters()).map {
+            EvaluationTestCase.fromEvaluatorTestCase(it as EvaluatorTestCase)
+        }
+        EvaluationTestCase.print("order-by.ion", cases, env)
     }
 
     @ParameterizedTest

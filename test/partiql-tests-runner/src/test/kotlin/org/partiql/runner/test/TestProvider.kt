@@ -22,7 +22,10 @@ sealed class TestProvider(private val root: String) : ArgumentsProvider {
 
     @Throws(Exception::class)
     override fun provideArguments(extensionContext: ExtensionContext): Stream<out Arguments>? {
-        return TestLoader.load(root).map { Arguments.of(it) }.stream()
+        val roots = root.split(":")
+        return roots.flatMap {
+            TestLoader.load(it)
+        }.map { Arguments.of(it) }.stream()
     }
 
     /**

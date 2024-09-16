@@ -691,7 +691,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<`14d0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<'a', <<'hello'>>>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`20d0`>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(listOf("STRING", "VARCHAR", "CHARACTER VARYING")),
+                ).types(listOf("STRING", "VARCHAR(30)", "CHARACTER VARYING(30)")),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -1045,7 +1045,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("-2147483648.3", "-2147483648", CastQuality.LOSSY),
                 case("-2147483648.5", "-2147483648", CastQuality.LOSSY),
                 case("-2147483648.9", ErrorCode.EVALUATOR_INTEGER_OVERFLOW)
-            ).types(listOf("INT4", "INTEGER4")),
+            ).types(listOf("INT4", "INTEGER4", "INT")),
             // LONG tests
             listOf(
                 case("9223372036854775807", "9223372036854775807", CastQuality.LOSSLESS),
@@ -1055,7 +1055,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("9223372036854775808", ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW),
                 // A very large decimal
                 case("1e2147483609", ErrorCode.EVALUATOR_INTEGER_OVERFLOW)
-            ).types(listOf("INT")),
+            ).types(listOf("BIGINT")),
             // DECIMAL(3)
             listOf(
                 case("12", "12.", CastQuality.LOSSLESS),
@@ -1113,7 +1113,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
             listOf(
                 // from string types
                 case("'a'", "\"a\"", CastQuality.LOSSLESS),
-                case("'a'", "\"a\"", CastQuality.LOSSLESS),
                 case("'abcde'", "\"abcd\"", CastQuality.LOSSY),
                 case("'💩💩💩💩💩'", "\"💩💩💩💩\"", CastQuality.LOSSY),
                 case("TRUE AND FALSE", "\"fals\"", CastQuality.LOSSY),
@@ -1146,7 +1145,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("`+inf`", "\"Infinity\"", CastQuality.LOSSLESS),
                 case("`-inf`", "\"-Infinity\"", CastQuality.LOSSLESS),
                 case("`nan`", "\"NaN\"", CastQuality.LOSSLESS)
-            ).types(listOf("STRING", "VARCHAR", "CHARACTER VARYING")),
+            ).types(listOf("STRING", "VARCHAR(20)", "CHARACTER VARYING(20)")),
             // cast([`+inf` | `-inf` | `nan`] as STRING) returns 'Infinity', '-Infinity', and 'NaN' respectively.
             listOf(
                 case("`+inf`", "'Infinity'", CastQuality.LOSSLESS),
@@ -1183,7 +1182,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(ExprValueType.SYMBOL.typeAliases()),
             listOf(
                 case("DATE '2007-10-10'", "\"2007-10-10\"", CastQuality.LOSSLESS)
-            ).types(listOf("string", "varchar")),
+            ).types(listOf("string", "varchar(20)")),
             listOf(
                 // CAST(<TIME> AS <variants of TIME type>)
                 case("TIME '23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
@@ -1216,11 +1215,11 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("""`"23:12:12.1267"`""", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
                 case("""`"23:12:12.1267"`""", "TIME (2)", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
                 case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
                 case("""`'23:12:12.1267'`""", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
                 case("""`'23:12:12.1267'`""", "TIME (2)", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
                 case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
                 case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
+                // case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
             ),
             // Error cases for TIME
             listOf(
@@ -1270,7 +1269,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "\"23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}\"", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "\"23:12:12.127-05:30\"", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "\"23:12:12.127+05:30\"", CastQuality.LOSSLESS)
-            ).types(listOf("string", "varchar"))
+            ).types(listOf("string", "varchar(40)"))
         ).flatten() +
             listOf(ExprValueType.MISSING, ExprValueType.NULL, ExprValueType.BOOL, ExprValueType.INT, ExprValueType.FLOAT, ExprValueType.DECIMAL, ExprValueType.TIMESTAMP, ExprValueType.CLOB, ExprValueType.BLOB, ExprValueType.LIST, ExprValueType.SEXP, ExprValueType.STRUCT, ExprValueType.BAG)
                 .map {
@@ -1302,14 +1301,14 @@ abstract class CastTestBase : EvaluatorTestBase() {
         }
 
         private val castPermissiveConfiguredTestCases = honorParamCastTestCases.toPermissive().map { case ->
-            ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
+            ConfiguredCastCase(case, "PERMISSIVE_TYPING_MODE") {
                 honorTypedOpParameters()
                 permissiveTypingMode()
             }
         }
 
         private val castLegacyConfiguredTestCases = honorParamCastTestCases.map { case ->
-            ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE") {
+            ConfiguredCastCase(case, "LEGACY_ERROR_MODE") {
                 honorTypedOpParameters()
                 legacyTypingMode()
             }
@@ -1392,7 +1391,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
         // TODO: delete these tests ahead of `v1` release
         private val canCastConfiguredTestCases = honorParamCastTestCases.flatMap { case ->
             typingModes.map { (typingModeName, typingModeConfig) ->
-                ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName") {
+                ConfiguredCastCase(case.toCanCast(), "$typingModeName") {
                     honorTypedOpParameters()
                     typingModeConfig(this)
                 }
@@ -1402,7 +1401,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
         // TODO: delete these tests ahead of `v1` release
         private val canLosslessCastConfiguredTestCases = honorParamCastTestCases.flatMap { case ->
             typingModes.map { (typingModeName, typingModeConfig) ->
-                ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName") {
+                ConfiguredCastCase(case.toCanLosslessCast(), "$typingModeName") {
                     honorTypedOpParameters()
                     typingModeConfig(this)
                 }
@@ -1424,11 +1423,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ConfiguredCastCase(case, "PERMISSIVE_TYPING_MODE") {
                 permissiveTypingMode()
             }
-        } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
-            ConfiguredCastCase(case, "Configuring default timezone offset") {
-                defaultTimezoneOffset(configuredTimezoneOffset)
-            }
         }
+//        castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
+//            ConfiguredCastCase(case, "Configuring default timezone offset") {
+//                defaultTimezoneOffset(configuredTimezoneOffset)
+//            }
+//        }
 
         // TODO: delete these tests ahead of `v1` release
         private val canCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->

@@ -82,7 +82,7 @@ abstract class EvaluatorTestBase : TestBase() {
     }
 
     /** A convenience, for a session with bindings only to regular, non-graph, values. */
-    protected fun Map<String, String>.toSession() =
+    fun Map<String, String>.toSession() =
         sessionOf(regulars = this@toSession)
 
     /**

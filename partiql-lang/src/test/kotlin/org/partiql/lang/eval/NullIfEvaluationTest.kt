@@ -14,8 +14,10 @@
 
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 
 class NullIfEvaluationTest : EvaluatorTestBase() {
@@ -25,6 +27,17 @@ class NullIfEvaluationTest : EvaluatorTestBase() {
         val expr2: String,
         val expected: String
     )
+
+    private fun runEvaluatorTestCase(
+        query: String,
+        session: EvaluationSession = EvaluationSession.standard(),
+        expectedResult: String,
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION,
+        target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
+    ) {
+        val tc = EvaluationTestCase.runEvaluatorTestCase(query, session, expectedResult, expectedResultFormat, target)
+        tc.append(file)
+    }
 
     @ParameterizedTest
     @MethodSource("nullifEvaluationTests")
@@ -36,6 +49,14 @@ class NullIfEvaluationTest : EvaluatorTestBase() {
 
     companion object {
         fun testCase(expr1: String, expr2: String, expected: String) = NullIfTestCase(expr1, expr2, expected)
+
+        private val file = "null-if.ion"
+
+        @BeforeAll
+        @JvmStatic
+        fun setup() {
+            EvaluationTestCase.print(file, emptyList(), emptyMap())
+        }
 
         @JvmStatic
         @Suppress("unused")

@@ -14,32 +14,76 @@
 
 package org.partiql.lang.eval
 
-import org.junit.Test
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
 class LikePredicateTest : EvaluatorTestBase() {
 
-    private val animals = mapOf(
-        "animals" to """
+    companion object {
+
+        private val animalsEnv = mapOf(
+            "animals" to """
         [
           {name: "Kumo", type: "dog"},
           {name: "Mochi", type: "dog"},
           {name: "Lilikoi", type: "unicorn"},
         ]
         """
-    ).toSession()
+        )
 
-    private val animalsWithNulls = mapOf(
-        "animalsWithNulls" to """
+        private val animalsWithNullsEnv = mapOf(
+            "animalsWithNulls" to """
         [
           {name: null, type: "dog"},
           {name: null, type: "dog"},
           {name: null, type: "unicorn"},
         ]
         """
-    ).toSession()
+        )
+
+        private const val objectInput = """$BAG_ANNOTATION::[{num: 1, str: "string", esc: "\\"}]"""
+        private val objectEnv = mapOf("Object" to objectInput)
+
+        private val env = animalsEnv + animalsWithNullsEnv + objectEnv
+
+        private val file = "like-predicate.ion"
+
+        @BeforeAll
+        @JvmStatic
+        fun printEnv() {
+            EvaluationTestCase.print(file, emptyList(), env)
+        }
+    }
+
+    private val animals = animalsEnv.toSession()
+    private val animalsWithNulls = animalsWithNullsEnv.toSession()
+
+    private fun runEvaluatorTestCase(
+        query: String,
+        session: EvaluationSession = EvaluationSession.standard(),
+        expectedResult: String,
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION,
+        target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
+    ) {
+        val tc = EvaluationTestCase.runEvaluatorTestCase(query, session, expectedResult, expectedResultFormat, target)
+        tc.append(file)
+    }
+
+    fun runEvaluatorErrorTestCase(
+        query: String,
+        expectedErrorCode: ErrorCode,
+        expectedErrorContext: PropertyValueMap? = null,
+        expectedPermissiveModeResult: String? = null,
+    ) {
+        val tc = EvaluationTestCase.runEvaluatorErrorTestCase(query, expectedErrorCode, expectedErrorContext, expectedPermissiveModeResult)
+        tc.append(file)
+    }
 
     @Test
     fun emptyTextUnderscorePattern() =

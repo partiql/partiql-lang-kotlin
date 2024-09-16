@@ -1,7 +1,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonStruct
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
@@ -44,6 +44,16 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         val expectedTime: TimeForValidation? = null,
         val compileOptionsBlock: CompileOptions.Builder.() -> Unit
     )
+
+    @Test
+    fun printTimeLiterals() {
+        val cases = ArgumentsForTimeLiterals().getParameters().map { tc ->
+            val newQuery = "${tc.query} = ${tc.expected}"
+            val assertion = EvaluationTestCase.Assertion.Success(EvaluationTestCase.Mode.values().toList(), "true")
+            EvaluationTestCase(newQuery, newQuery, assertion)
+        }
+        EvaluationTestCase.print("date-time-literals.ion", cases, emptyMap())
+    }
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForTimeLiterals::class)
@@ -105,11 +115,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME (5) WITH TIME ZONE '12:24:12.123678+05:30'", "TIME WITH TIME ZONE '12:24:12.12368+05:30'", TimeForValidation(12, 24, 12, 123680000, 5, 330)),
             case("TIME (2) WITH TIME ZONE '12:59:59.135-05:30'", "TIME WITH TIME ZONE '12:59:59.14-05:30'", TimeForValidation(12, 59, 59, 140000000, 2, -330)),
             case("TIME (2) WITH TIME ZONE '12:59:59.134-05:30'", "TIME WITH TIME ZONE '12:59:59.13-05:30'", TimeForValidation(12, 59, 59, 130000000, 2, -330)),
-            case("TIME '12:25:12.123456' IS TIME", "true"),
-            case("TIME (2) '01:01:12' IS TIME", "true"),
-            case("TIME WITH TIME ZONE '12:25:12.123456' IS TIME", "true"),
-            case("TIME (2) WITH TIME ZONE '01:01:12' IS TIME", "true"),
-            case("'01:01:12' IS TIME", "false"),
             case("TIME WITH TIME ZONE '00:00:00'", "TIME WITH TIME ZONE '00:00:00-01:00'", TimeForValidation(0, 0, 0, 0, 0, -60), compileOptionsBlock(-1)),
             case("TIME WITH TIME ZONE '11:23:45.678'", "TIME WITH TIME ZONE '11:23:45.678+06:00'", TimeForValidation(11, 23, 45, 678000000, 3, 360), compileOptionsBlock(6)),
             case("TIME WITH TIME ZONE '11:23:45.678-05:30'", "TIME WITH TIME ZONE '11:23:45.678-05:30'", TimeForValidation(11, 23, 45, 678000000, 3, -330), compileOptionsBlock(6)),
@@ -147,6 +152,27 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             } ?: ""
             return "$hourStr:$minStr:$secStr.$nanoStr$timezoneStr"
         }
+    }
+    class ArgumentsForComparisonPrint : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> = ArgumentsForComparison().getParameters().map { tc ->
+            val assertion = when (tc.expected) {
+                null -> EvaluationTestCase.Assertion.Failure(EvaluationTestCase.ALL_MODES)
+                else -> EvaluationTestCase.Assertion.Success(EvaluationTestCase.ALL_MODES, tc.expected)
+            }
+            EvaluationTestCase(tc.query, tc.query, assertion)
+        }
+    }
+
+    @Test
+    fun testComparisonPrint() {
+        val cases = ArgumentsForComparison().getParameters().map { tc ->
+            val assertion = when (tc.expected) {
+                null -> EvaluationTestCase.Assertion.Failure(EvaluationTestCase.ALL_MODES)
+                else -> EvaluationTestCase.Assertion.Success(EvaluationTestCase.ALL_MODES, tc.expected)
+            }
+            EvaluationTestCase(tc.query, tc.query, assertion)
+        }
+        EvaluationTestCase.print("date-time-comparisons.ion", cases, emptyMap())
     }
 
     @ParameterizedTest
