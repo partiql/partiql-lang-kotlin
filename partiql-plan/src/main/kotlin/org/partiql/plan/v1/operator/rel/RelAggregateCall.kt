@@ -1,14 +1,14 @@
 package org.partiql.plan.v1.operator.rel
 
 import org.partiql.plan.v1.operator.rex.Rex
-import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.Aggregation
 
 /**
  * TODO DOCUMENTATION
  */
 public interface RelAggregateCall {
 
-    public fun getAgg(): Agg
+    public fun getAgg(): Aggregation
 
     public fun getArgs(): List<Rex>
 
@@ -25,11 +25,11 @@ public interface RelAggregateCall {
  * @property isDistinct
  */
 internal class RelAggregateCallImpl(
-    private var agg: Agg,
+    private var agg: Aggregation,
     private var args: List<Rex>,
     private var isDistinct: Boolean,
 ) : RelAggregateCall {
-    override fun getAgg(): Agg = agg
+    override fun getAgg(): Aggregation = agg
     override fun getArgs(): List<Rex> = args
     override fun isDistinct(): Boolean = isDistinct
 }

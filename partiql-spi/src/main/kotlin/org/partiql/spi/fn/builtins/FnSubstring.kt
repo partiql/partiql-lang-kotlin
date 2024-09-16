@@ -5,9 +5,9 @@ package org.partiql.spi.fn.builtins
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.fn.utils.StringUtils.codepointSubstring
 import org.partiql.types.PType
 
@@ -80,14 +80,14 @@ import org.partiql.types.PType
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
-internal object Fn_SUBSTRING__STRING_INT32__STRING : Fn {
+internal object Fn_SUBSTRING__STRING_INT32__STRING : Function {
 
     override val signature = FnSignature(
         name = "substring",
         returns = PType.string(),
         parameters = listOf(
-            FnParameter("value", PType.string()),
-            FnParameter("start", PType.integer()),
+            Parameter("value", PType.string()),
+            Parameter("start", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -101,15 +101,15 @@ internal object Fn_SUBSTRING__STRING_INT32__STRING : Fn {
     }
 }
 
-internal object Fn_SUBSTRING__STRING_INT32_INT32__STRING : Fn {
+internal object Fn_SUBSTRING__STRING_INT32_INT32__STRING : Function {
 
     override val signature = FnSignature(
         name = "substring",
         returns = PType.string(),
         parameters = listOf(
-            FnParameter("value", PType.string()),
-            FnParameter("start", PType.integer()),
-            FnParameter("end", PType.integer()),
+            Parameter("value", PType.string()),
+            Parameter("start", PType.integer()),
+            Parameter("end", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -125,14 +125,14 @@ internal object Fn_SUBSTRING__STRING_INT32_INT32__STRING : Fn {
     }
 }
 
-internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Fn {
+internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Function {
 
     override val signature = FnSignature(
         name = "substring",
         returns = PType.symbol(),
         parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("start", PType.integer()),
+            Parameter("value", PType.symbol()),
+            Parameter("start", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -146,15 +146,15 @@ internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Fn {
     }
 }
 
-internal object Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL : Fn {
+internal object Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL : Function {
 
     override val signature = FnSignature(
         name = "substring",
         returns = PType.symbol(),
         parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("start", PType.integer()),
-            FnParameter("end", PType.integer()),
+            Parameter("value", PType.symbol()),
+            Parameter("start", PType.integer()),
+            Parameter("end", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -170,14 +170,14 @@ internal object Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL : Fn {
     }
 }
 
-internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
+internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Function {
 
     override val signature = FnSignature(
         name = "substring",
         returns = PType.clob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("value", PType.clob(Int.MAX_VALUE)),
-            FnParameter("start", PType.integer()),
+            Parameter("value", PType.clob(Int.MAX_VALUE)),
+            Parameter("start", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -191,15 +191,15 @@ internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
     }
 }
 
-internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Fn {
+internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Function {
 
     override val signature = FnSignature(
         name = "substring",
         returns = PType.clob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("value", PType.clob(Int.MAX_VALUE)),
-            FnParameter("start", PType.integer()),
-            FnParameter("end", PType.integer()),
+            Parameter("value", PType.clob(Int.MAX_VALUE)),
+            Parameter("start", PType.integer()),
+            Parameter("end", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,

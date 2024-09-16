@@ -60,7 +60,7 @@ import org.partiql.plan.SetQuantifier
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
-import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.Aggregation
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 
@@ -195,7 +195,7 @@ internal class Compiler(
         }
         val agg = symbols.getAgg(node.agg)
         return object : Operator.Aggregation {
-            override val delegate: Agg = agg
+            override val delegate: Aggregation = agg
             override val args: List<Operator.Expr> = args
             override val setQuantifier: Operator.Aggregation.SetQuantifier = setQuantifier
         }
@@ -223,7 +223,7 @@ internal class Compiler(
         val fn = symbols.getFn(node.fn)
         val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
         val fnTakesInMissing = fn.signature.parameters.any {
-            it.type.kind == PType.Kind.DYNAMIC // TODO: Is this needed?
+            it.getType().kind == PType.Kind.DYNAMIC // TODO: Is this needed?
         }
         return when (fnTakesInMissing) {
             true -> ExprCallStatic(fn, args.map { it.modeHandled() }.toTypedArray())

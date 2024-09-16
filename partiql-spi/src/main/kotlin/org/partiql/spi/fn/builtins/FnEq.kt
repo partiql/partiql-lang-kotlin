@@ -4,9 +4,9 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.types.PType
 
 /**
@@ -23,7 +23,7 @@ import org.partiql.types.PType
  * TODO: The PartiQL Specification needs to clearly define the semantics of MISSING. That being said, this implementation
  *  follows the existing conformance tests and SQL:1999.
  */
-internal object Fn_EQ__ANY_ANY__BOOL : Fn {
+internal object Fn_EQ__ANY_ANY__BOOL : Function {
 
     private val comparator = Datum.comparator()
 
@@ -31,8 +31,8 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         name = "eq",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.dynamic()),
-            FnParameter("rhs", PType.dynamic()),
+            Parameter("lhs", PType.dynamic()),
+            Parameter("rhs", PType.dynamic()),
         ),
         isNullable = true,
         isNullCall = true,

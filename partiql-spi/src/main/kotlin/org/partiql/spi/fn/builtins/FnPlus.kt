@@ -4,20 +4,20 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.types.PType
 
 // TODO: Handle Overflow
-internal object Fn_PLUS__INT8_INT8__INT8 : Fn {
+internal object Fn_PLUS__INT8_INT8__INT8 : Function {
 
     override val signature = FnSignature(
         name = "plus",
         returns = PType.tinyint(),
         parameters = listOf(
-            FnParameter("lhs", PType.tinyint()),
-            FnParameter("rhs", PType.tinyint()),
+            Parameter("lhs", PType.tinyint()),
+            Parameter("rhs", PType.tinyint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -30,14 +30,14 @@ internal object Fn_PLUS__INT8_INT8__INT8 : Fn {
     }
 }
 
-internal object Fn_PLUS__INT16_INT16__INT16 : Fn {
+internal object Fn_PLUS__INT16_INT16__INT16 : Function {
 
     override val signature = FnSignature(
         name = "plus",
         returns = PType.smallint(),
         parameters = listOf(
-            FnParameter("lhs", PType.smallint()),
-            FnParameter("rhs", PType.smallint()),
+            Parameter("lhs", PType.smallint()),
+            Parameter("rhs", PType.smallint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -50,14 +50,14 @@ internal object Fn_PLUS__INT16_INT16__INT16 : Fn {
     }
 }
 
-internal object Fn_PLUS__INT32_INT32__INT32 : Fn {
+internal object Fn_PLUS__INT32_INT32__INT32 : Function {
 
     override val signature = FnSignature(
         name = "plus",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("lhs", PType.integer()),
-            FnParameter("rhs", PType.integer()),
+            Parameter("lhs", PType.integer()),
+            Parameter("rhs", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -70,14 +70,14 @@ internal object Fn_PLUS__INT32_INT32__INT32 : Fn {
     }
 }
 
-internal object Fn_PLUS__INT64_INT64__INT64 : Fn {
+internal object Fn_PLUS__INT64_INT64__INT64 : Function {
 
     override val signature = FnSignature(
         name = "plus",
         returns = PType.bigint(),
         parameters = listOf(
-            FnParameter("lhs", PType.bigint()),
-            FnParameter("rhs", PType.bigint()),
+            Parameter("lhs", PType.bigint()),
+            Parameter("rhs", PType.bigint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -90,14 +90,14 @@ internal object Fn_PLUS__INT64_INT64__INT64 : Fn {
     }
 }
 
-internal object Fn_PLUS__INT_INT__INT : Fn {
+internal object Fn_PLUS__INT_INT__INT : Function {
 
     override val signature = FnSignature(
         name = "plus",
         returns = PType.numeric(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("lhs", PType.numeric()),
-            @Suppress("DEPRECATION") FnParameter("rhs", PType.numeric()),
+            @Suppress("DEPRECATION") Parameter("lhs", PType.numeric()),
+            @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -110,14 +110,15 @@ internal object Fn_PLUS__INT_INT__INT : Fn {
     }
 }
 
-internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY :
+    Function {
 
     override val signature = FnSignature(
         name = "plus",
         returns = PType.decimal(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("lhs", PType.decimal()),
-            @Suppress("DEPRECATION") FnParameter("rhs", PType.decimal()),
+            @Suppress("DEPRECATION") Parameter("lhs", PType.decimal()),
+            @Suppress("DEPRECATION") Parameter("rhs", PType.decimal()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -130,14 +131,14 @@ internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY 
     }
 }
 
-internal object Fn_PLUS__FLOAT32_FLOAT32__FLOAT32 : Fn {
+internal object Fn_PLUS__FLOAT32_FLOAT32__FLOAT32 : Function {
 
     override val signature = FnSignature(
         name = "plus",
         returns = PType.real(),
         parameters = listOf(
-            FnParameter("lhs", PType.real()),
-            FnParameter("rhs", PType.real()),
+            Parameter("lhs", PType.real()),
+            Parameter("rhs", PType.real()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -150,14 +151,14 @@ internal object Fn_PLUS__FLOAT32_FLOAT32__FLOAT32 : Fn {
     }
 }
 
-internal object Fn_PLUS__FLOAT64_FLOAT64__FLOAT64 : Fn {
+internal object Fn_PLUS__FLOAT64_FLOAT64__FLOAT64 : Function {
 
     override val signature = FnSignature(
         name = "plus",
         returns = PType.doublePrecision(),
         parameters = listOf(
-            FnParameter("lhs", PType.doublePrecision()),
-            FnParameter("rhs", PType.doublePrecision()),
+            Parameter("lhs", PType.doublePrecision()),
+            Parameter("rhs", PType.doublePrecision()),
         ),
         isNullCall = true,
         isNullable = false,

@@ -4,19 +4,19 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.types.PType
 
-internal object Fn_OR__BOOL_BOOL__BOOL : Fn {
+internal object Fn_OR__BOOL_BOOL__BOOL : Function {
 
     override val signature = FnSignature(
         name = "or",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("lhs", PType.bool()),
-            FnParameter("rhs", PType.bool()),
+            Parameter("lhs", PType.bool()),
+            Parameter("rhs", PType.bool()),
         ),
         isNullable = true,
         isNullCall = false,

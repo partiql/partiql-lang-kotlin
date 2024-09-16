@@ -4,7 +4,7 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.Aggregation
 import java.util.TreeMap
 import java.util.TreeSet
 
@@ -19,12 +19,12 @@ internal class RelAggregate(
     private val aggregationMap = TreeMap<Array<Datum>, List<AccumulatorWrapper>>(DatumArrayComparator)
 
     /**
-     * Wraps an [Agg.Accumulator] to help with filtering distinct values.
+     * Wraps an [Aggregation.Accumulator] to help with filtering distinct values.
      *
      * @property seen maintains which values have already been seen. If null, we accumulate all values coming through.
      */
     class AccumulatorWrapper(
-        val delegate: Agg.Accumulator,
+        val delegate: Aggregation.Accumulator,
         val args: List<Operator.Expr>,
         val seen: TreeSet<Array<Datum>>?
     )

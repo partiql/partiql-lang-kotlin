@@ -8,8 +8,8 @@ import org.partiql.plan.Ref
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
-import org.partiql.spi.fn.Agg
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.fn.Function
 import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.planner.catalog.Catalog as Cat
 
@@ -29,8 +29,8 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
 
         // TEMPORARY FOR DEPENDENCY REASONS
         fun getTable(name: Name): Table? = catalog.getTable(session, name)
-        fun getFn(name: Name, specific: String): Fn? = SqlFnProvider.getFn(specific)
-        fun getAgg(name: Name, specific: String): Agg? = SqlFnProvider.getAgg(specific)
+        fun getFn(name: Name, specific: String): Function? = SqlFnProvider.getFn(specific)
+        fun getAgg(name: Name, specific: String): Aggregation? = SqlFnProvider.getAgg(specific)
 
         override fun toString(): String = name
     }
@@ -46,7 +46,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
             ?: error("Catalog `$catalog` has no entry for table $item")
     }
 
-    fun getFn(ref: Ref): Fn {
+    fun getFn(ref: Ref): Function {
         val catalog = catalogs[ref.catalog]
         val item = catalog.items.getOrNull(ref.symbol)
         if (item == null || item !is Catalog.Item.Fn) {
@@ -58,7 +58,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
             ?: error("Catalog `$catalog` has no entry for function $item")
     }
 
-    fun getAgg(ref: Ref): Agg {
+    fun getAgg(ref: Ref): Aggregation {
         val catalog = catalogs[ref.catalog]
         val item = catalog.items.getOrNull(ref.symbol)
         if (item == null || item !is Catalog.Item.Agg) {

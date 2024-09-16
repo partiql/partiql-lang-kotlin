@@ -4,20 +4,20 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.fn.utils.StringUtils.codepointTrimLeading
 import org.partiql.types.PType
 
-internal object Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING : Fn {
+internal object Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING : Function {
 
     override val signature = FnSignature(
         name = "trim_leading_chars",
         returns = PType.string(),
         parameters = listOf(
-            FnParameter("value", PType.string()),
-            FnParameter("chars", PType.string()),
+            Parameter("value", PType.string()),
+            Parameter("chars", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -31,14 +31,14 @@ internal object Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING : Fn {
     }
 }
 
-internal object Fn_TRIM_LEADING_CHARS__SYMBOL_SYMBOL__SYMBOL : Fn {
+internal object Fn_TRIM_LEADING_CHARS__SYMBOL_SYMBOL__SYMBOL : Function {
 
     override val signature = FnSignature(
         name = "trim_leading_chars",
         returns = PType.symbol(),
         parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("chars", PType.symbol()),
+            Parameter("value", PType.symbol()),
+            Parameter("chars", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -52,14 +52,14 @@ internal object Fn_TRIM_LEADING_CHARS__SYMBOL_SYMBOL__SYMBOL : Fn {
     }
 }
 
-internal object Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB : Fn {
+internal object Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB : Function {
 
     override val signature = FnSignature(
         name = "trim_leading_chars",
         returns = PType.clob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("value", PType.clob(Int.MAX_VALUE)),
-            FnParameter("chars", PType.clob(Int.MAX_VALUE)),
+            Parameter("value", PType.clob(Int.MAX_VALUE)),
+            Parameter("chars", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

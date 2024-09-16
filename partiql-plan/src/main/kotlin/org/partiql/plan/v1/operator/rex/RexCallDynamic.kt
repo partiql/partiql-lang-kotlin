@@ -1,6 +1,6 @@
 package org.partiql.plan.v1.operator.rex
 
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Function
 import org.partiql.types.PType
 
 /**
@@ -13,7 +13,7 @@ public interface RexCallDynamic : Rex {
      *
      * @return
      */
-    public fun getFunctions(): List<Fn>
+    public fun getFunctions(): List<Function>
 
     /**
      * Returns the list of function arguments.
@@ -28,13 +28,13 @@ public interface RexCallDynamic : Rex {
 /**
  * Default [RexCallDynamic] implementation meant for extension.
  */
-internal class RexCallDynamicImpl(functions: List<Fn>, args: List<Rex>) : RexCallDynamic {
+internal class RexCallDynamicImpl(functions: List<Function>, args: List<Rex>) : RexCallDynamic {
 
     // DO NOT USE FINAL
     private var _functions = functions
     private var _args = args
 
-    override fun getFunctions(): List<Fn> = _functions
+    override fun getFunctions(): List<Function> = _functions
 
     override fun getArgs(): List<Rex> = _args
 

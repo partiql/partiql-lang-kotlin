@@ -332,7 +332,8 @@ public abstract interface class org/partiql/eval/value/Field {
 }
 
 public abstract interface class org/partiql/planner/catalog/Catalog {
-	public abstract fun getFunctions (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Ljava/util/Collection;
+	public abstract fun getAggregations (Lorg/partiql/planner/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
+	public abstract fun getFunctions (Lorg/partiql/planner/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getTable (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Lorg/partiql/planner/catalog/Table;
 	public abstract fun getTableHandle (Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Table$Handle;
@@ -343,7 +344,8 @@ public abstract interface class org/partiql/planner/catalog/Catalog {
 }
 
 public final class org/partiql/planner/catalog/Catalog$DefaultImpls {
-	public static fun getFunctions (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Ljava/util/Collection;
+	public static fun getAggregations (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
+	public static fun getFunctions (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public static fun getTable (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Name;)Lorg/partiql/planner/catalog/Table;
 	public static fun getTableHandle (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;Lorg/partiql/planner/catalog/Identifier;)Lorg/partiql/planner/catalog/Table$Handle;
 	public static fun listNamespaces (Lorg/partiql/planner/catalog/Catalog;Lorg/partiql/planner/catalog/Session;)Ljava/util/Collection;
@@ -376,64 +378,6 @@ public final class org/partiql/planner/catalog/Catalogs$Companion {
 public final class org/partiql/planner/catalog/Catalogs$DefaultImpls {
 	public static synthetic fun getCatalog$default (Lorg/partiql/planner/catalog/Catalogs;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/planner/catalog/Catalog;
 	public static fun listCatalogs (Lorg/partiql/planner/catalog/Catalogs;)Ljava/util/Collection;
-}
-
-public abstract interface class org/partiql/planner/catalog/Function {
-	public static final field Companion Lorg/partiql/planner/catalog/Function$Companion;
-	public static fun aggregation (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Aggregation;
-	public abstract fun computeReturnType (Ljava/util/List;)Lorg/partiql/types/PType;
-	public abstract fun getName ()Ljava/lang/String;
-	public abstract fun getParameters ()[Lorg/partiql/planner/catalog/Function$Parameter;
-	public abstract fun getReturnType ()Lorg/partiql/types/PType$Kind;
-	public abstract fun getSpecific ()Ljava/lang/String;
-	public static fun scalar (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Scalar;
-}
-
-public abstract interface class org/partiql/planner/catalog/Function$Aggregation : org/partiql/planner/catalog/Function {
-	public abstract fun getSpecific ()Ljava/lang/String;
-	public abstract fun isDecomposable ()Z
-}
-
-public final class org/partiql/planner/catalog/Function$Aggregation$DefaultImpls {
-	public static fun computeReturnType (Lorg/partiql/planner/catalog/Function$Aggregation;Ljava/util/List;)Lorg/partiql/types/PType;
-	public static fun getParameters (Lorg/partiql/planner/catalog/Function$Aggregation;)[Lorg/partiql/planner/catalog/Function$Parameter;
-	public static fun getSpecific (Lorg/partiql/planner/catalog/Function$Aggregation;)Ljava/lang/String;
-	public static fun isDecomposable (Lorg/partiql/planner/catalog/Function$Aggregation;)Z
-}
-
-public final class org/partiql/planner/catalog/Function$Companion {
-	public final fun aggregation (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Aggregation;
-	public final fun scalar (Ljava/lang/String;Ljava/util/Collection;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Scalar;
-}
-
-public final class org/partiql/planner/catalog/Function$DefaultImpls {
-	public static fun computeReturnType (Lorg/partiql/planner/catalog/Function;Ljava/util/List;)Lorg/partiql/types/PType;
-	public static fun getParameters (Lorg/partiql/planner/catalog/Function;)[Lorg/partiql/planner/catalog/Function$Parameter;
-}
-
-public final class org/partiql/planner/catalog/Function$Parameter {
-	public final field name Ljava/lang/String;
-	public final field type Lorg/partiql/types/PType$Kind;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType$Kind;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Lorg/partiql/types/PType$Kind;
-	public final fun copy (Ljava/lang/String;Lorg/partiql/types/PType$Kind;)Lorg/partiql/planner/catalog/Function$Parameter;
-	public static synthetic fun copy$default (Lorg/partiql/planner/catalog/Function$Parameter;Ljava/lang/String;Lorg/partiql/types/PType$Kind;ILjava/lang/Object;)Lorg/partiql/planner/catalog/Function$Parameter;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class org/partiql/planner/catalog/Function$Scalar : org/partiql/planner/catalog/Function {
-	public abstract fun getSpecific ()Ljava/lang/String;
-	public abstract fun isNullCall ()Z
-}
-
-public final class org/partiql/planner/catalog/Function$Scalar$DefaultImpls {
-	public static fun computeReturnType (Lorg/partiql/planner/catalog/Function$Scalar;Ljava/util/List;)Lorg/partiql/types/PType;
-	public static fun getParameters (Lorg/partiql/planner/catalog/Function$Scalar;)[Lorg/partiql/planner/catalog/Function$Parameter;
-	public static fun getSpecific (Lorg/partiql/planner/catalog/Function$Scalar;)Ljava/lang/String;
-	public static fun isNullCall (Lorg/partiql/planner/catalog/Function$Scalar;)Z
 }
 
 public final class org/partiql/planner/catalog/Identifier : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
@@ -645,16 +589,6 @@ public final class org/partiql/spi/connector/Connector$Factory$DefaultImpls {
 	public static synthetic fun create$default (Lorg/partiql/spi/connector/Connector$Factory;Lcom/amazon/ionelement/api/StructElement;ILjava/lang/Object;)Lorg/partiql/spi/connector/Connector;
 }
 
-public abstract interface class org/partiql/spi/fn/Agg {
-	public abstract fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public abstract fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public abstract interface class org/partiql/spi/fn/Agg$Accumulator {
-	public abstract fun next ([Lorg/partiql/eval/value/Datum;)V
-	public abstract fun value ()Lorg/partiql/eval/value/Datum;
-}
-
 public final class org/partiql/spi/fn/AggSignature {
 	public final field description Ljava/lang/String;
 	public final field isDecomposable Z
@@ -670,22 +604,27 @@ public final class org/partiql/spi/fn/AggSignature {
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/spi/fn/Fn {
-	public abstract fun getSignature ()Lorg/partiql/spi/fn/FnSignature;
-	public abstract fun invoke ([Lorg/partiql/eval/value/Datum;)Lorg/partiql/eval/value/Datum;
+public abstract interface class org/partiql/spi/fn/Aggregation : org/partiql/spi/fn/Routine {
+	public abstract fun accumulator ()Lorg/partiql/spi/fn/Aggregation$Accumulator;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getParameters ()[Lorg/partiql/spi/fn/Parameter;
+	public abstract fun getReturnType ()Lorg/partiql/types/PType;
+	public abstract fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
+	public abstract fun getSpecific ()Ljava/lang/String;
+	public abstract fun isDecomposable ()Z
 }
 
-public final class org/partiql/spi/fn/FnParameter {
-	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Lorg/partiql/types/PType;
-	public final fun copy (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/spi/fn/FnParameter;
-	public static synthetic fun copy$default (Lorg/partiql/spi/fn/FnParameter;Ljava/lang/String;Lorg/partiql/types/PType;ILjava/lang/Object;)Lorg/partiql/spi/fn/FnParameter;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getName ()Ljava/lang/String;
-	public final fun getType ()Lorg/partiql/types/PType;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+public abstract interface class org/partiql/spi/fn/Aggregation$Accumulator {
+	public abstract fun next ([Lorg/partiql/eval/value/Datum;)V
+	public abstract fun value ()Lorg/partiql/eval/value/Datum;
+}
+
+public final class org/partiql/spi/fn/Aggregation$DefaultImpls {
+	public static fun getName (Lorg/partiql/spi/fn/Aggregation;)Ljava/lang/String;
+	public static fun getParameters (Lorg/partiql/spi/fn/Aggregation;)[Lorg/partiql/spi/fn/Parameter;
+	public static fun getReturnType (Lorg/partiql/spi/fn/Aggregation;)Lorg/partiql/types/PType;
+	public static fun getSpecific (Lorg/partiql/spi/fn/Aggregation;)Ljava/lang/String;
+	public static fun isDecomposable (Lorg/partiql/spi/fn/Aggregation;)Z
 }
 
 public final class org/partiql/spi/fn/FnSignature {
@@ -714,16 +653,48 @@ public final class org/partiql/spi/fn/FnSignature {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getSpecific ()Ljava/lang/String;
 	public fun hashCode ()I
-	public final fun sql ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/spi/fn/Function : org/partiql/spi/fn/Routine {
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getParameters ()[Lorg/partiql/spi/fn/Parameter;
+	public abstract fun getReturnType ()Lorg/partiql/types/PType;
+	public abstract fun getSignature ()Lorg/partiql/spi/fn/FnSignature;
+	public abstract fun getSpecific ()Ljava/lang/String;
+	public abstract fun invoke ([Lorg/partiql/eval/value/Datum;)Lorg/partiql/eval/value/Datum;
+	public abstract fun isNullCall ()Z
+}
+
+public final class org/partiql/spi/fn/Function$DefaultImpls {
+	public static fun getName (Lorg/partiql/spi/fn/Function;)Ljava/lang/String;
+	public static fun getParameters (Lorg/partiql/spi/fn/Function;)[Lorg/partiql/spi/fn/Parameter;
+	public static fun getReturnType (Lorg/partiql/spi/fn/Function;)Lorg/partiql/types/PType;
+	public static fun getSpecific (Lorg/partiql/spi/fn/Function;)Ljava/lang/String;
+	public static fun isNullCall (Lorg/partiql/spi/fn/Function;)Z
+}
+
+public final class org/partiql/spi/fn/Parameter {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;)V
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lorg/partiql/types/PType;
+}
+
+public abstract interface class org/partiql/spi/fn/Routine {
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getParameters ()[Lorg/partiql/spi/fn/Parameter;
+	public abstract fun getReturnType ()Lorg/partiql/types/PType;
+	public abstract fun getSpecific ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/fn/Routine$DefaultImpls {
+	public static fun getParameters (Lorg/partiql/spi/fn/Routine;)[Lorg/partiql/spi/fn/Parameter;
 }
 
 public final class org/partiql/spi/fn/SqlFnProvider {
 	public static final field INSTANCE Lorg/partiql/spi/fn/SqlFnProvider;
-	public final fun getAgg (Ljava/lang/String;)Lorg/partiql/spi/fn/Agg;
-	public final fun getFn (Ljava/lang/String;)Lorg/partiql/spi/fn/Fn;
-	public final fun lookupAgg (Ljava/lang/String;)Ljava/util/List;
-	public final fun lookupFn (Ljava/lang/String;)Ljava/util/List;
+	public final fun getAgg (Ljava/lang/String;)Lorg/partiql/spi/fn/Aggregation;
+	public final fun getFn (Ljava/lang/String;)Lorg/partiql/spi/fn/Function;
 }
 
 public abstract class org/partiql/value/BagValue : org/partiql/value/CollectionValue {

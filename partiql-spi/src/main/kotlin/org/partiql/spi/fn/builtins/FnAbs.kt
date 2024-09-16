@@ -4,19 +4,19 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.types.PType
 import kotlin.math.absoluteValue
 
 // TODO: When negate a negative value, we need to consider overflow
-internal object Fn_ABS__INT8__INT8 : Fn {
+internal object Fn_ABS__INT8__INT8 : Function {
 
     override val signature = FnSignature(
         name = "abs",
         returns = PType.tinyint(),
-        parameters = listOf(FnParameter("value", PType.tinyint())),
+        parameters = listOf(Parameter("value", PType.tinyint())),
         isNullCall = true,
         isNullable = false,
     )
@@ -28,12 +28,12 @@ internal object Fn_ABS__INT8__INT8 : Fn {
     }
 }
 
-internal object Fn_ABS__INT16__INT16 : Fn {
+internal object Fn_ABS__INT16__INT16 : Function {
 
     override val signature = FnSignature(
         name = "abs",
         returns = PType.smallint(),
-        parameters = listOf(FnParameter("value", PType.smallint())),
+        parameters = listOf(Parameter("value", PType.smallint())),
         isNullCall = true,
         isNullable = false,
     )
@@ -44,12 +44,12 @@ internal object Fn_ABS__INT16__INT16 : Fn {
     }
 }
 
-internal object Fn_ABS__INT32__INT32 : Fn {
+internal object Fn_ABS__INT32__INT32 : Function {
 
     override val signature = FnSignature(
         name = "abs",
         returns = PType.integer(),
-        parameters = listOf(FnParameter("value", PType.integer())),
+        parameters = listOf(Parameter("value", PType.integer())),
         isNullCall = true,
         isNullable = false,
     )
@@ -60,12 +60,12 @@ internal object Fn_ABS__INT32__INT32 : Fn {
     }
 }
 
-internal object Fn_ABS__INT64__INT64 : Fn {
+internal object Fn_ABS__INT64__INT64 : Function {
 
     override val signature = FnSignature(
         name = "abs",
         returns = PType.bigint(),
-        parameters = listOf(FnParameter("value", PType.bigint())),
+        parameters = listOf(Parameter("value", PType.bigint())),
         isNullCall = true,
         isNullable = false,
     )
@@ -76,12 +76,12 @@ internal object Fn_ABS__INT64__INT64 : Fn {
     }
 }
 
-internal object Fn_ABS__INT__INT : Fn {
+internal object Fn_ABS__INT__INT : Function {
 
     override val signature = FnSignature(
         name = "abs",
         returns = PType.numeric(),
-        parameters = listOf(FnParameter("value", PType.numeric())),
+        parameters = listOf(Parameter("value", PType.numeric())),
         isNullCall = true,
         isNullable = false,
     )
@@ -92,12 +92,12 @@ internal object Fn_ABS__INT__INT : Fn {
     }
 }
 
-internal object Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+internal object Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Function {
 
     override val signature = FnSignature(
         name = "abs",
         returns = PType.decimal(),
-        parameters = listOf(FnParameter("value", PType.decimal())),
+        parameters = listOf(Parameter("value", PType.decimal())),
         isNullCall = true,
         isNullable = false,
     )
@@ -108,12 +108,12 @@ internal object Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
     }
 }
 
-internal object Fn_ABS__FLOAT32__FLOAT32 : Fn {
+internal object Fn_ABS__FLOAT32__FLOAT32 : Function {
 
     override val signature = FnSignature(
         name = "abs",
         returns = PType.real(),
-        parameters = listOf(FnParameter("value", PType.real())),
+        parameters = listOf(Parameter("value", PType.real())),
         isNullCall = true,
         isNullable = false,
     )
@@ -124,12 +124,12 @@ internal object Fn_ABS__FLOAT32__FLOAT32 : Fn {
     }
 }
 
-internal object Fn_ABS__FLOAT64__FLOAT64 : Fn {
+internal object Fn_ABS__FLOAT64__FLOAT64 : Function {
 
     override val signature = FnSignature(
         name = "abs",
         returns = PType.doublePrecision(),
-        parameters = listOf(FnParameter("value", PType.doublePrecision())),
+        parameters = listOf(Parameter("value", PType.doublePrecision())),
         isNullCall = true,
         isNullable = false,
     )
