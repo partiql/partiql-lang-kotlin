@@ -1126,15 +1126,8 @@ class PartiQLParserPrecedenceTest : PartiQLParserTestBase() {
             val expectedExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
             val expectedStatement = PartiqlAst.build { query(expectedExpr) }
 
-            val actualStatement = target.parser.parseAstStatement(source)
-            assertEquals(expectedStatement, actualStatement)
-        }
-    }
-
-    private fun assertFailure(case: String) {
-        targets.forEach { target ->
-            assertThrows(ParserException::class.java) {
-                target.parser.parseAstStatement(case)
+            assertExpression(source) {
+                expectedStatement
             }
         }
     }

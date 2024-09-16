@@ -169,9 +169,7 @@ class PartiQLParserCastTests : PartiQLParserTestBase() {
         val parser = PartiQLParserBuilder().customTypes(CUSTOM_TEST_TYPES).build()
 
         fun assertCase() {
-            // Convert the query to ast
-            val parsedPartiqlAst = parser.parseAstStatement(source) as PartiqlAst.Statement.Query
-            assertEquals("Expected PartiqlAst and actual PartiqlAst must match", expectedAst, parsedPartiqlAst)
+            PartiQLParserCastTests().assertExpression(source) { expectedAst }
         }
     }
 }

@@ -6,7 +6,6 @@ import com.amazon.ionelement.api.ionString
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
-import kotlin.test.assertFailsWith
 
 class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
@@ -22,13 +21,9 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     @Test
     fun loneMatchExpr1path_noParens() {
         // fails because it should be in parentheses
-        assertFailsWith<ParserException> {
-            assertExpression(
-                "MyGraph MATCH (x)"
-            ) {
-                astMygraphMatchAllNodes
-            }
-        }
+        assertFailure(
+            "MyGraph MATCH (x)"
+        )
     }
 
     @Test
@@ -41,13 +36,9 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     @Test
     fun loneMatchExpr2path_noParens() {
         // fails because it should be in parentheses
-        assertFailsWith<ParserException> {
-            assertExpression(
-                "MyGraph MATCH (x), -[u]-> "
-            ) {
-                astMyGraphMatchAllNodesEdges
-            }
-        }
+        assertFailure(
+            "MyGraph MATCH (x), -[u]-> "
+        )
     }
 
     // `MyGraph MATCH (x), -[u]->`
@@ -121,20 +112,9 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     @Test
     fun leftMatchExprInUnion_noParens() {
         // fails because it should be in parentheses
-        assertFailsWith<ParserException> {
-            assertExpression(
-                "MyGraph MATCH (x) UNION SELECT * FROM tbl1"
-            ) {
-                bagOp(
-                    op = union(),
-                    quantifier = distinct(),
-                    operands = listOf(
-                        astMygraphMatchAllNodes,
-                        astSelectStarFromTbl1
-                    )
-                )
-            }
-        }
+        assertFailure(
+            "MyGraph MATCH (x) UNION SELECT * FROM tbl1"
+        )
     }
 
     @Test
@@ -154,20 +134,9 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     @Test
     fun rightMatchExprInUnion_noParens() {
         // fails because it should be in parentheses
-        assertFailsWith<ParserException> {
-            assertExpression(
-                "SELECT * FROM tbl1 UNION MyGraph MATCH (x)"
-            ) {
-                bagOp(
-                    op = union(),
-                    quantifier = distinct(),
-                    operands = listOf(
-                        astSelectStarFromTbl1,
-                        astMygraphMatchAllNodes
-                    )
-                )
-            }
-        }
+        assertFailure(
+            "SELECT * FROM tbl1 UNION MyGraph MATCH (x)"
+        )
     }
 
     @Test
@@ -183,16 +152,9 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     @Test
     fun matchLeftTight_noParens() {
         // fails because it should be in parentheses
-        assertFailsWith<ParserException> {
-            assertExpression(
-                "3 + MyGraph MATCH (x)"
-            ) {
-                plus(
-                    lit(ionInt(3)),
-                    astMygraphMatchAllNodes
-                )
-            }
-        }
+        assertFailure(
+            "3 + MyGraph MATCH (x)"
+        )
     }
 
     @Test
@@ -1351,37 +1313,23 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     @Test
     fun matchAndJoinCommasParenthesized() {
         // fails because of the outer parentheses in ((a) -> (b), (a) -> (c)))
-        assertFailsWith<ParserException> {
-            assertExpression(
-                "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
-            ) {
-                joinedMatch()
-            }
-        }
+        assertFailure(
+            "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+        )
     }
 
     @Test
     fun matchAndJoinCommas() {
         // fails because of the comma in the pattern and no parentheses like `(graph MATCH ...)`
-        assertFailsWith<ParserException> {
-            assertExpression(
-                "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
-            ) {
-                joinedMatch()
-            }
-        }
+        assertFailure("SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2")
     }
 
     @Test
     fun matchAndJoinCommasParenthesized_outerParens() {
         // fails because of the outer parentheses in ((a) -> (b), (a) -> (c)))
-        assertFailsWith<ParserException> {
-            assertExpression(
-                "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH ((a) -> (b), (a) -> (c))), table1 as t1, table2 as t2",
-            ) {
-                joinedMatch()
-            }
-        }
+        assertFailure(
+            "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH ((a) -> (b), (a) -> (c))), table1 as t1, table2 as t2",
+        )
     }
 
     @Test

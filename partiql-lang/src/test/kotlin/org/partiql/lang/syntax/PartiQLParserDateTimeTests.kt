@@ -1243,7 +1243,8 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
     private fun runDateTimeTest(tc: DateTimeTestCase) = if (!tc.skipTest) {
         assertExpression(tc.source, expectedPigBuilder = tc.block)
     } else {
-        // Skip test, do nothing
+        // Don't skip. Print
+        assertExpression(tc.source, expectedPigBuilder = tc.block)
     }
 
     @ParameterizedTest
@@ -1259,14 +1260,12 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
     fun timestampLiteralTests(tc: DateTimeTestCase) = runDateTimeTest(tc)
 
     private fun runErrorTimeTestCase(tc: ErrorDateTimeTestCase) {
-        if (!tc.skipTest) {
-            checkInputThrowingParserException(
-                tc.source,
-                tc.errorCode,
-                tc.ctx,
-                assertContext = false,
-            )
-        }
+        checkInputThrowingParserException(
+            tc.source,
+            tc.errorCode,
+            tc.ctx,
+            assertContext = false,
+        )
     }
 
     @ParameterizedTest
