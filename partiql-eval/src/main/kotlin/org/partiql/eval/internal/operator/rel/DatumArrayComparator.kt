@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 
 internal object DatumArrayComparator : Comparator<Array<Datum>> {
     private val delegate = Datum.comparator(false)

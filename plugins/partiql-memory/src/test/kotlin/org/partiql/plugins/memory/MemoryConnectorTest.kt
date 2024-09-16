@@ -1,7 +1,7 @@
 package org.partiql.plugins.memory
 
 import org.junit.jupiter.api.Test
-import org.partiql.planner.catalog.Session
+import org.partiql.spi.catalog.Session
 
 class MemoryConnectorTest {
 

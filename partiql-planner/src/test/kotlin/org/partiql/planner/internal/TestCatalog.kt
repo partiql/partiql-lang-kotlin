@@ -1,11 +1,11 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Identifier
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Namespace
-import org.partiql.planner.catalog.Session
-import org.partiql.planner.catalog.Table
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Namespace
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.catalog.Table
 import org.partiql.types.PType
 
 /**

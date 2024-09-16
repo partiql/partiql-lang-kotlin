@@ -4,7 +4,7 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal class RelOpIterate(

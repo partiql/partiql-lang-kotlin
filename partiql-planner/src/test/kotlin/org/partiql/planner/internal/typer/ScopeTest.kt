@@ -4,13 +4,13 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Identifier
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Session
 import org.partiql.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail

@@ -1,7 +1,7 @@
 imports::{
   kotlin: [
-    identifier::'org.partiql.planner.catalog.Identifier',
-    name::'org.partiql.planner.catalog.Name',
+    identifier::'org.partiql.spi.catalog.Identifier',
+    name::'org.partiql.spi.catalog.Name',
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',

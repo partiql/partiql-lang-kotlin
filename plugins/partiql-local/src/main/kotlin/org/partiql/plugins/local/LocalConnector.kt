@@ -15,7 +15,7 @@
 package org.partiql.plugins.local
 
 import com.amazon.ionelement.api.StructElement
-import org.partiql.planner.catalog.Catalog
+import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.connector.Connector
 import java.nio.file.Path
 import java.nio.file.Paths

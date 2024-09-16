@@ -24,14 +24,14 @@ import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
-import org.partiql.planner.catalog.Name
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryTable
+import org.partiql.spi.catalog.Name
 import org.partiql.spi.connector.Connector
+import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
-import org.partiql.value.ion.IonDatum
 import picocli.CommandLine
 import java.io.File
 import java.io.InputStream

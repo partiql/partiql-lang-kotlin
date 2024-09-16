@@ -4,14 +4,14 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
-import org.partiql.eval.value.Field
 import org.partiql.plan.Rel
 import org.partiql.plan.relOpExcludeTypeCollIndex
 import org.partiql.plan.relOpExcludeTypeCollWildcard
 import org.partiql.plan.relOpExcludeTypeStructKey
 import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
+import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueType

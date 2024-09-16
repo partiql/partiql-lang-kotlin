@@ -4,8 +4,8 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
 import org.partiql.plan.v1.Schema
+import org.partiql.spi.value.Datum
 
 /**
  * Full Outer Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true. For all

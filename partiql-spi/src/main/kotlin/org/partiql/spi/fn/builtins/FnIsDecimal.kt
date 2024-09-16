@@ -3,10 +3,10 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import java.math.RoundingMode
 import kotlin.math.max

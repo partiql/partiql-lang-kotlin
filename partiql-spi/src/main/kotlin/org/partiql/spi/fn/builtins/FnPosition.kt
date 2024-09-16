@@ -3,11 +3,11 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.spi.fn.utils.StringUtils.codepointPosition
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal object Fn_POSITION__STRING_STRING__INT64 : Fn {

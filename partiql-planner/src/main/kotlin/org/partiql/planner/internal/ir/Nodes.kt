@@ -3,9 +3,8 @@
 package org.partiql.planner.`internal`.ir
 
 import org.partiql.errors.Problem
-import org.partiql.planner.catalog.Identifier
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Table
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Name
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
 import org.partiql.planner.internal.ir.builder.RefAggBuilder
 import org.partiql.planner.internal.ir.builder.RefCastBuilder
@@ -70,6 +69,7 @@ import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.spi.catalog.Table
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValue

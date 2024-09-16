@@ -9,9 +9,9 @@ import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.connector.Connector
 import java.time.Instant
-import org.partiql.planner.catalog.Session as PlannerSession
 
 internal class Pipeline private constructor(
     private val parser: PartiQLParser,
@@ -35,7 +35,7 @@ internal class Pipeline private constructor(
 
         private val catalogs = connectors.values.map { it.getCatalog() }
 
-        fun planner() = PlannerSession.builder()
+        fun planner() = org.partiql.spi.catalog.Session.builder()
             .identity(userId)
             .namespace(currentDirectory)
             .catalog(currentCatalog)

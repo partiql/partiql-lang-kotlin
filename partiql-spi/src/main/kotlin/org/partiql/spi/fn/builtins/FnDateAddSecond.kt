@@ -5,10 +5,10 @@ package org.partiql.spi.fn.builtins
 
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Fn {

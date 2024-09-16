@@ -5,7 +5,7 @@ import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.createIonElementLoader
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind.ARRAY
 import org.partiql.types.PType.Kind.BAG
