@@ -25,7 +25,7 @@ application {
 
 dependencies {
     implementation(Deps.ionElement)
-    testImplementation(project(":partiql-lang"))
+    testImplementation("org.partiql:partiql-lang-kotlin:0.14.8")
     testImplementation(project(":partiql-eval"))
     testImplementation(project(":plugins:partiql-memory"))
 }
