@@ -1,10 +1,12 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
@@ -17,6 +19,55 @@ import org.partiql.types.StaticType
 
 /** Test cases for PartiQL unknown values `MISSING` and `NULL`, including their propagation. */
 class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
+
+    private fun runEvaluatorTestCase(
+        query: String,
+        session: EvaluationSession = EvaluationSession.standard(),
+        expectedResult: String,
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION,
+        target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
+    ) {
+        val assertion = when (expectedResultFormat) {
+            ExpectedResultFormat.STRICT, ExpectedResultFormat.PARTIQL -> EvaluationTestCase.Assertion.SuccessPartiQL(
+                EvaluationTestCase.ALL_MODES, expectedResult, emptyMap()
+            )
+            ExpectedResultFormat.ION -> EvaluationTestCase.Assertion.Success(
+                EvaluationTestCase.ALL_MODES, expectedResult
+            )
+        }
+        val tc = EvaluationTestCase(query, query, assertion)
+        tc.append(file)
+    }
+
+    private fun runEvaluatorErrorTestCase(
+        query: String,
+        expectedErrorCode: ErrorCode,
+        expectedErrorContext: PropertyValueMap? = null,
+        expectedPermissiveModeResult: String? = null,
+    ) {
+        val assertion = EvaluationTestCase.Assertion.Multi(
+            listOfNotNull(
+                EvaluationTestCase.Assertion.Failure(
+                    EvaluationTestCase.ERROR
+                ),
+                expectedPermissiveModeResult?.let {
+                    EvaluationTestCase.Assertion.SuccessPartiQL(
+                        EvaluationTestCase.COERCE,
+                        expectedPermissiveModeResult,
+                        emptyMap()
+                    )
+                }
+            )
+        )
+        val tc = EvaluationTestCase(query, query, assertion)
+        tc.append(file)
+    }
+
+    @Test
+    fun print() {
+        val cases = NAryUnknownPropagationCases().getParameters().map { EvaluationTestCase.fromEvaluatorTestCase(it) }
+        EvaluationTestCase.print("unknown-propagation.ion", cases, emptyMap())
+    }
 
     @ParameterizedTest
     @ArgumentsSource(NAryUnknownPropagationCases::class)
@@ -498,28 +549,37 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
         }
     } // end NAryUnknownPropagationCases
 
-    private val nullSample = mapOf(
-        "nullSample" to """
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun printEnv() {
+            EvaluationTestCase.print(file, emptyList(), env)
+        }
+
+        val file = "unknown-values.ion"
+
+        private val nullSampleEnv = mapOf(
+            "nullSample" to """
         [
             {val: "A", control: true, n: 1},
             {val: "B", control: false, n: null},
             {val: "C", control: null, n: 3},
         ]
         """
-    ).toSession()
+        )
 
-    private val missingSample = mapOf(
-        "missingSample" to """
+        private val missingSampleEnv = mapOf(
+            "missingSample" to """
         [
             {val: "A", control: true, n: 1},
             {val: "B", control: false, n: 2},
             {val: "C" ,},
         ]
         """
-    ).toSession()
+        )
 
-    private val missingAndNullSample = mapOf(
-        "missingAndNullSample" to """
+        private val missingAndNullSampleEnv = mapOf(
+            "missingAndNullSample" to """
         [
             {val: "A", control: true, n:2},
             {val: "B", control: false, n: 2},
@@ -527,10 +587,10 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
             {val: "D", control: null, n:5},
         ]
         """
-    ).toSession()
+        )
 
-    private val boolsWithUnknowns = mapOf(
-        "boolsWithUnknowns" to """
+        private val boolsWithUnknownsEnv = mapOf(
+            "boolsWithUnknowns" to """
         [
             {x: true, y: true},
             {x: true, y: false},
@@ -550,7 +610,18 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
             {}
         ]
     """
-    ).toSession()
+        )
+
+        private val env = nullSampleEnv + missingSampleEnv + missingAndNullSampleEnv + boolsWithUnknownsEnv
+    }
+
+    private val nullSample = nullSampleEnv.toSession()
+
+    private val missingSample = missingSampleEnv.toSession()
+
+    private val missingAndNullSample = missingAndNullSampleEnv.toSession()
+
+    private val boolsWithUnknowns = boolsWithUnknownsEnv.toSession()
 
     @Test
     fun andShortCircuits() = runEvaluatorTestCase(

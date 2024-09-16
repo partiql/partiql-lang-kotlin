@@ -14,6 +14,15 @@ import java.math.BigInteger
  * integer arithmetic in the absence of [StaticType] information.
  */
 class EvaluatingCompilerIntTest : EvaluatorTestBase() {
+    @Test
+    fun print() {
+        val cases = parametersForValues() + parametersForPlus() + parametersForMinus() + parametersForBitwiseAnd() + parametersForTimes() + parametersForDivision()
+        val evalCases = cases.map { (query, expected) ->
+            val assertion = EvaluationTestCase.Assertion.Success(EvaluationTestCase.ALL_MODES, expected)
+            EvaluationTestCase(query, query, assertion)
+        }
+        EvaluationTestCase.print("int.ion", evalCases, emptyMap())
+    }
 
     @ParameterizedTest
     @MethodSource("parametersForValues")

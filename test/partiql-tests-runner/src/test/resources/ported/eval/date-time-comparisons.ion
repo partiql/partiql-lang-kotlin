@@ -1,0 +1,249 @@
+
+{
+  name:"DATE '2012-02-29' > DATE '2012-02-28'",
+  statement:"DATE '2012-02-29' > DATE '2012-02-28'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"DATE '2012-02-29' < DATE '2013-02-28'",
+  statement:"DATE '2012-02-29' < DATE '2013-02-28'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"DATE '2012-02-29' < DATE '2012-03-29'",
+  statement:"DATE '2012-02-29' < DATE '2012-03-29'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"DATE '2012-02-29' != DATE '2012-02-29'",
+  statement:"DATE '2012-02-29' != DATE '2012-02-29'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:false
+  }
+}
+{
+  name:"DATE '2012-02-29' = DATE '2012-02-29'",
+  statement:"DATE '2012-02-29' = DATE '2012-02-29'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"DATE '2012-02-29' = CAST('2012-02-29' AS DATE)",
+  statement:"DATE '2012-02-29' = CAST('2012-02-29' AS DATE)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '12:12:12' = TIME '12:12:12'",
+  statement:"TIME '12:12:12' = TIME '12:12:12'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '12:12:12' != TIME '12:12:12'",
+  statement:"TIME '12:12:12' != TIME '12:12:12'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:false
+  }
+}
+{
+  name:"TIME '12:12:12' < TIME '12:12:12.123'",
+  statement:"TIME '12:12:12' < TIME '12:12:12.123'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '12:12:13' < TIME '12:12:12.123'",
+  statement:"TIME '12:12:13' < TIME '12:12:12.123'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:false
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'",
+  statement:"TIME WITH TIME ZONE '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:false
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:12:13' > TIME WITH TIME ZONE '12:12:12.123'",
+  statement:"TIME WITH TIME ZONE '12:12:13' > TIME WITH TIME ZONE '12:12:12.123'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:12:12.123+00:00' = TIME WITH TIME ZONE '12:12:12.123+00:00'",
+  statement:"TIME WITH TIME ZONE '12:12:12.123+00:00' = TIME WITH TIME ZONE '12:12:12.123+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:12:12.123-08:00' > TIME WITH TIME ZONE '12:12:12.123+00:00'",
+  statement:"TIME WITH TIME ZONE '12:12:12.123-08:00' > TIME WITH TIME ZONE '12:12:12.123+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:12:12.123-08:00' < TIME WITH TIME ZONE '12:12:12.123+00:00'",
+  statement:"TIME WITH TIME ZONE '12:12:12.123-08:00' < TIME WITH TIME ZONE '12:12:12.123+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:false
+  }
+}
+{
+  name:"CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'",
+  statement:"CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'",
+  statement:"CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'",
+  statement:"TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'",
+  statement:"TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'",
+  statement:"TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'",
+  statement:"TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}

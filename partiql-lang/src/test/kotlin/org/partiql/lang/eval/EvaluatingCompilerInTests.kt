@@ -1,11 +1,20 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerInTests : EvaluatorTestBase() {
+
+    @Test
+    fun print() {
+        val cases = (BasicInOperatorTestCases().getParameters() + InRightOpNotASequenceCases().getParameters()).map {
+            EvaluationTestCase.fromEvaluatorTestCase(it as EvaluatorTestCase)
+        }
+        EvaluationTestCase.print("in.ion", cases, emptyMap())
+    }
 
     // Basic tests for behavior that is unchanged all [TypingMode]s, not including unknown propagation
     // as that is already well tested in [EvaluatingCompilerUnknownValuesTest].

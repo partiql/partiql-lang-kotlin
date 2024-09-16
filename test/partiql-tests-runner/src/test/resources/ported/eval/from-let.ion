@@ -1,0 +1,383 @@
+
+envs::{
+  A:[
+    {
+      id:1
+    }
+  ],
+  B:[
+    {
+      id:100
+    },
+    {
+      id:200
+    }
+  ],
+  C:[
+    {
+      name:foo,
+      region:NA
+    },
+    {
+      name:foobar,
+      region:EU
+    },
+    {
+      name:foobarbaz,
+      region:NA
+    }
+  ]
+}
+{
+  name:"SELECT * FROM A LET 1 AS X WHERE X = 1",
+  statement:"SELECT * FROM A LET 1 AS X WHERE X = 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        id:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT X FROM A LET 1 AS X",
+  statement:"SELECT X FROM A LET 1 AS X",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        X:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM C LET region AS X GROUP BY X",
+  statement:"SELECT * FROM C LET region AS X GROUP BY X",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        X:EU
+      },
+      {
+        X:NA
+      }
+    ]
+  }
+}
+{
+  name:"SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo",
+  statement:"SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        foo:100
+      },
+      {
+        foo:100
+      }
+    ]
+  }
+}
+{
+  name:"SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo",
+  statement:"SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        id:200
+      }
+    ]
+  }
+}
+{
+  name:"SELECT X FROM A LET 1 AS X, 2 AS X",
+  statement:"SELECT X FROM A LET 1 AS X, 2 AS X",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        X:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM A LET 100 AS A",
+  statement:"SELECT * FROM A LET 100 AS A",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:100
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM A LET 100 AS A",
+  statement:"SELECT * FROM A LET 100 AS A",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        id:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM A LET 100 AS A",
+  statement:"SELECT * FROM A LET 100 AS A",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        id:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y",
+  statement:"SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        X:1,
+        Y:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT X FROM A LET 1 AS X, X AS X",
+  statement:"SELECT X FROM A LET 1 AS X, X AS X",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        X:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT X FROM A LET upper('foo') AS X",
+  statement:"SELECT X FROM A LET upper('foo') AS X",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        X:"FOO"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT nameLength FROM C LET char_length(C.name) AS nameLength",
+  statement:"SELECT nameLength FROM C LET char_length(C.name) AS nameLength",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        nameLength:3
+      },
+      {
+        nameLength:6
+      },
+      {
+        nameLength:9
+      }
+    ]
+  }
+}
+{
+  name:"SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region",
+  statement:"SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        region:EU,
+        maxLen:6
+      },
+      {
+        region:NA,
+        maxLen:9
+      }
+    ]
+  }
+}
+{
+  name:"SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X",
+  statement:"SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        X:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT X FROM A LET Y AS X",
+  statement:"SELECT X FROM A LET Y AS X",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y",
+  statement:"SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          X:1
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X)",
+  statement:"SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X)",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT Z FROM A LET (SELECT 1 FROM A LET 1 AS X) AS Y, X AS Z",
+  statement:"SELECT Z FROM A LET (SELECT 1 FROM A LET 1 AS X) AS Y, X AS Z",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo",
+  statement:"SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"SELECT foo FROM B LET 100 AS foo GROUP BY B.id",
+  statement:"SELECT foo FROM B LET 100 AS foo GROUP BY B.id",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}

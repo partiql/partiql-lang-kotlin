@@ -38,10 +38,20 @@ object Env {
     const val PARTIQL_EQUIV = "PARTIQL_EVAL_EQUIV_TESTS_DATA"
 }
 
+fun setEnvironmentDataDirectories(test: Test) {
+    // Set PartiQL Evaluation Test Directory
+    val conformanceDataEval = file("$tests/eval/").absolutePath
+    val projectDataEval = file("$buildDir/resources/test/ported/eval/").absolutePath
+    test.environment(Env.PARTIQL_EVAL, "$conformanceDataEval:$projectDataEval")
+    // Set PartiQL Evaluation Equivalence Test Directory
+    val conformanceDataEquiv = file("$tests/eval-equiv/").absolutePath
+    val projectDataEquiv = file("$buildDir/resources/test/ported/eval-equiv/").absolutePath
+    test.environment(Env.PARTIQL_EQUIV, "$conformanceDataEquiv:$projectDataEquiv")
+}
+
 tasks.test {
     useJUnitPlatform()
-    environment(Env.PARTIQL_EVAL, file("$tests/eval/").absolutePath)
-    environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
+    setEnvironmentDataDirectories(this)
 
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
     exclude("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
@@ -60,8 +70,7 @@ val createReportDir by tasks.registering {
 val generateTestReport by tasks.registering(Test::class) {
     dependsOn(createReportDir)
     useJUnitPlatform()
-    environment(Env.PARTIQL_EVAL, file("$tests/eval/").absolutePath)
-    environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
+    setEnvironmentDataDirectories(this)
     environment("conformanceReportDir", reportDir)
     include("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
     if (project.hasProperty("engine")) {

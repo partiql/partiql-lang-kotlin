@@ -1,14 +1,48 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
 
-    private val session = mapOf("foo" to "[ { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 } ]").toSession()
+    private val session = env.toSession()
+
+    private fun runEvaluatorTestCase(
+        query: String,
+        session: EvaluationSession = EvaluationSession.standard(),
+        expectedResult: String,
+        target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES // This is ignored
+    ) {
+        val assertion = EvaluationTestCase.Assertion.Success(EvaluationTestCase.ALL_MODES, expectedResult)
+        val case = EvaluationTestCase(query, query, assertion)
+        case.append(path)
+    }
+
+    private fun runEvaluatorErrorTestCase(
+        query: String,
+        errorCode: ErrorCode,
+        properties: PropertyValueMap? = null, // This is ignored
+        target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES // This is intentionally ignored
+    ) {
+        val case = EvaluationTestCase(query, query, EvaluationTestCase.Assertion.Failure(EvaluationTestCase.ALL_MODES))
+        case.append(path)
+    }
+
+    companion object {
+        private val env = mapOf("foo" to "[ { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 } ]")
+        private val path = "limit.ion"
+
+        @BeforeAll
+        @JvmStatic
+        fun printEnv() {
+            EvaluationTestCase.print(path, emptyList(), env)
+        }
+    }
 
     @Test
     fun `LIMIT 0 should return no results`() =

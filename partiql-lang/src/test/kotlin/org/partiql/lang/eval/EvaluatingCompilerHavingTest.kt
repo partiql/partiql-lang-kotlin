@@ -21,7 +21,7 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
-    val session = mapOf(
+    val env = mapOf(
         "repeating_things" to """[
             { thingId: 1,  attributeId: 10 },
 
@@ -50,7 +50,15 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             { thingId: 20, attributeId: null },
             { thingId: 21, attributeId: null },
         ]"""
-    ).toSession()
+    )
+
+    val session = env.toSession()
+
+    @Test
+    fun groupByHavingTestPrint() {
+        val cases = parametersForGroupByHavingTest().map { EvaluationTestCase.fromEvaluatorTestCase(it) }
+        EvaluationTestCase.print("having.ion", cases, env)
+    }
 
     @Test
     @Parameters
