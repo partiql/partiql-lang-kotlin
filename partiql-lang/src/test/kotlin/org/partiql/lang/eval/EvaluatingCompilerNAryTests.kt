@@ -193,6 +193,7 @@ class EvaluatingCompilerNAryTests : EvaluatorTestBase() {
                                 expected = false
                                 break@loop
                             }
+                            else -> {}
                         }
                         current = it
                     }

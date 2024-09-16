@@ -16,6 +16,7 @@ public final class org/partiql/errors/ErrorAndErrorContextsKt {
 public final class org/partiql/errors/ErrorBehaviorInPermissiveMode : java/lang/Enum {
 	public static final field RETURN_MISSING Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
 	public static final field THROW_EXCEPTION Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
 	public static fun values ()[Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
 }
@@ -25,6 +26,7 @@ public final class org/partiql/errors/ErrorCategory : java/lang/Enum {
 	public static final field LEXER Lorg/partiql/errors/ErrorCategory;
 	public static final field PARSER Lorg/partiql/errors/ErrorCategory;
 	public static final field SEMANTIC Lorg/partiql/errors/ErrorCategory;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getMessage ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ErrorCategory;
 	public static fun values ()[Lorg/partiql/errors/ErrorCategory;
@@ -126,6 +128,7 @@ public class org/partiql/errors/ErrorCode : java/lang/Enum {
 	protected fun detailMessagePrefix ()Ljava/lang/String;
 	protected fun detailMessageSuffix (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
 	public final fun getCategory ()Lorg/partiql/errors/ErrorCategory;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getErrorBehaviorInPermissiveMode ()Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
 	public fun getErrorMessage (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
 	public final fun getProperties ()Ljava/util/Set;
@@ -182,6 +185,7 @@ public final class org/partiql/errors/ProblemLocation {
 public final class org/partiql/errors/ProblemSeverity : java/lang/Enum {
 	public static final field ERROR Lorg/partiql/errors/ProblemSeverity;
 	public static final field WARNING Lorg/partiql/errors/ProblemSeverity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ProblemSeverity;
 	public static fun values ()[Lorg/partiql/errors/ProblemSeverity;
 }
@@ -217,6 +221,7 @@ public final class org/partiql/errors/Property : java/lang/Enum {
 	public static final field TOKEN_DESCRIPTION Lorg/partiql/errors/Property;
 	public static final field TOKEN_STRING Lorg/partiql/errors/Property;
 	public static final field TOKEN_VALUE Lorg/partiql/errors/Property;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getPropertyName ()Ljava/lang/String;
 	public final fun getPropertyType ()Lorg/partiql/errors/PropertyType;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/Property;
@@ -229,6 +234,7 @@ public final class org/partiql/errors/PropertyType : java/lang/Enum {
 	public static final field LONG_CLASS Lorg/partiql/errors/PropertyType;
 	public static final field STRING_CLASS Lorg/partiql/errors/PropertyType;
 	public static final field TOKEN_CLASS Lorg/partiql/errors/PropertyType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getType ()Ljava/lang/Class;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/PropertyType;
 	public static fun values ()[Lorg/partiql/errors/PropertyType;
@@ -1084,6 +1090,7 @@ public final class org/partiql/value/PartiQLValueType : java/lang/Enum {
 	public static final field SYMBOL Lorg/partiql/value/PartiQLValueType;
 	public static final field TIME Lorg/partiql/value/PartiQLValueType;
 	public static final field TIMESTAMP Lorg/partiql/value/PartiQLValueType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun toPType ()Lorg/partiql/types/PType;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/value/PartiQLValueType;
 	public static fun values ()[Lorg/partiql/value/PartiQLValueType;
@@ -1455,6 +1462,7 @@ public final class org/partiql/value/io/PartiQLValueIonReaderBuilder$Companion {
 public final class org/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat : java/lang/Enum {
 	public static final field IonForPartiQL Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;
 	public static final field IonGeneric Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;
 	public static fun values ()[Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;
 }
