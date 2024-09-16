@@ -4,6 +4,10 @@ import org.partiql.spi.fn.Aggregation
 import org.partiql.spi.fn.Function
 import org.partiql.spi.fn.SqlFnProvider
 
+import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.SqlFnProvider
+
 /**
  * Catalog interface for access to tables and routines.
  *
