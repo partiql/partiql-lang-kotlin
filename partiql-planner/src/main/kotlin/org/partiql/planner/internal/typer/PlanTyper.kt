@@ -785,7 +785,6 @@ internal class PlanTyper(private val env: Env) {
          * @param ctx
          * @return
          */
-
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: CompilerType?): Rex {
             // Apply the coercions as explicit casts
             val args: List<Rex> = node.args.map {
@@ -798,16 +797,16 @@ internal class PlanTyper(private val env: Env) {
 
             // Check if any arg is always missing
             val argIsAlwaysMissing = args.any { it.type.isMissingValue }
-            if (node.fn.signature.isMissingCall && argIsAlwaysMissing) {
+            if (node.fn.signature.isMissingCall() && argIsAlwaysMissing) {
                 return ProblemGenerator.missingRex(
                     node,
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments."),
-                    CompilerType(node.fn.signature.returns, isMissingValue = true)
+                    CompilerType(node.fn.signature.getReturnType(), isMissingValue = true)
                 )
             }
 
             // Infer fn return type
-            return rex(CompilerType(node.fn.signature.returns), Rex.Op.Call.Static(node.fn, args))
+            return rex(CompilerType(node.fn.signature.getReturnType()), Rex.Op.Call.Static(node.fn, args))
         }
 
         /**
@@ -817,9 +816,8 @@ internal class PlanTyper(private val env: Env) {
          * @param ctx
          * @return
          */
-
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: CompilerType?): Rex {
-            val types = node.candidates.map { candidate -> candidate.fn.signature.returns }.toMutableSet()
+            val types = node.candidates.map { candidate -> candidate.fn.signature.getReturnType() }.toMutableSet()
             // TODO: Should this always be DYNAMIC?
             return Rex(type = CompilerType(anyOf(types) ?: PType.dynamic()), op = node)
         }
@@ -1165,7 +1163,7 @@ internal class PlanTyper(private val env: Env) {
             if (firstBranchCondition !is Rex.Op.Call.Static) {
                 return null
             }
-            if (!firstBranchCondition.fn.signature.name.equals("is_struct", ignoreCase = true)) {
+            if (!firstBranchCondition.fn.signature.getName().equals("is_struct", ignoreCase = true)) {
                 return null
             }
             val firstBranchResultType = firstBranch.rex.type
@@ -1250,7 +1248,7 @@ internal class PlanTyper(private val env: Env) {
 
             // Resolve the function
             val call = env.resolveAgg(node.name, node.setq, args) ?: return argsResolved to CompilerType(PType.dynamic())
-            return call to CompilerType(call.agg.signature.returns)
+            return call to CompilerType(call.agg.signature.getReturnType())
         }
     }
 

@@ -21,8 +21,7 @@ import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
-import org.partiql.spi.fn.AggSignature
-import org.partiql.spi.fn.SqlFnProvider
+import org.partiql.spi.fn.Aggregation
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
@@ -38,17 +37,15 @@ import org.partiql.types.PType.Kind
  */
 internal class Env(private val session: Session) {
 
+    /**
+     * Catalogs provider.
+     */
     private val catalogs: Catalogs = session.getCatalogs()
 
     /**
      * Current [Catalog] implementation; error if missing from the [Catalogs] provider.
      */
     private val default: Catalog = catalogs.getCatalog(session.getCatalog()) ?: error("Default catalog does not exist")
-
-    /**
-     * A [SqlFnProvider] for looking up built-in functions.
-     */
-    private val fns: SqlFnProvider = SqlFnProvider
 
     /**
      * Catalog lookup needs to search (3x) to handle schema-qualified and catalog-qualified use-cases.
@@ -114,7 +111,7 @@ internal class Env(private val session: Session) {
         // 1. Search in the current catalog and namespace.
         val catalog = default
         val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
-        val variants = catalog.getFunctions(session, name).map { it.signature }
+        val variants = catalog.getFunctions(session, name).toList()
         if (variants.isEmpty()) {
             return null
         }
@@ -149,7 +146,7 @@ internal class Env(private val session: Session) {
                         fn = refFn(
                             catalog = catalog.getName(),
                             name = Name.of(name),
-                            signature = it.signature,
+                            signature = it.function,
                         ),
                         coercions = it.mapping.toList(),
                     )
@@ -162,7 +159,7 @@ internal class Env(private val session: Session) {
                 val ref = refFn(
                     catalog = catalog.getName(),
                     name = Name.of(name),
-                    signature = match.signature,
+                    signature = match.function,
                 )
                 // Apply the coercions as explicit casts
                 val coercions: List<Rex> = args.mapIndexed { i, arg ->
@@ -183,7 +180,7 @@ internal class Env(private val session: Session) {
         // 1. Search in the current catalog and namespace.
         val catalog = default
         val name = path.lowercase()
-        val candidates = catalog.getAggregations(session, name).map { it.signature }
+        val candidates = catalog.getAggregations(session, name).toList()
         if (candidates.isEmpty()) {
             return null
         }
@@ -243,7 +240,7 @@ internal class Env(private val session: Session) {
         return rhs.takeLast(rhs.size - lhs.size)
     }
 
-    private fun match(candidates: List<AggSignature>, args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+    private fun match(candidates: List<Aggregation>, args: List<PType>): Pair<Aggregation, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
             if (candidate.matches(args)) {
@@ -251,7 +248,7 @@ internal class Env(private val session: Session) {
             }
         }
         // 2. Look for best match.
-        var match: Pair<AggSignature, Array<Ref.Cast?>>? = null
+        var match: Pair<Aggregation, Array<Ref.Cast?>>? = null
         for (candidate in candidates) {
             val m = candidate.match(args) ?: continue
             // TODO AggMatch comparison
@@ -269,7 +266,8 @@ internal class Env(private val session: Session) {
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
 
-    private fun AggSignature.matches(args: List<PType>): Boolean {
+    private fun Aggregation.matches(args: List<PType>): Boolean {
+        val parameters = getParameters()
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
@@ -284,7 +282,8 @@ internal class Env(private val session: Session) {
      * @param args
      * @return
      */
-    private fun AggSignature.match(args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+    private fun Aggregation.match(args: List<PType>): Pair<Aggregation, Array<Ref.Cast?>>? {
+        val parameters = getParameters()
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
             val arg = args[i]

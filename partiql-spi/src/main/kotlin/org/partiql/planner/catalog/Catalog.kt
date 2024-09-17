@@ -1,8 +1,8 @@
 package org.partiql.planner.catalog
 
 import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.fn.Builtins
 import org.partiql.spi.fn.Function
-import org.partiql.spi.fn.SqlFnProvider
 
 /**
  * Catalog interface for access to tables and routines.
@@ -66,10 +66,10 @@ public interface Catalog {
     /**
      * Returns a collection of scalar functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getFunctions(session: Session, name: String): Collection<Function> = SqlFnProvider.lookupFn(name)
+    public fun getFunctions(session: Session, name: String): Collection<Function> = Builtins.getFunctions(name)
 
     /**
      * Returns a collection of aggregation functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getAggregations(session: Session, name: String): Collection<Aggregation> = SqlFnProvider.lookupAgg(name)
+    public fun getAggregations(session: Session, name: String): Collection<Aggregation> = Builtins.getAggregations(name)
 }

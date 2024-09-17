@@ -3,6 +3,8 @@ imports::{
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.types.PType',
     static_type::'org.partiql.types.PType',
+    function::'org.partiql.spi.fn.Function',
+    aggregation::'org.partiql.spi.fn.Aggregation',
   ],
 }
 
@@ -22,11 +24,11 @@ catalog::{
       },
       fn::{
         path:     list::[string],
-        specific: string,
+        function: function,
       },
       agg::{
         path:     list::[string],
-        specific: string,
+        aggregation: aggregation,
       },
     ]
   ]

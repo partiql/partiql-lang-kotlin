@@ -1,4 +1,3 @@
-
 package org.partiql.eval.internal
 
 import org.partiql.eval.PartiQLEngine
@@ -10,7 +9,6 @@ import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
 import org.partiql.spi.fn.Aggregation
 import org.partiql.spi.fn.Function
-import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.planner.catalog.Catalog as Cat
 
 /**
@@ -29,8 +27,6 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
 
         // TEMPORARY FOR DEPENDENCY REASONS
         fun getTable(name: Name): Table? = catalog.getTable(session, name)
-        fun getFn(name: Name, specific: String): Function? = SqlFnProvider.getFn(specific)
-        fun getAgg(name: Name, specific: String): Aggregation? = SqlFnProvider.getAgg(specific)
 
         override fun toString(): String = name
     }
@@ -52,10 +48,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         if (item == null || item !is Catalog.Item.Fn) {
             error("Invalid reference $ref; missing function entry for catalog `$catalog`.")
         }
-        // Lookup in connector
-        val name = Name.of(item.path)
-        return catalog.getFn(name, item.specific)
-            ?: error("Catalog `$catalog` has no entry for function $item")
+        return item.function
     }
 
     fun getAgg(ref: Ref): Aggregation {
@@ -64,10 +57,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         if (item == null || item !is Catalog.Item.Agg) {
             error("Invalid reference $ref; missing aggregation entry for catalog `$catalog`.")
         }
-        // Lookup in connector
-        val name = Name.of(item.path)
-        return catalog.getAgg(name, item.specific)
-            ?: error("Catalog `$catalog` has no entry for aggregation function $item")
+        return item.aggregation
     }
 
     companion object {

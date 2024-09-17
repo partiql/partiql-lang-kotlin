@@ -24,7 +24,12 @@ public interface Function : Routine {
     /**
      * SQL NULL CALL -> RETURNS NULL ON NULL INPUT
      */
-    public fun isNullCall(): Boolean = true
+    public fun isNullCall(): Boolean = signature.isNullCall
+
+    /**
+     * TODO REMOVE ME
+     */
+    public fun isMissingCall(): Boolean = signature.isMissingCall
 
     /**
      * TODO REPLACE ME WITH `getInstance(args: Array<PType>)` which returns an invocable instance of this function.

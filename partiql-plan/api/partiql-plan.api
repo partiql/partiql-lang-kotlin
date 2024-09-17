@@ -25,15 +25,15 @@ public abstract class org/partiql/plan/Catalog$Item : org/partiql/plan/PlanNode 
 
 public final class org/partiql/plan/Catalog$Item$Agg : org/partiql/plan/Catalog$Item {
 	public static final field Companion Lorg/partiql/plan/Catalog$Item$Agg$Companion;
+	public final field aggregation Lorg/partiql/spi/fn/Aggregation;
 	public final field path Ljava/util/List;
-	public final field specific Ljava/lang/String;
-	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public fun <init> (Ljava/util/List;Lorg/partiql/spi/fn/Aggregation;)V
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/plan/builder/CatalogItemAggBuilder;
 	public final fun component1 ()Ljava/util/List;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Agg;
-	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog$Item$Agg;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Agg;
+	public final fun component2 ()Lorg/partiql/spi/fn/Aggregation;
+	public final fun copy (Ljava/util/List;Lorg/partiql/spi/fn/Aggregation;)Lorg/partiql/plan/Catalog$Item$Agg;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog$Item$Agg;Ljava/util/List;Lorg/partiql/spi/fn/Aggregation;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Agg;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -46,15 +46,15 @@ public final class org/partiql/plan/Catalog$Item$Agg$Companion {
 
 public final class org/partiql/plan/Catalog$Item$Fn : org/partiql/plan/Catalog$Item {
 	public static final field Companion Lorg/partiql/plan/Catalog$Item$Fn$Companion;
+	public final field function Lorg/partiql/spi/fn/Function;
 	public final field path Ljava/util/List;
-	public final field specific Ljava/lang/String;
-	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public fun <init> (Ljava/util/List;Lorg/partiql/spi/fn/Function;)V
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/plan/builder/CatalogItemFnBuilder;
 	public final fun component1 ()Ljava/util/List;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Fn;
-	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog$Item$Fn;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Fn;
+	public final fun component2 ()Lorg/partiql/spi/fn/Function;
+	public final fun copy (Ljava/util/List;Lorg/partiql/spi/fn/Function;)Lorg/partiql/plan/Catalog$Item$Fn;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog$Item$Fn;Ljava/util/List;Lorg/partiql/spi/fn/Function;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Fn;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -162,8 +162,8 @@ public final class org/partiql/plan/PartiQLPlan$Companion {
 
 public final class org/partiql/plan/Plan {
 	public static final fun catalog (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Catalog;
-	public static final fun catalogItemAgg (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Agg;
-	public static final fun catalogItemFn (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Fn;
+	public static final fun catalogItemAgg (Ljava/util/List;Lorg/partiql/spi/fn/Aggregation;)Lorg/partiql/plan/Catalog$Item$Agg;
+	public static final fun catalogItemFn (Ljava/util/List;Lorg/partiql/spi/fn/Function;)Lorg/partiql/plan/Catalog$Item$Fn;
 	public static final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/PType;)Lorg/partiql/plan/Catalog$Item$Value;
 	public static final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)Lorg/partiql/plan/Identifier$Qualified;
 	public static final fun identifierSymbol (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;)Lorg/partiql/plan/Identifier$Symbol;
@@ -1463,28 +1463,28 @@ public final class org/partiql/plan/builder/CatalogBuilder {
 
 public final class org/partiql/plan/builder/CatalogItemAggBuilder {
 	public fun <init> ()V
-	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Lorg/partiql/spi/fn/Aggregation;)V
+	public synthetic fun <init> (Ljava/util/List;Lorg/partiql/spi/fn/Aggregation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun aggregation (Lorg/partiql/spi/fn/Aggregation;)Lorg/partiql/plan/builder/CatalogItemAggBuilder;
 	public final fun build ()Lorg/partiql/plan/Catalog$Item$Agg;
+	public final fun getAggregation ()Lorg/partiql/spi/fn/Aggregation;
 	public final fun getPath ()Ljava/util/List;
-	public final fun getSpecific ()Ljava/lang/String;
 	public final fun path (Ljava/util/List;)Lorg/partiql/plan/builder/CatalogItemAggBuilder;
+	public final fun setAggregation (Lorg/partiql/spi/fn/Aggregation;)V
 	public final fun setPath (Ljava/util/List;)V
-	public final fun setSpecific (Ljava/lang/String;)V
-	public final fun specific (Ljava/lang/String;)Lorg/partiql/plan/builder/CatalogItemAggBuilder;
 }
 
 public final class org/partiql/plan/builder/CatalogItemFnBuilder {
 	public fun <init> ()V
-	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Lorg/partiql/spi/fn/Function;)V
+	public synthetic fun <init> (Ljava/util/List;Lorg/partiql/spi/fn/Function;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/plan/Catalog$Item$Fn;
+	public final fun function (Lorg/partiql/spi/fn/Function;)Lorg/partiql/plan/builder/CatalogItemFnBuilder;
+	public final fun getFunction ()Lorg/partiql/spi/fn/Function;
 	public final fun getPath ()Ljava/util/List;
-	public final fun getSpecific ()Ljava/lang/String;
 	public final fun path (Ljava/util/List;)Lorg/partiql/plan/builder/CatalogItemFnBuilder;
+	public final fun setFunction (Lorg/partiql/spi/fn/Function;)V
 	public final fun setPath (Ljava/util/List;)V
-	public final fun setSpecific (Ljava/lang/String;)V
-	public final fun specific (Ljava/lang/String;)Lorg/partiql/plan/builder/CatalogItemFnBuilder;
 }
 
 public final class org/partiql/plan/builder/CatalogItemValueBuilder {
@@ -1543,10 +1543,10 @@ public final class org/partiql/plan/builder/PlanBuilder {
 	public fun <init> ()V
 	public final fun catalog (Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog;
 	public static synthetic fun catalog$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog;
-	public final fun catalogItemAgg (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Agg;
-	public static synthetic fun catalogItemAgg$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Agg;
-	public final fun catalogItemFn (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Fn;
-	public static synthetic fun catalogItemFn$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Fn;
+	public final fun catalogItemAgg (Ljava/util/List;Lorg/partiql/spi/fn/Aggregation;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Agg;
+	public static synthetic fun catalogItemAgg$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/spi/fn/Aggregation;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Agg;
+	public final fun catalogItemFn (Ljava/util/List;Lorg/partiql/spi/fn/Function;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Fn;
+	public static synthetic fun catalogItemFn$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/spi/fn/Function;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Fn;
 	public final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Value;
 	public static synthetic fun catalogItemValue$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Value;
 	public final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Identifier$Qualified;

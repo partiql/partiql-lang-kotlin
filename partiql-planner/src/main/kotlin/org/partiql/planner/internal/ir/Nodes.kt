@@ -5,8 +5,6 @@ package org.partiql.planner.`internal`.ir
 import org.partiql.errors.Problem
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
-import org.partiql.spi.fn.AggSignature
-import org.partiql.spi.fn.FnSignature
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
 import org.partiql.planner.internal.ir.builder.RefAggBuilder
 import org.partiql.planner.internal.ir.builder.RefCastBuilder
@@ -71,9 +69,10 @@ import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.fn.Function
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import kotlin.collections.Set
 import kotlin.random.Random
 
 internal abstract class PlanNode {
@@ -127,7 +126,7 @@ internal sealed class Ref : PlanNode() {
     internal data class Fn(
         @JvmField internal val catalog: String,
         @JvmField internal val name: Name,
-        @JvmField internal val signature: FnSignature,
+        @JvmField internal val signature: Function,
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
@@ -142,7 +141,7 @@ internal sealed class Ref : PlanNode() {
     internal data class Agg(
         @JvmField internal val catalog: String,
         @JvmField internal val name: Name,
-        @JvmField internal val signature: AggSignature,
+        @JvmField internal val signature: Aggregation,
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
@@ -959,22 +958,17 @@ internal data class Rel(
         }
 
         internal data class Union(
-            @JvmField
-            internal val setq: SetQuantifier,
-            @JvmField
-            internal val isOuter: Boolean,
-            @JvmField
-            internal val lhs: Rel,
-            @JvmField
-            internal val rhs: Rel,
+            @JvmField internal val setq: SetQuantifier,
+            @JvmField internal val isOuter: Boolean,
+            @JvmField internal val lhs: Rel,
+            @JvmField internal val rhs: Rel,
         ) : Op() {
-            internal override val children: List<PlanNode> by lazy {
+            public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
                 kids.add(lhs)
                 kids.add(rhs)
                 kids.filterNotNull()
             }
-
 
             override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                 visitor.visitRelOpUnion(this, ctx)
@@ -984,24 +978,19 @@ internal data class Rel(
                 internal fun builder(): RelOpUnionBuilder = RelOpUnionBuilder()
             }
         }
-    
+
         internal data class Intersect(
-            @JvmField
-            internal val setq: SetQuantifier,
-            @JvmField
-            internal val isOuter: Boolean,
-            @JvmField
-            internal val lhs: Rel,
-            @JvmField
-            internal val rhs: Rel,
+            @JvmField internal val setq: SetQuantifier,
+            @JvmField internal val isOuter: Boolean,
+            @JvmField internal val lhs: Rel,
+            @JvmField internal val rhs: Rel,
         ) : Op() {
-            internal override val children: List<PlanNode> by lazy {
+            public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
                 kids.add(lhs)
                 kids.add(rhs)
                 kids.filterNotNull()
             }
-
 
             override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                 visitor.visitRelOpIntersect(this, ctx)
@@ -1011,24 +1000,19 @@ internal data class Rel(
                 internal fun builder(): RelOpIntersectBuilder = RelOpIntersectBuilder()
             }
         }
-    
+
         internal data class Except(
-            @JvmField
-            internal val setq: SetQuantifier,
-            @JvmField
-            internal val isOuter: Boolean,
-            @JvmField
-            internal val lhs: Rel,
-            @JvmField
-            internal val rhs: Rel,
+            @JvmField internal val setq: SetQuantifier,
+            @JvmField internal val isOuter: Boolean,
+            @JvmField internal val lhs: Rel,
+            @JvmField internal val rhs: Rel,
         ) : Op() {
-            internal override val children: List<PlanNode> by lazy {
+            public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
                 kids.add(lhs)
                 kids.add(rhs)
                 kids.filterNotNull()
             }
-
 
             override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                 visitor.visitRelOpExcept(this, ctx)
@@ -1396,6 +1380,5 @@ internal data class Rel(
 }
 
 internal enum class SetQuantifier {
-    ALL,
-    DISTINCT,
+    ALL, DISTINCT,
 }
