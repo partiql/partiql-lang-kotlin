@@ -3,7 +3,7 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Function
+import org.partiql.spi.function.Function
 import org.partiql.value.PartiQLValueExperimental
 
 @OptIn(PartiQLValueExperimental::class)

@@ -1,7 +1,7 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.spi.fn.Function
+import org.partiql.spi.function.Function
 
 /**
  * Result of matching an unresolved function.

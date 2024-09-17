@@ -4,7 +4,7 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Function
+import org.partiql.spi.function.Function
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 
@@ -22,9 +22,9 @@ import org.partiql.value.PartiQLValue
  * @param args the arguments to the function
  * @property paramIndices the last index of the [args]
  * @property paramTypes represents a two dimensional array, where the first dimension maps to the [candidates], and the
- * second dimensions maps to the [org.partiql.spi.fn.FnSignature.parameters]'s [PType].
+ * second dimensions maps to the [org.partiql.spi.function.FnSignature.parameters]'s [PType].
  * @property paramFamilies represents a two dimensional array, where the first dimension maps to the [candidates], and the
- * second dimensions maps to the [org.partiql.spi.fn.FnSignature.parameters]'s [CoercionFamily]. This allows the algorithm
+ * second dimensions maps to the [org.partiql.spi.function.FnSignature.parameters]'s [CoercionFamily]. This allows the algorithm
  * to know if an argument is coercible to the target parameter.
  * @property cachedMatches a memoization cache for the [match] function.
  */

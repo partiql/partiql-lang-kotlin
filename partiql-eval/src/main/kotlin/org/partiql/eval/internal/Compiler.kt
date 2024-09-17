@@ -60,7 +60,7 @@ import org.partiql.plan.SetQuantifier
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 

@@ -4,7 +4,7 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 import java.util.TreeMap
 import java.util.TreeSet
 

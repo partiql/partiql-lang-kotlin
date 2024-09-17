@@ -7,8 +7,8 @@ import org.partiql.plan.Ref
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
 import org.partiql.planner.catalog.Table
-import org.partiql.spi.fn.Aggregation
-import org.partiql.spi.fn.Function
+import org.partiql.spi.function.Aggregation
+import org.partiql.spi.function.Function
 import org.partiql.planner.catalog.Catalog as Cat
 
 /**

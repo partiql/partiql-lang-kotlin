@@ -90,8 +90,8 @@ import org.partiql.plan.v1.operator.rex.RexTableImpl
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVarImpl
 import org.partiql.planner.catalog.Table
-import org.partiql.spi.fn.Aggregation
-import org.partiql.spi.fn.Function
+import org.partiql.spi.function.Aggregation
+import org.partiql.spi.function.Function
 import org.partiql.types.PType
 
 /**

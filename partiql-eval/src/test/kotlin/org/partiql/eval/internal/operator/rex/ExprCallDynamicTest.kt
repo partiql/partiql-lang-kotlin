@@ -13,9 +13,9 @@ import org.partiql.eval.value.Datum.bool
 import org.partiql.eval.value.Datum.integer
 import org.partiql.eval.value.Datum.list
 import org.partiql.eval.value.Datum.string
-import org.partiql.spi.fn.FnSignature
-import org.partiql.spi.fn.Function
-import org.partiql.spi.fn.Parameter
+import org.partiql.spi.function.FnSignature
+import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType

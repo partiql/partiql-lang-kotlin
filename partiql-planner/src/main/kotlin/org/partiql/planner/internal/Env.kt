@@ -21,7 +21,7 @@ import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
