@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.catalog.Name
 import org.partiql.planner.catalog.Session
+import org.partiql.planner.catalog.Table
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
@@ -324,10 +325,10 @@ class PlanTyperTest {
     }
 
     private fun global(type: CompilerType, path: List<String>): Rex {
-        return rex(
-            type,
-            rexOpVarGlobal(refObj(catalog = "pql", name = Name.of(path), type))
-        )
+        val catalog = "pql"
+        val name = Name.of(path)
+        val table = Table.Companion.empty(name, type)
+        return rex(type, rexOpVarGlobal(refObj(catalog, name, type, table)))
     }
 
     private fun assertEquals(expected: Statement, actual: Statement) {

@@ -7,7 +7,8 @@ imports::{
     static_type::'org.partiql.planner.internal.typer.CompilerType',
     fn_signature::'org.partiql.spi.fn.FnSignature',
     agg_signature::'org.partiql.spi.fn.AggSignature',
-    problem::'org.partiql.errors.Problem'
+    problem::'org.partiql.errors.Problem',
+    table::'org.partiql.planner.catalog.Table',
   ],
 }
 
@@ -25,6 +26,8 @@ ref::[
     catalog: string,
     name: name,
     type: static_type,
+    // TEMPORARY FOR V1 EXECUTION
+    table: table,
   },
   fn::{
     catalog: string,
