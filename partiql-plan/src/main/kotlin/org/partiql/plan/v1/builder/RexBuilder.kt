@@ -1,10 +1,10 @@
 package org.partiql.plan.v1.builder
 
-import org.partiql.eval.value.Datum
 import org.partiql.plan.v1.operator.rel.Rel
 import org.partiql.plan.v1.operator.rex.Rex
 import org.partiql.plan.v1.operator.rex.RexStruct
 import org.partiql.plan.v1.operator.rex.RexSubqueryTest
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**

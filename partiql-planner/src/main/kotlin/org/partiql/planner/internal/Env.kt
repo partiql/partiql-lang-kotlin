@@ -1,10 +1,5 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Catalogs
-import org.partiql.planner.catalog.Identifier
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
@@ -21,6 +16,11 @@ import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Catalogs
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.types.PType

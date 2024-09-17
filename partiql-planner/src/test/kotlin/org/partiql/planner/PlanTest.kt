@@ -9,14 +9,14 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.debug.PlanPrinter
-import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PlanNodeEquivalentVisitor
 import org.partiql.planner.util.ProblemCollector
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
 import org.partiql.types.PType
 import org.partiql.types.StaticType

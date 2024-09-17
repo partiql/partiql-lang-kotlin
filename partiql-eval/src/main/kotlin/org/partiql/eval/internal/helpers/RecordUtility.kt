@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 
 internal object RecordUtility {
     /**

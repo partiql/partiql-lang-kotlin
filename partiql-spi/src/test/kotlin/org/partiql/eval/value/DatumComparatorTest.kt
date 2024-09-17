@@ -1,4 +1,4 @@
-package org.partiql.eval.value
+package org.partiql.spi.value
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -261,19 +261,59 @@ class DatumComparatorTest {
             Datum.list(listOf(Datum.bool(true), Datum.integer(100))) // [true, 100]
         ),
         EquivValues(
-            Datum.list(listOf(Datum.list(listOf(Datum.integer(1))))) // [[1]]
+            Datum.list(
+                listOf(
+                    Datum.list(
+                        listOf(
+                            Datum.integer(1)
+                        )
+                    )
+                )
+            ) // [[1]]
         ),
         EquivValues(
-            Datum.list(listOf(Datum.list(listOf(Datum.integer(1), Datum.integer(1))))) // [[1, 1]]
+            Datum.list(
+                listOf(
+                    Datum.list(
+                        listOf(
+                            Datum.integer(1), Datum.integer(1)
+                        )
+                    )
+                )
+            ) // [[1, 1]]
         ),
         EquivValues(
-            Datum.list(listOf(Datum.list(listOf(Datum.integer(1), Datum.integer(2))))) // [[1, 2]]
+            Datum.list(
+                listOf(
+                    Datum.list(
+                        listOf(
+                            Datum.integer(1), Datum.integer(2)
+                        )
+                    )
+                )
+            ) // [[1, 2]]
         ),
         EquivValues(
-            Datum.list(listOf(Datum.list(listOf(Datum.integer(2), Datum.integer(1))))) // [[2, 1]]
+            Datum.list(
+                listOf(
+                    Datum.list(
+                        listOf(
+                            Datum.integer(2), Datum.integer(1)
+                        )
+                    )
+                )
+            ) // [[2, 1]]
         ),
         EquivValues(
-            Datum.list(listOf(Datum.list(listOf(Datum.list(listOf(Datum.integer(1))))))) // [[[1]]]
+            Datum.list(
+                listOf(
+                    Datum.list(
+                        listOf(
+                            Datum.list(listOf(Datum.integer(1)))
+                        )
+                    )
+                )
+            ) // [[[1]]]
         ),
         // TODO: Annotations.
 //        EquivValues(

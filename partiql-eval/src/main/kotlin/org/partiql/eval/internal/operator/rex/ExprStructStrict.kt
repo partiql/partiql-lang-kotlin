@@ -4,7 +4,8 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getText
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
 
 internal class ExprStructStrict(private val fields: List<ExprStructField>) : Operator.Expr {
     override fun eval(env: Environment): Datum {
@@ -17,7 +18,7 @@ internal class ExprStructStrict(private val fields: List<ExprStructField>) : Ope
             val value = it.value.eval(env)
             when (value.isMissing) {
                 true -> null
-                false -> org.partiql.eval.value.Field.of(keyString, value)
+                false -> Field.of(keyString, value)
             }
         }
         return Datum.struct(fields)

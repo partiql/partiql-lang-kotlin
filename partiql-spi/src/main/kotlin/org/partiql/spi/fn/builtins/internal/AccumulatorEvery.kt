@@ -1,6 +1,6 @@
 package org.partiql.spi.fn.builtins.internal
 
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal class AccumulatorEvery : Accumulator() {

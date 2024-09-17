@@ -13,7 +13,7 @@ import org.partiql.planner.internal.ir.rexOpMissing
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.types.PType
 import org.partiql.types.StaticType
-import org.partiql.planner.catalog.Identifier as InternalIdentifier
+import org.partiql.spi.catalog.Identifier as InternalIdentifier
 
 /**
  * Used to report problems during planning phase.

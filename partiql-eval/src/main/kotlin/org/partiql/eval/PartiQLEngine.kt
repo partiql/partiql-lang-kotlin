@@ -2,7 +2,7 @@ package org.partiql.eval
 
 import org.partiql.eval.builder.PartiQLEngineBuilder
 import org.partiql.plan.v1.PartiQLPlan
-import org.partiql.planner.catalog.Session
+import org.partiql.spi.catalog.Session
 
 /**
  * PartiQL's Experimental Engine.

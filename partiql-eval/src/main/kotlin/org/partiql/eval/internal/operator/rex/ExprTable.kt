@@ -2,8 +2,8 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
-import org.partiql.planner.catalog.Table
+import org.partiql.spi.catalog.Table
+import org.partiql.spi.value.Datum
 
 /**
  * Wrap a [Table] as an expression operator.

@@ -4,8 +4,6 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
-import org.partiql.eval.value.Field
 import org.partiql.plan.v1.operator.rel.RelExcludeCollectionWildcard
 import org.partiql.plan.v1.operator.rel.RelExcludeIndex
 import org.partiql.plan.v1.operator.rel.RelExcludeKey
@@ -13,6 +11,8 @@ import org.partiql.plan.v1.operator.rel.RelExcludePath
 import org.partiql.plan.v1.operator.rel.RelExcludeStep
 import org.partiql.plan.v1.operator.rel.RelExcludeStructWildcard
 import org.partiql.plan.v1.operator.rel.RelExcludeSymbol
+import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueType

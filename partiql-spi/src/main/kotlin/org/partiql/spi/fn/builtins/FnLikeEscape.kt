@@ -4,13 +4,13 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.spi.fn.utils.PatternUtils
 import org.partiql.spi.fn.utils.PatternUtils.checkPattern
 import org.partiql.spi.fn.utils.PatternUtils.parsePattern
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import java.util.regex.Pattern
 

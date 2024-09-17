@@ -5,7 +5,7 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PartiQLPlan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
-import org.partiql.planner.catalog.Session
+import org.partiql.spi.catalog.Session
 
 /**
  * PartiQLPlanner is responsible for transforming an AST into PartiQL's logical query plan.

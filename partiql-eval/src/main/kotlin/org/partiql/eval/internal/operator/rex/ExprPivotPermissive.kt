@@ -4,8 +4,8 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getText
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
-import org.partiql.eval.value.Field
+import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
 
 internal class ExprPivotPermissive(
     private val input: Operator.Relation,

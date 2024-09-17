@@ -4,10 +4,10 @@ import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.v1.PartiQLPlan
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransformV1
 import org.partiql.planner.internal.typer.PlanTyper
+import org.partiql.spi.catalog.Session
 
 /**
  * Default PartiQL logical query planner.
