@@ -958,6 +958,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             ),
         )
     }
+
     @ParameterizedTest
     @ArgumentsSource(UpdateStatements::class)
     fun `update statements`(tc: TestCase) = runTestCase(tc)
@@ -972,8 +973,8 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                         f.bork = 42
                 """,
                 Expectation.Success(
-                    ResolvedId(3, 32) { localId(0) },
-                    ResolvedId(3, 41) { localId(0) },
+                    ResolvedId(3, 31) { localId(0) },
+                    ResolvedId(3, 40) { localId(0) },
                     ResolvedId(6, 25) { localId(0) },
                 ).withLocals(localVariable("f", 0))
             ),

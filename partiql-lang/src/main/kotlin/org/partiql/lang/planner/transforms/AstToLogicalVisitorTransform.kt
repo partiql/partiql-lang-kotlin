@@ -17,6 +17,7 @@ import org.partiql.lang.eval.builtins.CollectionAggregationFunction
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
+import org.partiql.lang.eval.physical.sourceLocationMeta
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -444,11 +445,18 @@ internal class AstToLogicalVisitorTransform(
 
             is PartiqlAst.DmlOp.Set -> {
                 val setOperations = node.operations.ops.mapNotNull {
-                    val set = it as? PartiqlAst.DmlOp.Set
-                    set?.let {
-                        problemHandler.handleUnimplementedFeature(it, "UPDATE operation other than SET")
+                    when (it) {
+                        is PartiqlAst.DmlOp.Set -> it
+                        else -> {
+                            problemHandler.handleProblem(
+                                Problem(
+                                    it.metas.sourceLocationMeta?.toProblemLocation() ?: UNKNOWN_PROBLEM_LOCATION,
+                                    PlanningProblemDetails.CompileError("UPDATE operation other than SET")
+                                )
+                            )
+                            null
+                        }
                     }
-                    set
                 }
 
                 val scan = node.from as? PartiqlAst.FromSource.Scan
