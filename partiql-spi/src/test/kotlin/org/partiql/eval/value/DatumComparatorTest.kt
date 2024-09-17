@@ -1,9 +1,7 @@
-package org.partiql.eval.value
+package org.partiql.spi.value
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.partiql.spi.value.Datum
-import org.partiql.spi.value.Field
 import org.partiql.types.PType
 import org.partiql.value.datetime.DateTimeValue.date
 import org.partiql.value.datetime.DateTimeValue.time

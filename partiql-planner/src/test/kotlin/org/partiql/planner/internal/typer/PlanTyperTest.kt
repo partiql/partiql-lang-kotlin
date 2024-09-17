@@ -327,7 +327,7 @@ class PlanTyperTest {
     private fun global(type: CompilerType, path: List<String>): Rex {
         val catalog = "pql"
         val name = Name.of(path)
-        val table = Table.Companion.empty(name, type)
+        val table = Table.empty(name, type)
         return rex(type, rexOpVarGlobal(refObj(catalog, name, type, table)))
     }
 

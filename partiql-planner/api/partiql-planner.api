@@ -35,7 +35,7 @@ public final class org/partiql/planner/builder/PartiQLPlannerBuilder {
 
 public final class org/partiql/planner/internal/SqlPlannerV1 {
 	public static final field INSTANCE Lorg/partiql/planner/internal/SqlPlannerV1;
-	public final fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/planner/catalog/Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/v1/PartiQLPlan;
-	public static synthetic fun plan$default (Lorg/partiql/planner/internal/SqlPlannerV1;Lorg/partiql/ast/Statement;Lorg/partiql/planner/catalog/Session;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/v1/PartiQLPlan;
+	public final fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/v1/PartiQLPlan;
+	public static synthetic fun plan$default (Lorg/partiql/planner/internal/SqlPlannerV1;Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/v1/PartiQLPlan;
 }
 

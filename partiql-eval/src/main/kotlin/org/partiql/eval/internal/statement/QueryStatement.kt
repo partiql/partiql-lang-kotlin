@@ -4,7 +4,7 @@ import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.planner.catalog.Session
+import org.partiql.spi.catalog.Session
 import org.partiql.value.PartiQLValueExperimental
 
 internal class QueryStatement(root: Operator.Expr) : PartiQLStatement {

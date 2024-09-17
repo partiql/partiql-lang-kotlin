@@ -8,7 +8,7 @@ imports::{
     fn_signature::'org.partiql.spi.fn.FnSignature',
     agg_signature::'org.partiql.spi.fn.AggSignature',
     problem::'org.partiql.errors.Problem',
-    table::'org.partiql.planner.catalog.Table',
+    table::'org.partiql.spi.catalog.Table',
   ],
 }
 

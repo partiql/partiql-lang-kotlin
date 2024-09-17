@@ -153,5 +153,15 @@ public interface Table {
         override fun getName(): Name = _name
         override fun getSchema(): PType = _schema
         override fun getDatum(): Datum = _datum
+
+        // TODO REMOVE ME, THIS IS REQUIRED FOR EQUALITY IN UNIT TESTS
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Table) return false
+            return _name == other.getName()
+        }
+
+        // TODO REMOVE ME, THIS IS REQUIRED FOR EQUALITY IN UNIT TESTS
+        override fun hashCode(): Int = _name.hashCode()
     }
 }
