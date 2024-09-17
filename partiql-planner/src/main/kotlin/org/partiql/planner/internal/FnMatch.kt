@@ -1,7 +1,7 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
 
 /**
  * Result of matching an unresolved function.
@@ -12,11 +12,11 @@ internal sealed class FnMatch {
     /**
      * Successful match of a static function call.
      *
-     * @property signature
+     * @property function
      * @property mapping
      */
-    data class Static(
-        val signature: FnSignature,
+    class Static(
+        val function: Function,
         val mapping: Array<Ref.Cast?>,
     ) : FnMatch() {
 
@@ -31,7 +31,7 @@ internal sealed class FnMatch {
 
             other as Static
 
-            if (signature != other.signature) return false
+            if (function != other.function) return false
             if (!mapping.contentEquals(other.mapping)) return false
             if (exact != other.exact) return false
 
@@ -39,7 +39,7 @@ internal sealed class FnMatch {
         }
 
         override fun hashCode(): Int {
-            var result = signature.hashCode()
+            var result = function.hashCode()
             result = 31 * result + mapping.contentHashCode()
             result = 31 * result + exact
             return result
@@ -51,7 +51,5 @@ internal sealed class FnMatch {
      *
      * @property candidates     Ordered list of potentially applicable functions to dispatch dynamically.
      */
-    data class Dynamic(
-        val candidates: List<Static>,
-    ) : FnMatch()
+    class Dynamic(val candidates: List<Static>) : FnMatch()
 }

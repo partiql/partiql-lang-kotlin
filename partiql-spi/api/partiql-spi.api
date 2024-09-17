@@ -609,6 +609,7 @@ public abstract interface class org/partiql/spi/fn/Function : org/partiql/spi/fn
 	public abstract fun getSignature ()Lorg/partiql/spi/fn/FnSignature;
 	public abstract fun getSpecific ()Ljava/lang/String;
 	public abstract fun invoke ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
+	public abstract fun isMissingCall ()Z
 	public abstract fun isNullCall ()Z
 }
 
@@ -617,6 +618,7 @@ public final class org/partiql/spi/fn/Function$DefaultImpls {
 	public static fun getParameters (Lorg/partiql/spi/fn/Function;)[Lorg/partiql/spi/fn/Parameter;
 	public static fun getReturnType (Lorg/partiql/spi/fn/Function;)Lorg/partiql/types/PType;
 	public static fun getSpecific (Lorg/partiql/spi/fn/Function;)Ljava/lang/String;
+	public static fun isMissingCall (Lorg/partiql/spi/fn/Function;)Z
 	public static fun isNullCall (Lorg/partiql/spi/fn/Function;)Z
 }
 
@@ -635,12 +637,6 @@ public abstract interface class org/partiql/spi/fn/Routine {
 
 public final class org/partiql/spi/fn/Routine$DefaultImpls {
 	public static fun getParameters (Lorg/partiql/spi/fn/Routine;)[Lorg/partiql/spi/fn/Parameter;
-}
-
-public final class org/partiql/spi/fn/SqlFnProvider {
-	public static final field INSTANCE Lorg/partiql/spi/fn/SqlFnProvider;
-	public final fun getAgg (Ljava/lang/String;)Lorg/partiql/spi/fn/Aggregation;
-	public final fun getFn (Ljava/lang/String;)Lorg/partiql/spi/fn/Function;
 }
 
 public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable {

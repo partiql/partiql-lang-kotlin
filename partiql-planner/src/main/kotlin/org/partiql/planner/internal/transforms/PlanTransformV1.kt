@@ -19,12 +19,8 @@ import org.partiql.plan.v1.operator.rex.RexStruct
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
-import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
-import org.partiql.spi.fn.Aggregation
-import org.partiql.spi.fn.Function
-import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
@@ -172,13 +168,13 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
-            val fns = node.candidates.map { getFn(it.fn) }
+            val fns = node.candidates.map { it.fn.signature }
             val args = node.args.map { visitRex(it, ctx) }
             return factory.rexCall(fns, args)
         }
 
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
-            val fn = getFn(node.fn)
+            val fn = node.fn.signature
             val args = node.args.map { visitRex(it, ctx) }
             return factory.rexCall(fn, args)
         }
@@ -271,7 +267,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRelOpAggregateCallResolved(node: IRel.Op.Aggregate.Call.Resolved, ctx: PType): Any {
-            val agg = getAgg(node.agg)
+            val agg = node.agg.signature
             val args = node.args.map { visitRex(it, ctx) }
             val isDistinct = node.setq == SetQuantifier.DISTINCT
             return factory.relAggregateCall(agg, args, isDistinct)
@@ -436,22 +432,6 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
                 onProblem(ProblemGenerator.asWarning(problem))
                 factory.rexMissing(message = problem.toString(), trace)
             }
-        }
-
-        /**
-         * TODO TEMPORARY!
-         */
-        private fun getFn(ref: Ref.Fn): Function {
-            val specific = ref.signature.specific
-            return SqlFnProvider.getFn(specific) ?: error("Function not found: $specific")
-        }
-
-        /**
-         * TODO TEMPORARY!
-         */
-        private fun getAgg(ref: Ref.Agg): Aggregation {
-            val specific = ref.signature.specific
-            return SqlFnProvider.getAgg(specific) ?: error("Aggregation not found: $specific")
         }
 
         /**
