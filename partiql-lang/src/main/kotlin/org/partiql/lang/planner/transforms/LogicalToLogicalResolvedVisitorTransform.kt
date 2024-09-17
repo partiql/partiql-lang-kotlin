@@ -279,7 +279,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             varDecl(node.indexMeta.toLong())
         }
 
-
     /**
      * Returns [GlobalResolutionResult.LocalVariable] if [bindingName] refers to a local variable.
      *
