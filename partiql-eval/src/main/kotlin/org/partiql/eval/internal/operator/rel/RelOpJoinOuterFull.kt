@@ -25,7 +25,7 @@ internal class RelOpJoinOuterFull(
     // TODO BETTER MECHANISM FOR NULL PADDING
     private val r = rhsType.getFields().toTypedArray()
     private val l = lhsType.getFields().toTypedArray()
-    private val lhsPadded: Record = Record(r.indices.map { Datum.nullValue(l[it].type) }.toTypedArray())
+    private val lhsPadded: Record = Record(l.indices.map { Datum.nullValue(l[it].type) }.toTypedArray())
     private val rhsPadded: Record = Record(r.indices.map { Datum.nullValue(r[it].type) }.toTypedArray())
 
     private lateinit var env: Environment

@@ -5,7 +5,7 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 
 /**
- * Creates a bag by evaluating each input value expression.
+ * Creates an array by evaluating each input value expression.
  */
 internal class ExprArray(values: List<Operator.Expr>) : Operator.Expr {
 

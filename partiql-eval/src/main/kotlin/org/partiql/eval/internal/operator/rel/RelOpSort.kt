@@ -3,11 +3,9 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.value.Datum
 import java.util.Collections
 
-@OptIn(PartiQLValueExperimental::class)
 internal class RelOpSort(
     private val input: Operator.Relation,
     private val collations: List<Collation>,
@@ -15,8 +13,8 @@ internal class RelOpSort(
     private var records: Iterator<Record> = Collections.emptyIterator()
     private var init: Boolean = false
 
-    private val nullsFirstComparator = PartiQLValue.comparator(nullsFirst = true)
-    private val nullsLastComparator = PartiQLValue.comparator(nullsFirst = false)
+    private val nullsFirstComparator = Datum.comparator(true)
+    private val nullsLastComparator = Datum.comparator(false)
 
     private lateinit var env: Environment
 
@@ -31,8 +29,8 @@ internal class RelOpSort(
         override fun compare(l: Record, r: Record): Int {
             collations.forEach { spec ->
                 // TODO: Write comparator for PQLValue
-                val lVal = spec.expr.eval(env.push(l)).toPartiQLValue()
-                val rVal = spec.expr.eval(env.push(r)).toPartiQLValue()
+                val lVal = spec.expr.eval(env.push(l))
+                val rVal = spec.expr.eval(env.push(r))
 
                 // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
                 // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)

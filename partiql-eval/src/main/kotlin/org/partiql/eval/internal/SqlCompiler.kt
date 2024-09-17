@@ -120,7 +120,10 @@ import org.partiql.types.PType
 import org.partiql.plan.Rel as IRel
 
 /**
- * See https://github.com/partiql/partiql-lang-kotlin/blob/v1/partiql-eval/src/main/kotlin/org/partiql/eval/internal/Compiler.kt
+ * This class is responsible for producing a tree of evaluable operators from a tree of logical operators.
+ *
+ * @property mode
+ * @property session
  */
 internal class SqlCompiler(
     @JvmField var mode: PartiQLEngine.Mode,
