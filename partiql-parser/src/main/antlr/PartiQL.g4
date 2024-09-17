@@ -99,7 +99,7 @@ dropCommand
     ;
 
 alterCommand
-    : ALTER TABLE qualifiedName alterOp+                        #AlterTable
+    : ALTER TABLE qualifiedName alterOp ( COMMA alterOp )*      #AlterTable
     ;
 
 alterOp

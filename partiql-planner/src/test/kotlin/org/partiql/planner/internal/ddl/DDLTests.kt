@@ -209,9 +209,9 @@ class DDLTests {
     fun sanity8() {
         val query = """
             ALTER TABLE FOO 
-                CHANGE COLUMN foo TYPE INT2 
-                CHANGE COLUMN foo COMMENT 'foo comment'
-                CHANGE COLUMN foo SET NOT NULL
+                CHANGE COLUMN foo TYPE INT2,
+                CHANGE COLUMN foo COMMENT 'foo comment',
+                CHANGE COLUMN foo SET NOT NULL,
                 ADD COLUMN bar OPTIONAL INT2 NOT NULL COMMENT 'bla'
         """.trimIndent()
 
