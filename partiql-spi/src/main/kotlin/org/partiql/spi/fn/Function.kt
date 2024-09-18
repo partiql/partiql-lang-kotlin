@@ -1,6 +1,6 @@
 package org.partiql.spi.fn
 
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**

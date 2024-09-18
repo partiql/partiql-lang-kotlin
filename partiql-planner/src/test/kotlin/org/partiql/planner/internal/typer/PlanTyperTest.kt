@@ -2,10 +2,6 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.partiql.planner.catalog.Identifier
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Session
-import org.partiql.planner.catalog.Table
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
@@ -22,6 +18,10 @@ import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.LocalConnector
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.catalog.Table
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
@@ -327,7 +327,7 @@ class PlanTyperTest {
     private fun global(type: CompilerType, path: List<String>): Rex {
         val catalog = "pql"
         val name = Name.of(path)
-        val table = Table.Companion.empty(name, type)
+        val table = Table.empty(name, type)
         return rex(type, rexOpVarGlobal(refObj(catalog, name, type, table)))
     }
 

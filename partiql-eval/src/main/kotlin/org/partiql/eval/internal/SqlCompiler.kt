@@ -52,7 +52,6 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
-import org.partiql.eval.value.Datum
 import org.partiql.plan.relOpExcludePath
 import org.partiql.plan.relOpExcludeStep
 import org.partiql.plan.relOpExcludeTypeCollIndex
@@ -114,8 +113,9 @@ import org.partiql.plan.v1.operator.rex.RexSubqueryTest
 import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVisitor
-import org.partiql.planner.catalog.Session
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.plan.Rel as IRel
 

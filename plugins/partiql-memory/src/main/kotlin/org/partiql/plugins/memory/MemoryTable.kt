@@ -1,8 +1,8 @@
 package org.partiql.plugins.memory
 
-import org.partiql.eval.value.Datum
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Table
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Table
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 public class MemoryTable private constructor(

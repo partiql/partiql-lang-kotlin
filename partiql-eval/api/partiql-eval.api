@@ -1,7 +1,7 @@
 public abstract interface class org/partiql/eval/PartiQLEngine {
 	public static final field Companion Lorg/partiql/eval/PartiQLEngine$Companion;
 	public static fun builder ()Lorg/partiql/eval/builder/PartiQLEngineBuilder;
-	public abstract fun prepare (Lorg/partiql/plan/v1/PartiQLPlan;Lorg/partiql/eval/PartiQLEngine$Mode;Lorg/partiql/planner/catalog/Session;)Lorg/partiql/eval/PartiQLStatement;
+	public abstract fun prepare (Lorg/partiql/plan/v1/PartiQLPlan;Lorg/partiql/eval/PartiQLEngine$Mode;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLStatement;
 	public static fun standard ()Lorg/partiql/eval/PartiQLEngine;
 }
 
@@ -44,7 +44,7 @@ public final class org/partiql/eval/PartiQLResult$Value : org/partiql/eval/Parti
 }
 
 public abstract interface class org/partiql/eval/PartiQLStatement {
-	public abstract fun execute (Lorg/partiql/planner/catalog/Session;)Lorg/partiql/eval/PartiQLResult;
+	public abstract fun execute (Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLResult;
 }
 
 public final class org/partiql/eval/builder/PartiQLEngineBuilder {

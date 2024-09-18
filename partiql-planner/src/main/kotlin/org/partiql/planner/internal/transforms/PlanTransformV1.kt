@@ -2,7 +2,6 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
-import org.partiql.eval.value.Datum
 import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.Statement
@@ -26,6 +25,7 @@ import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Aggregation
 import org.partiql.spi.fn.Function
 import org.partiql.spi.fn.SqlFnProvider
+import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental

@@ -1,6 +1,6 @@
 package org.partiql.eval
 
-import org.partiql.planner.catalog.Session
+import org.partiql.spi.catalog.Session
 
 /**
  * Represents a compiled PartiQL statement ready for execution.

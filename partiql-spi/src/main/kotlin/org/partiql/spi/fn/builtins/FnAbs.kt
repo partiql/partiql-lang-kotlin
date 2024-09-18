@@ -3,10 +3,10 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.FnSignature
 import org.partiql.spi.fn.Function
 import org.partiql.spi.fn.Parameter
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import kotlin.math.absoluteValue
 

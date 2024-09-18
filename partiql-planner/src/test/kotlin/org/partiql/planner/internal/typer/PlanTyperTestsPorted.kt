@@ -19,9 +19,6 @@ import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
@@ -32,6 +29,9 @@ import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
 import org.partiql.types.ListType

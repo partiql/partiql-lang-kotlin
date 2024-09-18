@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 
 /**
  * Creates an array by evaluating each input value expression.

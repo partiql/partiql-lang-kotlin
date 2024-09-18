@@ -20,8 +20,8 @@ import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.catalog.Session
 import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.spi.catalog.Session
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 

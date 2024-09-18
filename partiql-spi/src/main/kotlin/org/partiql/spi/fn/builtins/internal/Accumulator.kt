@@ -16,8 +16,8 @@ package org.partiql.spi.fn.builtins.internal
 
 import com.amazon.ion.Decimal
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.util.coerceNumbers
 import java.math.BigDecimal

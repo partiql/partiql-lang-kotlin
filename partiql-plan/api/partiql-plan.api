@@ -2560,7 +2560,7 @@ public abstract interface class org/partiql/plan/v1/builder/PlanFactory {
 	public abstract fun rexCast (Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/types/PType;)Lorg/partiql/plan/v1/operator/rex/RexCast;
 	public abstract fun rexCoalesce (Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexCoalesce;
 	public abstract fun rexError (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexError;
-	public abstract fun rexLit (Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/operator/rex/RexLit;
+	public abstract fun rexLit (Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/v1/operator/rex/RexLit;
 	public abstract fun rexMissing (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexMissing;
 	public abstract fun rexNullIf (Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rex/RexNullIf;
 	public abstract fun rexPathIndex (Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rex/RexPathIndex;
@@ -2576,7 +2576,7 @@ public abstract interface class org/partiql/plan/v1/builder/PlanFactory {
 	public abstract fun rexSubqueryIn (Ljava/util/List;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryIn;
 	public abstract fun rexSubqueryIn (Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryIn;
 	public abstract fun rexSubqueryTest (Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest;
-	public abstract fun rexTable (Lorg/partiql/planner/catalog/Table;)Lorg/partiql/plan/v1/operator/rex/RexTable;
+	public abstract fun rexTable (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/v1/operator/rex/RexTable;
 	public abstract fun rexVar (II)Lorg/partiql/plan/v1/operator/rex/RexVar;
 }
 
@@ -2618,7 +2618,7 @@ public final class org/partiql/plan/v1/builder/PlanFactory$DefaultImpls {
 	public static fun rexCast (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/types/PType;)Lorg/partiql/plan/v1/operator/rex/RexCast;
 	public static fun rexCoalesce (Lorg/partiql/plan/v1/builder/PlanFactory;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexCoalesce;
 	public static fun rexError (Lorg/partiql/plan/v1/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexError;
-	public static fun rexLit (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/operator/rex/RexLit;
+	public static fun rexLit (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/v1/operator/rex/RexLit;
 	public static fun rexMissing (Lorg/partiql/plan/v1/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/v1/operator/rex/RexMissing;
 	public static fun rexNullIf (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rex/RexNullIf;
 	public static fun rexPathIndex (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rex/Rex;)Lorg/partiql/plan/v1/operator/rex/RexPathIndex;
@@ -2634,7 +2634,7 @@ public final class org/partiql/plan/v1/builder/PlanFactory$DefaultImpls {
 	public static fun rexSubqueryIn (Lorg/partiql/plan/v1/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryIn;
 	public static fun rexSubqueryIn (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/Rex;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryIn;
 	public static fun rexSubqueryTest (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest$Test;Lorg/partiql/plan/v1/operator/rel/Rel;)Lorg/partiql/plan/v1/operator/rex/RexSubqueryTest;
-	public static fun rexTable (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/planner/catalog/Table;)Lorg/partiql/plan/v1/operator/rex/RexTable;
+	public static fun rexTable (Lorg/partiql/plan/v1/builder/PlanFactory;Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/v1/operator/rex/RexTable;
 	public static fun rexVar (Lorg/partiql/plan/v1/builder/PlanFactory;II)Lorg/partiql/plan/v1/operator/rex/RexVar;
 }
 
@@ -2686,7 +2686,7 @@ public final class org/partiql/plan/v1/builder/RexBuilder {
 	public static final fun lit (I)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public static final fun lit (J)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public static final fun lit (Ljava/lang/String;)Lorg/partiql/plan/v1/builder/RexBuilder;
-	public static final fun lit (Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/builder/RexBuilder;
+	public static final fun lit (Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public static final fun lit (Z)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public static final fun pivot (Lorg/partiql/plan/v1/builder/RelBuilder;Lorg/partiql/plan/v1/builder/RexBuilder;Lorg/partiql/plan/v1/builder/RexBuilder;)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public final fun scan ()Lorg/partiql/plan/v1/builder/RelBuilder;
@@ -2707,7 +2707,7 @@ public final class org/partiql/plan/v1/builder/RexBuilder$Companion {
 	public final fun lit (I)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public final fun lit (J)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public final fun lit (Ljava/lang/String;)Lorg/partiql/plan/v1/builder/RexBuilder;
-	public final fun lit (Lorg/partiql/eval/value/Datum;)Lorg/partiql/plan/v1/builder/RexBuilder;
+	public final fun lit (Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public final fun lit (Z)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public final fun pivot (Lorg/partiql/plan/v1/builder/RelBuilder;Lorg/partiql/plan/v1/builder/RexBuilder;Lorg/partiql/plan/v1/builder/RexBuilder;)Lorg/partiql/plan/v1/builder/RexBuilder;
 	public final fun select (Lorg/partiql/plan/v1/builder/RelBuilder;Lorg/partiql/plan/v1/builder/RexBuilder;)Lorg/partiql/plan/v1/builder/RexBuilder;
@@ -3232,7 +3232,7 @@ public abstract interface class org/partiql/plan/v1/operator/rex/RexLit : org/pa
 	public abstract fun accept (Lorg/partiql/plan/v1/operator/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getChildren ()Ljava/util/Collection;
 	public abstract fun getType ()Lorg/partiql/types/PType;
-	public abstract fun getValue ()Lorg/partiql/eval/value/Datum;
+	public abstract fun getValue ()Lorg/partiql/spi/value/Datum;
 }
 
 public final class org/partiql/plan/v1/operator/rex/RexLit$DefaultImpls {
@@ -3437,7 +3437,7 @@ public final class org/partiql/plan/v1/operator/rex/RexSubqueryTest$Test : java/
 public abstract interface class org/partiql/plan/v1/operator/rex/RexTable : org/partiql/plan/v1/operator/rex/Rex {
 	public abstract fun accept (Lorg/partiql/plan/v1/operator/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getChildren ()Ljava/util/Collection;
-	public abstract fun getTable ()Lorg/partiql/planner/catalog/Table;
+	public abstract fun getTable ()Lorg/partiql/spi/catalog/Table;
 }
 
 public final class org/partiql/plan/v1/operator/rex/RexTable$DefaultImpls {

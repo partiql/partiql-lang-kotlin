@@ -1,6 +1,5 @@
 package org.partiql.planner.internal.typer
 
-import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rex
@@ -9,6 +8,7 @@ import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType

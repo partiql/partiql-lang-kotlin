@@ -5,10 +5,10 @@ import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
+import org.partiql.spi.catalog.Session
 
 /**
  * Default PartiQL logical query planner.

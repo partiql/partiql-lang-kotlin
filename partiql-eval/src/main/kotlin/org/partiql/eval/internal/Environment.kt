@@ -1,6 +1,6 @@
 package org.partiql.eval.internal
 
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 
 /**
  * This class represents the Variables Environment defined in the PartiQL Specification.

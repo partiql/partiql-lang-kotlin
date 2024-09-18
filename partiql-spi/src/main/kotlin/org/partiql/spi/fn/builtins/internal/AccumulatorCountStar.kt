@@ -1,7 +1,7 @@
 package org.partiql.spi.fn.builtins.internal
 
-import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.value.Datum
 
 internal class AccumulatorCountStar : Aggregation.Accumulator {
 

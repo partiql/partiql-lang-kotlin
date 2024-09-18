@@ -5,7 +5,7 @@ import org.partiql.eval.PartiQLStatement
 import org.partiql.eval.internal.statement.QueryStatement
 import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.plan.v1.Statement
-import org.partiql.planner.catalog.Session
+import org.partiql.spi.catalog.Session
 
 internal class SqlEngine : PartiQLEngine {
 

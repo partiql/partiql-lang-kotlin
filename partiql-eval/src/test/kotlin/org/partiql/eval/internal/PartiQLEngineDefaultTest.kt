@@ -13,11 +13,12 @@ import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.SqlPlannerV1
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryTable
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.value.CollectionValue
@@ -30,7 +31,6 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.intValue
 import org.partiql.value.io.PartiQLValueIonWriterBuilder
-import org.partiql.value.ion.IonDatum
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue

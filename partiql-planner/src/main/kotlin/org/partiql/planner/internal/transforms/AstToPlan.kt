@@ -19,9 +19,9 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.visitor.AstBaseVisitor
-import org.partiql.planner.catalog.Identifier
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.statementQuery
+import org.partiql.spi.catalog.Identifier
 import org.partiql.ast.Identifier as AstIdentifier
 import org.partiql.ast.Statement as AstStatement
 import org.partiql.planner.internal.ir.Statement as PlanStatement

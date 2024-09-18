@@ -16,11 +16,11 @@
 package org.partiql.plugins.memory
 
 import com.amazon.ionelement.api.StructElement
-import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Identifier
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Session
-import org.partiql.planner.catalog.Table
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.catalog.Table
 import org.partiql.spi.connector.Connector
 import org.partiql.types.PType
 import org.partiql.types.StaticType
