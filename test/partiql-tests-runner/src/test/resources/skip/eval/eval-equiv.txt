@@ -1,0 +1,23 @@
+PERMISSIVE:::equiv tuple path navigation with array notation
+LEGACY:::equiv tuple path navigation with array notation
+LEGACY:::equiv path collection expression with wildcard steps
+LEGACY:::equiv attribute value pair unpivot non-missing
+LEGACY:::equiv attribute value pair unpivot missing
+PERMISSIVE:::equiv of comma, cross join, and join
+LEGACY:::equiv of comma, cross join, and join
+PERMISSIVE:::equiv coercion of a SELECT subquery into a scalar
+LEGACY:::equiv coercion of a SELECT subquery into a scalar
+PERMISSIVE:::equiv coercion of a SELECT subquery into an array
+LEGACY:::equiv coercion of a SELECT subquery into an array
+PERMISSIVE:::equiv group_all
+LEGACY:::equiv group_all
+PERMISSIVE:::equiv aliases from select clause
+LEGACY:::equiv aliases from select clause
+PERMISSIVE:::equiv coercions with explicit literals
+LEGACY:::equiv coercions with explicit literals
+PERMISSIVE:::Example 2.2 — With CORRESPONDING Clause
+LEGACY:::Example 2.2 — With CORRESPONDING Clause
+PERMISSIVE:::Example 7 — NULL and MISSING Coercion - 1
+LEGACY:::Example 7 — NULL and MISSING Coercion - 1
+PERMISSIVE:::Example 7 — NULL and MISSING Coercion - 2
+LEGACY:::Example 7 — NULL and MISSING Coercion - 2

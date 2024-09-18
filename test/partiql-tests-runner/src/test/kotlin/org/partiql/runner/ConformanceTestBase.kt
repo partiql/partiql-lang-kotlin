@@ -3,15 +3,15 @@ package org.partiql.runner
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.CompileOptions
 import org.partiql.runner.schema.TestCase
 import org.partiql.runner.test.TestProvider
 import org.partiql.runner.test.TestRunner
+import org.partiql_v0_14_8.lang.eval.CompileOptions
 
 abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>
-    abstract val skipListForEvaluation: List<Pair<String, CompileOptions>>
-    abstract val skipListForEquivalence: List<Pair<String, CompileOptions>>
+    abstract val skipListForEvaluation: Set<Pair<String, CompileOptions>>
+    abstract val skipListForEquivalence: Set<Pair<String, CompileOptions>>
 
     // Tests the eval tests with the Kotlin implementation
     // Unit is second.

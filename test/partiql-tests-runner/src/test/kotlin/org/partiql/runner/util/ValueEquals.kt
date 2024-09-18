@@ -8,8 +8,8 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonTimestamp
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import org.partiql.lang.eval.BAG_ANNOTATION
-import org.partiql.lang.eval.MISSING_ANNOTATION
+import org.partiql.runner.Mappings.BAG_ANNOTATION
+import org.partiql.runner.Mappings.MISSING_ANNOTATION
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 

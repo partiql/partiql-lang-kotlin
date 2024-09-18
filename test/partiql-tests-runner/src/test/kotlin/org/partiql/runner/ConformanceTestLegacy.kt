@@ -2,11 +2,11 @@ package org.partiql.runner
 
 import com.amazon.ion.IonValue
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.ExprValue
 import org.partiql.runner.executor.LegacyExecutor
 import org.partiql.runner.report.ReportGenerator
 import org.partiql.runner.test.TestRunner
+import org.partiql_v0_14_8.lang.eval.CompileOptions
+import org.partiql_v0_14_8.lang.eval.ExprValue
 
 /**
  * Runs the conformance tests without a fail list, so we can document the passing/failing tests in the conformance
@@ -26,6 +26,6 @@ class ConformanceTestLegacy : ConformanceTestBase<ExprValue, IonValue>() {
     private val factory = LegacyExecutor.Factory
     override val runner = TestRunner(factory)
 
-    override val skipListForEvaluation: List<Pair<String, CompileOptions>> = emptyList()
-    override val skipListForEquivalence: List<Pair<String, CompileOptions>> = emptyList()
+    override val skipListForEvaluation: Set<Pair<String, CompileOptions>> = emptySet()
+    override val skipListForEquivalence: Set<Pair<String, CompileOptions>> = emptySet()
 }

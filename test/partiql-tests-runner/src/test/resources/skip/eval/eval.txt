@@ -1,0 +1,2703 @@
+// TODO: Alias tests. Needed for V1 release.
+PERMISSIVE:::testing alias support
+LEGACY:::testing alias support
+PERMISSIVE:::testing nested alias support
+LEGACY:::testing nested alias support
+PERMISSIVE:::group and order by count
+LEGACY:::group and order by count
+
+// TODO: Arithmetic tests. Needed for V1 release.
+PERMISSIVE:::division with mixed StaticType
+LEGACY:::division with mixed StaticType
+PERMISSIVE:::repeatingDecimal
+LEGACY:::repeatingDecimal
+PERMISSIVE:::repeatingDecimalHigherPrecision
+LEGACY:::repeatingDecimalHigherPrecision
+PERMISSIVE:::divDecimalInt
+LEGACY:::divDecimalInt
+PERMISSIVE:::subtractionOutOfAllowedPrecision
+LEGACY:::subtractionOutOfAllowedPrecision
+
+// TODO: Undefined variable tests. Needed for V1 release.
+PERMISSIVE:::GROUP BY binding referenced in FROM clause
+PERMISSIVE:::GROUP BY binding referenced in WHERE clause
+PERMISSIVE:::GROUP AS binding referenced in FROM clause
+PERMISSIVE:::GROUP AS binding referenced in WHERE clause
+PERMISSIVE:::GROUP BY with JOIN : SELECT supplierName, COUNT(*) as the_count FROM suppliers AS s INNER JOIN products AS p ON s.supplierId = p.supplierId GROUP BY supplierName
+LEGACY:::GROUP BY with JOIN : SELECT supplierName, COUNT(*) as the_count FROM suppliers AS s INNER JOIN products AS p ON s.supplierId = p.supplierId GROUP BY supplierName
+PERMISSIVE:::SELECT col1, g FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g
+LEGACY:::SELECT col1, g FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g
+PERMISSIVE:::SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g
+LEGACY:::SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, join_me GROUP BY col1 GROUP AS g
+PERMISSIVE:::SELECT col1, g FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g
+LEGACY:::SELECT col1, g FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g
+PERMISSIVE:::SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g
+LEGACY:::SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g
+PERMISSIVE:::select fld3,period from t1,t2 where fld1 = 011401
+PERMISSIVE:::select fld3,period from t2,t1 where companynr*10 = 37*10
+PERMISSIVE:::undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing
+PERMISSIVE:::undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing
+PERMISSIVE:::undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing
+PERMISSIVE:::MYSQL_SELECT_20
+LEGACY:::MYSQL_SELECT_20
+PERMISSIVE:::MYSQL_SELECT_21
+LEGACY:::MYSQL_SELECT_21
+
+// TODO: Negative offset. Needed for V1 release.
+PERMISSIVE:::offset -1
+LEGACY:::offset -1
+LEGACY:::offset 1-2
+
+// TODO: Mistyped Coll Aggs. Needed for V1 release.
+LEGACY:::COLL_MAX non-collection
+LEGACY:::COLL_AVG non-collection
+LEGACY:::COLL_COUNT non-collection
+LEGACY:::COLL_SUM non-collection
+LEGACY:::COLL_MIN non-collection
+LEGACY:::COLL_ANY non-collection
+LEGACY:::COLL_SOME non-collection
+LEGACY:::COLL_EVERY non-collection
+
+// TODO: Mistyped functions. Needed for V1 release.
+LEGACY:::MOD(MISSING, 'some string')
+LEGACY:::MOD('some string', MISSING)
+LEGACY:::MOD(NULL, 'some string')
+LEGACY:::MOD('some string', NULL)
+LEGACY:::MOD(3, 'some string')
+LEGACY:::MOD('some string', 3)
+LEGACY:::CARDINALITY('foo') type mismatch
+LEGACY:::OCTET_LENGTH invalid type
+LEGACY:::CHARACTER_LENGTH invalid type
+LEGACY:::ABS('foo')
+LEGACY:::POSITION invalid type in string
+LEGACY:::POSITION string in invalid type
+LEGACY:::BIT_LENGTH invalid type
+
+// TODO: Invalid casts. Needed for V1 release.
+LEGACY:::cast to int invalid target type{value:"`2017T`",target:"TIMESTAMP"}
+LEGACY:::cast to int invalid target type{value:" `{{\"\"}}` ",target:"CLOB"}
+LEGACY:::cast to int invalid target type{value:" `{{\"1\"}}` ",target:"CLOB"}
+LEGACY:::cast to int invalid target type{value:"`{{}}`",target:"BLOB"}
+LEGACY:::cast to int invalid target type{value:"[1, 2]",target:"LIST"}
+LEGACY:::cast to int invalid target type{value:"[1]",target:"LIST"}
+LEGACY:::cast to int invalid target type{value:"[]",target:"LIST"}
+LEGACY:::cast to int invalid target type{value:"`(1 2)`",target:"SEXP"}
+LEGACY:::cast to int invalid target type{value:"`(1)`",target:"SEXP"}
+LEGACY:::cast to int invalid target type{value:"`()`",target:"SEXP"}
+LEGACY:::cast to int invalid target type{value:"{'a': 1}",target:"STRUCT"}
+LEGACY:::cast to int invalid target type{value:"{'a': '12'}",target:"STRUCT"}
+LEGACY:::cast to int invalid target type{value:"{}",target:"STRUCT"}
+LEGACY:::cast to int invalid target type{value:"<<1, 2>>",target:"BAG"}
+LEGACY:::cast to int invalid target type{value:"<<1>>",target:"BAG"}
+LEGACY:::cast to int invalid target type{value:"<<>>",target:"BAG"}
+
+// TODO: Special forms. Needed for V1 release.
+PERMISSIVE:::More than one character given for ESCAPE
+LEGACY:::LIKE bad value type
+LEGACY:::LIKE bad pattern type
+LEGACY:::LIKE bad escape type
+
+// TODO: Bag ops. Needed for V1 release.
+PERMISSIVE:::Example 6 - Value Coercion not union-compatible
+LEGACY:::Example 6 - Value Coercion not union-compatible
+
+// TODO: Operators. Needed for V1 release.
+LEGACY:::array navigation with wrongly typed array index
+LEGACY:::data type mismatch in comparison expression
+LEGACY:::data type mismatch in logical expression
+
+// TODO: Sexp tests. Needed for V1 release.
+PERMISSIVE:::projectOfSexp
+LEGACY:::projectOfSexp
+
+// TODO: Miscellaneous. Needed for V1 release.
+LEGACY:::subscript with non-existent variable in lowercase
+LEGACY:::subscript with non-existent variable in uppercase
+LEGACY:::repeated field on struct is ambiguous{identifier:"REPEATED",cn:9,bn:"REPEATED"}
+LEGACY:::repeated field on struct is ambiguous{identifier:" \"repeated\" ",cn:10,bn:"repeated"}
+LEGACY:::invalid extract year from time
+LEGACY:::invalid extract month from time
+LEGACY:::invalid extract day from time
+LEGACY:::invalid extract month from time with time zone
+LEGACY:::invalid extract day from time with time zone
+
+// TODO: GPML. Not needed for V1 release.
+PERMISSIVE:::Right with variables
+LEGACY:::Right with variables
+PERMISSIVE:::Right with spots
+LEGACY:::Right with spots
+PERMISSIVE:::Right shorthand
+LEGACY:::Right shorthand
+PERMISSIVE:::Left with variables
+LEGACY:::Left with variables
+PERMISSIVE:::Left with spots
+LEGACY:::Left with spots
+PERMISSIVE:::Left shorthand
+LEGACY:::Left shorthand
+PERMISSIVE:::Left+right with variables
+LEGACY:::Left+right with variables
+PERMISSIVE:::Left+right with spots
+LEGACY:::Left+right with spots
+PERMISSIVE:::Left+right shorthand
+LEGACY:::Left+right shorthand
+PERMISSIVE:::Left+right with variables and label
+LEGACY:::Left+right with variables and label
+PERMISSIVE:::Undirected with variables
+LEGACY:::Undirected with variables
+PERMISSIVE:::Undirected with spots
+LEGACY:::Undirected with spots
+PERMISSIVE:::Undirected shorthand
+LEGACY:::Undirected shorthand
+PERMISSIVE:::Undirected with variables and label
+LEGACY:::Undirected with variables and label
+PERMISSIVE:::Right+undirected with variables
+LEGACY:::Right+undirected with variables
+PERMISSIVE:::Right+undirected with spots
+LEGACY:::Right+undirected with spots
+PERMISSIVE:::Right+undirected shorthand
+LEGACY:::Right+undirected shorthand
+PERMISSIVE:::Right+undirected with variables and labels
+LEGACY:::Right+undirected with variables and labels
+PERMISSIVE:::Left+undirected with variables
+LEGACY:::Left+undirected with variables
+PERMISSIVE:::Left+undirected with spots
+LEGACY:::Left+undirected with spots
+PERMISSIVE:::Left+undirected shorthand
+LEGACY:::Left+undirected shorthand
+PERMISSIVE:::Left+undirected with variables and label
+LEGACY:::Left+undirected with variables and label
+PERMISSIVE:::Left+right+undirected with variables
+LEGACY:::Left+right+undirected with variables
+PERMISSIVE:::Left+right+undirected with spots
+LEGACY:::Left+right+undirected with spots
+PERMISSIVE:::Left+right+undirected shorthand
+LEGACY:::Left+right+undirected shorthand
+PERMISSIVE:::(N0E0 MATCH (x))
+LEGACY:::(N0E0 MATCH (x))
+PERMISSIVE:::(N0E0 MATCH -[y]-> )
+LEGACY:::(N0E0 MATCH -[y]-> )
+PERMISSIVE:::(N0E0 MATCH (x)-[y]->(z) )
+LEGACY:::(N0E0 MATCH (x)-[y]->(z) )
+PERMISSIVE:::(N1E0 MATCH (x))
+LEGACY:::(N1E0 MATCH (x))
+PERMISSIVE:::(N1E0 MATCH -[y]-> )
+LEGACY:::(N1E0 MATCH -[y]-> )
+PERMISSIVE:::(N1E0 MATCH (x)-[y]->(z) )
+LEGACY:::(N1E0 MATCH (x)-[y]->(z) )
+PERMISSIVE:::(N1E0 MATCH (x)-[y]->(x) )
+LEGACY:::(N1E0 MATCH (x)-[y]->(x) )
+PERMISSIVE:::(N1U1 MATCH (x))
+LEGACY:::(N1U1 MATCH (x))
+PERMISSIVE:::(N1U1 MATCH ~[y]~ )
+LEGACY:::(N1U1 MATCH ~[y]~ )
+PERMISSIVE:::(N1U1 MATCH (x)~[y]~(z) )
+LEGACY:::(N1U1 MATCH (x)~[y]~(z) )
+PERMISSIVE:::(N1U1 MATCH (x)~[y]~(x) )
+LEGACY:::(N1U1 MATCH (x)~[y]~(x) )
+PERMISSIVE:::(N1U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )
+LEGACY:::(N1U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )
+PERMISSIVE:::(N1D2 MATCH (x))
+LEGACY:::(N1D2 MATCH (x))
+PERMISSIVE:::(N1D2 MATCH -[y]-> )
+LEGACY:::(N1D2 MATCH -[y]-> )
+PERMISSIVE:::(N1D2 MATCH (x)-[y]->(z) )
+LEGACY:::(N1D2 MATCH (x)-[y]->(z) )
+PERMISSIVE:::(N1D2 MATCH (x)-[y]->(x) )
+LEGACY:::(N1D2 MATCH (x)-[y]->(x) )
+PERMISSIVE:::(N1D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )
+LEGACY:::(N1D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )
+PERMISSIVE:::(N2E0 MATCH (x))
+LEGACY:::(N2E0 MATCH (x))
+PERMISSIVE:::(N2E0 MATCH -[y]-> )
+LEGACY:::(N2E0 MATCH -[y]-> )
+PERMISSIVE:::(N2E0 MATCH (x)-[y]->(z) )
+LEGACY:::(N2E0 MATCH (x)-[y]->(z) )
+PERMISSIVE:::(N2E0 MATCH (x)-[y]->(x) )
+LEGACY:::(N2E0 MATCH (x)-[y]->(x) )
+PERMISSIVE:::(N2D1 MATCH (x))
+LEGACY:::(N2D1 MATCH (x))
+PERMISSIVE:::(N2D1 MATCH -[y]-> )
+LEGACY:::(N2D1 MATCH -[y]-> )
+PERMISSIVE:::(N2D1 MATCH (x)-[y]->(z) )
+LEGACY:::(N2D1 MATCH (x)-[y]->(z) )
+PERMISSIVE:::(N2D1 MATCH (x)-[y]->(x) )
+LEGACY:::(N2D1 MATCH (x)-[y]->(x) )
+PERMISSIVE:::(N2D1 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )
+LEGACY:::(N2D1 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )
+PERMISSIVE:::(N2D1 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )
+LEGACY:::(N2D1 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )
+PERMISSIVE:::(N2D1 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )
+LEGACY:::(N2D1 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )
+PERMISSIVE:::(N2D1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )
+LEGACY:::(N2D1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )
+PERMISSIVE:::(N2U1 MATCH (x))
+LEGACY:::(N2U1 MATCH (x))
+PERMISSIVE:::(N2U1 MATCH ~[y]~ )
+LEGACY:::(N2U1 MATCH ~[y]~ )
+PERMISSIVE:::(N2U1 MATCH (x)~[y]~(z) )
+LEGACY:::(N2U1 MATCH (x)~[y]~(z) )
+PERMISSIVE:::(N2U1 MATCH (x)~[y]~(x) )
+LEGACY:::(N2U1 MATCH (x)~[y]~(x) )
+PERMISSIVE:::(N2U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )
+LEGACY:::(N2U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )
+PERMISSIVE:::(N2U1 MATCH (x1)~[y1]~(x2)-[y2]-(x3) )
+LEGACY:::(N2U1 MATCH (x1)~[y1]~(x2)-[y2]-(x3) )
+PERMISSIVE:::(N2U1 MATCH (x1)-[y1]-(x2)~[y2]~(x3) )
+LEGACY:::(N2U1 MATCH (x1)-[y1]-(x2)~[y2]~(x3) )
+PERMISSIVE:::(N2U1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )
+LEGACY:::(N2U1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )
+PERMISSIVE:::(N2D2 MATCH (x))
+LEGACY:::(N2D2 MATCH (x))
+PERMISSIVE:::(N2D2 MATCH -[y]-> )
+LEGACY:::(N2D2 MATCH -[y]-> )
+PERMISSIVE:::(N2D2 MATCH (x)-[y]->(z) )
+LEGACY:::(N2D2 MATCH (x)-[y]->(z) )
+PERMISSIVE:::(N2D2 MATCH (x)-[y]->(x) )
+LEGACY:::(N2D2 MATCH (x)-[y]->(x) )
+PERMISSIVE:::(N2D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )
+LEGACY:::(N2D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )
+PERMISSIVE:::(N2D2 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )
+LEGACY:::(N2D2 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )
+PERMISSIVE:::(N2D2 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )
+LEGACY:::(N2D2 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )
+PERMISSIVE:::(N2D2 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )
+LEGACY:::(N2D2 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )
+PERMISSIVE:::(N2D2c MATCH (x))
+LEGACY:::(N2D2c MATCH (x))
+PERMISSIVE:::(N2D2c MATCH -[y]-> )
+LEGACY:::(N2D2c MATCH -[y]-> )
+PERMISSIVE:::(N2D2c MATCH (x)-[y]->(z) )
+LEGACY:::(N2D2c MATCH (x)-[y]->(z) )
+PERMISSIVE:::(N2D2c MATCH (x)-[y]->(x) )
+LEGACY:::(N2D2c MATCH (x)-[y]->(x) )
+PERMISSIVE:::(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x3) )
+LEGACY:::(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x3) )
+PERMISSIVE:::(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x1) )
+LEGACY:::(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x1) )
+PERMISSIVE:::(N2D2c MATCH (x1)-[y1]->(x2)-[y2]-(x3) )
+LEGACY:::(N2D2c MATCH (x1)-[y1]->(x2)-[y2]-(x3) )
+PERMISSIVE:::(N2D2c MATCH (x1)-[y1]-(x2)-[y2]->(x3) )
+LEGACY:::(N2D2c MATCH (x1)-[y1]-(x2)-[y2]->(x3) )
+PERMISSIVE:::(N2D2c MATCH (x1)-[y1]-(x2)-[y2]-(x3) )
+LEGACY:::(N2D2c MATCH (x1)-[y1]-(x2)-[y2]-(x3) )
+PERMISSIVE:::(N2U2 MATCH (x))
+LEGACY:::(N2U2 MATCH (x))
+PERMISSIVE:::(N2U2 MATCH ~[y]~ )
+LEGACY:::(N2U2 MATCH ~[y]~ )
+PERMISSIVE:::(N2U2 MATCH (x)~[y]~(z) )
+LEGACY:::(N2U2 MATCH (x)~[y]~(z) )
+PERMISSIVE:::(N2U2 MATCH (x)~[y]~(x) )
+LEGACY:::(N2U2 MATCH (x)~[y]~(x) )
+PERMISSIVE:::(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )
+LEGACY:::(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )
+PERMISSIVE:::(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x1) )
+LEGACY:::(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x1) )
+
+// TODO: These are remaining tests to be fixed before releasing V1. Many of these were ported from
+//  partiql-lang before it was deleted.
+LEGACY:::tuple navigation with array notation without explicit CAST to string
+LEGACY:::path on string
+LEGACY:::tuple navigation missing attribute dot notation
+LEGACY:::tuple navigation missing attribute array notation
+PERMISSIVE:::coll_count without group by
+LEGACY:::coll_count without group by
+PERMISSIVE:::windowing simplified with grouping
+LEGACY:::windowing simplified with grouping
+PERMISSIVE:::1.000 is DECIMAL(3,3)
+LEGACY:::1.000 is DECIMAL(3,3)
+PERMISSIVE:::123.456 is DECIMAL(7,3)
+LEGACY:::123.456 is DECIMAL(7,3)
+LEGACY:::pathMissingDotName
+LEGACY:::pathIndexBagLiteral
+LEGACY:::pathIndexStructLiteral
+LEGACY:::pathIndexStructOutOfBoundsLowLiteral
+LEGACY:::pathIndexStructOutOfBoundsHighLiteral
+LEGACY:::pathUnpivotWildCardOverStructMultiple
+LEGACY:::subscript with variable in lowercase
+LEGACY:::subscript with variable in uppercase
+LEGACY:::subscript with variable in mixed case
+PERMISSIVE:::Example 2.1 — Union of Compatible Relations; Mismatch Column Names; Without CORRESPONDING Clause
+LEGACY:::Example 2.1 — Union of Compatible Relations; Mismatch Column Names; Without CORRESPONDING Clause
+PERMISSIVE:::Example 2.2 — Union of Compatible Relations; Mismatch Column Names; With CORRESPONDING Clause
+LEGACY:::Example 2.2 — Union of Compatible Relations; Mismatch Column Names; With CORRESPONDING Clause
+PERMISSIVE:::offset <str>
+PERMISSIVE:::offset <decimal>>
+PERMISSIVE:::should order data types by the specifications (NULLS LAST default for asc)
+LEGACY:::should order data types by the specifications (NULLS LAST default for asc)
+PERMISSIVE:::should order data types by the specifications (NULLS FIRST default for desc)
+LEGACY:::should order data types by the specifications (NULLS FIRST default for desc)
+PERMISSIVE:::should order data types by the specifications (nulls should be first due to nulls spec)
+LEGACY:::should order data types by the specifications (nulls should be first due to nulls spec)
+PERMISSIVE:::should order data types by the specifications (nulls should be last due to nulls spec)
+LEGACY:::should order data types by the specifications (nulls should be last due to nulls spec)
+PERMISSIVE:::text types compared by lexicographical ordering of Unicode scalar (ASC)
+LEGACY:::text types compared by lexicographical ordering of Unicode scalar (ASC)
+PERMISSIVE:::text types compared by lexicographical ordering of Unicode scalar (DESC)
+LEGACY:::text types compared by lexicographical ordering of Unicode scalar (DESC)
+PERMISSIVE:::Empty Projection item (ordered) -- Output (unordered)
+LEGACY:::Empty Projection item (ordered) -- Output (unordered)
+PERMISSIVE:::Empty Projection item (unordered) -- Output (ordered)
+LEGACY:::Empty Projection item (unordered) -- Output (ordered)
+PERMISSIVE:::Empty Projection item (ordered) -- Output (ordered)
+LEGACY:::Empty Projection item (ordered) -- Output (ordered)
+PERMISSIVE:::Empty Projection item (unordered) -- Output (unordered)
+LEGACY:::Empty Projection item (unordered) -- Output (unordered)
+LEGACY:::projectionIterationBehaviorUnfiltered_select_star
+LEGACY:::selectIndexStruct
+PERMISSIVE:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00+00:00'
+LEGACY:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00+00:00'
+PERMISSIVE:::TIME (2) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.12+00:00'
+LEGACY:::TIME (2) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.12+00:00'
+PERMISSIVE:::TIME WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.12300+00:00'
+LEGACY:::TIME WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.12300+00:00'
+PERMISSIVE:::TIME (3) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.123+00:00'
+LEGACY:::TIME (3) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.123+00:00'
+PERMISSIVE:::TIME (4) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.1230+00:00'
+LEGACY:::TIME (4) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.1230+00:00'
+PERMISSIVE:::TIME (4) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.1230+00:00'
+LEGACY:::TIME (4) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.1230+00:00'
+PERMISSIVE:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00-01:00'
+LEGACY:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00-01:00'
+PERMISSIVE:::TIME WITH TIME ZONE '11:23:45.678' = TIME WITH TIME ZONE '11:23:45.678+06:00'
+LEGACY:::TIME WITH TIME ZONE '11:23:45.678' = TIME WITH TIME ZONE '11:23:45.678+06:00'
+PERMISSIVE:::TIME (2) WITH TIME ZONE '12:59:59.13456' = TIME WITH TIME ZONE '12:59:59.13-05:30'
+LEGACY:::TIME (2) WITH TIME ZONE '12:59:59.13456' = TIME WITH TIME ZONE '12:59:59.13-05:30'
+PERMISSIVE:::"stores"[0]."books"[2]."title"
+LEGACY:::"stores"[0]."books"[2]."title"
+PERMISSIVE:::SELECT s.abc FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s
+LEGACY:::SELECT s.abc FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s
+LEGACY:::"s".*
+LEGACY:::"n".z IS MISSING
+PERMISSIVE:::"stores"[*]."books"[*]."title"
+LEGACY:::"stores"[*]."books"[*]."title"
+PERMISSIVE:::abc
+LEGACY:::abc
+PERMISSIVE:::"friends"."kumo"."likes".*."type"
+LEGACY:::"friends"."kumo"."likes".*."type"
+PERMISSIVE:::"stores"[0]."books"[*]."title"
+LEGACY:::"stores"[0]."books"[*]."title"
+PERMISSIVE:::"friends".*."likes".*."type"
+LEGACY:::"friends".*."likes".*."type"
+LEGACY:::n."z" IS MISSING
+LEGACY:::"s"[*]
+LEGACY:::"n"."z" IS MISSING
+LEGACY:::SELECT attributeId, SUM(attributeId) as the_sum FROM repeating_things GROUP BY attributeId HAVING SUM(attributeId) >= 160
+LEGACY:::SELECT * FROM <<>> AS a WHERE 1 LIKE 'a' ESCAPE '['
+LEGACY:::Select * From Object a Where null LIKE null ESCAPE a._null_
+LEGACY:::Select * From Object a Where null LIKE null ESCAPE a.num
+LEGACY:::Select * From Object a Where null LIKE a._null_
+LEGACY:::Select * From Object a Where null LIKE a._null_ ESCAPE null
+LEGACY:::Select * From Object a Where null LIKE a._null_ ESCAPE a._null_
+LEGACY:::Select * From Object a Where null LIKE a._null_ ESCAPE a.num
+LEGACY:::Select * From Object a Where null LIKE a._null_ ESCAPE '\'
+LEGACY:::Select * From Object a Where null LIKE a._null_ ESCAPE a.esc
+LEGACY:::Select * From Object a Where null LIKE a.num
+LEGACY:::Select * From Object a Where null LIKE a.num ESCAPE null
+LEGACY:::Select * From Object a Where null LIKE a.num ESCAPE a._null_
+LEGACY:::Select * From Object a Where null LIKE a.num ESCAPE a.num
+LEGACY:::Select * From Object a Where null LIKE a.num ESCAPE '\'
+LEGACY:::Select * From Object a Where null LIKE a.num ESCAPE a.esc
+LEGACY:::Select * From Object a Where null LIKE 'string' ESCAPE a._null_
+LEGACY:::Select * From Object a Where null LIKE 'string' ESCAPE a.num
+LEGACY:::Select * From Object a Where null LIKE a.str ESCAPE a._null_
+LEGACY:::Select * From Object a Where null LIKE a.str ESCAPE a.num
+LEGACY:::Select * From Object a Where a._null_ LIKE null
+LEGACY:::Select * From Object a Where a._null_ LIKE null ESCAPE null
+LEGACY:::Select * From Object a Where a._null_ LIKE null ESCAPE a._null_
+LEGACY:::Select * From Object a Where a._null_ LIKE null ESCAPE a.num
+LEGACY:::Select * From Object a Where a._null_ LIKE null ESCAPE '\'
+LEGACY:::Select * From Object a Where a._null_ LIKE null ESCAPE a.esc
+LEGACY:::Select * From Object a Where a._null_ LIKE a._null_
+LEGACY:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE null
+LEGACY:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a._null_
+LEGACY:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a.num
+LEGACY:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE '\'
+LEGACY:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a.esc
+LEGACY:::Select * From Object a Where a._null_ LIKE a.num
+LEGACY:::Select * From Object a Where a._null_ LIKE a.num ESCAPE null
+LEGACY:::Select * From Object a Where a._null_ LIKE a.num ESCAPE a._null_
+LEGACY:::Select * From Object a Where a._null_ LIKE a.num ESCAPE a.num
+LEGACY:::Select * From Object a Where a._null_ LIKE a.num ESCAPE '\'
+LEGACY:::Select * From Object a Where a._null_ LIKE a.num ESCAPE a.esc
+LEGACY:::Select * From Object a Where a._null_ LIKE 'string'
+LEGACY:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE null
+LEGACY:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE a._null_
+LEGACY:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE a.num
+LEGACY:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE '\'
+LEGACY:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE a.esc
+LEGACY:::Select * From Object a Where a._null_ LIKE a.str
+LEGACY:::Select * From Object a Where a._null_ LIKE a.str ESCAPE null
+LEGACY:::Select * From Object a Where a._null_ LIKE a.str ESCAPE a._null_
+LEGACY:::Select * From Object a Where a._null_ LIKE a.str ESCAPE a.num
+LEGACY:::Select * From Object a Where a._null_ LIKE a.str ESCAPE '\'
+LEGACY:::Select * From Object a Where a._null_ LIKE a.str ESCAPE a.esc
+LEGACY:::Select * From Object a Where a.num LIKE null
+LEGACY:::Select * From Object a Where a.num LIKE null ESCAPE null
+LEGACY:::Select * From Object a Where a.num LIKE null ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.num LIKE null ESCAPE a.num
+LEGACY:::Select * From Object a Where a.num LIKE null ESCAPE '\'
+LEGACY:::Select * From Object a Where a.num LIKE null ESCAPE a.esc
+LEGACY:::Select * From Object a Where a.num LIKE a._null_
+LEGACY:::Select * From Object a Where a.num LIKE a._null_ ESCAPE null
+LEGACY:::Select * From Object a Where a.num LIKE a._null_ ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.num LIKE a._null_ ESCAPE a.num
+LEGACY:::Select * From Object a Where a.num LIKE a._null_ ESCAPE '\'
+LEGACY:::Select * From Object a Where a.num LIKE a._null_ ESCAPE a.esc
+LEGACY:::Select * From Object a Where a.num LIKE a.num ESCAPE null
+LEGACY:::Select * From Object a Where a.num LIKE a.num ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.num LIKE 'string' ESCAPE null
+LEGACY:::Select * From Object a Where a.num LIKE 'string' ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.num LIKE a.str ESCAPE null
+LEGACY:::Select * From Object a Where a.num LIKE a.str ESCAPE a._null_
+LEGACY:::Select * From Object a Where 'string' LIKE null ESCAPE a._null_
+LEGACY:::Select * From Object a Where 'string' LIKE null ESCAPE a.num
+LEGACY:::Select * From Object a Where 'string' LIKE a._null_
+LEGACY:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE null
+LEGACY:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE a._null_
+LEGACY:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE a.num
+LEGACY:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE '\'
+LEGACY:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE a.esc
+LEGACY:::Select * From Object a Where 'string' LIKE a.num ESCAPE null
+LEGACY:::Select * From Object a Where 'string' LIKE a.num ESCAPE a._null_
+LEGACY:::Select * From Object a Where 'string' LIKE 'string' ESCAPE a._null_
+LEGACY:::Select * From Object a Where 'string' LIKE a.str ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.str LIKE null ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.str LIKE null ESCAPE a.num
+LEGACY:::Select * From Object a Where a.str LIKE a._null_
+LEGACY:::Select * From Object a Where a.str LIKE a._null_ ESCAPE null
+LEGACY:::Select * From Object a Where a.str LIKE a._null_ ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.str LIKE a._null_ ESCAPE a.num
+LEGACY:::Select * From Object a Where a.str LIKE a._null_ ESCAPE '\'
+LEGACY:::Select * From Object a Where a.str LIKE a._null_ ESCAPE a.esc
+LEGACY:::Select * From Object a Where a.str LIKE a.num ESCAPE null
+LEGACY:::Select * From Object a Where a.str LIKE a.num ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.str LIKE 'string' ESCAPE a._null_
+LEGACY:::Select * From Object a Where a.str LIKE a.str ESCAPE a._null_
+LEGACY:::SELECT * FROM animals as a WHERE a.name LIKE a.xxx
+LEGACY:::SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['
+LEGACY:::SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''
+LEGACY:::SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1
+LEGACY:::SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['
+LEGACY:::SELECT * FROM animals as a WHERE a.name LIKE '%' ESCAPE a.xxx
+LEGACY:::SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['
+LEGACY:::SELECT * FROM animals as a WHERE a.xxx LIKE '%'
+LEGACY:::SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'
+LEGACY:::SELECT count(x.n) from missingAndNullSample as x
+LEGACY:::SELECT avg(x.n) from missingAndNullSample as x
+LEGACY:::SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x
+LEGACY:::SELECT min(x.n) from missingSample as x
+LEGACY:::SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x
+LEGACY:::SELECT VALUE D.val from missingAndNullSample as D WHERE D.control
+LEGACY:::SELECT min(x.i) from `[{}]` as x
+LEGACY:::SELECT VALUE D.val from missingSample as D WHERE D.control
+LEGACY:::SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x
+LEGACY:::SELECT avg(x.i) from `[{}]` as x
+LEGACY:::SELECT avg(x.n) from missingSample as x
+LEGACY:::SELECT min(x.n) from missingAndNullSample as x
+LEGACY:::SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x
+LEGACY:::SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)
+LEGACY:::SELECT count(x.n) from missingSample as x
+LEGACY:::SELECT sum(x.n) from missingSample as x
+LEGACY:::SELECT sum(x.i) from `[{}]` as x
+LEGACY:::SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x
+LEGACY:::SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x
+LEGACY:::SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x
+LEGACY:::SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)
+LEGACY:::SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x
+LEGACY:::SELECT max(x.i) from `[{}]` as x
+LEGACY:::SELECT sum(x.n) from missingAndNullSample as x
+LEGACY:::1 IN 'so long'
+PERMISSIVE:::1 IN 'so long'
+PERMISSIVE:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value
+LEGACY:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value
+PERMISSIVE:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value DESC
+LEGACY:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value DESC
+PERMISSIVE:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value NULLS FIRST
+LEGACY:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value NULLS FIRST
+PERMISSIVE:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value NULLS LAST
+LEGACY:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value NULLS LAST
+PERMISSIVE:::SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC
+LEGACY:::SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC
+PERMISSIVE:::SELECT b AS "C" FROM (SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC) ORDER BY "C"
+LEGACY:::SELECT b AS "C" FROM (SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC) ORDER BY "C"
+PERMISSIVE:::SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST) DESC NULLS FIRST
+LEGACY:::SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST) DESC NULLS FIRST
+PERMISSIVE:::CAST(DATE '2007-10-10' AS date)
+LEGACY:::CAST(DATE '2007-10-10' AS date)
+PERMISSIVE:::CAST(DATE '2007-10-10' AS symbol)
+LEGACY:::CAST(DATE '2007-10-10' AS symbol)
+PERMISSIVE:::CAST(DATE '2007-10-10' AS string)
+LEGACY:::CAST(DATE '2007-10-10' AS string)
+PERMISSIVE:::CAST(DATE '2007-10-10' AS varchar(20))
+LEGACY:::CAST(DATE '2007-10-10' AS varchar(20))
+PERMISSIVE:::CAST(TIME '23:12:12.1267' AS TIME)
+LEGACY:::CAST(TIME '23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+LEGACY:::CAST(TIME '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME '23:12:12.1267+05:30' AS TIME (3))
+LEGACY:::CAST(TIME '23:12:12.1267+05:30' AS TIME (3))
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS TIME (3) WITH TIME ZONE)
+LEGACY:::CAST(TIME '23:12:12.1267-05:30' AS TIME (3) WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267' AS TIME)
+LEGACY:::CAST(TIME (3) '23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS TIME)
+LEGACY:::CAST(TIME (3) '23:12:12.1267-05:30' AS TIME)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267+05:30' AS TIME WITH TIME ZONE)
+LEGACY:::CAST(TIME (3) '23:12:12.1267+05:30' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS TIME (9))
+LEGACY:::CAST(TIME (3) '23:12:12.1267-05:30' AS TIME (9))
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS TIME)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS TIME (3) WITH TIME ZONE)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS TIME (3) WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS TIME)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS TIME)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS TIME)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS TIME (5))
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS TIME (5))
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS TIME (5) WITH TIME ZONE)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS TIME (5) WITH TIME ZONE)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS TIME)
+LEGACY:::CAST(`2007-02-23T12:14:33.079Z` AS TIME)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME)
+LEGACY:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS TIME WITH TIME ZONE)
+LEGACY:::CAST(`2007-02-23T12:14:33.079Z` AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME (1))
+LEGACY:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME (1))
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME (2) WITH TIME ZONE)
+LEGACY:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME (2) WITH TIME ZONE)
+PERMISSIVE:::CAST('23:12:12.1267' AS TIME)
+LEGACY:::CAST('23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST('23:12:12.1267' AS TIME (2))
+LEGACY:::CAST('23:12:12.1267' AS TIME (2))
+PERMISSIVE:::CAST('23:12:12.1267' AS TIME WITH TIME ZONE)
+LEGACY:::CAST('23:12:12.1267' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST('23:12:12.1267' AS TIME (2) WITH TIME ZONE)
+LEGACY:::CAST('23:12:12.1267' AS TIME (2) WITH TIME ZONE)
+PERMISSIVE:::CAST(`"23:12:12.1267"` AS TIME)
+LEGACY:::CAST(`"23:12:12.1267"` AS TIME)
+PERMISSIVE:::CAST(`"23:12:12.1267"` AS TIME (2))
+LEGACY:::CAST(`"23:12:12.1267"` AS TIME (2))
+PERMISSIVE:::CAST(`"23:12:12.1267"` AS TIME WITH TIME ZONE)
+LEGACY:::CAST(`"23:12:12.1267"` AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(`'23:12:12.1267'` AS TIME)
+LEGACY:::CAST(`'23:12:12.1267'` AS TIME)
+PERMISSIVE:::CAST(`'23:12:12.1267'` AS TIME (2))
+LEGACY:::CAST(`'23:12:12.1267'` AS TIME (2))
+PERMISSIVE:::CAST(`'23:12:12.1267'` AS TIME WITH TIME ZONE)
+LEGACY:::CAST(`'23:12:12.1267'` AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(`'23:12:12.1267'` AS TIME (2) WITH TIME ZONE)
+LEGACY:::CAST(`'23:12:12.1267'` AS TIME (2) WITH TIME ZONE)
+LEGACY:::CAST(`2007-02-23T` AS TIME WITH TIME ZONE)
+LEGACY:::CAST(`2007-02-23T12:14:33.079-00:00` AS TIME WITH TIME ZONE)
+LEGACY:::CAST('23:12:2.1267' AS TIME)
+LEGACY:::CAST('2:12:2.1267' AS TIME (2))
+LEGACY:::CAST('25:12:2.1267' AS TIME WITH TIME ZONE)
+LEGACY:::CAST('24:60:2.1267' AS TIME (2) WITH TIME ZONE)
+LEGACY:::CAST(`"12:60:12.1267"` AS TIME)
+LEGACY:::CAST(`"23:1:12.1267"` AS TIME (2))
+LEGACY:::CAST(`"30:12:12.1267"` AS TIME WITH TIME ZONE)
+LEGACY:::CAST(`'23:12:60.1267'` AS TIME (2) WITH TIME ZONE)
+LEGACY:::CAST(`'23:12:1.1267'` AS TIME)
+LEGACY:::CAST(`'2:12:12.1267'` AS TIME (2))
+LEGACY:::CAST(`'23:1:12.1267'` AS TIME WITH TIME ZONE)
+LEGACY:::CAST(`'-23:41:12.1267'` AS TIME (2) WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME '23:12:12.1267' AS symbol)
+LEGACY:::CAST(TIME '23:12:12.1267' AS symbol)
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS symbol)
+LEGACY:::CAST(TIME '23:12:12.1267-05:30' AS symbol)
+PERMISSIVE:::CAST(TIME '23:12:12.1267+05:30' AS symbol)
+LEGACY:::CAST(TIME '23:12:12.1267+05:30' AS symbol)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267' AS symbol)
+LEGACY:::CAST(TIME (3) '23:12:12.1267' AS symbol)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS symbol)
+LEGACY:::CAST(TIME (3) '23:12:12.1267-05:30' AS symbol)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267+05:30' AS symbol)
+LEGACY:::CAST(TIME (3) '23:12:12.1267+05:30' AS symbol)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS symbol)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS symbol)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS symbol)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS symbol)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS symbol)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS symbol)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS symbol)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS symbol)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS symbol)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS symbol)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS symbol)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS symbol)
+PERMISSIVE:::CAST(TIME '23:12:12.1267' AS string)
+LEGACY:::CAST(TIME '23:12:12.1267' AS string)
+PERMISSIVE:::CAST(TIME '23:12:12.1267' AS varchar(40))
+LEGACY:::CAST(TIME '23:12:12.1267' AS varchar(40))
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS string)
+LEGACY:::CAST(TIME '23:12:12.1267-05:30' AS string)
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS varchar(40))
+LEGACY:::CAST(TIME '23:12:12.1267-05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME '23:12:12.1267+05:30' AS string)
+LEGACY:::CAST(TIME '23:12:12.1267+05:30' AS string)
+PERMISSIVE:::CAST(TIME '23:12:12.1267+05:30' AS varchar(40))
+LEGACY:::CAST(TIME '23:12:12.1267+05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267' AS string)
+LEGACY:::CAST(TIME (3) '23:12:12.1267' AS string)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267' AS varchar(40))
+LEGACY:::CAST(TIME (3) '23:12:12.1267' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS string)
+LEGACY:::CAST(TIME (3) '23:12:12.1267-05:30' AS string)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS varchar(40))
+LEGACY:::CAST(TIME (3) '23:12:12.1267-05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267+05:30' AS string)
+LEGACY:::CAST(TIME (3) '23:12:12.1267+05:30' AS string)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267+05:30' AS varchar(40))
+LEGACY:::CAST(TIME (3) '23:12:12.1267+05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS string)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS string)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS varchar(40))
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS varchar(40))
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS string)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS string)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS varchar(40))
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS string)
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS string)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS varchar(40))
+LEGACY:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS string)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS string)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS varchar(40))
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS string)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS string)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS varchar(40))
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS string)
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS string)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS varchar(40))
+LEGACY:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS varchar(40))
+LEGACY:::CAST(DATE '2007-10-10' AS bool)
+LEGACY:::CAST(DATE '2007-10-10' AS boolean)
+LEGACY:::CAST(DATE '2007-10-10' AS int)
+LEGACY:::CAST(DATE '2007-10-10' AS smallint)
+LEGACY:::CAST(DATE '2007-10-10' AS integer2)
+LEGACY:::CAST(DATE '2007-10-10' AS int2)
+LEGACY:::CAST(DATE '2007-10-10' AS integer)
+LEGACY:::CAST(DATE '2007-10-10' AS integer4)
+LEGACY:::CAST(DATE '2007-10-10' AS int4)
+LEGACY:::CAST(DATE '2007-10-10' AS integer8)
+LEGACY:::CAST(DATE '2007-10-10' AS int8)
+LEGACY:::CAST(DATE '2007-10-10' AS bigint)
+LEGACY:::CAST(DATE '2007-10-10' AS float)
+LEGACY:::CAST(DATE '2007-10-10' AS real)
+LEGACY:::CAST(DATE '2007-10-10' AS double precision)
+LEGACY:::CAST(DATE '2007-10-10' AS dec)
+LEGACY:::CAST(DATE '2007-10-10' AS decimal)
+LEGACY:::CAST(DATE '2007-10-10' AS numeric)
+LEGACY:::CAST(DATE '2007-10-10' AS timestamp)
+LEGACY:::CAST(DATE '2007-10-10' AS clob)
+LEGACY:::CAST(DATE '2007-10-10' AS blob)
+LEGACY:::CAST(DATE '2007-10-10' AS list)
+LEGACY:::CAST(DATE '2007-10-10' AS sexp)
+LEGACY:::CAST(DATE '2007-10-10' AS struct)
+LEGACY:::CAST(DATE '2007-10-10' AS tuple)
+LEGACY:::CAST(DATE '2007-10-10' AS bag)
+PERMISSIVE:::CAST(NULL AS varchar)
+LEGACY:::CAST(NULL AS varchar)
+PERMISSIVE:::CAST(NULL AS character varying)
+LEGACY:::CAST(NULL AS character varying)
+PERMISSIVE:::CAST(MISSING AS varchar)
+LEGACY:::CAST(MISSING AS varchar)
+PERMISSIVE:::CAST(MISSING AS character varying)
+LEGACY:::CAST(MISSING AS character varying)
+LEGACY:::CAST(`2007-10-10T` AS bool)
+LEGACY:::CAST(`2007-10-10T` AS boolean)
+PERMISSIVE:::CAST('TrUe' AS bool)
+LEGACY:::CAST('TrUe' AS bool)
+PERMISSIVE:::CAST('TrUe' AS boolean)
+LEGACY:::CAST('TrUe' AS boolean)
+PERMISSIVE:::CAST(`'true'` AS bool)
+LEGACY:::CAST(`'true'` AS bool)
+PERMISSIVE:::CAST(`'true'` AS boolean)
+LEGACY:::CAST(`'true'` AS boolean)
+LEGACY:::CAST(`{{""}}` AS bool)
+LEGACY:::CAST(`{{""}}` AS boolean)
+LEGACY:::CAST(`{{"goodbye"}}` AS bool)
+LEGACY:::CAST(`{{"goodbye"}}` AS boolean)
+LEGACY:::CAST(`{{"false"}}` AS bool)
+LEGACY:::CAST(`{{"false"}}` AS boolean)
+LEGACY:::CAST(`{{"true"}}` AS bool)
+LEGACY:::CAST(`{{"true"}}` AS boolean)
+LEGACY:::CAST(`{{}}` AS bool)
+LEGACY:::CAST(`{{}}` AS boolean)
+LEGACY:::CAST(`{{Z29vZGJ5ZQ==}}` AS bool)
+LEGACY:::CAST(`{{Z29vZGJ5ZQ==}}` AS boolean)
+LEGACY:::CAST(`{{ZmFsc2U=}}` AS bool)
+LEGACY:::CAST(`{{ZmFsc2U=}}` AS boolean)
+LEGACY:::CAST(`{{dHJ1ZQ==}}` AS bool)
+LEGACY:::CAST(`{{dHJ1ZQ==}}` AS boolean)
+LEGACY:::CAST(`[]` AS bool)
+LEGACY:::CAST(`[]` AS boolean)
+LEGACY:::CAST(`[true]` AS bool)
+LEGACY:::CAST(`[true]` AS boolean)
+LEGACY:::CAST(`[false]` AS bool)
+LEGACY:::CAST(`[false]` AS boolean)
+LEGACY:::CAST(`[true, false]` AS bool)
+LEGACY:::CAST(`[true, false]` AS boolean)
+LEGACY:::CAST(`()` AS bool)
+LEGACY:::CAST(`()` AS boolean)
+LEGACY:::CAST(`(true)` AS bool)
+LEGACY:::CAST(`(true)` AS boolean)
+LEGACY:::CAST(`(false)` AS bool)
+LEGACY:::CAST(`(false)` AS boolean)
+LEGACY:::CAST(`{}` AS bool)
+LEGACY:::CAST(`{}` AS boolean)
+LEGACY:::CAST({} AS bool)
+LEGACY:::CAST({} AS boolean)
+LEGACY:::CAST(`{a:true}` AS bool)
+LEGACY:::CAST(`{a:true}` AS boolean)
+LEGACY:::CAST({'b':true} AS bool)
+LEGACY:::CAST({'b':true} AS boolean)
+LEGACY:::CAST(<<>> AS bool)
+LEGACY:::CAST(<<>> AS boolean)
+LEGACY:::CAST(<<true>> AS bool)
+LEGACY:::CAST(<<true>> AS boolean)
+LEGACY:::CAST(<<false>> AS bool)
+LEGACY:::CAST(<<false>> AS boolean)
+LEGACY:::CAST(`2007-10-10T` AS int)
+LEGACY:::CAST(`2007-10-10T` AS smallint)
+LEGACY:::CAST(`2007-10-10T` AS integer2)
+LEGACY:::CAST(`2007-10-10T` AS int2)
+LEGACY:::CAST(`2007-10-10T` AS integer)
+LEGACY:::CAST(`2007-10-10T` AS integer4)
+LEGACY:::CAST(`2007-10-10T` AS int4)
+LEGACY:::CAST(`2007-10-10T` AS integer8)
+LEGACY:::CAST(`2007-10-10T` AS int8)
+LEGACY:::CAST(`2007-10-10T` AS bigint)
+LEGACY:::CAST(`'2e100'` AS int)
+LEGACY:::CAST(`'2e100'` AS smallint)
+LEGACY:::CAST(`'2e100'` AS integer2)
+LEGACY:::CAST(`'2e100'` AS int2)
+LEGACY:::CAST(`'2e100'` AS integer)
+LEGACY:::CAST(`'2e100'` AS integer4)
+LEGACY:::CAST(`'2e100'` AS int4)
+LEGACY:::CAST(`'2e100'` AS integer8)
+LEGACY:::CAST(`'2e100'` AS int8)
+LEGACY:::CAST(`'2e100'` AS bigint)
+LEGACY:::CAST(`'2d100'` AS int)
+LEGACY:::CAST(`'2d100'` AS smallint)
+LEGACY:::CAST(`'2d100'` AS integer2)
+LEGACY:::CAST(`'2d100'` AS int2)
+LEGACY:::CAST(`'2d100'` AS integer)
+LEGACY:::CAST(`'2d100'` AS integer4)
+LEGACY:::CAST(`'2d100'` AS int4)
+LEGACY:::CAST(`'2d100'` AS integer8)
+LEGACY:::CAST(`'2d100'` AS int8)
+LEGACY:::CAST(`'2d100'` AS bigint)
+LEGACY:::CAST(`{{""}}` AS int)
+LEGACY:::CAST(`{{""}}` AS smallint)
+LEGACY:::CAST(`{{""}}` AS integer2)
+LEGACY:::CAST(`{{""}}` AS int2)
+LEGACY:::CAST(`{{""}}` AS integer)
+LEGACY:::CAST(`{{""}}` AS integer4)
+LEGACY:::CAST(`{{""}}` AS int4)
+LEGACY:::CAST(`{{""}}` AS integer8)
+LEGACY:::CAST(`{{""}}` AS int8)
+LEGACY:::CAST(`{{""}}` AS bigint)
+LEGACY:::CAST(`{{"0"}}` AS int)
+LEGACY:::CAST(`{{"0"}}` AS smallint)
+LEGACY:::CAST(`{{"0"}}` AS integer2)
+LEGACY:::CAST(`{{"0"}}` AS int2)
+LEGACY:::CAST(`{{"0"}}` AS integer)
+LEGACY:::CAST(`{{"0"}}` AS integer4)
+LEGACY:::CAST(`{{"0"}}` AS int4)
+LEGACY:::CAST(`{{"0"}}` AS integer8)
+LEGACY:::CAST(`{{"0"}}` AS int8)
+LEGACY:::CAST(`{{"0"}}` AS bigint)
+LEGACY:::CAST(`{{"1.0"}}` AS int)
+LEGACY:::CAST(`{{"1.0"}}` AS smallint)
+LEGACY:::CAST(`{{"1.0"}}` AS integer2)
+LEGACY:::CAST(`{{"1.0"}}` AS int2)
+LEGACY:::CAST(`{{"1.0"}}` AS integer)
+LEGACY:::CAST(`{{"1.0"}}` AS integer4)
+LEGACY:::CAST(`{{"1.0"}}` AS int4)
+LEGACY:::CAST(`{{"1.0"}}` AS integer8)
+LEGACY:::CAST(`{{"1.0"}}` AS int8)
+LEGACY:::CAST(`{{"1.0"}}` AS bigint)
+LEGACY:::CAST(`{{"2e10"}}` AS int)
+LEGACY:::CAST(`{{"2e10"}}` AS smallint)
+LEGACY:::CAST(`{{"2e10"}}` AS integer2)
+LEGACY:::CAST(`{{"2e10"}}` AS int2)
+LEGACY:::CAST(`{{"2e10"}}` AS integer)
+LEGACY:::CAST(`{{"2e10"}}` AS integer4)
+LEGACY:::CAST(`{{"2e10"}}` AS int4)
+LEGACY:::CAST(`{{"2e10"}}` AS integer8)
+LEGACY:::CAST(`{{"2e10"}}` AS int8)
+LEGACY:::CAST(`{{"2e10"}}` AS bigint)
+LEGACY:::CAST(`{{}}` AS int)
+LEGACY:::CAST(`{{}}` AS smallint)
+LEGACY:::CAST(`{{}}` AS integer2)
+LEGACY:::CAST(`{{}}` AS int2)
+LEGACY:::CAST(`{{}}` AS integer)
+LEGACY:::CAST(`{{}}` AS integer4)
+LEGACY:::CAST(`{{}}` AS int4)
+LEGACY:::CAST(`{{}}` AS integer8)
+LEGACY:::CAST(`{{}}` AS int8)
+LEGACY:::CAST(`{{}}` AS bigint)
+LEGACY:::CAST(`{{MA==}}` AS int)
+LEGACY:::CAST(`{{MA==}}` AS smallint)
+LEGACY:::CAST(`{{MA==}}` AS integer2)
+LEGACY:::CAST(`{{MA==}}` AS int2)
+LEGACY:::CAST(`{{MA==}}` AS integer)
+LEGACY:::CAST(`{{MA==}}` AS integer4)
+LEGACY:::CAST(`{{MA==}}` AS int4)
+LEGACY:::CAST(`{{MA==}}` AS integer8)
+LEGACY:::CAST(`{{MA==}}` AS int8)
+LEGACY:::CAST(`{{MA==}}` AS bigint)
+LEGACY:::CAST(`{{MS4w}}` AS int)
+LEGACY:::CAST(`{{MS4w}}` AS smallint)
+LEGACY:::CAST(`{{MS4w}}` AS integer2)
+LEGACY:::CAST(`{{MS4w}}` AS int2)
+LEGACY:::CAST(`{{MS4w}}` AS integer)
+LEGACY:::CAST(`{{MS4w}}` AS integer4)
+LEGACY:::CAST(`{{MS4w}}` AS int4)
+LEGACY:::CAST(`{{MS4w}}` AS integer8)
+LEGACY:::CAST(`{{MS4w}}` AS int8)
+LEGACY:::CAST(`{{MS4w}}` AS bigint)
+LEGACY:::CAST(`{{MmUxMA==}}` AS int)
+LEGACY:::CAST(`{{MmUxMA==}}` AS smallint)
+LEGACY:::CAST(`{{MmUxMA==}}` AS integer2)
+LEGACY:::CAST(`{{MmUxMA==}}` AS int2)
+LEGACY:::CAST(`{{MmUxMA==}}` AS integer)
+LEGACY:::CAST(`{{MmUxMA==}}` AS integer4)
+LEGACY:::CAST(`{{MmUxMA==}}` AS int4)
+LEGACY:::CAST(`{{MmUxMA==}}` AS integer8)
+LEGACY:::CAST(`{{MmUxMA==}}` AS int8)
+LEGACY:::CAST(`{{MmUxMA==}}` AS bigint)
+LEGACY:::CAST(`[]` AS int)
+LEGACY:::CAST(`[]` AS smallint)
+LEGACY:::CAST(`[]` AS integer2)
+LEGACY:::CAST(`[]` AS int2)
+LEGACY:::CAST(`[]` AS integer)
+LEGACY:::CAST(`[]` AS integer4)
+LEGACY:::CAST(`[]` AS int4)
+LEGACY:::CAST(`[]` AS integer8)
+LEGACY:::CAST(`[]` AS int8)
+LEGACY:::CAST(`[]` AS bigint)
+LEGACY:::CAST(`[1]` AS int)
+LEGACY:::CAST(`[1]` AS smallint)
+LEGACY:::CAST(`[1]` AS integer2)
+LEGACY:::CAST(`[1]` AS int2)
+LEGACY:::CAST(`[1]` AS integer)
+LEGACY:::CAST(`[1]` AS integer4)
+LEGACY:::CAST(`[1]` AS int4)
+LEGACY:::CAST(`[1]` AS integer8)
+LEGACY:::CAST(`[1]` AS int8)
+LEGACY:::CAST(`[1]` AS bigint)
+LEGACY:::CAST(`[-2, 0]` AS int)
+LEGACY:::CAST(`[-2, 0]` AS smallint)
+LEGACY:::CAST(`[-2, 0]` AS integer2)
+LEGACY:::CAST(`[-2, 0]` AS int2)
+LEGACY:::CAST(`[-2, 0]` AS integer)
+LEGACY:::CAST(`[-2, 0]` AS integer4)
+LEGACY:::CAST(`[-2, 0]` AS int4)
+LEGACY:::CAST(`[-2, 0]` AS integer8)
+LEGACY:::CAST(`[-2, 0]` AS int8)
+LEGACY:::CAST(`[-2, 0]` AS bigint)
+LEGACY:::CAST(`()` AS int)
+LEGACY:::CAST(`()` AS smallint)
+LEGACY:::CAST(`()` AS integer2)
+LEGACY:::CAST(`()` AS int2)
+LEGACY:::CAST(`()` AS integer)
+LEGACY:::CAST(`()` AS integer4)
+LEGACY:::CAST(`()` AS int4)
+LEGACY:::CAST(`()` AS integer8)
+LEGACY:::CAST(`()` AS int8)
+LEGACY:::CAST(`()` AS bigint)
+LEGACY:::CAST(`(1)` AS int)
+LEGACY:::CAST(`(1)` AS smallint)
+LEGACY:::CAST(`(1)` AS integer2)
+LEGACY:::CAST(`(1)` AS int2)
+LEGACY:::CAST(`(1)` AS integer)
+LEGACY:::CAST(`(1)` AS integer4)
+LEGACY:::CAST(`(1)` AS int4)
+LEGACY:::CAST(`(1)` AS integer8)
+LEGACY:::CAST(`(1)` AS int8)
+LEGACY:::CAST(`(1)` AS bigint)
+LEGACY:::CAST(`(0)` AS int)
+LEGACY:::CAST(`(0)` AS smallint)
+LEGACY:::CAST(`(0)` AS integer2)
+LEGACY:::CAST(`(0)` AS int2)
+LEGACY:::CAST(`(0)` AS integer)
+LEGACY:::CAST(`(0)` AS integer4)
+LEGACY:::CAST(`(0)` AS int4)
+LEGACY:::CAST(`(0)` AS integer8)
+LEGACY:::CAST(`(0)` AS int8)
+LEGACY:::CAST(`(0)` AS bigint)
+LEGACY:::CAST(`{}` AS int)
+LEGACY:::CAST(`{}` AS smallint)
+LEGACY:::CAST(`{}` AS integer2)
+LEGACY:::CAST(`{}` AS int2)
+LEGACY:::CAST(`{}` AS integer)
+LEGACY:::CAST(`{}` AS integer4)
+LEGACY:::CAST(`{}` AS int4)
+LEGACY:::CAST(`{}` AS integer8)
+LEGACY:::CAST(`{}` AS int8)
+LEGACY:::CAST(`{}` AS bigint)
+LEGACY:::CAST({} AS int)
+LEGACY:::CAST({} AS smallint)
+LEGACY:::CAST({} AS integer2)
+LEGACY:::CAST({} AS int2)
+LEGACY:::CAST({} AS integer)
+LEGACY:::CAST({} AS integer4)
+LEGACY:::CAST({} AS int4)
+LEGACY:::CAST({} AS integer8)
+LEGACY:::CAST({} AS int8)
+LEGACY:::CAST({} AS bigint)
+LEGACY:::CAST(`{a:12}` AS int)
+LEGACY:::CAST(`{a:12}` AS smallint)
+LEGACY:::CAST(`{a:12}` AS integer2)
+LEGACY:::CAST(`{a:12}` AS int2)
+LEGACY:::CAST(`{a:12}` AS integer)
+LEGACY:::CAST(`{a:12}` AS integer4)
+LEGACY:::CAST(`{a:12}` AS int4)
+LEGACY:::CAST(`{a:12}` AS integer8)
+LEGACY:::CAST(`{a:12}` AS int8)
+LEGACY:::CAST(`{a:12}` AS bigint)
+LEGACY:::CAST({'b':-4} AS int)
+LEGACY:::CAST({'b':-4} AS smallint)
+LEGACY:::CAST({'b':-4} AS integer2)
+LEGACY:::CAST({'b':-4} AS int2)
+LEGACY:::CAST({'b':-4} AS integer)
+LEGACY:::CAST({'b':-4} AS integer4)
+LEGACY:::CAST({'b':-4} AS int4)
+LEGACY:::CAST({'b':-4} AS integer8)
+LEGACY:::CAST({'b':-4} AS int8)
+LEGACY:::CAST({'b':-4} AS bigint)
+LEGACY:::CAST(<<>> AS int)
+LEGACY:::CAST(<<>> AS smallint)
+LEGACY:::CAST(<<>> AS integer2)
+LEGACY:::CAST(<<>> AS int2)
+LEGACY:::CAST(<<>> AS integer)
+LEGACY:::CAST(<<>> AS integer4)
+LEGACY:::CAST(<<>> AS int4)
+LEGACY:::CAST(<<>> AS integer8)
+LEGACY:::CAST(<<>> AS int8)
+LEGACY:::CAST(<<>> AS bigint)
+LEGACY:::CAST(<<14>> AS int)
+LEGACY:::CAST(<<14>> AS smallint)
+LEGACY:::CAST(<<14>> AS integer2)
+LEGACY:::CAST(<<14>> AS int2)
+LEGACY:::CAST(<<14>> AS integer)
+LEGACY:::CAST(<<14>> AS integer4)
+LEGACY:::CAST(<<14>> AS int4)
+LEGACY:::CAST(<<14>> AS integer8)
+LEGACY:::CAST(<<14>> AS int8)
+LEGACY:::CAST(<<14>> AS bigint)
+LEGACY:::CAST(<<20>> AS int)
+LEGACY:::CAST(<<20>> AS smallint)
+LEGACY:::CAST(<<20>> AS integer2)
+LEGACY:::CAST(<<20>> AS int2)
+LEGACY:::CAST(<<20>> AS integer)
+LEGACY:::CAST(<<20>> AS integer4)
+LEGACY:::CAST(<<20>> AS int4)
+LEGACY:::CAST(<<20>> AS integer8)
+LEGACY:::CAST(<<20>> AS int8)
+LEGACY:::CAST(<<20>> AS bigint)
+PERMISSIVE:::CAST(`0e0` AS real)
+LEGACY:::CAST(`0e0` AS real)
+LEGACY:::CAST(`2007-10-10T` AS float)
+LEGACY:::CAST(`2007-10-10T` AS real)
+LEGACY:::CAST(`2007-10-10T` AS double precision)
+LEGACY:::CAST('hello' AS float)
+LEGACY:::CAST('hello' AS real)
+LEGACY:::CAST('hello' AS double precision)
+PERMISSIVE:::CAST('-20' AS float)
+LEGACY:::CAST('-20' AS float)
+PERMISSIVE:::CAST('-20' AS real)
+LEGACY:::CAST('-20' AS real)
+PERMISSIVE:::CAST('-20' AS double precision)
+LEGACY:::CAST('-20' AS double precision)
+PERMISSIVE:::CAST(`"1000"` AS float)
+LEGACY:::CAST(`"1000"` AS float)
+PERMISSIVE:::CAST(`"1000"` AS real)
+LEGACY:::CAST(`"1000"` AS real)
+PERMISSIVE:::CAST(`"1000"` AS double precision)
+LEGACY:::CAST(`"1000"` AS double precision)
+PERMISSIVE:::CAST(`'2e100'` AS float)
+LEGACY:::CAST(`'2e100'` AS float)
+PERMISSIVE:::CAST(`'2e100'` AS real)
+LEGACY:::CAST(`'2e100'` AS real)
+PERMISSIVE:::CAST(`'2e100'` AS double precision)
+LEGACY:::CAST(`'2e100'` AS double precision)
+LEGACY:::CAST(`'2d100'` AS float)
+LEGACY:::CAST(`'2d100'` AS real)
+LEGACY:::CAST(`'2d100'` AS double precision)
+LEGACY:::CAST(`{{""}}` AS float)
+LEGACY:::CAST(`{{""}}` AS real)
+LEGACY:::CAST(`{{""}}` AS double precision)
+LEGACY:::CAST(`{{"0"}}` AS float)
+LEGACY:::CAST(`{{"0"}}` AS real)
+LEGACY:::CAST(`{{"0"}}` AS double precision)
+LEGACY:::CAST(`{{"1.0"}}` AS float)
+LEGACY:::CAST(`{{"1.0"}}` AS real)
+LEGACY:::CAST(`{{"1.0"}}` AS double precision)
+LEGACY:::CAST(`{{"2e10"}}` AS float)
+LEGACY:::CAST(`{{"2e10"}}` AS real)
+LEGACY:::CAST(`{{"2e10"}}` AS double precision)
+LEGACY:::CAST(`{{}}` AS float)
+LEGACY:::CAST(`{{}}` AS real)
+LEGACY:::CAST(`{{}}` AS double precision)
+LEGACY:::CAST(`{{MA==}}` AS float)
+LEGACY:::CAST(`{{MA==}}` AS real)
+LEGACY:::CAST(`{{MA==}}` AS double precision)
+LEGACY:::CAST(`{{MS4w}}` AS float)
+LEGACY:::CAST(`{{MS4w}}` AS real)
+LEGACY:::CAST(`{{MS4w}}` AS double precision)
+LEGACY:::CAST(`{{MmUxMA==}}` AS float)
+LEGACY:::CAST(`{{MmUxMA==}}` AS real)
+LEGACY:::CAST(`{{MmUxMA==}}` AS double precision)
+LEGACY:::CAST(`[]` AS float)
+LEGACY:::CAST(`[]` AS real)
+LEGACY:::CAST(`[]` AS double precision)
+LEGACY:::CAST(`[1e0]` AS float)
+LEGACY:::CAST(`[1e0]` AS real)
+LEGACY:::CAST(`[1e0]` AS double precision)
+LEGACY:::CAST(`[-2e0, 0e0]` AS float)
+LEGACY:::CAST(`[-2e0, 0e0]` AS real)
+LEGACY:::CAST(`[-2e0, 0e0]` AS double precision)
+LEGACY:::CAST(`()` AS float)
+LEGACY:::CAST(`()` AS real)
+LEGACY:::CAST(`()` AS double precision)
+LEGACY:::CAST(`(1e0)` AS float)
+LEGACY:::CAST(`(1e0)` AS real)
+LEGACY:::CAST(`(1e0)` AS double precision)
+LEGACY:::CAST(`(0e0)` AS float)
+LEGACY:::CAST(`(0e0)` AS real)
+LEGACY:::CAST(`(0e0)` AS double precision)
+LEGACY:::CAST(`{}` AS float)
+LEGACY:::CAST(`{}` AS real)
+LEGACY:::CAST(`{}` AS double precision)
+LEGACY:::CAST({} AS float)
+LEGACY:::CAST({} AS real)
+LEGACY:::CAST({} AS double precision)
+LEGACY:::CAST(`{a:12e0}` AS float)
+LEGACY:::CAST(`{a:12e0}` AS real)
+LEGACY:::CAST(`{a:12e0}` AS double precision)
+LEGACY:::CAST({'b':`-4e0`} AS float)
+LEGACY:::CAST({'b':`-4e0`} AS real)
+LEGACY:::CAST({'b':`-4e0`} AS double precision)
+LEGACY:::CAST(<<>> AS float)
+LEGACY:::CAST(<<>> AS real)
+LEGACY:::CAST(<<>> AS double precision)
+LEGACY:::CAST(<<`14e0`>> AS float)
+LEGACY:::CAST(<<`14e0`>> AS real)
+LEGACY:::CAST(<<`14e0`>> AS double precision)
+LEGACY:::CAST(<<`20e0`>> AS float)
+LEGACY:::CAST(<<`20e0`>> AS real)
+LEGACY:::CAST(<<`20e0`>> AS double precision)
+LEGACY:::CAST(`2007-10-10T` AS dec)
+LEGACY:::CAST(`2007-10-10T` AS decimal)
+LEGACY:::CAST(`2007-10-10T` AS numeric)
+PERMISSIVE:::CAST(`'2e100'` AS dec)
+LEGACY:::CAST(`'2e100'` AS dec)
+PERMISSIVE:::CAST(`'2e100'` AS decimal)
+LEGACY:::CAST(`'2e100'` AS decimal)
+PERMISSIVE:::CAST(`'2e100'` AS numeric)
+LEGACY:::CAST(`'2e100'` AS numeric)
+LEGACY:::CAST(`'2d100'` AS dec)
+LEGACY:::CAST(`'2d100'` AS decimal)
+LEGACY:::CAST(`'2d100'` AS numeric)
+LEGACY:::CAST(`{{""}}` AS dec)
+LEGACY:::CAST(`{{""}}` AS decimal)
+LEGACY:::CAST(`{{""}}` AS numeric)
+LEGACY:::CAST(`{{"0"}}` AS dec)
+LEGACY:::CAST(`{{"0"}}` AS decimal)
+LEGACY:::CAST(`{{"0"}}` AS numeric)
+LEGACY:::CAST(`{{"1.0"}}` AS dec)
+LEGACY:::CAST(`{{"1.0"}}` AS decimal)
+LEGACY:::CAST(`{{"1.0"}}` AS numeric)
+LEGACY:::CAST(`{{"2e10"}}` AS dec)
+LEGACY:::CAST(`{{"2e10"}}` AS decimal)
+LEGACY:::CAST(`{{"2e10"}}` AS numeric)
+LEGACY:::CAST(`{{}}` AS dec)
+LEGACY:::CAST(`{{}}` AS decimal)
+LEGACY:::CAST(`{{}}` AS numeric)
+LEGACY:::CAST(`{{MA==}}` AS dec)
+LEGACY:::CAST(`{{MA==}}` AS decimal)
+LEGACY:::CAST(`{{MA==}}` AS numeric)
+LEGACY:::CAST(`{{MS4w}}` AS dec)
+LEGACY:::CAST(`{{MS4w}}` AS decimal)
+LEGACY:::CAST(`{{MS4w}}` AS numeric)
+LEGACY:::CAST(`{{MmUxMA==}}` AS dec)
+LEGACY:::CAST(`{{MmUxMA==}}` AS decimal)
+LEGACY:::CAST(`{{MmUxMA==}}` AS numeric)
+LEGACY:::CAST(`[]` AS dec)
+LEGACY:::CAST(`[]` AS decimal)
+LEGACY:::CAST(`[]` AS numeric)
+LEGACY:::CAST(`[1d0]` AS dec)
+LEGACY:::CAST(`[1d0]` AS decimal)
+LEGACY:::CAST(`[1d0]` AS numeric)
+LEGACY:::CAST(`[-2d0, 0d0]` AS dec)
+LEGACY:::CAST(`[-2d0, 0d0]` AS decimal)
+LEGACY:::CAST(`[-2d0, 0d0]` AS numeric)
+LEGACY:::CAST(`()` AS dec)
+LEGACY:::CAST(`()` AS decimal)
+LEGACY:::CAST(`()` AS numeric)
+LEGACY:::CAST(`(1d0)` AS dec)
+LEGACY:::CAST(`(1d0)` AS decimal)
+LEGACY:::CAST(`(1d0)` AS numeric)
+LEGACY:::CAST(`(0d0)` AS dec)
+LEGACY:::CAST(`(0d0)` AS decimal)
+LEGACY:::CAST(`(0d0)` AS numeric)
+LEGACY:::CAST(`{}` AS dec)
+LEGACY:::CAST(`{}` AS decimal)
+LEGACY:::CAST(`{}` AS numeric)
+LEGACY:::CAST({} AS dec)
+LEGACY:::CAST({} AS decimal)
+LEGACY:::CAST({} AS numeric)
+LEGACY:::CAST(`{a:12d0}` AS dec)
+LEGACY:::CAST(`{a:12d0}` AS decimal)
+LEGACY:::CAST(`{a:12d0}` AS numeric)
+LEGACY:::CAST({'b':`-4d0`} AS dec)
+LEGACY:::CAST({'b':`-4d0`} AS decimal)
+LEGACY:::CAST({'b':`-4d0`} AS numeric)
+LEGACY:::CAST(<<>> AS dec)
+LEGACY:::CAST(<<>> AS decimal)
+LEGACY:::CAST(<<>> AS numeric)
+LEGACY:::CAST(<<`14d0`>> AS dec)
+LEGACY:::CAST(<<`14d0`>> AS decimal)
+LEGACY:::CAST(<<`14d0`>> AS numeric)
+LEGACY:::CAST(<<`20d0`>> AS dec)
+LEGACY:::CAST(<<`20d0`>> AS decimal)
+LEGACY:::CAST(<<`20d0`>> AS numeric)
+LEGACY:::CAST(TRUE AND FALSE AS date)
+LEGACY:::CAST(`true` AS date)
+LEGACY:::CAST(5 AS date)
+LEGACY:::CAST(`0e0` AS date)
+LEGACY:::CAST(1.1 AS date)
+LEGACY:::CAST(-20.1 AS date)
+PERMISSIVE:::CAST(`2007-10-10T` AS date)
+LEGACY:::CAST(`2007-10-10T` AS date)
+PERMISSIVE:::CAST(`2007-02-23T12:14Z` AS date)
+LEGACY:::CAST(`2007-02-23T12:14Z` AS date)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS date)
+LEGACY:::CAST(`2007-02-23T12:14:33.079Z` AS date)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS date)
+LEGACY:::CAST(`2007-02-23T12:14:33.079-08:00` AS date)
+PERMISSIVE:::CAST(`2007-02T` AS date)
+LEGACY:::CAST(`2007-02T` AS date)
+PERMISSIVE:::CAST(`2007T` AS date)
+LEGACY:::CAST(`2007T` AS date)
+LEGACY:::CAST('hello' AS date)
+LEGACY:::CAST('2016-03-01T01:12:12Z' AS date)
+PERMISSIVE:::CAST(`"2001-01-01"` AS date)
+LEGACY:::CAST(`"2001-01-01"` AS date)
+LEGACY:::CAST(`"+20212-02-01"` AS date)
+LEGACY:::CAST(`"20212-02-01"` AS date)
+LEGACY:::CAST(`'2000T'` AS date)
+LEGACY:::CAST(`'1999-04T'` AS date)
+LEGACY:::CAST(`{{""}}` AS date)
+LEGACY:::CAST(`{{}}` AS date)
+LEGACY:::CAST(`[]` AS date)
+LEGACY:::CAST(`()` AS date)
+LEGACY:::CAST(`{}` AS date)
+LEGACY:::CAST(<<>> AS date)
+LEGACY:::CAST(TRUE AND FALSE AS time)
+LEGACY:::CAST(`true` AS time)
+LEGACY:::CAST(5 AS time)
+LEGACY:::CAST(`0e0` AS time)
+LEGACY:::CAST(1.1 AS time)
+LEGACY:::CAST(-20.1 AS time)
+PERMISSIVE:::CAST(`2007-10-10T` AS time)
+LEGACY:::CAST(`2007-10-10T` AS time)
+PERMISSIVE:::CAST(`2007-02-23T12:14Z` AS time)
+LEGACY:::CAST(`2007-02-23T12:14Z` AS time)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS time)
+LEGACY:::CAST(`2007-02-23T12:14:33.079Z` AS time)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS time)
+LEGACY:::CAST(`2007-02-23T12:14:33.079-08:00` AS time)
+PERMISSIVE:::CAST(`2007-02T` AS time)
+LEGACY:::CAST(`2007-02T` AS time)
+PERMISSIVE:::CAST(`2007T` AS time)
+LEGACY:::CAST(`2007T` AS time)
+LEGACY:::CAST('hello' AS time)
+LEGACY:::CAST('2016-03-01T01:12:12Z' AS time)
+LEGACY:::CAST(`"23:2:12.12345"` AS time)
+LEGACY:::CAST(`"+20212-02-01"` AS time)
+LEGACY:::CAST(`"20212-02-01"` AS time)
+LEGACY:::CAST(`'2000T'` AS time)
+LEGACY:::CAST(`'1999-04T'` AS time)
+LEGACY:::CAST(`{{""}}` AS time)
+LEGACY:::CAST(`{{}}` AS time)
+LEGACY:::CAST(`[]` AS time)
+LEGACY:::CAST(`()` AS time)
+LEGACY:::CAST(`{}` AS time)
+LEGACY:::CAST(<<>> AS time)
+LEGACY:::CAST(TRUE AND FALSE AS timestamp)
+LEGACY:::CAST(`true` AS timestamp)
+LEGACY:::CAST(5 AS timestamp)
+LEGACY:::CAST(`0e0` AS timestamp)
+LEGACY:::CAST(1.1 AS timestamp)
+LEGACY:::CAST(-20.1 AS timestamp)
+PERMISSIVE:::CAST(`2007-10-10T` AS timestamp)
+LEGACY:::CAST(`2007-10-10T` AS timestamp)
+LEGACY:::CAST('hello' AS timestamp)
+PERMISSIVE:::CAST('2016-03-01T01:12:12Z' AS timestamp)
+LEGACY:::CAST('2016-03-01T01:12:12Z' AS timestamp)
+PERMISSIVE:::CAST(`"2001-01-01"` AS timestamp)
+LEGACY:::CAST(`"2001-01-01"` AS timestamp)
+PERMISSIVE:::CAST(`'2000T'` AS timestamp)
+LEGACY:::CAST(`'2000T'` AS timestamp)
+PERMISSIVE:::CAST(`'1999-04T'` AS timestamp)
+LEGACY:::CAST(`'1999-04T'` AS timestamp)
+LEGACY:::CAST(`{{""}}` AS timestamp)
+LEGACY:::CAST(`{{}}` AS timestamp)
+LEGACY:::CAST(`[]` AS timestamp)
+LEGACY:::CAST(`()` AS timestamp)
+LEGACY:::CAST(`{}` AS timestamp)
+LEGACY:::CAST(<<>> AS timestamp)
+PERMISSIVE:::CAST(`2007-10-10T` AS symbol)
+LEGACY:::CAST(`2007-10-10T` AS symbol)
+LEGACY:::CAST(`{{""}}` AS symbol)
+LEGACY:::CAST(`{{"0"}}` AS symbol)
+LEGACY:::CAST(`{{"1.0"}}` AS symbol)
+LEGACY:::CAST(`{{"2e10"}}` AS symbol)
+LEGACY:::CAST(`{{}}` AS symbol)
+LEGACY:::CAST(`{{MA==}}` AS symbol)
+LEGACY:::CAST(`{{MS4w}}` AS symbol)
+LEGACY:::CAST(`{{MmUxMA==}}` AS symbol)
+LEGACY:::CAST(`[]` AS symbol)
+LEGACY:::CAST(['hello'] AS symbol)
+LEGACY:::CAST(`[-2d0, 0d0]` AS symbol)
+LEGACY:::CAST(`()` AS symbol)
+LEGACY:::CAST(`(1d0)` AS symbol)
+LEGACY:::CAST(`(0d0)` AS symbol)
+LEGACY:::CAST(`{}` AS symbol)
+LEGACY:::CAST({} AS symbol)
+LEGACY:::CAST(`{a:12d0}` AS symbol)
+LEGACY:::CAST({'b':`-4d0`} AS symbol)
+LEGACY:::CAST(<<>> AS symbol)
+LEGACY:::CAST(<<`14d0`>> AS symbol)
+LEGACY:::CAST(<<`20d0`>> AS symbol)
+PERMISSIVE:::CAST(TRUE AND FALSE AS VARCHAR(30))
+LEGACY:::CAST(TRUE AND FALSE AS VARCHAR(30))
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHARACTER VARYING(30))
+LEGACY:::CAST(TRUE AND FALSE AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`true` AS VARCHAR(30))
+LEGACY:::CAST(`true` AS VARCHAR(30))
+PERMISSIVE:::CAST(`true` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`true` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(5 AS VARCHAR(30))
+LEGACY:::CAST(5 AS VARCHAR(30))
+PERMISSIVE:::CAST(5 AS CHARACTER VARYING(30))
+LEGACY:::CAST(5 AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`0e0` AS VARCHAR(30))
+LEGACY:::CAST(`0e0` AS VARCHAR(30))
+PERMISSIVE:::CAST(`0e0` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`0e0` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(1.1 AS VARCHAR(30))
+LEGACY:::CAST(1.1 AS VARCHAR(30))
+PERMISSIVE:::CAST(1.1 AS CHARACTER VARYING(30))
+LEGACY:::CAST(1.1 AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(-20.1 AS VARCHAR(30))
+LEGACY:::CAST(-20.1 AS VARCHAR(30))
+PERMISSIVE:::CAST(-20.1 AS CHARACTER VARYING(30))
+LEGACY:::CAST(-20.1 AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`2007-10-10T` AS STRING)
+LEGACY:::CAST(`2007-10-10T` AS STRING)
+PERMISSIVE:::CAST(`2007-10-10T` AS VARCHAR(30))
+LEGACY:::CAST(`2007-10-10T` AS VARCHAR(30))
+PERMISSIVE:::CAST(`2007-10-10T` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`2007-10-10T` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST('hello' AS VARCHAR(30))
+LEGACY:::CAST('hello' AS VARCHAR(30))
+PERMISSIVE:::CAST('hello' AS CHARACTER VARYING(30))
+LEGACY:::CAST('hello' AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST('-20' AS VARCHAR(30))
+LEGACY:::CAST('-20' AS VARCHAR(30))
+PERMISSIVE:::CAST('-20' AS CHARACTER VARYING(30))
+LEGACY:::CAST('-20' AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`"1000"` AS VARCHAR(30))
+LEGACY:::CAST(`"1000"` AS VARCHAR(30))
+PERMISSIVE:::CAST(`"1000"` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`"1000"` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`'2e100'` AS VARCHAR(30))
+LEGACY:::CAST(`'2e100'` AS VARCHAR(30))
+PERMISSIVE:::CAST(`'2e100'` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`'2e100'` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`'2d100'` AS VARCHAR(30))
+LEGACY:::CAST(`'2d100'` AS VARCHAR(30))
+PERMISSIVE:::CAST(`'2d100'` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`'2d100'` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{{""}}` AS STRING)
+PERMISSIVE:::CAST(`{{""}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{""}}` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{{"0"}}` AS STRING)
+PERMISSIVE:::CAST(`{{"0"}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{"0"}}` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{{"1.0"}}` AS STRING)
+PERMISSIVE:::CAST(`{{"1.0"}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{"1.0"}}` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{{"2e10"}}` AS STRING)
+PERMISSIVE:::CAST(`{{"2e10"}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{"2e10"}}` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{{}}` AS STRING)
+PERMISSIVE:::CAST(`{{}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{}}` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{{MA==}}` AS STRING)
+PERMISSIVE:::CAST(`{{MA==}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{MA==}}` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{{MS4w}}` AS STRING)
+PERMISSIVE:::CAST(`{{MS4w}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{MS4w}}` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{{MmUxMA==}}` AS STRING)
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`[]` AS STRING)
+PERMISSIVE:::CAST(`[]` AS VARCHAR(30))
+PERMISSIVE:::CAST(`[]` AS CHARACTER VARYING(30))
+LEGACY:::CAST(['hello'] AS STRING)
+PERMISSIVE:::CAST(['hello'] AS VARCHAR(30))
+PERMISSIVE:::CAST(['hello'] AS CHARACTER VARYING(30))
+LEGACY:::CAST(`[-2d0, 0d0]` AS STRING)
+PERMISSIVE:::CAST(`[-2d0, 0d0]` AS VARCHAR(30))
+PERMISSIVE:::CAST(`[-2d0, 0d0]` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`()` AS STRING)
+PERMISSIVE:::CAST(`()` AS VARCHAR(30))
+PERMISSIVE:::CAST(`()` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`(1d0)` AS STRING)
+PERMISSIVE:::CAST(`(1d0)` AS VARCHAR(30))
+PERMISSIVE:::CAST(`(1d0)` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`(0d0)` AS STRING)
+PERMISSIVE:::CAST(`(0d0)` AS VARCHAR(30))
+PERMISSIVE:::CAST(`(0d0)` AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{}` AS STRING)
+PERMISSIVE:::CAST(`{}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{}` AS CHARACTER VARYING(30))
+LEGACY:::CAST({} AS STRING)
+PERMISSIVE:::CAST({} AS VARCHAR(30))
+PERMISSIVE:::CAST({} AS CHARACTER VARYING(30))
+LEGACY:::CAST(`{a:12d0}` AS STRING)
+PERMISSIVE:::CAST(`{a:12d0}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{a:12d0}` AS CHARACTER VARYING(30))
+LEGACY:::CAST({'b':`-4d0`} AS STRING)
+PERMISSIVE:::CAST({'b':`-4d0`} AS VARCHAR(30))
+PERMISSIVE:::CAST({'b':`-4d0`} AS CHARACTER VARYING(30))
+LEGACY:::CAST(<<>> AS STRING)
+PERMISSIVE:::CAST(<<>> AS VARCHAR(30))
+PERMISSIVE:::CAST(<<>> AS CHARACTER VARYING(30))
+LEGACY:::CAST(<<`14d0`>> AS STRING)
+PERMISSIVE:::CAST(<<`14d0`>> AS VARCHAR(30))
+PERMISSIVE:::CAST(<<`14d0`>> AS CHARACTER VARYING(30))
+LEGACY:::CAST(<<'a', <<'hello'>>>> AS STRING)
+PERMISSIVE:::CAST(<<'a', <<'hello'>>>> AS VARCHAR(30))
+PERMISSIVE:::CAST(<<'a', <<'hello'>>>> AS CHARACTER VARYING(30))
+LEGACY:::CAST(<<`20d0`>> AS STRING)
+PERMISSIVE:::CAST(<<`20d0`>> AS VARCHAR(30))
+PERMISSIVE:::CAST(<<`20d0`>> AS CHARACTER VARYING(30))
+LEGACY:::CAST(TRUE AND FALSE AS clob)
+LEGACY:::CAST(`true` AS clob)
+LEGACY:::CAST(5 AS clob)
+LEGACY:::CAST(`0e0` AS clob)
+LEGACY:::CAST(1.1 AS clob)
+LEGACY:::CAST(-20.1 AS clob)
+LEGACY:::CAST(`2007-10-10T` AS clob)
+PERMISSIVE:::CAST(`{{""}}` AS clob)
+LEGACY:::CAST(`{{""}}` AS clob)
+PERMISSIVE:::CAST(`{{"0"}}` AS clob)
+LEGACY:::CAST(`{{"0"}}` AS clob)
+PERMISSIVE:::CAST(`{{"1.0"}}` AS clob)
+LEGACY:::CAST(`{{"1.0"}}` AS clob)
+PERMISSIVE:::CAST(`{{"2e10"}}` AS clob)
+LEGACY:::CAST(`{{"2e10"}}` AS clob)
+PERMISSIVE:::CAST(`{{}}` AS clob)
+LEGACY:::CAST(`{{}}` AS clob)
+PERMISSIVE:::CAST(`{{MA==}}` AS clob)
+LEGACY:::CAST(`{{MA==}}` AS clob)
+PERMISSIVE:::CAST(`{{MS4w}}` AS clob)
+LEGACY:::CAST(`{{MS4w}}` AS clob)
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS clob)
+LEGACY:::CAST(`{{MmUxMA==}}` AS clob)
+LEGACY:::CAST(`[]` AS clob)
+LEGACY:::CAST(['hello'] AS clob)
+LEGACY:::CAST(`[-2d0, 0d0]` AS clob)
+LEGACY:::CAST(`()` AS clob)
+LEGACY:::CAST(`(1d0)` AS clob)
+LEGACY:::CAST(`(0d0)` AS clob)
+LEGACY:::CAST(`{}` AS clob)
+LEGACY:::CAST({} AS clob)
+LEGACY:::CAST(`{a:12d0}` AS clob)
+LEGACY:::CAST({'b':`-4d0`} AS clob)
+LEGACY:::CAST(<<>> AS clob)
+LEGACY:::CAST(<<`14d0`>> AS clob)
+LEGACY:::CAST(<<`20d0`>> AS clob)
+LEGACY:::CAST(TRUE AND FALSE AS blob)
+LEGACY:::CAST(`true` AS blob)
+LEGACY:::CAST(5 AS blob)
+LEGACY:::CAST(`0e0` AS blob)
+LEGACY:::CAST(1.1 AS blob)
+LEGACY:::CAST(-20.1 AS blob)
+LEGACY:::CAST(`2007-10-10T` AS blob)
+LEGACY:::CAST('hello' AS blob)
+LEGACY:::CAST('-20' AS blob)
+LEGACY:::CAST(`"1000"` AS blob)
+LEGACY:::CAST(`'2e100'` AS blob)
+LEGACY:::CAST(`'2d100'` AS blob)
+PERMISSIVE:::CAST(`{{""}}` AS blob)
+LEGACY:::CAST(`{{""}}` AS blob)
+PERMISSIVE:::CAST(`{{"0"}}` AS blob)
+LEGACY:::CAST(`{{"0"}}` AS blob)
+PERMISSIVE:::CAST(`{{"1.0"}}` AS blob)
+LEGACY:::CAST(`{{"1.0"}}` AS blob)
+PERMISSIVE:::CAST(`{{"2e10"}}` AS blob)
+LEGACY:::CAST(`{{"2e10"}}` AS blob)
+PERMISSIVE:::CAST(`{{}}` AS blob)
+LEGACY:::CAST(`{{}}` AS blob)
+PERMISSIVE:::CAST(`{{MA==}}` AS blob)
+LEGACY:::CAST(`{{MA==}}` AS blob)
+PERMISSIVE:::CAST(`{{MS4w}}` AS blob)
+LEGACY:::CAST(`{{MS4w}}` AS blob)
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS blob)
+LEGACY:::CAST(`{{MmUxMA==}}` AS blob)
+LEGACY:::CAST(`[]` AS blob)
+LEGACY:::CAST(['hello'] AS blob)
+LEGACY:::CAST(`[-2d0, 0d0]` AS blob)
+LEGACY:::CAST(`()` AS blob)
+LEGACY:::CAST(`(1d0)` AS blob)
+LEGACY:::CAST(`(0d0)` AS blob)
+LEGACY:::CAST(`{}` AS blob)
+LEGACY:::CAST({} AS blob)
+LEGACY:::CAST(`{a:12d0}` AS blob)
+LEGACY:::CAST({'b':`-4d0`} AS blob)
+LEGACY:::CAST(<<>> AS blob)
+LEGACY:::CAST(<<`14d0`>> AS blob)
+LEGACY:::CAST(<<`20d0`>> AS blob)
+LEGACY:::CAST(TRUE AND FALSE AS list)
+LEGACY:::CAST(`true` AS list)
+LEGACY:::CAST(5 AS list)
+LEGACY:::CAST(`0e0` AS list)
+LEGACY:::CAST(1.1 AS list)
+LEGACY:::CAST(-20.1 AS list)
+LEGACY:::CAST(`2007-10-10T` AS list)
+LEGACY:::CAST('hello' AS list)
+LEGACY:::CAST('-20' AS list)
+LEGACY:::CAST(`"1000"` AS list)
+LEGACY:::CAST(`'2e100'` AS list)
+LEGACY:::CAST(`'2d100'` AS list)
+LEGACY:::CAST(`{{""}}` AS list)
+LEGACY:::CAST(`{{"0"}}` AS list)
+LEGACY:::CAST(`{{"1.0"}}` AS list)
+LEGACY:::CAST(`{{"2e10"}}` AS list)
+LEGACY:::CAST(`{{}}` AS list)
+LEGACY:::CAST(`{{MA==}}` AS list)
+LEGACY:::CAST(`{{MS4w}}` AS list)
+LEGACY:::CAST(`{{MmUxMA==}}` AS list)
+LEGACY:::CAST(`{}` AS list)
+LEGACY:::CAST({} AS list)
+LEGACY:::CAST(`{a:12d0}` AS list)
+LEGACY:::CAST({'b':`-4d0`} AS list)
+PERMISSIVE:::CAST(<<>> AS list)
+LEGACY:::CAST(<<>> AS list)
+PERMISSIVE:::CAST(<<`14d0`>> AS list)
+LEGACY:::CAST(<<`14d0`>> AS list)
+PERMISSIVE:::CAST(<<`20d0`>> AS list)
+LEGACY:::CAST(<<`20d0`>> AS list)
+LEGACY:::CAST(TRUE AND FALSE AS sexp)
+LEGACY:::CAST(`true` AS sexp)
+LEGACY:::CAST(5 AS sexp)
+LEGACY:::CAST(`0e0` AS sexp)
+LEGACY:::CAST(1.1 AS sexp)
+LEGACY:::CAST(-20.1 AS sexp)
+LEGACY:::CAST(`2007-10-10T` AS sexp)
+LEGACY:::CAST('hello' AS sexp)
+LEGACY:::CAST('-20' AS sexp)
+LEGACY:::CAST(`"1000"` AS sexp)
+LEGACY:::CAST(`'2e100'` AS sexp)
+LEGACY:::CAST(`'2d100'` AS sexp)
+LEGACY:::CAST(`{{""}}` AS sexp)
+LEGACY:::CAST(`{{"0"}}` AS sexp)
+LEGACY:::CAST(`{{"1.0"}}` AS sexp)
+LEGACY:::CAST(`{{"2e10"}}` AS sexp)
+LEGACY:::CAST(`{{}}` AS sexp)
+LEGACY:::CAST(`{{MA==}}` AS sexp)
+LEGACY:::CAST(`{{MS4w}}` AS sexp)
+LEGACY:::CAST(`{{MmUxMA==}}` AS sexp)
+LEGACY:::CAST(`{}` AS sexp)
+LEGACY:::CAST({} AS sexp)
+LEGACY:::CAST(`{a:12d0}` AS sexp)
+LEGACY:::CAST({'b':`-4d0`} AS sexp)
+PERMISSIVE:::CAST(<<>> AS sexp)
+LEGACY:::CAST(<<>> AS sexp)
+PERMISSIVE:::CAST(<<`14d0`>> AS sexp)
+LEGACY:::CAST(<<`14d0`>> AS sexp)
+PERMISSIVE:::CAST(<<`20d0`>> AS sexp)
+LEGACY:::CAST(<<`20d0`>> AS sexp)
+LEGACY:::CAST(TRUE AND FALSE AS struct)
+LEGACY:::CAST(TRUE AND FALSE AS tuple)
+LEGACY:::CAST(`true` AS struct)
+LEGACY:::CAST(`true` AS tuple)
+LEGACY:::CAST(5 AS struct)
+LEGACY:::CAST(5 AS tuple)
+LEGACY:::CAST(`0e0` AS struct)
+LEGACY:::CAST(`0e0` AS tuple)
+LEGACY:::CAST(1.1 AS struct)
+LEGACY:::CAST(1.1 AS tuple)
+LEGACY:::CAST(-20.1 AS struct)
+LEGACY:::CAST(-20.1 AS tuple)
+LEGACY:::CAST(`2007-10-10T` AS struct)
+LEGACY:::CAST(`2007-10-10T` AS tuple)
+LEGACY:::CAST('hello' AS struct)
+LEGACY:::CAST('hello' AS tuple)
+LEGACY:::CAST('-20' AS struct)
+LEGACY:::CAST('-20' AS tuple)
+LEGACY:::CAST(`"1000"` AS struct)
+LEGACY:::CAST(`"1000"` AS tuple)
+LEGACY:::CAST(`'2e100'` AS struct)
+LEGACY:::CAST(`'2e100'` AS tuple)
+LEGACY:::CAST(`'2d100'` AS struct)
+LEGACY:::CAST(`'2d100'` AS tuple)
+LEGACY:::CAST(`{{""}}` AS struct)
+LEGACY:::CAST(`{{""}}` AS tuple)
+LEGACY:::CAST(`{{"0"}}` AS struct)
+LEGACY:::CAST(`{{"0"}}` AS tuple)
+LEGACY:::CAST(`{{"1.0"}}` AS struct)
+LEGACY:::CAST(`{{"1.0"}}` AS tuple)
+LEGACY:::CAST(`{{"2e10"}}` AS struct)
+LEGACY:::CAST(`{{"2e10"}}` AS tuple)
+LEGACY:::CAST(`{{}}` AS struct)
+LEGACY:::CAST(`{{}}` AS tuple)
+LEGACY:::CAST(`{{MA==}}` AS struct)
+LEGACY:::CAST(`{{MA==}}` AS tuple)
+LEGACY:::CAST(`{{MS4w}}` AS struct)
+LEGACY:::CAST(`{{MS4w}}` AS tuple)
+LEGACY:::CAST(`{{MmUxMA==}}` AS struct)
+LEGACY:::CAST(`{{MmUxMA==}}` AS tuple)
+LEGACY:::CAST(`[]` AS struct)
+LEGACY:::CAST(`[]` AS tuple)
+LEGACY:::CAST(['hello'] AS struct)
+LEGACY:::CAST(['hello'] AS tuple)
+LEGACY:::CAST(`[-2d0, 0d0]` AS struct)
+LEGACY:::CAST(`[-2d0, 0d0]` AS tuple)
+LEGACY:::CAST(`()` AS struct)
+LEGACY:::CAST(`()` AS tuple)
+LEGACY:::CAST(`(1d0)` AS struct)
+LEGACY:::CAST(`(1d0)` AS tuple)
+LEGACY:::CAST(`(0d0)` AS struct)
+LEGACY:::CAST(`(0d0)` AS tuple)
+PERMISSIVE:::CAST({} AS struct)
+LEGACY:::CAST({} AS struct)
+PERMISSIVE:::CAST({} AS tuple)
+LEGACY:::CAST({} AS tuple)
+PERMISSIVE:::CAST({'b':`-4d0`} AS struct)
+LEGACY:::CAST({'b':`-4d0`} AS struct)
+PERMISSIVE:::CAST({'b':`-4d0`} AS tuple)
+LEGACY:::CAST({'b':`-4d0`} AS tuple)
+LEGACY:::CAST(<<>> AS struct)
+LEGACY:::CAST(<<>> AS tuple)
+LEGACY:::CAST(<<`14d0`>> AS struct)
+LEGACY:::CAST(<<`14d0`>> AS tuple)
+LEGACY:::CAST(<<`20d0`>> AS struct)
+LEGACY:::CAST(<<`20d0`>> AS tuple)
+LEGACY:::CAST(TRUE AND FALSE AS bag)
+LEGACY:::CAST(`true` AS bag)
+LEGACY:::CAST(5 AS bag)
+LEGACY:::CAST(`0e0` AS bag)
+LEGACY:::CAST(1.1 AS bag)
+LEGACY:::CAST(-20.1 AS bag)
+LEGACY:::CAST(`2007-10-10T` AS bag)
+LEGACY:::CAST('hello' AS bag)
+LEGACY:::CAST('-20' AS bag)
+LEGACY:::CAST(`"1000"` AS bag)
+LEGACY:::CAST(`'2e100'` AS bag)
+LEGACY:::CAST(`'2d100'` AS bag)
+LEGACY:::CAST(`{{""}}` AS bag)
+LEGACY:::CAST(`{{"0"}}` AS bag)
+LEGACY:::CAST(`{{"1.0"}}` AS bag)
+LEGACY:::CAST(`{{"2e10"}}` AS bag)
+LEGACY:::CAST(`{{}}` AS bag)
+LEGACY:::CAST(`{{MA==}}` AS bag)
+LEGACY:::CAST(`{{MS4w}}` AS bag)
+LEGACY:::CAST(`{{MmUxMA==}}` AS bag)
+LEGACY:::CAST(`{}` AS bag)
+LEGACY:::CAST({} AS bag)
+LEGACY:::CAST(`{a:12d0}` AS bag)
+LEGACY:::CAST({'b':`-4d0`} AS bag)
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHAR)
+LEGACY:::CAST(TRUE AND FALSE AS CHAR)
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHARACTER)
+LEGACY:::CAST(TRUE AND FALSE AS CHARACTER)
+PERMISSIVE:::CAST(`true` AS CHAR)
+LEGACY:::CAST(`true` AS CHAR)
+PERMISSIVE:::CAST(`true` AS CHARACTER)
+LEGACY:::CAST(`true` AS CHARACTER)
+PERMISSIVE:::CAST(5 AS CHAR)
+LEGACY:::CAST(5 AS CHAR)
+PERMISSIVE:::CAST(5 AS CHARACTER)
+LEGACY:::CAST(5 AS CHARACTER)
+PERMISSIVE:::CAST(`0e0` AS CHAR)
+LEGACY:::CAST(`0e0` AS CHAR)
+PERMISSIVE:::CAST(`0e0` AS CHARACTER)
+LEGACY:::CAST(`0e0` AS CHARACTER)
+PERMISSIVE:::CAST(1.1 AS CHAR)
+LEGACY:::CAST(1.1 AS CHAR)
+PERMISSIVE:::CAST(1.1 AS CHARACTER)
+LEGACY:::CAST(1.1 AS CHARACTER)
+PERMISSIVE:::CAST(-20.1 AS CHAR)
+LEGACY:::CAST(-20.1 AS CHAR)
+PERMISSIVE:::CAST(-20.1 AS CHARACTER)
+LEGACY:::CAST(-20.1 AS CHARACTER)
+PERMISSIVE:::CAST(`+inf` AS CHAR)
+LEGACY:::CAST(`+inf` AS CHAR)
+PERMISSIVE:::CAST(`+inf` AS CHARACTER)
+LEGACY:::CAST(`+inf` AS CHARACTER)
+PERMISSIVE:::CAST(`-inf` AS CHAR)
+LEGACY:::CAST(`-inf` AS CHAR)
+PERMISSIVE:::CAST(`-inf` AS CHARACTER)
+LEGACY:::CAST(`-inf` AS CHARACTER)
+PERMISSIVE:::CAST(`nan` AS CHAR)
+LEGACY:::CAST(`nan` AS CHAR)
+PERMISSIVE:::CAST(`nan` AS CHARACTER)
+LEGACY:::CAST(`nan` AS CHARACTER)
+PERMISSIVE:::CAST(`2007-10-10T` AS CHAR)
+LEGACY:::CAST(`2007-10-10T` AS CHAR)
+PERMISSIVE:::CAST(`2007-10-10T` AS CHARACTER)
+LEGACY:::CAST(`2007-10-10T` AS CHARACTER)
+PERMISSIVE:::CAST('hello' AS CHAR)
+LEGACY:::CAST('hello' AS CHAR)
+PERMISSIVE:::CAST('hello' AS CHARACTER)
+LEGACY:::CAST('hello' AS CHARACTER)
+PERMISSIVE:::CAST('-20' AS CHAR)
+LEGACY:::CAST('-20' AS CHAR)
+PERMISSIVE:::CAST('-20' AS CHARACTER)
+LEGACY:::CAST('-20' AS CHARACTER)
+PERMISSIVE:::CAST(`"1000"` AS CHAR)
+LEGACY:::CAST(`"1000"` AS CHAR)
+PERMISSIVE:::CAST(`"1000"` AS CHARACTER)
+LEGACY:::CAST(`"1000"` AS CHARACTER)
+PERMISSIVE:::CAST(`'2e100'` AS CHAR)
+LEGACY:::CAST(`'2e100'` AS CHAR)
+PERMISSIVE:::CAST(`'2e100'` AS CHARACTER)
+LEGACY:::CAST(`'2e100'` AS CHARACTER)
+PERMISSIVE:::CAST(`'2d100'` AS CHAR)
+LEGACY:::CAST(`'2d100'` AS CHAR)
+PERMISSIVE:::CAST(`'2d100'` AS CHARACTER)
+LEGACY:::CAST(`'2d100'` AS CHARACTER)
+LEGACY:::CAST(`{{""}}` AS CHAR)
+LEGACY:::CAST(`{{""}}` AS CHARACTER)
+LEGACY:::CAST(`{{"0"}}` AS CHAR)
+LEGACY:::CAST(`{{"0"}}` AS CHARACTER)
+LEGACY:::CAST(`{{"1.0"}}` AS CHAR)
+LEGACY:::CAST(`{{"1.0"}}` AS CHARACTER)
+LEGACY:::CAST(`{{"2e10"}}` AS CHAR)
+LEGACY:::CAST(`{{"2e10"}}` AS CHARACTER)
+LEGACY:::CAST(`{{}}` AS CHAR)
+LEGACY:::CAST(`{{}}` AS CHARACTER)
+LEGACY:::CAST(`{{MA==}}` AS CHAR)
+LEGACY:::CAST(`{{MA==}}` AS CHARACTER)
+LEGACY:::CAST(`{{MS4w}}` AS CHAR)
+LEGACY:::CAST(`{{MS4w}}` AS CHARACTER)
+LEGACY:::CAST(`{{MmUxMA==}}` AS CHAR)
+LEGACY:::CAST(`{{MmUxMA==}}` AS CHARACTER)
+LEGACY:::CAST(`[]` AS CHAR)
+LEGACY:::CAST(`[]` AS CHARACTER)
+LEGACY:::CAST(['hello'] AS CHAR)
+LEGACY:::CAST(['hello'] AS CHARACTER)
+LEGACY:::CAST(`[-2d0, 0d0]` AS CHAR)
+LEGACY:::CAST(`[-2d0, 0d0]` AS CHARACTER)
+LEGACY:::CAST(`()` AS CHAR)
+LEGACY:::CAST(`()` AS CHARACTER)
+LEGACY:::CAST(`(1d0)` AS CHAR)
+LEGACY:::CAST(`(1d0)` AS CHARACTER)
+LEGACY:::CAST(`(0d0)` AS CHAR)
+LEGACY:::CAST(`(0d0)` AS CHARACTER)
+LEGACY:::CAST(`{}` AS CHAR)
+LEGACY:::CAST(`{}` AS CHARACTER)
+LEGACY:::CAST({} AS CHAR)
+LEGACY:::CAST({} AS CHARACTER)
+LEGACY:::CAST(`{a:12d0}` AS CHAR)
+LEGACY:::CAST(`{a:12d0}` AS CHARACTER)
+LEGACY:::CAST({'b':`-4d0`} AS CHAR)
+LEGACY:::CAST({'b':`-4d0`} AS CHARACTER)
+LEGACY:::CAST(<<>> AS CHAR)
+LEGACY:::CAST(<<>> AS CHARACTER)
+LEGACY:::CAST(<<`14d0`>> AS CHAR)
+LEGACY:::CAST(<<`14d0`>> AS CHARACTER)
+LEGACY:::CAST(<<'a', <<'hello'>>>> AS CHAR)
+LEGACY:::CAST(<<'a', <<'hello'>>>> AS CHARACTER)
+LEGACY:::CAST(<<`20d0`>> AS CHAR)
+LEGACY:::CAST(<<`20d0`>> AS CHARACTER)
+PERMISSIVE:::CAST(1.9 AS int)
+LEGACY:::CAST(1.9 AS int)
+PERMISSIVE:::CAST(1.9 AS smallint)
+LEGACY:::CAST(1.9 AS smallint)
+PERMISSIVE:::CAST(1.9 AS integer2)
+LEGACY:::CAST(1.9 AS integer2)
+PERMISSIVE:::CAST(1.9 AS int2)
+LEGACY:::CAST(1.9 AS int2)
+PERMISSIVE:::CAST(1.9 AS integer)
+LEGACY:::CAST(1.9 AS integer)
+PERMISSIVE:::CAST(1.9 AS integer4)
+LEGACY:::CAST(1.9 AS integer4)
+PERMISSIVE:::CAST(1.9 AS int4)
+LEGACY:::CAST(1.9 AS int4)
+PERMISSIVE:::CAST(1.9 AS integer8)
+LEGACY:::CAST(1.9 AS integer8)
+PERMISSIVE:::CAST(1.9 AS int8)
+LEGACY:::CAST(1.9 AS int8)
+PERMISSIVE:::CAST(1.9 AS bigint)
+LEGACY:::CAST(1.9 AS bigint)
+PERMISSIVE:::CAST(-20.9 AS int)
+LEGACY:::CAST(-20.9 AS int)
+PERMISSIVE:::CAST(-20.9 AS smallint)
+LEGACY:::CAST(-20.9 AS smallint)
+PERMISSIVE:::CAST(-20.9 AS integer2)
+LEGACY:::CAST(-20.9 AS integer2)
+PERMISSIVE:::CAST(-20.9 AS int2)
+LEGACY:::CAST(-20.9 AS int2)
+PERMISSIVE:::CAST(-20.9 AS integer)
+LEGACY:::CAST(-20.9 AS integer)
+PERMISSIVE:::CAST(-20.9 AS integer4)
+LEGACY:::CAST(-20.9 AS integer4)
+PERMISSIVE:::CAST(-20.9 AS int4)
+LEGACY:::CAST(-20.9 AS int4)
+PERMISSIVE:::CAST(-20.9 AS integer8)
+LEGACY:::CAST(-20.9 AS integer8)
+PERMISSIVE:::CAST(-20.9 AS int8)
+LEGACY:::CAST(-20.9 AS int8)
+PERMISSIVE:::CAST(-20.9 AS bigint)
+LEGACY:::CAST(-20.9 AS bigint)
+PERMISSIVE:::CAST(1.5 AS int)
+LEGACY:::CAST(1.5 AS int)
+PERMISSIVE:::CAST(1.5 AS smallint)
+LEGACY:::CAST(1.5 AS smallint)
+PERMISSIVE:::CAST(1.5 AS integer2)
+LEGACY:::CAST(1.5 AS integer2)
+PERMISSIVE:::CAST(1.5 AS int2)
+LEGACY:::CAST(1.5 AS int2)
+PERMISSIVE:::CAST(1.5 AS integer)
+LEGACY:::CAST(1.5 AS integer)
+PERMISSIVE:::CAST(1.5 AS integer4)
+LEGACY:::CAST(1.5 AS integer4)
+PERMISSIVE:::CAST(1.5 AS int4)
+LEGACY:::CAST(1.5 AS int4)
+PERMISSIVE:::CAST(1.5 AS integer8)
+LEGACY:::CAST(1.5 AS integer8)
+PERMISSIVE:::CAST(1.5 AS int8)
+LEGACY:::CAST(1.5 AS int8)
+PERMISSIVE:::CAST(1.5 AS bigint)
+LEGACY:::CAST(1.5 AS bigint)
+PERMISSIVE:::CAST(1.5 AS SMALLINT)
+LEGACY:::CAST(1.5 AS SMALLINT)
+PERMISSIVE:::CAST(1.5 AS INT2)
+LEGACY:::CAST(1.5 AS INT2)
+PERMISSIVE:::CAST(1.5 AS INTEGER2)
+LEGACY:::CAST(1.5 AS INTEGER2)
+PERMISSIVE:::CAST(32767.5 AS SMALLINT)
+LEGACY:::CAST(32767.5 AS SMALLINT)
+PERMISSIVE:::CAST(32767.5 AS INT2)
+LEGACY:::CAST(32767.5 AS INT2)
+PERMISSIVE:::CAST(32767.5 AS INTEGER2)
+LEGACY:::CAST(32767.5 AS INTEGER2)
+PERMISSIVE:::CAST(32767.8 AS SMALLINT)
+LEGACY:::CAST(32767.8 AS SMALLINT)
+PERMISSIVE:::CAST(32767.8 AS INT2)
+LEGACY:::CAST(32767.8 AS INT2)
+PERMISSIVE:::CAST(32767.8 AS INTEGER2)
+LEGACY:::CAST(32767.8 AS INTEGER2)
+PERMISSIVE:::CAST(-32768.9 AS SMALLINT)
+LEGACY:::CAST(-32768.9 AS SMALLINT)
+PERMISSIVE:::CAST(-32768.9 AS INT2)
+LEGACY:::CAST(-32768.9 AS INT2)
+PERMISSIVE:::CAST(-32768.9 AS INTEGER2)
+LEGACY:::CAST(-32768.9 AS INTEGER2)
+PERMISSIVE:::CAST(1.5 AS INT4)
+LEGACY:::CAST(1.5 AS INT4)
+PERMISSIVE:::CAST(1.5 AS INTEGER4)
+LEGACY:::CAST(1.5 AS INTEGER4)
+PERMISSIVE:::CAST(1.5 AS INT)
+LEGACY:::CAST(1.5 AS INT)
+PERMISSIVE:::CAST(2147483647.5 AS INT4)
+LEGACY:::CAST(2147483647.5 AS INT4)
+PERMISSIVE:::CAST(2147483647.5 AS INTEGER4)
+LEGACY:::CAST(2147483647.5 AS INTEGER4)
+PERMISSIVE:::CAST(2147483647.5 AS INT)
+LEGACY:::CAST(2147483647.5 AS INT)
+PERMISSIVE:::CAST(2147483647.8 AS INT4)
+LEGACY:::CAST(2147483647.8 AS INT4)
+PERMISSIVE:::CAST(2147483647.8 AS INTEGER4)
+LEGACY:::CAST(2147483647.8 AS INTEGER4)
+PERMISSIVE:::CAST(2147483647.8 AS INT)
+LEGACY:::CAST(2147483647.8 AS INT)
+PERMISSIVE:::CAST(-2147483648.9 AS INT4)
+LEGACY:::CAST(-2147483648.9 AS INT4)
+PERMISSIVE:::CAST(-2147483648.9 AS INTEGER4)
+LEGACY:::CAST(-2147483648.9 AS INTEGER4)
+PERMISSIVE:::CAST(-2147483648.9 AS INT)
+LEGACY:::CAST(-2147483648.9 AS INT)
+PERMISSIVE:::CAST(9223372036854775807.5 AS BIGINT)
+LEGACY:::CAST(9223372036854775807.5 AS BIGINT)
+PERMISSIVE:::CAST(9223372036854775807.8 AS BIGINT)
+LEGACY:::CAST(9223372036854775807.8 AS BIGINT)
+PERMISSIVE:::CAST(9223372036854775808 AS BIGINT)
+PERMISSIVE:::CAST(1234 AS dec(3))
+LEGACY:::CAST(1234 AS dec(3))
+PERMISSIVE:::CAST(1234 AS decimal(3))
+LEGACY:::CAST(1234 AS decimal(3))
+PERMISSIVE:::CAST(1234 AS numeric(3))
+LEGACY:::CAST(1234 AS numeric(3))
+PERMISSIVE:::CAST(123.45 AS dec(3))
+LEGACY:::CAST(123.45 AS dec(3))
+PERMISSIVE:::CAST(123.45 AS decimal(3))
+LEGACY:::CAST(123.45 AS decimal(3))
+PERMISSIVE:::CAST(123.45 AS numeric(3))
+LEGACY:::CAST(123.45 AS numeric(3))
+PERMISSIVE:::CAST('1234' AS dec(3))
+LEGACY:::CAST('1234' AS dec(3))
+PERMISSIVE:::CAST('1234' AS decimal(3))
+LEGACY:::CAST('1234' AS decimal(3))
+PERMISSIVE:::CAST('1234' AS numeric(3))
+LEGACY:::CAST('1234' AS numeric(3))
+PERMISSIVE:::CAST('123.45' AS dec(3))
+LEGACY:::CAST('123.45' AS dec(3))
+PERMISSIVE:::CAST('123.45' AS decimal(3))
+LEGACY:::CAST('123.45' AS decimal(3))
+PERMISSIVE:::CAST('123.45' AS numeric(3))
+LEGACY:::CAST('123.45' AS numeric(3))
+PERMISSIVE:::CAST(1234 AS dec(5, 2))
+LEGACY:::CAST(1234 AS dec(5, 2))
+PERMISSIVE:::CAST(1234 AS decimal(5, 2))
+LEGACY:::CAST(1234 AS decimal(5, 2))
+PERMISSIVE:::CAST(1234 AS numeric(5, 2))
+LEGACY:::CAST(1234 AS numeric(5, 2))
+PERMISSIVE:::CAST(123.459 AS dec(5, 2))
+LEGACY:::CAST(123.459 AS dec(5, 2))
+PERMISSIVE:::CAST(123.459 AS decimal(5, 2))
+LEGACY:::CAST(123.459 AS decimal(5, 2))
+PERMISSIVE:::CAST(123.459 AS numeric(5, 2))
+LEGACY:::CAST(123.459 AS numeric(5, 2))
+PERMISSIVE:::CAST('1234' AS dec(5, 2))
+LEGACY:::CAST('1234' AS dec(5, 2))
+PERMISSIVE:::CAST('1234' AS decimal(5, 2))
+LEGACY:::CAST('1234' AS decimal(5, 2))
+PERMISSIVE:::CAST('1234' AS numeric(5, 2))
+LEGACY:::CAST('1234' AS numeric(5, 2))
+PERMISSIVE:::CAST('123.459' AS dec(5, 2))
+LEGACY:::CAST('123.459' AS dec(5, 2))
+PERMISSIVE:::CAST('123.459' AS decimal(5, 2))
+LEGACY:::CAST('123.459' AS decimal(5, 2))
+PERMISSIVE:::CAST('123.459' AS numeric(5, 2))
+LEGACY:::CAST('123.459' AS numeric(5, 2))
+PERMISSIVE:::CAST(0.12345 AS dec(4,4))
+LEGACY:::CAST(0.12345 AS dec(4,4))
+PERMISSIVE:::CAST(0.12345 AS decimal(4,4))
+LEGACY:::CAST(0.12345 AS decimal(4,4))
+PERMISSIVE:::CAST(0.12345 AS numeric(4,4))
+LEGACY:::CAST(0.12345 AS numeric(4,4))
+PERMISSIVE:::CAST(1 AS dec(2,4))
+LEGACY:::CAST(1 AS dec(2,4))
+PERMISSIVE:::CAST(1 AS decimal(2,4))
+LEGACY:::CAST(1 AS decimal(2,4))
+PERMISSIVE:::CAST(1 AS numeric(2,4))
+LEGACY:::CAST(1 AS numeric(2,4))
+PERMISSIVE:::CAST(1 AS dec(0,0))
+LEGACY:::CAST(1 AS dec(0,0))
+PERMISSIVE:::CAST(1 AS decimal(0,0))
+LEGACY:::CAST(1 AS decimal(0,0))
+PERMISSIVE:::CAST(1 AS numeric(0,0))
+LEGACY:::CAST(1 AS numeric(0,0))
+PERMISSIVE:::CAST('a' AS VARCHAR(4))
+LEGACY:::CAST('a' AS VARCHAR(4))
+PERMISSIVE:::CAST('a' AS CHARACTER VARYING(4))
+LEGACY:::CAST('a' AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST('a    ' AS VARCHAR(4))
+LEGACY:::CAST('a    ' AS VARCHAR(4))
+PERMISSIVE:::CAST('a    ' AS CHARACTER VARYING(4))
+LEGACY:::CAST('a    ' AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST('abcde' AS VARCHAR(4))
+LEGACY:::CAST('abcde' AS VARCHAR(4))
+PERMISSIVE:::CAST('abcde' AS CHARACTER VARYING(4))
+LEGACY:::CAST('abcde' AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST('💩💩💩💩💩' AS VARCHAR(4))
+LEGACY:::CAST('💩💩💩💩💩' AS VARCHAR(4))
+PERMISSIVE:::CAST('💩💩💩💩💩' AS CHARACTER VARYING(4))
+LEGACY:::CAST('💩💩💩💩💩' AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(TRUE AND FALSE AS VARCHAR(4))
+LEGACY:::CAST(TRUE AND FALSE AS VARCHAR(4))
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHARACTER VARYING(4))
+LEGACY:::CAST(TRUE AND FALSE AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(`true` AS VARCHAR(4))
+LEGACY:::CAST(`true` AS VARCHAR(4))
+PERMISSIVE:::CAST(`true` AS CHARACTER VARYING(4))
+LEGACY:::CAST(`true` AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(5 AS VARCHAR(4))
+LEGACY:::CAST(5 AS VARCHAR(4))
+PERMISSIVE:::CAST(5 AS CHARACTER VARYING(4))
+LEGACY:::CAST(5 AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(`0e0` AS VARCHAR(4))
+LEGACY:::CAST(`0e0` AS VARCHAR(4))
+PERMISSIVE:::CAST(`0e0` AS CHARACTER VARYING(4))
+LEGACY:::CAST(`0e0` AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(1.1 AS VARCHAR(4))
+LEGACY:::CAST(1.1 AS VARCHAR(4))
+PERMISSIVE:::CAST(1.1 AS CHARACTER VARYING(4))
+LEGACY:::CAST(1.1 AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(-20.1 AS VARCHAR(4))
+LEGACY:::CAST(-20.1 AS VARCHAR(4))
+PERMISSIVE:::CAST(-20.1 AS CHARACTER VARYING(4))
+LEGACY:::CAST(-20.1 AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST('a' AS CHAR(4))
+LEGACY:::CAST('a' AS CHAR(4))
+PERMISSIVE:::CAST('a' AS CHARACTER(4))
+LEGACY:::CAST('a' AS CHARACTER(4))
+PERMISSIVE:::CAST('abcde' AS CHAR(4))
+LEGACY:::CAST('abcde' AS CHAR(4))
+PERMISSIVE:::CAST('abcde' AS CHARACTER(4))
+LEGACY:::CAST('abcde' AS CHARACTER(4))
+PERMISSIVE:::CAST('💩💩💩💩💩' AS CHAR(4))
+LEGACY:::CAST('💩💩💩💩💩' AS CHAR(4))
+PERMISSIVE:::CAST('💩💩💩💩💩' AS CHARACTER(4))
+LEGACY:::CAST('💩💩💩💩💩' AS CHARACTER(4))
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHAR(4))
+LEGACY:::CAST(TRUE AND FALSE AS CHAR(4))
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHARACTER(4))
+LEGACY:::CAST(TRUE AND FALSE AS CHARACTER(4))
+PERMISSIVE:::CAST(`true` AS CHAR(4))
+LEGACY:::CAST(`true` AS CHAR(4))
+PERMISSIVE:::CAST(`true` AS CHARACTER(4))
+LEGACY:::CAST(`true` AS CHARACTER(4))
+PERMISSIVE:::CAST(5 AS CHAR(4))
+LEGACY:::CAST(5 AS CHAR(4))
+PERMISSIVE:::CAST(5 AS CHARACTER(4))
+LEGACY:::CAST(5 AS CHARACTER(4))
+PERMISSIVE:::CAST(`0e0` AS CHAR(4))
+LEGACY:::CAST(`0e0` AS CHAR(4))
+PERMISSIVE:::CAST(`0e0` AS CHARACTER(4))
+LEGACY:::CAST(`0e0` AS CHARACTER(4))
+PERMISSIVE:::CAST(1.1 AS CHAR(4))
+LEGACY:::CAST(1.1 AS CHAR(4))
+PERMISSIVE:::CAST(1.1 AS CHARACTER(4))
+LEGACY:::CAST(1.1 AS CHARACTER(4))
+PERMISSIVE:::CAST(-20.1 AS CHAR(4))
+LEGACY:::CAST(-20.1 AS CHAR(4))
+PERMISSIVE:::CAST(-20.1 AS CHARACTER(4))
+LEGACY:::CAST(-20.1 AS CHARACTER(4))
+PERMISSIVE:::CAST(`+inf` AS smallint)
+LEGACY:::CAST(`+inf` AS smallint)
+PERMISSIVE:::CAST(`+inf` AS integer2)
+LEGACY:::CAST(`+inf` AS integer2)
+PERMISSIVE:::CAST(`+inf` AS int2)
+LEGACY:::CAST(`+inf` AS int2)
+PERMISSIVE:::CAST(`-inf` AS smallint)
+LEGACY:::CAST(`-inf` AS smallint)
+PERMISSIVE:::CAST(`-inf` AS integer2)
+LEGACY:::CAST(`-inf` AS integer2)
+PERMISSIVE:::CAST(`-inf` AS int2)
+LEGACY:::CAST(`-inf` AS int2)
+PERMISSIVE:::CAST(`nan` AS int)
+LEGACY:::CAST(`nan` AS int)
+PERMISSIVE:::CAST(`nan` AS smallint)
+LEGACY:::CAST(`nan` AS smallint)
+PERMISSIVE:::CAST(`nan` AS integer2)
+LEGACY:::CAST(`nan` AS integer2)
+PERMISSIVE:::CAST(`nan` AS int2)
+LEGACY:::CAST(`nan` AS int2)
+PERMISSIVE:::CAST(`nan` AS integer)
+LEGACY:::CAST(`nan` AS integer)
+PERMISSIVE:::CAST(`nan` AS integer4)
+LEGACY:::CAST(`nan` AS integer4)
+PERMISSIVE:::CAST(`nan` AS int4)
+LEGACY:::CAST(`nan` AS int4)
+PERMISSIVE:::CAST(`nan` AS integer8)
+LEGACY:::CAST(`nan` AS integer8)
+PERMISSIVE:::CAST(`nan` AS int8)
+LEGACY:::CAST(`nan` AS int8)
+PERMISSIVE:::CAST(`nan` AS bigint)
+LEGACY:::CAST(`nan` AS bigint)
+PERMISSIVE:::CAST(`+inf` AS real)
+LEGACY:::CAST(`+inf` AS real)
+PERMISSIVE:::CAST(`-inf` AS real)
+LEGACY:::CAST(`-inf` AS real)
+PERMISSIVE:::CAST(`+inf` AS VARCHAR(20))
+LEGACY:::CAST(`+inf` AS VARCHAR(20))
+PERMISSIVE:::CAST(`+inf` AS CHARACTER VARYING(20))
+LEGACY:::CAST(`+inf` AS CHARACTER VARYING(20))
+PERMISSIVE:::CAST(`-inf` AS VARCHAR(20))
+LEGACY:::CAST(`-inf` AS VARCHAR(20))
+PERMISSIVE:::CAST(`-inf` AS CHARACTER VARYING(20))
+LEGACY:::CAST(`-inf` AS CHARACTER VARYING(20))
+PERMISSIVE:::CAST(`nan` AS VARCHAR(20))
+LEGACY:::CAST(`nan` AS VARCHAR(20))
+PERMISSIVE:::CAST(`nan` AS CHARACTER VARYING(20))
+LEGACY:::CAST(`nan` AS CHARACTER VARYING(20))
+LEGACY:::CAST(`+inf` AS date)
+LEGACY:::CAST(`+inf` AS timestamp)
+LEGACY:::CAST(`+inf` AS time)
+LEGACY:::CAST(`+inf` AS clob)
+LEGACY:::CAST(`+inf` AS blob)
+LEGACY:::CAST(`+inf` AS list)
+LEGACY:::CAST(`+inf` AS sexp)
+LEGACY:::CAST(`+inf` AS struct)
+LEGACY:::CAST(`+inf` AS tuple)
+LEGACY:::CAST(`+inf` AS bag)
+LEGACY:::CAST(`-inf` AS date)
+LEGACY:::CAST(`-inf` AS timestamp)
+LEGACY:::CAST(`-inf` AS time)
+LEGACY:::CAST(`-inf` AS clob)
+LEGACY:::CAST(`-inf` AS blob)
+LEGACY:::CAST(`-inf` AS list)
+LEGACY:::CAST(`-inf` AS sexp)
+LEGACY:::CAST(`-inf` AS struct)
+LEGACY:::CAST(`-inf` AS tuple)
+LEGACY:::CAST(`-inf` AS bag)
+LEGACY:::CAST(`nan` AS date)
+LEGACY:::CAST(`nan` AS timestamp)
+LEGACY:::CAST(`nan` AS time)
+LEGACY:::CAST(`nan` AS clob)
+LEGACY:::CAST(`nan` AS blob)
+LEGACY:::CAST(`nan` AS list)
+LEGACY:::CAST(`nan` AS sexp)
+LEGACY:::CAST(`nan` AS struct)
+LEGACY:::CAST(`nan` AS tuple)
+LEGACY:::CAST(`nan` AS bag)
+PERMISSIVE:::CAST(TRUE AND FALSE AS ANY)
+LEGACY:::CAST(TRUE AND FALSE AS ANY)
+PERMISSIVE:::CAST(`true` AS ANY)
+LEGACY:::CAST(`true` AS ANY)
+PERMISSIVE:::CAST(5 AS ANY)
+LEGACY:::CAST(5 AS ANY)
+PERMISSIVE:::CAST(`0e0` AS ANY)
+LEGACY:::CAST(`0e0` AS ANY)
+PERMISSIVE:::CAST(1.1 AS ANY)
+LEGACY:::CAST(1.1 AS ANY)
+PERMISSIVE:::CAST(`2007-10-10T` AS ANY)
+LEGACY:::CAST(`2007-10-10T` AS ANY)
+PERMISSIVE:::CAST('hello' AS ANY)
+LEGACY:::CAST('hello' AS ANY)
+PERMISSIVE:::CAST('TrUe' AS ANY)
+LEGACY:::CAST('TrUe' AS ANY)
+PERMISSIVE:::CAST(`"FALSE"` AS ANY)
+LEGACY:::CAST(`"FALSE"` AS ANY)
+PERMISSIVE:::CAST(`'true'` AS ANY)
+LEGACY:::CAST(`'true'` AS ANY)
+PERMISSIVE:::CAST(`{{""}}` AS ANY)
+LEGACY:::CAST(`{{""}}` AS ANY)
+PERMISSIVE:::CAST(`{{"goodbye"}}` AS ANY)
+LEGACY:::CAST(`{{"goodbye"}}` AS ANY)
+PERMISSIVE:::CAST(`{{"false"}}` AS ANY)
+LEGACY:::CAST(`{{"false"}}` AS ANY)
+PERMISSIVE:::CAST(`{{"true"}}` AS ANY)
+LEGACY:::CAST(`{{"true"}}` AS ANY)
+PERMISSIVE:::CAST(`{{}}` AS ANY)
+LEGACY:::CAST(`{{}}` AS ANY)
+PERMISSIVE:::CAST(`{{Z29vZGJ5ZQ==}}` AS ANY)
+LEGACY:::CAST(`{{Z29vZGJ5ZQ==}}` AS ANY)
+PERMISSIVE:::CAST(`{{ZmFsc2U=}}` AS ANY)
+LEGACY:::CAST(`{{ZmFsc2U=}}` AS ANY)
+PERMISSIVE:::CAST(`{{dHJ1ZQ==}}` AS ANY)
+LEGACY:::CAST(`{{dHJ1ZQ==}}` AS ANY)
+PERMISSIVE:::CAST(`[]` AS ANY)
+LEGACY:::CAST(`[]` AS ANY)
+PERMISSIVE:::CAST(`[true]` AS ANY)
+LEGACY:::CAST(`[true]` AS ANY)
+PERMISSIVE:::CAST(`[false]` AS ANY)
+LEGACY:::CAST(`[false]` AS ANY)
+PERMISSIVE:::CAST(`[true, false]` AS ANY)
+LEGACY:::CAST(`[true, false]` AS ANY)
+PERMISSIVE:::CAST(`()` AS ANY)
+LEGACY:::CAST(`()` AS ANY)
+PERMISSIVE:::CAST(`(true)` AS ANY)
+LEGACY:::CAST(`(true)` AS ANY)
+PERMISSIVE:::CAST(`(false)` AS ANY)
+LEGACY:::CAST(`(false)` AS ANY)
+PERMISSIVE:::CAST(`{}` AS ANY)
+LEGACY:::CAST(`{}` AS ANY)
+PERMISSIVE:::CAST({} AS ANY)
+LEGACY:::CAST({} AS ANY)
+PERMISSIVE:::CAST(`{a:true}` AS ANY)
+LEGACY:::CAST(`{a:true}` AS ANY)
+PERMISSIVE:::CAST({'b':true} AS ANY)
+LEGACY:::CAST({'b':true} AS ANY)
+PERMISSIVE:::CAST(<<>> AS ANY)
+LEGACY:::CAST(<<>> AS ANY)
+PERMISSIVE:::CAST(<<true>> AS ANY)
+LEGACY:::CAST(<<true>> AS ANY)
+PERMISSIVE:::CAST(<<false>> AS ANY)
+LEGACY:::CAST(<<false>> AS ANY)
+PERMISSIVE:::CAST( 5  AS ANY)
+LEGACY:::CAST( 5  AS ANY)
+PERMISSIVE:::CAST(-20.1 AS ANY)
+LEGACY:::CAST(-20.1 AS ANY)
+PERMISSIVE:::CAST('1234A' AS ANY)
+LEGACY:::CAST('1234A' AS ANY)
+PERMISSIVE:::CAST('20' AS ANY)
+LEGACY:::CAST('20' AS ANY)
+PERMISSIVE:::CAST('020' AS ANY)
+LEGACY:::CAST('020' AS ANY)
+PERMISSIVE:::CAST('+20' AS ANY)
+LEGACY:::CAST('+20' AS ANY)
+PERMISSIVE:::CAST('+020' AS ANY)
+LEGACY:::CAST('+020' AS ANY)
+PERMISSIVE:::CAST('-20' AS ANY)
+LEGACY:::CAST('-20' AS ANY)
+PERMISSIVE:::CAST('-020' AS ANY)
+LEGACY:::CAST('-020' AS ANY)
+PERMISSIVE:::CAST('0' AS ANY)
+LEGACY:::CAST('0' AS ANY)
+PERMISSIVE:::CAST('00' AS ANY)
+LEGACY:::CAST('00' AS ANY)
+PERMISSIVE:::CAST('+0' AS ANY)
+LEGACY:::CAST('+0' AS ANY)
+PERMISSIVE:::CAST('+00' AS ANY)
+LEGACY:::CAST('+00' AS ANY)
+PERMISSIVE:::CAST('-0' AS ANY)
+LEGACY:::CAST('-0' AS ANY)
+PERMISSIVE:::CAST('-00' AS ANY)
+LEGACY:::CAST('-00' AS ANY)
+PERMISSIVE:::CAST('0xA' AS ANY)
+LEGACY:::CAST('0xA' AS ANY)
+PERMISSIVE:::CAST('0XA' AS ANY)
+LEGACY:::CAST('0XA' AS ANY)
+PERMISSIVE:::CAST('0x0A' AS ANY)
+LEGACY:::CAST('0x0A' AS ANY)
+PERMISSIVE:::CAST('+0xA' AS ANY)
+LEGACY:::CAST('+0xA' AS ANY)
+PERMISSIVE:::CAST('+0x0A' AS ANY)
+LEGACY:::CAST('+0x0A' AS ANY)
+PERMISSIVE:::CAST('-0xA' AS ANY)
+LEGACY:::CAST('-0xA' AS ANY)
+PERMISSIVE:::CAST('-0x0A' AS ANY)
+LEGACY:::CAST('-0x0A' AS ANY)
+PERMISSIVE:::CAST('0b10' AS ANY)
+LEGACY:::CAST('0b10' AS ANY)
+PERMISSIVE:::CAST('0B10' AS ANY)
+LEGACY:::CAST('0B10' AS ANY)
+PERMISSIVE:::CAST('0b010' AS ANY)
+LEGACY:::CAST('0b010' AS ANY)
+PERMISSIVE:::CAST('+0b10' AS ANY)
+LEGACY:::CAST('+0b10' AS ANY)
+PERMISSIVE:::CAST('+0b010' AS ANY)
+LEGACY:::CAST('+0b010' AS ANY)
+PERMISSIVE:::CAST('-0b10' AS ANY)
+LEGACY:::CAST('-0b10' AS ANY)
+PERMISSIVE:::CAST('-0b010' AS ANY)
+LEGACY:::CAST('-0b010' AS ANY)
+PERMISSIVE:::CAST(`"1000"` AS ANY)
+LEGACY:::CAST(`"1000"` AS ANY)
+PERMISSIVE:::CAST(`'2e100'` AS ANY)
+LEGACY:::CAST(`'2e100'` AS ANY)
+PERMISSIVE:::CAST(`'2d100'` AS ANY)
+LEGACY:::CAST(`'2d100'` AS ANY)
+PERMISSIVE:::CAST('00xA' AS ANY)
+LEGACY:::CAST('00xA' AS ANY)
+PERMISSIVE:::CAST('00b10' AS ANY)
+LEGACY:::CAST('00b10' AS ANY)
+PERMISSIVE:::CAST(`{{"0"}}` AS ANY)
+LEGACY:::CAST(`{{"0"}}` AS ANY)
+PERMISSIVE:::CAST(`{{"1.0"}}` AS ANY)
+LEGACY:::CAST(`{{"1.0"}}` AS ANY)
+PERMISSIVE:::CAST(`{{"2e10"}}` AS ANY)
+LEGACY:::CAST(`{{"2e10"}}` AS ANY)
+PERMISSIVE:::CAST(`{{MA==}}` AS ANY)
+LEGACY:::CAST(`{{MA==}}` AS ANY)
+PERMISSIVE:::CAST(`{{MS4w}}` AS ANY)
+LEGACY:::CAST(`{{MS4w}}` AS ANY)
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS ANY)
+LEGACY:::CAST(`{{MmUxMA==}}` AS ANY)
+PERMISSIVE:::CAST(`[1]` AS ANY)
+LEGACY:::CAST(`[1]` AS ANY)
+PERMISSIVE:::CAST(`[-2, 0]` AS ANY)
+LEGACY:::CAST(`[-2, 0]` AS ANY)
+PERMISSIVE:::CAST(`(1)` AS ANY)
+LEGACY:::CAST(`(1)` AS ANY)
+PERMISSIVE:::CAST(`(0)` AS ANY)
+LEGACY:::CAST(`(0)` AS ANY)
+PERMISSIVE:::CAST(`{a:12}` AS ANY)
+LEGACY:::CAST(`{a:12}` AS ANY)
+PERMISSIVE:::CAST({'b':-4} AS ANY)
+LEGACY:::CAST({'b':-4} AS ANY)
+PERMISSIVE:::CAST(<<14>> AS ANY)
+LEGACY:::CAST(<<14>> AS ANY)
+PERMISSIVE:::CAST(<<20>> AS ANY)
+LEGACY:::CAST(<<20>> AS ANY)
+PERMISSIVE:::CAST(`[1e0]` AS ANY)
+LEGACY:::CAST(`[1e0]` AS ANY)
+PERMISSIVE:::CAST(`[-2e0, 0e0]` AS ANY)
+LEGACY:::CAST(`[-2e0, 0e0]` AS ANY)
+PERMISSIVE:::CAST(`(1e0)` AS ANY)
+LEGACY:::CAST(`(1e0)` AS ANY)
+PERMISSIVE:::CAST(`(0e0)` AS ANY)
+LEGACY:::CAST(`(0e0)` AS ANY)
+PERMISSIVE:::CAST(`{a:12e0}` AS ANY)
+LEGACY:::CAST(`{a:12e0}` AS ANY)
+PERMISSIVE:::CAST({'b':`-4e0`} AS ANY)
+LEGACY:::CAST({'b':`-4e0`} AS ANY)
+PERMISSIVE:::CAST(<<`14e0`>> AS ANY)
+LEGACY:::CAST(<<`14e0`>> AS ANY)
+PERMISSIVE:::CAST(<<`20e0`>> AS ANY)
+LEGACY:::CAST(<<`20e0`>> AS ANY)
+PERMISSIVE:::CAST(5  AS ANY)
+LEGACY:::CAST(5  AS ANY)
+PERMISSIVE:::CAST(`1e0` AS ANY)
+LEGACY:::CAST(`1e0` AS ANY)
+PERMISSIVE:::CAST(`[1d0]` AS ANY)
+LEGACY:::CAST(`[1d0]` AS ANY)
+PERMISSIVE:::CAST(`[-2d0, 0d0]` AS ANY)
+LEGACY:::CAST(`[-2d0, 0d0]` AS ANY)
+PERMISSIVE:::CAST(`(1d0)` AS ANY)
+LEGACY:::CAST(`(1d0)` AS ANY)
+PERMISSIVE:::CAST(`(0d0)` AS ANY)
+LEGACY:::CAST(`(0d0)` AS ANY)
+PERMISSIVE:::CAST(`{a:12d0}` AS ANY)
+LEGACY:::CAST(`{a:12d0}` AS ANY)
+PERMISSIVE:::CAST({'b':`-4d0`} AS ANY)
+LEGACY:::CAST({'b':`-4d0`} AS ANY)
+PERMISSIVE:::CAST(<<`14d0`>> AS ANY)
+LEGACY:::CAST(<<`14d0`>> AS ANY)
+PERMISSIVE:::CAST(<<`20d0`>> AS ANY)
+LEGACY:::CAST(<<`20d0`>> AS ANY)
+PERMISSIVE:::CAST(`2007-02-23T12:14Z` AS ANY)
+LEGACY:::CAST(`2007-02-23T12:14Z` AS ANY)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS ANY)
+LEGACY:::CAST(`2007-02-23T12:14:33.079Z` AS ANY)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS ANY)
+LEGACY:::CAST(`2007-02-23T12:14:33.079-08:00` AS ANY)
+PERMISSIVE:::CAST(`2007-02T` AS ANY)
+LEGACY:::CAST(`2007-02T` AS ANY)
+PERMISSIVE:::CAST(`2007T` AS ANY)
+LEGACY:::CAST(`2007T` AS ANY)
+PERMISSIVE:::CAST('2016-03-01T01:12:12Z' AS ANY)
+LEGACY:::CAST('2016-03-01T01:12:12Z' AS ANY)
+PERMISSIVE:::CAST(`"2001-01-01"` AS ANY)
+LEGACY:::CAST(`"2001-01-01"` AS ANY)
+PERMISSIVE:::CAST(`"+20212-02-01"` AS ANY)
+LEGACY:::CAST(`"+20212-02-01"` AS ANY)
+PERMISSIVE:::CAST(`"20212-02-01"` AS ANY)
+LEGACY:::CAST(`"20212-02-01"` AS ANY)
+PERMISSIVE:::CAST(`'2000T'` AS ANY)
+LEGACY:::CAST(`'2000T'` AS ANY)
+PERMISSIVE:::CAST(`'1999-04T'` AS ANY)
+LEGACY:::CAST(`'1999-04T'` AS ANY)
+PERMISSIVE:::CAST(`"23:2:12.12345"` AS ANY)
+LEGACY:::CAST(`"23:2:12.12345"` AS ANY)
+PERMISSIVE:::CAST(['hello'] AS ANY)
+LEGACY:::CAST(['hello'] AS ANY)
+PERMISSIVE:::CAST(<<'a', <<'hello'>>>> AS ANY)
+LEGACY:::CAST(<<'a', <<'hello'>>>> AS ANY)
+PERMISSIVE:::CAST(`+inf` AS ANY)
+LEGACY:::CAST(`+inf` AS ANY)
+PERMISSIVE:::CAST(`-inf` AS ANY)
+LEGACY:::CAST(`-inf` AS ANY)
+PERMISSIVE:::CAST(`nan` AS ANY)
+LEGACY:::CAST(`nan` AS ANY)
+PERMISSIVE:::CAST(1.9 AS ANY)
+LEGACY:::CAST(1.9 AS ANY)
+PERMISSIVE:::CAST(-20.9 AS ANY)
+LEGACY:::CAST(-20.9 AS ANY)
+PERMISSIVE:::CAST(1.5 AS ANY)
+LEGACY:::CAST(1.5 AS ANY)
+PERMISSIVE:::CAST(2.5 AS ANY)
+LEGACY:::CAST(2.5 AS ANY)
+PERMISSIVE:::CAST(32768 AS ANY)
+LEGACY:::CAST(32768 AS ANY)
+PERMISSIVE:::CAST(-32769 AS ANY)
+LEGACY:::CAST(-32769 AS ANY)
+PERMISSIVE:::CAST(32767.3 AS ANY)
+LEGACY:::CAST(32767.3 AS ANY)
+PERMISSIVE:::CAST(32767.5 AS ANY)
+LEGACY:::CAST(32767.5 AS ANY)
+PERMISSIVE:::CAST(32767.8 AS ANY)
+LEGACY:::CAST(32767.8 AS ANY)
+PERMISSIVE:::CAST(-32768.3 AS ANY)
+LEGACY:::CAST(-32768.3 AS ANY)
+PERMISSIVE:::CAST(-32768.5 AS ANY)
+LEGACY:::CAST(-32768.5 AS ANY)
+PERMISSIVE:::CAST(-32768.9 AS ANY)
+LEGACY:::CAST(-32768.9 AS ANY)
+PERMISSIVE:::CAST(2147483648 AS ANY)
+LEGACY:::CAST(2147483648 AS ANY)
+PERMISSIVE:::CAST(-2147483649 AS ANY)
+LEGACY:::CAST(-2147483649 AS ANY)
+PERMISSIVE:::CAST(2147483647.3 AS ANY)
+LEGACY:::CAST(2147483647.3 AS ANY)
+PERMISSIVE:::CAST(2147483647.5 AS ANY)
+LEGACY:::CAST(2147483647.5 AS ANY)
+PERMISSIVE:::CAST(2147483647.8 AS ANY)
+LEGACY:::CAST(2147483647.8 AS ANY)
+PERMISSIVE:::CAST(-2147483648.3 AS ANY)
+LEGACY:::CAST(-2147483648.3 AS ANY)
+PERMISSIVE:::CAST(-2147483648.5 AS ANY)
+LEGACY:::CAST(-2147483648.5 AS ANY)
+PERMISSIVE:::CAST(-2147483648.9 AS ANY)
+LEGACY:::CAST(-2147483648.9 AS ANY)
+PERMISSIVE:::CAST(9223372036854775807 AS ANY)
+LEGACY:::CAST(9223372036854775807 AS ANY)
+PERMISSIVE:::CAST(9223372036854775807.3 AS ANY)
+LEGACY:::CAST(9223372036854775807.3 AS ANY)
+PERMISSIVE:::CAST(9223372036854775807.5 AS ANY)
+LEGACY:::CAST(9223372036854775807.5 AS ANY)
+PERMISSIVE:::CAST(9223372036854775807.8 AS ANY)
+LEGACY:::CAST(9223372036854775807.8 AS ANY)
+PERMISSIVE:::CAST(1e2147483609 AS ANY)
+LEGACY:::CAST(1e2147483609 AS ANY)
+PERMISSIVE:::CAST(12 AS ANY)
+LEGACY:::CAST(12 AS ANY)
+PERMISSIVE:::CAST(123 AS ANY)
+LEGACY:::CAST(123 AS ANY)
+PERMISSIVE:::CAST(1234 AS ANY)
+LEGACY:::CAST(1234 AS ANY)
+PERMISSIVE:::CAST(123.45 AS ANY)
+LEGACY:::CAST(123.45 AS ANY)
+PERMISSIVE:::CAST('12' AS ANY)
+LEGACY:::CAST('12' AS ANY)
+PERMISSIVE:::CAST('123' AS ANY)
+LEGACY:::CAST('123' AS ANY)
+PERMISSIVE:::CAST('1234' AS ANY)
+LEGACY:::CAST('1234' AS ANY)
+PERMISSIVE:::CAST('123.45' AS ANY)
+LEGACY:::CAST('123.45' AS ANY)
+PERMISSIVE:::CAST(123.459 AS ANY)
+LEGACY:::CAST(123.459 AS ANY)
+PERMISSIVE:::CAST('123.459' AS ANY)
+LEGACY:::CAST('123.459' AS ANY)
+PERMISSIVE:::CAST(0.1 AS ANY)
+LEGACY:::CAST(0.1 AS ANY)
+PERMISSIVE:::CAST(0.1234 AS ANY)
+LEGACY:::CAST(0.1234 AS ANY)
+PERMISSIVE:::CAST(0.12345 AS ANY)
+LEGACY:::CAST(0.12345 AS ANY)
+PERMISSIVE:::CAST('a' AS ANY)
+LEGACY:::CAST('a' AS ANY)
+PERMISSIVE:::CAST('a    ' AS ANY)
+LEGACY:::CAST('a    ' AS ANY)
+PERMISSIVE:::CAST('abcde' AS ANY)
+LEGACY:::CAST('abcde' AS ANY)
+PERMISSIVE:::CAST('💩💩💩💩💩' AS ANY)
+LEGACY:::CAST('💩💩💩💩💩' AS ANY)
+PERMISSIVE:::select * from <<1>> limit -1
+LEGACY:::select * from <<1>> limit -1
+PERMISSIVE:::select * from foo OFFSET -1
+LEGACY:::select * from foo OFFSET -1
+PERMISSIVE:::select * from foo OFFSET 1 - 2
+LEGACY:::select * from foo OFFSET 1 - 2
+PERMISSIVE:::select * from foo OFFSET 92233720368547758070
+LEGACY:::select * from foo OFFSET 92233720368547758070
+PERMISSIVE:::SELECT * FROM A LET 1 AS X WHERE X = 1
+LEGACY:::SELECT * FROM A LET 1 AS X WHERE X = 1
+PERMISSIVE:::SELECT X FROM A LET 1 AS X
+LEGACY:::SELECT X FROM A LET 1 AS X
+PERMISSIVE:::SELECT * FROM C LET region AS X GROUP BY X
+LEGACY:::SELECT * FROM C LET region AS X GROUP BY X
+PERMISSIVE:::SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo
+LEGACY:::SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo
+PERMISSIVE:::SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo
+LEGACY:::SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo
+PERMISSIVE:::SELECT X FROM A LET 1 AS X, 2 AS X
+LEGACY:::SELECT X FROM A LET 1 AS X, 2 AS X
+PERMISSIVE:::SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y
+LEGACY:::SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y
+PERMISSIVE:::SELECT X FROM A LET 1 AS X, X AS X
+LEGACY:::SELECT X FROM A LET 1 AS X, X AS X
+PERMISSIVE:::SELECT X FROM A LET upper('foo') AS X
+LEGACY:::SELECT X FROM A LET upper('foo') AS X
+PERMISSIVE:::SELECT nameLength FROM C LET char_length(C.name) AS nameLength
+LEGACY:::SELECT nameLength FROM C LET char_length(C.name) AS nameLength
+PERMISSIVE:::SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region
+LEGACY:::SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region
+PERMISSIVE:::SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X
+LEGACY:::SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X
+PERMISSIVE:::SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y
+PERMISSIVE:::SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo
+PERMISSIVE:::SELECT foo FROM B LET 100 AS foo GROUP BY B.id
+PERMISSIVE:::DATE '2012-02-29' = CAST('2012-02-29' AS DATE)
+LEGACY:::DATE '2012-02-29' = CAST('2012-02-29' AS DATE)
+PERMISSIVE:::CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'
+LEGACY:::CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'
+LEGACY:::CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'
+PERMISSIVE:::TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'
+LEGACY:::TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'
+LEGACY:::TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'
+LEGACY:::TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'
+LEGACY:::TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'
+LEGACY:::SELECT i.x + i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x + i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x + i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x + i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x + i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x - i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x - i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x - i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x - i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x - i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x * i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x * i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x * i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x * i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x * i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x / i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x / i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x / i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x / i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x / i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x % i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x % i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x % i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x % i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x % i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x > i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x > i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x > i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x > i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x > i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x >= i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x >= i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x >= i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x >= i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x >= i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x < i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x < i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x < i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x < i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x < i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x <= i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'x': 4} >> AS i
+LEGACY:::SELECT i.x <= i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'y': 2} >> AS i
+LEGACY:::SELECT i.x <= i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x <= i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x <= i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x AND i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x OR i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': null, 'y': false} >> AS i
+LEGACY:::SELECT i.x AND i.y AS result FROM << {'x': null, 'y': false} >> AS i
+LEGACY:::SELECT i.x AND i.y AS result FROM << {'x': true} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': true} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'x': true} >> AS i
+LEGACY:::SELECT i.x OR i.y AS result FROM << {'x': true} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': false} >> AS i
+LEGACY:::SELECT i.x AND i.y AS result FROM << {'x': false} >> AS i
+LEGACY:::SELECT i.x OR i.y AS result FROM << {'x': false} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'x': false} >> AS i
+LEGACY:::SELECT i.x AND i.y AS result FROM << {'y': true} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'y': true} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'y': true} >> AS i
+LEGACY:::SELECT i.x OR i.y AS result FROM << {'y': true} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'y': false} >> AS i
+LEGACY:::SELECT i.x AND i.y AS result FROM << {'y': false} >> AS i
+LEGACY:::SELECT i.x OR i.y AS result FROM << {'y': false} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'y': false} >> AS i
+LEGACY:::SELECT i.x AND i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x OR i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x AND i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x OR i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT NOT i.b AS result FROM << {  } >> AS i
+PERMISSIVE:::SELECT NOT i.b AS result FROM << {  } >> AS i
+LEGACY:::SELECT i.x || i.y AS result FROM << {'x': 'a'} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'x': 'a'} >> AS i
+LEGACY:::SELECT i.x || i.y AS result FROM << {'y': 'b'} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'y': 'b'} >> AS i
+LEGACY:::SELECT i.x || i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'x': null} >> AS i
+LEGACY:::SELECT i.x || i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'y': null} >> AS i
+LEGACY:::SELECT i.x || i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {} >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': 1, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': 1, 'z': 3 } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': 3 } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': MISSING } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': 3 } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': MISSING } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': MISSING } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': 3 } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': 3 } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': MISSING } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': NULL } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': MISSING } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': MISSING } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': MISSING } >> AS i
+LEGACY:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+LEGACY:::SELECT +i.n AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT +i.n AS result FROM << { } >> AS i
+LEGACY:::SELECT -i.n AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT -i.n AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, null, 2, 3] } >> AS i
+LEGACY:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, null, 2, 3] } >> AS i
+LEGACY:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, missing, 2, 3] } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, missing, 2, 3] } >> AS i
+LEGACY:::SELECT i.x IN i.y AS result FROM << { 'x': 2 } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': 2 } >> AS i
+LEGACY:::SELECT i.x IN i.y AS result FROM << { 'y': [1, 2, 3] } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'y': [1, 2, 3] } >> AS i
+LEGACY:::SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': MISSING } >> AS i
+LEGACY:::SELECT i.x IN i.y AS result FROM << { 'x': MISSING, 'y': NULL } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': MISSING, 'y': NULL } >> AS i
+LEGACY:::SELECT i.x IN i.y AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { } >> AS i
+LEGACY:::SELECT i.x IN (1, 2, 3)  AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.x IN (1, 2, 3)  AS result FROM << { } >> AS i
+LEGACY:::SELECT i.a LIKE 'a%' AS result FROM << {  } >> AS i
+PERMISSIVE:::SELECT i.a LIKE 'a%' AS result FROM << {  } >> AS i
+LEGACY:::SELECT i.a LIKE i.b AS result FROM << { 'b': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'b': 'ab' } >> AS i
+LEGACY:::SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab' } >> AS i
+LEGACY:::SELECT i.a LIKE i.b AS result FROM << { 'a': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'a': NULL } >> AS i
+LEGACY:::SELECT i.a LIKE i.b AS result FROM << { 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'b': NULL } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': 'ab', 'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': 'ab', 'c': 'n' } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab',  'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab',  'c': 'n' } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': 'n' } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab' } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': NULL } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL, 'c': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL, 'c': NULL } >> AS i
+LEGACY:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'c': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'c': NULL } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': null } >> AS i
+PERMISSIVE:::SELECT * EXCLUDE t.a[1] FROM << {'a': <<0, 1, 2>>} >> AS t
+LEGACY:::SELECT * EXCLUDE t.a[1] FROM << {'a': <<0, 1, 2>>} >> AS t
+PERMISSIVE:::SELECT * EXCLUDE t.a[*].bar, t.a.bar, t.a.*.bar FROM << {'a': [{'foo': 0, 'bar': 1, 'baz': 2}, {'foo': 3, 'bar': 4, 'baz': 5}]}, {'a': {'foo': 6, 'bar': 7, 'baz': 8}}, {'a': {'a1': {'foo': 9, 'bar': 10, 'baz': 11}, 'a2': {'foo': 12, 'bar': 13, 'baz': 14}}} >> AS t
+LEGACY:::SELECT * EXCLUDE t.a[*].bar, t.a.bar, t.a.*.bar FROM << {'a': [{'foo': 0, 'bar': 1, 'baz': 2}, {'foo': 3, 'bar': 4, 'baz': 5}]}, {'a': {'foo': 6, 'bar': 7, 'baz': 8}}, {'a': {'a1': {'foo': 9, 'bar': 10, 'baz': 11}, 'a2': {'foo': 12, 'bar': 13, 'baz': 14}}} >> AS t

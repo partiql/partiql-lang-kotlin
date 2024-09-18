@@ -234,8 +234,8 @@ envs::{
   }
 }
 {
-  name:" SELECT attributeId, SUM(attributeId) as the_sum FROM repeating_things GROUP BY attributeId HAVING SUM(attributeId) >= 160 ",
-  statement:" SELECT attributeId, SUM(attributeId) as the_sum FROM repeating_things GROUP BY attributeId HAVING SUM(attributeId) >= 160 ",
+  name:"SELECT attributeId, SUM(attributeId) as the_sum FROM repeating_things GROUP BY attributeId HAVING SUM(attributeId) >= 160",
+  statement:"SELECT attributeId, SUM(attributeId) as the_sum FROM repeating_things GROUP BY attributeId HAVING SUM(attributeId) >= 160",
   assert:{
     result:EvaluationSuccess,
     evalMode:[

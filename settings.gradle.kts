@@ -29,6 +29,7 @@ include(
     "plugins:partiql-memory",
     "lib:isl",
     "lib:sprout",
+    "test:partiql-lang-import",
     "test:coverage-tests",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",

@@ -25,8 +25,10 @@ application {
 
 dependencies {
     implementation(Deps.ionElement)
-    testImplementation("org.partiql:partiql-lang-kotlin:0.14.8")
+    testImplementation(project(":test:partiql-lang-import", configuration = "shadow"))
     testImplementation(project(":partiql-eval"))
+    testImplementation(project(":partiql-parser", configuration = "shadow"))
+    testImplementation(project(":partiql-planner"))
     testImplementation(project(":plugins:partiql-memory"))
 }
 
@@ -54,10 +56,10 @@ tasks.test {
     setEnvironmentDataDirectories(this)
 
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
-    exclude("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
+    // exclude("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
 
     // May 2023: Disabled conformance testing during regular project build, because fail lists are out of date.
-    exclude("org/partiql/runner/ConformanceTest.class")
+    // exclude("org/partiql/runner/ConformanceTest.class")
 }
 
 val createReportDir by tasks.registering {

@@ -1,7 +1,7 @@
 package org.partiql.runner.schema
 
 import com.amazon.ion.IonStruct
-import org.partiql.lang.eval.CompileOptions
+import org.partiql_v0_14_8.lang.eval.CompileOptions
 
 sealed class TestCase {
     abstract val name: String

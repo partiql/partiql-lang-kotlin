@@ -17,8 +17,8 @@
   }
 }
 {
-  name:" SELECT tbl2.* EXCLUDE tbl2.derivedColumn FROM (SELECT tbl1.*, tbl1.a.b + 2 AS derivedColumn FROM <<{'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}>> AS tbl1) AS tbl2",
-  statement:" SELECT tbl2.* EXCLUDE tbl2.derivedColumn FROM (SELECT tbl1.*, tbl1.a.b + 2 AS derivedColumn FROM <<{'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}>> AS tbl1) AS tbl2",
+  name:"SELECT tbl2.* EXCLUDE tbl2.derivedColumn FROM (SELECT tbl1.*, tbl1.a.b + 2 AS derivedColumn FROM <<{'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}>> AS tbl1) AS tbl2",
+  statement:"SELECT tbl2.* EXCLUDE tbl2.derivedColumn FROM (SELECT tbl1.*, tbl1.a.b + 2 AS derivedColumn FROM <<{'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}>> AS tbl1) AS tbl2",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -269,8 +269,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a.b.c[0], t.a.b.c[1].field FROM [{ 'a': { 'b': { 'c': [ { 'field': 0, 'index': 0 }, { 'field': 1, 'index': 1 }, { 'field': 2, 'index': 2 } ] } }, 'foo': 'bar' }] AS t ",
-  statement:" SELECT * EXCLUDE t.a.b.c[0], t.a.b.c[1].field FROM [{ 'a': { 'b': { 'c': [ { 'field': 0, 'index': 0 }, { 'field': 1, 'index': 1 }, { 'field': 2, 'index': 2 } ] } }, 'foo': 'bar' }] AS t ",
+  name:"SELECT * EXCLUDE t.a.b.c[0], t.a.b.c[1].field FROM [{ 'a': { 'b': { 'c': [ { 'field': 0, 'index': 0 }, { 'field': 1, 'index': 1 }, { 'field': 2, 'index': 2 } ] } }, 'foo': 'bar' }] AS t",
+  statement:"SELECT * EXCLUDE t.a.b.c[0], t.a.b.c[1].field FROM [{ 'a': { 'b': { 'c': [ { 'field': 0, 'index': 0 }, { 'field': 1, 'index': 1 }, { 'field': 2, 'index': 2 } ] } }, 'foo': 'bar' }] AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -298,8 +298,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a.b.c[0] FROM [{ 'a': { 'b': { 'c': [0, 1, 2] } }, 'foo': 'bar' }] AS t ",
-  statement:" SELECT * EXCLUDE t.a.b.c[0] FROM [{ 'a': { 'b': { 'c': [0, 1, 2] } }, 'foo': 'bar' }] AS t ",
+  name:"SELECT * EXCLUDE t.a.b.c[0] FROM [{ 'a': { 'b': { 'c': [0, 1, 2] } }, 'foo': 'bar' }] AS t",
+  statement:"SELECT * EXCLUDE t.a.b.c[0] FROM [{ 'a': { 'b': { 'c': [0, 1, 2] } }, 'foo': 'bar' }] AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -322,8 +322,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[*] FROM [{ 'a': [0, 1, 2] }] AS t ",
-  statement:" SELECT * EXCLUDE t.a[*] FROM [{ 'a': [0, 1, 2] }] AS t ",
+  name:"SELECT * EXCLUDE t.a[*] FROM [{ 'a': [0, 1, 2] }] AS t",
+  statement:"SELECT * EXCLUDE t.a[*] FROM [{ 'a': [0, 1, 2] }] AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -339,8 +339,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a.b.c[*].field_x FROM [{ 'a': { 'b': { 'c': [ { 'field_x': 0, 'field_y': 0 }, { 'field_x': 1, 'field_y': 1 }, { 'field_x': 2, 'field_y': 2 } ] } }, 'foo': 'bar' }] AS t ",
-  statement:" SELECT * EXCLUDE t.a.b.c[*].field_x FROM [{ 'a': { 'b': { 'c': [ { 'field_x': 0, 'field_y': 0 }, { 'field_x': 1, 'field_y': 1 }, { 'field_x': 2, 'field_y': 2 } ] } }, 'foo': 'bar' }] AS t ",
+  name:"SELECT * EXCLUDE t.a.b.c[*].field_x FROM [{ 'a': { 'b': { 'c': [ { 'field_x': 0, 'field_y': 0 }, { 'field_x': 1, 'field_y': 1 }, { 'field_x': 2, 'field_y': 2 } ] } }, 'foo': 'bar' }] AS t",
+  statement:"SELECT * EXCLUDE t.a.b.c[*].field_x FROM [{ 'a': { 'b': { 'c': [ { 'field_x': 0, 'field_y': 0 }, { 'field_x': 1, 'field_y': 1 }, { 'field_x': 2, 'field_y': 2 } ] } }, 'foo': 'bar' }] AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -370,8 +370,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a.b.c[*].* FROM [{ 'a': { 'b': { 'c': [ { 'field_x': 0, 'field_y': 0 }, { 'field_x': 1, 'field_y': 1 }, { 'field_x': 2, 'field_y': 2 } ] } }, 'foo': 'bar' }] AS t ",
-  statement:" SELECT * EXCLUDE t.a.b.c[*].* FROM [{ 'a': { 'b': { 'c': [ { 'field_x': 0, 'field_y': 0 }, { 'field_x': 1, 'field_y': 1 }, { 'field_x': 2, 'field_y': 2 } ] } }, 'foo': 'bar' }] AS t ",
+  name:"SELECT * EXCLUDE t.a.b.c[*].* FROM [{ 'a': { 'b': { 'c': [ { 'field_x': 0, 'field_y': 0 }, { 'field_x': 1, 'field_y': 1 }, { 'field_x': 2, 'field_y': 2 } ] } }, 'foo': 'bar' }] AS t",
+  statement:"SELECT * EXCLUDE t.a.b.c[*].* FROM [{ 'a': { 'b': { 'c': [ { 'field_x': 0, 'field_y': 0 }, { 'field_x': 1, 'field_y': 1 }, { 'field_x': 2, 'field_y': 2 } ] } }, 'foo': 'bar' }] AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -398,8 +398,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a FROM [ { 'a': 2, 'foo': 'bar2' }, { 'a': 1, 'foo': 'bar1' }, { 'a': 3, 'foo': 'bar3' } ] AS t ORDER BY t.a ",
-  statement:" SELECT * EXCLUDE t.a FROM [ { 'a': 2, 'foo': 'bar2' }, { 'a': 1, 'foo': 'bar1' }, { 'a': 3, 'foo': 'bar3' } ] AS t ORDER BY t.a ",
+  name:"SELECT * EXCLUDE t.a FROM [ { 'a': 2, 'foo': 'bar2' }, { 'a': 1, 'foo': 'bar1' }, { 'a': 3, 'foo': 'bar3' } ] AS t ORDER BY t.a",
+  statement:"SELECT * EXCLUDE t.a FROM [ { 'a': 2, 'foo': 'bar2' }, { 'a': 1, 'foo': 'bar1' }, { 'a': 3, 'foo': 'bar3' } ] AS t ORDER BY t.a",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -420,8 +420,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE bar.d FROM << {'a': 1, 'b': 11}, {'a': 2, 'b': 22} >> AS foo, << {'c': 3, 'd': 33}, {'c': 4, 'd': 44} >> AS bar ",
-  statement:" SELECT * EXCLUDE bar.d FROM << {'a': 1, 'b': 11}, {'a': 2, 'b': 22} >> AS foo, << {'c': 3, 'd': 33}, {'c': 4, 'd': 44} >> AS bar ",
+  name:"SELECT * EXCLUDE bar.d FROM << {'a': 1, 'b': 11}, {'a': 2, 'b': 22} >> AS foo, << {'c': 3, 'd': 33}, {'c': 4, 'd': 44} >> AS bar",
+  statement:"SELECT * EXCLUDE bar.d FROM << {'a': 1, 'b': 11}, {'a': 2, 'b': 22} >> AS foo, << {'c': 3, 'd': 33}, {'c': 4, 'd': 44} >> AS bar",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -453,8 +453,8 @@
   }
 }
 {
-  name:" SELECT t.b EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t ",
-  statement:" SELECT t.b EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t ",
+  name:"SELECT t.b EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t",
+  statement:"SELECT t.b EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -476,8 +476,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t ",
-  statement:" SELECT * EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t ",
+  name:"SELECT * EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t",
+  statement:"SELECT * EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -505,8 +505,8 @@
   }
 }
 {
-  name:" SELECT VALUE t.b EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t ",
-  statement:" SELECT VALUE t.b EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t ",
+  name:"SELECT VALUE t.b EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t",
+  statement:"SELECT VALUE t.b EXCLUDE t.b[*].b_1 FROM << { 'a': {'a_1':1,'a_2':2}, 'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ], 'c': 7, 'd': 8 } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -526,8 +526,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[*].b.c FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[*].b.c FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t ",
+  name:"SELECT * EXCLUDE t.a[*].b.c FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t",
+  statement:"SELECT * EXCLUDE t.a[*].b.c FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -558,8 +558,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[1].b.c FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[1].b.c FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t ",
+  name:"SELECT * EXCLUDE t.a[1].b.c FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t",
+  statement:"SELECT * EXCLUDE t.a[1].b.c FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -592,8 +592,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[*].b.* FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[*].b.* FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t ",
+  name:"SELECT * EXCLUDE t.a[*].b.* FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t",
+  statement:"SELECT * EXCLUDE t.a[*].b.* FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -621,8 +621,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[1].b.* FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[1].b.* FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t ",
+  name:"SELECT * EXCLUDE t.a[1].b.* FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t",
+  statement:"SELECT * EXCLUDE t.a[1].b.* FROM << { 'a': [ { 'b': { 'c': 0, 'd': 'zero' } }, { 'b': { 'c': 1, 'd': 'one' } }, { 'b': { 'c': 2, 'd': 'two' } } ] } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -654,8 +654,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[*].b.d[*].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[*].b.d[*].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t ",
+  name:"SELECT * EXCLUDE t.a[*].b.d[*].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t",
+  statement:"SELECT * EXCLUDE t.a[*].b.d[*].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -710,8 +710,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[1].b.d[*].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[1].b.d[*].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t ",
+  name:"SELECT * EXCLUDE t.a[1].b.d[*].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t",
+  statement:"SELECT * EXCLUDE t.a[1].b.d[*].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -770,8 +770,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[1].b.d[0].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[1].b.d[0].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t ",
+  name:"SELECT * EXCLUDE t.a[1].b.d[0].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t",
+  statement:"SELECT * EXCLUDE t.a[1].b.d[0].e FROM << { 'a': [ { 'b': { 'c': 0, 'd': [{'e': 'zero0', 'f': true}, {'e': 'zero1', 'f': false}] } }, { 'b': { 'c': 1, 'd': [{'e': 'one0', 'f': true}, {'e': 'one1', 'f': false}] } }, { 'b': { 'c': 2, 'd': [{'e': 'two0', 'f': true}, {'e': 'two1', 'f': false}] } } ] } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -831,8 +831,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a.*.bar FROM [ { 'a': { 'b': { 'foo': 1, 'bar': 2 }, 'c': { 'foo': 11, 'bar': 22 }, 'd': { 'foo': 111, 'bar': 222 } }, 'foo': 'bar' } ] AS t ",
-  statement:" SELECT * EXCLUDE t.a.*.bar FROM [ { 'a': { 'b': { 'foo': 1, 'bar': 2 }, 'c': { 'foo': 11, 'bar': 22 }, 'd': { 'foo': 111, 'bar': 222 } }, 'foo': 'bar' } ] AS t ",
+  name:"SELECT * EXCLUDE t.a.*.bar FROM [ { 'a': { 'b': { 'foo': 1, 'bar': 2 }, 'c': { 'foo': 11, 'bar': 22 }, 'd': { 'foo': 111, 'bar': 222 } }, 'foo': 'bar' } ] AS t",
+  statement:"SELECT * EXCLUDE t.a.*.bar FROM [ { 'a': { 'b': { 'foo': 1, 'bar': 2 }, 'c': { 'foo': 11, 'bar': 22 }, 'd': { 'foo': 111, 'bar': 222 } }, 'foo': 'bar' } ] AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -858,8 +858,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a FROM [ { 'a': 2, 'foo': 'bar2' }, { 'a': 1, 'foo': 'bar1' }, { 'a': 3, 'foo': 'bar3' } ] AS t ORDER BY t.a ",
-  statement:" SELECT * EXCLUDE t.a FROM [ { 'a': 2, 'foo': 'bar2' }, { 'a': 1, 'foo': 'bar1' }, { 'a': 3, 'foo': 'bar3' } ] AS t ORDER BY t.a ",
+  name:"SELECT * EXCLUDE t.a FROM [ { 'a': 2, 'foo': 'bar2' }, { 'a': 1, 'foo': 'bar1' }, { 'a': 3, 'foo': 'bar3' } ] AS t ORDER BY t.a",
+  statement:"SELECT * EXCLUDE t.a FROM [ { 'a': 2, 'foo': 'bar2' }, { 'a': 1, 'foo': 'bar1' }, { 'a': 3, 'foo': 'bar3' } ] AS t ORDER BY t.a",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -880,8 +880,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE g[*].t.c FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 1, 'b': 22, 'c': 222 }, { 'a': 2, 'b': 33, 'c': 333 } >> AS t GROUP BY t.a AS a GROUP AS g ",
-  statement:" SELECT * EXCLUDE g[*].t.c FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 1, 'b': 22, 'c': 222 }, { 'a': 2, 'b': 33, 'c': 333 } >> AS t GROUP BY t.a AS a GROUP AS g ",
+  name:"SELECT * EXCLUDE g[*].t.c FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 1, 'b': 22, 'c': 222 }, { 'a': 2, 'b': 33, 'c': 333 } >> AS t GROUP BY t.a AS a GROUP AS g",
+  statement:"SELECT * EXCLUDE g[*].t.c FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 1, 'b': 22, 'c': 222 }, { 'a': 2, 'b': 33, 'c': 333 } >> AS t GROUP BY t.a AS a GROUP AS g",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -921,8 +921,8 @@
   }
 }
 {
-  name:" SELECT DISTINCT * EXCLUDE t.a FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 2, 'b': 11, 'c': 111 }, { 'a': 1, 'b': 22, 'c': 222 } >> AS t ",
-  statement:" SELECT DISTINCT * EXCLUDE t.a FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 2, 'b': 11, 'c': 111 }, { 'a': 1, 'b': 22, 'c': 222 } >> AS t ",
+  name:"SELECT DISTINCT * EXCLUDE t.a FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 2, 'b': 11, 'c': 111 }, { 'a': 1, 'b': 22, 'c': 222 } >> AS t",
+  statement:"SELECT DISTINCT * EXCLUDE t.a FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 2, 'b': 11, 'c': 111 }, { 'a': 1, 'b': 22, 'c': 222 } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -942,8 +942,8 @@
   }
 }
 {
-  name:" SELECT DISTINCT * EXCLUDE t.a FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 2, 'b': 22, 'c': 222 }, { 'a': 3, 'b': 33, 'c': 333 }, { 'a': 4, 'b': 44, 'c': 444 }, { 'a': 5, 'b': 55, 'c': 555 } >> AS t ORDER BY a LIMIT 2 OFFSET 2 ",
-  statement:" SELECT DISTINCT * EXCLUDE t.a FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 2, 'b': 22, 'c': 222 }, { 'a': 3, 'b': 33, 'c': 333 }, { 'a': 4, 'b': 44, 'c': 444 }, { 'a': 5, 'b': 55, 'c': 555 } >> AS t ORDER BY a LIMIT 2 OFFSET 2 ",
+  name:"SELECT DISTINCT * EXCLUDE t.a FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 2, 'b': 22, 'c': 222 }, { 'a': 3, 'b': 33, 'c': 333 }, { 'a': 4, 'b': 44, 'c': 444 }, { 'a': 5, 'b': 55, 'c': 555 } >> AS t ORDER BY a LIMIT 2 OFFSET 2",
+  statement:"SELECT DISTINCT * EXCLUDE t.a FROM << { 'a': 1, 'b': 11, 'c': 111 }, { 'a': 2, 'b': 22, 'c': 222 }, { 'a': 3, 'b': 33, 'c': 333 }, { 'a': 4, 'b': 44, 'c': 444 }, { 'a': 5, 'b': 55, 'c': 555 } >> AS t ORDER BY a LIMIT 2 OFFSET 2",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -963,8 +963,8 @@
   }
 }
 {
-  name:" PIVOT t.v AT t.attr EXCLUDE t.v[*].excludeValue FROM << { 'attr': 'a', 'v': [{'keepValue': 1, 'excludeValue': 11}, {'keepValue': 4, 'excludeValue': 44}] }, { 'attr': 'b', 'v': [{'keepValue': 2, 'excludeValue': 22}, {'keepValue': 5, 'excludeValue': 55}] }, { 'attr': 'c', 'v': [{'keepValue': 3, 'excludeValue': 33}, {'keepValue': 6, 'excludeValue': 66}] } >> AS t ",
-  statement:" PIVOT t.v AT t.attr EXCLUDE t.v[*].excludeValue FROM << { 'attr': 'a', 'v': [{'keepValue': 1, 'excludeValue': 11}, {'keepValue': 4, 'excludeValue': 44}] }, { 'attr': 'b', 'v': [{'keepValue': 2, 'excludeValue': 22}, {'keepValue': 5, 'excludeValue': 55}] }, { 'attr': 'c', 'v': [{'keepValue': 3, 'excludeValue': 33}, {'keepValue': 6, 'excludeValue': 66}] } >> AS t ",
+  name:"PIVOT t.v AT t.attr EXCLUDE t.v[*].excludeValue FROM << { 'attr': 'a', 'v': [{'keepValue': 1, 'excludeValue': 11}, {'keepValue': 4, 'excludeValue': 44}] }, { 'attr': 'b', 'v': [{'keepValue': 2, 'excludeValue': 22}, {'keepValue': 5, 'excludeValue': 55}] }, { 'attr': 'c', 'v': [{'keepValue': 3, 'excludeValue': 33}, {'keepValue': 6, 'excludeValue': 66}] } >> AS t",
+  statement:"PIVOT t.v AT t.attr EXCLUDE t.v[*].excludeValue FROM << { 'attr': 'a', 'v': [{'keepValue': 1, 'excludeValue': 11}, {'keepValue': 4, 'excludeValue': 44}] }, { 'attr': 'b', 'v': [{'keepValue': 2, 'excludeValue': 22}, {'keepValue': 5, 'excludeValue': 55}] }, { 'attr': 'c', 'v': [{'keepValue': 3, 'excludeValue': 33}, {'keepValue': 6, 'excludeValue': 66}] } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1000,8 +1000,8 @@
   }
 }
 {
-  name:" SELECT v, attr EXCLUDE v.foo FROM UNPIVOT { 'a': {'foo': 1, 'bar': 11}, 'a': {'foo': 2, 'bar': 22}, 'b': {'foo': 3, 'bar': 33} } AS v AT attr ",
-  statement:" SELECT v, attr EXCLUDE v.foo FROM UNPIVOT { 'a': {'foo': 1, 'bar': 11}, 'a': {'foo': 2, 'bar': 22}, 'b': {'foo': 3, 'bar': 33} } AS v AT attr ",
+  name:"SELECT v, attr EXCLUDE v.foo FROM UNPIVOT { 'a': {'foo': 1, 'bar': 11}, 'a': {'foo': 2, 'bar': 22}, 'b': {'foo': 3, 'bar': 33} } AS v AT attr",
+  statement:"SELECT v, attr EXCLUDE v.foo FROM UNPIVOT { 'a': {'foo': 1, 'bar': 11}, 'a': {'foo': 2, 'bar': 22}, 'b': {'foo': 3, 'bar': 33} } AS v AT attr",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1031,8 +1031,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[1] FROM << {'a': [0, 1, 2]} >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[1] FROM << {'a': [0, 1, 2]} >> AS t ",
+  name:"SELECT * EXCLUDE t.a[1] FROM << {'a': [0, 1, 2]} >> AS t",
+  statement:"SELECT * EXCLUDE t.a[1] FROM << {'a': [0, 1, 2]} >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1050,8 +1050,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[1] FROM << {'a': <<0, 1, 2>>} >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[1] FROM << {'a': <<0, 1, 2>>} >> AS t ",
+  name:"SELECT * EXCLUDE t.a[1] FROM << {'a': <<0, 1, 2>>} >> AS t",
+  statement:"SELECT * EXCLUDE t.a[1] FROM << {'a': <<0, 1, 2>>} >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1070,8 +1070,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[1] FROM << {'a': `(0 1 2)`} >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[1] FROM << {'a': `(0 1 2)`} >> AS t ",
+  name:"SELECT * EXCLUDE t.a[1] FROM << {'a': `(0 1 2)`} >> AS t",
+  statement:"SELECT * EXCLUDE t.a[1] FROM << {'a': `(0 1 2)`} >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1089,8 +1089,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[*] FROM << {'a': [0, 1, 2]} >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[*] FROM << {'a': [0, 1, 2]} >> AS t ",
+  name:"SELECT * EXCLUDE t.a[*] FROM << {'a': [0, 1, 2]} >> AS t",
+  statement:"SELECT * EXCLUDE t.a[*] FROM << {'a': [0, 1, 2]} >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1106,8 +1106,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[*] FROM << {'a': <<0, 1, 2>>} >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[*] FROM << {'a': <<0, 1, 2>>} >> AS t ",
+  name:"SELECT * EXCLUDE t.a[*] FROM << {'a': <<0, 1, 2>>} >> AS t",
+  statement:"SELECT * EXCLUDE t.a[*] FROM << {'a': <<0, 1, 2>>} >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1123,8 +1123,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[*] FROM << {'a': `(0 1 2)`} >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[*] FROM << {'a': `(0 1 2)`} >> AS t ",
+  name:"SELECT * EXCLUDE t.a[*] FROM << {'a': `(0 1 2)`} >> AS t",
+  statement:"SELECT * EXCLUDE t.a[*] FROM << {'a': `(0 1 2)`} >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1140,8 +1140,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a FROM << { 'a': 1, 'a': 2, 'a': 3, 'b': 4, 'c': 5 } >> AS t ",
-  statement:" SELECT * EXCLUDE t.a FROM << { 'a': 1, 'a': 2, 'a': 3, 'b': 4, 'c': 5 } >> AS t ",
+  name:"SELECT * EXCLUDE t.a FROM << { 'a': 1, 'a': 2, 'a': 3, 'b': 4, 'c': 5 } >> AS t",
+  statement:"SELECT * EXCLUDE t.a FROM << { 'a': 1, 'a': 2, 'a': 3, 'b': 4, 'c': 5 } >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1157,8 +1157,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.path_does_not_exist, t.path_does_not_exist.*.foo, t.a['does not exist'], t.a FROM <<{'a': 1, 'b': 2}>> AS t ",
-  statement:" SELECT * EXCLUDE t.path_does_not_exist, t.path_does_not_exist.*.foo, t.a['does not exist'], t.a FROM <<{'a': 1, 'b': 2}>> AS t ",
+  name:"SELECT * EXCLUDE t.path_does_not_exist, t.path_does_not_exist.*.foo, t.a['does not exist'], t.a FROM <<{'a': 1, 'b': 2}>> AS t",
+  statement:"SELECT * EXCLUDE t.path_does_not_exist, t.path_does_not_exist.*.foo, t.a['does not exist'], t.a FROM <<{'a': 1, 'b': 2}>> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1173,8 +1173,8 @@
   }
 }
 {
-  name:" SELECT * EXCLUDE t.a[*].bar, t.a.bar, t.a.*.bar FROM << {'a': [{'foo': 0, 'bar': 1, 'baz': 2}, {'foo': 3, 'bar': 4, 'baz': 5}]}, {'a': {'foo': 6, 'bar': 7, 'baz': 8}}, {'a': {'a1': {'foo': 9, 'bar': 10, 'baz': 11}, 'a2': {'foo': 12, 'bar': 13, 'baz': 14}}} >> AS t ",
-  statement:" SELECT * EXCLUDE t.a[*].bar, t.a.bar, t.a.*.bar FROM << {'a': [{'foo': 0, 'bar': 1, 'baz': 2}, {'foo': 3, 'bar': 4, 'baz': 5}]}, {'a': {'foo': 6, 'bar': 7, 'baz': 8}}, {'a': {'a1': {'foo': 9, 'bar': 10, 'baz': 11}, 'a2': {'foo': 12, 'bar': 13, 'baz': 14}}} >> AS t ",
+  name:"SELECT * EXCLUDE t.a[*].bar, t.a.bar, t.a.*.bar FROM << {'a': [{'foo': 0, 'bar': 1, 'baz': 2}, {'foo': 3, 'bar': 4, 'baz': 5}]}, {'a': {'foo': 6, 'bar': 7, 'baz': 8}}, {'a': {'a1': {'foo': 9, 'bar': 10, 'baz': 11}, 'a2': {'foo': 12, 'bar': 13, 'baz': 14}}} >> AS t",
+  statement:"SELECT * EXCLUDE t.a[*].bar, t.a.bar, t.a.*.bar FROM << {'a': [{'foo': 0, 'bar': 1, 'baz': 2}, {'foo': 3, 'bar': 4, 'baz': 5}]}, {'a': {'foo': 6, 'bar': 7, 'baz': 8}}, {'a': {'a1': {'foo': 9, 'bar': 10, 'baz': 11}, 'a2': {'foo': 12, 'bar': 13, 'baz': 14}}} >> AS t",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -1216,8 +1216,8 @@
   }
 }
 {
-  name:" SELECT SUM(t.b) AS total, g EXCLUDE g[*].t.c FROM [ {'a': 1, 'b': 2, 'c': 3}, {'a': 1, 'b': 22, 'c': 33}, {'a': 2, 'b': 222, 'c': 333} ] AS t GROUP BY t.a GROUP AS g HAVING COUNT(t.a) > 1 ",
-  statement:" SELECT SUM(t.b) AS total, g EXCLUDE g[*].t.c FROM [ {'a': 1, 'b': 2, 'c': 3}, {'a': 1, 'b': 22, 'c': 33}, {'a': 2, 'b': 222, 'c': 333} ] AS t GROUP BY t.a GROUP AS g HAVING COUNT(t.a) > 1 ",
+  name:"SELECT SUM(t.b) AS total, g EXCLUDE g[*].t.c FROM [ {'a': 1, 'b': 2, 'c': 3}, {'a': 1, 'b': 22, 'c': 33}, {'a': 2, 'b': 222, 'c': 333} ] AS t GROUP BY t.a GROUP AS g HAVING COUNT(t.a) > 1",
+  statement:"SELECT SUM(t.b) AS total, g EXCLUDE g[*].t.c FROM [ {'a': 1, 'b': 2, 'c': 3}, {'a': 1, 'b': 22, 'c': 33}, {'a': 2, 'b': 222, 'c': 333} ] AS t GROUP BY t.a GROUP AS g HAVING COUNT(t.a) > 1",
   assert:{
     result:EvaluationSuccess,
     evalMode:[

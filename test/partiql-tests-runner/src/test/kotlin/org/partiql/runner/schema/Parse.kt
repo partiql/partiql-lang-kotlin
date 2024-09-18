@@ -5,10 +5,10 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSymbol
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.TypingMode
-import org.partiql.lang.util.asIonStruct
-import org.partiql.lang.util.stringValue
+import org.partiql.runner.Mappings.asIonStruct
+import org.partiql.runner.Mappings.stringValue
+import org.partiql_v0_14_8.lang.eval.CompileOptions
+import org.partiql_v0_14_8.lang.eval.TypingMode
 
 /**
  * Parses the [testStruct] to a list of [TestCase]s with respect to the environments and equivalence classes provided
@@ -16,7 +16,7 @@ import org.partiql.lang.util.stringValue
  */
 private fun parseTestCase(testStruct: IonStruct, curNamespace: Namespace): List<TestCase> {
     val testCases = mutableListOf<TestCase>()
-    val name = testStruct.get("name").stringValue() ?: error("Expected test case to have field `name`")
+    val name = stringValue(testStruct.get("name")) ?: error("Expected test case to have field `name`")
     val statement = testStruct.get("statement") ?: error("Expected test case to have field `statement`")
     val env = testStruct.get("env") ?: curNamespace.env
     val assertList = when (val assert = testStruct.get("assert") ?: error("Expected test case to have field `assert`")) {
@@ -29,7 +29,7 @@ private fun parseTestCase(testStruct: IonStruct, curNamespace: Namespace): List<
         val assertionStruct = assertion as IonStruct
         val evalModeList = when (val evalModeIonValue = assertionStruct.get("evalMode")) {
             is IonSymbol -> listOf(evalModeIonValue.stringValue())
-            is IonList -> evalModeIonValue.toList().map { it.stringValue() }
+            is IonList -> evalModeIonValue.toList().map { stringValue(it) }
             else -> error("evalMode expects IonSymbol or IonList")
         }
 
@@ -39,7 +39,7 @@ private fun parseTestCase(testStruct: IonStruct, curNamespace: Namespace): List<
                 "EvalModeCoerce" -> CompileOptions.build { typingMode(TypingMode.PERMISSIVE) }
                 else -> error("unsupported eval modes")
             }
-            val evalResult: Assertion = when (assertionStruct.get("result").stringValue()) {
+            val evalResult: Assertion = when (stringValue(assertionStruct.get("result"))) {
                 "EvaluationSuccess" -> Assertion.EvaluationSuccess(assertionStruct.get("output"))
                 "EvaluationFail" -> Assertion.EvaluationFailure
                 else -> error("expected one of EvaluationSuccess or EvaluationFail")
@@ -49,18 +49,18 @@ private fun parseTestCase(testStruct: IonStruct, curNamespace: Namespace): List<
                 // statement being an IonString indicates that this is an Eval test case
                 IonType.STRING -> TestCase.Eval(
                     name = name,
-                    statement = statement.stringValue() ?: error("Expected `statement` to be a string"),
-                    env = env.asIonStruct(),
+                    statement = stringValue(statement) ?: error("Expected `statement` to be a string"),
+                    env = asIonStruct(env),
                     compileOptions = compileOption,
                     assertion = evalResult
                 )
                 // statement being an IonSymbol indicates that this is an eval equivalence test case
                 IonType.SYMBOL -> {
-                    val equivClassId = statement.stringValue() ?: error("Expected `statement` to be a symbol")
+                    val equivClassId = stringValue(statement) ?: error("Expected `statement` to be a symbol")
                     TestCase.Equiv(
                         name = name,
                         statements = curNamespace.equivClasses[equivClassId] ?: error("Equiv class $equivClassId not defined in current namespace"),
-                        env = env.asIonStruct(),
+                        env = asIonStruct(env),
                         compileOptions = compileOption,
                         assertion = evalResult
                     )
@@ -76,9 +76,9 @@ private fun parseEquivalenceClass(equivClassStruct: IonStruct): EquivalenceClass
     val id = equivClassStruct.get("id") ?: error("Expected field `id` for equivalence class struct: $equivClassStruct ")
     val statements = equivClassStruct.get("statements") ?: error("Expected field `statements` for equivalence class struct: $equivClassStruct")
 
-    val idAsString = id.stringValue() ?: error("Expected `id` to be an IonSymbol")
+    val idAsString = stringValue(id) ?: error("Expected `id` to be an IonSymbol")
     val statementsAsStrings = (statements as IonList).map { statement ->
-        statement.stringValue() ?: error("Expected each statement within equivalence class to be a string $statement")
+        stringValue(statement) ?: error("Expected each statement within equivalence class to be a string $statement")
     }
     return EquivalenceClass(
         idAsString,

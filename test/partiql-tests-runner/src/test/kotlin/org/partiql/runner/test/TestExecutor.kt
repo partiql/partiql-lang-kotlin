@@ -2,7 +2,7 @@ package org.partiql.runner.test
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
-import org.partiql.lang.eval.CompileOptions
+import org.partiql_v0_14_8.lang.eval.CompileOptions
 
 interface TestExecutor<T, V> {
 

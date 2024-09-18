@@ -1,13 +1,15 @@
 package org.partiql.runner
 
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
-import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.TypingMode
 import org.partiql.runner.executor.EvalExecutor
 import org.partiql.runner.report.ReportGenerator
 import org.partiql.runner.test.TestRunner
+import org.partiql_v0_14_8.lang.eval.CompileOptions
+import org.partiql_v0_14_8.lang.eval.TypingMode
 
 class ConformanceTestEval : ConformanceTestBase<PartiQLStatement<*>, PartiQLResult>() {
     companion object {
@@ -25,10 +27,64 @@ class ConformanceTestEval : ConformanceTestBase<PartiQLStatement<*>, PartiQLResu
     /**
      * Currently, the [ConformanceTestEval] only skips GPML-related tests.
      */
-    override val skipListForEvaluation: List<Pair<String, CompileOptions>>
-        get() = gpmlTests + testsToFix
+    override val skipListForEvaluation: Set<Pair<String, CompileOptions>> = getSkipList("/skip/eval/eval.txt")
 
-    override val skipListForEquivalence: List<Pair<String, CompileOptions>> = emptyList()
+    override val skipListForEquivalence: Set<Pair<String, CompileOptions>> = getSkipList("/skip/eval/eval-equiv.txt")
+
+    private fun getSkipList(path: String): Set<Pair<String, CompileOptions>> {
+        val reader = this::class.java.getResourceAsStream(path)?.bufferedReader() ?: error("Could not find skip list file.")
+        val skipList = mutableSetOf<Pair<String, CompileOptions>>()
+        reader.lines().forEach { line ->
+            // Skip empty lines
+            if (line.isEmpty()) {
+                return@forEach
+            }
+            // Skip comments
+            if (line.startsWith("//")) {
+                return@forEach
+            }
+            val parts = line.split(":::")
+            assert(parts.size == 2)
+            val compileOptions = when (parts[0]) {
+                "PERMISSIVE" -> COERCE_EVAL_MODE_COMPILE_OPTIONS
+                "LEGACY" -> ERROR_EVAL_MODE_COMPILE_OPTIONS
+                else -> throw IllegalArgumentException("Unknown typing mode: ${parts[0]}")
+            }
+            skipList.add(Pair(parts[1], compileOptions))
+        }
+        reader.close()
+        return skipList
+    }
+
+    @Disabled
+    @Test
+    fun print() {
+        printTestGroup("Alias tests", aliasTests)
+        printTestGroup("Arithmetic tests", arithmeticCases)
+        printTestGroup("Undefined variable tests", undefinedVariableCases)
+        printTestGroup("Negative offset", negativeOffset)
+        printTestGroup("Mistyped Coll Aggs", mistypedCollAggs)
+        printTestGroup("Mistyped functions", mistypedFunctions)
+        printTestGroup("Invalid casts", invalidCasts)
+        printTestGroup("Special forms", specialForms)
+        printTestGroup("Bag ops", bagOps)
+        printTestGroup("Operators", operators)
+        printTestGroup("Sexp tests", sexpTests)
+        printTestGroup("Miscellaneous", miscellaneousCases)
+        printTestGroup("GPML", gpmlTests)
+    }
+
+    private fun printTestGroup(groupName: String, tests: List<Pair<String, CompileOptions>>) {
+        println("// TODO: $groupName. Needed for V1 release.")
+        tests.forEach { tc ->
+            when (tc.second.typingMode) {
+                TypingMode.PERMISSIVE -> print("PERMISSIVE:::")
+                TypingMode.LEGACY -> print("LEGACY:::")
+            }
+            println(tc.first)
+        }
+        println()
+    }
 
     /**
      * TODO: ADD SUPPORT FOR THESE
@@ -269,342 +325,172 @@ class ConformanceTestEval : ConformanceTestBase<PartiQLStatement<*>, PartiQLResu
     private val gpmlTests: List<Pair<String, CompileOptions>> = listOf(
         Pair("Right with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right with variables and label", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right with variables and label", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right with variables and label", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right with variables and label", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Undirected with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Undirected with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Undirected with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Undirected with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Undirected with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Undirected with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Undirected with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Undirected with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Undirected shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Undirected shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Undirected shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Undirected shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Undirected with variables and label", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Undirected with variables and label", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Undirected with variables and label", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Undirected with variables and label", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right+undirected with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right+undirected with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right+undirected with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right+undirected with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right+undirected with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right+undirected with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right+undirected with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right+undirected with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right+undirected shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right+undirected shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right+undirected shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right+undirected shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right+undirected with variables and labels", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Right+undirected with variables and labels", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right+undirected with variables and labels", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Right+undirected with variables and labels", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+undirected with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+undirected with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+undirected with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+undirected with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+undirected with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+undirected with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+undirected with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+undirected with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+undirected shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+undirected shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+undirected shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+undirected shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+undirected with variables and label", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+undirected with variables and label", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+undirected with variables and label", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+undirected with variables and label", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right+undirected with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right+undirected with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right+undirected with variables", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right+undirected with variables", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right+undirected with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right+undirected with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right+undirected with spots", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right+undirected with spots", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right+undirected shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("Left+right+undirected shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right+undirected shorthand", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("Left+right+undirected shorthand", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N0E0 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N0E0 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N0E0 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N0E0 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N0E0 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N0E0 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N0E0 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N0E0 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N0E0 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N0E0 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N0E0 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N0E0 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1E0 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1E0 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1E0 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1E0 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1E0 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1E0 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1E0 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1E0 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1E0 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1E0 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1E0 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1E0 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1E0 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1E0 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1E0 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1E0 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH ~[y]~ )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH ~[y]~ )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH ~[y]~ )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH ~[y]~ )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH (x)~[y]~(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH (x)~[y]~(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH (x)~[y]~(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH (x)~[y]~(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH (x)~[y]~(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH (x)~[y]~(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH (x)~[y]~(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH (x)~[y]~(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N1D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N1D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2E0 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2E0 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2E0 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2E0 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2E0 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2E0 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2E0 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2E0 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2E0 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2E0 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2E0 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2E0 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2E0 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2E0 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2E0 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2E0 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH ~[y]~ )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH ~[y]~ )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH ~[y]~ )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH ~[y]~ )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x)~[y]~(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x)~[y]~(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x)~[y]~(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x)~[y]~(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x)~[y]~(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x)~[y]~(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x)~[y]~(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x)~[y]~(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x1)~[y1]~(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x1)~[y1]~(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x1)~[y1]~(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x1)~[y1]~(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x1)-[y1]-(x2)~[y2]~(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x1)-[y1]-(x2)~[y2]~(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x1)-[y1]-(x2)~[y2]~(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x1)-[y1]-(x2)~[y2]~(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U1 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2 MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH -[y]-> )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH -[y]-> )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x)-[y]->(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x)-[y]->(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x)-[y]->(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x)-[y]->(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x1) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x1) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x1) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]->(x1) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]->(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]-(x2)-[y2]->(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2D2c MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2D2c MATCH (x1)-[y1]-(x2)-[y2]-(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x))", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x))", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH ~[y]~ )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH ~[y]~ )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH ~[y]~ )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH ~[y]~ )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x)~[y]~(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x)~[y]~(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x)~[y]~(z) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x)~[y]~(z) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x)~[y]~(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x)~[y]~(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x)~[y]~(x) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x)~[y]~(x) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x1) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-        Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x1) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x1) )", COERCE_EVAL_MODE_COMPILE_OPTIONS),
         Pair("(N2U2 MATCH (x1)~[y1]~(x2)~[y2]~(x1) )", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     )

@@ -11,8 +11,6 @@ import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
 import org.partiql.eval.value.Datum
-import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.TypingMode
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
@@ -27,6 +25,8 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
+import org.partiql_v0_14_8.lang.eval.CompileOptions
+import org.partiql_v0_14_8.lang.eval.TypingMode
 import org.partiql.planner.catalog.Session as PlannerSession
 
 @OptIn(PartiQLValueExperimental::class)

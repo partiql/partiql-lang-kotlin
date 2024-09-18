@@ -163,8 +163,8 @@ envs::{
   }
 }
 {
-  name:" select * from <<1>> limit -1 ",
-  statement:" select * from <<1>> limit -1 ",
+  name:"select * from <<1>> limit -1",
+  statement:"select * from <<1>> limit -1",
   assert:{
     result:EvaluationFail,
     evalMode:[
