@@ -2,7 +2,6 @@ package org.partiql.eval.internal.operator
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
-import org.partiql.spi.fn.Agg
 import org.partiql.spi.value.Datum
 
 internal sealed interface Operator {
@@ -27,7 +26,7 @@ internal sealed interface Operator {
 
     interface Aggregation : Operator {
 
-        val delegate: Agg
+        val delegate: org.partiql.spi.fn.Aggregation
 
         val args: List<Expr>
 

@@ -3,20 +3,20 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_CONCAT__STRING_STRING__STRING : Fn {
+internal object Fn_CONCAT__STRING_STRING__STRING : Function {
 
     override val signature = FnSignature(
         name = "concat",
         returns = PType.string(),
         parameters = listOf(
-            FnParameter("lhs", PType.string()),
-            FnParameter("rhs", PType.string()),
+            Parameter("lhs", PType.string()),
+            Parameter("rhs", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -29,14 +29,14 @@ internal object Fn_CONCAT__STRING_STRING__STRING : Fn {
     }
 }
 
-internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Fn {
+internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Function {
 
     override val signature = FnSignature(
         name = "concat",
         returns = PType.symbol(),
         parameters = listOf(
-            FnParameter("lhs", PType.symbol()),
-            FnParameter("rhs", PType.symbol()),
+            Parameter("lhs", PType.symbol()),
+            Parameter("rhs", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -49,14 +49,14 @@ internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Fn {
     }
 }
 
-internal object Fn_CONCAT__CLOB_CLOB__CLOB : Fn {
+internal object Fn_CONCAT__CLOB_CLOB__CLOB : Function {
 
     override val signature = FnSignature(
         name = "concat",
         returns = PType.clob(Int.MAX_VALUE),
         parameters = listOf(
-            FnParameter("lhs", PType.clob(Int.MAX_VALUE)),
-            FnParameter("rhs", PType.clob(Int.MAX_VALUE)),
+            Parameter("lhs", PType.clob(Int.MAX_VALUE)),
+            Parameter("rhs", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

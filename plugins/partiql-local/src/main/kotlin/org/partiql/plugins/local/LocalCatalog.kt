@@ -1,7 +1,6 @@
 package org.partiql.plugins.local
 
 import org.partiql.spi.catalog.Catalog
-import org.partiql.spi.catalog.Function
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Namespace
@@ -92,8 +91,6 @@ internal class LocalCatalog(
             .filter { it.isDirectory }
             .map { toNamespace(it.toPath()) }
     }
-
-    override fun getFunctions(session: Session, name: Name): Collection<Function> = emptyList()
 
     private fun toPath(namespace: Namespace): Path {
         var curr = root

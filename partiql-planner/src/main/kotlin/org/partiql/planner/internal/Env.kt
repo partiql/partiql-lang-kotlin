@@ -56,7 +56,6 @@ internal class Env(private val session: Session) {
      *  1. Lookup in current catalog and namespace.
      *  2. Lookup as a schema-qualified identifier.
      *  3. Lookup as a catalog-qualified identifier.
-     *
      */
     fun resolveTable(identifier: Identifier): Rex? {
 
@@ -98,22 +97,38 @@ internal class Env(private val session: Session) {
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
 
+    /**
+     * TODO leverage session PATH.
+     *
+     * @param identifier
+     * @param args
+     * @return
+     */
     fun resolveFn(identifier: Identifier, args: List<Rex>): Rex? {
-        // Assume all functions are defined in the current catalog and reject qualified routine names.
+
+        // Reject qualified routine names.
         if (identifier.hasQualifier()) {
             error("Qualified functions are not supported.")
         }
-        val catalog = session.getCatalog()
-        val name = identifier.getIdentifier().getText().lowercase()
-        // Invoke existing function resolution logic
-        val variants = fns.lookupFn(name) ?: return null
+
+        // 1. Search in the current catalog and namespace.
+        val catalog = default
+        val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
+        val variants = catalog.getFunctions(session, name).map { it.signature }
+        if (variants.isEmpty()) {
+            return null
+        }
+
+        // 2. Search along the PATH.
+        // TODO
+
         val match = FnResolver.resolve(variants, args.map { it.type })
         // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {
             val candidates = variants.map { fnSignature ->
                 rexOpCallDynamicCandidate(
                     fn = refFn(
-                        catalog = catalog,
+                        catalog = catalog.getName(),
                         name = Name.of(name),
                         signature = fnSignature
                     ),
@@ -132,7 +147,7 @@ internal class Env(private val session: Session) {
                     // Create an internal typed reference for every candidate
                     rexOpCallDynamicCandidate(
                         fn = refFn(
-                            catalog = catalog,
+                            catalog = catalog.getName(),
                             name = Name.of(name),
                             signature = it.signature,
                         ),
@@ -145,7 +160,7 @@ internal class Env(private val session: Session) {
             is FnMatch.Static -> {
                 // Create an internal typed reference
                 val ref = refFn(
-                    catalog = catalog,
+                    catalog = catalog.getName(),
                     name = Name.of(name),
                     signature = match.signature,
                 )
@@ -164,16 +179,25 @@ internal class Env(private val session: Session) {
 
     fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
-        val catalog = session.getCatalog()
+
+        // 1. Search in the current catalog and namespace.
+        val catalog = default
         val name = path.lowercase()
+        val candidates = catalog.getAggregations(session, name).map { it.signature }
+        if (candidates.isEmpty()) {
+            return null
+        }
+
+        // 2. Search along the PATH.
+        // TODO
+
         // Invoke existing function resolution logic
-        val candidates = fns.lookupAgg(name) ?: return null
-        val parameters = args.mapIndexed { i, arg -> arg.type }
+        val parameters = args.map { it.type }
         val match = match(candidates, parameters) ?: return null
         val agg = match.first
         val mapping = match.second
         // Create an internal typed reference
-        val ref = refAgg(catalog, Name.of(name), agg)
+        val ref = refAgg(catalog.getName(), Name.of(name), agg)
         // Apply the coercions as explicit casts
         val coercions: List<Rex> = args.mapIndexed { i, arg ->
             when (val cast = mapping[i]) {
@@ -249,7 +273,7 @@ internal class Env(private val session: Session) {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.type.kind != Kind.DYNAMIC && a != p.type) return false
+            if (p.getType().kind != Kind.DYNAMIC && a != p.getType()) return false
         }
         return true
     }
@@ -267,11 +291,11 @@ internal class Env(private val session: Session) {
             val p = parameters[i]
             when {
                 // 1. Exact match
-                arg == p.type -> continue
+                arg == p.getType() -> continue
                 // 2. Match ANY, no coercion needed
-                p.type.kind == Kind.DYNAMIC -> continue
+                p.getType().kind == Kind.DYNAMIC -> continue
                 // 3. Check for a coercion
-                else -> when (val coercion = Coercions.get(arg, p.type)) {
+                else -> when (val coercion = Coercions.get(arg, p.getType())) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion
                 }

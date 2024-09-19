@@ -1,5 +1,9 @@
 package org.partiql.spi.catalog
 
+import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.SqlFnProvider
+
 /**
  * Catalog interface for access to tables and routines.
  *
@@ -60,13 +64,12 @@ public interface Catalog {
     public fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> = emptyList()
 
     /**
-     * Get a routine's variants by name; the default implementation is backed by the SQL-99 builtins.
+     * Returns a collection of scalar functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getFunctions(session: Session, name: Name): Collection<Function> {
-        // if (name.hasNamespace()) {
-        //     error("The default catalog implementation does not support namespaced functions, found: $name")
-        // }
-        // return SqlFunctions.getFunctions(name.getName())
-        error("Catalog functions are not implemented.")
-    }
+    public fun getFunctions(session: Session, name: String): Collection<Function> = SqlFnProvider.lookupFn(name)
+
+    /**
+     * Returns a collection of aggregation functions in this catalog with the given name, or an empty list if none.
+     */
+    public fun getAggregations(session: Session, name: String): Collection<Aggregation> = SqlFnProvider.lookupAgg(name)
 }

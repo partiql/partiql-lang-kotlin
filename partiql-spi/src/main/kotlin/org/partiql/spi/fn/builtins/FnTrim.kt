@@ -3,9 +3,9 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.fn.utils.StringUtils.codepointTrim
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -39,12 +39,12 @@ import org.partiql.types.PType
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-internal object Fn_TRIM__STRING__STRING : Fn {
+internal object Fn_TRIM__STRING__STRING : Function {
 
     override val signature = FnSignature(
         name = "trim",
         returns = PType.string(),
-        parameters = listOf(FnParameter("value", PType.string())),
+        parameters = listOf(Parameter("value", PType.string())),
         isNullCall = true,
         isNullable = false,
     )
@@ -56,12 +56,12 @@ internal object Fn_TRIM__STRING__STRING : Fn {
     }
 }
 
-internal object Fn_TRIM__SYMBOL__SYMBOL : Fn {
+internal object Fn_TRIM__SYMBOL__SYMBOL : Function {
 
     override val signature = FnSignature(
         name = "trim",
         returns = PType.symbol(),
-        parameters = listOf(FnParameter("value", PType.symbol())),
+        parameters = listOf(Parameter("value", PType.symbol())),
         isNullCall = true,
         isNullable = false,
     )
@@ -73,12 +73,12 @@ internal object Fn_TRIM__SYMBOL__SYMBOL : Fn {
     }
 }
 
-internal object Fn_TRIM__CLOB__CLOB : Fn {
+internal object Fn_TRIM__CLOB__CLOB : Function {
 
     override val signature = FnSignature(
         name = "trim",
         returns = PType.clob(Int.MAX_VALUE),
-        parameters = listOf(FnParameter("value", PType.clob(Int.MAX_VALUE))),
+        parameters = listOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
         isNullCall = true,
         isNullable = false,
     )

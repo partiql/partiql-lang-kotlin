@@ -5,8 +5,8 @@ import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Parameter
 import org.partiql.types.PType
 
 /**
@@ -24,8 +24,8 @@ class FnResolverTest {
                 name = "plus",
                 returns = PType.doublePrecision(),
                 parameters = listOf(
-                    FnParameter("arg-0", PType.doublePrecision()),
-                    FnParameter("arg-1", PType.doublePrecision()),
+                    Parameter("arg-0", PType.doublePrecision()),
+                    Parameter("arg-1", PType.doublePrecision()),
                 ),
             )
         )
@@ -42,8 +42,8 @@ class FnResolverTest {
                 name = "split",
                 returns = PType.array(),
                 parameters = listOf(
-                    FnParameter("value", PType.string()),
-                    FnParameter("delimiter", PType.string()),
+                    Parameter("value", PType.string()),
+                    Parameter("delimiter", PType.string()),
                 ),
                 isNullable = false,
             )

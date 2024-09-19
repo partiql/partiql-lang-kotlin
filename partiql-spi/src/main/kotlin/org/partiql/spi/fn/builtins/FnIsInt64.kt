@@ -3,18 +3,18 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_IS_INT64__ANY__BOOL : Fn {
+internal object Fn_IS_INT64__ANY__BOOL : Function {
 
     override val signature = FnSignature(
         name = "is_int64",
         returns = PType.bool(),
-        parameters = listOf(FnParameter("value", PType.dynamic())),
+        parameters = listOf(Parameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
@@ -25,7 +25,8 @@ internal object Fn_IS_INT64__ANY__BOOL : Fn {
             PType.Kind.TINYINT,
             PType.Kind.SMALLINT,
             PType.Kind.INTEGER,
-            PType.Kind.BIGINT -> Datum.bool(true)
+            PType.Kind.BIGINT,
+            -> Datum.bool(true)
             PType.Kind.NUMERIC -> {
                 val v = arg.bigInteger
                 return try {

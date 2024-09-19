@@ -120,7 +120,7 @@ internal object FnResolver {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (a != p.type) return false
+            if (a != p.getType()) return false
         }
         return true
     }
@@ -139,19 +139,19 @@ internal object FnResolver {
             val p = parameters[i]
             when {
                 // 1. Exact match
-                arg == p.type -> {
+                arg == p.getType() -> {
                     exactInputTypes++
                     continue
                 }
                 // 2. Match ANY parameter, no coercion needed
-                p.type.kind == Kind.DYNAMIC -> continue
+                p.getType().kind == Kind.DYNAMIC -> continue
                 arg.kind == Kind.UNKNOWN -> continue
                 // 3. Allow for ANY arguments
                 arg.kind == Kind.DYNAMIC -> {
-                    mapping[i] = Ref.Cast(arg, p.type.toCType(), Ref.Cast.Safety.UNSAFE, true)
+                    mapping[i] = Ref.Cast(arg, p.getType().toCType(), Ref.Cast.Safety.UNSAFE, true)
                 }
                 // 4. Check for a coercion
-                else -> when (val coercion = Coercions.get(arg, p.type)) {
+                else -> when (val coercion = Coercions.get(arg, p.getType())) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion
                 }

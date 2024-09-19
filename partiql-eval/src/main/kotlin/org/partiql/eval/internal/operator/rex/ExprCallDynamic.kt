@@ -3,7 +3,7 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
@@ -30,14 +30,14 @@ import org.partiql.value.PartiQLValue
  */
 internal class ExprCallDynamic(
     private val name: String,
-    candidateFns: Array<Fn>,
+    candidateFns: Array<Function>,
     private val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
     private val candidates = Array(candidateFns.size) { Candidate(candidateFns[it]) }
     private val paramIndices: IntRange = args.indices
-    private val paramTypes: List<List<PType>> = this.candidates.map { candidate -> candidate.fn.signature.parameters.map { it.type } }
-    private val paramFamilies: List<List<CoercionFamily>> = this.candidates.map { candidate -> candidate.fn.signature.parameters.map { family(it.type.kind) } }
+    private val paramTypes: List<List<PType>> = this.candidates.map { candidate -> candidate.fn.signature.parameters.map { it.getType() } }
+    private val paramFamilies: List<List<CoercionFamily>> = this.candidates.map { candidate -> candidate.fn.signature.parameters.map { family(it.getType().kind) } }
     private val cachedMatches: MutableMap<List<PType>, Int> = mutableMapOf()
 
     override fun eval(env: Environment): Datum {
@@ -154,7 +154,7 @@ internal class ExprCallDynamic(
      * @see ExprCallDynamic
      */
     private class Candidate(
-        val fn: Fn,
+        val fn: Function,
     ) {
 
         /**
@@ -168,7 +168,7 @@ internal class ExprCallDynamic(
                     return nil.invoke()
                 }
                 val argType = arg.type
-                val paramType = fn.signature.parameters[i].type
+                val paramType = fn.signature.parameters[i].getType()
                 when (paramType == argType) {
                     true -> arg
                     false -> CastTable.cast(arg, paramType)

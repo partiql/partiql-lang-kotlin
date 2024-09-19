@@ -4,18 +4,18 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_IS_CHAR__ANY__BOOL : Fn {
+internal object Fn_IS_CHAR__ANY__BOOL : Function {
 
     override val signature = FnSignature(
         name = "is_char",
         returns = PType.bool(),
-        parameters = listOf(FnParameter("value", PType.dynamic())),
+        parameters = listOf(Parameter("value", PType.dynamic())),
         isNullCall = true,
         isNullable = false,
     )
@@ -25,14 +25,14 @@ internal object Fn_IS_CHAR__ANY__BOOL : Fn {
     }
 }
 
-internal object Fn_IS_CHAR__INT32_ANY__BOOL : Fn {
+internal object Fn_IS_CHAR__INT32_ANY__BOOL : Function {
 
     override val signature = FnSignature(
         name = "is_char",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("type_parameter_1", PType.integer()),
-            FnParameter("value", PType.dynamic()),
+            Parameter("type_parameter_1", PType.integer()),
+            Parameter("value", PType.dynamic()),
         ),
         isNullCall = true,
         isNullable = false,

@@ -1,7 +1,7 @@
 package org.partiql.planner.internal
 
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Parameter
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
@@ -29,8 +29,8 @@ internal object FnComparator : Comparator<FnSignature> {
         return 0
     }
 
-    private fun FnParameter.compareTo(other: FnParameter): Int =
-        comparePrecedence(this.type, other.type)
+    private fun Parameter.compareTo(other: Parameter): Int =
+        comparePrecedence(this.getType(), other.getType())
 
     private fun comparePrecedence(t1: PType, t2: PType): Int {
         if (t1 == t2) return 0

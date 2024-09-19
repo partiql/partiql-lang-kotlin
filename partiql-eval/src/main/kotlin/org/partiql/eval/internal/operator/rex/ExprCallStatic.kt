@@ -2,13 +2,11 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Function
 import org.partiql.spi.value.Datum
-import org.partiql.value.PartiQLValueExperimental
 
-@OptIn(PartiQLValueExperimental::class)
 internal class ExprCallStatic(
-    private val fn: Fn,
+    private val fn: Function,
     private val inputs: Array<Operator.Expr>,
 ) : Operator.Expr {
 

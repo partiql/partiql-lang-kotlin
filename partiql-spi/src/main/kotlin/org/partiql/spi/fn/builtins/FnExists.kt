@@ -1,18 +1,18 @@
 package org.partiql.spi.fn.builtins
 
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_EXISTS__BAG__BOOL : Fn {
+internal object Fn_EXISTS__BAG__BOOL : Function {
 
     override val signature = FnSignature(
         name = "exists",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("container", PType.bag()),
+            Parameter("container", PType.bag()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -25,13 +25,13 @@ internal object Fn_EXISTS__BAG__BOOL : Fn {
     }
 }
 
-internal object Fn_EXISTS__LIST__BOOL : Fn {
+internal object Fn_EXISTS__LIST__BOOL : Function {
 
     override val signature = FnSignature(
         name = "exists",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("container", PType.array()),
+            Parameter("container", PType.array()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -44,13 +44,13 @@ internal object Fn_EXISTS__LIST__BOOL : Fn {
     }
 }
 
-internal object Fn_EXISTS__SEXP__BOOL : Fn {
+internal object Fn_EXISTS__SEXP__BOOL : Function {
 
     override val signature = FnSignature(
         name = "exists",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("container", PType.sexp()),
+            Parameter("container", PType.sexp()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -63,13 +63,13 @@ internal object Fn_EXISTS__SEXP__BOOL : Fn {
     }
 }
 
-internal object Fn_EXISTS__STRUCT__BOOL : Fn {
+internal object Fn_EXISTS__STRUCT__BOOL : Function {
 
     override val signature = FnSignature(
         name = "exists",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("container", PType.struct()),
+            Parameter("container", PType.struct()),
         ),
         isNullCall = true,
         isNullable = false,

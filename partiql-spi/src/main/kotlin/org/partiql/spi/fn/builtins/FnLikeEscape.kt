@@ -4,9 +4,9 @@
 package org.partiql.spi.fn.builtins
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.fn.utils.PatternUtils
 import org.partiql.spi.fn.utils.PatternUtils.checkPattern
 import org.partiql.spi.fn.utils.PatternUtils.parsePattern
@@ -14,15 +14,15 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import java.util.regex.Pattern
 
-internal object Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL : Fn {
+internal object Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL : Function {
 
     override val signature = FnSignature(
         name = "like_escape",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.string()),
-            FnParameter("pattern", PType.string()),
-            FnParameter("escape", PType.string()),
+            Parameter("value", PType.string()),
+            Parameter("pattern", PType.string()),
+            Parameter("escape", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -49,15 +49,15 @@ internal object Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL : Fn {
     }
 }
 
-internal object Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
+internal object Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL : Function {
 
     override val signature = FnSignature(
         name = "like_escape",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("pattern", PType.symbol()),
-            FnParameter("escape", PType.symbol()),
+            Parameter("value", PType.symbol()),
+            Parameter("pattern", PType.symbol()),
+            Parameter("escape", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -84,15 +84,15 @@ internal object Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
     }
 }
 
-internal object Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL : Fn {
+internal object Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL : Function {
 
     override val signature = FnSignature(
         name = "like_escape",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.clob(Int.MAX_VALUE)),
-            FnParameter("pattern", PType.clob(Int.MAX_VALUE)),
-            FnParameter("escape", PType.clob(Int.MAX_VALUE)),
+            Parameter("value", PType.clob(Int.MAX_VALUE)),
+            Parameter("pattern", PType.clob(Int.MAX_VALUE)),
+            Parameter("escape", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

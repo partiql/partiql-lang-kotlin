@@ -3,19 +3,19 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_CHAR_LENGTH__STRING__INT : Fn {
+internal object Fn_CHAR_LENGTH__STRING__INT : Function {
 
     override val signature = FnSignature(
         name = "char_length",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("value", PType.string()),
+            Parameter("value", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -27,13 +27,13 @@ internal object Fn_CHAR_LENGTH__STRING__INT : Fn {
     }
 }
 
-internal object Fn_CHAR_LENGTH__SYMBOL__INT : Fn {
+internal object Fn_CHAR_LENGTH__SYMBOL__INT : Function {
 
     override val signature = FnSignature(
         name = "char_length",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("lhs", PType.symbol()),
+            Parameter("lhs", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -45,13 +45,13 @@ internal object Fn_CHAR_LENGTH__SYMBOL__INT : Fn {
     }
 }
 
-internal object Fn_CHAR_LENGTH__CLOB__INT : Fn {
+internal object Fn_CHAR_LENGTH__CLOB__INT : Function {
 
     override val signature = FnSignature(
         name = "char_length",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("lhs", PType.clob(Int.MAX_VALUE)),
+            Parameter("lhs", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,

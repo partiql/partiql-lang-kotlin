@@ -4,12 +4,12 @@ package org.partiql.spi.fn
 import org.partiql.spi.fn.builtins.*
 
 /**
- * This is where we will register all SQL builtins. For now, we wrap the generated header to keep the diff small.
+ * This is where we will register all SQL builtins.
  */
 internal object SqlBuiltins {
 
     @JvmStatic
-    val builtins: List<Fn> = listOf(
+    val builtins: List<Function> = listOf(
         Fn_ABS__INT8__INT8,
         Fn_ABS__INT16__INT16,
         Fn_ABS__INT32__INT32,
@@ -407,7 +407,7 @@ internal object SqlBuiltins {
     )
 
     @JvmStatic
-    val aggregations: List<Agg> = listOf(
+    val aggregations: List<Aggregation> = listOf(
         Agg_ANY__BOOL__BOOL,
         Agg_AVG__INT8__INT8,
         Agg_AVG__INT16__INT16,

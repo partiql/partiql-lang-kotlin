@@ -5,20 +5,20 @@ package org.partiql.spi.fn.builtins
 
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Fn {
+internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Function {
 
     override val signature = FnSignature(
         name = "date_add_second",
         returns = PType.time(6),
         parameters = listOf(
-            FnParameter("interval", PType.integer()),
-            FnParameter("datetime", PType.time(6)),
+            Parameter("interval", PType.integer()),
+            Parameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -33,14 +33,14 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Fn {
     }
 }
 
-internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : Fn {
+internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : Function {
 
     override val signature = FnSignature(
         name = "date_add_second",
         returns = PType.time(6),
         parameters = listOf(
-            FnParameter("interval", PType.bigint()),
-            FnParameter("datetime", PType.time(6)),
+            Parameter("interval", PType.bigint()),
+            Parameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -55,14 +55,14 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : Fn {
     }
 }
 
-internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : Fn {
+internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : Function {
 
     override val signature = FnSignature(
         name = "date_add_second",
         returns = PType.time(6),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("interval", PType.numeric()),
-            FnParameter("datetime", PType.time(6)),
+            @Suppress("DEPRECATION") Parameter("interval", PType.numeric()),
+            Parameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -81,14 +81,14 @@ internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : Fn {
     }
 }
 
-internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : Fn {
+internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : Function {
 
     override val signature = FnSignature(
         name = "date_add_second",
         returns = PType.timestamp(6),
         parameters = listOf(
-            FnParameter("interval", PType.integer()),
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("interval", PType.integer()),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -103,14 +103,14 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : Fn {
     }
 }
 
-internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : Fn {
+internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : Function {
 
     override val signature = FnSignature(
         name = "date_add_second",
         returns = PType.timestamp(6),
         parameters = listOf(
-            FnParameter("interval", PType.bigint()),
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("interval", PType.bigint()),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -125,14 +125,14 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : Fn {
     }
 }
 
-internal object Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP : Fn {
+internal object Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP : Function {
 
     override val signature = FnSignature(
         name = "date_add_second",
         returns = PType.timestamp(6),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("interval", PType.numeric()),
-            FnParameter("datetime", PType.timestamp(6)),
+            @Suppress("DEPRECATION") Parameter("interval", PType.numeric()),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,

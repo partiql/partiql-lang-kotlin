@@ -3,9 +3,9 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.datetime.TimeZone
@@ -13,13 +13,13 @@ import org.partiql.value.datetime.TimeZone
 //
 // Extract Year
 //
-internal object Fn_EXTRACT_YEAR__DATE__INT32 : Fn {
+internal object Fn_EXTRACT_YEAR__DATE__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_year",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.date()),
+            Parameter("datetime", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -31,13 +31,13 @@ internal object Fn_EXTRACT_YEAR__DATE__INT32 : Fn {
     }
 }
 
-internal object Fn_EXTRACT_YEAR__TIMESTAMP__INT32 : Fn {
+internal object Fn_EXTRACT_YEAR__TIMESTAMP__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_year",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -52,13 +52,13 @@ internal object Fn_EXTRACT_YEAR__TIMESTAMP__INT32 : Fn {
 //
 // Extract Month
 //
-internal object Fn_EXTRACT_MONTH__DATE__INT32 : Fn {
+internal object Fn_EXTRACT_MONTH__DATE__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_month",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.date()),
+            Parameter("datetime", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -70,13 +70,13 @@ internal object Fn_EXTRACT_MONTH__DATE__INT32 : Fn {
     }
 }
 
-internal object Fn_EXTRACT_MONTH__TIMESTAMP__INT32 : Fn {
+internal object Fn_EXTRACT_MONTH__TIMESTAMP__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_month",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -92,13 +92,13 @@ internal object Fn_EXTRACT_MONTH__TIMESTAMP__INT32 : Fn {
 //  Extract Day
 //
 
-internal object Fn_EXTRACT_DAY__DATE__INT32 : Fn {
+internal object Fn_EXTRACT_DAY__DATE__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_day",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.date()),
+            Parameter("datetime", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -110,13 +110,13 @@ internal object Fn_EXTRACT_DAY__DATE__INT32 : Fn {
     }
 }
 
-internal object Fn_EXTRACT_DAY__TIMESTAMP__INT32 : Fn {
+internal object Fn_EXTRACT_DAY__TIMESTAMP__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_day",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -131,13 +131,13 @@ internal object Fn_EXTRACT_DAY__TIMESTAMP__INT32 : Fn {
 //
 // Extract Hour
 //
-internal object Fn_EXTRACT_HOUR__TIME__INT32 : Fn {
+internal object Fn_EXTRACT_HOUR__TIME__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_hour",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.time(6)),
+            Parameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -149,13 +149,13 @@ internal object Fn_EXTRACT_HOUR__TIME__INT32 : Fn {
     }
 }
 
-internal object Fn_EXTRACT_HOUR__TIMESTAMP__INT32 : Fn {
+internal object Fn_EXTRACT_HOUR__TIMESTAMP__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_hour",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -170,13 +170,13 @@ internal object Fn_EXTRACT_HOUR__TIMESTAMP__INT32 : Fn {
 //
 // Extract Minute
 //
-internal object Fn_EXTRACT_MINUTE__TIME__INT32 : Fn {
+internal object Fn_EXTRACT_MINUTE__TIME__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_minute",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.time(6)),
+            Parameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -188,13 +188,13 @@ internal object Fn_EXTRACT_MINUTE__TIME__INT32 : Fn {
     }
 }
 
-internal object Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 : Fn {
+internal object Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_minute",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -209,13 +209,13 @@ internal object Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 : Fn {
 //
 // Extract Second
 //
-internal object Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY : Fn {
+internal object Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY : Function {
 
     override val signature = FnSignature(
         name = "extract_second",
         returns = PType.decimal(),
         parameters = listOf(
-            FnParameter("datetime", PType.time(6)),
+            Parameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -227,13 +227,13 @@ internal object Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY : Fn {
     }
 }
 
-internal object Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY : Fn {
+internal object Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY : Function {
 
     override val signature = FnSignature(
         name = "extract_second",
         returns = PType.decimal(),
         parameters = listOf(
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -248,13 +248,13 @@ internal object Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY : Fn {
 //
 // Extract Timezone Hour
 //
-internal object Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 : Fn {
+internal object Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_timezone_hour",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.time(6)),
+            Parameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -270,13 +270,13 @@ internal object Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 : Fn {
     }
 }
 
-internal object Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 : Fn {
+internal object Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_timezone_hour",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -295,13 +295,13 @@ internal object Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 : Fn {
 //
 // Extract Timezone Minute
 //
-internal object Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 : Fn {
+internal object Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_timezone_minute",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.time(6)),
+            Parameter("datetime", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -317,13 +317,13 @@ internal object Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 : Fn {
     }
 }
 
-internal object Fn_EXTRACT_TIMEZONE_MINUTE__TIMESTAMP__INT32 : Fn {
+internal object Fn_EXTRACT_TIMEZONE_MINUTE__TIMESTAMP__INT32 : Function {
 
     override val signature = FnSignature(
         name = "extract_timezone_minute",
         returns = PType.integer(),
         parameters = listOf(
-            FnParameter("datetime", PType.timestamp(6)),
+            Parameter("datetime", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,

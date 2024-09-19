@@ -3,21 +3,21 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.spi.fn.Fn
-import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
+import org.partiql.spi.fn.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_BETWEEN__INT8_INT8_INT8__BOOL : Fn {
+internal object Fn_BETWEEN__INT8_INT8_INT8__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.tinyint()),
-            FnParameter("lower", PType.tinyint()),
-            FnParameter("upper", PType.tinyint()),
+            Parameter("value", PType.tinyint()),
+            Parameter("lower", PType.tinyint()),
+            Parameter("upper", PType.tinyint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -31,15 +31,15 @@ internal object Fn_BETWEEN__INT8_INT8_INT8__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__INT16_INT16_INT16__BOOL : Fn {
+internal object Fn_BETWEEN__INT16_INT16_INT16__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.smallint()),
-            FnParameter("lower", PType.smallint()),
-            FnParameter("upper", PType.smallint()),
+            Parameter("value", PType.smallint()),
+            Parameter("lower", PType.smallint()),
+            Parameter("upper", PType.smallint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -53,15 +53,15 @@ internal object Fn_BETWEEN__INT16_INT16_INT16__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__INT32_INT32_INT32__BOOL : Fn {
+internal object Fn_BETWEEN__INT32_INT32_INT32__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.integer()),
-            FnParameter("lower", PType.integer()),
-            FnParameter("upper", PType.integer()),
+            Parameter("value", PType.integer()),
+            Parameter("lower", PType.integer()),
+            Parameter("upper", PType.integer()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -75,15 +75,15 @@ internal object Fn_BETWEEN__INT32_INT32_INT32__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__INT64_INT64_INT64__BOOL : Fn {
+internal object Fn_BETWEEN__INT64_INT64_INT64__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.bigint()),
-            FnParameter("lower", PType.bigint()),
-            FnParameter("upper", PType.bigint()),
+            Parameter("value", PType.bigint()),
+            Parameter("lower", PType.bigint()),
+            Parameter("upper", PType.bigint()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -97,15 +97,15 @@ internal object Fn_BETWEEN__INT64_INT64_INT64__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__INT_INT_INT__BOOL : Fn {
+internal object Fn_BETWEEN__INT_INT_INT__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.numeric()),
-            @Suppress("DEPRECATION") FnParameter("lower", PType.numeric()),
-            @Suppress("DEPRECATION") FnParameter("upper", PType.numeric()),
+            @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
+            @Suppress("DEPRECATION") Parameter("lower", PType.numeric()),
+            @Suppress("DEPRECATION") Parameter("upper", PType.numeric()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -119,15 +119,16 @@ internal object Fn_BETWEEN__INT_INT_INT__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
+internal object Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL :
+    Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            @Suppress("DEPRECATION") FnParameter("value", PType.decimal()),
-            @Suppress("DEPRECATION") FnParameter("lower", PType.decimal()),
-            @Suppress("DEPRECATION") FnParameter("upper", PType.decimal()),
+            @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
+            @Suppress("DEPRECATION") Parameter("lower", PType.decimal()),
+            @Suppress("DEPRECATION") Parameter("upper", PType.decimal()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -141,15 +142,15 @@ internal object Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRAR
     }
 }
 
-internal object Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL : Fn {
+internal object Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.real()),
-            FnParameter("lower", PType.real()),
-            FnParameter("upper", PType.real()),
+            Parameter("value", PType.real()),
+            Parameter("lower", PType.real()),
+            Parameter("upper", PType.real()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -163,15 +164,15 @@ internal object Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL : Fn {
+internal object Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.doublePrecision()),
-            FnParameter("lower", PType.doublePrecision()),
-            FnParameter("upper", PType.doublePrecision()),
+            Parameter("value", PType.doublePrecision()),
+            Parameter("lower", PType.doublePrecision()),
+            Parameter("upper", PType.doublePrecision()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -185,15 +186,15 @@ internal object Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__STRING_STRING_STRING__BOOL : Fn {
+internal object Fn_BETWEEN__STRING_STRING_STRING__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.string()),
-            FnParameter("lower", PType.string()),
-            FnParameter("upper", PType.string()),
+            Parameter("value", PType.string()),
+            Parameter("lower", PType.string()),
+            Parameter("upper", PType.string()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -207,15 +208,15 @@ internal object Fn_BETWEEN__STRING_STRING_STRING__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
+internal object Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.symbol()),
-            FnParameter("lower", PType.symbol()),
-            FnParameter("upper", PType.symbol()),
+            Parameter("value", PType.symbol()),
+            Parameter("lower", PType.symbol()),
+            Parameter("upper", PType.symbol()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -229,15 +230,15 @@ internal object Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL : Fn {
+internal object Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.clob(Int.MAX_VALUE)),
-            FnParameter("lower", PType.clob(Int.MAX_VALUE)),
-            FnParameter("upper", PType.clob(Int.MAX_VALUE)),
+            Parameter("value", PType.clob(Int.MAX_VALUE)),
+            Parameter("lower", PType.clob(Int.MAX_VALUE)),
+            Parameter("upper", PType.clob(Int.MAX_VALUE)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -251,15 +252,15 @@ internal object Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__DATE_DATE_DATE__BOOL : Fn {
+internal object Fn_BETWEEN__DATE_DATE_DATE__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.date()),
-            FnParameter("lower", PType.date()),
-            FnParameter("upper", PType.date()),
+            Parameter("value", PType.date()),
+            Parameter("lower", PType.date()),
+            Parameter("upper", PType.date()),
         ),
         isNullCall = true,
         isNullable = false,
@@ -273,15 +274,15 @@ internal object Fn_BETWEEN__DATE_DATE_DATE__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__TIME_TIME_TIME__BOOL : Fn {
+internal object Fn_BETWEEN__TIME_TIME_TIME__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.time(6)),
-            FnParameter("lower", PType.time(6)),
-            FnParameter("upper", PType.time(6)),
+            Parameter("value", PType.time(6)),
+            Parameter("lower", PType.time(6)),
+            Parameter("upper", PType.time(6)),
         ),
         isNullCall = true,
         isNullable = false,
@@ -295,15 +296,15 @@ internal object Fn_BETWEEN__TIME_TIME_TIME__BOOL : Fn {
     }
 }
 
-internal object Fn_BETWEEN__TIMESTAMP_TIMESTAMP_TIMESTAMP__BOOL : Fn {
+internal object Fn_BETWEEN__TIMESTAMP_TIMESTAMP_TIMESTAMP__BOOL : Function {
 
     override val signature = FnSignature(
         name = "between",
         returns = PType.bool(),
         parameters = listOf(
-            FnParameter("value", PType.timestamp(6)),
-            FnParameter("lower", PType.timestamp(6)),
-            FnParameter("upper", PType.timestamp(6)),
+            Parameter("value", PType.timestamp(6)),
+            Parameter("lower", PType.timestamp(6)),
+            Parameter("upper", PType.timestamp(6)),
         ),
         isNullCall = true,
         isNullable = false,

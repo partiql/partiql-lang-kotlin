@@ -3,13 +3,13 @@
 
 package org.partiql.spi.fn.builtins
 
-import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnSignature
+import org.partiql.spi.fn.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.datetime.TimestampWithTimeZone
 
-internal object Fn_UTCNOW____TIMESTAMP : Fn {
+internal object Fn_UTCNOW____TIMESTAMP : Function {
 
     override val signature = FnSignature(
         name = "utcnow",

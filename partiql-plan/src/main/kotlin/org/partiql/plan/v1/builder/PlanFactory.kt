@@ -89,8 +89,8 @@ import org.partiql.plan.v1.operator.rex.RexTableImpl
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVarImpl
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.fn.Agg
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.fn.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -134,7 +134,7 @@ public interface PlanFactory {
      * @param isDistinct
      * @return
      */
-    public fun relAggregateCall(aggregation: Agg, args: List<Rex>, isDistinct: Boolean = false): RelAggregateCall =
+    public fun relAggregateCall(aggregation: Aggregation, args: List<Rex>, isDistinct: Boolean = false): RelAggregateCall =
         RelAggregateCallImpl(aggregation, args, isDistinct)
 
     /**
@@ -347,7 +347,7 @@ public interface PlanFactory {
      * @param args
      * @return
      */
-    public fun rexCall(function: Fn, args: List<Rex>): RexCallStatic = RexCallStaticImpl(function, args)
+    public fun rexCall(function: Function, args: List<Rex>): RexCallStatic = RexCallStaticImpl(function, args)
 
     /**
      * Create a [RexCallDynamic] instance.
@@ -356,7 +356,7 @@ public interface PlanFactory {
      * @param args
      * @return
      */
-    public fun rexCall(functions: List<Fn>, args: List<Rex>): RexCallDynamic = RexCallDynamicImpl(functions, args)
+    public fun rexCall(functions: List<Function>, args: List<Rex>): RexCallDynamic = RexCallDynamicImpl(functions, args)
 
     /**
      * Create a [RexCase] instance for a searched case-when.

@@ -16,7 +16,7 @@ package org.partiql.spi.fn.builtins.internal
 
 import com.amazon.ion.Decimal
 import org.partiql.errors.TypeCheckException
-import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.util.coerceNumbers
@@ -25,7 +25,7 @@ import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 
-internal abstract class Accumulator : Agg.Accumulator {
+internal abstract class Accumulator : Aggregation.Accumulator {
 
     override fun next(args: Array<Datum>) {
         val value = args[0]

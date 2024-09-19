@@ -22,8 +22,8 @@ import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
-import org.partiql.spi.fn.Agg
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.fn.Function
 import org.partiql.spi.fn.SqlFnProvider
 import org.partiql.spi.value.Datum
 import org.partiql.types.Field
@@ -441,7 +441,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         /**
          * TODO TEMPORARY!
          */
-        private fun getFn(ref: Ref.Fn): Fn {
+        private fun getFn(ref: Ref.Fn): Function {
             val specific = ref.signature.specific
             return SqlFnProvider.getFn(specific) ?: error("Function not found: $specific")
         }
@@ -449,7 +449,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         /**
          * TODO TEMPORARY!
          */
-        private fun getAgg(ref: Ref.Agg): Agg {
+        private fun getAgg(ref: Ref.Agg): Aggregation {
             val specific = ref.signature.specific
             return SqlFnProvider.getAgg(specific) ?: error("Aggregation not found: $specific")
         }
