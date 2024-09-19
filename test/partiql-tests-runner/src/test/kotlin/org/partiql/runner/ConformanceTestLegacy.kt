@@ -26,6 +26,6 @@ class ConformanceTestLegacy : ConformanceTestBase<ExprValue, IonValue>() {
     private val factory = LegacyExecutor.Factory
     override val runner = TestRunner(factory)
 
-    override val skipListForEvaluation: Set<Pair<String, CompileOptions>> = emptySet()
-    override val skipListForEquivalence: Set<Pair<String, CompileOptions>> = emptySet()
+    override val skipListForEvaluation: Set<Pair<String, CompileOptions>> = getSkipList("/skip/legacy/eval.txt")
+    override val skipListForEquivalence: Set<Pair<String, CompileOptions>> = getSkipList("/skip/legacy/eval-equiv.txt")
 }

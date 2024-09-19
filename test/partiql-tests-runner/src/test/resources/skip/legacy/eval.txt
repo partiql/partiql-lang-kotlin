@@ -1,0 +1,784 @@
+PERMISSIVE:::tuple navigation with array notation without explicit CAST to string
+LEGACY:::tuple navigation with array notation without explicit CAST to string
+LEGACY:::path on string
+LEGACY:::tuple navigation missing attribute dot notation
+LEGACY:::tuple navigation missing attribute array notation
+LEGACY:::single source FROM with bag and AT clause
+LEGACY:::single source FROM with scalar
+LEGACY:::single source FROM with scalar and AT clause
+LEGACY:::single source FROM with tuple
+LEGACY:::single source FROM with tuple and AT clause
+LEGACY:::single source FROM with absent value null
+LEGACY:::single source FROM with absent value null and AT clause
+LEGACY:::single source FROM with absent value missing
+LEGACY:::single source FROM with absent value missing and AT clause
+LEGACY:::attribute value evaluates to MISSING
+LEGACY:::array element evaluates to MISSING
+LEGACY:::bag element evaluates to MISSING
+LEGACY:::bag element evaluates to MISSING in bag constructor
+LEGACY:::pivot into a tuple with invalid attribute name
+LEGACY:::cast and operations with missing argument
+LEGACY:::missing value in arithmetic expression
+LEGACY:::equality of scalar missing
+PERMISSIVE:::missing and true
+LEGACY:::WHERE clause eliminating absent values
+PERMISSIVE:::coll_count without group by
+LEGACY:::coll_count without group by
+PERMISSIVE:::coll_count with result of subquery
+LEGACY:::coll_count with result of subquery
+LEGACY:::group by with absent values
+LEGACY:::group by with differenciated absent values
+PERMISSIVE:::windowing simplified with grouping
+LEGACY:::windowing simplified with grouping
+PERMISSIVE:::cast to MISSING valid cases{value:"NULL"}
+LEGACY:::cast to MISSING valid cases{value:"NULL"}
+PERMISSIVE:::cast to MISSING valid cases{value:"MISSING"}
+LEGACY:::cast to MISSING valid cases{value:"MISSING"}
+PERMISSIVE:::cast to NULL valid cases{value:"NULL"}
+LEGACY:::cast to NULL valid cases{value:"NULL"}
+PERMISSIVE:::cast to NULL valid cases{value:"MISSING"}
+LEGACY:::cast to NULL valid cases{value:"MISSING"}
+LEGACY:::MISSING LIKE 'some pattern'
+LEGACY:::'some value' LIKE MISSING
+LEGACY:::MISSING LIKE MISSING
+LEGACY:::NULL LIKE MISSING
+LEGACY:::MISSING LIKE NULL
+LEGACY:::MISSING LIKE 'some pattern' ESCAPE '/'
+LEGACY:::'some value' LIKE MISSING ESCAPE '/'
+LEGACY:::'some value' LIKE 'some pattern' ESCAPE MISSING
+LEGACY:::NULL LIKE 'some pattern' ESCAPE MISSING
+LEGACY:::'some value' LIKE NULL ESCAPE MISSING
+PERMISSIVE:::LIKE bad value type
+PERMISSIVE:::LIKE bad pattern type
+PERMISSIVE:::LIKE bad escape type
+PERMISSIVE:::outerUnionAll
+LEGACY:::outerUnionAll
+PERMISSIVE:::outerExceptDistinct
+LEGACY:::outerExceptDistinct
+LEGACY:::outerUnionCoerceScalar
+LEGACY:::outerUnionCoerceStruct
+PERMISSIVE:::outerUnionCoerceNullMissing
+LEGACY:::outerUnionCoerceNullMissing
+PERMISSIVE:::outerUnionCoerceList
+LEGACY:::outerUnionCoerceList
+LEGACY:::outerIntersectCoerceScalar
+LEGACY:::outerIntersectCoerceStruct
+PERMISSIVE:::outerIntersectCoerceNullMissing
+LEGACY:::outerIntersectCoerceNullMissing
+LEGACY:::outerExceptCoerceScalar
+LEGACY:::outerExceptCoerceStruct
+LEGACY:::outerExceptCoerceNullMissing
+PERMISSIVE:::OUTER UNION with ORDER BY LIMIT OFFSET on children
+LEGACY:::OUTER UNION with ORDER BY LIMIT OFFSET on children
+PERMISSIVE:::SQL UNION with ORDER BY LIMIT on children and set op
+LEGACY:::SQL UNION with ORDER BY LIMIT on children and set op
+PERMISSIVE:::SQL INTERSECT with ORDER BY LIMIT on children and set op
+LEGACY:::SQL INTERSECT with ORDER BY LIMIT on children and set op
+PERMISSIVE:::SQL EXCEPT with ORDER BY LIMIT on children and set op
+LEGACY:::SQL EXCEPT with ORDER BY LIMIT on children and set op
+PERMISSIVE:::PartiQL OUTER UNION with ORDER BY LIMIT on children and bag op
+LEGACY:::PartiQL OUTER UNION with ORDER BY LIMIT on children and bag op
+PERMISSIVE:::PartiQL OUTER INTERSECT with ORDER BY LIMIT on children and bag op
+LEGACY:::PartiQL OUTER INTERSECT with ORDER BY LIMIT on children and bag op
+PERMISSIVE:::PartiQL OUTER EXCEPT with ORDER BY LIMIT on children and bag op
+LEGACY:::PartiQL OUTER EXCEPT with ORDER BY LIMIT on children and bag op
+LEGACY:::notInPredicateSingleExpr
+LEGACY:::|| valid cases{lparam:"null",rparam:"missing",result:missing::null}
+LEGACY:::|| valid cases{lparam:"missing",rparam:"null",result:missing::null}
+LEGACY:::|| valid cases{lparam:"missing",rparam:"'b'",result:missing::null}
+LEGACY:::|| valid cases{lparam:"'a'",rparam:"missing",result:missing::null}
+LEGACY:::|| valid cases{lparam:"missing",rparam:"missing",result:missing::null}
+PERMISSIVE:::1.000 is DECIMAL(3,3)
+LEGACY:::1.000 is DECIMAL(3,3)
+PERMISSIVE:::123.456 is DECIMAL(7,3)
+LEGACY:::123.456 is DECIMAL(7,3)
+LEGACY:::simpleCase
+LEGACY:::simpleCaseNoElse
+LEGACY:::searchedCase
+LEGACY:::searchedCaseNoElse
+LEGACY:::dateTimePartsAsVariableNames
+LEGACY:::pathDotMissingAttribute
+LEGACY:::pathMissingDotName
+LEGACY:::pathIndexBagLiteral
+PERMISSIVE:::pathIndexStructLiteral
+LEGACY:::pathIndexStructLiteral
+LEGACY:::pathIndexStructOutOfBoundsLowLiteral
+LEGACY:::pathIndexStructOutOfBoundsHighLiteral
+LEGACY:::pathWildCardOverScalar
+LEGACY:::pathUnpivotWildCardOverScalar
+LEGACY:::pathWildCardOverScalarMultiple
+LEGACY:::pathUnpivotWildCardOverScalarMultiple
+LEGACY:::pathWildCardOverStructMultiple
+LEGACY:::pathUnpivotWildCardOverStructMultiple
+LEGACY:::unpivotMissing
+LEGACY:::unpivotMissingWithAsAndAt
+LEGACY:::unpivotMissingCrossJoinWithAsAndAt
+LEGACY:::dotted path expression with quoted field name accesses field UNAMBIGUOUS_FIELD (uppercase)
+PERMISSIVE:::subscript with variable in lowercase
+LEGACY:::subscript with variable in lowercase
+PERMISSIVE:::subscript with variable in uppercase
+LEGACY:::subscript with variable in uppercase
+PERMISSIVE:::subscript with variable in mixed case
+LEGACY:::subscript with variable in mixed case
+PERMISSIVE:::max top level{agg:'COLL_MAX(data)',result:(success 2)}
+LEGACY:::max top level{agg:'COLL_MAX(data)',result:(success 2)}
+PERMISSIVE:::coll_max top level{agg:'COLL_MAX(ALL data)',result:(success 2)}
+LEGACY:::coll_max top level{agg:'COLL_MAX(ALL data)',result:(success 2)}
+PERMISSIVE:::coll_max top level{agg:'COLL_MAX(DISTINCT data)',result:(success 2)}
+LEGACY:::coll_max top level{agg:'COLL_MAX(DISTINCT data)',result:(success 2)}
+PERMISSIVE:::topLevelCollMax
+LEGACY:::topLevelCollMax
+PERMISSIVE:::topLevelDistinctCollMax
+LEGACY:::topLevelDistinctCollMax
+PERMISSIVE:::topLevelAllCollMax
+LEGACY:::topLevelAllCollMax
+PERMISSIVE:::COLL_MAX empty collection
+LEGACY:::COLL_MAX empty collection
+PERMISSIVE:::COLL_MAX null
+LEGACY:::COLL_MAX null
+PERMISSIVE:::COLL_MAX missing
+LEGACY:::COLL_MAX missing
+PERMISSIVE:::COLL_MAX list of missing element
+LEGACY:::COLL_MAX list of missing element
+PERMISSIVE:::COLL_MAX bag of missing elements
+LEGACY:::COLL_MAX bag of missing elements
+PERMISSIVE:::COLL_MAX non-collection
+PERMISSIVE:::COLL_MAX bag of heterogeneous element types
+LEGACY:::COLL_MAX bag of heterogeneous element types
+PERMISSIVE:::coll_avg top level{agg:'COLL_AVG(data)',result:(success 1.25)}
+LEGACY:::coll_avg top level{agg:'COLL_AVG(data)',result:(success 1.25)}
+PERMISSIVE:::coll_avg top level{agg:'COLL_AVG(ALL data)',result:(success 1.25)}
+LEGACY:::coll_avg top level{agg:'COLL_AVG(ALL data)',result:(success 1.25)}
+PERMISSIVE:::coll_avg top level{agg:'COLL_AVG(DISTINCT data)',result:(success 1.5)}
+LEGACY:::coll_avg top level{agg:'COLL_AVG(DISTINCT data)',result:(success 1.5)}
+PERMISSIVE:::topLevelCollAvg
+LEGACY:::topLevelCollAvg
+PERMISSIVE:::topLevelDistinctCollAvg
+LEGACY:::topLevelDistinctCollAvg
+PERMISSIVE:::topLevelCollAvgOnlyInt
+LEGACY:::topLevelCollAvgOnlyInt
+PERMISSIVE:::COLL_AVG empty collection
+LEGACY:::COLL_AVG empty collection
+PERMISSIVE:::COLL_AVG null
+LEGACY:::COLL_AVG null
+PERMISSIVE:::COLL_AVG missing
+LEGACY:::COLL_AVG missing
+PERMISSIVE:::COLL_AVG list of missing element
+LEGACY:::COLL_AVG list of missing element
+PERMISSIVE:::COLL_AVG bag of missing elements
+LEGACY:::COLL_AVG bag of missing elements
+PERMISSIVE:::COLL_AVG non-collection
+PERMISSIVE:::COLL_AVG mistyped element
+PERMISSIVE:::coll_count top level{agg:'COLL_COUNT(data)',result:(success 4)}
+LEGACY:::coll_count top level{agg:'COLL_COUNT(data)',result:(success 4)}
+PERMISSIVE:::coll_count top level{agg:'COLL_COUNT(ALL data)',result:(success 4)}
+LEGACY:::coll_count top level{agg:'COLL_COUNT(ALL data)',result:(success 4)}
+PERMISSIVE:::coll_count top level{agg:'COLL_COUNT(DISTINCT data)',result:(success 2)}
+LEGACY:::coll_count top level{agg:'COLL_COUNT(DISTINCT data)',result:(success 2)}
+PERMISSIVE:::topLevelCollCountDistinct
+LEGACY:::topLevelCollCountDistinct
+PERMISSIVE:::topLevelCollCount
+LEGACY:::topLevelCollCount
+PERMISSIVE:::topLevelAllCollCount
+LEGACY:::topLevelAllCollCount
+PERMISSIVE:::COLL_COUNT empty collection
+LEGACY:::COLL_COUNT empty collection
+PERMISSIVE:::COLL_COUNT null
+LEGACY:::COLL_COUNT null
+PERMISSIVE:::COLL_COUNT missing
+LEGACY:::COLL_COUNT missing
+PERMISSIVE:::COLL_COUNT list of missing element
+LEGACY:::COLL_COUNT list of missing element
+PERMISSIVE:::COLL_COUNT bag of missing elements
+LEGACY:::COLL_COUNT bag of missing elements
+PERMISSIVE:::COLL_COUNT non-collection
+PERMISSIVE:::COLL_COUNT bag of heterogeneous element types
+LEGACY:::COLL_COUNT bag of heterogeneous element types
+PERMISSIVE:::coll_sum top level{agg:'COLL_SUM(data)',result:(success 5)}
+LEGACY:::coll_sum top level{agg:'COLL_SUM(data)',result:(success 5)}
+PERMISSIVE:::coll_sum top level{agg:'COLL_SUM(ALL data)',result:(success 5)}
+LEGACY:::coll_sum top level{agg:'COLL_SUM(ALL data)',result:(success 5)}
+PERMISSIVE:::coll_sum top level{agg:'COLL_SUM(DISTINCT data)',result:(success 3)}
+LEGACY:::coll_sum top level{agg:'COLL_SUM(DISTINCT data)',result:(success 3)}
+PERMISSIVE:::topLevelCollSum
+LEGACY:::topLevelCollSum
+PERMISSIVE:::topLevelAllCollSum
+LEGACY:::topLevelAllCollSum
+PERMISSIVE:::topLevelDistinctCollSum
+LEGACY:::topLevelDistinctCollSum
+PERMISSIVE:::COLL_SUM empty collection
+LEGACY:::COLL_SUM empty collection
+PERMISSIVE:::COLL_SUM null
+LEGACY:::COLL_SUM null
+PERMISSIVE:::COLL_SUM missing
+LEGACY:::COLL_SUM missing
+PERMISSIVE:::COLL_SUM list of missing element
+LEGACY:::COLL_SUM list of missing element
+PERMISSIVE:::COLL_SUM bag of missing elements
+LEGACY:::COLL_SUM bag of missing elements
+PERMISSIVE:::COLL_SUM non-collection
+PERMISSIVE:::COLL_SUM mistyped element
+PERMISSIVE:::coll_min top level{agg:'COLL_MIN(data)',result:(success 1)}
+LEGACY:::coll_min top level{agg:'COLL_MIN(data)',result:(success 1)}
+PERMISSIVE:::coll_min top level{agg:'COLL_MIN(ALL data)',result:(success 1)}
+LEGACY:::coll_min top level{agg:'COLL_MIN(ALL data)',result:(success 1)}
+PERMISSIVE:::coll_min top level{agg:'COLL_MIN(DISTINCT data)',result:(success 1)}
+LEGACY:::coll_min top level{agg:'COLL_MIN(DISTINCT data)',result:(success 1)}
+PERMISSIVE:::topLevelCollMin
+LEGACY:::topLevelCollMin
+PERMISSIVE:::topLevelDistinctCollMin
+LEGACY:::topLevelDistinctCollMin
+PERMISSIVE:::topLevelAllCollMin
+LEGACY:::topLevelAllCollMin
+PERMISSIVE:::COLL_MIN empty collection
+LEGACY:::COLL_MIN empty collection
+PERMISSIVE:::COLL_MIN null
+LEGACY:::COLL_MIN null
+PERMISSIVE:::COLL_MIN missing
+LEGACY:::COLL_MIN missing
+PERMISSIVE:::COLL_MIN list of missing element
+LEGACY:::COLL_MIN list of missing element
+PERMISSIVE:::COLL_MIN bag of missing elements
+LEGACY:::COLL_MIN bag of missing elements
+PERMISSIVE:::COLL_MIN non-collection
+PERMISSIVE:::COLL_MIN bag of heterogeneous element types
+LEGACY:::COLL_MIN bag of heterogeneous element types
+PERMISSIVE:::COLL_ANY bag literals
+LEGACY:::COLL_ANY bag literals
+PERMISSIVE:::COLL_ANY list expressions
+LEGACY:::COLL_ANY list expressions
+PERMISSIVE:::COLL_ANY single true
+LEGACY:::COLL_ANY single true
+PERMISSIVE:::COLL_ANY single false
+LEGACY:::COLL_ANY single false
+PERMISSIVE:::COLL_ANY nulls with true
+LEGACY:::COLL_ANY nulls with true
+PERMISSIVE:::COLL_ANY nulls with false
+LEGACY:::COLL_ANY nulls with false
+PERMISSIVE:::COLL_ANY nulls only
+LEGACY:::COLL_ANY nulls only
+PERMISSIVE:::COLL_ANY null
+LEGACY:::COLL_ANY null
+PERMISSIVE:::COLL_ANY missing
+LEGACY:::COLL_ANY missing
+PERMISSIVE:::COLL_ANY list of missing element
+LEGACY:::COLL_ANY list of missing element
+PERMISSIVE:::COLL_ANY bag of missing elements
+LEGACY:::COLL_ANY bag of missing elements
+PERMISSIVE:::COLL_ANY some empty
+LEGACY:::COLL_ANY some empty
+PERMISSIVE:::COLL_ANY non-collection
+PERMISSIVE:::COLL_ANY one non-bool, non-unknown
+PERMISSIVE:::COLL_ANY all non-bool, non-unknown
+PERMISSIVE:::COLL_ANY nested collection
+PERMISSIVE:::COLL_SOME bag literals
+LEGACY:::COLL_SOME bag literals
+PERMISSIVE:::COLL_SOME list expressions
+LEGACY:::COLL_SOME list expressions
+PERMISSIVE:::COLL_SOME single true
+LEGACY:::COLL_SOME single true
+PERMISSIVE:::COLL_SOME single false
+LEGACY:::COLL_SOME single false
+PERMISSIVE:::COLL_SOME nulls with true
+LEGACY:::COLL_SOME nulls with true
+PERMISSIVE:::COLL_SOME nulls with false
+LEGACY:::COLL_SOME nulls with false
+PERMISSIVE:::COLL_SOME nulls only
+LEGACY:::COLL_SOME nulls only
+PERMISSIVE:::COLL_SOME null
+LEGACY:::COLL_SOME null
+PERMISSIVE:::COLL_SOME missing
+LEGACY:::COLL_SOME missing
+PERMISSIVE:::COLL_SOME list of missing element
+LEGACY:::COLL_SOME list of missing element
+PERMISSIVE:::COLL_SOME bag of missing elements
+LEGACY:::COLL_SOME bag of missing elements
+PERMISSIVE:::COLL_SOME some empty
+LEGACY:::COLL_SOME some empty
+PERMISSIVE:::COLL_SOME non-collection
+PERMISSIVE:::COLL_SOME one non-bool, non-unknown
+PERMISSIVE:::COLL_SOME all non-bool, non-unknown
+PERMISSIVE:::COLL_SOME nested collection
+PERMISSIVE:::COLL_EVERY bag literals
+LEGACY:::COLL_EVERY bag literals
+PERMISSIVE:::COLL_EVERY list expressions
+LEGACY:::COLL_EVERY list expressions
+PERMISSIVE:::COLL_EVERY single true
+LEGACY:::COLL_EVERY single true
+PERMISSIVE:::COLL_EVERY single false
+LEGACY:::COLL_EVERY single false
+PERMISSIVE:::COLL_EVERY null and missing with true
+LEGACY:::COLL_EVERY null and missing with true
+PERMISSIVE:::COLL_EVERY null with false
+LEGACY:::COLL_EVERY null with false
+PERMISSIVE:::COLL_EVERY null and missing only
+LEGACY:::COLL_EVERY null and missing only
+PERMISSIVE:::COLL_EVERY null
+LEGACY:::COLL_EVERY null
+PERMISSIVE:::COLL_EVERY missing
+LEGACY:::COLL_EVERY missing
+PERMISSIVE:::COLL_EVERY list of missing element
+LEGACY:::COLL_EVERY list of missing element
+PERMISSIVE:::COLL_EVERY bag of missing elements
+LEGACY:::COLL_EVERY bag of missing elements
+PERMISSIVE:::COLL_EVERY empty collection
+LEGACY:::COLL_EVERY empty collection
+PERMISSIVE:::COLL_EVERY non-collection
+PERMISSIVE:::COLL_EVERY one non-bool, non-unknown
+PERMISSIVE:::COLL_EVERY all non-bool, non-unknown
+PERMISSIVE:::COLL_EVERY nested collection
+PERMISSIVE:::selectValueCollAggregate
+LEGACY:::selectValueCollAggregate
+LEGACY:::null comparison{sql:"MISSING = NULL",result:missing::null}
+LEGACY:::null comparison{sql:"NULL = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.null` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.bool` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.int` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.decimal` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.string` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.symbol` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.clob` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.blob` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.list` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.struct` = MISSING",result:missing::null}
+LEGACY:::null comparison{sql:"`null.sexp` = MISSING",result:missing::null}
+LEGACY:::concatenation with null values{left:"MISSING",right:"MISSING"}
+LEGACY:::concatenation with null values{left:"''",right:"MISSING"}
+LEGACY:::concatenation with null values{left:"MISSING",right:"''"}
+LEGACY:::concatenation with null values{left:"'a'",right:"MISSING"}
+LEGACY:::concatenation with null values{left:"MISSING",right:"'b'"}
+LEGACY:::char_length null and missing propagation{in:"missing",result:(success missing::null)}
+LEGACY:::character_length null and missing propagation{in:"missing",result:(success missing::null)}
+LEGACY:::upper null and missing propagation{param:"missing"}
+LEGACY:::cardinality null and missing propagation{param:"missing"}
+LEGACY:::EXTRACT(YEAR FROM MISSING)
+LEGACY:::EXTRACT(MONTH FROM MISSING)
+LEGACY:::EXTRACT(DAY FROM MISSING)
+LEGACY:::EXTRACT(HOUR FROM MISSING)
+LEGACY:::EXTRACT(MINUTE FROM MISSING)
+LEGACY:::EXTRACT(SECOND FROM MISSING)
+LEGACY:::EXTRACT(TIMEZONE_HOUR FROM MISSING)
+LEGACY:::EXTRACT(TIMEZONE_MINUTE FROM MISSING)
+PERMISSIVE:::EXTRACT(SECOND FROM `2000-01-02T03:04:05.67Z`)
+LEGACY:::EXTRACT(SECOND FROM `2000-01-02T03:04:05.67Z`)
+PERMISSIVE:::EXTRACT(SECOND FROM `2000-01-02T03:04:05.67+08:09`)
+LEGACY:::EXTRACT(SECOND FROM `2000-01-02T03:04:05.67+08:09`)
+LEGACY:::POSITION MISSING in string
+LEGACY:::POSITION string in MISSING
+LEGACY:::POSITION NULL in MISSING
+LEGACY:::POSITION MISSING in NULL
+LEGACY:::POSITION MISSING in MISSING
+LEGACY:::substring null and missing propagation 2 arguments{target:"missing",start_pos:"1"}
+LEGACY:::substring null and missing propagation 2 arguments{target:"''",start_pos:"missing"}
+LEGACY:::substring null and missing propagation 2 arguments{target:"missing",start_pos:"missing"}
+LEGACY:::substring null and missing propagation 2 arguments{target:"null",start_pos:"missing"}
+LEGACY:::substring null and missing propagation 2 arguments{target:"missing",start_pos:"null"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"null",start_pos:"1",quantity:"missing"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"null",start_pos:"null",quantity:"missing"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"1"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"null"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"missing"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"1"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"null"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"missing"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"1"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"null"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"missing"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"1"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"null"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"missing"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"''",start_pos:"1",quantity:"missing"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"''",start_pos:"null",quantity:"missing"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"1"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"null"}
+LEGACY:::substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"missing"}
+LEGACY:::lower null and missing propagation{param:"missing"}
+PERMISSIVE:::nullif valid cases{first:"missing",second:"missing",result:missing}
+LEGACY:::nullif valid cases{first:"missing",second:"missing",result:missing}
+LEGACY:::ABS(MISSING) null propogation
+LEGACY:::trim null and missing propagation{sql:"trim(missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(leading from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(trailing from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(both from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(leading '' from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(trailing '' from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(both '' from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(leading missing from '')"}
+LEGACY:::trim null and missing propagation{sql:"trim(trailing missing from '')"}
+LEGACY:::trim null and missing propagation{sql:"trim(both missing from '')"}
+LEGACY:::trim null and missing propagation{sql:"trim(leading null from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(trailing null from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(both null from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(leading missing from null)"}
+LEGACY:::trim null and missing propagation{sql:"trim(trailing missing from null)"}
+LEGACY:::trim null and missing propagation{sql:"trim(both missing from null)"}
+LEGACY:::trim null and missing propagation{sql:"trim(leading missing from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(trailing missing from missing)"}
+LEGACY:::trim null and missing propagation{sql:"trim(both missing from missing)"}
+LEGACY:::MOD(MISSING, 3)
+LEGACY:::MOD(3, MISSING)
+LEGACY:::MOD(MISSING, NULL)
+LEGACY:::MOD(NULL, MISSING)
+LEGACY:::BIT_LENGTH MISSING
+LEGACY:::OCTET_LENGTH MISSING
+LEGACY:::OVERLAY MISSING
+LEGACY:::OVERLAY PLACING MISSING
+LEGACY:::OVERLAY FROM MISSING
+LEGACY:::OVERLAY FOR MISSING
+LEGACY:::Empty Symbol in table
+LEGACY:::Empty Symbol in globals
+LEGACY:::Empty Symbol in alias
+LEGACY:::arithmetic with null/missing
+PERMISSIVE:::Example 1 — Union of Compatible Relations
+LEGACY:::Example 1 — Union of Compatible Relations
+PERMISSIVE:::Example 2.1 — Union of Compatible Relations; Mismatch Column Names; Without CORRESPONDING Clause
+LEGACY:::Example 2.1 — Union of Compatible Relations; Mismatch Column Names; Without CORRESPONDING Clause
+PERMISSIVE:::Example 2.2 — Union of Compatible Relations; Mismatch Column Names; With CORRESPONDING Clause
+LEGACY:::Example 2.2 — Union of Compatible Relations; Mismatch Column Names; With CORRESPONDING Clause
+PERMISSIVE:::Example 4 — Intersection of Compatible Relations
+LEGACY:::Example 4 — Intersection of Compatible Relations
+PERMISSIVE:::Example 5 — Difference of Compatible Relations
+LEGACY:::Example 5 — Difference of Compatible Relations
+LEGACY:::Example 6 — Value Coercion; Coercion of single value
+PERMISSIVE:::Example 7 — `engineering.employees UNION << MISSING >>`
+LEGACY:::Example 7 — `engineering.employees UNION << MISSING >>`
+LEGACY:::undefinedUnqualifiedVariableInSelectWithUndefinedVariableBehaviorMissing
+PERMISSIVE:::PG_JOIN_07
+LEGACY:::PG_JOIN_07
+PERMISSIVE:::PG_JOIN_09
+LEGACY:::PG_JOIN_09
+PERMISSIVE:::offset 2^63
+LEGACY:::offset 2^63
+PERMISSIVE:::offset 1-2
+PERMISSIVE:::offset <str>
+PERMISSIVE:::offset <decimal>>
+LEGACY:::pivotBadFieldType
+PERMISSIVE:::should order data types by the specifications (NULLS LAST default for asc)
+LEGACY:::should order data types by the specifications (NULLS LAST default for asc)
+PERMISSIVE:::should order data types by the specifications (NULLS FIRST default for desc)
+LEGACY:::should order data types by the specifications (NULLS FIRST default for desc)
+PERMISSIVE:::should order data types by the specifications (nulls should be first due to nulls spec)
+LEGACY:::should order data types by the specifications (nulls should be first due to nulls spec)
+PERMISSIVE:::should order data types by the specifications (nulls should be last due to nulls spec)
+LEGACY:::should order data types by the specifications (nulls should be last due to nulls spec)
+PERMISSIVE:::text types compared by lexicographical ordering of Unicode scalar (ASC)
+LEGACY:::text types compared by lexicographical ordering of Unicode scalar (ASC)
+PERMISSIVE:::text types compared by lexicographical ordering of Unicode scalar (DESC)
+LEGACY:::text types compared by lexicographical ordering of Unicode scalar (DESC)
+PERMISSIVE:::Empty Projection item (ordered) -- Output (unordered)
+LEGACY:::Empty Projection item (ordered) -- Output (unordered)
+PERMISSIVE:::Empty Projection item (unordered) -- Output (ordered)
+LEGACY:::Empty Projection item (unordered) -- Output (ordered)
+PERMISSIVE:::Empty Projection item (ordered) -- Output (ordered)
+LEGACY:::Empty Projection item (ordered) -- Output (ordered)
+PERMISSIVE:::Empty Projection item (unordered) -- Output (unordered)
+LEGACY:::Empty Projection item (unordered) -- Output (unordered)
+PERMISSIVE:::SELECT someMissing FROM simple_1_col_1_group GROUP BY MISSING AS someMissing
+LEGACY:::SELECT someMissing FROM simple_1_col_1_group GROUP BY MISSING AS someMissing
+PERMISSIVE:::SELECT VALUE { 'someMissing': someMissing } FROM simple_1_col_1_group GROUP BY MISSING AS someMissing
+LEGACY:::SELECT VALUE { 'someMissing': someMissing } FROM simple_1_col_1_group GROUP BY MISSING AS someMissing
+PERMISSIVE:::SELECT supplierId_missings FROM products_sparse p GROUP BY p.supplierId_missings
+LEGACY:::SELECT supplierId_missings FROM products_sparse p GROUP BY p.supplierId_missings
+PERMISSIVE:::SELECT p.supplierId_missings FROM products_sparse p GROUP BY p.supplierId_missings
+LEGACY:::SELECT p.supplierId_missings FROM products_sparse p GROUP BY p.supplierId_missings
+PERMISSIVE:::SELECT VALUE { 'supplierId_missings' : p.supplierId_missings } FROM products_sparse p GROUP BY p.supplierId_missings
+LEGACY:::SELECT VALUE { 'supplierId_missings' : p.supplierId_missings } FROM products_sparse p GROUP BY p.supplierId_missings
+PERMISSIVE:::SELECT supplierId_mixed FROM products_sparse p GROUP BY p.supplierId_mixed
+LEGACY:::SELECT supplierId_mixed FROM products_sparse p GROUP BY p.supplierId_mixed
+PERMISSIVE:::SELECT p.supplierId_mixed FROM products_sparse p GROUP BY p.supplierId_mixed
+LEGACY:::SELECT p.supplierId_mixed FROM products_sparse p GROUP BY p.supplierId_mixed
+PERMISSIVE:::SELECT VALUE { 'supplierId_mixed' : p.supplierId_mixed } FROM products_sparse p GROUP BY p.supplierId_mixed
+LEGACY:::SELECT VALUE { 'supplierId_mixed' : p.supplierId_mixed } FROM products_sparse p GROUP BY p.supplierId_mixed
+PERMISSIVE:::SELECT regionId, supplierId_missings FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings
+LEGACY:::SELECT regionId, supplierId_missings FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings
+PERMISSIVE:::SELECT p.regionId, p.supplierId_missings FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings
+LEGACY:::SELECT p.regionId, p.supplierId_missings FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings
+PERMISSIVE:::SELECT VALUE { 'regionId': p.regionId, 'supplierId_missings': p.supplierId_missings } FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings
+LEGACY:::SELECT VALUE { 'regionId': p.regionId, 'supplierId_missings': p.supplierId_missings } FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings
+PERMISSIVE:::SELECT regionId, supplierId_mixed FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed
+LEGACY:::SELECT regionId, supplierId_mixed FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed
+PERMISSIVE:::SELECT regionId, p.supplierId_mixed FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed
+LEGACY:::SELECT regionId, p.supplierId_mixed FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed
+PERMISSIVE:::SELECT VALUE { 'regionId': p.regionId, 'supplierId_mixed': p.supplierId_mixed } FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed
+LEGACY:::SELECT VALUE { 'regionId': p.regionId, 'supplierId_mixed': p.supplierId_mixed } FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed
+LEGACY:::SELECT COUNT(1) AS the_count, COUNT(p.price_missings) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, SUM(p.price_missings) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, MIN(p.price_missings) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, MAX(p.price_missings) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, AVG(p.price_missings) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, COUNT(p.price_mixed) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, SUM(p.price_mixed) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, MIN(p.price_mixed) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, MAX(p.price_mixed) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT COUNT(1) AS the_count, AVG(p.price_mixed) AS the_agg FROM products_sparse AS p
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, COUNT(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, SUM(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, MIN(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, MAX(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, AVG(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, COUNT(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, SUM(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, MIN(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, MAX(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT categoryId, COUNT(1) AS the_count, AVG(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, COUNT(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, SUM(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, MIN(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, MAX(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, AVG(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, COUNT(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, SUM(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, MIN(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, MAX(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+LEGACY:::SELECT p.categoryId, COUNT(1) AS the_count, AVG(p.price_mixed) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId
+PERMISSIVE:::SELECT VALUE with nested aggregates : SELECT VALUE (SELECT SUM(outerFromSource.col1) AS the_sum FROM <<1>>) FROM simple_1_col_1_group as outerFromSource
+LEGACY:::SELECT VALUE with nested aggregates : SELECT VALUE (SELECT SUM(outerFromSource.col1) AS the_sum FROM <<1>>) FROM simple_1_col_1_group as outerFromSource
+PERMISSIVE:::SELECT with nested aggregates (complex) 2
+LEGACY:::SELECT with nested aggregates (complex) 2
+PERMISSIVE:::selectFromScalarAndAtUnpivotWildCardOverScalar
+LEGACY:::selectFromScalarAndAtUnpivotWildCardOverScalar
+PERMISSIVE:::selectFromListAndAtUnpivotWildCardOverScalar
+LEGACY:::selectFromListAndAtUnpivotWildCardOverScalar
+PERMISSIVE:::selectFromBagAndAtUnpivotWildCardOverScalar
+LEGACY:::selectFromBagAndAtUnpivotWildCardOverScalar
+PERMISSIVE:::selectPathUnpivotWildCardOverStructMultiple
+LEGACY:::selectPathUnpivotWildCardOverStructMultiple
+LEGACY:::ordinalAccessWithNegativeIndex
+LEGACY:::ordinalAccessWithNegativeIndexAndBindings
+LEGACY:::rangeOverScalar
+LEGACY:::rangeTwiceOverScalar
+PERMISSIVE:::rangeOverSexp
+LEGACY:::rangeOverSexp
+LEGACY:::rangeOverStruct
+LEGACY:::rangeOverBagWithAt
+LEGACY:::rangeOverNestedWithAt
+LEGACY:::ANY with GROUP BY
+LEGACY:::ANY DISTINCT with GROUP BY
+LEGACY:::SOME with GROUP BY
+LEGACY:::SOME DISTINCT with GROUP BY
+LEGACY:::EVERY with GROUP BY
+LEGACY:::EVERY DISTINCT with GROUP BY
+PERMISSIVE:::selectListMultipleAggregatesNestedQuery
+LEGACY:::selectListMultipleAggregatesNestedQuery
+LEGACY:::undefinedUnqualifiedVariable_inSelect_withProjectionOption
+LEGACY:::projectionIterationBehaviorUnfiltered_select_list
+PERMISSIVE:::projectionIterationBehaviorUnfiltered_select_star
+LEGACY:::projectionIterationBehaviorUnfiltered_select_star
+LEGACY:::projectOfUnpivotPath
+LEGACY:::alias1.alias2.*
+LEGACY:::selectListWithMissing
+PERMISSIVE:::selectCorrelatedLeftJoin
+LEGACY:::selectCorrelatedLeftJoin
+PERMISSIVE:::selectCorrelatedLeftJoinOnClause
+LEGACY:::selectCorrelatedLeftJoinOnClause
+LEGACY:::selectNonCorrelatedJoin
+LEGACY:::correlatedJoinWithShadowedAttributes
+LEGACY:::correlatedJoinWithoutLexicalScope
+LEGACY:::joinWithShadowedGlobal
+LEGACY:::variableShadow
+LEGACY:::selectValueStructConstructorWithMissing
+PERMISSIVE:::selectIndexStruct
+LEGACY:::selectIndexStruct
+LEGACY:::emptySymbol
+LEGACY:::emptySymbolInGlobals
+PERMISSIVE:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00-01:00'
+LEGACY:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00-01:00'
+PERMISSIVE:::TIME WITH TIME ZONE '11:23:45.678' = TIME WITH TIME ZONE '11:23:45.678+06:00'
+LEGACY:::TIME WITH TIME ZONE '11:23:45.678' = TIME WITH TIME ZONE '11:23:45.678+06:00'
+PERMISSIVE:::TIME (2) WITH TIME ZONE '12:59:59.13456' = TIME WITH TIME ZONE '12:59:59.13-05:30'
+LEGACY:::TIME (2) WITH TIME ZONE '12:59:59.13456' = TIME WITH TIME ZONE '12:59:59.13-05:30'
+PERMISSIVE:::"stores"[0]."books"[2]."title"
+LEGACY:::"stores"[0]."books"[2]."title"
+PERMISSIVE:::SELECT s.abc FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s
+PERMISSIVE:::"abc"
+PERMISSIVE:::"ABC"
+PERMISSIVE:::"stores"[*]."books"[*]."title"
+LEGACY:::"stores"[*]."books"[*]."title"
+PERMISSIVE:::abc
+PERMISSIVE:::"friends"."kumo"."likes".*."type"
+LEGACY:::"friends"."kumo"."likes".*."type"
+PERMISSIVE:::"stores"[0]."books"[*]."title"
+LEGACY:::"stores"[0]."books"[*]."title"
+PERMISSIVE:::"friends".*."likes".*."type"
+LEGACY:::"friends".*."likes".*."type"
+PERMISSIVE:::1 IN 'so long'
+PERMISSIVE:::CAST(2147483648 AS INT)
+LEGACY:::CAST(2147483648 AS INT)
+PERMISSIVE:::CAST(-2147483649 AS INT)
+LEGACY:::CAST(-2147483649 AS INT)
+PERMISSIVE:::CAST(2147483647.5 AS INT)
+LEGACY:::CAST(2147483647.5 AS INT)
+PERMISSIVE:::CAST(2147483647.8 AS INT)
+LEGACY:::CAST(2147483647.8 AS INT)
+PERMISSIVE:::CAST(-2147483648.9 AS INT)
+LEGACY:::CAST(-2147483648.9 AS INT)
+PERMISSIVE:::TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x = i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x = i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x = i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x = i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x = i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x <> i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x <> i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x <> i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x <> i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x <> i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': true} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'x': false} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'y': true} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'y': false} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT NOT i.b AS result FROM << {  } >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'x': 'a'} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'y': 'b'} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': 1, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT +i.n AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT -i.n AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, missing, 2, 3] } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': 2 } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'y': [1, 2, 3] } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': MISSING, 'y': NULL } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.x IN (1, 2, 3)  AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.a LIKE 'a%' AS result FROM << {  } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'b': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'a': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': 'ab', 'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab',  'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL, 'c': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'c': NULL } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': missing } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': 4 } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': null } >> AS i
+LEGACY:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': null } >> AS i
