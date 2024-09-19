@@ -36,9 +36,11 @@ internal class PlannerErrorReportingTests {
         .define("struct_no_missing", PType.fromStaticType(closedStruct(StructType.Field("f1", StaticType.INT2))))
         .define(
             "struct_with_missing",
-            PType.fromStaticType(closedStruct(
-                StructType.Field("f1", StaticType.INT2),
-            ))
+            PType.fromStaticType(
+                closedStruct(
+                    StructType.Field("f1", StaticType.INT2),
+                )
+            )
         )
         .build()
 
