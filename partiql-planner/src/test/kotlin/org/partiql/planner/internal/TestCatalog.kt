@@ -3,13 +3,14 @@ package org.partiql.planner.internal
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
-import org.partiql.spi.catalog.Namespace
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.types.PType
 
 /**
  * Basic catalog implementation used for testing; consider merging with MemoryConnector?
+ *
+ * TODO COMBINE WITH MemoryCatalog as the standard catalog implementation.
  */
 public class TestCatalog private constructor(
     private val name: String,
@@ -22,30 +23,12 @@ public class TestCatalog private constructor(
         return null
     }
 
-    override fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? {
-        val matched = mutableListOf<String>()
+    override fun getTable(session: Session, identifier: Identifier): Table? {
         var curr: Tree = root
         for (part in identifier) {
             curr = curr.get(part) ?: break
-            matched.add(curr.name)
         }
-        if (curr.table == null) {
-            return null
-        }
-        return Table.Handle(
-            name = Name.of(matched),
-            table = curr.table!!
-        )
-    }
-
-    // TODO
-    override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
-        return emptyList()
-    }
-
-    // TODO
-    override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
-        return emptyList()
+        return curr.table
     }
 
     private class Tree(
@@ -115,7 +98,7 @@ public class TestCatalog private constructor(
                 // upsert namespaces
                 curr = curr.getOrPut(part)
             }
-            curr.table = Table.empty(name.getName(), schema)
+            curr.table = Table.empty(name, schema)
             return this
         }
 

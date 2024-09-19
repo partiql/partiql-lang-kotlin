@@ -20,7 +20,7 @@ import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.spi.catalog.Session
 import java.util.stream.Stream
 import kotlin.test.assertEquals
@@ -31,7 +31,7 @@ class SubsumptionTest {
 
         private val planner = PartiQLPlanner.standard()
         private val parser = PartiQLParser.default()
-        private val catalog = MemoryConnector.builder().name("default").build().getCatalog()
+        private val catalog = MemoryCatalog.builder().name("default").build()
     }
 
     private fun getExcludeClause(statement: Statement): Rel.Op.Exclude {

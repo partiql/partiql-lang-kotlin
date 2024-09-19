@@ -51,7 +51,7 @@ internal class Env(private val session: Session) {
     private val fns: SqlFnProvider = SqlFnProvider
 
     /**
-     * Catalog lookup needs to search (3x) to handle schema-qualified and catalog-qualified use-cases.
+     * Catalog lookup needs to search (3x) to table schema-qualified and catalog-qualified use-cases.
      *
      *  1. Lookup in current catalog and namespace.
      *  2. Lookup as a schema-qualified identifier.
@@ -62,38 +62,38 @@ internal class Env(private val session: Session) {
         // 1. Search in current catalog and namespace
         var catalog = default
         var path = resolve(identifier)
-        var handle = catalog.getTableHandle(session, path)
+        var table = catalog.getTable(session, path)
 
         // 2. Lookup as a schema-qualified identifier.
-        if (handle == null && identifier.hasQualifier()) {
+        if (table == null && identifier.hasQualifier()) {
             path = identifier
-            handle = catalog.getTableHandle(session, path)
+            table = catalog.getTable(session, path)
         }
 
         // 3. Lookup as a catalog-qualified identifier
-        if (handle == null && identifier.hasQualifier()) {
+        if (table == null && identifier.hasQualifier()) {
             val parts = identifier.getParts()
             val head = parts.first()
             val tail = parts.drop(1)
             catalog = catalogs.getCatalog(head.getText(), ignoreCase = head.isRegular()) ?: return null
             path = Identifier.of(tail)
-            handle = catalog.getTableHandle(session, path)
+            table = catalog.getTable(session, path)
         }
 
         // !! NOT FOUND !!
-        if (handle == null) {
+        if (table == null) {
             return null
         }
 
         // Make a reference and return a global variable expression.
         val refCatalog = catalog.getName()
-        val refName = handle.name
-        val refType = CompilerType(handle.table.getSchema())
-        val ref = Ref.Obj(refCatalog, refName, refType, handle.table)
+        val refName = table.getName()
+        val refType = CompilerType(table.getSchema())
+        val ref = Ref.Obj(refCatalog, refName, refType, table)
 
         // Convert any remaining identifier parts to a path expression
         val root = Rex(ref.type, rexOpVarGlobal(ref))
-        val tail = calculateMatched(path, handle.name)
+        val tail = calculateMatched(path, refName)
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
 

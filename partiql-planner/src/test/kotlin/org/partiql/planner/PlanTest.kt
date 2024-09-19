@@ -118,10 +118,11 @@ class PlanTest {
             // Assert
             DynamicTest.dynamicTest(displayName) {
                 val input = input[test.key] ?: error("no test cases")
-
+                val originalQuery = input
+                val normalizedQuery = test
                 listOf(true, false).forEach { isSignal ->
-                    val inputPlan = pipeline.invoke(input, isSignal).plan
-                    val outputPlan = pipeline.invoke(test, isSignal).plan
+                    val inputPlan = pipeline.invoke(originalQuery, isSignal).plan
+                    val outputPlan = pipeline.invoke(normalizedQuery, isSignal).plan
                     assertPlanEqual(inputPlan, outputPlan)
                 }
             }

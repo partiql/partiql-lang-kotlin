@@ -14,71 +14,40 @@
 
 package org.partiql.plugins.local
 
-import com.amazon.ionelement.api.StructElement
+import org.partiql.spi.Connector
 import org.partiql.spi.catalog.Catalog
-import org.partiql.spi.connector.Connector
 import java.nio.file.Path
-import java.nio.file.Paths
-import kotlin.io.path.isDirectory
-import kotlin.io.path.notExists
 
 /**
  * An implementation of a PartiQL [Connector] backed by a catalog in a local directory.
  *
- * Set to the "root" key to specify the root of the local database.
- *
- * ```ion
- * {
- *   connector_name: "local",
- *   root: "/Users/me/some/root/directory"
- * }
+ * Example:
+ * ```
+ * val connector = LocalConnector()
+ * val context = LocalConnector.Context(Paths.get("/path/to/catalog"))
+ * val catalog = connector.getCatalog("my_catalog", context)
+ * // use catalog
  * ```
  */
-public class LocalConnector private constructor(
-    private val name: String,
-    private val root: Path,
-) : Connector {
+public class LocalConnector : Connector {
 
-    private val catalog = LocalCatalog(name, root)
+    /**
+     * Context arguments for instantiating a [LocalConnector] catalog.
+     *
+     * @property root   The catalog root directory.
+     */
+    public class Context(@JvmField public val root: Path) : Connector.Context
 
-    public companion object {
-
-        public const val CONNECTOR_NAME: String = "local"
-
-        public const val ROOT_KEY: String = "root"
-
-        @JvmStatic
-        public fun builder(): Builder = Builder()
-
-        public class Builder internal constructor() {
-
-            private var name: String? = null
-
-            private var root: Path? = null
-
-            public fun name(name: String): Builder = apply { this.name = name }
-
-            public fun root(root: Path): Builder = apply { this.root = root }
-
-            public fun build(): LocalConnector = LocalConnector(name!!, root!!)
-        }
+    override fun getCatalog(name: String): Catalog {
+        throw IllegalArgumentException("LocalConnector cannot instantiate a catalog with no context")
     }
 
-    override fun getCatalog(): Catalog = catalog
-
-    internal class Factory : Connector.Factory {
-
-        override val name: String = CONNECTOR_NAME
-
-        override fun create(config: StructElement): Connector {
-            val root = config.getOptional(ROOT_KEY)?.stringValueOrNull?.let { Paths.get(it) }
-            if (root == null) {
-                error("Root cannot be null")
-            }
-            if (root.notExists() || !root.isDirectory()) {
-                error("Invalid catalog `$root`")
-            }
-            return LocalConnector("default", root)
+    override fun getCatalog(name: String, context: Connector.Context): Catalog {
+        if (context !is Context) {
+            throw IllegalArgumentException("LocalConnector context must be of type ${Context::class.java}, found: ${context::class.java}")
         }
+        return getCatalog(name, context)
     }
+
+    private fun getCatalog(name: String, context: Context): Catalog = LocalCatalog(name, context.root)
 }

@@ -11,7 +11,7 @@ import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
@@ -50,24 +50,25 @@ abstract class PartiQLTyperTestBase {
 
     val inputs = PartiQLTestProvider().apply { load() }
 
-    val testingPipeline: ((String, String, Catalog, ProblemCallback) -> PartiQLPlanner.Result) = { query, catalog, metadata, collector ->
-        val ast = parser.parse(query).root
-        planner.plan(ast, session(catalog, metadata), collector)
-    }
+    val testingPipeline: ((String, String, Catalog, ProblemCallback) -> PartiQLPlanner.Result) =
+        { query, catalog, metadata, collector ->
+            val ast = parser.parse(query).root
+            planner.plan(ast, session(catalog, metadata), collector)
+        }
 
     /**
      * Build a ConnectorMetadata instance from the list of types.
      */
-    private fun buildMetadata(catalog: String, types: List<StaticType>): Catalog {
-        val connector = MemoryConnector.builder().name(catalog)
+    private fun buildCatalog(name: String, types: List<StaticType>): Catalog {
+        val catalog = MemoryCatalog.builder().name(name)
         // define all bindings
         types.forEachIndexed { i, t ->
-            val name = Name.of("t${i + 1}")
-            val schema = PType.fromStaticType(t)
-            val table = MemoryTable.empty(name, schema)
-            connector.define(table)
+            val tableName = Name.of("t${i + 1}")
+            val tableSchema = PType.fromStaticType(t)
+            val table = MemoryTable.empty(tableName, tableSchema)
+            catalog.define(table)
         }
-        return connector.build().getCatalog()
+        return catalog.build()
     }
 
     fun testGen(
@@ -81,7 +82,7 @@ abstract class PartiQLTyperTestBase {
             val children = argsMap.flatMap { (key, value) ->
                 value.mapIndexed { index: Int, types: List<StaticType> ->
                     val testName = "${testCategory}_${key}_$index"
-                    val metadata = buildMetadata(testName, types)
+                    val metadata = buildCatalog(testName, types)
                     val displayName = "$group | $testName | $types"
                     val statement = test.statement
                     // Assert

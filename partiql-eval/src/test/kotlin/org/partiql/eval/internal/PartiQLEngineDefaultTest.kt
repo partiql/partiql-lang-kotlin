@@ -14,7 +14,7 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.planner.internal.SqlPlannerV1
-import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -1261,7 +1261,7 @@ class PartiQLEngineDefaultTest {
 
         internal fun assert() {
             val statement = parser.parse(input).root
-            val connector = MemoryConnector.builder()
+            val catalog = MemoryCatalog.builder()
                 .name("memory")
                 .apply {
                     globals.forEach {
@@ -1276,7 +1276,7 @@ class PartiQLEngineDefaultTest {
                 .build()
             val session = Session.builder()
                 .catalog("memory")
-                .catalogs(connector.getCatalog())
+                .catalogs(catalog)
                 .build()
             val plan = SqlPlannerV1.plan(statement, session)
             val stmt = engine.prepare(plan, mode, session)
@@ -1353,10 +1353,10 @@ class PartiQLEngineDefaultTest {
 
         private fun run(mode: PartiQLEngine.Mode): Pair<PartiQLValue, PartiQLPlan> {
             val statement = parser.parse(input).root
-            val connector = MemoryConnector.builder().name("memory").build()
+            val catalog = MemoryCatalog.builder().name("memory").build()
             val session = Session.builder()
                 .catalog("memory")
-                .catalogs(connector.getCatalog())
+                .catalogs(catalog)
                 .build()
             val plan = SqlPlannerV1.plan(statement, session)
             val stmt = engine.prepare(plan, mode, session)

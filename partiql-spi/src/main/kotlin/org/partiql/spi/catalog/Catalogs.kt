@@ -11,11 +11,6 @@ public interface Catalogs {
     public fun getCatalog(name: String, ignoreCase: Boolean = false): Catalog?
 
     /**
-     * Returns a list of all available catalogs.
-     */
-    public fun listCatalogs(): Collection<Catalog> = listOf()
-
-    /**
      * Factory methods and builder.
      */
     public companion object {
@@ -69,8 +64,6 @@ public interface Catalogs {
                     // lookup
                     return catalogs[name]
                 }
-
-                override fun listCatalogs(): Collection<Catalog> = catalogs.values
             }
         }
     }

@@ -277,38 +277,33 @@ public final class org/partiql/errors/TypeCheckException : java/lang/RuntimeExce
 	public fun fillInStackTrace ()Ljava/lang/Throwable;
 }
 
-public abstract interface class org/partiql/spi/Plugin {
-	public abstract fun getFactory ()Lorg/partiql/spi/connector/Connector$Factory;
+public abstract interface class org/partiql/spi/Connector {
+	public abstract fun getCatalog (Ljava/lang/String;)Lorg/partiql/spi/catalog/Catalog;
+	public abstract fun getCatalog (Ljava/lang/String;Lorg/partiql/spi/Connector$Context;)Lorg/partiql/spi/catalog/Catalog;
+}
+
+public abstract interface class org/partiql/spi/Connector$Context {
 }
 
 public abstract interface class org/partiql/spi/catalog/Catalog {
 	public abstract fun getAggregations (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getFunctions (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getTable (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Table;
 	public abstract fun getTable (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
-	public abstract fun getTableHandle (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Table$Handle;
-	public abstract fun listNamespaces (Lorg/partiql/spi/catalog/Session;)Ljava/util/Collection;
-	public abstract fun listNamespaces (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Namespace;)Ljava/util/Collection;
-	public abstract fun listTables (Lorg/partiql/spi/catalog/Session;)Ljava/util/Collection;
-	public abstract fun listTables (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Namespace;)Ljava/util/Collection;
 }
 
 public final class org/partiql/spi/catalog/Catalog$DefaultImpls {
 	public static fun getAggregations (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public static fun getFunctions (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
+	public static fun getTable (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Table;
 	public static fun getTable (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
-	public static fun getTableHandle (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Table$Handle;
-	public static fun listNamespaces (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;)Ljava/util/Collection;
-	public static fun listNamespaces (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Namespace;)Ljava/util/Collection;
-	public static fun listTables (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;)Ljava/util/Collection;
-	public static fun listTables (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Namespace;)Ljava/util/Collection;
 }
 
 public abstract interface class org/partiql/spi/catalog/Catalogs {
 	public static final field Companion Lorg/partiql/spi/catalog/Catalogs$Companion;
 	public static fun builder ()Lorg/partiql/spi/catalog/Catalogs$Builder;
 	public abstract fun getCatalog (Ljava/lang/String;Z)Lorg/partiql/spi/catalog/Catalog;
-	public abstract fun listCatalogs ()Ljava/util/Collection;
 	public static fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Catalogs;
 	public static fun of ([Lorg/partiql/spi/catalog/Catalog;)Lorg/partiql/spi/catalog/Catalogs;
 }
@@ -327,7 +322,6 @@ public final class org/partiql/spi/catalog/Catalogs$Companion {
 
 public final class org/partiql/spi/catalog/Catalogs$DefaultImpls {
 	public static synthetic fun getCatalog$default (Lorg/partiql/spi/catalog/Catalogs;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/spi/catalog/Catalog;
-	public static fun listCatalogs (Lorg/partiql/spi/catalog/Catalogs;)Ljava/util/Collection;
 }
 
 public final class org/partiql/spi/catalog/Identifier : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
@@ -514,25 +508,6 @@ public final class org/partiql/spi/catalog/Table$Companion {
 public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getDatum (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/spi/value/Datum;
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
-}
-
-public final class org/partiql/spi/catalog/Table$Handle {
-	public final field name Lorg/partiql/spi/catalog/Name;
-	public final field table Lorg/partiql/spi/catalog/Table;
-	public fun <init> (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/catalog/Table;)V
-}
-
-public abstract interface class org/partiql/spi/connector/Connector {
-	public abstract fun getCatalog ()Lorg/partiql/spi/catalog/Catalog;
-}
-
-public abstract interface class org/partiql/spi/connector/Connector$Factory {
-	public abstract fun create (Lcom/amazon/ionelement/api/StructElement;)Lorg/partiql/spi/connector/Connector;
-	public abstract fun getName ()Ljava/lang/String;
-}
-
-public final class org/partiql/spi/connector/Connector$Factory$DefaultImpls {
-	public static synthetic fun create$default (Lorg/partiql/spi/connector/Connector$Factory;Lcom/amazon/ionelement/api/StructElement;ILjava/lang/Object;)Lorg/partiql/spi/connector/Connector;
 }
 
 public final class org/partiql/spi/fn/AggSignature {

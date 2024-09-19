@@ -22,12 +22,12 @@ import com.amazon.ionelement.api.loadAllElements
 import org.partiql.cli.io.Format
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
-import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
-import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
+import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
-import org.partiql.spi.connector.Connector
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
@@ -36,7 +36,6 @@ import picocli.CommandLine
 import java.io.File
 import java.io.InputStream
 import java.io.SequenceInputStream
-import java.time.Instant
 import java.util.Collections
 import java.util.Properties
 import kotlin.system.exitProcess
@@ -185,24 +184,17 @@ internal class MainCommand : Runnable {
         }
     }
 
-    private fun session() = Pipeline.Session(
-        queryId = "cli",
-        userId = System.getProperty("user.name"),
-        currentCatalog = "default",
-        currentDirectory = emptyList(),
-        connectors = connectors(),
-        instant = Instant.now(),
-        debug = false,
-        mode = when (strict) {
-            true -> PartiQLEngine.Mode.STRICT
-            else -> PartiQLEngine.Mode.PERMISSIVE
-        }
-    )
+    private fun session() = Session.builder()
+        .identity(System.getProperty("user.name"))
+        .namespace(emptyList())
+        .catalog("default")
+        .catalogs(*catalogs().toTypedArray())
+        .build()
 
     /**
      * Produce the connector map for planning and execution.
      */
-    private fun connectors(): Map<String, Connector> {
+    private fun catalogs(): List<Catalog> {
         if (dir != null && files != null && files!!.isNotEmpty()) {
             error("Cannot specify both a database directory and a list of files.")
         }
@@ -225,7 +217,7 @@ internal class MainCommand : Runnable {
         } else {
             ionNull()
         }
-        val connector = MemoryConnector.builder()
+        val catalog = MemoryCatalog.builder()
             .name("default")
             .define(
                 MemoryTable.of(
@@ -235,9 +227,7 @@ internal class MainCommand : Runnable {
                 )
             )
             .build()
-        return mapOf(
-            "default" to connector
-        )
+        return listOf(catalog)
     }
 
     /**
