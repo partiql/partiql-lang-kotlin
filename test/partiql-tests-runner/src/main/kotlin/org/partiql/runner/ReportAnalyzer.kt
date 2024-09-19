@@ -7,12 +7,8 @@ class ReportAnalyzer(
 ) {
 
     companion object {
-        fun build(first: Report, second: Report): ReportAnalyzer {
-            return if (first.engine == second.engine) {
-                ReportAnalyzer("CROSS-COMMIT-${first.engine.uppercase()} Conformance Report", first, second)
-            } else {
-                ReportAnalyzer("CROSS-ENGINE Conformance Report", first, second)
-            }
+        fun build(title: String, first: Report, second: Report): ReportAnalyzer {
+            return ReportAnalyzer(title, first, second)
         }
 
         const val ICON_X = ":x:"
@@ -25,8 +21,11 @@ class ReportAnalyzer(
 
     private val passingInBoth = first.passingSet.intersect(second.passingSet)
     private val failingInBoth = first.failingSet.intersect(second.failingSet)
+    private val ignoredInBoth = first.ignoredSet.intersect(second.ignoredSet)
     private val passingFirstFailingSecond = first.passingSet.intersect(second.failingSet)
+    private val passingFirstIgnoredSecond = first.passingSet.intersect(second.ignoredSet)
     private val failureFirstPassingSecond = first.failingSet.intersect(second.passingSet)
+    private val ignoredFirstPassingSecond = first.ignoredSet.intersect(second.passingSet)
     private val firstPassingSize = first.passingSet.size
     private val firstFailingSize = first.failingSet.size
     private val firstIgnoreSize = first.ignoredSet.size
@@ -48,8 +47,10 @@ class ReportAnalyzer(
             appendTitle(this)
             appendTable(this)
             appendSummary(this)
-            appendOptionalNowFailingTests(this, limit)
-            appendOptionalNowPassingTests(this, limit)
+            appendOptionalNowFailingTests(this, limit, passingFirstFailingSecond, "FAILING")
+            appendOptionalNowFailingTests(this, limit, passingFirstIgnoredSecond, "IGNORED")
+            appendOptionalNowPassingTests(this, limit, failureFirstPassingSecond, "FAILING")
+            appendOptionalNowPassingTests(this, limit, ignoredFirstPassingSecond, "IGNORED")
         }
     }
 
@@ -108,24 +109,27 @@ class ReportAnalyzer(
         out.appendLine("- **Target Engine**: ${second.engine.uppercase()}")
 
         out.appendMarkdown("## Result Details")
-        if (passingFirstFailingSecond.isNotEmpty()) {
-            out.appendLine("- **$ICON_X REGRESSION DETECTED. See *Now Failing Tests*. $ICON_X**")
+        if (passingFirstFailingSecond.isNotEmpty() || passingFirstIgnoredSecond.isNotEmpty()) {
+            out.appendLine("- **$ICON_X REGRESSION DETECTED. See *Now Failing/Ignored Tests*. $ICON_X**")
         }
         out.appendLine("- **Passing in both**: ${passingInBoth.count()}")
         out.appendLine("- **Failing in both**: ${failingInBoth.count()}")
+        out.appendLine("- **Ignored in both**: ${ignoredInBoth.count()}")
         out.appendLine("- **PASSING in $BASE but now FAILING in $TARGET**: ${passingFirstFailingSecond.count()}")
+        out.appendLine("- **PASSING in $BASE but now IGNORED in $TARGET**: ${passingFirstIgnoredSecond.count()}")
         out.appendLine("- **FAILING in $BASE but now PASSING in $TARGET**: ${failureFirstPassingSecond.count()}")
+        out.appendLine("- **IGNORED in $BASE but now PASSING in $TARGET**: ${ignoredFirstPassingSecond.count()}")
     }
 
-    private fun appendOptionalNowFailingTests(out: Appendable, limit: Int) {
-        if (passingFirstFailingSecond.isNotEmpty()) {
-            out.appendMarkdown("## Now Failing Tests $ICON_X")
+    private fun appendOptionalNowFailingTests(out: Appendable, limit: Int, set: Set<String>, description: String) {
+        if (set.isNotEmpty()) {
+            out.appendMarkdown("## Now $description Tests $ICON_X")
             // character count limitation with comments in GitHub
             // also, not ideal to list out hundreds of test names
-            if (passingFirstFailingSecond.size < limit) {
-                out.appendMarkdown("The following ${passingFirstFailingSecond.size} test(s) were previously PASSING in $BASE but are now FAILING in $TARGET:")
+            if (set.size < limit) {
+                out.appendMarkdown("The following ${set.size} test(s) were previously PASSING in $BASE but are now $description in $TARGET:")
                 out.appendMarkdown("<details><summary>Click here to see</summary>")
-                passingFirstFailingSecond.forEachIndexed { index, testName ->
+                set.forEachIndexed { index, testName ->
                     out.appendLine("${index + 1}. $testName")
                 }
                 out.appendMarkdown("</details>")
@@ -135,18 +139,18 @@ class ReportAnalyzer(
         }
     }
 
-    private fun appendOptionalNowPassingTests(out: Appendable, limit: Int) {
-        if (failureFirstPassingSecond.isNotEmpty()) {
+    private fun appendOptionalNowPassingTests(out: Appendable, limit: Int, set: Set<String>, description: String) {
+        if (set.isNotEmpty()) {
             out.appendMarkdown("## Now Passing Tests")
-            if (failureFirstPassingSecond.size < limit) {
-                out.appendMarkdown("The following ${failureFirstPassingSecond.size} test(s) were previously FAILING in $BASE but are now PASSING in $TARGET. Before merging, confirm they are intended to pass:")
+            if (set.size < limit) {
+                out.appendMarkdown("The following ${set.size} test(s) were previously $description in $BASE but are now PASSING in $TARGET. Before merging, confirm they are intended to pass:")
                 out.appendMarkdown("<details><summary>Click here to see</summary>")
-                failureFirstPassingSecond.forEachIndexed { index, testName ->
+                set.forEachIndexed { index, testName ->
                     out.appendLine("${index + 1}. $testName")
                 }
                 out.appendMarkdown("</details>")
             } else {
-                out.appendMarkdown("${failureFirstPassingSecond.size} test(s) were previously failing in $firstNameShort but now pass in $secondNameShort. Before merging, confirm they are intended to pass.")
+                out.appendMarkdown("${set.size} test(s) were previously failing in $firstNameShort but now pass in $secondNameShort. Before merging, confirm they are intended to pass.")
                 out.appendMarkdown("The complete list can be found in GitHub CI summary, either from Step Summary or in the Artifact.")
             }
         }

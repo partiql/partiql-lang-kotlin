@@ -83,12 +83,4 @@ class TestRunner<T, V>(private val factory: TestExecutor.Factory<T, V>) {
             }
         }
     }
-
-//    private fun print(tc: Pair<String, CompileOptions>) {
-//        val mode = when (tc.second.typingMode) {
-//            TypingMode.LEGACY -> "LEGACY"
-//            TypingMode.PERMISSIVE -> "PERMISSIVE"
-//        }
-//        println("$mode:::${tc.first}")
-//    }
 }
