@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.Problem
+import org.partiql.errors.ProblemSeverity
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Identifier
@@ -39,7 +40,6 @@ import org.partiql.types.NumberConstraint
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.MISSING
-import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StringType
 import org.partiql.types.StructType
@@ -1683,9 +1683,8 @@ class PlanTyperTestsPorted {
                     )
                 )
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC)
             SuccessTestCase(
-                name = "EXCLUDE with non-existent attribute reference",
+                name = "EXCLUDE with non-existent attribute reference -- warning",
                 key = key("exclude-25"),
                 expected = BagType(
                     StructType(
@@ -1699,7 +1698,13 @@ class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.InvalidExcludePath("t.attr_does_not_exist")
+                    )
+                }
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
@@ -1825,9 +1830,8 @@ class PlanTyperTestsPorted {
                     )
                 )
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude collection wildcard",
+                name = "invalid exclude collection wildcard -- warning",
                 key = key("exclude-29"),
                 expected = BagType(
                     elementType = StructType(
@@ -1857,11 +1861,16 @@ class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.InvalidExcludePath("t.a[*]")
+                    )
+                }
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude collection index",
+                name = "invalid exclude collection index -- warning",
                 key = key("exclude-30"),
                 expected = BagType(
                     elementType = StructType(
@@ -1891,11 +1900,16 @@ class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.InvalidExcludePath("t.a[1]")
+                    )
+                }
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude tuple attr",
+                name = "invalid exclude tuple attr -- warning",
                 key = key("exclude-31"),
                 expected = BagType(
                     elementType = StructType(
@@ -1917,11 +1931,16 @@ class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.InvalidExcludePath("t.a.b")
+                    )
+                }
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude tuple wildcard",
+                name = "invalid exclude tuple wildcard - warning",
                 key = key("exclude-32"),
                 expected = BagType(
                     elementType = StructType(
@@ -1943,11 +1962,16 @@ class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.InvalidExcludePath("t.a.*")
+                    )
+                }
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude tuple attr step",
+                name = "invalid exclude tuple attr step - warning",
                 key = key("exclude-33"),
                 expected = BagType(
                     elementType = StructType(
@@ -1969,7 +1993,13 @@ class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.InvalidExcludePath("t.b")
+                    )
+                }
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             ErrorTestCase(
@@ -2079,6 +2109,139 @@ class PlanTyperTestsPorted {
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE with case-sensitive tuple reference not matching - warning",
+                key = key("exclude-37"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "B" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.INT4,
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(
+                                            TupleConstraint.Open(false),
+                                            TupleConstraint.UniqueAttrs(true)
+                                        )
+                                    ),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.InvalidExcludePath("t.\"a\".\"b\".c")
+                    )
+                }
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE with case-sensitive tuple reference not matching earlier step - warning",
+                key = key("exclude-38"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "B" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.INT4,
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(
+                                            TupleConstraint.Open(false),
+                                            TupleConstraint.UniqueAttrs(true)
+                                        )
+                                    ),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.InvalidExcludePath("t.\"A\".\"b\".c")
+                    )
+                }
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE  with an open struct - no warning or error",
+                catalog = CATALOG_B,
+                key = key("exclude-39"),
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "b" to StructType(
+                                fields = mapOf(
+                                    "b" to StaticType.INT4
+                                ),
+                                contentClosed = false,
+                                constraints = setOf(
+                                    TupleConstraint.UniqueAttrs(true),
+                                    TupleConstraint.Ordered
+                                )
+                            ),
+                        ),
+                        contentClosed = false,
+                        constraints = setOf(
+                            TupleConstraint.Open(true),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE  with an open struct; nonexistent attribute in the open struct - no warning or error",
+                catalog = CATALOG_B,
+                key = key("exclude-40"),
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "b" to StructType(
+                                fields = mapOf(
+                                    "b" to StaticType.INT4
+                                ),
+                                contentClosed = false,
+                                constraints = setOf(
+                                    TupleConstraint.UniqueAttrs(true),
+                                    TupleConstraint.Ordered
+                                )
+                            ),
+                            "c" to StaticType.INT4
+                        ),
+                        contentClosed = false,
+                        constraints = setOf(
+                            TupleConstraint.Open(true),
                             TupleConstraint.UniqueAttrs(true),
                             TupleConstraint.Ordered
                         )
@@ -3818,9 +3981,11 @@ class PlanTyperTestsPorted {
         val plan = infer(input, session, collector)
         when (val statement = plan.statement) {
             is Statement.Query -> {
-                assert(collector.problems.isEmpty()) {
+                val errors = collector.problems.filter { it.details.severity == ProblemSeverity.ERROR }
+                val warnings = collector.problems.filter { it.details.severity == ProblemSeverity.WARNING }
+                assert(errors.isEmpty()) {
                     buildString {
-                        appendLine(collector.problems.toString())
+                        appendLine(errors.toString())
                         appendLine()
                         PlanPrinter.append(this, statement)
                     }
@@ -3834,6 +3999,10 @@ class PlanTyperTestsPorted {
                         appendLine()
                         PlanPrinter.append(this, statement)
                     }
+                }
+                if (warnings.isNotEmpty()) {
+                    assert(tc.warnings != null) { "Expected no warnings but warnings were found: $warnings" }
+                    tc.warnings?.handle(warnings, true)
                 }
             }
         }

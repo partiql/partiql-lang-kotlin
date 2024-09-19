@@ -241,7 +241,7 @@ internal fun CollectionType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOp
  * @param other
  * @return
  */
-private fun Identifier.Symbol.isEquivalentTo(other: String): Boolean = when (caseSensitivity) {
+internal fun Identifier.Symbol.isEquivalentTo(other: String): Boolean = when (caseSensitivity) {
     Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
     Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
 }
