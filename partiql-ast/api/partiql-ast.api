@@ -152,6 +152,7 @@ public final class org/partiql/ast/DatetimeField : java/lang/Enum {
 	public static final field TIMEZONE_HOUR Lorg/partiql/ast/DatetimeField;
 	public static final field TIMEZONE_MINUTE Lorg/partiql/ast/DatetimeField;
 	public static final field YEAR Lorg/partiql/ast/DatetimeField;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/DatetimeField;
 	public static fun values ()[Lorg/partiql/ast/DatetimeField;
 }
@@ -464,6 +465,7 @@ public final class org/partiql/ast/Expr$Collection$Type : java/lang/Enum {
 	public static final field LIST Lorg/partiql/ast/Expr$Collection$Type;
 	public static final field SEXP Lorg/partiql/ast/Expr$Collection$Type;
 	public static final field VALUES Lorg/partiql/ast/Expr$Collection$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$Collection$Type;
 	public static fun values ()[Lorg/partiql/ast/Expr$Collection$Type;
 }
@@ -962,6 +964,7 @@ public final class org/partiql/ast/Expr$SessionAttribute : org/partiql/ast/Expr 
 public final class org/partiql/ast/Expr$SessionAttribute$Attribute : java/lang/Enum {
 	public static final field CURRENT_DATE Lorg/partiql/ast/Expr$SessionAttribute$Attribute;
 	public static final field CURRENT_USER Lorg/partiql/ast/Expr$SessionAttribute$Attribute;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$SessionAttribute$Attribute;
 	public static fun values ()[Lorg/partiql/ast/Expr$SessionAttribute$Attribute;
 }
@@ -1060,6 +1063,7 @@ public final class org/partiql/ast/Expr$Trim$Spec : java/lang/Enum {
 	public static final field BOTH Lorg/partiql/ast/Expr$Trim$Spec;
 	public static final field LEADING Lorg/partiql/ast/Expr$Trim$Spec;
 	public static final field TRAILING Lorg/partiql/ast/Expr$Trim$Spec;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$Trim$Spec;
 	public static fun values ()[Lorg/partiql/ast/Expr$Trim$Spec;
 }
@@ -1126,6 +1130,7 @@ public final class org/partiql/ast/Expr$Var$Companion {
 public final class org/partiql/ast/Expr$Var$Scope : java/lang/Enum {
 	public static final field DEFAULT Lorg/partiql/ast/Expr$Var$Scope;
 	public static final field LOCAL Lorg/partiql/ast/Expr$Var$Scope;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$Var$Scope;
 	public static fun values ()[Lorg/partiql/ast/Expr$Var$Scope;
 }
@@ -1160,6 +1165,7 @@ public final class org/partiql/ast/Expr$Window$Companion {
 public final class org/partiql/ast/Expr$Window$Function : java/lang/Enum {
 	public static final field LAG Lorg/partiql/ast/Expr$Window$Function;
 	public static final field LEAD Lorg/partiql/ast/Expr$Window$Function;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$Window$Function;
 	public static fun values ()[Lorg/partiql/ast/Expr$Window$Function;
 }
@@ -1224,6 +1230,7 @@ public final class org/partiql/ast/From$Join$Type : java/lang/Enum {
 	public static final field LEFT_OUTER Lorg/partiql/ast/From$Join$Type;
 	public static final field RIGHT Lorg/partiql/ast/From$Join$Type;
 	public static final field RIGHT_OUTER Lorg/partiql/ast/From$Join$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/From$Join$Type;
 	public static fun values ()[Lorg/partiql/ast/From$Join$Type;
 }
@@ -1258,6 +1265,7 @@ public final class org/partiql/ast/From$Value$Companion {
 public final class org/partiql/ast/From$Value$Type : java/lang/Enum {
 	public static final field SCAN Lorg/partiql/ast/From$Value$Type;
 	public static final field UNPIVOT Lorg/partiql/ast/From$Value$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/From$Value$Type;
 	public static fun values ()[Lorg/partiql/ast/From$Value$Type;
 }
@@ -1291,6 +1299,7 @@ public final class org/partiql/ast/GraphMatch$Direction : java/lang/Enum {
 	public static final field RIGHT Lorg/partiql/ast/GraphMatch$Direction;
 	public static final field UNDIRECTED Lorg/partiql/ast/GraphMatch$Direction;
 	public static final field UNDIRECTED_OR_RIGHT Lorg/partiql/ast/GraphMatch$Direction;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/GraphMatch$Direction;
 	public static fun values ()[Lorg/partiql/ast/GraphMatch$Direction;
 }
@@ -1525,6 +1534,7 @@ public final class org/partiql/ast/GraphMatch$Restrictor : java/lang/Enum {
 	public static final field ACYCLIC Lorg/partiql/ast/GraphMatch$Restrictor;
 	public static final field SIMPLE Lorg/partiql/ast/GraphMatch$Restrictor;
 	public static final field TRAIL Lorg/partiql/ast/GraphMatch$Restrictor;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/GraphMatch$Restrictor;
 	public static fun values ()[Lorg/partiql/ast/GraphMatch$Restrictor;
 }
@@ -1700,6 +1710,7 @@ public final class org/partiql/ast/GroupBy$Key$Companion {
 public final class org/partiql/ast/GroupBy$Strategy : java/lang/Enum {
 	public static final field FULL Lorg/partiql/ast/GroupBy$Strategy;
 	public static final field PARTIAL Lorg/partiql/ast/GroupBy$Strategy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/GroupBy$Strategy;
 	public static fun values ()[Lorg/partiql/ast/GroupBy$Strategy;
 }
@@ -1711,6 +1722,7 @@ public abstract class org/partiql/ast/Identifier : org/partiql/ast/AstNode {
 public final class org/partiql/ast/Identifier$CaseSensitivity : java/lang/Enum {
 	public static final field INSENSITIVE Lorg/partiql/ast/Identifier$CaseSensitivity;
 	public static final field SENSITIVE Lorg/partiql/ast/Identifier$CaseSensitivity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Identifier$CaseSensitivity;
 	public static fun values ()[Lorg/partiql/ast/Identifier$CaseSensitivity;
 }
@@ -2094,6 +2106,7 @@ public final class org/partiql/ast/SetOp$Type : java/lang/Enum {
 	public static final field EXCEPT Lorg/partiql/ast/SetOp$Type;
 	public static final field INTERSECT Lorg/partiql/ast/SetOp$Type;
 	public static final field UNION Lorg/partiql/ast/SetOp$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/SetOp$Type;
 	public static fun values ()[Lorg/partiql/ast/SetOp$Type;
 }
@@ -2101,6 +2114,7 @@ public final class org/partiql/ast/SetOp$Type : java/lang/Enum {
 public final class org/partiql/ast/SetQuantifier : java/lang/Enum {
 	public static final field ALL Lorg/partiql/ast/SetQuantifier;
 	public static final field DISTINCT Lorg/partiql/ast/SetQuantifier;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/SetQuantifier;
 	public static fun values ()[Lorg/partiql/ast/SetQuantifier;
 }
@@ -2131,6 +2145,7 @@ public final class org/partiql/ast/Sort$Companion {
 public final class org/partiql/ast/Sort$Dir : java/lang/Enum {
 	public static final field ASC Lorg/partiql/ast/Sort$Dir;
 	public static final field DESC Lorg/partiql/ast/Sort$Dir;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Sort$Dir;
 	public static fun values ()[Lorg/partiql/ast/Sort$Dir;
 }
@@ -2138,6 +2153,7 @@ public final class org/partiql/ast/Sort$Dir : java/lang/Enum {
 public final class org/partiql/ast/Sort$Nulls : java/lang/Enum {
 	public static final field FIRST Lorg/partiql/ast/Sort$Nulls;
 	public static final field LAST Lorg/partiql/ast/Sort$Nulls;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Sort$Nulls;
 	public static fun values ()[Lorg/partiql/ast/Sort$Nulls;
 }
@@ -5304,6 +5320,7 @@ public final class org/partiql/ast/sql/SqlLayout$Indent$Type : java/lang/Enum {
 	public static final field SPACE Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
 	public static final field TAB Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
 	public final fun getChar ()C
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
 	public static fun values ()[Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
 }

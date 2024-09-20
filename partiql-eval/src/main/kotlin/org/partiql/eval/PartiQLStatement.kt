@@ -1,15 +1,11 @@
 package org.partiql.eval
 
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.spi.catalog.Session
 
 /**
- * Represents a compiled PartiQL Plan ready for execution.
+ * Represents a compiled PartiQL statement ready for execution.
  */
-sealed interface PartiQLStatement<T> {
+public interface PartiQLStatement {
 
-    public fun execute(): T
-
-    @OptIn(PartiQLValueExperimental::class)
-    interface Query : PartiQLStatement<PartiQLValue>
+    public fun execute(session: Session): PartiQLResult
 }

@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Parameter
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -11,19 +11,17 @@ import org.partiql.types.PType.Kind
  *  1. Fewest args first
  *  2. Parameters are compared left-to-right
  */
-internal object FnComparator : Comparator<Function> {
+internal object FnComparator : Comparator<FnSignature> {
 
-    override fun compare(fn1: Function, fn2: Function): Int {
-        val params1 = fn1.getParameters()
-        val params2 = fn2.getParameters()
+    override fun compare(fn1: FnSignature, fn2: FnSignature): Int {
         // Compare number of arguments
-        if (params1.size != params2.size) {
-            return params1.size - params2.size
+        if (fn1.parameters.size != fn2.parameters.size) {
+            return fn1.parameters.size - fn2.parameters.size
         }
         // Compare operand type precedence
-        for (i in params1.indices) {
-            val p1 = params1[i]
-            val p2 = params2[i]
+        for (i in fn1.parameters.indices) {
+            val p1 = fn1.parameters[i]
+            val p2 = fn2.parameters[i]
             val comparison = p1.compareTo(p2)
             if (comparison != 0) return comparison
         }

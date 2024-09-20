@@ -812,7 +812,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitLetBinding(node: Let.Binding, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
-        val name = node.asAlias?.symbol
+        val name = node.asAlias.symbol
         letBinding(expr, name, metas)
     }
 

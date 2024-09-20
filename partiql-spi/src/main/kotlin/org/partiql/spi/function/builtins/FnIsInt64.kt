@@ -3,10 +3,10 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.eval.value.Datum
 import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal object Fn_IS_INT64__ANY__BOOL : Function {
@@ -25,7 +25,8 @@ internal object Fn_IS_INT64__ANY__BOOL : Function {
             PType.Kind.TINYINT,
             PType.Kind.SMALLINT,
             PType.Kind.INTEGER,
-            PType.Kind.BIGINT -> Datum.bool(true)
+            PType.Kind.BIGINT,
+            -> Datum.bool(true)
             PType.Kind.NUMERIC -> {
                 val v = arg.bigInteger
                 return try {

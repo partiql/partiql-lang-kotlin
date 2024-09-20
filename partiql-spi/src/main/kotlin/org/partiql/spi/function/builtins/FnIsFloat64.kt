@@ -3,10 +3,10 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.eval.value.Datum
 import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal object Fn_IS_FLOAT64__ANY__BOOL : Function {
@@ -22,7 +22,8 @@ internal object Fn_IS_FLOAT64__ANY__BOOL : Function {
     override fun invoke(args: Array<Datum>): Datum {
         return when (args[0].type.kind) {
             PType.Kind.REAL,
-            PType.Kind.DOUBLE -> Datum.bool(true)
+            PType.Kind.DOUBLE,
+            -> Datum.bool(true)
             else -> Datum.bool(false)
         }
     }

@@ -1,13 +1,14 @@
 imports::{
   kotlin: [
-    identifier::'org.partiql.planner.catalog.Identifier',
-    name::'org.partiql.planner.catalog.Name',
+    identifier::'org.partiql.spi.catalog.Identifier',
+    name::'org.partiql.spi.catalog.Name',
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
-    fn_signature::'org.partiql.spi.fn.Function',
-    agg_signature::'org.partiql.spi.fn.Aggregation',
-    problem::'org.partiql.errors.Problem'
+    fn_signature::'org.partiql.spi.function.Function',
+    agg_signature::'org.partiql.spi.function.Aggregation',
+    problem::'org.partiql.errors.Problem',
+    table::'org.partiql.spi.catalog.Table',
   ],
 }
 
@@ -25,6 +26,8 @@ ref::[
     catalog: string,
     name: name,
     type: static_type,
+    // TEMPORARY FOR V1 EXECUTION
+    table: table,
   },
   fn::{
     catalog: string,

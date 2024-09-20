@@ -1,6 +1,6 @@
 package org.partiql.plan.v1.operator.rex
 
-import org.partiql.planner.catalog.Table
+import org.partiql.spi.catalog.Table
 import org.partiql.types.PType
 
 /**

@@ -1,10 +1,5 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.catalog.Catalog
-import org.partiql.planner.catalog.Catalogs
-import org.partiql.planner.catalog.Identifier
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
@@ -21,6 +16,11 @@ import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Catalogs
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.function.Aggregation
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -86,7 +86,7 @@ internal class Env(private val session: Session) {
         val refCatalog = catalog.getName()
         val refName = handle.name
         val refType = CompilerType(handle.table.getSchema())
-        val ref = Ref.Obj(refCatalog, refName, refType)
+        val ref = Ref.Obj(refCatalog, refName, refType, handle.table)
 
         // Convert any remaining identifier parts to a path expression
         val root = Rex(ref.type, rexOpVarGlobal(ref))

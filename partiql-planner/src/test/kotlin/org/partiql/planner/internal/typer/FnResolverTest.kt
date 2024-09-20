@@ -2,12 +2,10 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import org.partiql.eval.value.Datum
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.function.FnSignature
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.types.PType
 
@@ -29,7 +27,7 @@ class FnResolverTest {
                     Parameter("arg-0", PType.doublePrecision()),
                     Parameter("arg-1", PType.doublePrecision()),
                 ),
-            ).toFunction(),
+            )
         )
         val args = listOf(PType.integer().toCType(), PType.doublePrecision().toCType())
         val expectedImplicitCasts = listOf(true, false)
@@ -48,7 +46,7 @@ class FnResolverTest {
                     Parameter("delimiter", PType.string()),
                 ),
                 isNullable = false,
-            ).toFunction()
+            )
         )
         val args = listOf(PType.string().toCType(), PType.string().toCType())
         val expectedImplicitCasts = listOf(false, false)
@@ -56,20 +54,12 @@ class FnResolverTest {
         case.assert()
     }
 
-    private fun FnSignature.toFunction(): Function {
-        val self = this
-        return object : Function {
-            override val signature: FnSignature = self
-            override fun invoke(args: Array<Datum>): Datum = Datum.nullValue()
-        }
-    }
-
     private sealed class Case {
 
         abstract fun assert()
 
         class Success(
-            private val variants: List<Function>,
+            private val variants: List<FnSignature>,
             private val inputs: List<CompilerType>,
             private val expectedImplicitCast: List<Boolean>,
         ) : Case() {

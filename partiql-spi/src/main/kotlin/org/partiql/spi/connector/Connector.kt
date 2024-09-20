@@ -2,7 +2,7 @@ package org.partiql.spi.connector
 
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.emptyIonStruct
-import org.partiql.planner.catalog.Catalog
+import org.partiql.spi.catalog.Catalog
 
 /**
  * A mechanism by which PartiQL can access bindings and catalog metadata.

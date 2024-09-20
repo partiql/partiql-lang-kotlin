@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 
 internal sealed interface Operator {
 

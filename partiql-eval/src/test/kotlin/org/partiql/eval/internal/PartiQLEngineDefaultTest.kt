@@ -11,13 +11,14 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.PartiQLPlan
-import org.partiql.plan.debug.PlanPrinter
+import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Session
+import org.partiql.planner.internal.SqlPlannerV1
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryTable
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.value.CollectionValue
@@ -30,7 +31,6 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.intValue
 import org.partiql.value.io.PartiQLValueIonWriterBuilder
-import org.partiql.value.ion.IonDatum
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -42,7 +42,7 @@ import java.math.BigInteger
 import kotlin.test.assertNotNull
 
 /**
- * This holds sanity tests during the development of the [PartiQLEngine.default] implementation.
+ * This holds sanity tests during the development of the [PartiQLEngine.standard] implementation.
  */
 @OptIn(PartiQLValueExperimental::class)
 class PartiQLEngineDefaultTest {
@@ -1278,18 +1278,19 @@ class PartiQLEngineDefaultTest {
                 .catalog("memory")
                 .catalogs(connector.getCatalog())
                 .build()
-            val plan = planner.plan(statement, session)
-            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
-            val result = when (val returned = engine.execute(prepared)) {
+            val plan = SqlPlannerV1.plan(statement, session)
+            val stmt = engine.prepare(plan, mode, session)
+            val result = when (val returned = stmt.execute(session)) {
                 is PartiQLResult.Value -> returned
                 is PartiQLResult.Error -> {
-                    PlanPrinter.append(System.err, plan.plan)
+                    // TODO pretty-print V1 plans
+                    System.err.append(plan.toString())
                     throw returned.cause
                 }
             }
             val output = result.value
             assert(expected == output) {
-                comparisonString(expected, output, plan.plan)
+                comparisonString(expected, output, plan)
             }
         }
 
@@ -1299,7 +1300,8 @@ class PartiQLEngineDefaultTest {
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
             expectedWriter.append(expected)
             return buildString {
-                PlanPrinter.append(this, plan)
+                // TODO pretty-print V1 plans!
+                appendLine(plan)
                 appendLine("Expected : $expectedBuffer")
                 expectedBuffer.reset()
                 expectedWriter.append(actual)
@@ -1329,7 +1331,8 @@ class PartiQLEngineDefaultTest {
             } catch (t: Throwable) {
                 val str = buildString {
                     appendLine("Test Name: $name")
-                    PlanPrinter.append(this, permissiveResult.second)
+                    // TODO pretty-print V1 plans!
+                    appendLine(permissiveResult.second)
                 }
                 throw RuntimeException(str, t)
             }
@@ -1355,14 +1358,15 @@ class PartiQLEngineDefaultTest {
                 .catalog("memory")
                 .catalogs(connector.getCatalog())
                 .build()
-            val plan = planner.plan(statement, session)
-            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
-            when (val result = engine.execute(prepared)) {
-                is PartiQLResult.Value -> return result.value to plan.plan
+            val plan = SqlPlannerV1.plan(statement, session)
+            val stmt = engine.prepare(plan, mode, session)
+            when (val result = stmt.execute(session)) {
+                is PartiQLResult.Value -> return result.value to plan
                 is PartiQLResult.Error -> {
                     val str = buildString {
                         appendLine("Execution resulted in an unexpected error. Plan:")
-                        PlanPrinter.append(this, plan.plan)
+                        // TODO pretty-print V1 plans!
+                        appendLine(plan)
                     }
                     throw RuntimeException(str, result.cause)
                 }
@@ -1375,7 +1379,8 @@ class PartiQLEngineDefaultTest {
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
             expectedWriter.append(expected)
             return buildString {
-                PlanPrinter.append(this, plan)
+                // TODO pretty-print V1 plans!
+                appendLine(plan)
                 appendLine("Expected : $expectedBuffer")
                 expectedBuffer.reset()
                 expectedWriter.append(actual)

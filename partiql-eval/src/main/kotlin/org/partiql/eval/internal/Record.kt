@@ -1,6 +1,6 @@
 package org.partiql.eval.internal
 
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 
 internal class Record(val values: Array<Datum>) {
 

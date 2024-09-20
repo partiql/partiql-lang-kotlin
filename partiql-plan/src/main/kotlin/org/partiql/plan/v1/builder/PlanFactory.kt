@@ -1,6 +1,5 @@
 package org.partiql.plan.v1.builder
 
-import org.partiql.eval.value.Datum
 import org.partiql.plan.v1.Schema
 import org.partiql.plan.v1.operator.rel.Rel
 import org.partiql.plan.v1.operator.rel.RelAggregate
@@ -89,9 +88,10 @@ import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexTableImpl
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVarImpl
-import org.partiql.planner.catalog.Table
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.function.Function
+import org.partiql.spi.catalog.Table
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**

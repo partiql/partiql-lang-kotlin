@@ -1,7 +1,8 @@
 package org.partiql.eval
 
-import org.partiql.plan.PartiQLPlan
-import org.partiql.spi.connector.Connector
+import org.partiql.eval.builder.PartiQLEngineBuilder
+import org.partiql.plan.v1.PartiQLPlan
+import org.partiql.spi.catalog.Session
 
 /**
  * PartiQL's Experimental Engine.
@@ -17,13 +18,13 @@ import org.partiql.spi.connector.Connector
  * This engine also internalizes the mechanics of the engine itself. Internally, it creates a physical plan to operate on,
  * and it executes directly on that plan. The limited number of APIs exposed in this library is intentional to allow for
  * under-the-hood experimentation by the PartiQL Community.
+ *
+ *
+ * TODO rename PartiQLEngine to PartiQLCompiler as it produces the statement (statement holds its own execution logic).
  */
 public interface PartiQLEngine {
 
-    public fun prepare(plan: PartiQLPlan, session: Session): PartiQLStatement<*>
-
-    // TODO: Pass session variable during statement execution once we finalize data structure for session.
-    public fun execute(statement: PartiQLStatement<*>): PartiQLResult
+    public fun prepare(plan: PartiQLPlan, mode: Mode, session: Session): PartiQLStatement
 
     companion object {
 
@@ -31,14 +32,12 @@ public interface PartiQLEngine {
         public fun builder(): PartiQLEngineBuilder = PartiQLEngineBuilder()
 
         @JvmStatic
-        fun default() = PartiQLEngineBuilder().build()
+        fun standard() = PartiQLEngineBuilder().build()
     }
 
-    public class Session(
-        val catalogs: Map<String, Connector> = mapOf(),
-        val mode: Mode = Mode.PERMISSIVE
-    )
-
+    /**
+     * TODO move mode to the session ??
+     */
     public enum class Mode {
         PERMISSIVE,
         STRICT // AKA, Type Checking Mode in the PartiQL Specification

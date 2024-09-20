@@ -2,7 +2,8 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Field
 import org.partiql.types.PType
 
 internal class ExprStructPermissive(private val fields: List<ExprStructField>) : Operator.Expr {
@@ -13,7 +14,7 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
             val value = it.value.eval(env)
             when (value.isMissing) {
                 true -> null
-                false -> org.partiql.eval.value.Field.of(keyString, value)
+                false -> Field.of(keyString, value)
             }
         }
         return Datum.struct(fields)

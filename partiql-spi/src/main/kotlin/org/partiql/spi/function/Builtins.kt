@@ -413,7 +413,7 @@ internal object Builtins {
         Fn_SIZE__LIST__INT32,
         Fn_SIZE__SEXP__INT32,
         Fn_SIZE__STRUCT__INT32
-    ).groupBy { it.getName() }
+    )
 
     @JvmStatic
     private val aggregations: Map<String, List<Aggregation>> = listOf(

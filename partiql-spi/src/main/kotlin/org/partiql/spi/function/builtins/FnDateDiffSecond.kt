@@ -3,10 +3,10 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.eval.value.Datum
 import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal object Fn_DATE_DIFF_SECOND__TIME_TIME__INT64 : Function {

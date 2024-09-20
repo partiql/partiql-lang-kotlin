@@ -16,9 +16,9 @@ package org.partiql.plugins.local
 
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
-import org.partiql.eval.value.Datum
-import org.partiql.planner.catalog.Name
-import org.partiql.planner.catalog.Table
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Table
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import java.nio.file.Path

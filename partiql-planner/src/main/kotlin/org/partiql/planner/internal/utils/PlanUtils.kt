@@ -24,7 +24,7 @@ internal object PlanUtils {
         Identifier.CaseSensitivity.INSENSITIVE -> node.symbol
     }
 
-    fun externalize(identifier: org.partiql.planner.catalog.Identifier): Identifier {
+    fun externalize(identifier: org.partiql.spi.catalog.Identifier): Identifier {
         if (identifier.hasQualifier()) {
             val symbols = identifier.getParts().map { externalize(it) }
             return Identifier.Qualified(
@@ -35,7 +35,7 @@ internal object PlanUtils {
         return externalize(identifier.getIdentifier())
     }
 
-    private fun externalize(part: org.partiql.planner.catalog.Identifier.Part): Identifier.Symbol {
+    private fun externalize(part: org.partiql.spi.catalog.Identifier.Part): Identifier.Symbol {
         return Identifier.Symbol(
             symbol = part.getText(),
             caseSensitivity = when (part.isRegular()) {

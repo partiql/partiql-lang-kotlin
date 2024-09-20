@@ -1,6 +1,6 @@
 package org.partiql.planner.internal.typer
 
-import org.partiql.planner.catalog.Identifier
+import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 

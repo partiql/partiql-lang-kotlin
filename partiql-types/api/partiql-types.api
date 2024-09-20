@@ -230,6 +230,7 @@ public final class org/partiql/types/IntType$IntRangeConstraint : java/lang/Enum
 	public static final field LONG Lorg/partiql/types/IntType$IntRangeConstraint;
 	public static final field SHORT Lorg/partiql/types/IntType$IntRangeConstraint;
 	public static final field UNCONSTRAINED Lorg/partiql/types/IntType$IntRangeConstraint;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getNumBytes ()I
 	public final fun getValidRange ()Lkotlin/ranges/LongRange;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/types/IntType$IntRangeConstraint;

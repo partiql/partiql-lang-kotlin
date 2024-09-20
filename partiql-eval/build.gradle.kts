@@ -38,7 +38,6 @@ dependencies {
     testImplementation(Deps.junitVintage) // Enables JUnit4
 }
 
-// Disabled for partiql-eval project at initialization.
 kotlin {
     explicitApi = null
 }

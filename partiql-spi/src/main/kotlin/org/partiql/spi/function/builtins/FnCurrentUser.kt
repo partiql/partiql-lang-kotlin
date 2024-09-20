@@ -3,9 +3,9 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.eval.value.Datum
 import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal object Fn_CURRENT_USER____STRING : Function {

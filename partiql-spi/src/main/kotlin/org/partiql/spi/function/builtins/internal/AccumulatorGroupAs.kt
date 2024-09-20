@@ -1,6 +1,6 @@
 package org.partiql.spi.function.builtins.internal
 
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 
 internal class AccumulatorGroupAs : Accumulator() {
 

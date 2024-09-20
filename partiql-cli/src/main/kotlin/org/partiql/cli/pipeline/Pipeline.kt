@@ -7,11 +7,11 @@ import org.partiql.errors.ProblemSeverity
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.connector.Connector
 import java.time.Instant
-import org.partiql.planner.catalog.Session as PlannerSession
 
 internal class Pipeline private constructor(
     private val parser: PartiQLParser,
@@ -35,17 +35,12 @@ internal class Pipeline private constructor(
 
         private val catalogs = connectors.values.map { it.getCatalog() }
 
-        fun planner() = PlannerSession.builder()
+        fun planner() = org.partiql.spi.catalog.Session.builder()
             .identity(userId)
             .namespace(currentDirectory)
             .catalog(currentCatalog)
             .catalogs(*catalogs.toTypedArray())
             .build()
-
-        fun engine() = PartiQLEngine.Session(
-            catalogs = connectors,
-            mode = mode
-        )
     }
 
     /**
@@ -69,12 +64,13 @@ internal class Pipeline private constructor(
         if (errors.isNotEmpty()) {
             throw RuntimeException(errors.joinToString())
         }
-        return result.plan
+        TODO("Add V1 planner to the CLI")
     }
 
     private fun execute(plan: PartiQLPlan, session: Session): PartiQLResult {
-        val statement = engine.prepare(plan, session.engine())
-        return engine.execute(statement)
+        // val statement = engine.prepare(plan, session.mode, session.planner())
+        // return engine.execute(statement)
+        TODO("Add V1 planner to the CLI")
     }
 
     private class ProblemListener : ProblemCallback {
@@ -91,14 +87,14 @@ internal class Pipeline private constructor(
         fun default(): Pipeline {
             val parser = PartiQLParser.default()
             val planner = PartiQLPlanner.standard()
-            val engine = PartiQLEngine.default()
+            val engine = PartiQLEngine.standard()
             return Pipeline(parser, planner, engine)
         }
 
         fun strict(): Pipeline {
             val parser = PartiQLParser.default()
             val planner = PartiQLPlanner.builder().signal().build()
-            val engine = PartiQLEngine.default()
+            val engine = PartiQLEngine.standard()
             return Pipeline(parser, planner, engine)
         }
     }

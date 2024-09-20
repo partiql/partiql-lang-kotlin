@@ -5,7 +5,7 @@ import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 
 internal class ExprPermissive(
     val target: Operator.Expr

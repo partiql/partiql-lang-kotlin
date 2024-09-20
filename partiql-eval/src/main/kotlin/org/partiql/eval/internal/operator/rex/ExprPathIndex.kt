@@ -4,7 +4,7 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getInt32Coerced
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal class ExprPathIndex(
@@ -15,8 +15,10 @@ internal class ExprPathIndex(
     override fun eval(env: Environment): Datum {
         val input = root.eval(env)
         val iterator = when (input.type.kind) {
-            PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> input.iterator()
-            else -> throw TypeCheckException()
+            PType.Kind.BAG,
+            PType.Kind.ARRAY,
+            PType.Kind.SEXP -> input.iterator()
+            else -> throw TypeCheckException("expected collection, found ${input.type.kind}")
         }
 
         // Calculate index

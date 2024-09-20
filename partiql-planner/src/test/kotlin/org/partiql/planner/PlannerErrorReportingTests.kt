@@ -7,11 +7,11 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
-import org.partiql.planner.catalog.Session
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
 import org.partiql.types.PType
 import org.partiql.types.StaticType

@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.helpers
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.value.Datum
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental

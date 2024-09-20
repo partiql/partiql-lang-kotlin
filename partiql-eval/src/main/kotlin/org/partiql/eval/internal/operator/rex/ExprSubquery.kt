@@ -3,80 +3,64 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.errors.CardinalityViolation
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.Datum
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.spi.value.Datum
+import org.partiql.types.PType
 
 /**
- * The PartiQL Specification talks about subqueries and how they are coerced. Specifically, subqueries are
- * modeled as a COLL_TO_SCALAR(SELECT VALUE <tuple> ...) where the SELECT VALUE must return a single row containing
- * a TUPLE.
+ * Implementation of scalar subquery coercion.
  *
- * @see [getFirst]
+ * TODO REMOVE CONSTRUCTOR – TEMPORARY UNTIL SUBQUERIES ARE FIXED IN THE PLANNER.
  */
-internal abstract class ExprSubquery : Operator.Expr {
+internal class ExprSubquery(input: Operator.Relation, constructor: Operator.Expr) : Operator.Expr {
 
-    abstract val constructor: Operator.Expr
-    abstract val input: Operator.Relation
+    // DO NOT USE FINAL
+    private var _input = input
+    private var _constructor = constructor
 
-    internal class Row(
-        override val constructor: Operator.Expr,
-        override val input: Operator.Relation,
-    ) : ExprSubquery() {
-
-        @PartiQLValueExperimental
-        override fun eval(env: Environment): Datum {
-            val tuple = getFirst(env) ?: return Datum.nullValue()
-            val values = IteratorSupplier { tuple.fields }.map { it.value }
-            return Datum.list(values)
-        }
-    }
-
-    internal class Scalar(
-        override val constructor: Operator.Expr,
-        override val input: Operator.Relation,
-    ) : ExprSubquery() {
-
-        @PartiQLValueExperimental
-        override fun eval(env: Environment): Datum {
-            val tuple = getFirst(env) ?: return Datum.nullValue()
-            val values = tuple.fields.asSequence().map { it.value }.iterator()
-            if (values.hasNext().not()) {
-                throw TypeCheckException()
-            }
-            val singleValue = values.next()
-            if (values.hasNext()) {
-                throw TypeCheckException()
-            }
-            return singleValue
-        }
+    private companion object {
+        @JvmStatic
+        private val STRUCT = PType.struct()
     }
 
     /**
-     * This grabs the first row of the [input], asserts that the [constructor] evaluates to a TUPLE, and returns the
+     * TODO simplify
+     */
+    override fun eval(env: Environment): Datum {
+        val tuple = getFirst(env) ?: return Datum.nullValue()
+        val values = tuple.fields.asSequence().map { it.value }.iterator()
+        if (values.hasNext().not()) {
+            throw TypeCheckException()
+        }
+        val singleValue = values.next()
+        if (values.hasNext()) {
+            throw TypeCheckException()
+        }
+        return singleValue
+    }
+
+    /**
+     * This grabs the first row of the input, asserts that the constructor evaluates to a TUPLE, and returns the
      * constructed value.
      *
-     * @return the constructed [constructor]. Returns null when no rows are returned from the [input].
-     * @throws CardinalityViolation when more than one row is returned from the [input].
-     * @throws TypeCheckException when the constructor is not a [PartiQLValueType.STRUCT].
+     * @return the constructed constructor. Returns null when no rows are returned from the input.
+     * @throws CardinalityViolation when more than one row is returned from the input.
+     * @throws TypeCheckException when the constructor is not a struct.
      */
-    @OptIn(PartiQLValueExperimental::class)
-    fun getFirst(env: Environment): Datum? {
-        input.open(env)
-        if (input.hasNext().not()) {
-            input.close()
+    private fun getFirst(env: Environment): Datum? {
+        _input.open(env)
+        if (_input.hasNext().not()) {
+            _input.close()
             return null
         }
-        val firstRecord = input.next()
-        val tuple = constructor.eval(env.push(firstRecord)).check(PartiQLValueType.STRUCT)
-        if (input.hasNext()) {
-            input.close()
+        val firstRecord = _input.next()
+        val tuple = _constructor.eval(env.push(firstRecord)).check(STRUCT)
+        if (_input.hasNext()) {
+            _input.close()
             throw CardinalityViolation()
         }
-        input.close()
+        _input.close()
         return tuple
     }
 }
