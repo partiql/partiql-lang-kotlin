@@ -1089,6 +1089,26 @@ class AstToLogicalVisitorTransformTests {
         override fun getParameters() = listOf(
             TestCase(
                 // simple, non-nested target field
+                "FROM foo AS f WHERE TRUE SET a = 1",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = emptyList()
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            TestCase(
+                // simple, non-nested target field
                 "UPDATE foo SET a = 1 WHERE TRUE",
                 PartiqlLogical.build {
                     dmlUpdate(

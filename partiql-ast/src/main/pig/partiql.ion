@@ -802,10 +802,6 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
-        // Redefine statement.dml to be a simpler subset of the full DML functionality expressed with PartiQL's DML
-        // syntax.  Full functionality is out of scope for now.  This is factored minimally to support
-        // `INSERT INTO` and `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when
-        // `FROM ... UPDATE` and `UPDATE` is supported later.
         (with statement
               (exclude dml)
               (include
