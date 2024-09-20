@@ -426,7 +426,7 @@ internal class PlanTyper(
 
             // apply exclusions to the input schema
             val initBindings = input.type.schema.map { it.copy() }
-            checkForInvalidExcludePaths(initBindings, node.items, onProblem)
+            ExcludeUtils.checkForInvalidExcludePaths(initBindings, node.items, onProblem)
             val schema = node.items.fold((initBindings)) { bindings, item -> excludeBindings(bindings, item) }
 
             // rewrite
