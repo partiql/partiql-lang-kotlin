@@ -406,8 +406,6 @@ internal class PlanTyper(
          *  - Excluding collection wildcards (e.g. t.a[*].b)
          *
          * There are still discussion points regarding the following edge cases:
-         *  - EXCLUDE on a tuple attribute that doesn't exist -- give an error/warning?
-         *      - currently no error
          *  - EXCLUDE on a tuple attribute that has duplicates -- give an error/warning? exclude one? exclude both?
          *      - currently excludes both w/ no error
          *  - EXCLUDE on a collection index as the last step -- mark element type as optional?
@@ -427,8 +425,9 @@ internal class PlanTyper(
             val input = visitRel(node.input, ctx)
 
             // apply exclusions to the input schema
-            val init = input.type.schema.map { it.copy() }
-            val schema = node.items.fold((init)) { bindings, item -> excludeBindings(bindings, item) }
+            val initBindings = input.type.schema.map { it.copy() }
+            ExcludeUtils.checkForInvalidExcludePaths(initBindings, node.items, onProblem)
+            val schema = node.items.fold((initBindings)) { bindings, item -> excludeBindings(bindings, item) }
 
             // rewrite
             val type = ctx!!.copy(schema = schema)
@@ -1645,7 +1644,14 @@ internal class PlanTyper(
                                 it
                             }
                         }
-                        is Identifier.Qualified -> it
+                        is Identifier.Qualified -> if (id.root.isEquivalentTo(it.name)) {
+                            matchedRoot = true
+                            // recompute the StaticType of this binding after apply the exclusions
+                            val type = it.type.exclude(item.steps, false)
+                            it.copy(type = type)
+                        } else {
+                            it
+                        }
                     }
                 }
                 is Rex.Op.Var.Resolved -> it

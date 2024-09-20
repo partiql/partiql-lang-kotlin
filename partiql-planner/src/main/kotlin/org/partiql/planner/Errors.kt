@@ -178,6 +178,12 @@ public sealed class PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "Exclude expression given an unresolvable root '$root'" }
         )
+
+    public data class InvalidExcludePath(val path: String) :
+        PlanningProblemDetails(
+            ProblemSeverity.WARNING,
+            { "Exclude path '$path' does not exclude any values" }
+        )
 }
 
 private fun quotationHint(caseSensitive: Boolean) =

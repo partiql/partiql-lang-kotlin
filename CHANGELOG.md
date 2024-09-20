@@ -23,6 +23,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
+## [0.14.9]
+
+### Added
+
+### Changed
+- With full, closed schema, the planner will now give a plan-time warning when it can prove an exclude path will never 
+exclude a value (relevant issue -- https://github.com/partiql/partiql-lang/issues/91).
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+- @alancai98
+
 ## [0.14.8]
 
 ### Added
@@ -1110,7 +1129,8 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.8...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.9...HEAD
+[0.14.8]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.8...v0.14.9
 [0.14.8]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.7...v0.14.8
 [0.14.7]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.6...v0.14.7
 [0.14.6]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.5...v0.14.6

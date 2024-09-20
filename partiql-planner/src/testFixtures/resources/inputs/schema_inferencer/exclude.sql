@@ -471,3 +471,39 @@ FROM <<
 
 --#[exclude-36]
 SELECT * EXCLUDE t.c FROM b.b.b AS t;
+
+-- exclude path does not exclude value
+--#[exclude-37]
+SELECT * EXCLUDE t."a"."b".c
+FROM <<
+    {
+    'a': {
+    'B': {
+    'c': 0,
+    'd': 'foo'
+    }
+    }
+    }
+    >> AS t;
+
+-- exclude path does not exclude value
+--#[exclude-38]
+SELECT * EXCLUDE t."A"."b".c
+FROM <<
+    {
+    'a': {
+    'B': {
+    'c': 0,
+    'd': 'foo'
+    }
+    }
+    }
+    >> AS t;
+
+-- EXCLUDE on a struct with open content
+--#[exclude-39]
+SELECT * EXCLUDE t.c FROM b.b.b_open AS t;
+
+-- EXCLUDE on a struct with open content; nonexistent attribute in the open struct
+--#[exclude-40]
+SELECT * EXCLUDE t.non_existent_attr FROM b.b.b_open AS t;
