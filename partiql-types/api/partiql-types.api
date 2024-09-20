@@ -375,6 +375,7 @@ public final class org/partiql/types/PType$Kind : java/lang/Enum {
 	public static final field TIMESTAMPZ Lorg/partiql/types/PType$Kind;
 	public static final field TIMEZ Lorg/partiql/types/PType$Kind;
 	public static final field TINYINT Lorg/partiql/types/PType$Kind;
+	public static final field UDT Lorg/partiql/types/PType$Kind;
 	public static final field UNKNOWN Lorg/partiql/types/PType$Kind;
 	public static final field VARCHAR Lorg/partiql/types/PType$Kind;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/types/PType$Kind;

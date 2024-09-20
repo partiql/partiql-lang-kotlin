@@ -432,6 +432,16 @@ public interface PType {
         STRUCT,
 
         /**
+         * UDT represents a user-defined type.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>: CURRENTLY NOT APPLICABLE
+         * <br>
+         * <b>Applicable methods</b>: Implementation defined.
+         */
+        UDT,
+
+        /**
          * PartiQL's unknown type. This temporarily represents literal null and missing values.
          * <br>
          * <br>
