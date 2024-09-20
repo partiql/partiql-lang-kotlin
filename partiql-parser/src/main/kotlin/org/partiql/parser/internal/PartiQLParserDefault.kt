@@ -689,6 +689,13 @@ internal class PartiQLParserDefault : PartiQLParser {
                 isValidTypeDeclarationOrThrow(it, ctx.type())
             }
             val constraints = ctx.columnConstraint().map { visitColumnConstraint(it) }
+            // For now: we require either the NULL constraint or NOT NULL Constraint for specifing
+            //  nullability when using the Change Column Type operation
+            val hasNullabilitySpecifier = constraints.any {
+                val def = it.definition
+                def is Constraint.Definition.Nullable || def is Constraint.Definition.NotNull
+            }
+            if (!hasNullabilitySpecifier) throw error(ctx, "Except NULL Constraint Or NOT NULL Constraint when using the ALTER COLUMN ... TYPE opeartion")
             val optional = when (ctx.OPTIONAL()) {
                 null -> false
                 else -> true

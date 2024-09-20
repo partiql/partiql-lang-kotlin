@@ -118,6 +118,12 @@ internal object DDLConverter {
         ): org.partiql.planner.internal.ir.DdlOp.AlterTable.Operation.ChangeColumn.Subcommand.ChangeType {
             val type = visitType(node.type, ctx)
             val constraints = node.constraints.map { visitConstraint(it, ctx) }
+            val conflictNullable = node.constraints.any {
+                it.definition is Constraint.Definition.Nullable
+            } && node.constraints.any {
+                it.definition is Constraint.Definition.NotNull
+            }
+            if (conflictNullable) throw IllegalArgumentException("conflicting NULL/NOT NULL declarations for column ${ctx.currentFieldName!!.symbol}")
             val updatedType = StaticType.ANY
             return ddlOpAlterTableOperationChangeColumnSubcommandChangeType(updatedType, type, constraints, node.isOptional)
         }

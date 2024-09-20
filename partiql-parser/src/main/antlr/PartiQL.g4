@@ -103,7 +103,7 @@ alterCommand
     ;
 
 alterOp
-    : CHANGE COLUMN symbolPrimitive changeColumnOp              #ChangeColumn
+    : ALTER COLUMN symbolPrimitive changeColumnOp               #ChangeColumn
     | ADD COLUMN tableDefPart                                   #AddColumn
     ;
 
