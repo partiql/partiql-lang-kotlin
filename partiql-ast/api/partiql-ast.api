@@ -17,7 +17,6 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprDateDiff (Lorg/partiql/ast/DatetimeField;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$DateDiff;
 	public static final fun exprExtract (Lorg/partiql/ast/DatetimeField;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Expr$Extract;
 	public static final fun exprInCollection (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$InCollection;
-	public static final fun exprIon (Lcom/amazon/ionelement/api/IonElement;)Lorg/partiql/ast/Expr$Ion;
 	public static final fun exprIsType (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$IsType;
 	public static final fun exprLike (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;)Lorg/partiql/ast/Expr$Like;
 	public static final fun exprLit (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/Expr$Lit;
@@ -43,6 +42,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprValues (Ljava/util/List;)Lorg/partiql/ast/Expr$Values;
 	public static final fun exprValuesRow (Ljava/util/List;)Lorg/partiql/ast/Expr$Values$Row;
 	public static final fun exprVar (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Expr$Var$Scope;)Lorg/partiql/ast/Expr$Var;
+	public static final fun exprVariant (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/Expr$Variant;
 	public static final fun exprWindow (Lorg/partiql/ast/Expr$Window$Function;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr$Window$Over;)Lorg/partiql/ast/Expr$Window;
 	public static final fun exprWindowOver (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/Expr$Window$Over;
 	public static final fun fromJoin (Lorg/partiql/ast/From;Lorg/partiql/ast/From;Lorg/partiql/ast/From$Join$Type;Lorg/partiql/ast/Expr;)Lorg/partiql/ast/From$Join;
@@ -558,25 +558,6 @@ public final class org/partiql/ast/Expr$InCollection : org/partiql/ast/Expr {
 
 public final class org/partiql/ast/Expr$InCollection$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/ExprInCollectionBuilder;
-}
-
-public final class org/partiql/ast/Expr$Ion : org/partiql/ast/Expr {
-	public static final field Companion Lorg/partiql/ast/Expr$Ion$Companion;
-	public final field value Lcom/amazon/ionelement/api/IonElement;
-	public fun <init> (Lcom/amazon/ionelement/api/IonElement;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/ExprIonBuilder;
-	public final fun component1 ()Lcom/amazon/ionelement/api/IonElement;
-	public final fun copy (Lcom/amazon/ionelement/api/IonElement;)Lorg/partiql/ast/Expr$Ion;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$Ion;Lcom/amazon/ionelement/api/IonElement;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Ion;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Expr$Ion$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/ExprIonBuilder;
 }
 
 public final class org/partiql/ast/Expr$IsType : org/partiql/ast/Expr {
@@ -1133,6 +1114,27 @@ public final class org/partiql/ast/Expr$Var$Scope : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/Expr$Var$Scope;
 	public static fun values ()[Lorg/partiql/ast/Expr$Var$Scope;
+}
+
+public final class org/partiql/ast/Expr$Variant : org/partiql/ast/Expr {
+	public static final field Companion Lorg/partiql/ast/Expr$Variant$Companion;
+	public final field encoding Ljava/lang/String;
+	public final field value Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ExprVariantBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/Expr$Variant;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Expr$Variant;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Variant;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Expr$Variant$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ExprVariantBuilder;
 }
 
 public final class org/partiql/ast/Expr$Window : org/partiql/ast/Expr {
@@ -3234,8 +3236,6 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun exprExtract$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/DatetimeField;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Extract;
 	public final fun exprInCollection (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$InCollection;
 	public static synthetic fun exprInCollection$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$InCollection;
-	public final fun exprIon (Lcom/amazon/ionelement/api/IonElement;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Ion;
-	public static synthetic fun exprIon$default (Lorg/partiql/ast/builder/AstBuilder;Lcom/amazon/ionelement/api/IonElement;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Ion;
 	public final fun exprIsType (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$IsType;
 	public static synthetic fun exprIsType$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$IsType;
 	public final fun exprLike (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Like;
@@ -3286,6 +3286,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun exprValuesRow$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Values$Row;
 	public final fun exprVar (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Expr$Var$Scope;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Var;
 	public static synthetic fun exprVar$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Expr$Var$Scope;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Var;
+	public final fun exprVariant (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Variant;
+	public static synthetic fun exprVariant$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Variant;
 	public final fun exprWindow (Lorg/partiql/ast/Expr$Window$Function;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr$Window$Over;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Window;
 	public static synthetic fun exprWindow$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr$Window$Function;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Expr$Window$Over;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Expr$Window;
 	public final fun exprWindowOver (Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Expr$Window$Over;
@@ -3701,16 +3703,6 @@ public final class org/partiql/ast/builder/ExprInCollectionBuilder {
 	public final fun setRhs (Lorg/partiql/ast/Expr;)V
 }
 
-public final class org/partiql/ast/builder/ExprIonBuilder {
-	public fun <init> ()V
-	public fun <init> (Lcom/amazon/ionelement/api/IonElement;)V
-	public synthetic fun <init> (Lcom/amazon/ionelement/api/IonElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Expr$Ion;
-	public final fun getValue ()Lcom/amazon/ionelement/api/IonElement;
-	public final fun setValue (Lcom/amazon/ionelement/api/IonElement;)V
-	public final fun value (Lcom/amazon/ionelement/api/IonElement;)Lorg/partiql/ast/builder/ExprIonBuilder;
-}
-
 public final class org/partiql/ast/builder/ExprIsTypeBuilder {
 	public fun <init> ()V
 	public fun <init> (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Type;Ljava/lang/Boolean;)V
@@ -4021,6 +4013,19 @@ public final class org/partiql/ast/builder/ExprVarBuilder {
 	public final fun scope (Lorg/partiql/ast/Expr$Var$Scope;)Lorg/partiql/ast/builder/ExprVarBuilder;
 	public final fun setIdentifier (Lorg/partiql/ast/Identifier;)V
 	public final fun setScope (Lorg/partiql/ast/Expr$Var$Scope;)V
+}
+
+public final class org/partiql/ast/builder/ExprVariantBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Expr$Variant;
+	public final fun encoding (Ljava/lang/String;)Lorg/partiql/ast/builder/ExprVariantBuilder;
+	public final fun getEncoding ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+	public final fun setEncoding (Ljava/lang/String;)V
+	public final fun setValue (Ljava/lang/String;)V
+	public final fun value (Ljava/lang/String;)Lorg/partiql/ast/builder/ExprVariantBuilder;
 }
 
 public final class org/partiql/ast/builder/ExprWindowBuilder {
@@ -5109,8 +5114,6 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/A
 	public fun visitExprExtract (Lorg/partiql/ast/Expr$Extract;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public synthetic fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5159,6 +5162,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/A
 	public fun visitExprValuesRow (Lorg/partiql/ast/Expr$Values$Row;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprVar (Lorg/partiql/ast/Expr$Var;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprVar (Lorg/partiql/ast/Expr$Var;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprVariant (Lorg/partiql/ast/Expr$Variant;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprVariant (Lorg/partiql/ast/Expr$Variant;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public fun visitExprWrapped (Lorg/partiql/ast/Expr;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitFromJoin (Lorg/partiql/ast/From$Join;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitFromJoin (Lorg/partiql/ast/From$Join;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
@@ -5365,8 +5370,6 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitExprExtract (Lorg/partiql/ast/Expr$Extract;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5417,6 +5420,8 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitExprValuesRow (Lorg/partiql/ast/Expr$Values$Row;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprVar (Lorg/partiql/ast/Expr$Var;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprVar (Lorg/partiql/ast/Expr$Var;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprVariant (Lorg/partiql/ast/Expr$Variant;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprVariant (Lorg/partiql/ast/Expr$Variant;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprWindow (Lorg/partiql/ast/Expr$Window;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprWindow (Lorg/partiql/ast/Expr$Window;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprWindowOver (Lorg/partiql/ast/Expr$Window$Over;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5626,7 +5631,6 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitExprDateDiff (Lorg/partiql/ast/Expr$DateDiff;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprExtract (Lorg/partiql/ast/Expr$Extract;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5653,6 +5657,7 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitExprValues (Lorg/partiql/ast/Expr$Values;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprValuesRow (Lorg/partiql/ast/Expr$Values$Row;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprVar (Lorg/partiql/ast/Expr$Var;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprVariant (Lorg/partiql/ast/Expr$Variant;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprWindow (Lorg/partiql/ast/Expr$Window;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprWindowOver (Lorg/partiql/ast/Expr$Window$Over;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitFrom (Lorg/partiql/ast/From;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5782,7 +5787,6 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitExprDateDiff (Lorg/partiql/ast/Expr$DateDiff;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprExtract (Lorg/partiql/ast/Expr$Extract;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprInCollection (Lorg/partiql/ast/Expr$InCollection;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprIon (Lorg/partiql/ast/Expr$Ion;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprIsType (Lorg/partiql/ast/Expr$IsType;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprLike (Lorg/partiql/ast/Expr$Like;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprLit (Lorg/partiql/ast/Expr$Lit;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5809,6 +5813,7 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitExprValues (Lorg/partiql/ast/Expr$Values;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprValuesRow (Lorg/partiql/ast/Expr$Values$Row;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprVar (Lorg/partiql/ast/Expr$Var;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprVariant (Lorg/partiql/ast/Expr$Variant;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprWindow (Lorg/partiql/ast/Expr$Window;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprWindowOver (Lorg/partiql/ast/Expr$Window$Over;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitFrom (Lorg/partiql/ast/From;Ljava/lang/Object;)Ljava/lang/Object;

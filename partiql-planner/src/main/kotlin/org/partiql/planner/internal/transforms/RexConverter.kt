@@ -16,6 +16,7 @@
 
 package org.partiql.planner.internal.transforms
 
+import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
@@ -103,10 +104,15 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        override fun visitExprIon(node: Expr.Ion, ctx: Env): Rex {
-            val value =
-                PartiQLValueIonReaderBuilder
-                    .standard().build(node.value).read()
+        /**
+         * TODO PartiQLValue will be replaced by Datum (i.e. IonDatum) is a subsequent PR.
+         */
+        override fun visitExprVariant(node: Expr.Variant, ctx: Env): Rex {
+            if (node.encoding != "ion") {
+                throw IllegalArgumentException("unsupported encoding ${node.encoding}")
+            }
+            val ion = loadSingleElement(node.value)
+            val value = PartiQLValueIonReaderBuilder.standard().build(ion).read()
             val type = CompilerType(value.type.toPType())
             return rex(type, rexOpLit(value))
         }
