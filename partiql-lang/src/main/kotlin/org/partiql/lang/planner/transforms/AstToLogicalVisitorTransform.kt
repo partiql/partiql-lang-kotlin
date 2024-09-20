@@ -384,8 +384,6 @@ internal class AstToLogicalVisitorTransform(
                     )
                 }
             }
-            // DL TODO: transformDmlUpdate
-
             // INSERT single row with VALUE is disallowed. (This variation of INSERT might be removed in a future
             // release of PartiQL.)
             is PartiqlAst.DmlOp.InsertValue -> {
@@ -432,17 +430,12 @@ internal class AstToLogicalVisitorTransform(
                     }
                 }
             }
-
             is PartiqlAst.DmlOp.Remove -> {
                 problemHandler.handleProblem(
-                    Problem(
-                        dmlOp.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
-                        PlanningProblemDetails.UnimplementedFeature("REMOVE")
-                    )
+                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown.toProblemLocation(), PlanningProblemDetails.UnimplementedFeature("REMOVE"))
                 )
                 INVALID_STATEMENT
             }
-
             is PartiqlAst.DmlOp.Set -> {
                 val setOperations = node.operations.ops.mapNotNull {
                     when (it) {
