@@ -99,7 +99,6 @@ internal class PlanTransform(
 
         override fun visitRexOp(node: Rex.Op, ctx: Unit) = super.visitRexOp(node, ctx) as org.partiql.plan.Rex.Op
 
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: Unit) = org.partiql.plan.rexOpLit(node.value)
 
         override fun visitRexOpVar(node: Rex.Op.Var, ctx: Unit) =

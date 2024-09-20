@@ -54,16 +54,12 @@ import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.value.Datum
+import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
-import org.partiql.value.boolValue
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.io.PartiQLValueIonReaderBuilder
-import org.partiql.value.nullValue
-import org.partiql.value.stringValue
 import org.partiql.ast.Identifier as AstIdentifier
 
 /**
@@ -99,15 +95,17 @@ internal object RexConverter {
                 isNullValue = node.value.isNull,
                 isMissingValue = node.value is MissingValue
             )
-            val op = rexOpLit(node.value)
+            // TODO update in https://github.com/partiql/partiql-lang-kotlin/issues/1589
+            val op = rexOpLit(Datum.of(node.value))
             return rex(type, op)
         }
 
-        override fun visitExprIon(node: Expr.Ion, ctx: Env): Rex {
-            val value =
-                PartiQLValueIonReaderBuilder
-                    .standard().build(node.value).read()
-            val type = CompilerType(value.type.toPType())
+        override fun visitExprVariant(node: Expr.Variant, ctx: Env): Rex {
+            val value = when (node.encoding) {
+                "ion" -> IonDatum.of(node.value)
+                else -> throw IllegalArgumentException("unsupported variant encoding ${node.encoding}")
+            }
+            val type = CompilerType(value.type)
             return rex(type, rexOpLit(value))
         }
 
@@ -410,7 +408,7 @@ internal object RexConverter {
                 val schema = acc.type.schema + scan.type.schema
                 val props = emptySet<Rel.Prop>()
                 val type = relType(schema, props)
-                rel(type, relOpJoin(acc, scan, rex(BOOL, rexOpLit(boolValue(true))), Rel.Op.Join.Type.INNER))
+                rel(type, relOpJoin(acc, scan, rex(BOOL, rexOpLit(Datum.bool(true))), Rel.Op.Join.Type.INNER))
             }
 
             // compute the ref used by select construct
@@ -466,7 +464,7 @@ internal object RexConverter {
             return rel(relType, relOpUnpivot(path))
         }
 
-        private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
+        private fun rexString(str: String) = rex(STRING, rexOpLit(Datum.string(str)))
 
         override fun visitExprCall(node: Expr.Call, context: Env): Rex {
             val type = (ANY)
@@ -574,7 +572,7 @@ internal object RexConverter {
             }.toMutableList()
 
             val defaultRex = when (val default = node.default) {
-                null -> rex(type = ANY, op = rexOpLit(value = nullValue()))
+                null -> rex(type = ANY, op = rexOpLit(value = Datum.nullValue()))
                 else -> visitExprCoerce(default, context)
             }
             val op = rexOpCase(branches = branches, default = defaultRex)
@@ -752,7 +750,7 @@ internal object RexConverter {
             val type = ANY
             // Args
             val arg0 = visitExprCoerce(node.value, ctx)
-            val arg1 = node.start?.let { visitExprCoerce(it, ctx) } ?: rex(INT, rexOpLit(int64Value(1)))
+            val arg1 = node.start?.let { visitExprCoerce(it, ctx) } ?: rex(INT, rexOpLit(Datum.bigint(1)))
             val arg2 = node.length?.let { visitExprCoerce(it, ctx) }
             // Call Variants
             val call = when (arg2) {
@@ -830,8 +828,8 @@ internal object RexConverter {
                 call(
                     "substring",
                     cv,
-                    rex(INT4, rexOpLit(int32Value(1))),
-                    rex(ANY, call("minus", sp, rex(INT4, rexOpLit(int32Value(1)))))
+                    rex(INT4, rexOpLit(Datum.integer(1))),
+                    rex(ANY, call("minus", sp, rex(INT4, rexOpLit(Datum.integer(1)))))
                 )
             )
             val p2 = rex(ANY, call("concat", p1, rs))
@@ -962,7 +960,14 @@ internal object RexConverter {
             return rexOpCallUnresolved(id, args.toList())
         }
 
-        private fun Int?.toRex() = rex(INT4, rexOpLit(int32Value(this)))
+        private fun Int?.toRex(): Rex {
+            val datum = if (this == null) {
+                Datum.nullValue(PType.integer())
+            } else {
+                Datum.integer(this)
+            }
+            return rex(INT4, rexOpLit(datum))
+        }
 
         private val ANY: CompilerType = CompilerType(PType.dynamic())
         private val BOOL: CompilerType = CompilerType(PType.bool())

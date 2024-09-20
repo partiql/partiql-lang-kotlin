@@ -1,6 +1,6 @@
 imports::{
   kotlin: [
-    partiql_value::'org.partiql.value.PartiQLValue',
+    partiql_value::'org.partiql.spi.value.Datum',
     partiql_value_type::'org.partiql.types.PType',
     static_type::'org.partiql.types.PType',
     function::'org.partiql.spi.fn.Function',

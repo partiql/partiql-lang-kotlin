@@ -45,6 +45,16 @@ public interface PType {
     Kind getKind();
 
     /**
+     * Returns the variant type encoding.
+     *
+     * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
+     * {@link Kind#VARIANT}
+     */
+    default String getEncoding() throws UnsupportedOperationException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * The fields of the type
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
      * {@link Kind#ROW}
@@ -432,14 +442,16 @@ public interface PType {
         STRUCT,
 
         /**
-         * UDT represents a user-defined type.
+         * PartiQL's variant type.
          * <br>
+         * @see <a href="https://github.com/apache/spark/blob/master/common/variant/README.md">Spark VARIANT</a>
+         * @see <a href="https://docs.snowflake.com/en/sql-reference/data-types-semistructured">Snowflake VARIANT</a>
          * <br>
-         * <b>Type Syntax</b>: CURRENTLY NOT APPLICABLE
+         * <b>Type Syntax</b>: NOT APPLICABLE
          * <br>
          * <b>Applicable methods</b>: Implementation defined.
          */
-        UDT,
+        VARIANT,
 
         /**
          * PartiQL's unknown type. This temporarily represents literal null and missing values.
@@ -713,6 +725,14 @@ public interface PType {
     @NotNull
     static PType struct() {
         return new PTypePrimitive(Kind.STRUCT);
+    }
+
+    /**
+     * @return a PartiQL variant type with the given encoding.
+     */
+    @NotNull
+    static PType variant(String encoding) {
+        return new PTypeVariant(encoding);
     }
 
     /**

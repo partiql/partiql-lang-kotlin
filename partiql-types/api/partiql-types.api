@@ -323,6 +323,7 @@ public abstract interface class org/partiql/types/PType {
 	public static fun doublePrecision ()Lorg/partiql/types/PType;
 	public static fun dynamic ()Lorg/partiql/types/PType;
 	public static fun fromStaticType (Lorg/partiql/types/StaticType;)Lorg/partiql/types/PType;
+	public fun getEncoding ()Ljava/lang/String;
 	public fun getFields ()Ljava/util/Collection;
 	public abstract fun getKind ()Lorg/partiql/types/PType$Kind;
 	public fun getLength ()I
@@ -346,6 +347,7 @@ public abstract interface class org/partiql/types/PType {
 	public static fun tinyint ()Lorg/partiql/types/PType;
 	public static fun unknown ()Lorg/partiql/types/PType;
 	public static fun varchar (I)Lorg/partiql/types/PType;
+	public static fun variant (Ljava/lang/String;)Lorg/partiql/types/PType;
 }
 
 public final class org/partiql/types/PType$Kind : java/lang/Enum {
@@ -375,9 +377,9 @@ public final class org/partiql/types/PType$Kind : java/lang/Enum {
 	public static final field TIMESTAMPZ Lorg/partiql/types/PType$Kind;
 	public static final field TIMEZ Lorg/partiql/types/PType$Kind;
 	public static final field TINYINT Lorg/partiql/types/PType$Kind;
-	public static final field UDT Lorg/partiql/types/PType$Kind;
 	public static final field UNKNOWN Lorg/partiql/types/PType$Kind;
 	public static final field VARCHAR Lorg/partiql/types/PType$Kind;
+	public static final field VARIANT Lorg/partiql/types/PType$Kind;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/types/PType$Kind;
 	public static fun values ()[Lorg/partiql/types/PType$Kind;
 }
