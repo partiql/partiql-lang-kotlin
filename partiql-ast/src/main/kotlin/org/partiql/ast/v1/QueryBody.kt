@@ -1,5 +1,7 @@
 package org.partiql.ast.v1
 
+import org.partiql.ast.v1.expr.Expr
+
 /**
  * TODO docs, equals, hashcode
  */

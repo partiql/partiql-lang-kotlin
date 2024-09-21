@@ -13,15 +13,6 @@ public abstract class Identifier : AstNode() {
     /**
      * TODO docs, equals, hashcode
      */
-    public enum class CaseSensitivity {
-        SENSITIVE,
-        INSENSITIVE,
-        OTHER,
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
     public class Symbol(
         @JvmField
         public var symbol: String,
