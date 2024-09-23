@@ -17,8 +17,6 @@ package org.partiql.parser.internal
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.IonElement
-import com.amazon.ionelement.api.IonElementException
-import com.amazon.ionelement.api.loadSingleElement
 import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
@@ -67,7 +65,6 @@ import org.partiql.ast.exprDateAdd
 import org.partiql.ast.exprDateDiff
 import org.partiql.ast.exprExtract
 import org.partiql.ast.exprInCollection
-import org.partiql.ast.exprIon
 import org.partiql.ast.exprIsType
 import org.partiql.ast.exprLike
 import org.partiql.ast.exprLit
@@ -91,6 +88,7 @@ import org.partiql.ast.exprStructField
 import org.partiql.ast.exprSubstring
 import org.partiql.ast.exprTrim
 import org.partiql.ast.exprVar
+import org.partiql.ast.exprVariant
 import org.partiql.ast.exprWindow
 import org.partiql.ast.exprWindowOver
 import org.partiql.ast.fromJoin
@@ -1820,12 +1818,9 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralIon(ctx: GeneratedParser.LiteralIonContext) = translate(ctx) {
-            val value = try {
-                loadSingleElement(ctx.ION_CLOSURE().getStringValue())
-            } catch (e: IonElementException) {
-                throw error(ctx, "Unable to parse Ion value.", e)
-            }
-            exprIon(value)
+            val value = ctx.ION_CLOSURE().getStringValue()
+            val encoding = "ion"
+            exprVariant(value, encoding)
         }
 
         override fun visitLiteralString(ctx: GeneratedParser.LiteralStringContext) = translate(ctx) {

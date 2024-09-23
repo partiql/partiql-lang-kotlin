@@ -224,9 +224,11 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         return head concat r(value)
     }
 
-    override fun visitExprIon(node: Expr.Ion, head: SqlBlock): SqlBlock {
-        // simplified Ion value writing, as this intentionally omits formatting
-        val value = node.value.toString()
+    override fun visitExprVariant(node: Expr.Variant, head: SqlBlock): SqlBlock {
+        if (node.encoding != "ion") {
+            error("Unsupported encoding ${node.encoding}")
+        }
+        val value = node.value
         return head concat r("`$value`")
     }
 
