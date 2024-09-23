@@ -11,22 +11,6 @@ env:
   COMMENT_SIZE_LIMIT: 10
 
 jobs:
-  print-variables:
-    name: Prints variables
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print
-        run: |
-          T="CROSS-ENGINE-REPORT"
-          BF="$GITHUB_WORKSPACE/test/partiql-tests-runner/src/main/resources/config/legacy/$CONFORMANCE_REPORT_NAME"
-          BL="LEGACY"
-          BT="$LEGACY_VERSION"
-          TF="$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
-          TL="EVAL"
-          TT="$GITHUB_SHA"
-          O="$COMPARISON_REPORT_NAME"
-          ARGS="-t $T -bf $BF -bl $BL -bt $BT -tf $TF -tl $TL -tt $TT -o $O"
-          echo $ARGS
   conformance-report:
     name: Create conformance report for `push` and `pull_request` events
     runs-on: ubuntu-latest
@@ -118,10 +102,10 @@ jobs:
         continue-on-error: true
         run: |
           T="CROSS-ENGINE-REPORT"
-          BF="$GITHUB_WORKSPACE/test/partiql-tests-runner/src/main/resources/config/legacy/$CONFORMANCE_REPORT_NAME"
+          BF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/src/main/resources/config/legacy/$CONFORMANCE_REPORT_NAME"
           BL="LEGACY"
           BT="$LEGACY_VERSION"
-          TF="$CONFORMANCE_REPORT_RELATIVE_PATH/eval/CONFORMANCE_REPORT_NAME"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
           TL="EVAL"
           TT="$GITHUB_SHA"
           O="$COMPARISON_REPORT_NAME"
@@ -131,10 +115,10 @@ jobs:
         continue-on-error: true
         run: |
           T="CROSS-COMMIT-REPORT"
-          BF="$GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
+          BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
           BL="EVAL"
           BT="${{ github.event.pull_request.base.sha }}"
-          TF="$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
           TL="EVAL"
           TT="$GITHUB_SHA"
           O="$COMPARISON_REPORT_NAME"
@@ -153,10 +137,10 @@ jobs:
         continue-on-error: true
         run: |
           T="CROSS-ENGINE-REPORT"
-          BF="$GITHUB_WORKSPACE/test/partiql-tests-runner/src/main/resources/config/legacy/$CONFORMANCE_REPORT_NAME"
+          BF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/src/main/resources/config/legacy/$CONFORMANCE_REPORT_NAME"
           BL="LEGACY"
           BT="$LEGACY_VERSION"
-          TF="$CONFORMANCE_REPORT_RELATIVE_PATH/eval/CONFORMANCE_REPORT_NAME"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
           TL="EVAL"
           TT="$GITHUB_SHA"
           O="$COMPARISON_REPORT_NAME_WITH_LIMIT"
@@ -167,10 +151,10 @@ jobs:
         continue-on-error: true
         run: |
           T="CROSS-COMMIT-REPORT"
-          BF="$GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
+          BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
           BL="EVAL"
           BT="${{ github.event.pull_request.base.sha }}"
-          TF="$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
           TL="EVAL"
           TT="$GITHUB_SHA"
           O="$COMPARISON_REPORT_NAME_WITH_LIMIT"

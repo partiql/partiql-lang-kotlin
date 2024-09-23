@@ -48,7 +48,6 @@ object Versions {
     const val pig = "0.6.3"
     const val kotlinxCoroutines = "1.8.1"
     const val kotlinxCoroutinesJdk8 = "1.8.1"
-    const val shadow = "8.1.1"
     const val ktlint = "0.42.1" // we're on an old version of ktlint. TODO upgrade https://github.com/partiql/partiql-lang-kotlin/issues/1418
 
     // Testing
@@ -124,6 +123,5 @@ object Plugins {
     const val dokka = "org.jetbrains.dokka"
     const val jmh = "me.champeau.jmh"
     const val library = "org.gradle.java-library"
-    const val shadow = "com.github.johnrengelman.shadow"
     const val testFixtures = "org.gradle.java-test-fixtures"
 }
