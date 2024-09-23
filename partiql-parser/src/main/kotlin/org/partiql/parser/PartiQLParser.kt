@@ -34,6 +34,6 @@ public interface PartiQLParser {
         public fun builder(): PartiQLParserBuilder = PartiQLParserBuilder()
 
         @JvmStatic
-        public fun default(): PartiQLParser = PartiQLParserDefault()
+        public fun standard(): PartiQLParser = PartiQLParserDefault()
     }
 }

@@ -3,7 +3,7 @@ package org.partiql.planner
 import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
-import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.spi.catalog.Session
 

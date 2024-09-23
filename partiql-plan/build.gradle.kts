@@ -23,8 +23,6 @@ plugins {
 dependencies {
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
-    implementation(Deps.ionElement)
-    implementation(Deps.kotlinReflect)
 }
 
 tasks.shadowJar {

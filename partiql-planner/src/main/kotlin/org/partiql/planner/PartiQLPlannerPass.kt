@@ -1,7 +1,7 @@
 package org.partiql.planner
 
 import org.partiql.errors.ProblemCallback
-import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.v1.PartiQLPlan
 
 public interface PartiQLPlannerPass {
 

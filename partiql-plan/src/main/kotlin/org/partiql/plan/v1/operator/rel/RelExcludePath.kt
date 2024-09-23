@@ -30,4 +30,22 @@ internal class RelExcludePathImpl(
 ) : RelExcludePath {
     override fun getRoot(): RexVar = root
     override fun getSteps(): Collection<RelExcludeStep> = steps
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is RelExcludePathImpl) return false
+
+        if (root != other.root) return false
+        if (steps != other.steps) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = root.hashCode()
+        result = 31 * result + steps.hashCode()
+        return result
+    }
+
+    override fun toString(): String = "RelExcludePath(root=$root, steps=$steps)"
 }

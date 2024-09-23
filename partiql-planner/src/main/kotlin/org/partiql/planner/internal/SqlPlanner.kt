@@ -6,7 +6,7 @@ import org.partiql.errors.ProblemCallback
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
 import org.partiql.planner.internal.transforms.AstToPlan
-import org.partiql.planner.internal.transforms.PlanTransform
+import org.partiql.planner.internal.transforms.PlanTransformV1
 import org.partiql.planner.internal.typer.PlanTyper
 import org.partiql.spi.catalog.Session
 
@@ -14,11 +14,11 @@ import org.partiql.spi.catalog.Session
  * Default PartiQL logical query planner.
  */
 internal class SqlPlanner(
-    private val passes: List<PartiQLPlannerPass>,
-    private val flags: Set<PlannerFlag>,
+    private var passes: List<PartiQLPlannerPass>,
+    private var flags: Set<PlannerFlag>,
 ) : PartiQLPlanner {
 
-    override fun plan(
+    public override fun plan(
         statement: Statement,
         session: Session,
         onProblem: ProblemCallback,
@@ -39,7 +39,7 @@ internal class SqlPlanner(
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
 
         // 4. Assert plan has been resolved — translating to public API
-        var plan = PlanTransform(flags).transform(internal, onProblem)
+        var plan = PlanTransformV1(flags).transform(internal, onProblem)
 
         // 5. Apply all passes
         for (pass in passes) {

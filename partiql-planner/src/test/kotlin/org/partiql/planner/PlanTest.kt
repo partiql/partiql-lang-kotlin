@@ -5,14 +5,12 @@ import org.junit.jupiter.api.DynamicContainer.dynamicContainer
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.api.fail
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.PartiQLPlan
-import org.partiql.plan.PlanNode
-import org.partiql.plan.debug.PlanPrinter
+import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.planner.util.PlanNodeEquivalentVisitor
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
@@ -74,7 +72,7 @@ class PlanTest {
             .namespace("SCHEMA")
             .build()
         val problemCollector = ProblemCollector()
-        val ast = PartiQLParser.default().parse(test.statement).root
+        val ast = PartiQLParser.standard().parse(test.statement).root
         val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
         planner.plan(ast, session, problemCollector)
     }
@@ -131,13 +129,16 @@ class PlanTest {
     }
 
     private fun assertPlanEqual(inputPlan: PartiQLPlan, outputPlan: PartiQLPlan) {
-        assert(inputPlan.isEquaivalentTo(outputPlan)) {
-            buildString {
-                this.appendLine("expect plan equivalence")
-                PlanPrinter.append(this, inputPlan)
-                PlanPrinter.append(this, outputPlan)
-            }
+        fail {
+            "assertPlanEqual is not implemented"
         }
+        // assert(inputPlan.isEquaivalentTo(outputPlan)) {
+        //     buildString {
+        //         this.appendLine("expect plan equivalence")
+        //         PlanPrinter.append(this, inputPlan)
+        //         PlanPrinter.append(this, outputPlan)
+        //     }
+        // }
     }
 
     private fun parse(group: String, file: File): List<PartiQLTest> {
@@ -167,7 +168,4 @@ class PlanTest {
         }
         return tests
     }
-
-    private fun PlanNode.isEquaivalentTo(other: PlanNode): Boolean =
-        PlanNodeEquivalentVisitor().visit(this, other)
 }
