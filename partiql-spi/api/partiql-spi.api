@@ -718,10 +718,12 @@ public final class org/partiql/spi/value/ion/IonDatum : org/partiql/spi/value/Da
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
 	public static final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/spi/value/Datum;
+	public static final fun of (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 }
 
 public final class org/partiql/spi/value/ion/IonDatum$Companion {
 	public final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/spi/value/Datum;
+	public final fun of (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 }
 
 public abstract class org/partiql/value/BagValue : org/partiql/value/CollectionValue {

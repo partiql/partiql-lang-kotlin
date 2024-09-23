@@ -71,11 +71,10 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.boolValue
 import org.partiql.value.int32Value
-import org.partiql.value.stringValue
 
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.
@@ -276,13 +275,12 @@ internal object RelConverter {
          *
          * TODO compute basic schema
          */
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitFromJoin(node: From.Join, nil: Rel): Rel {
             val lhs = visitFrom(node.lhs, nil)
             val rhs = visitFrom(node.rhs, nil)
             val schema = lhs.type.schema + rhs.type.schema // Note: This gets more specific in PlanTyper. It is only used to find binding names here.
             val props = emptySet<Rel.Prop>()
-            val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(BOOL, rexOpLit(boolValue(true)))
+            val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(BOOL, rexOpLit(Datum.bool(true)))
             val joinType = when (node.type) {
                 From.Join.Type.LEFT_OUTER, From.Join.Type.LEFT -> Rel.Op.Join.Type.LEFT
                 From.Join.Type.RIGHT_OUTER, From.Join.Type.RIGHT -> Rel.Op.Join.Type.RIGHT
@@ -423,7 +421,7 @@ internal object RelConverter {
                     schema.add(binding)
                     val fields = input.type.schema.mapIndexed { bindingIndex, currBinding ->
                         rexOpStructField(
-                            k = rex(STRING, rexOpLit(stringValue(currBinding.name))),
+                            k = rex(STRING, rexOpLit(Datum.string(currBinding.name))),
                             v = rex(ANY, rexOpVarLocal(0, bindingIndex))
                         )
                     }
