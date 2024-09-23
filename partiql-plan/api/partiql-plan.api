@@ -2365,12 +2365,6 @@ public final class org/partiql/plan/builder/StatementQueryBuilder {
 	public final fun setRoot (Lorg/partiql/plan/Rex;)V
 }
 
-public final class org/partiql/plan/debug/PlanPrinter {
-	public static final field INSTANCE Lorg/partiql/plan/debug/PlanPrinter;
-	public final fun append (Ljava/lang/Appendable;Lorg/partiql/plan/PlanNode;)V
-	public final fun toString (Lorg/partiql/plan/PlanNode;)Ljava/lang/String;
-}
-
 public abstract class org/partiql/plan/util/PlanRewriter : org/partiql/plan/visitor/PlanBaseVisitor {
 	public fun <init> ()V
 	public synthetic fun defaultReturn (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;

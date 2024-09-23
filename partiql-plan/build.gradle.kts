@@ -39,6 +39,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
 }
 
 // Disabled for partiql-plan project.
+// TODO enable before PR
 kotlin {
     explicitApi = null
 }
@@ -46,28 +47,5 @@ kotlin {
 publish {
     artifactId = "partiql-plan"
     name = "PartiQL Plan"
-    description = "PartiQL Plan experimental data structures"
-}
-
-val generate = tasks.register<Exec>("generate") {
-    dependsOn(":lib:sprout:install")
-    workingDir(projectDir)
-    commandLine(
-        "../lib/sprout/build/install/sprout/bin/sprout",
-        "generate",
-        "kotlin",
-        "-o", "$buildDir/generated-src",
-        "-p", "org.partiql.plan",
-        "-u", "Plan",
-        "--poems", "factory",
-        "--poems", "visitor",
-        "--poems", "builder",
-        "--poems", "util",
-        "--opt-in", "org.partiql.value.PartiQLValueExperimental",
-        "./src/main/resources/partiql_plan.ion"
-    )
-}
-
-tasks.compileKotlin {
-    dependsOn(generate)
+    description = "PartiQL logical plan data structures"
 }
