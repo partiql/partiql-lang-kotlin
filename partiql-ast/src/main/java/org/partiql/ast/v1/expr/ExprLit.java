@@ -1,0 +1,32 @@
+package org.partiql.ast.v1.expr;
+
+import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.v1.AstNode;
+import org.partiql.ast.v1.AstVisitor;
+import org.partiql.value.PartiQLValue;
+
+import java.util.Collection;
+import java.util.Collections;
+
+/**
+ * TODO docs, equals, hashcode
+ */
+public class ExprLit extends Expr {
+    @NotNull
+    public PartiQLValue value;
+
+    public ExprLit(@NotNull PartiQLValue value) {
+        this.value = value;
+    }
+
+    @Override
+    @NotNull
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return visitor.visitExprLit(this, ctx);
+    }
+}
