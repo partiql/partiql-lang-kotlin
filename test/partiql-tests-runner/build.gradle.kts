@@ -20,13 +20,15 @@ plugins {
 }
 
 application {
-    mainClass.set("org.partiql.runner.ConformanceComparisonKt")
+    mainClass.set("org.partiql.runner.PartiQLTestsRunner")
 }
 
 dependencies {
     implementation(Deps.ionElement)
-    testImplementation(project(":partiql-lang"))
+    implementation(Deps.picoCli)
     testImplementation(project(":partiql-eval"))
+    testImplementation(project(":partiql-parser", configuration = "shadow"))
+    testImplementation(project(":partiql-planner"))
     testImplementation(project(":plugins:partiql-memory"))
 }
 
@@ -41,12 +43,10 @@ object Env {
 fun setEnvironmentDataDirectories(test: Test) {
     // Set PartiQL Evaluation Test Directory
     val conformanceDataEval = file("$tests/eval/").absolutePath
-    val projectDataEval = file("$buildDir/resources/test/ported/eval/").absolutePath
-    test.environment(Env.PARTIQL_EVAL, "$conformanceDataEval:$projectDataEval")
+    test.environment(Env.PARTIQL_EVAL, conformanceDataEval)
     // Set PartiQL Evaluation Equivalence Test Directory
     val conformanceDataEquiv = file("$tests/eval-equiv/").absolutePath
-    val projectDataEquiv = file("$buildDir/resources/test/ported/eval-equiv/").absolutePath
-    test.environment(Env.PARTIQL_EQUIV, "$conformanceDataEquiv:$projectDataEquiv")
+    test.environment(Env.PARTIQL_EQUIV, conformanceDataEquiv)
 }
 
 tasks.test {
@@ -54,7 +54,7 @@ tasks.test {
     setEnvironmentDataDirectories(this)
 
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
-    exclude("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
+    exclude("org/partiql/runner/ConformanceTestEval.class")
 
     // May 2023: Disabled conformance testing during regular project build, because fail lists are out of date.
     exclude("org/partiql/runner/ConformanceTest.class")
@@ -72,15 +72,5 @@ val generateTestReport by tasks.registering(Test::class) {
     useJUnitPlatform()
     setEnvironmentDataDirectories(this)
     environment("conformanceReportDir", reportDir)
-    include("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
-    if (project.hasProperty("engine")) {
-        val engine = project.property("engine")!! as String
-        if (engine.toLowerCase() == "legacy") {
-            exclude("org/partiql/runner/ConformanceTestEval.class")
-        } else if (engine.toLowerCase() == "eval") {
-            exclude("org/partiql/runner/ConformanceTestLegacy.class")
-        } else {
-            throw InvalidUserDataException("Expect engine property to be either Legacy or Eval, received $engine")
-        }
-    }
+    include("org/partiql/runner/ConformanceTestEval.class")
 }

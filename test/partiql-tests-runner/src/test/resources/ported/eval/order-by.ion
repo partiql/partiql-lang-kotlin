@@ -1927,8 +1927,8 @@ envs::{
   }
 }
 {
-  name:" SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST) DESC NULLS FIRST ",
-  statement:" SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST) DESC NULLS FIRST ",
+  name:"SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST) DESC NULLS FIRST",
+  statement:"SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST) DESC NULLS FIRST",
   assert:{
     result:EvaluationSuccess,
     evalMode:[

@@ -10,14 +10,13 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
-import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.TypingMode
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.SqlPlannerV1
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryTable
+import org.partiql.runner.CompileType
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
 import org.partiql.spi.catalog.Name
@@ -120,7 +119,7 @@ class EvalExecutor(
 
     object Factory : TestExecutor.Factory<PartiQLStatement, PartiQLResult> {
 
-        override fun create(env: IonStruct, options: CompileOptions): TestExecutor<PartiQLStatement, PartiQLResult> {
+        override fun create(env: IonStruct, options: CompileType): TestExecutor<PartiQLStatement, PartiQLResult> {
             // infer catalog from conformance test `env`
             val catalog = "default"
             val connector = infer(env.toIonElement() as StructElement)
@@ -128,9 +127,9 @@ class EvalExecutor(
                 .catalog(catalog)
                 .catalogs(connector.getCatalog())
                 .build()
-            val mode = when (options.typingMode) {
-                TypingMode.PERMISSIVE -> PartiQLEngine.Mode.PERMISSIVE
-                TypingMode.LEGACY -> PartiQLEngine.Mode.STRICT
+            val mode = when (options) {
+                CompileType.PERMISSIVE -> PartiQLEngine.Mode.PERMISSIVE
+                CompileType.STRICT -> PartiQLEngine.Mode.STRICT
             }
             return EvalExecutor(session, mode)
         }

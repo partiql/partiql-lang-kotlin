@@ -130,54 +130,39 @@ envs::{
     ]
   }
 }
-{
-  name:"SELECT * FROM A LET 100 AS A",
-  statement:"SELECT * FROM A LET 100 AS A",
-  assert:{
-    result:EvaluationSuccess,
-    evalMode:[
-      EvalModeCoerce,
-      EvalModeError
-    ],
-    output:$bag::[
-      {
-        _1:100
-      }
-    ]
-  }
-}
-{
-  name:"SELECT * FROM A LET 100 AS A",
-  statement:"SELECT * FROM A LET 100 AS A",
-  assert:{
-    result:EvaluationSuccess,
-    evalMode:[
-      EvalModeCoerce,
-      EvalModeError
-    ],
-    output:$bag::[
-      {
-        id:1
-      }
-    ]
-  }
-}
-{
-  name:"SELECT * FROM A LET 100 AS A",
-  statement:"SELECT * FROM A LET 100 AS A",
-  assert:{
-    result:EvaluationSuccess,
-    evalMode:[
-      EvalModeCoerce,
-      EvalModeError
-    ],
-    output:$bag::[
-      {
-        id:1
-      }
-    ]
-  }
-}
+// TODO: Figure out what the correct behavior is. See: https://github.com/partiql/partiql-lang-kotlin/issues/549
+//{
+//  name:"SELECT * FROM A LET 100 AS A",
+//  statement:"SELECT * FROM A LET 100 AS A",
+//  assert:{
+//    result:EvaluationSuccess,
+//    evalMode:[
+//      EvalModeCoerce,
+//      EvalModeError
+//    ],
+//    output:$bag::[
+//      {
+//        _1:100
+//      }
+//    ]
+//  }
+//}
+//{
+//  name:"SELECT * FROM A LET 100 AS A",
+//  statement:"SELECT * FROM A LET 100 AS A",
+//  assert:{
+//    result:EvaluationSuccess,
+//    evalMode:[
+//      EvalModeCoerce,
+//      EvalModeError
+//    ],
+//    output:$bag::[
+//      {
+//        id:1
+//      }
+//    ]
+//  }
+//}
 {
   name:"SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y",
   statement:"SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y",

@@ -2,7 +2,7 @@ package org.partiql.runner.test
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
-import org.partiql.lang.eval.CompileOptions
+import org.partiql.runner.CompileType
 
 interface TestExecutor<T, V> {
 
@@ -54,6 +54,6 @@ interface TestExecutor<T, V> {
      */
     interface Factory<T, V> {
 
-        fun create(env: IonStruct, options: CompileOptions): TestExecutor<T, V>
+        fun create(env: IonStruct, options: CompileType): TestExecutor<T, V>
     }
 }

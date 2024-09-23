@@ -3,12 +3,10 @@ package org.partiql.runner.schema
 import com.amazon.ion.IonList
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSymbol
+import com.amazon.ion.IonText
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.TypingMode
-import org.partiql.lang.util.asIonStruct
-import org.partiql.lang.util.stringValue
+import org.partiql.runner.CompileType
 
 /**
  * Parses the [testStruct] to a list of [TestCase]s with respect to the environments and equivalence classes provided
@@ -35,8 +33,8 @@ private fun parseTestCase(testStruct: IonStruct, curNamespace: Namespace): List<
 
         evalModeList.map { evalMode ->
             val compileOption = when (evalMode) {
-                "EvalModeError" -> CompileOptions.build { typingMode(TypingMode.LEGACY) }
-                "EvalModeCoerce" -> CompileOptions.build { typingMode(TypingMode.PERMISSIVE) }
+                "EvalModeError" -> CompileType.STRICT
+                "EvalModeCoerce" -> CompileType.PERMISSIVE
                 else -> error("unsupported eval modes")
             }
             val evalResult: Assertion = when (assertionStruct.get("result").stringValue()) {
@@ -125,4 +123,11 @@ internal fun parseNamespace(curNamespace: Namespace, data: IonValue): Namespace 
         }
         else -> error("Document parsing requires an IonList or IonStruct")
     }
+}
+
+private fun IonValue.asIonStruct() = this as? IonStruct ?: error("Expected an IonStruct but found ${this.type}.")
+
+private fun IonValue.stringValue(): String? = when (this) {
+    is IonText -> stringValue()
+    else -> error("Expected text: $this")
 }

@@ -47,8 +47,8 @@ envs::{
   s:"hello"
 }
 {
-  name:" \"stores\"[0].\"books\"[2].\"title\" ",
-  statement:" \"stores\"[0].\"books\"[2].\"title\" ",
+  name:"\"stores\"[0].\"books\"[2].\"title\"",
+  statement:"\"stores\"[0].\"books\"[2].\"title\"",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -140,8 +140,8 @@ envs::{
   }
 }
 {
-  name:" \"s\".*  ",
-  statement:" \"s\".*  ",
+  name:"\"s\".*",
+  statement:"\"s\".*",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -154,8 +154,8 @@ envs::{
   }
 }
 {
-  name:" \"n\".z IS MISSING ",
-  statement:" \"n\".z IS MISSING ",
+  name:"\"n\".z IS MISSING",
+  statement:"\"n\".z IS MISSING",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -166,8 +166,8 @@ envs::{
   }
 }
 {
-  name:" \"stores\"[*].\"books\"[*].\"title\" ",
-  statement:" \"stores\"[*].\"books\"[*].\"title\" ",
+  name:"\"stores\"[*].\"books\"[*].\"title\"",
+  statement:"\"stores\"[*].\"books\"[*].\"title\"",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -186,8 +186,8 @@ envs::{
   }
 }
 {
-  name:"{'a': 1, 'b': 2, 'b': 3}.\"a\" ",
-  statement:"{'a': 1, 'b': 2, 'b': 3}.\"a\" ",
+  name:"{'a': 1, 'b': 2, 'b': 3}.\"a\"",
+  statement:"{'a': 1, 'b': 2, 'b': 3}.\"a\"",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -209,8 +209,8 @@ envs::{
   }
 }
 {
-  name:" \"friends\".\"kumo\".\"likes\".*.\"type\" ",
-  statement:" \"friends\".\"kumo\".\"likes\".*.\"type\" ",
+  name:"\"friends\".\"kumo\".\"likes\".*.\"type\"",
+  statement:"\"friends\".\"kumo\".\"likes\".*.\"type\"",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -224,8 +224,8 @@ envs::{
   }
 }
 {
-  name:" \"stores\"[0].\"books\"[*].\"title\" ",
-  statement:" \"stores\"[0].\"books\"[*].\"title\" ",
+  name:"\"stores\"[0].\"books\"[*].\"title\"",
+  statement:"\"stores\"[0].\"books\"[*].\"title\"",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -241,8 +241,8 @@ envs::{
   }
 }
 {
-  name:" \"friends\".*.\"likes\".*.\"type\" ",
-  statement:" \"friends\".*.\"likes\".*.\"type\" ",
+  name:"\"friends\".*.\"likes\".*.\"type\"",
+  statement:"\"friends\".*.\"likes\".*.\"type\"",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -258,8 +258,8 @@ envs::{
   }
 }
 {
-  name:" \"n\".b.\"c\".d.\"e\" ",
-  statement:" \"n\".b.\"c\".d.\"e\" ",
+  name:"\"n\".b.\"c\".d.\"e\"",
+  statement:"\"n\".b.\"c\".d.\"e\"",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -288,8 +288,8 @@ envs::{
   }
 }
 {
-  name:" \"n\".\"b\".\"c\".\"d\".\"e\" ",
-  statement:" \"n\".\"b\".\"c\".\"d\".\"e\" ",
+  name:"\"n\".\"b\".\"c\".\"d\".\"e\"",
+  statement:"\"n\".\"b\".\"c\".\"d\".\"e\"",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -318,8 +318,8 @@ envs::{
   }
 }
 {
-  name:" n.\"z\" IS MISSING ",
-  statement:" n.\"z\" IS MISSING ",
+  name:"n.\"z\" IS MISSING",
+  statement:"n.\"z\" IS MISSING",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -330,8 +330,8 @@ envs::{
   }
 }
 {
-  name:" \"s\"[*] ",
-  statement:" \"s\"[*] ",
+  name:"\"s\"[*]",
+  statement:"\"s\"[*]",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -344,8 +344,8 @@ envs::{
   }
 }
 {
-  name:" n.\"b\".c.\"d\".e ",
-  statement:" n.\"b\".c.\"d\".e ",
+  name:"n.\"b\".c.\"d\".e",
+  statement:"n.\"b\".c.\"d\".e",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -356,8 +356,8 @@ envs::{
   }
 }
 {
-  name:" \"n\".\"z\" IS MISSING ",
-  statement:" \"n\".\"z\" IS MISSING ",
+  name:"\"n\".\"z\" IS MISSING",
+  statement:"\"n\".\"z\" IS MISSING",
   assert:{
     result:EvaluationSuccess,
     evalMode:[

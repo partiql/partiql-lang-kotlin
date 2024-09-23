@@ -34,7 +34,7 @@ class ReportGenerator(
 
     override fun afterAll(p0: ExtensionContext?) {
         val basePath = System.getenv("conformanceReportDir") ?: "."
-        val dir = Files.createDirectory(Path("$basePath/$engine")).toFile()
+        val dir = Files.createDirectories(Path("$basePath/$engine")).toFile()
         val file = File(dir, "conformance_test_results.ion")
         val outputStream = file.outputStream()
         val writer = IonTextWriterBuilder.pretty().build(outputStream)

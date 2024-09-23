@@ -37,8 +37,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo' ",
-  statement:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo' ",
+  name:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo'",
+  statement:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -62,8 +62,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE '%' LIKE '[%' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '%' LIKE '[%' ESCAPE '[' ",
+  name:"SELECT * FROM animals as a WHERE '%' LIKE '[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '%' LIKE '[%' ESCAPE '['",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -87,8 +87,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo' ",
+  name:"SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -113,8 +113,8 @@ envs::{
   }
 }
 {
-  name:" SELECT * FROM animals WHERE 'Kumo' LIKE '' ",
-  statement:" SELECT * FROM animals WHERE 'Kumo' LIKE '' ",
+  name:" SELECT * FROM animals WHERE 'Kumo' LIKE ''",
+  statement:" SELECT * FROM animals WHERE 'Kumo' LIKE ''",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -126,33 +126,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%m%' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%m%' ",
-  assert:{
-    result:EvaluationSuccess,
-    evalMode:[
-      EvalModeCoerce,
-      EvalModeError
-    ],
-    output:$bag::[
-      {
-        name:"Kumo",
-        type:"dog"
-      },
-      {
-        name:"Mochi",
-        type:"dog"
-      },
-      {
-        name:"Lilikoi",
-        type:"unicorn"
-      }
-    ]
-  }
-}
-{
-  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1__[%' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1__[%' ESCAPE '[' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%m%'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%m%'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -176,8 +151,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum%' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum%' ",
+  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1__[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1__[%' ESCAPE '['",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -201,8 +176,33 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo' ",
-  statement:"SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum%'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo'",
+  statement:"SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -224,8 +224,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum_' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum_' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum_'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum_'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -249,8 +249,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE null LIKE 'A' ",
-  statement:"SELECT * FROM animals as a WHERE null LIKE 'A' ",
+  name:"SELECT * FROM animals as a WHERE null LIKE 'A'",
+  statement:"SELECT * FROM animals as a WHERE null LIKE 'A'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -262,8 +262,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o' ",
-  statement:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o' ",
+  name:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o'",
+  statement:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -275,8 +275,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '_[_%[_%[%' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '_[_%[_%[%' ESCAPE '[' ",
+  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '_[_%[_%[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '_[_%[_%[%' ESCAPE '['",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -300,8 +300,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '____' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '____' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '____'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '____'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -2777,8 +2777,8 @@ envs::{
   }
 }
 {
-  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100\",  pattern:\"1%0\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern ",
-  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100\",  pattern:\"1%0\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern ",
+  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100\",  pattern:\"1%0\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern",
+  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100\",  pattern:\"1%0\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -2796,8 +2796,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1%\\%' ESCAPE '\\' ",
-  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1%\\%' ESCAPE '\\' ",
+  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1%\\%' ESCAPE '\\'",
+  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1%\\%' ESCAPE '\\'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -2821,8 +2821,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM `[true]` as a WHERE '' LIKE '_'  ",
-  statement:"SELECT * FROM `[true]` as a WHERE '' LIKE '_'  ",
+  name:"SELECT * FROM `[true]` as a WHERE '' LIKE '_'",
+  statement:"SELECT * FROM `[true]` as a WHERE '' LIKE '_'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -2834,8 +2834,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '_u_o' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '_u_o' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '_u_o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '_u_o'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -2872,8 +2872,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE a.name LIKE a.xxx ",
-  statement:"SELECT * FROM animals as a WHERE a.name LIKE a.xxx ",
+  name:"SELECT * FROM animals as a WHERE a.name LIKE a.xxx",
+  statement:"SELECT * FROM animals as a WHERE a.name LIKE a.xxx",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -2885,46 +2885,8 @@ envs::{
   }
 }
 {
-  name:" SELECT * FROM animals WHERE '' LIKE '' ",
-  statement:" SELECT * FROM animals WHERE '' LIKE '' ",
-  assert:{
-    result:EvaluationSuccess,
-    evalMode:[
-      EvalModeCoerce,
-      EvalModeError
-    ],
-    output:$bag::[
-      {
-        name:"Kumo",
-        type:"dog"
-      },
-      {
-        name:"Mochi",
-        type:"dog"
-      },
-      {
-        name:"Lilikoi",
-        type:"unicorn"
-      }
-    ]
-  }
-}
-{
-  name:"SELECT * FROM animals as a WHERE 'A' LIKE null ",
-  statement:"SELECT * FROM animals as a WHERE 'A' LIKE null ",
-  assert:{
-    result:EvaluationSuccess,
-    evalMode:[
-      EvalModeCoerce,
-      EvalModeError
-    ],
-    output:$bag::[
-    ]
-  }
-}
-{
-  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1%[%' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1%[%' ESCAPE '[' ",
+  name:" SELECT * FROM animals WHERE '' LIKE ''",
+  statement:" SELECT * FROM animals WHERE '' LIKE ''",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -2948,8 +2910,46 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE '' LIKE '%' ",
-  statement:"SELECT * FROM animals as a WHERE '' LIKE '%' ",
+  name:"SELECT * FROM animals as a WHERE 'A' LIKE null",
+  statement:"SELECT * FROM animals as a WHERE 'A' LIKE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1%[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1%[%' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '' LIKE '%'",
+  statement:"SELECT * FROM animals as a WHERE '' LIKE '%'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -2983,8 +2983,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%umo' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%umo' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%umo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%umo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3008,8 +3008,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_%mo' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_%mo' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_%mo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_%mo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3033,8 +3033,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animalsWithNulls as a WHERE a.name LIKE '%' ",
-  statement:"SELECT * FROM animalsWithNulls as a WHERE a.name LIKE '%' ",
+  name:"SELECT * FROM animalsWithNulls as a WHERE a.name LIKE '%'",
+  statement:"SELECT * FROM animalsWithNulls as a WHERE a.name LIKE '%'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3056,8 +3056,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K__o' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K__o' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K__o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K__o'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3081,8 +3081,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_m%' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_m%' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_m%'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_m%'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3116,8 +3116,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT * FROM animals as a WHERE '%100' LIKE '[%%' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '%100' LIKE '[%%' ESCAPE '[' ",
+  name:"SELECT * FROM animals as a WHERE '%100' LIKE '[%%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '%100' LIKE '[%%' ESCAPE '['",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3141,8 +3141,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_mo' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_mo' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_mo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_mo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3166,8 +3166,8 @@ envs::{
   }
 }
 {
-  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" , escapeChar:'['},\n                   { name:\"100%\",  pattern:\"1%0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE a.escapeChar ",
-  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" , escapeChar:'['},\n                   { name:\"100%\",  pattern:\"1%0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE a.escapeChar ",
+  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" , escapeChar:'['},\n                   { name:\"100%\",  pattern:\"1%0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE a.escapeChar",
+  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" , escapeChar:'['},\n                   { name:\"100%\",  pattern:\"1%0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE a.escapeChar",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3185,8 +3185,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE '%100' LIKE '[%_00' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '%100' LIKE '[%_00' ESCAPE '[' ",
+  name:"SELECT * FROM animals as a WHERE '%100' LIKE '[%_00' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '%100' LIKE '[%_00' ESCAPE '['",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3210,8 +3210,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE a.name || 'xx' LIKE '%xx' ",
-  statement:"SELECT * FROM animals as a WHERE a.name || 'xx' LIKE '%xx' ",
+  name:"SELECT * FROM animals as a WHERE a.name || 'xx' LIKE '%xx'",
+  statement:"SELECT * FROM animals as a WHERE a.name || 'xx' LIKE '%xx'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3235,8 +3235,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'A' LIKE 'B' ESCAPE null ",
-  statement:"SELECT * FROM animals as a WHERE 'A' LIKE 'B' ESCAPE null ",
+  name:"SELECT * FROM animals as a WHERE 'A' LIKE 'B' ESCAPE null",
+  statement:"SELECT * FROM animals as a WHERE 'A' LIKE 'B' ESCAPE null",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3258,8 +3258,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3283,8 +3283,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '[' ",
+  name:"SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '['",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3296,8 +3296,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%%o' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%%o' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%%o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%%o'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3321,8 +3321,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE a.name LIKE 'Kumo' ",
-  statement:"SELECT * FROM animals as a WHERE a.name LIKE 'Kumo' ",
+  name:"SELECT * FROM animals as a WHERE a.name LIKE 'Kumo'",
+  statement:"SELECT * FROM animals as a WHERE a.name LIKE 'Kumo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3338,8 +3338,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM `[true]` as a WHERE '' LIKE '%'  ",
-  statement:"SELECT * FROM `[true]` as a WHERE '' LIKE '%'  ",
+  name:"SELECT * FROM `[true]` as a WHERE '' LIKE '%'",
+  statement:"SELECT * FROM `[true]` as a WHERE '' LIKE '%'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3354,8 +3354,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Ku%o' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Ku%o' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Ku%o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Ku%o'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3415,8 +3415,8 @@ envs::{
   }
 }
 {
-  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A__\" , escapeChar:'['},\n                   { name:\"1000%\",  pattern:\"1_0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name NOT LIKE a.pattern ESCAPE a.escapeChar ",
-  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A__\" , escapeChar:'['},\n                   { name:\"1000%\",  pattern:\"1_0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name NOT LIKE a.pattern ESCAPE a.escapeChar ",
+  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A__\" , escapeChar:'['},\n                   { name:\"1000%\",  pattern:\"1_0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name NOT LIKE a.pattern ESCAPE a.escapeChar",
+  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A__\" , escapeChar:'['},\n                   { name:\"1000%\",  pattern:\"1_0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name NOT LIKE a.pattern ESCAPE a.escapeChar",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3434,8 +3434,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[____[_%[%' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[____[_%[%' ESCAPE '[' ",
+  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[____[_%[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[____[_%[%' ESCAPE '['",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3498,8 +3498,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animalsWithNulls as a WHERE a.type LIKE a.name ",
-  statement:"SELECT * FROM animalsWithNulls as a WHERE a.type LIKE a.name ",
+  name:"SELECT * FROM animalsWithNulls as a WHERE a.type LIKE a.name",
+  statement:"SELECT * FROM animalsWithNulls as a WHERE a.type LIKE a.name",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3521,8 +3521,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[_000[_000[%' ESCAPE '[' ",
-  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[_000[_000[%' ESCAPE '[' ",
+  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[_000[_000[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[_000[_000[%' ESCAPE '['",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3546,8 +3546,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3571,8 +3571,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE a.xxx LIKE '%' ",
-  statement:"SELECT * FROM animals as a WHERE a.xxx LIKE '%' ",
+  name:"SELECT * FROM animals as a WHERE a.xxx LIKE '%'",
+  statement:"SELECT * FROM animals as a WHERE a.xxx LIKE '%'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3584,8 +3584,8 @@ envs::{
   }
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3607,8 +3607,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100%\",  pattern:\"1%0\\\\%\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE '\\' ",
-  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100%\",  pattern:\"1%0\\\\%\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE '\\' ",
+  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100%\",  pattern:\"1%0\\\\%\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE '\\'",
+  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100%\",  pattern:\"1%0\\\\%\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE '\\'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
@@ -3649,8 +3649,8 @@ envs::{
   ]
 }
 {
-  name:"SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o' ",
-  statement:"SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o' ",
+  name:"SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o'",
   assert:{
     result:EvaluationSuccess,
     evalMode:[
