@@ -59,6 +59,7 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 )
             ).build()
         )
+        .returns(boundedT)
         .addStatement("return %T().block()", dslClass)
         .build()
 

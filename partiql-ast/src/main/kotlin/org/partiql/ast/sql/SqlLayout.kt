@@ -6,7 +6,7 @@ package org.partiql.ast.sql
 @Deprecated("This will be changed in the next major version")
 public abstract class SqlLayout {
 
-    abstract val indent: Indent
+    public abstract val indent: Indent
 
     public open fun format(root: SqlBlock): String {
         val ctx = Ctx.empty()
@@ -19,7 +19,7 @@ public abstract class SqlLayout {
         /**
          * Default SQL format.
          */
-        public val DEFAULT = object : SqlLayout() {
+        public val DEFAULT: SqlLayout = object : SqlLayout() {
 
             override val indent = Indent(2, Indent.Type.SPACE)
         }
@@ -27,7 +27,7 @@ public abstract class SqlLayout {
         /**
          * Write SQL statement on one line.
          */
-        public val ONELINE = object : SqlLayout() {
+        public val ONELINE: SqlLayout = object : SqlLayout() {
 
             override val indent = Indent(2, Indent.Type.SPACE)
 
@@ -46,12 +46,12 @@ public abstract class SqlLayout {
         public val type: Type,
     ) {
 
-        enum class Type(val char: Char) {
+        public enum class Type(public val char: Char) {
             TAB(Char(9)),
             SPACE(Char(32)), ;
         }
 
-        override fun toString() = type.char.toString().repeat(count)
+        override fun toString(): String = type.char.toString().repeat(count)
     }
 
     private class Ctx private constructor(val out: StringBuilder, val level: Int) {

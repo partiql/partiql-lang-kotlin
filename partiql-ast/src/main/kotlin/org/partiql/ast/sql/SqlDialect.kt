@@ -36,10 +36,10 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
      */
     public fun apply(node: AstNode): SqlBlock = node.accept(this, SqlBlock.Nil)
 
-    companion object {
+    public companion object {
 
         @JvmStatic
-        public val PARTIQL = object : SqlDialect() {}
+        public val PARTIQL: SqlDialect = object : SqlDialect() {}
     }
 
     override fun defaultReturn(node: AstNode, head: SqlBlock): SqlBlock =

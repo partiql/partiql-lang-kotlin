@@ -14,18 +14,20 @@
 
 package org.partiql.cli.format
 
-import com.google.common.net.PercentEscaper
-import org.partiql.pig.runtime.DomainNode
-
-internal object DotUrlFormatter : NodeFormatter {
-
-    private const val URL_PREFIX = "https://dreampuf.github.io/GraphvizOnline/#"
-    private val EOL = System.lineSeparator()
-
-    override fun format(input: DomainNode): String {
-        val graph = DotFormatter.format(input)
-        val escaper = PercentEscaper("", false)
-        val params = escaper.escape(graph)
-        return "$URL_PREFIX$params$EOL"
-    }
-}
+// TODO: Add this for the v1 APIs
+// 
+// import com.google.common.net.PercentEscaper
+// import org.partiql.pig.runtime.DomainNode
+// 
+// internal object DotUrlFormatter : NodeFormatter {
+// 
+//     private const val URL_PREFIX = "https://dreampuf.github.io/GraphvizOnline/#"
+//     private val EOL = System.lineSeparator()
+// 
+//     override fun format(input: DomainNode): String {
+//         val graph = DotFormatter.format(input)
+//         val escaper = PercentEscaper("", false)
+//         val params = escaper.escape(graph)
+//         return "$URL_PREFIX$params$EOL"
+//     }
+// }

@@ -19,7 +19,6 @@ import org.partiql.ast.Statement
 /**
  * Wraps a rewriter with a default entry point.
  */
-public interface AstPass {
-
+internal interface AstPass {
     public fun apply(statement: Statement): Statement
 }

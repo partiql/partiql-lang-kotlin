@@ -16,11 +16,9 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
-    id(Plugins.pig)
 }
 
 dependencies {
-    api(Deps.pigRuntime)
     api(Deps.ionElement)
     api(project(":partiql-types"))
     // TODO REMOVE ME ONCE PartiQLValue IS REMOVED
@@ -54,27 +52,6 @@ publish {
     artifactId = "partiql-ast"
     name = "PartiQL AST"
     description = "PartiQL's Abstract Syntax Tree"
-}
-
-pig {
-    namespace = "org.partiql.lang.domains"
-}
-
-tasks.dokkaHtml.configure {
-    dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
-}
-
-tasks.processResources {
-    from("src/main/pig") {
-        include("partiql.ion")
-        into("org/partiql/type-domains/")
-    }
-}
-
-kotlin {
-    // TODO: Once PIG is either removed or adds explicit visibility modifiers, we can remove this.
-    //  See https://github.com/partiql/partiql-ir-generator/issues/108.
-    explicitApi = null
 }
 
 val generate = tasks.register<Exec>("generate") {
