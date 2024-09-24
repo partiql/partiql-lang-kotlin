@@ -3,11 +3,13 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
+
+// Memoize the comparator.
+private val comparator = Datum.comparator()
 
 /**
  * According to SQL:1999:
@@ -23,29 +25,17 @@ import org.partiql.types.PType
  * TODO: The PartiQL Specification needs to clearly define the semantics of MISSING. That being said, this implementation
  *  follows the existing conformance tests and SQL:1999.
  */
-internal object Fn_EQ__ANY_ANY__BOOL : Function {
-
-    private val comparator = Datum.comparator()
-
-    override val signature = FnSignature(
-        name = "eq",
-        returns = PType.bool(),
-        parameters = listOf(
-            Parameter("lhs", PType.dynamic()),
-            Parameter("rhs", PType.dynamic()),
-        ),
-        isNullable = true,
-        isNullCall = true,
-        isMissable = false,
-        isMissingCall = false,
+internal val Fn_EQ__ANY_ANY__BOOL = Function.standard(
+    name = "eq", returns = PType.bool(),
+    parameters = arrayOf(
+        Parameter("lhs", PType.dynamic()),
+        Parameter("rhs", PType.dynamic()),
     )
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.isMissing || rhs.isMissing) {
-            return Datum.nullValue(PType.bool())
-        }
-        return Datum.bool(comparator.compare(lhs, rhs) == 0)
+) { args ->
+    val lhs = args[0]
+    val rhs = args[1]
+    if (lhs.isMissing || rhs.isMissing) {
+        Datum.nullValue(PType.bool())
     }
+    Datum.bool(comparator.compare(lhs, rhs) == 0)
 }

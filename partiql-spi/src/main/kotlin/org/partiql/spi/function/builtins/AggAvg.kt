@@ -3,143 +3,91 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.AggSignature
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorAvg
 import org.partiql.types.PType
 
-internal object Agg_AVG__INT8__INT8 : Aggregation {
+internal val Agg_AVG__INT8__INT8 = Aggregation.standard(
+    name = "avg",
+    returns = PType.decimal(),
+    parameters = arrayOf(Parameter("value", PType.tinyint())),
+    accumulator = ::AccumulatorAvg,
+)
 
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.decimal(),
-        parameters = listOf(
-            Parameter("value", PType.tinyint()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
+internal val Agg_AVG__INT16__INT16 = Aggregation.standard(
+    name = "avg",
+    returns = PType.decimal(),
+    parameters = arrayOf(Parameter("value", PType.smallint())),
+    accumulator = ::AccumulatorAvg,
+)
 
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.decimal())
-}
+internal val Agg_AVG__INT32__INT32 = Aggregation.standard(
 
-internal object Agg_AVG__INT16__INT16 : Aggregation {
+    name = "avg",
+    returns = PType.decimal(),
+    parameters = arrayOf(
+        Parameter("value", PType.integer()),
+    ),
+    accumulator = ::AccumulatorAvg,
+)
 
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.decimal(),
-        parameters = listOf(
-            Parameter("value", PType.smallint()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
+internal val Agg_AVG__INT64__INT64 = Aggregation.standard(
 
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.decimal())
-}
+    name = "avg",
+    returns = PType.decimal(),
+    parameters = arrayOf(
+        Parameter("value", PType.bigint()),
+    ),
+    accumulator = ::AccumulatorAvg,
+)
 
-internal object Agg_AVG__INT32__INT32 : Aggregation {
+internal val Agg_AVG__INT__INT = Aggregation.standard(
 
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.decimal(),
-        parameters = listOf(
-            Parameter("value", PType.integer()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
+    name = "avg",
+    returns = PType.decimal(),
+    parameters = arrayOf(
+        @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
+    ),
+    accumulator = ::AccumulatorAvg,
+)
 
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.decimal())
-}
+internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.standard(
 
-internal object Agg_AVG__INT64__INT64 : Aggregation {
+    name = "avg",
+    returns = PType.decimal(),
+    parameters = arrayOf(
+        @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
+    ),
+    accumulator = ::AccumulatorAvg,
+)
 
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.decimal(),
-        parameters = listOf(
-            Parameter("value", PType.bigint()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
+internal val Agg_AVG__FLOAT32__FLOAT32 = Aggregation.standard(
 
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.decimal())
-}
+    name = "avg",
+    returns = PType.real(),
+    parameters = arrayOf(
+        Parameter("value", PType.real()),
+    ),
+    accumulator = ::AccumulatorAvg,
+)
 
-internal object Agg_AVG__INT__INT : Aggregation {
+internal val Agg_AVG__FLOAT64__FLOAT64 = Aggregation.standard(
 
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.decimal(),
-        parameters = listOf(
-            @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
+    name = "avg",
+    returns = PType.doublePrecision(),
+    parameters = arrayOf(
+        Parameter("value", PType.doublePrecision()),
+    ),
+    accumulator = ::AccumulatorAvg,
+)
 
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.decimal())
-}
+internal val Agg_AVG__ANY__ANY = Aggregation.standard(
 
-internal object Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Aggregation {
-
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.decimal(),
-        parameters = listOf(
-            @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
-
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.decimal())
-}
-
-internal object Agg_AVG__FLOAT32__FLOAT32 : Aggregation {
-
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.real(),
-        parameters = listOf(
-            Parameter("value", PType.real()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
-
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.real())
-}
-
-internal object Agg_AVG__FLOAT64__FLOAT64 : Aggregation {
-
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.doublePrecision(),
-        parameters = listOf(
-            Parameter("value", PType.doublePrecision()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
-
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.doublePrecision())
-}
-
-internal object Agg_AVG__ANY__ANY : Aggregation {
-
-    override val signature: AggSignature = AggSignature(
-        name = "avg",
-        returns = PType.decimal(),
-        parameters = listOf(
-            Parameter("value", PType.dynamic()),
-        ),
-        isNullable = true,
-        isDecomposable = true
-    )
-
-    override fun accumulator(): Aggregation.Accumulator = AccumulatorAvg(PType.decimal())
-}
+    name = "avg",
+    returns = PType.decimal(),
+    parameters = arrayOf(
+        Parameter("value", PType.dynamic()),
+    ),
+    accumulator = ::AccumulatorAvg,
+)

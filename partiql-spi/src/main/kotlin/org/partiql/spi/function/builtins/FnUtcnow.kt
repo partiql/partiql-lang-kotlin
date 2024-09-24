@@ -3,24 +3,18 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.datetime.TimestampWithTimeZone
 
-internal object Fn_UTCNOW____TIMESTAMP : Function {
+internal val Fn_UTCNOW____TIMESTAMP = Function.standard(
 
-    override val signature = FnSignature(
-        name = "utcnow",
-        returns = PType.timestamp(6),
-        parameters = listOf(),
-        isNullCall = false,
-        isNullable = false,
-    )
+    name = "utcnow",
+    returns = PType.timestamp(6),
+    parameters = arrayOf(),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val now = TimestampWithTimeZone.nowZ()
-        return Datum.timestamp(now)
-    }
+    ) { args ->
+    val now = TimestampWithTimeZone.nowZ()
+    Datum.timestamp(now)
 }

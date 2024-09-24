@@ -3,7 +3,6 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.Accumulator
@@ -19,36 +18,29 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal abstract class Fn_COLL_AGG__BAG__ANY(
-    name: String,
-    private val isDistinct: Boolean,
-    private val accumulator: () -> Accumulator,
+    private var name: String,
+    private var isDistinct: Boolean,
+    private var accumulator: () -> Accumulator,
 ) : Function {
 
-    private fun getAccumulator(): Accumulator = when (isDistinct) {
-        true -> AccumulatorDistinct(accumulator.invoke())
-        false -> accumulator.invoke()
-    }
+    private var parameters = arrayOf(Parameter("value", PType.bag()))
+    private var returns = PType.dynamic()
 
-    override val signature: FnSignature = createSignature(name)
+    override fun getName(): String = name
+    override fun getParameters(): Array<Parameter> = parameters
+    override fun getReturnType(args: Array<PType>): PType = returns
+    override fun getInstance(args: Array<PType>): Function.Instance = instance
 
-    companion object {
-        @JvmStatic
-        internal fun createSignature(name: String) = FnSignature(
-            name = name,
-            returns = PType.dynamic(),
-            parameters = listOf(
-                Parameter("value", PType.bag()),
-            ),
-            isNullCall = true,
-            isNullable = true
-        )
-    }
-
-    override fun invoke(args: Array<Datum>): Datum {
-        val bag = args[0]
-        val accumulator = getAccumulator()
-        bag.forEach { element -> accumulator.next(arrayOf(element)) }
-        return accumulator.value()
+    private val instance = object : Function.Instance {
+        override fun invoke(args: Array<Datum>): Datum {
+            val bag = args[0]
+            val accumulator = when (isDistinct) {
+                true -> AccumulatorDistinct(accumulator())
+                false -> accumulator()
+            }
+            bag.forEach { element -> accumulator.next(arrayOf(element)) }
+            return accumulator.value()
+        }
     }
 
     object SUM_ALL : Fn_COLL_AGG__BAG__ANY("coll_sum_all", false, ::AccumulatorSum)

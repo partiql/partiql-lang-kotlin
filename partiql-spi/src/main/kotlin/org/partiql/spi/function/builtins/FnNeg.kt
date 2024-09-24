@@ -3,138 +3,97 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 // TODO: Handle Overflow
-internal object Fn_NEG__INT8__INT8 : Function {
+internal val Fn_NEG__INT8__INT8 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "neg",
-        returns = PType.tinyint(),
-        parameters = listOf(Parameter("value", PType.tinyint())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "neg",
+    returns = PType.tinyint(),
+    parameters = arrayOf(Parameter("value", PType.tinyint())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        @Suppress("DEPRECATION")
-        val value = args[0].byte
-        return Datum.tinyint(value.times(-1).toByte())
-    }
+    ) { args ->
+    @Suppress("DEPRECATION")
+    val value = args[0].byte
+    Datum.tinyint(value.times(-1).toByte())
 }
 
-internal object Fn_NEG__INT16__INT16 : Function {
+internal val Fn_NEG__INT16__INT16 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "neg",
-        returns = PType.smallint(),
-        parameters = listOf(Parameter("value", PType.smallint())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "neg",
+    returns = PType.smallint(),
+    parameters = arrayOf(Parameter("value", PType.smallint())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].short
-        return Datum.smallint(value.times(-1).toShort())
-    }
+    ) { args ->
+    val value = args[0].short
+    Datum.smallint(value.times(-1).toShort())
 }
 
-internal object Fn_NEG__INT32__INT32 : Function {
+internal val Fn_NEG__INT32__INT32 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "neg",
-        returns = PType.integer(),
-        parameters = listOf(Parameter("value", PType.integer())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "neg",
+    returns = PType.integer(),
+    parameters = arrayOf(Parameter("value", PType.integer())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].int
-        return Datum.integer(value.times(-1))
-    }
+    ) { args ->
+    val value = args[0].int
+    Datum.integer(value.times(-1))
 }
 
-internal object Fn_NEG__INT64__INT64 : Function {
+internal val Fn_NEG__INT64__INT64 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "neg",
-        returns = PType.bigint(),
-        parameters = listOf(Parameter("value", PType.bigint())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "neg",
+    returns = PType.bigint(),
+    parameters = arrayOf(Parameter("value", PType.bigint())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].long
-        return Datum.bigint(value.times(-1L))
-    }
+    ) { args ->
+    val value = args[0].long
+    Datum.bigint(value.times(-1L))
 }
 
-internal object Fn_NEG__INT__INT : Function {
+internal val Fn_NEG__INT__INT = Function.standard(
 
-    override val signature = FnSignature(
-        name = "neg",
-        returns = PType.numeric(),
-        parameters = listOf(Parameter("value", PType.numeric())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "neg",
+    returns = PType.numeric(),
+    parameters = arrayOf(Parameter("value", PType.numeric())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].bigInteger
-        return Datum.numeric(value.negate())
-    }
+    ) { args ->
+    val value = args[0].bigInteger
+    Datum.numeric(value.negate())
 }
 
-internal object Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Function {
+internal val Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.standard(
 
-    override val signature = FnSignature(
-        name = "neg",
-        returns = PType.decimal(),
-        parameters = listOf(Parameter("value", PType.decimal())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "neg",
+    returns = PType.decimal(),
+    parameters = arrayOf(Parameter("value", PType.decimal())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].bigDecimal
-        return Datum.decimal(value.negate())
-    }
+    ) { args ->
+    val value = args[0].bigDecimal
+    Datum.decimal(value.negate())
 }
 
-internal object Fn_NEG__FLOAT32__FLOAT32 : Function {
+internal val Fn_NEG__FLOAT32__FLOAT32 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "neg",
-        returns = PType.real(),
-        parameters = listOf(Parameter("value", PType.real())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "neg",
+    returns = PType.real(),
+    parameters = arrayOf(Parameter("value", PType.real())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].float
-        return Datum.real(value.times(-1))
-    }
+    ) { args ->
+    val value = args[0].float
+    Datum.real(value.times(-1))
 }
 
-internal object Fn_NEG__FLOAT64__FLOAT64 : Function {
+internal val Fn_NEG__FLOAT64__FLOAT64 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "neg",
-        returns = PType.doublePrecision(),
-        parameters = listOf(Parameter("value", PType.doublePrecision())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "neg",
+    returns = PType.doublePrecision(),
+    parameters = arrayOf(Parameter("value", PType.doublePrecision())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].double
-        return Datum.doublePrecision(value.times(-1))
-    }
+    ) { args ->
+    val value = args[0].double
+    Datum.doublePrecision(value.times(-1))
 }

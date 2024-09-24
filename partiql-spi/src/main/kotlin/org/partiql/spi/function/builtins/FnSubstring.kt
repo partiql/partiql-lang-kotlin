@@ -4,7 +4,6 @@
 package org.partiql.spi.function.builtins
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.StringUtils.codepointSubstring
@@ -12,7 +11,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * Built in function to return the substring of an existing string. This function
+ * Built in function to the substring of an existing string. This function
  * propagates null and missing values as described in docs/Functions.md
  *
  * From the SQL-92 spec, page 135:
@@ -64,7 +63,7 @@ import org.partiql.types.PType
  *
  *          # Section 1-c:
  *          if str, startPos, or (sliceLength is specified and is null):
- *              return null
+ *              null
  *
  *          # Section 1-d
  *          if endPos < startPos:
@@ -72,145 +71,115 @@ import org.partiql.types.PType
  *
  *          # Section 1-e-i
  *          if startPos > strLength or endPos < 1:
- *              return ''
+ *              ''
  *          else:
  *              # Section 1-e-ii
  *              S1 = greater_of(startPos, 1)
  *              E1 = lesser_of(endPos, strLength + 1)
  *              L1 = E1 - S1
- *              return java's substring(C, S1, E1)
+ *              java's substring(C, S1, E1)
  */
-internal object Fn_SUBSTRING__STRING_INT32__STRING : Function {
+internal val Fn_SUBSTRING__STRING_INT32__STRING = Function.standard(
 
-    override val signature = FnSignature(
-        name = "substring",
-        returns = PType.string(),
-        parameters = listOf(
-            Parameter("value", PType.string()),
-            Parameter("start", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "substring",
+    returns = PType.string(),
+    parameters = arrayOf(
+        Parameter("value", PType.string()),
+        Parameter("start", PType.integer()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val start = args[1].int
-        val result = value.codepointSubstring(start)
-        return Datum.string(result)
-    }
+    ) { args ->
+    val value = args[0].string
+    val start = args[1].int
+    val result = value.codepointSubstring(start)
+    Datum.string(result)
 }
 
-internal object Fn_SUBSTRING__STRING_INT32_INT32__STRING : Function {
+internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = Function.standard(
 
-    override val signature = FnSignature(
-        name = "substring",
-        returns = PType.string(),
-        parameters = listOf(
-            Parameter("value", PType.string()),
-            Parameter("start", PType.integer()),
-            Parameter("end", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "substring",
+    returns = PType.string(),
+    parameters = arrayOf(
+        Parameter("value", PType.string()),
+        Parameter("start", PType.integer()),
+        Parameter("end", PType.integer()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val start = args[1].int
-        val end = args[2].int
-        if (end < 0) throw TypeCheckException()
-        val result = value.codepointSubstring(start, end)
-        return Datum.string(result)
-    }
+    ) { args ->
+    val value = args[0].string
+    val start = args[1].int
+    val end = args[2].int
+    if (end < 0) throw TypeCheckException()
+    val result = value.codepointSubstring(start, end)
+    Datum.string(result)
 }
 
-internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Function {
+internal val Fn_SUBSTRING__SYMBOL_INT64__SYMBOL = Function.standard(
 
-    override val signature = FnSignature(
-        name = "substring",
-        returns = PType.symbol(),
-        parameters = listOf(
-            Parameter("value", PType.symbol()),
-            Parameter("start", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "substring",
+    returns = PType.symbol(),
+    parameters = arrayOf(
+        Parameter("value", PType.symbol()),
+        Parameter("start", PType.integer()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val start = args[1].int
-        val result = value.codepointSubstring(start)
-        return Datum.symbol(result)
-    }
+    ) { args ->
+    val value = args[0].string
+    val start = args[1].int
+    val result = value.codepointSubstring(start)
+    Datum.symbol(result)
 }
 
-internal object Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL : Function {
+internal val Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL = Function.standard(
 
-    override val signature = FnSignature(
-        name = "substring",
-        returns = PType.symbol(),
-        parameters = listOf(
-            Parameter("value", PType.symbol()),
-            Parameter("start", PType.integer()),
-            Parameter("end", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "substring",
+    returns = PType.symbol(),
+    parameters = arrayOf(
+        Parameter("value", PType.symbol()),
+        Parameter("start", PType.integer()),
+        Parameter("end", PType.integer()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val start = args[1].int
-        val end = args[1].int
-        if (end < 0) throw TypeCheckException()
-        val result = value.codepointSubstring(start, end)
-        return Datum.symbol(result)
-    }
+    ) { args ->
+    val value = args[0].string
+    val start = args[1].int
+    val end = args[1].int
+    if (end < 0) throw TypeCheckException()
+    val result = value.codepointSubstring(start, end)
+    Datum.symbol(result)
 }
 
-internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Function {
+internal val Fn_SUBSTRING__CLOB_INT64__CLOB = Function.standard(
 
-    override val signature = FnSignature(
-        name = "substring",
-        returns = PType.clob(Int.MAX_VALUE),
-        parameters = listOf(
-            Parameter("value", PType.clob(Int.MAX_VALUE)),
-            Parameter("start", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "substring",
+    returns = PType.clob(Int.MAX_VALUE),
+    parameters = arrayOf(
+        Parameter("value", PType.clob(Int.MAX_VALUE)),
+        Parameter("start", PType.integer()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].bytes.toString(Charsets.UTF_8)
-        val start = args[1].int
-        val result = value.codepointSubstring(start)
-        return Datum.clob(result.toByteArray())
-    }
+    ) { args ->
+    val value = args[0].bytes.toString(Charsets.UTF_8)
+    val start = args[1].int
+    val result = value.codepointSubstring(start)
+    Datum.clob(result.toByteArray())
 }
 
-internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Function {
+internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = Function.standard(
 
-    override val signature = FnSignature(
-        name = "substring",
-        returns = PType.clob(Int.MAX_VALUE),
-        parameters = listOf(
-            Parameter("value", PType.clob(Int.MAX_VALUE)),
-            Parameter("start", PType.integer()),
-            Parameter("end", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "substring",
+    returns = PType.clob(Int.MAX_VALUE),
+    parameters = arrayOf(
+        Parameter("value", PType.clob(Int.MAX_VALUE)),
+        Parameter("start", PType.integer()),
+        Parameter("end", PType.integer()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val string = args[0].bytes.toString(Charsets.UTF_8)
-        val start = args[1].int
-        val end = args[2].int
-        if (end < 0) throw TypeCheckException()
-        val result = string.codepointSubstring(start, end)
-        return Datum.clob(result.toByteArray())
-    }
+    ) { args ->
+    val string = args[0].bytes.toString(Charsets.UTF_8)
+    val start = args[1].int
+    val end = args[2].int
+    if (end < 0) throw TypeCheckException()
+    val result = string.codepointSubstring(start, end)
+    Datum.clob(result.toByteArray())
 }

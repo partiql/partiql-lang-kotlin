@@ -8,22 +8,17 @@ import org.partiql.types.PType
 public interface Routine {
 
     /**
-     * The function name. Required.
+     * Function name. Required.
      */
     public fun getName(): String
 
     /**
-     * The formal argument definitions. Optional.
+     * Formal argument definitions. Optional with default empty.
      */
     public fun getParameters(): Array<Parameter> = emptyArray<Parameter>()
 
     /**
-     * The function return type. Required.
+     * Compute the function return type. Required.
      */
-    public fun getReturnType(): PType
-
-    /**
-     * TODO REMOVE ME ??
-     */
-    public fun getSpecific(): String
+    public fun getReturnType(args: Array<PType>): PType
 }

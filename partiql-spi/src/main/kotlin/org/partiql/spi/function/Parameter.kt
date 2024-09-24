@@ -4,18 +4,23 @@ import org.partiql.types.PType
 
 /**
  * [Parameter] is a formal argument's definition.
- *
- * @constructor
- * Default constructor.
- *
- * @param name  Parameter name used for error reporting, debugging, and documentation.
- * @param type  Parameter type used for function resolution.
  */
-public class Parameter(name: String, type: PType) {
+public class Parameter private constructor(
+    private var name: String,
+    private var type: PType,
+    private var variadic: Boolean,
+) {
 
-    private var _name: String = name
-    private var _type: PType = type
+    /**
+     * @constructor
+     * Default public constructor forms a regular (non-variadic
+     *
+     * @param name  Parameter name used for error reporting, debugging, and documentation.
+     * @param type  Parameter type used for function resolution.
+     */
+    public constructor(name: String, type: PType) : this(name, type, false)
 
-    public fun getName(): String = _name
-    public fun getType(): PType = _type
+    public fun getName(): String = name
+
+    public fun getType(): PType = type
 }

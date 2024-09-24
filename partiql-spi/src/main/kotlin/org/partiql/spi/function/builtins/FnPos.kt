@@ -3,128 +3,86 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
-import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_POS__INT8__INT8 : Function {
+internal val Fn_POS__INT8__INT8 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "pos",
-        returns = PType.tinyint(),
-        parameters = listOf(Parameter("value", PType.tinyint())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "pos",
+    returns = PType.tinyint(),
+    parameters = arrayOf(Parameter("value", PType.tinyint())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        return args[0]
-    }
+    ) { args ->
+    args[0]
 }
 
-internal object Fn_POS__INT16__INT16 : Function {
+internal val Fn_POS__INT16__INT16 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "pos",
-        returns = PType.smallint(),
-        parameters = listOf(Parameter("value", PType.smallint())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "pos",
+    returns = PType.smallint(),
+    parameters = arrayOf(Parameter("value", PType.smallint())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        return args[0]
-    }
+    ) { args ->
+    args[0]
 }
 
-internal object Fn_POS__INT32__INT32 : Function {
+internal val Fn_POS__INT32__INT32 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "pos",
-        returns = PType.integer(),
-        parameters = listOf(Parameter("value", PType.integer())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "pos",
+    returns = PType.integer(),
+    parameters = arrayOf(Parameter("value", PType.integer())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        return args[0]
-    }
+    ) { args ->
+    args[0]
 }
 
-internal object Fn_POS__INT64__INT64 : Function {
+internal val Fn_POS__INT64__INT64 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "pos",
-        returns = PType.bigint(),
-        parameters = listOf(Parameter("value", PType.bigint())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "pos",
+    returns = PType.bigint(),
+    parameters = arrayOf(Parameter("value", PType.bigint())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        return args[0]
-    }
+    ) { args ->
+    args[0]
 }
 
-internal object Fn_POS__INT__INT : Function {
+internal val Fn_POS__INT__INT = Function.standard(
 
-    override val signature = FnSignature(
-        name = "pos",
-        returns = PType.numeric(),
-        parameters = listOf(Parameter("value", PType.numeric())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "pos",
+    returns = PType.numeric(),
+    parameters = arrayOf(Parameter("value", PType.numeric())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        return args[0]
-    }
+    ) { args ->
+    args[0]
 }
 
-internal object Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Function {
+internal val Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.standard(
 
-    override val signature = FnSignature(
-        name = "pos",
-        returns = PType.decimal(),
-        parameters = listOf(Parameter("value", PType.decimal())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "pos",
+    returns = PType.decimal(),
+    parameters = arrayOf(Parameter("value", PType.decimal())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        return args[0]
-    }
+    ) { args ->
+    args[0]
 }
 
-internal object Fn_POS__FLOAT32__FLOAT32 : Function {
+internal val Fn_POS__FLOAT32__FLOAT32 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "pos",
-        returns = PType.real(),
-        parameters = listOf(Parameter("value", PType.real())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "pos",
+    returns = PType.real(),
+    parameters = arrayOf(Parameter("value", PType.real())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        return args[0]
-    }
+    ) { args ->
+    args[0]
 }
 
-internal object Fn_POS__FLOAT64__FLOAT64 : Function {
+internal val Fn_POS__FLOAT64__FLOAT64 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "pos",
-        returns = PType.doublePrecision(),
-        parameters = listOf(Parameter("value", PType.doublePrecision())),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "pos",
+    returns = PType.doublePrecision(),
+    parameters = arrayOf(Parameter("value", PType.doublePrecision())),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        return args[0]
-    }
+    ) { args ->
+    args[0]
 }

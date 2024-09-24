@@ -526,13 +526,9 @@ public final class org/partiql/spi/function/AggSignature {
 }
 
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {
-	public abstract fun accumulator ()Lorg/partiql/spi/function/Aggregation$Accumulator;
-	public abstract fun getName ()Ljava/lang/String;
-	public abstract fun getParameters ()[Lorg/partiql/spi/function/Parameter;
-	public abstract fun getReturnType ()Lorg/partiql/types/PType;
-	public abstract fun getSignature ()Lorg/partiql/spi/function/AggSignature;
-	public abstract fun getSpecific ()Ljava/lang/String;
-	public abstract fun isDecomposable ()Z
+	public static final field Companion Lorg/partiql/spi/function/Aggregation$Companion;
+	public abstract fun getAccumulator ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
+	public static fun standard (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
 }
 
 public abstract interface class org/partiql/spi/function/Aggregation$Accumulator {
@@ -540,61 +536,34 @@ public abstract interface class org/partiql/spi/function/Aggregation$Accumulator
 	public abstract fun value ()Lorg/partiql/spi/value/Datum;
 }
 
-public final class org/partiql/spi/function/Aggregation$DefaultImpls {
-	public static fun getName (Lorg/partiql/spi/function/Aggregation;)Ljava/lang/String;
-	public static fun getParameters (Lorg/partiql/spi/function/Aggregation;)[Lorg/partiql/spi/function/Parameter;
-	public static fun getReturnType (Lorg/partiql/spi/function/Aggregation;)Lorg/partiql/types/PType;
-	public static fun getSpecific (Lorg/partiql/spi/function/Aggregation;)Ljava/lang/String;
-	public static fun isDecomposable (Lorg/partiql/spi/function/Aggregation;)Z
+public final class org/partiql/spi/function/Aggregation$Companion {
+	public final fun standard (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
 }
 
-public final class org/partiql/spi/function/FnSignature {
-	public final field description Ljava/lang/String;
-	public final field isDeterministic Z
-	public final field isMissable Z
-	public final field isMissingCall Z
-	public final field isNullCall Z
-	public final field isNullable Z
-	public final field name Ljava/lang/String;
-	public final field parameters Ljava/util/List;
-	public final field returns Lorg/partiql/types/PType;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZ)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Lorg/partiql/types/PType;
-	public final fun component3 ()Ljava/util/List;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun component5 ()Z
-	public final fun component6 ()Z
-	public final fun component7 ()Z
-	public final fun component8 ()Z
-	public final fun component9 ()Z
-	public final fun copy (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZ)Lorg/partiql/spi/function/FnSignature;
-	public static synthetic fun copy$default (Lorg/partiql/spi/function/FnSignature;Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZZZZILjava/lang/Object;)Lorg/partiql/spi/function/FnSignature;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getSpecific ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+public final class org/partiql/spi/function/Aggregation$DefaultImpls {
+	public static fun getAccumulator (Lorg/partiql/spi/function/Aggregation;[Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
+	public static fun getParameters (Lorg/partiql/spi/function/Aggregation;)[Lorg/partiql/spi/function/Parameter;
 }
 
 public abstract interface class org/partiql/spi/function/Function : org/partiql/spi/function/Routine {
-	public abstract fun getName ()Ljava/lang/String;
-	public abstract fun getParameters ()[Lorg/partiql/spi/function/Parameter;
-	public abstract fun getReturnType ()Lorg/partiql/types/PType;
-	public abstract fun getSignature ()Lorg/partiql/spi/function/FnSignature;
-	public abstract fun getSpecific ()Ljava/lang/String;
-	public abstract fun invoke ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
-	public abstract fun isMissingCall ()Z
+	public static final field Companion Lorg/partiql/spi/function/Function$Companion;
+	public abstract fun getInstance ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Function$Instance;
 	public abstract fun isNullCall ()Z
+	public static fun standard (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
+}
+
+public final class org/partiql/spi/function/Function$Companion {
+	public final fun standard (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
 }
 
 public final class org/partiql/spi/function/Function$DefaultImpls {
-	public static fun getName (Lorg/partiql/spi/function/Function;)Ljava/lang/String;
+	public static fun getInstance (Lorg/partiql/spi/function/Function;[Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Function$Instance;
 	public static fun getParameters (Lorg/partiql/spi/function/Function;)[Lorg/partiql/spi/function/Parameter;
-	public static fun getReturnType (Lorg/partiql/spi/function/Function;)Lorg/partiql/types/PType;
-	public static fun getSpecific (Lorg/partiql/spi/function/Function;)Ljava/lang/String;
-	public static fun isMissingCall (Lorg/partiql/spi/function/Function;)Z
 	public static fun isNullCall (Lorg/partiql/spi/function/Function;)Z
+}
+
+public abstract interface class org/partiql/spi/function/Function$Instance {
+	public abstract fun invoke ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
 }
 
 public final class org/partiql/spi/function/Parameter {
@@ -606,8 +575,7 @@ public final class org/partiql/spi/function/Parameter {
 public abstract interface class org/partiql/spi/function/Routine {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getParameters ()[Lorg/partiql/spi/function/Parameter;
-	public abstract fun getReturnType ()Lorg/partiql/types/PType;
-	public abstract fun getSpecific ()Ljava/lang/String;
+	public abstract fun getReturnType ([Lorg/partiql/types/PType;)Lorg/partiql/types/PType;
 }
 
 public final class org/partiql/spi/function/Routine$DefaultImpls {

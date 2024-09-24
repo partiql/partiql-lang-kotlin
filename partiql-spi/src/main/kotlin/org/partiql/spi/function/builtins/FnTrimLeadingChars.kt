@@ -3,72 +3,56 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.StringUtils.codepointTrimLeading
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING : Function {
+internal val Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING = Function.standard(
 
-    override val signature = FnSignature(
-        name = "trim_leading_chars",
-        returns = PType.string(),
-        parameters = listOf(
-            Parameter("value", PType.string()),
-            Parameter("chars", PType.string()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "trim_leading_chars",
+    returns = PType.string(),
+    parameters = arrayOf(
+        Parameter("value", PType.string()),
+        Parameter("chars", PType.string()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val chars = args[1].string
-        val result = value.codepointTrimLeading(chars)
-        return Datum.string(result)
-    }
+    ) { args ->
+    val value = args[0].string
+    val chars = args[1].string
+    val result = value.codepointTrimLeading(chars)
+    Datum.string(result)
 }
 
-internal object Fn_TRIM_LEADING_CHARS__SYMBOL_SYMBOL__SYMBOL : Function {
+internal val Fn_TRIM_LEADING_CHARS__SYMBOL_SYMBOL__SYMBOL = Function.standard(
 
-    override val signature = FnSignature(
-        name = "trim_leading_chars",
-        returns = PType.symbol(),
-        parameters = listOf(
-            Parameter("value", PType.symbol()),
-            Parameter("chars", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "trim_leading_chars",
+    returns = PType.symbol(),
+    parameters = arrayOf(
+        Parameter("value", PType.symbol()),
+        Parameter("chars", PType.symbol()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        val chars = args[1].string
-        val result = value.codepointTrimLeading(chars)
-        return Datum.symbol(result)
-    }
+    ) { args ->
+    val value = args[0].string
+    val chars = args[1].string
+    val result = value.codepointTrimLeading(chars)
+    Datum.symbol(result)
 }
 
-internal object Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB : Function {
+internal val Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB = Function.standard(
 
-    override val signature = FnSignature(
-        name = "trim_leading_chars",
-        returns = PType.clob(Int.MAX_VALUE),
-        parameters = listOf(
-            Parameter("value", PType.clob(Int.MAX_VALUE)),
-            Parameter("chars", PType.clob(Int.MAX_VALUE)),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "trim_leading_chars",
+    returns = PType.clob(Int.MAX_VALUE),
+    parameters = arrayOf(
+        Parameter("value", PType.clob(Int.MAX_VALUE)),
+        Parameter("chars", PType.clob(Int.MAX_VALUE)),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val string = args[0].bytes.toString(Charsets.UTF_8)
-        val chars = args[1].bytes.toString(Charsets.UTF_8)
-        val result = string.codepointTrimLeading(chars)
-        return Datum.clob(result.toByteArray())
-    }
+    ) { args ->
+    val string = args[0].bytes.toString(Charsets.UTF_8)
+    val chars = args[1].bytes.toString(Charsets.UTF_8)
+    val result = string.codepointTrimLeading(chars)
+    Datum.clob(result.toByteArray())
 }

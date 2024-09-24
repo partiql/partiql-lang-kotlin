@@ -128,7 +128,8 @@ internal fun PType.isNumber(): Boolean = when (this.kind) {
     PType.Kind.REAL,
     PType.Kind.DOUBLE,
     PType.Kind.DECIMAL,
-    PType.Kind.DECIMAL_ARBITRARY -> true
+    PType.Kind.DECIMAL_ARBITRARY,
+    -> true
     else -> false
 }
 

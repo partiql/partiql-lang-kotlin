@@ -9,45 +9,70 @@ import org.partiql.types.PType
 public interface Function : Routine {
 
     /**
-     * Scalar function signature.
+     * Returns an invocable implementation. Optional.
+     */
+    public fun getInstance(args: Array<PType>): Instance {
+        throw Error("Function ${getName()} has no implementations.")
+    }
+
+    /**
+     * Indicates that this function returns NULL on NULL inputs; optional with default true.
+     */
+    public fun isNullCall(): Boolean = true
+
+    /**
+     * Invocable implementation of a function.
      *
-     * TODO REMOVE ME
+     * @see Function.getInstance
      */
-    public val signature: FnSignature
+    public interface Instance {
 
-    override fun getName(): String = signature.name
-
-    override fun getParameters(): Array<Parameter> = signature.parameters.toTypedArray()
-
-    override fun getReturnType(): PType = signature.returns
+        /**
+         * Invoke the function with the given arguments. Required.
+         *
+         * @param args the arguments to the function
+         * @return the result of the function
+         */
+        public fun invoke(args: Array<Datum>): Datum
+    }
 
     /**
-     * SQL NULL CALL -> RETURNS NULL ON NULL INPUT
+     * Factory methods for standard function implementations.
      */
-    public fun isNullCall(): Boolean = signature.isNullCall
+    public companion object {
+
+        @JvmStatic
+        public fun standard(
+            name: String,
+            parameters: Array<Parameter>,
+            returns: PType,
+            invoke: (Array<Datum>) -> Datum,
+        ): Function = _Function(
+            name, parameters, returns,
+            object : Instance {
+                override fun invoke(args: Array<Datum>): Datum = invoke(args)
+            }
+        )
+    }
 
     /**
-     * TODO REMOVE ME
+     * Private internal function implementation.
      */
-    public fun isMissingCall(): Boolean = signature.isMissingCall
-
-    /**
-     * TODO REPLACE ME WITH `getInstance(args: Array<PType>)` which returns an invocable instance of this function.
-     *
-     * Invoke the function with the given arguments. Required.
-     *
-     * @param args the arguments to the function
-     * @return the result of the function
-     */
-    public fun invoke(args: Array<Datum>): Datum
-
-    /**
-     * !! DO NOT OVERRIDE !!
-     */
-    public override fun getSpecific(): String {
-        val name = getName().uppercase()
-        val parameters = getParameters().joinToString("__") { it.getType().kind.name }
-        val returnType = getReturnType().kind.name
-        return "FN_${name}___${parameters}___$returnType"
+    @Suppress("ClassName")
+    private class _Function(
+        private var name: String,
+        private var parameters: Array<Parameter>,
+        private var returns: PType,
+        private var instance: Instance,
+    ) : Function {
+        override fun getName(): String = name
+        override fun getParameters(): Array<Parameter> = parameters
+        override fun getReturnType(args: Array<PType>): PType = returns
+        override fun getInstance(args: Array<PType>): Instance = instance
+        override fun toString(): String {
+            val parameters = parameters.joinToString("__") { it.getType().kind.name }
+            val returnType = returns.kind.name
+            return "FN_${name}___${parameters}___$returnType"
+        }
     }
 }

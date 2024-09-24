@@ -3,109 +3,83 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import kotlin.experimental.and
 
-internal object Fn_BITWISE_AND__INT8_INT8__INT8 : Function {
+internal val Fn_BITWISE_AND__INT8_INT8__INT8 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "bitwise_and",
-        returns = PType.tinyint(),
-        parameters = listOf(
-            Parameter("lhs", PType.tinyint()),
-            Parameter("rhs", PType.tinyint()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "bitwise_and",
+    returns = PType.tinyint(),
+    parameters = arrayOf(
+        Parameter("lhs", PType.tinyint()),
+        Parameter("rhs", PType.tinyint()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        @Suppress("DEPRECATION") val arg0 = args[0].byte
-        @Suppress("DEPRECATION") val arg1 = args[1].byte
-        return Datum.tinyint(arg0 and arg1)
-    }
+    ) { args ->
+    @Suppress("DEPRECATION") val arg0 = args[0].byte
+    @Suppress("DEPRECATION") val arg1 = args[1].byte
+    Datum.tinyint(arg0 and arg1)
 }
 
-internal object Fn_BITWISE_AND__INT16_INT16__INT16 : Function {
+internal val Fn_BITWISE_AND__INT16_INT16__INT16 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "bitwise_and",
-        returns = PType.smallint(),
-        parameters = listOf(
-            Parameter("lhs", PType.smallint()),
-            Parameter("rhs", PType.smallint()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "bitwise_and",
+    returns = PType.smallint(),
+    parameters = arrayOf(
+        Parameter("lhs", PType.smallint()),
+        Parameter("rhs", PType.smallint()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val arg0 = args[0].short
-        val arg1 = args[1].short
-        return Datum.smallint(arg0 and arg1)
-    }
+    ) { args ->
+    val arg0 = args[0].short
+    val arg1 = args[1].short
+    Datum.smallint(arg0 and arg1)
 }
 
-internal object Fn_BITWISE_AND__INT32_INT32__INT32 : Function {
+internal val Fn_BITWISE_AND__INT32_INT32__INT32 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "bitwise_and",
-        returns = PType.integer(),
-        parameters = listOf(
-            Parameter("lhs", PType.integer()),
-            Parameter("rhs", PType.integer()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "bitwise_and",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("lhs", PType.integer()),
+        Parameter("rhs", PType.integer()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val arg0 = args[0].int
-        val arg1 = args[1].int
-        return Datum.integer(arg0 and arg1)
-    }
+    ) { args ->
+    val arg0 = args[0].int
+    val arg1 = args[1].int
+    Datum.integer(arg0 and arg1)
 }
 
-internal object Fn_BITWISE_AND__INT64_INT64__INT64 : Function {
+internal val Fn_BITWISE_AND__INT64_INT64__INT64 = Function.standard(
 
-    override val signature = FnSignature(
-        name = "bitwise_and",
-        returns = PType.bigint(),
-        parameters = listOf(
-            Parameter("lhs", PType.bigint()),
-            Parameter("rhs", PType.bigint()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "bitwise_and",
+    returns = PType.bigint(),
+    parameters = arrayOf(
+        Parameter("lhs", PType.bigint()),
+        Parameter("rhs", PType.bigint()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val arg0 = args[0].long
-        val arg1 = args[1].long
-        return Datum.bigint(arg0 and arg1)
-    }
+    ) { args ->
+    val arg0 = args[0].long
+    val arg1 = args[1].long
+    Datum.bigint(arg0 and arg1)
 }
 
-internal object Fn_BITWISE_AND__INT_INT__INT : Function {
+internal val Fn_BITWISE_AND__INT_INT__INT = Function.standard(
 
-    override val signature = FnSignature(
-        name = "bitwise_and",
-        returns = PType.numeric(),
-        parameters = listOf(
-            @Suppress("DEPRECATION") Parameter("lhs", PType.numeric()),
-            @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "bitwise_and",
+    returns = PType.numeric(),
+    parameters = arrayOf(
+        @Suppress("DEPRECATION") Parameter("lhs", PType.numeric()),
+        @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val arg0 = args[0].bigInteger
-        val arg1 = args[1].bigInteger
-        return Datum.numeric(arg0 and arg1)
-    }
+    ) { args ->
+    val arg0 = args[0].bigInteger
+    val arg1 = args[1].bigInteger
+    Datum.numeric(arg0 and arg1)
 }

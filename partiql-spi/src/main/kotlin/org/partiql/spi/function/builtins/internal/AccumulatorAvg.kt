@@ -3,12 +3,11 @@ package org.partiql.spi.function.builtins.internal
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal class AccumulatorAvg(
-    private val targetType: PType = PType.dynamic(),
-) : Accumulator() {
+internal class AccumulatorAvg : Accumulator() {
 
-    var sum: Number = 0.0
-    var count: Long = 0L
+    private var targetType = PType.decimal()
+    private var sum: Number = 0.0
+    private var count: Long = 0L
 
     override fun nextValue(value: Datum) {
         checkIsNumberType(funcName = "AVG", value = value)

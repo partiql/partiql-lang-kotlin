@@ -3,62 +3,46 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object Fn_CHAR_LENGTH__STRING__INT : Function {
+internal val Fn_CHAR_LENGTH__STRING__INT = Function.standard(
 
-    override val signature = FnSignature(
-        name = "char_length",
-        returns = PType.integer(),
-        parameters = listOf(
-            Parameter("value", PType.string()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "char_length",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("value", PType.string()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        return Datum.integer(value.codePointCount(0, value.length))
-    }
+    ) { args ->
+    val value = args[0].string
+    Datum.integer(value.codePointCount(0, value.length))
 }
 
-internal object Fn_CHAR_LENGTH__SYMBOL__INT : Function {
+internal val Fn_CHAR_LENGTH__SYMBOL__INT = Function.standard(
 
-    override val signature = FnSignature(
-        name = "char_length",
-        returns = PType.integer(),
-        parameters = listOf(
-            Parameter("lhs", PType.symbol()),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "char_length",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("lhs", PType.symbol()),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].string
-        return Datum.integer(value.codePointCount(0, value.length))
-    }
+    ) { args ->
+    val value = args[0].string
+    Datum.integer(value.codePointCount(0, value.length))
 }
 
-internal object Fn_CHAR_LENGTH__CLOB__INT : Function {
+internal val Fn_CHAR_LENGTH__CLOB__INT = Function.standard(
 
-    override val signature = FnSignature(
-        name = "char_length",
-        returns = PType.integer(),
-        parameters = listOf(
-            Parameter("lhs", PType.clob(Int.MAX_VALUE)),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
+    name = "char_length",
+    returns = PType.integer(),
+    parameters = arrayOf(
+        Parameter("lhs", PType.clob(Int.MAX_VALUE)),
+    ),
 
-    override fun invoke(args: Array<Datum>): Datum {
-        val value = args[0].bytes
-        return Datum.integer(value.size)
-    }
+    ) { args ->
+    val value = args[0].bytes
+    Datum.integer(value.size)
 }
