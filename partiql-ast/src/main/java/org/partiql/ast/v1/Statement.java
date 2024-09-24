@@ -10,8 +10,6 @@ public abstract class Statement extends AstNode {
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         if (this instanceof Query) {
             return visitor.visitQuery((Query) this, ctx);
-        } else if (this instanceof DDL) {
-            return visitor.visitDDL((DDL) this, ctx);
         } else if (this instanceof Explain) {
             return visitor.visitExplain((Explain) this, ctx);
         } else {

@@ -86,16 +86,6 @@ public interface AstVisitor<R, C> {
 
     R visitQuery(Query node, C ctx);
 
-    R visitDDL(DDL node, C ctx);
-
-    R visitCreateTable(CreateTable node, C ctx);
-
-    R visitCreateIndex(CreateIndex node, C ctx);
-
-    R visitDropTable(DropTable node, C ctx);
-
-    R visitDropIndex(DropIndex node, C ctx);
-
     R visitExplain(Explain node, C ctx);
 
     R visitTarget(Target node, C ctx);
@@ -374,21 +364,4 @@ public interface AstVisitor<R, C> {
     R visitGraphLabelConj(GraphLabel.Conj node, C ctx);
 
     R visitGraphLabelDisj(GraphLabel.Disj node, C ctx);
-
-    R visitTableDefinition(TableDefinition node, C ctx);
-
-    R visitColumn(Column node, C ctx);
-
-    R visitConstraint(Constraint node, C ctx);
-
-    R visitConstraintBody(
-            ConstraintType node,
-            C ctx
-    );
-
-    R visitConstraintNullable(ConstraintNullable node, C ctx);
-
-    R visitConstraintNotNull(ConstraintNotNull node, C ctx);
-
-    R visitConstraintCheck(ConstraintCheck node, C ctx);
 }

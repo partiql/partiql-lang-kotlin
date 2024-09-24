@@ -5552,17 +5552,6 @@ public abstract class org/partiql/ast/v1/AstNode {
 
 public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visit (Lorg/partiql/ast/v1/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitColumn (Lorg/partiql/ast/v1/Column;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitConstraint (Lorg/partiql/ast/v1/Constraint;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitConstraintBody (Lorg/partiql/ast/v1/ConstraintType;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitConstraintCheck (Lorg/partiql/ast/v1/ConstraintCheck;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitConstraintNotNull (Lorg/partiql/ast/v1/ConstraintNotNull;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitConstraintNullable (Lorg/partiql/ast/v1/ConstraintNullable;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitCreateIndex (Lorg/partiql/ast/v1/CreateIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitCreateTable (Lorg/partiql/ast/v1/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitDDL (Lorg/partiql/ast/v1/DDL;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitDropIndex (Lorg/partiql/ast/v1/DropIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitDropTable (Lorg/partiql/ast/v1/DropTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExclude (Lorg/partiql/ast/v1/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExcludePath (Lorg/partiql/ast/v1/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExcludeStep (Lorg/partiql/ast/v1/ExcludeStep;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5663,7 +5652,6 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitSetOp (Lorg/partiql/ast/v1/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSort (Lorg/partiql/ast/v1/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatement (Lorg/partiql/ast/v1/Statement;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTableDefinition (Lorg/partiql/ast/v1/TableDefinition;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTarget (Lorg/partiql/ast/v1/Target;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTargetDomain (Lorg/partiql/ast/v1/Target$Domain;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitType (Lorg/partiql/ast/v1/type/Type;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5714,69 +5702,6 @@ public final class org/partiql/ast/v1/CaseSensitivity : java/lang/Enum {
 	public static fun values ()[Lorg/partiql/ast/v1/CaseSensitivity;
 }
 
-public class org/partiql/ast/v1/Column : org/partiql/ast/v1/AstNode {
-	public field constraints Ljava/util/List;
-	public field name Ljava/lang/String;
-	public field type Lorg/partiql/ast/v1/type/Type;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/v1/type/Type;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/Constraint : org/partiql/ast/v1/AstNode {
-	public field constraintType Lorg/partiql/ast/v1/ConstraintType;
-	public field name Ljava/lang/String;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/v1/ConstraintType;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/ConstraintCheck : org/partiql/ast/v1/ConstraintType {
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/ConstraintNotNull : org/partiql/ast/v1/ConstraintType {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/ConstraintNullable : org/partiql/ast/v1/ConstraintType {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public abstract class org/partiql/ast/v1/ConstraintType : org/partiql/ast/v1/AstNode {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public class org/partiql/ast/v1/CreateIndex : org/partiql/ast/v1/DDL {
-	public field fields Ljava/util/List;
-	public field index Lorg/partiql/ast/v1/Identifier;
-	public field table Lorg/partiql/ast/v1/Identifier;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/CreateTable : org/partiql/ast/v1/DDL {
-	public field definition Lorg/partiql/ast/v1/TableDefinition;
-	public field name Lorg/partiql/ast/v1/Identifier;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/TableDefinition;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public abstract class org/partiql/ast/v1/DDL : org/partiql/ast/v1/Statement {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
 public final class org/partiql/ast/v1/DatetimeField : java/lang/Enum {
 	public static final field DAY Lorg/partiql/ast/v1/DatetimeField;
 	public static final field HOUR Lorg/partiql/ast/v1/DatetimeField;
@@ -5789,21 +5714,6 @@ public final class org/partiql/ast/v1/DatetimeField : java/lang/Enum {
 	public static final field YEAR Lorg/partiql/ast/v1/DatetimeField;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/DatetimeField;
 	public static fun values ()[Lorg/partiql/ast/v1/DatetimeField;
-}
-
-public class org/partiql/ast/v1/DropIndex : org/partiql/ast/v1/DDL {
-	public field index Lorg/partiql/ast/v1/Identifier;
-	public field table Lorg/partiql/ast/v1/Identifier;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/DropTable : org/partiql/ast/v1/DDL {
-	public field table Lorg/partiql/ast/v1/Identifier;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/Exclude : org/partiql/ast/v1/AstNode {
@@ -6144,13 +6054,6 @@ public final class org/partiql/ast/v1/Sort$Nulls : java/lang/Enum {
 public abstract class org/partiql/ast/v1/Statement : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public class org/partiql/ast/v1/TableDefinition : org/partiql/ast/v1/AstNode {
-	public field columns Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
 }
 
 public abstract class org/partiql/ast/v1/Target : org/partiql/ast/v1/AstNode {
