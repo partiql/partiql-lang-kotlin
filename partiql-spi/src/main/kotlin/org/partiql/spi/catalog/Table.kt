@@ -9,18 +9,6 @@ import org.partiql.types.PType
 public interface Table {
 
     /**
-     * Handle holds both a table and its resolved name within its respective catalog.
-     *
-     * TODO DELETE ME AS A TABLE ALREADY CONTAINS ITS NAME.
-     *
-     * Note: This replaces ConnectorObjectHandle from versions < 1.0
-     */
-    public class Handle(
-        @JvmField public val name: Name,
-        @JvmField public val table: Table,
-    )
-
-    /**
      * The table's name.
      */
     public fun getName(): Name

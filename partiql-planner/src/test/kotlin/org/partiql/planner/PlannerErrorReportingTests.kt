@@ -10,7 +10,7 @@ import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
 import org.partiql.types.PType
@@ -25,21 +25,24 @@ internal class PlannerErrorReportingTests {
     val userId = "test-user"
     val queryId = "query"
 
-    val catalog = MemoryConnector
+    // TODO REMOVE fromStaticType
+    val catalog = MemoryCatalog
         .builder()
         .name(catalogName)
-        .define("missing_binding", StaticType.ANY)
-        .define("atomic", StaticType.INT2)
-        .define("collection_no_missing_atomic", BagType(StaticType.INT2))
-        .define("collection_contain_missing_atomic", BagType(StaticType.INT2))
-        .define("struct_no_missing", closedStruct(StructType.Field("f1", StaticType.INT2)))
+        .define("missing_binding", PType.fromStaticType(StaticType.ANY))
+        .define("atomic", PType.fromStaticType(StaticType.INT2))
+        .define("collection_no_missing_atomic", PType.fromStaticType(BagType(StaticType.INT2)))
+        .define("collection_contain_missing_atomic", PType.fromStaticType(BagType(StaticType.INT2)))
+        .define("struct_no_missing", PType.fromStaticType(closedStruct(StructType.Field("f1", StaticType.INT2))))
         .define(
             "struct_with_missing",
-            closedStruct(
-                StructType.Field("f1", StaticType.INT2),
+            PType.fromStaticType(
+                closedStruct(
+                    StructType.Field("f1", StaticType.INT2),
+                )
             )
         )
-        .build().getCatalog()
+        .build()
 
     val session = Session.builder()
         .catalog(catalogName)

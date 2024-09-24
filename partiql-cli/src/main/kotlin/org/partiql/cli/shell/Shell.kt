@@ -31,6 +31,7 @@ import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.eval.PartiQLResult
+import org.partiql.spi.catalog.Session
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.Closeable
@@ -115,7 +116,7 @@ val donePrinting = AtomicBoolean(true)
  */
 internal class Shell(
     private val pipeline: Pipeline,
-    private val session: Pipeline.Session,
+    private val session: Session,
     private val debug: Boolean,
 ) {
 
@@ -243,19 +244,17 @@ internal class Shell(
                             }
                             "info" -> {
                                 // Print catalog information
-                                val connector = session.connectors[session.currentCatalog]
-                                if (connector == null) {
-                                    out.error("No connector for catalog ${session.currentCatalog}.")
-                                    continue
-                                }
-                                out.error("Connectors do not support listing metadata")
+                                out.error("Catalogs do not support listing metadata")
                             }
                             "session" -> {
                                 // Print session information
-                                out.info("user:     ${session.userId}")
-                                out.info("mode:     ${session.mode.name.lowercase()}")
-                                out.info("catalog:  ${session.currentCatalog}")
-                                out.info("path:     [${session.currentDirectory.joinToString(".")}]")
+                                out.info("identity: ${session.getIdentity()}")
+                                // TODO Session mode, `out.info("mode:         ${session.getMode()")`
+                                out.println()
+                                out.info("ENVIRONMENT")
+                                out.info("-----------")
+                                out.info("CURRENT_CATALOG:      ${session.getCatalog()}")
+                                out.info("CURRENT_NAMESPACE:    ${session.getNamespace()}")
                                 out.println()
                             }
                             "version" -> {

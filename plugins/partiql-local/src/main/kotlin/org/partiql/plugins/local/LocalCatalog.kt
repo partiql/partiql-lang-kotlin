@@ -14,14 +14,10 @@ import kotlin.io.path.notExists
 /**
  * Implementation of [Catalog] where dirs are namespaces and files are table metadata.
  */
-internal class LocalCatalog(
+public class LocalCatalog internal constructor(
     private val name: String,
     private val root: Path,
 ) : Catalog {
-
-    private companion object {
-        private const val EXT = ".ion"
-    }
 
     init {
         assert(root.isDirectory()) { "LocalNamespace must be a directory" }
@@ -42,7 +38,7 @@ internal class LocalCatalog(
     /**
      * TODO this doesn't handle ambiguous binding errors or back-tracking for longest prefix searching.
      */
-    override fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? {
+    override fun getTable(session: Session, identifier: Identifier): Table? {
         val matched = mutableListOf<String>()
         var curr = root
         for (part in identifier) {
@@ -67,30 +63,32 @@ internal class LocalCatalog(
         }
         // Remove the extension
         val name = Name.of(matched)
-        return Table.Handle(name, LocalTable(name, path))
+        return LocalTable(name, path)
     }
 
-    override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
-        val path = toPath(namespace)
-        if (path.notExists()) {
-            // throw exception?
-            return emptyList()
-        }
-        return super.listTables(session, namespace)
-    }
+    // TODO preserving this logic if catalog regains the listing APIs.
+    // override fun listTables(session: Session, namespace: Namespace): Collection<Name> {
+    //     val path = toPath(namespace)
+    //     if (path.notExists()) {
+    //         // throw exception?
+    //         return emptyList()
+    //     }
+    //     return super.listTables(session, namespace)
+    // }
 
-    override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
-        val path = toPath(namespace)
-        if (path.notExists() || !path.isDirectory()) {
-            // throw exception?
-            return emptyList()
-        }
-        // List all child directories
-        return path.toFile()
-            .listFiles()!!
-            .filter { it.isDirectory }
-            .map { toNamespace(it.toPath()) }
-    }
+    // TODO preserving this logic if catalog regains the listing APIs.
+    // override fun listNamespaces(session: Session, namespace: Namespace): Collection<Namespace> {
+    //     val path = toPath(namespace)
+    //     if (path.notExists() || !path.isDirectory()) {
+    //         // throw exception?
+    //         return emptyList()
+    //     }
+    //     // List all child directories
+    //     return path.toFile()
+    //         .listFiles()!!
+    //         .filter { it.isDirectory }
+    //         .map { toNamespace(it.toPath()) }
+    // }
 
     private fun toPath(namespace: Namespace): Path {
         var curr = root
@@ -100,7 +98,28 @@ internal class LocalCatalog(
         return curr
     }
 
-    private fun toNamespace(path: Path): Namespace {
-        return Namespace.of(path.relativize(root).map { it.toString() })
+    // TODO preserving this logic if catalog regains the listing APIs.
+    // private fun toNamespace(path: Path): Namespace {
+    //     return Namespace.of(path.relativize(root).map { it.toString() })
+    // }
+
+    public companion object {
+
+        private const val EXT = ".ion"
+
+        @JvmStatic
+        public fun builder(): Builder = Builder()
+    }
+
+    public class Builder internal constructor() {
+
+        private var name: String? = null
+        private var root: Path? = null
+
+        public fun name(name: String): Builder = apply { this.name = name }
+
+        public fun root(root: Path): Builder = apply { this.root = root }
+
+        public fun build(): LocalCatalog = LocalCatalog(name!!, root!!)
     }
 }

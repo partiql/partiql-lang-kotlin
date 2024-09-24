@@ -99,9 +99,7 @@ public interface Session {
         }
 
         /**
-         * Adds catalogs to this session like the old Map<String, ConnectorMetadata>.
-         *
-         * TODO replace with org.partiql.spi.catalog.Catalog.
+         * Adds catalogs to this session.
          */
         public fun catalogs(vararg catalogs: Catalog): Builder {
             for (catalog in catalogs) {

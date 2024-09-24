@@ -10,38 +10,12 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.connector.Connector
-import java.time.Instant
 
 internal class Pipeline private constructor(
     private val parser: PartiQLParser,
     private val planner: PartiQLPlanner,
     private val engine: PartiQLEngine,
 ) {
-
-    /**
-     * Combined planner and engine session.
-     */
-    internal data class Session(
-        @JvmField val queryId: String,
-        @JvmField val userId: String,
-        @JvmField val currentCatalog: String,
-        @JvmField val currentDirectory: List<String>,
-        @JvmField val connectors: Map<String, Connector>,
-        @JvmField val instant: Instant,
-        @JvmField val debug: Boolean,
-        @JvmField val mode: PartiQLEngine.Mode,
-    ) {
-
-        private val catalogs = connectors.values.map { it.getCatalog() }
-
-        fun planner() = org.partiql.spi.catalog.Session.builder()
-            .identity(userId)
-            .namespace(currentDirectory)
-            .catalog(currentCatalog)
-            .catalogs(*catalogs.toTypedArray())
-            .build()
-    }
 
     /**
      * TODO replace with the ResultSet equivalent?
@@ -59,7 +33,7 @@ internal class Pipeline private constructor(
 
     private fun plan(statement: Statement, session: Session): PartiQLPlan {
         val callback = ProblemListener()
-        val result = planner.plan(statement, session.planner(), callback)
+        val result = planner.plan(statement, session, callback)
         val errors = callback.problems.filter { it.details.severity == ProblemSeverity.ERROR }
         if (errors.isNotEmpty()) {
             throw RuntimeException(errors.joinToString())

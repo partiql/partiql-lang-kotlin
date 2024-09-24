@@ -17,7 +17,7 @@ import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.local.LocalConnector
+import org.partiql.plugins.local.LocalCatalog
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -123,10 +123,10 @@ class PlanTyperTest {
                     .catalog("pql")
                     .namespace("main")
                     .catalogs(
-                        LocalConnector.builder()
+                        LocalCatalog.builder()
                             .name("pql")
                             .root(root)
-                            .build().getCatalog()
+                            .build()
                     )
                     .build()
             )

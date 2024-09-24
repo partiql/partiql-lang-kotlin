@@ -16,13 +16,13 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.SqlPlannerV1
-import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
+import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.connector.Connector
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
@@ -115,6 +115,7 @@ class EvalExecutor(
         val parser = PartiQLParser.default()
         val planner = PartiQLPlanner.standard()
         val engine = PartiQLEngine.standard()
+        // TODO REPLACE WITH DATUM COMPARATOR
         val comparator = PartiQLValue.comparator()
     }
 
@@ -122,11 +123,10 @@ class EvalExecutor(
 
         override fun create(env: IonStruct, options: CompileOptions): TestExecutor<PartiQLStatement, PartiQLResult> {
             // infer catalog from conformance test `env`
-            val catalog = "default"
-            val connector = infer(env.toIonElement() as StructElement)
+            val catalog = infer(env.toIonElement() as StructElement)
             val session = Session.builder()
-                .catalog(catalog)
-                .catalogs(connector.getCatalog())
+                .catalog("default")
+                .catalogs(catalog)
                 .build()
             val mode = when (options.typingMode) {
                 TypingMode.PERMISSIVE -> PartiQLEngine.Mode.PERMISSIVE
@@ -141,12 +141,12 @@ class EvalExecutor(
          * @param env
          * @return
          */
-        private fun infer(env: StructElement): Connector {
+        private fun infer(env: StructElement): Catalog {
             val map = mutableMapOf<String, PType>()
             env.fields.forEach {
                 map[it.name] = inferEnv(it.value)
             }
-            return MemoryConnector.builder()
+            return MemoryCatalog.builder()
                 .name("default")
                 .apply { load(env) }
                 .build()
@@ -156,7 +156,7 @@ class EvalExecutor(
          * Uses the planner to infer the type of the environment.
          */
         private fun inferEnv(env: AnyElement): PType {
-            val catalog = MemoryConnector.builder().name("default").build().getCatalog()
+            val catalog = MemoryCatalog.builder().name("default").build()
             val session = Session.builder()
                 .catalog("default")
                 .catalogs(catalog)
@@ -171,7 +171,7 @@ class EvalExecutor(
          *
          * TODO until this point, PartiQL Kotlin has only done top-level bindings.
          */
-        private fun MemoryConnector.Builder.load(env: StructElement) {
+        private fun MemoryCatalog.Builder.load(env: StructElement) {
             for (f in env.fields) {
                 val name = Name.of(f.name)
 

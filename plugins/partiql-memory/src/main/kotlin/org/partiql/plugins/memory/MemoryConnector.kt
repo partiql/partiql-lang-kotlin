@@ -15,95 +15,36 @@
 
 package org.partiql.plugins.memory
 
-import com.amazon.ionelement.api.StructElement
+import org.partiql.spi.Connector
 import org.partiql.spi.catalog.Catalog
-import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
-import org.partiql.spi.catalog.Session
-import org.partiql.spi.catalog.Table
-import org.partiql.spi.connector.Connector
-import org.partiql.types.PType
-import org.partiql.types.StaticType
 
 /**
- * This is a plugin used for testing and is not a versioned API per semver.
+ * This is the standard connector implementation.
+ *
+ * TODO move into partiql-spi package before 1.0!
  */
-public class MemoryConnector private constructor(
-    private val name: String,
-    private val tables: Map<Name, MemoryTable>,
-) : Connector {
-
-    override fun getCatalog(): Catalog = catalog
+public class MemoryConnector : Connector {
 
     /**
-     * For use with ServiceLoader to instantiate a connector from an Ion config.
+     * TODO
+     *
+     * @property tables
      */
-    internal class Factory : Connector.Factory {
+    public class Context(
+        @JvmField public val tables: Map<Name, MemoryTable>,
+    ) : Connector.Context
 
-        override val name: String = "memory"
+    override fun getCatalog(name: String): Catalog = getCatalog(name, Context(emptyMap()))
 
-        override fun create(config: StructElement): Connector {
-            TODO("Instantiation of a MemoryConnector via the factory is currently not supported")
+    override fun getCatalog(name: String, context: Connector.Context): Catalog {
+        if (context !is Context) {
+            throw IllegalArgumentException("MemoryConnector context must be of type ${Context::class.java}, found: ${context::class.java}")
         }
+        return getCatalog(name, context)
     }
 
-    public companion object {
-
-        @JvmStatic
-        public fun builder(): Builder = Builder()
-    }
-
-    public class Builder internal constructor() {
-
-        private var name: String? = null
-        private var tables: MutableMap<Name, MemoryTable> = mutableMapOf()
-
-        public fun name(name: String): Builder = apply { this.name = name }
-
-        // TODO REMOVE AFTER CREATE TABLE IS ADDED TO CATALOG
-        public fun define(name: String, type: StaticType): Builder {
-            val table = MemoryTable.empty(name, PType.fromStaticType(type))
-            return define(table)
-        }
-
-        // TODO REMOVE AFTER CREATE TABLE IS ADDED TO CATALOG
-        public fun define(table: MemoryTable): Builder = apply { tables[table.getName()] = table }
-
-        public fun build(): MemoryConnector = MemoryConnector(name!!, tables)
-    }
-
-    /**
-     * Implement [Catalog] over the tables map.
-     */
-    private val catalog = object : Catalog {
-
-        override fun getName(): String = name
-
-        override fun getTable(session: Session, name: Name): Table? {
-            if (name.hasNamespace()) {
-                error("MemoryCatalog does not support namespaces")
-            }
-            return tables[name]
-        }
-
-        /**
-         * TODO implement "longest match" on identifier searching.
-         */
-        override fun getTableHandle(session: Session, identifier: Identifier): Table.Handle? {
-            // TODO memory connector does not handle qualified identifiers and longest match
-            val first = identifier.first()
-            for ((name, table) in tables) {
-                val str = name.getName() // only use single identifiers for now
-                if (first.matches(str)) {
-                    // TODO emit errors on ambiguous table names
-                    return Table.Handle(name, table)
-                }
-            }
-            return super.getTableHandle(session, identifier)
-        }
-
-        override fun listTables(session: Session): Collection<Name> {
-            return tables.keys.map { it }
-        }
+    private fun getCatalog(name: String, context: Context): Catalog {
+        return MemoryCatalog(name, context.tables)
     }
 }
