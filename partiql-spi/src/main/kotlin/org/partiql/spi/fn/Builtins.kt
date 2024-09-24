@@ -4,12 +4,21 @@ package org.partiql.spi.fn
 import org.partiql.spi.fn.builtins.*
 
 /**
- * This is where we will register all SQL builtins.
+ * This is where we will register all SQL builtins; consider raising a "library" interface.
+ *
+ * TODO some cleanup efforts
+ *  - make a libs folder
+ *  - mv fn -> functions
+ *  - organize builtins by type
+ *  - add type families
  */
-internal object SqlBuiltins {
+internal object Builtins {
 
-    @JvmStatic
-    val builtins: List<Function> = listOf(
+    fun getFunctions(name: String): Collection<Function> = functions[name] ?: emptyList()
+
+    fun getAggregations(name: String): Collection<Aggregation> = aggregations[name] ?: emptyList()
+
+    private val functions = listOf(
         Fn_ABS__INT8__INT8,
         Fn_ABS__INT16__INT16,
         Fn_ABS__INT32__INT32,
@@ -404,10 +413,10 @@ internal object SqlBuiltins {
         Fn_SIZE__LIST__INT32,
         Fn_SIZE__SEXP__INT32,
         Fn_SIZE__STRUCT__INT32
-    )
+    ).groupBy { it.getName() }
 
     @JvmStatic
-    val aggregations: List<Aggregation> = listOf(
+    private val aggregations: Map<String, List<Aggregation>> = listOf(
         Agg_ANY__BOOL__BOOL,
         Agg_AVG__INT8__INT8,
         Agg_AVG__INT16__INT16,
@@ -451,5 +460,5 @@ internal object SqlBuiltins {
         Agg_SUM__FLOAT64__FLOAT64,
         Agg_SUM__ANY__ANY,
         Agg_GROUP_AS__ANY__ANY
-    )
+    ).groupBy { it.getName() }
 }

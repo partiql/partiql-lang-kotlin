@@ -247,9 +247,11 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
         return tail concat value
     }
 
-    override fun visitExprIon(node: Expr.Ion, tail: InternalSqlBlock): InternalSqlBlock {
-        // simplified Ion value writing, as this intentionally omits formatting
-        val value = node.value.toString()
+    override fun visitExprVariant(node: Expr.Variant, tail: InternalSqlBlock): InternalSqlBlock {
+        if (node.encoding != "ion") {
+            error("Unsupported encoding ${node.encoding}")
+        }
+        val value = node.value
         return tail concat "`$value`"
     }
 

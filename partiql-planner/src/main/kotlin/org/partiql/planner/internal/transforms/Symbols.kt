@@ -32,12 +32,12 @@ internal class Symbols private constructor() {
 
     fun insert(ref: Ref.Fn): CatalogRef = insert(
         catalog = ref.catalog,
-        item = catalogItemFn(ref.name.toList(), ref.signature.specific),
+        item = catalogItemFn(ref.name.toList(), ref.signature),
     )
 
     fun insert(ref: Ref.Agg): CatalogRef = insert(
         catalog = ref.catalog,
-        item = catalogItemAgg(ref.name.toList(), ref.signature.specific),
+        item = catalogItemAgg(ref.name.toList(), ref.signature),
     )
 
     private fun insert(catalog: String, item: Catalog.Item): CatalogRef {

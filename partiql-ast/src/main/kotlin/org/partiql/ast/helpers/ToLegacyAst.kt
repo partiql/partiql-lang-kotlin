@@ -7,6 +7,7 @@ import com.amazon.ionelement.api.DecimalElement
 import com.amazon.ionelement.api.FloatElement
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
+import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionDecimal
@@ -14,6 +15,7 @@ import com.amazon.ionelement.api.ionFloat
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
+import com.amazon.ionelement.api.loadSingleElement
 import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
@@ -270,8 +272,16 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         }
     }
 
-    override fun visitExprIon(node: Expr.Ion, ctx: Ctx) = translate(node) { metas ->
-        lit(node.value, metas)
+    override fun visitExprVariant(node: Expr.Variant, ctx: Ctx) = translate(node) { metas ->
+        if (node.encoding != "ion") {
+            error("Only `ion` variant encoding is supported in legacy AST")
+        }
+        val value = try {
+            loadSingleElement(node.value)
+        } catch (e: IonElementException) {
+            error("Unable to parse Ion value.")
+        }
+        lit(value, metas)
     }
 
     override fun visitExprVar(node: Expr.Var, ctx: Ctx) = translate(node) { metas ->

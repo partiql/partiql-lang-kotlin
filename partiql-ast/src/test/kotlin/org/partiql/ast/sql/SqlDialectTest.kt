@@ -1,6 +1,7 @@
 package org.partiql.ast.sql
 
 import com.amazon.ion.Decimal
+import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionDecimal
 import com.amazon.ionelement.api.ionFloat
@@ -25,6 +26,7 @@ import org.partiql.ast.Sort
 import org.partiql.ast.builder.AstBuilder
 import org.partiql.ast.builder.ast
 import org.partiql.ast.exprLit
+import org.partiql.ast.exprVariant
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.dateValue
@@ -449,7 +451,30 @@ class SqlDialectTest {
             expect("""`hello`""") {
                 exprIon(ionSymbol("hello"))
             },
+            expect("`a::b::null`") {
+                exprIon(ionNull().withAnnotations("a", "b"))
+            },
+            expect("`a::b::true`") {
+                exprIon(ionBool(true).withAnnotations("a", "b"))
+            },
+            expect("`a::b::1`") {
+                exprIon(ionInt(1).withAnnotations("a", "b"))
+            },
+            expect("`a::b::1.2e0`") {
+                exprIon(ionFloat(1.2).withAnnotations("a", "b"))
+            },
+            expect("`a::b::1.3`") {
+                exprIon(ionDecimal(Decimal.valueOf(1.3)).withAnnotations("a", "b"))
+            },
+            expect("""`a::b::"hello"`""") {
+                exprIon(ionString("hello").withAnnotations("a", "b"))
+            },
+            expect("""`a::b::hello`""") {
+                exprIon(ionSymbol("hello").withAnnotations("a", "b"))
+            },
         )
+
+        private fun exprIon(value: IonElement): Expr = exprVariant(value.toString(), "ion")
 
         @JvmStatic
         fun exprVarCases() = listOf(

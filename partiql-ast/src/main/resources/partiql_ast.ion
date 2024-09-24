@@ -1,5 +1,4 @@
 imports::{ kotlin: [
-    ion::'com.amazon.ionelement.api.IonElement',
     value::'org.partiql.value.PartiQLValue',
   ],
 }
@@ -157,13 +156,15 @@ set_quantifier::[
 expr::[
 
   // PartiQL Literal Value
+  // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1589
   lit::{
     value: '.value',
   },
 
-  // Ion Literal Value, ie `<ion>`
-  ion::{
-    value: '.ion',
+  // Variant literals such as `<ion>`
+  variant::{
+    value: string,
+    encoding: string,
   },
 
   // Variable Reference

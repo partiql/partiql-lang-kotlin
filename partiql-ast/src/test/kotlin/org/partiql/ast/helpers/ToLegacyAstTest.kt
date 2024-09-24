@@ -3,6 +3,7 @@
 package org.partiql.ast.helpers
 
 import com.amazon.ion.Decimal
+import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionDecimal
@@ -27,6 +28,7 @@ import org.partiql.ast.Sort
 import org.partiql.ast.builder.AstBuilder
 import org.partiql.ast.builder.ast
 import org.partiql.ast.exprLit
+import org.partiql.ast.exprVariant
 import org.partiql.ast.identifierSymbol
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.value.PartiQLValueExperimental
@@ -204,6 +206,8 @@ class ToLegacyAstTest {
             },
             // TODO detailed tests just for _DateTime_ types
         )
+
+        private fun exprIon(value: IonElement): Expr = exprVariant(value.toString(), "ion")
 
         @JvmStatic
         fun identifiers() = listOf(
