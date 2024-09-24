@@ -114,7 +114,7 @@ import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVisitor
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.plan.Rel as IRel

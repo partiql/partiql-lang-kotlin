@@ -4,7 +4,7 @@ import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.fn.Function
+import org.partiql.spi.function.Function
 import org.partiql.types.PType.Kind
 
 /**

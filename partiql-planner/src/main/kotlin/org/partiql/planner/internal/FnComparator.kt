@@ -1,7 +1,7 @@
 package org.partiql.planner.internal
 
-import org.partiql.spi.fn.Function
-import org.partiql.spi.fn.Parameter
+import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 

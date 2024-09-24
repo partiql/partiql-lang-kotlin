@@ -5,9 +5,9 @@ import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.fn.FnSignature
-import org.partiql.spi.fn.Function
-import org.partiql.spi.fn.Parameter
+import org.partiql.spi.function.FnSignature
+import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 

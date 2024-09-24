@@ -7,9 +7,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.fn.FnSignature
-import org.partiql.spi.fn.Function
-import org.partiql.spi.fn.Parameter
+import org.partiql.spi.function.FnSignature
+import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Datum.bag
 import org.partiql.spi.value.Datum.bool

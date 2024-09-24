@@ -21,7 +21,7 @@ import org.partiql.spi.catalog.Catalogs
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 

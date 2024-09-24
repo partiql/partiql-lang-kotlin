@@ -1,7 +1,7 @@
 package org.partiql.plan.v1.operator.rel
 
 import org.partiql.plan.v1.operator.rex.Rex
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 
 /**
  * TODO DOCUMENTATION

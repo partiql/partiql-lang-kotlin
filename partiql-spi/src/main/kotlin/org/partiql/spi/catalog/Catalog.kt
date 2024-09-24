@@ -1,8 +1,8 @@
 package org.partiql.spi.catalog
 
-import org.partiql.spi.fn.Aggregation
-import org.partiql.spi.fn.Builtins
-import org.partiql.spi.fn.Function
+import org.partiql.spi.function.Aggregation
+import org.partiql.spi.function.Builtins
+import org.partiql.spi.function.Function
 
 /**
  * Catalog interface for access to tables and routines.

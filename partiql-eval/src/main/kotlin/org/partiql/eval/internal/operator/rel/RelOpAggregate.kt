@@ -3,7 +3,7 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import java.util.TreeMap
 import java.util.TreeSet
