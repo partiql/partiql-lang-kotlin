@@ -1182,9 +1182,9 @@ class AstToLogicalVisitorTransformTests {
                                 setTarget = simplePath(
                                     root = identifier("a", caseInsensitive()),
                                     steps = listOf(
-                                        spsLiteral(ionInt(42)),
+                                        spsIndex(42),
                                         spsIdentifier(identifier("c", caseInsensitive())),
-                                        spsLiteral(ionInt(84)),
+                                        spsIndex(84),
                                     )
                                 ),
                                 value = lit(ionInt(42)),

@@ -1,5 +1,6 @@
 package org.partiql.lang.planner.transforms
 
+import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
@@ -537,8 +538,10 @@ internal class AstToLogicalVisitorTransform(
                                         val stepCase = transformCaseSensitivity(step.case)
                                         if (index.value.type.isText) {
                                             spsIdentifier(identifier(index.value.textValue, stepCase), step.metas)
+                                        } else if (index.value.type == ElementType.INT) {
+                                            spsIndex(index.value.asInt().longValue, step.metas)
                                         } else {
-                                            spsLiteral(index.value, step.metas)
+                                            error("Malformed AST: non-text and non-integer path step expression.")
                                         }
                                     }
                                     else -> error("Malformed AST: non-literal path step expression")

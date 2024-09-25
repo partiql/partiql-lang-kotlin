@@ -846,7 +846,7 @@ may then be further optimized by selecting better implementations of each operat
             )
             (sum simple_path_step
                  // for bracket paths steps, i.e. `[42]` in the simple_path example above.
-                (sps_literal (value ion))
+                (sps_index (index int))
                  // for symbols, i.e. `nested_field` in the simple_path example above.
                 (sps_identifier (identifier identifier))
             )
