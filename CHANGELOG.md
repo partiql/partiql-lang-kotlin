@@ -25,22 +25,20 @@ Thank you to all who have contributed!
 
 ## [0.14.9]
 
-### Added
-
 ### Changed
 - With full, closed schema, the planner will now give a plan-time warning when it can prove an exclude path will never 
 exclude a value (relevant issue -- https://github.com/partiql/partiql-lang/issues/91).
 
-### Deprecated
-
-### Fixed
-
-### Removed
-
-### Security
+### Experimental Changes
+- **BREAKING**: For the _experimental_ `org.partiql.lang.domains` of `PartiqlLogical`, `PartiqlLogicalResolved`, and `PartiqlPhysical`,
+the modeling of DML has changed substantially. These changes, while considered breaking changes, are part of an
+experimental area of the PartiQL library and thus do not mandate a major-version bump of this library. Consumers
+of these experimental APIs should be wary of these changes.
 
 ### Contributors
 - @alancai98
+- @dlurton
+- @johnedquinn
 
 ## [0.14.8]
 

@@ -808,7 +808,7 @@ may then be further optimized by selecting better implementations of each operat
                   // An `INSERT` DML operation, which is fundamentally different from UPDATE and DELETE
                   // because it lacks a FROM and WHERE clause while also including an ON CONFLICT clause.
                   //
-                  // Models: INSERT INTO <dml_target> [AS <target_alias>] <rows_to_isnert> [<on-conflict>]
+                  // Models: INSERT INTO <dml_target> [AS <target_alias>] <rows_to_insert> [<on-conflict>]
                   (dml_insert
                       // The target is an expression indicates the table whose data is to be manipulated.
                       // With current PartiQL Parser `SqlParser`, this can be an identifier or a simplified path expression
