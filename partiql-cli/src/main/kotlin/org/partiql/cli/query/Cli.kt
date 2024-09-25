@@ -150,6 +150,9 @@ internal class Cli(
     private fun outputResult(result: PartiQLResult) {
         when (result) {
             is PartiQLResult.Value -> outputResult(result.value)
+            is PartiQLResult.Delete,
+            is PartiQLResult.Replace,
+            is PartiQLResult.Insert -> TODO("Delete, Replace, and Insert do not have CLI support yet.")
             is PartiQLResult.Explain.Domain -> {
                 OutputStreamWriter(output).use {
                     it.append(ExplainFormatter.format(result))

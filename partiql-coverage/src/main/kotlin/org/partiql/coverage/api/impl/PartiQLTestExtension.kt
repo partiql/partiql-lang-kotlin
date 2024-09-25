@@ -123,7 +123,10 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
                 // NOTE: This is a hack to materialize data, then retrieve CoverageData.
                 val str = when (result) {
                     is PartiQLResult.Value -> ConfigurableExprValueFormatter.standard.format(result.value)
+                    is PartiQLResult.Delete -> TODO("@PartiQLTest does not yet support unit testing of Delete.")
                     is PartiQLResult.Explain.Domain -> TODO("@PartiQLTest does not yet support unit testing of Explain.")
+                    is PartiQLResult.Insert -> TODO("@PartiQLTest does not yet support unit testing of Insert.")
+                    is PartiQLResult.Replace -> TODO("@PartiQLTest does not yet support unit testing of Replace.")
                 }
                 assert(str.length > -1)
 

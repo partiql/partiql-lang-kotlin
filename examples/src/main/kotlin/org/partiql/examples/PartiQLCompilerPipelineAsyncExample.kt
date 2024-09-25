@@ -77,7 +77,10 @@ class PartiQLCompilerPipelineAsyncExample(out: PrintStream) : Example(out) {
         }
         val exprValue = when (result) {
             is PartiQLResult.Value -> result.value
-            is PartiQLResult.Explain.Domain -> TODO("DML and Explain not covered in this example")
+            is PartiQLResult.Delete,
+            is PartiQLResult.Explain.Domain,
+            is PartiQLResult.Insert,
+            is PartiQLResult.Replace -> TODO("DML and Explain not covered in this example")
         }
         print("result", exprValue)
     }
