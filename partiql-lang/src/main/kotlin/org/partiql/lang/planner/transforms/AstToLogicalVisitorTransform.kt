@@ -398,7 +398,7 @@ internal class AstToLogicalVisitorTransform(
 
             is PartiqlAst.DmlOp.Delete -> {
                 if (node.operations.ops.size > 1) {
-                    error("Malformed AST: more than 1 UPDATE DML operation!")
+                    error("Malformed AST: more than 1 DELETE DML operation!")
                 }
 
                 if (node.from == null) {

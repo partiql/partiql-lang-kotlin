@@ -808,21 +808,21 @@ may then be further optimized by selecting better implementations of each operat
                   // An `INSERT` DML operation, which is fundamentally different from UPDATE and DELETE
                   // because it lacks a FROM and WHERE clause while also including an ON CONFLICT clause.
                   //
-                  // Models: INSERT INTO <dml_target> [AS <target_alias>] <rows_to_isnert> [<on-conflict]
+                  // Models: INSERT INTO <dml_target> [AS <target_alias>] <rows_to_isnert> [<on-conflict>]
                   (dml_insert
                       // The target is an expression indicates the table whose data is to be manipulated.
                       // With current PartiQL Parser `SqlParser`, this can be an identifier or a simplified path expression
                       // consisting of only literal path steps (and with no wildcard or unpivot operators).
                       // Note: partiql_ast uses the `expr` sum type for this, which is too broad.  We're not
                       // changing that at this time because `partiql_ast` is established public API, but we can
-                      // use dml_target instead which has the proerly narrowed domain.
+                      // use dml_target instead which has the properly narrowed domain.
                       (target dml_target)
                       (target_alias var_decl)
                       (rows_to_insert expr)
                       (on_conflict (? on_conflict))
                   )
 
-                  // Models: UPDATE <dml_target> [AS <target_alias>] SET <assignments> WHERE <where>
+                  // Models: UPDATE <dml_target> [AS <target_alias>] SET <assignments> [WHERE <where>]
                   (dml_update
                       (target dml_target)
                       (target_alias var_decl)
@@ -836,18 +836,18 @@ may then be further optimized by selecting better implementations of each operat
         )
 
         (include
-            // represents simple paths, i.e. suitable for the left side of an `=` opeartor within a `SET` clause.
+            // represents simple paths, i.e. suitable for the left side of an `=` operator within a `SET` clause.
             // Example `a_field.nested_field[42]`
             (record simple_path
                 // The first element, `a_field` in the example above.
                 (root identifier)
-                // The subsequent elemnets, `nested_field` and `[42]` in the example above.
+                // The subsequent elements, `nested_field` and `[42]` in the example above.
                 (steps (* simple_path_step 0))
             )
             (sum simple_path_step
                  // for bracket paths steps, i.e. `[42]` in the simple_path example above.
                 (sps_literal (value ion))
-                 // for symbols, i.e. `nested_field` in the simple_path example above.l
+                 // for symbols, i.e. `nested_field` in the simple_path example above.
                 (sps_identifier (identifier identifier))
             )
 
