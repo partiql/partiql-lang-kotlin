@@ -74,7 +74,7 @@ class AstToLogicalVisitorTransformTests {
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForToLogicalWindowTests::class)
-    fun `to logical (Window)`(tc: TestCase) = runTestCase(tc)
+    fun `to logical-Window`(tc: TestCase) = runTestCase(tc)
 
     class ArgumentsForToLogicalWindowTests : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
@@ -130,7 +130,7 @@ class AstToLogicalVisitorTransformTests {
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForToLogicalSfwTests::class)
-    fun `to logical (SFW)`(tc: TestCase) = runTestCase(tc)
+    fun `to logical-SFW`(tc: TestCase) = runTestCase(tc)
 
     class ArgumentsForToLogicalSfwTests : ArgumentsProviderBase() {
 
@@ -725,27 +725,26 @@ class AstToLogicalVisitorTransformTests {
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForToLogicalDmlTests::class)
-    fun `to logical (DML)`(tc: TestCase) = runTestCase(tc)
+    fun `to logical-DML`(tc: TestCase) = runTestCase(tc)
     class ArgumentsForToLogicalDmlTests : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             TestCase(
                 "INSERT INTO foo << 1 >>",
                 PartiqlLogical.build {
-                    dml(
-                        identifier("foo", caseInsensitive()),
-                        dmlInsert(varDecl("foo")),
-                        bag(lit(ionInt(1)))
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        rowsToInsert = bag(lit(ionInt(1)))
                     )
                 }
             ),
-
             TestCase(
                 "INSERT INTO foo SELECT x.* FROM 1 AS x",
                 PartiqlLogical.build {
-                    dml(
-                        identifier("foo", caseInsensitive()),
-                        dmlInsert(varDecl("foo")),
-                        bindingsToValues(
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        rowsToInsert = bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
@@ -755,10 +754,14 @@ class AstToLogicalVisitorTransformTests {
             TestCase(
                 "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED",
                 PartiqlLogical.build {
-                    dml(
-                        identifier("foo", caseInsensitive()),
-                        dmlReplace(varDecl("foo")),
-                        bindingsToValues(
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doReplace()
+                        ),
+                        rowsToInsert = bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
@@ -768,10 +771,12 @@ class AstToLogicalVisitorTransformTests {
             TestCase(
                 "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",
                 PartiqlLogical.build {
-                    dml(
-                        identifier("foo", caseInsensitive()),
-                        dmlReplace(
-                            targetAlias = varDecl("foo"),
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doReplace(),
                             condition = gt(
                                 listOf(
                                     path(
@@ -780,10 +785,9 @@ class AstToLogicalVisitorTransformTests {
                                     ),
                                     lit(ionInt(2))
                                 )
-                            ),
-                            rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
+                            )
                         ),
-                        bindingsToValues(
+                        rowsToInsert = bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
@@ -793,47 +797,48 @@ class AstToLogicalVisitorTransformTests {
             TestCase(
                 "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED",
                 PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlReplace(varDecl("f")),
-                            bag(
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(1))),
-                                    structField(lit(ionString("name")), lit(ionString("bob")))
-                                )
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doReplace()
+                        ),
+                        rowsToInsert = bag(
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(1))),
+                                structField(lit(ionString("name")), lit(ionString("bob")))
                             )
                         )
-                    }
+                    )
                 }
             ),
             TestCase(
                 "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
                 PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlReplace(
-                                varDecl("f"),
-                                condition = gt(
-                                    listOf(
-                                        path(
-                                            id("f", caseInsensitive(), unqualified()),
-                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
-                                        ),
-                                        lit(ionInt(2))
-                                    )
-                                ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
-                            ),
-                            bag(
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(1))),
-                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doReplace(),
+                            condition = gt(
+                                listOf(
+                                    path(
+                                        id("f", caseInsensitive(), unqualified()),
+                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                    ),
+                                    lit(ionInt(2))
                                 )
                             )
+                        ),
+                        rowsToInsert = bag(
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(1))),
+                                structField(lit(ionString("name")), lit(ionString("bob")))
+                            )
                         )
-                    }
+                    )
                 }
             ),
 
@@ -841,73 +846,75 @@ class AstToLogicalVisitorTransformTests {
             TestCase(
                 "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}, {'id': 2, 'name':'alice'}>> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
                 PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlReplace(
-                                varDecl("f"),
-                                condition = gt(
-                                    listOf(
-                                        path(
-                                            id("f", caseInsensitive(), unqualified()),
-                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
-                                        ),
-                                        lit(ionInt(2))
-                                    )
-                                ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
-                            ),
-                            bag(
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(1))),
-                                    structField(lit(ionString("name")), lit(ionString("bob")))
-                                ),
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(2))),
-                                    structField(lit(ionString("name")), lit(ionString("alice")))
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doReplace(),
+                            condition = gt(
+                                listOf(
+                                    path(
+                                        id("f", caseInsensitive(), unqualified()),
+                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                    ),
+                                    lit(ionInt(2))
                                 )
                             )
+                        ),
+                        rowsToInsert = bag(
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(1))),
+                                structField(lit(ionString("name")), lit(ionString("bob")))
+                            ),
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(2))),
+                                structField(lit(ionString("name")), lit(ionString("alice")))
+                            )
                         )
-                    }
+                    )
                 }
             ),
             // Testing using excluded non-reserved keyword in condition
             TestCase(
                 "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED WHERE excluded.id > 2",
                 PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlReplace(
-                                varDecl("f"),
-                                condition = gt(
-                                    listOf(
-                                        path(
-                                            id("excluded", caseInsensitive(), unqualified()),
-                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
-                                        ),
-                                        lit(ionInt(2))
-                                    )
-                                ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
-                            ),
-                            bag(
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(1))),
-                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doReplace(),
+                            condition = gt(
+                                listOf(
+                                    path(
+                                        id("excluded", caseInsensitive(), unqualified()),
+                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                    ),
+                                    lit(ionInt(2))
                                 )
                             )
+                        ),
+                        rowsToInsert = bag(
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(1))),
+                                structField(lit(ionString("name")), lit(ionString("bob")))
+                            )
                         )
-                    }
+                    )
                 }
             ),
             TestCase(
                 "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO UPDATE EXCLUDED",
                 PartiqlLogical.build {
-                    dml(
-                        identifier("foo", caseInsensitive()),
-                        dmlUpdate(varDecl("foo")),
-                        bindingsToValues(
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doUpdate()
+                        ),
+                        rowsToInsert = bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
@@ -917,137 +924,129 @@ class AstToLogicalVisitorTransformTests {
             TestCase(
                 "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED",
                 PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlUpdate(varDecl("f")),
-                            bag(
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(1))),
-                                    structField(lit(ionString("name")), lit(ionString("bob")))
-                                )
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doUpdate()
+                        ),
+                        rowsToInsert = bag(
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(1))),
+                                structField(lit(ionString("name")), lit(ionString("bob")))
                             )
                         )
-                    }
+                    )
                 }
             ),
             TestCase(
                 "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
                 PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlUpdate(
-                                varDecl("f"),
-                                condition = gt(
-                                    listOf(
-                                        path(
-                                            id("f", caseInsensitive(), unqualified()),
-                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
-                                        ),
-                                        lit(ionInt(2))
-                                    )
-                                ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
-                            ),
-                            bag(
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(1))),
-                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doUpdate(),
+                            condition = gt(
+                                listOf(
+                                    path(
+                                        id("f", caseInsensitive(), unqualified()),
+                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                    ),
+                                    lit(ionInt(2))
                                 )
                             )
+                        ),
+                        rowsToInsert = bag(
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(1))),
+                                structField(lit(ionString("name")), lit(ionString("bob")))
+                            )
                         )
-                    }
+                    )
                 }
             ),
             // Testing using excluded non-reserved keyword in condition
             TestCase(
                 "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED WHERE excluded.id > 2",
                 PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlUpdate(
-                                varDecl("f"),
-                                condition = gt(
-                                    listOf(
-                                        path(
-                                            id("excluded", caseInsensitive(), unqualified()),
-                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
-                                        ),
-                                        lit(ionInt(2))
-                                    )
-                                ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
-                            ),
-                            bag(
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(1))),
-                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doUpdate(),
+                            condition = gt(
+                                listOf(
+                                    path(
+                                        id("excluded", caseInsensitive(), unqualified()),
+                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                    ),
+                                    lit(ionInt(2))
                                 )
                             )
-                        )
-                    }
-                }
-            ),
-            TestCase(
-                "REPLACE INTO foo AS f <<{'id': 1, 'name':'bob'}>>",
-                PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlReplace(varDecl("f")),
-                            bag(
-                                struct(
-                                    structField(lit(ionString("id")), lit(ionInt(1))),
-                                    structField(lit(ionString("name")), lit(ionString("bob")))
-                                )
+                        ),
+                        rowsToInsert = bag(
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(1))),
+                                structField(lit(ionString("name")), lit(ionString("bob")))
                             )
-                        )
-                    }
-                }
-            ),
-            TestCase(
-                "UPSERT INTO foo AS f SELECT x.* FROM 1 AS x",
-                PartiqlLogical.build {
-                    PartiqlLogical.build {
-                        dml(
-                            identifier("foo", caseInsensitive()),
-                            dmlUpdate(varDecl("f")),
-                            bindingsToValues(
-                                struct(structFields(id("x", caseInsensitive(), unqualified()))),
-                                scan(lit(ionInt(1)), varDecl("x"))
-                            )
-                        )
-                    }
-                }
-            ),
-            TestCase(
-                "DELETE FROM y AS y",
-                PartiqlLogical.build {
-                    dml(
-                        identifier("y", caseInsensitive()),
-                        dmlDelete(),
-                        bindingsToValues(
-                            id("y", caseSensitive(), unqualified()),
-                            scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
                         )
                     )
                 }
             ),
             TestCase(
+                "REPLACE INTO foo AS f <<{'id': 1, 'name':'bob'}>>",
+                PartiqlLogical.build {
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doReplace()
+                        ),
+                        rowsToInsert = bag(
+                            struct(
+                                structField(lit(ionString("id")), lit(ionInt(1))),
+                                structField(lit(ionString("name")), lit(ionString("bob")))
+                            )
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "UPSERT INTO foo AS f SELECT x.* FROM 1 AS x",
+                PartiqlLogical.build {
+                    dmlInsert(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        onConflict = onConflict(
+                            excludedAlias = varDecl("EXCLUDED"),
+                            action = doUpdate()
+                        ),
+                        rowsToInsert = bindingsToValues(
+                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            scan(lit(ionInt(1)), varDecl("x"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "DELETE FROM y AS y",
+                PartiqlLogical.build {
+                    dmlDelete(scan(id("y", caseInsensitive(), unqualified()), varDecl("y")))
+                }
+            ),
+            TestCase(
                 "DELETE FROM y AS y WHERE 1=1",
                 PartiqlLogical.build {
-                    dml(
-                        identifier("y", caseInsensitive()),
-                        dmlDelete(),
-                        bindingsToValues(
-                            id("y", caseSensitive(), unqualified()),
-                            // this logical plan is same as previous but includes this filter
-                            filter(
-                                eq(lit(ionInt(1)), lit(ionInt(1))),
-                                scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
-                            )
+                    dmlDelete(
+                        // this logical plan is same as previous but includes this filter
+                        filter(
+                            eq(lit(ionInt(1)), lit(ionInt(1))),
+                            scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
                         )
                     )
                 }
@@ -1080,6 +1079,220 @@ class AstToLogicalVisitorTransformTests {
                     )
                 }
             )
+        )
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(ArgumentsForToLogicalDmlUpdateTests::class)
+    fun `to logical-DML-update`(tc: TestCase) = runTestCase(tc)
+    class ArgumentsForToLogicalDmlUpdateTests : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                // simple, non-nested target field
+                "FROM foo AS f WHERE TRUE SET a = 1",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = emptyList()
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            TestCase(
+                // simple, non-nested target field
+                "UPDATE foo SET a = 1 WHERE TRUE",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = emptyList()
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            // simple, nested target field (depth 2)
+            TestCase(
+                "UPDATE foo SET a.b = 1 WHERE TRUE",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = listOf(spsIdentifier(identifier("b", caseInsensitive())))
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            // simple, nested target field (depth 3)
+            TestCase(
+                "UPDATE foo SET a.b.c = 1 WHERE TRUE",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = listOf(
+                                        spsIdentifier(identifier("b", caseInsensitive())),
+                                        spsIdentifier(identifier("c", caseInsensitive()))
+                                    )
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            // simple path with various types of steps
+            TestCase(
+                "UPDATE foo SET a[42].c[84] = 42 WHERE TRUE",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = listOf(
+                                        spsIndex(42),
+                                        spsIdentifier(identifier("c", caseInsensitive())),
+                                        spsIndex(84),
+                                    )
+                                ),
+                                value = lit(ionInt(42)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            // case sensitivity of root in simple path
+            TestCase(
+                "UPDATE foo SET \"a\".b = 1 WHERE TRUE",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseSensitive()),
+                                    steps = listOf(spsIdentifier(identifier("b", caseInsensitive())))
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            // case sensitivity of path step in simple path
+            TestCase(
+                "UPDATE foo SET a.\"b\" = 1 WHERE TRUE",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = listOf(spsIdentifier(identifier("b", caseSensitive())))
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            TestCase(
+                // with explicit target alias
+                "UPDATE foo AS f SET a = 1 WHERE TRUE",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("f"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = emptyList()
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                        ),
+                        where = lit(ionBool(true))
+                    )
+                }
+            ),
+            // with multiple set assignments.
+            TestCase(
+                "UPDATE foo SET a = 1, b.c = 2, d.e.f = 3 WHERE 42",
+                PartiqlLogical.build {
+                    dmlUpdate(
+                        target = dmlTarget(identifier("foo", caseInsensitive())),
+                        targetAlias = varDecl("foo"),
+                        assignments = listOf(
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("a", caseInsensitive()),
+                                    steps = emptyList()
+                                ),
+                                value = lit(ionInt(1)),
+                            ),
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("b", caseInsensitive()),
+                                    steps = listOf(
+                                        spsIdentifier(identifier("c", caseInsensitive()))
+                                    )
+                                ),
+                                value = lit(ionInt(2)),
+                            ),
+                            setAssignment(
+                                setTarget = simplePath(
+                                    root = identifier("d", caseInsensitive()),
+                                    steps = listOf(
+                                        spsIdentifier(identifier("e", caseInsensitive())),
+                                        spsIdentifier(identifier("f", caseInsensitive()))
+                                    )
+                                ),
+                                value = lit(ionInt(3)),
+                            ),
+                        ),
+                        where = lit(ionInt(42))
+                    )
+                }
+            ),
         )
     }
 
@@ -1117,8 +1330,6 @@ class AstToLogicalVisitorTransformTests {
 
             // Unimplemented parts of DML
             ProblemTestCase(200, "FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14, 6)),
-            ProblemTestCase(201, "FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14, 3)),
-            ProblemTestCase(202, "UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10, 3)),
             ProblemTestCase(203, "UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10, 6)),
             ProblemTestCase(204, "UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10, 6)),
 

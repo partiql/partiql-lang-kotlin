@@ -350,9 +350,9 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    override fun transformStatementDml(node: PartiqlLogical.Statement.Dml): PartiqlLogicalResolved.Statement {
+    override fun transformDmlTarget(node: PartiqlLogical.DmlTarget): PartiqlLogicalResolved.DmlTarget {
         // We only support DML targets that are global variables.
-        val bindingName = BindingName(node.target.name.text, node.target.case.toBindingCase())
+        val bindingName = BindingName(node.identifier.name.text, node.identifier.case.toBindingCase())
         val tableUniqueId = when (val resolvedVariable = globals.resolveGlobal(bindingName)) {
             is GlobalResolutionResult.GlobalVariable -> resolvedVariable.uniqueId
             GlobalResolutionResult.Undefined -> {
@@ -360,43 +360,28 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                     Problem(
                         node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                         PlanningProblemDetails.UndefinedDmlTarget(
-                            node.target.name.text,
-                            node.target.case is PartiqlLogical.CaseSensitivity.CaseSensitive
+                            node.identifier.name.text,
+                            node.identifier.case is PartiqlLogical.CaseSensitivity.CaseSensitive
                         )
                     )
                 )
-                "undefined DML target: ${node.target.name.text} - do not run"
+                "undefined DML target: ${node.identifier.name.text} - do not run"
             }
         }
-        return PartiqlLogicalResolved.build {
-            dml(
-                uniqueId = tableUniqueId,
-                operation = transformDmlOperation(node.operation),
-                rows = transformExpr(node.rows),
-                metas = node.metas
-            )
+        return PartiqlLogicalResolved.build { dmlTarget(uniqueId = tableUniqueId) }
+    }
+
+    override fun transformStatementDmlInsert_onConflict(node: PartiqlLogical.Statement.DmlInsert): PartiqlLogicalResolved.OnConflict? {
+        // the alias should only be accessible to the on_conflict clause.
+        val scope = this.inputScope.concatenate(listOfNotNull(node.targetAlias, node.onConflict?.excludedAlias))
+        return withInputScope(scope) {
+            super.transformStatementDmlInsert_onConflict(node)
         }
     }
 
-    override fun transformDmlOperationDmlInsert(node: PartiqlLogical.DmlOperation.DmlInsert): PartiqlLogicalResolved.DmlOperation {
+    override fun transformStatementDmlUpdate(node: PartiqlLogical.Statement.DmlUpdate): PartiqlLogicalResolved.Statement {
         return withInputScope(this.inputScope.concatenate(node.targetAlias)) {
-            super.transformDmlOperationDmlInsert(node)
-        }
-    }
-
-    override fun transformDmlOperationDmlReplace(node: PartiqlLogical.DmlOperation.DmlReplace): PartiqlLogicalResolved.DmlOperation {
-        val scopeWithTarget = this.inputScope.concatenate(node.targetAlias)
-        val inputScope = node.rowAlias?.let { scopeWithTarget.concatenate(it) } ?: scopeWithTarget
-        return withInputScope(inputScope) {
-            super.transformDmlOperationDmlReplace(node)
-        }
-    }
-
-    override fun transformDmlOperationDmlUpdate(node: PartiqlLogical.DmlOperation.DmlUpdate): PartiqlLogicalResolved.DmlOperation {
-        val scopeWithTarget = this.inputScope.concatenate(node.targetAlias)
-        val inputScope = node.rowAlias?.let { scopeWithTarget.concatenate(it) } ?: scopeWithTarget
-        return withInputScope(inputScope) {
-            super.transformDmlOperationDmlUpdate(node)
+            super.transformStatementDmlUpdate(node)
         }
     }
 
@@ -404,7 +389,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
      * Returns a list of variables accessible from the current scope which contain variables that may contain
      * an unqualified variable, in the order that they should be searched.
      */
-    fun currentDynamicResolutionCandidates(): List<PartiqlLogical.VarDecl> =
+    private fun currentDynamicResolutionCandidates(): List<PartiqlLogical.VarDecl> =
         inputScope.varDecls.filter { it.includeInDynamicResolution }
 
     override fun transformExprBindingsToValues_exp(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr {

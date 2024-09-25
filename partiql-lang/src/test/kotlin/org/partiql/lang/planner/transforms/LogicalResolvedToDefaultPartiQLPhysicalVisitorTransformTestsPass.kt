@@ -12,6 +12,7 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.pig.runtime.SymbolPrimitive
 import kotlin.test.fail
 
 class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
@@ -224,172 +225,177 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
     }
 
     class ArgumentsForToDMLTests : ArgumentsProviderBase() {
-        override fun getParameters() = listOf(
-            DmlTestCase(
-                // INSERT INTO foo VALUE 1
-                PartiqlLogicalResolved.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlInsert(varDecl(0)),
-                        rows = bag(lit(ionInt(1)))
-                    )
-                },
-                PartiqlPhysical.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlInsert(varDecl(0)),
-                        rows = bag(lit(ionInt(1)))
-                    )
-                }
-            ),
-            DmlTestCase(
-                // INSERT INTO foo SELECT x.* FROM 1 AS x
-                PartiqlLogicalResolved.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlInsert(varDecl(0)),
-                        rows = bindingsToValues(
-                            struct(structFields(localId(0))),
-                            scan(lit(ionInt(1)), varDecl(0))
-                        )
-                    )
-                },
-                PartiqlPhysical.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlInsert(varDecl(0)),
-                        rows = bindingsToValues(
-                            struct(structFields(localId(0))),
-                            scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
-                        )
-                    )
-                }
-            ),
-            DmlTestCase(
-                // INSERT INTO foo [AS f] SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED
-                PartiqlLogicalResolved.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlReplace(varDecl(0), rowAlias = varDecl(1)),
-                        rows = bindingsToValues(
-                            struct(structFields(localId(0))),
-                            scan(lit(ionInt(1)), varDecl(0))
-                        )
-                    )
-                },
-                PartiqlPhysical.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlReplace(varDecl(0), rowAlias = varDecl(1)),
-                        rows = bindingsToValues(
-                            struct(structFields(localId(0))),
-                            scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
-                        )
-                    )
-                }
-            ),
-            DmlTestCase(
-                // INSERT INTO foo [AS f] SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 1
-                PartiqlLogicalResolved.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlReplace(
+        override fun getParameters(): List<DmlTestCase> {
+            val listOf = listOf(
+                DmlTestCase(
+                    // INSERT INTO foo VALUE 1
+                    PartiqlLogicalResolved.build {
+                        dmlInsert(
+                            target = dmlTarget_(SymbolPrimitive("foo", emptyMap())),
                             targetAlias = varDecl(0),
-                            condition = gt(
-                                listOf(
-                                    path(
-                                        localId(0),
-                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
-                                    ),
-                                    lit(ionInt(1))
-                                )
-                            ),
-                            rowAlias = varDecl(1)
-                        ),
-                        rows = bindingsToValues(
-                            struct(structFields(localId(0))),
-                            scan(lit(ionInt(1)), varDecl(0))
+                            rowsToInsert = bag(lit(ionInt(1))),
                         )
-                    )
-                },
-                PartiqlPhysical.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlReplace(
+                    },
+                    PartiqlPhysical.build {
+                        dmlInsert(
+                            target = dmlTarget_(SymbolPrimitive("foo", emptyMap())),
                             targetAlias = varDecl(0),
-                            condition = gt(
-                                listOf(
-                                    path(
-                                        localId(0),
-                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
-                                    ),
-                                    lit(ionInt(1))
-                                )
-                            ),
-                            rowAlias = varDecl(1)
-                        ),
-                        rows = bindingsToValues(
-                            struct(structFields(localId(0))),
-                            scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
+                            rowsToInsert = bag(lit(ionInt(1))),
                         )
-                    )
-                }
-            ),
-            DmlTestCase(
-                // DELETE FROM y AS y
-                PartiqlLogicalResolved.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlDelete(),
-                        rows = bindingsToValues(
-                            localId(0),
-                            scan(globalId("y"), varDecl(0))
-                        )
-                    )
-                },
-                PartiqlPhysical.build {
-                    dml(
-                        uniqueId = "foo",
-                        operation = dmlDelete(),
-                        rows = bindingsToValues(
-                            localId(0),
-                            scan(DEFAULT_IMPL, globalId("y"), varDecl(0))
-                        )
-                    )
-                }
-            ),
-            DmlTestCase(
-                // DELETE FROM y AS y WHERE 1=1
-                PartiqlLogicalResolved.build {
-                    dml(
-                        uniqueId = "y",
-                        operation = dmlDelete(),
-                        rows = bindingsToValues(
-                            localId(0),
-                            // this logical plan is same as previous but includes this filter
-                            filter(
-                                eq(lit(ionInt(1)), lit(ionInt(1))),
-                                scan(globalId("y"), varDecl(0))
+                    }
+                ),
+                DmlTestCase(
+                    // INSERT INTO foo SELECT x.* FROM 1 AS x
+                    PartiqlLogicalResolved.build {
+                        dmlInsert(
+                            target = dmlTarget_(SymbolPrimitive("foo", emptyMap())),
+                            targetAlias = varDecl(0),
+                            rowsToInsert = bindingsToValues(
+                                struct(structFields(localId(0))),
+                                scan(lit(ionInt(1)), varDecl(0))
                             )
                         )
-                    )
-                },
-                PartiqlPhysical.build {
-                    dml(
-                        uniqueId = "y",
-                        operation = dmlDelete(),
-                        rows = bindingsToValues(
-                            localId(0),
-                            // this logical plan is same as previous but includes this filter
-                            filter(
+                    },
+                    PartiqlPhysical.build {
+                        dmlInsert(
+                            target = dmlTarget_(SymbolPrimitive("foo", emptyMap())),
+                            targetAlias = varDecl(0),
+                            rowsToInsert = bindingsToValues(
+                                struct(structFields(localId(0))),
+                                scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
+                            )
+                        )
+                    }
+                ),
+                DmlTestCase(
+                    // INSERT INTO foo [AS f] SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED
+                    PartiqlLogicalResolved.build {
+                        dmlInsert(
+                            target = dmlTarget_(SymbolPrimitive("foo", emptyMap())),
+                            targetAlias = varDecl(0),
+                            rowsToInsert = bindingsToValues(
+                                struct(structFields(localId(0))),
+                                scan(lit(ionInt(1)), varDecl(0))
+                            ),
+                            onConflict = onConflict(
+                                excludedAlias = varDecl(1),
+                                action = doReplace()
+                            )
+                        )
+                    },
+                    PartiqlPhysical.build {
+                        dmlInsert(
+                            target = dmlTarget_(SymbolPrimitive("foo", emptyMap())),
+                            targetAlias = varDecl(0),
+                            rowsToInsert = bindingsToValues(
+                                struct(structFields(localId(0))),
+                                scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
+                            ),
+                            onConflict = onConflict(
+                                excludedAlias = varDecl(1),
+                                action = doReplace()
+                            )
+                        )
+                    }
+                ),
+                DmlTestCase(
+                    // INSERT INTO foo [AS f] SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 1
+                    PartiqlLogicalResolved.build {
+                        dmlInsert(
+                            target = dmlTarget_(SymbolPrimitive("foo", emptyMap())),
+                            targetAlias = varDecl(0),
+                            rowsToInsert = bindingsToValues(
+                                struct(structFields(localId(0))),
+                                scan(lit(ionInt(1)), varDecl(0))
+                            ),
+                            onConflict = onConflict(
+                                excludedAlias = varDecl(1),
+                                action = doReplace(),
+                                condition = gt(
+                                    listOf(
+                                        path(
+                                            localId(0),
+                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                        ),
+                                        lit(ionInt(1))
+                                    )
+                                ),
+                            )
+                        )
+                    },
+                    PartiqlPhysical.build {
+                        dmlInsert(
+                            target = dmlTarget_(SymbolPrimitive("foo", emptyMap())),
+                            targetAlias = varDecl(0),
+                            rowsToInsert = bindingsToValues(
+                                struct(structFields(localId(0))),
+                                scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
+                            ),
+                            onConflict = onConflict(
+                                excludedAlias = varDecl(1),
+                                action = doReplace(),
+                                condition = gt(
+                                    listOf(
+                                        path(
+                                            localId(0),
+                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                        ),
+                                        lit(ionInt(1))
+                                    )
+                                ),
+                            )
+                        )
+                    }
+                ),
+                DmlTestCase(
+                    // DELETE FROM y AS y
+                    PartiqlLogicalResolved.build {
+                        dmlDelete(
+                            from = scan(
+                                globalId("y"),
+                                varDecl(0)
+                            ),
+                        )
+                    },
+                    PartiqlPhysical.build {
+                        dmlDelete(
+                            from = scan(
+                                DEFAULT_IMPL,
+                                globalId("y"),
+                                varDecl(0)
+                            ),
+                        )
+                    }
+                ),
+                DmlTestCase(
+                    // DELETE FROM y AS y WHERE 1=1
+                    PartiqlLogicalResolved.build {
+                        dmlDelete(
+                            from = filter(
+                                eq(lit(ionInt(1)), lit(ionInt(1))),
+                                scan(
+                                    globalId("y"),
+                                    varDecl(0)
+                                )
+                            ),
+                        )
+                    },
+                    PartiqlPhysical.build {
+                        dmlDelete(
+                            from = filter(
                                 DEFAULT_IMPL,
                                 eq(lit(ionInt(1)), lit(ionInt(1))),
-                                scan(DEFAULT_IMPL, globalId("y"), varDecl(0))
-                            )
+                                scan(
+                                    DEFAULT_IMPL,
+                                    globalId("y"),
+                                    varDecl(0)
+                                )
+                            ),
                         )
-                    )
-                }
-            ),
-        )
+                    }
+                ),
+            )
+            return listOf
+        }
     }
 }
