@@ -9,7 +9,7 @@ import org.partiql.spi.function.utils.StringUtils.codepointTrimTrailing
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING = Function.standard(
+internal val Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING = Function.static(
 
     name = "trim_trailing_chars",
     returns = PType.string(),
@@ -18,14 +18,14 @@ internal val Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING = Function.standard(
         Parameter("chars", PType.string()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val chars = args[1].string
     val result = value.codepointTrimTrailing(chars)
     Datum.string(result)
 }
 
-internal val Fn_TRIM_TRAILING_CHARS__SYMBOL_SYMBOL__SYMBOL = Function.standard(
+internal val Fn_TRIM_TRAILING_CHARS__SYMBOL_SYMBOL__SYMBOL = Function.static(
 
     name = "trim_trailing_chars",
     returns = PType.symbol(),
@@ -34,14 +34,14 @@ internal val Fn_TRIM_TRAILING_CHARS__SYMBOL_SYMBOL__SYMBOL = Function.standard(
         Parameter("chars", PType.symbol()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val chars = args[1].string
     val result = value.codepointTrimTrailing(chars)
     Datum.symbol(result)
 }
 
-internal val Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB = Function.standard(
+internal val Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB = Function.static(
 
     name = "trim_trailing_chars",
     returns = PType.clob(Int.MAX_VALUE),
@@ -50,7 +50,7 @@ internal val Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB = Function.standard(
         Parameter("chars", PType.clob(Int.MAX_VALUE)),
     ),
 
-    ) { args ->
+) { args ->
     val string = args[0].bytes.toString(Charsets.UTF_8)
     val chars = args[1].bytes.toString(Charsets.UTF_8)
     val result = string.codepointTrimTrailing(chars)

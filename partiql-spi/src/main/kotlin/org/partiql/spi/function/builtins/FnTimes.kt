@@ -9,7 +9,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 // TODO: Handle Overflow
-internal val Fn_TIMES__INT8_INT8__INT8 = Function.standard(
+internal val Fn_TIMES__INT8_INT8__INT8 = Function.static(
 
     name = "times",
     returns = PType.tinyint(),
@@ -18,13 +18,13 @@ internal val Fn_TIMES__INT8_INT8__INT8 = Function.standard(
         Parameter("rhs", PType.tinyint()),
     ),
 
-    ) { args ->
+) { args ->
     @Suppress("DEPRECATION") val arg0 = args[0].byte
     @Suppress("DEPRECATION") val arg1 = args[1].byte
     Datum.tinyint((arg0 * arg1).toByte())
 }
 
-internal val Fn_TIMES__INT16_INT16__INT16 = Function.standard(
+internal val Fn_TIMES__INT16_INT16__INT16 = Function.static(
 
     name = "times",
     returns = PType.smallint(),
@@ -33,13 +33,13 @@ internal val Fn_TIMES__INT16_INT16__INT16 = Function.standard(
         Parameter("rhs", PType.smallint()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].short
     val arg1 = args[1].short
     Datum.smallint((arg0 * arg1).toShort())
 }
 
-internal val Fn_TIMES__INT32_INT32__INT32 = Function.standard(
+internal val Fn_TIMES__INT32_INT32__INT32 = Function.static(
 
     name = "times",
     returns = PType.integer(),
@@ -48,13 +48,13 @@ internal val Fn_TIMES__INT32_INT32__INT32 = Function.standard(
         Parameter("rhs", PType.integer()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].int
     val arg1 = args[1].int
     Datum.integer(arg0.times(arg1))
 }
 
-internal val Fn_TIMES__INT64_INT64__INT64 = Function.standard(
+internal val Fn_TIMES__INT64_INT64__INT64 = Function.static(
 
     name = "times",
     returns = PType.bigint(),
@@ -63,13 +63,13 @@ internal val Fn_TIMES__INT64_INT64__INT64 = Function.standard(
         Parameter("rhs", PType.bigint()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].long
     val arg1 = args[1].long
     Datum.bigint(arg0.times(arg1))
 }
 
-internal val Fn_TIMES__INT_INT__INT = Function.standard(
+internal val Fn_TIMES__INT_INT__INT = Function.static(
 
     name = "times",
     returns = PType.numeric(),
@@ -78,13 +78,13 @@ internal val Fn_TIMES__INT_INT__INT = Function.standard(
         @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].bigInteger
     val arg1 = args[1].bigInteger
     Datum.numeric(arg0.times(arg1))
 }
 
-internal val Fn_TIMES__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.standard(
+internal val Fn_TIMES__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
 
     name = "times",
     returns = PType.decimal(),
@@ -93,13 +93,13 @@ internal val Fn_TIMES__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = 
         @Suppress("DEPRECATION") Parameter("rhs", PType.decimal()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].bigDecimal
     val arg1 = args[1].bigDecimal
     Datum.decimal(arg0.times(arg1))
 }
 
-internal val Fn_TIMES__FLOAT32_FLOAT32__FLOAT32 = Function.standard(
+internal val Fn_TIMES__FLOAT32_FLOAT32__FLOAT32 = Function.static(
 
     name = "times",
     returns = PType.real(),
@@ -108,13 +108,13 @@ internal val Fn_TIMES__FLOAT32_FLOAT32__FLOAT32 = Function.standard(
         Parameter("rhs", PType.real()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].float
     val arg1 = args[1].float
     Datum.real(arg0 * arg1)
 }
 
-internal val Fn_TIMES__FLOAT64_FLOAT64__FLOAT64 = Function.standard(
+internal val Fn_TIMES__FLOAT64_FLOAT64__FLOAT64 = Function.static(
 
     name = "times",
     returns = PType.doublePrecision(),
@@ -123,7 +123,7 @@ internal val Fn_TIMES__FLOAT64_FLOAT64__FLOAT64 = Function.standard(
         Parameter("rhs", PType.doublePrecision()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].double
     val arg1 = args[1].double
     Datum.doublePrecision(arg0 * arg1)

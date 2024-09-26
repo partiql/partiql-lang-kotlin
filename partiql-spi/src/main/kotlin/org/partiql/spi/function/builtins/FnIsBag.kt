@@ -9,12 +9,10 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
-internal val Fn_IS_BAG__ANY__BOOL = Function.standard(
-
+internal val Fn_IS_BAG__ANY__BOOL = Function.static(
     name = "is_bag",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
-
-    ) { args ->
+) { args ->
     Datum.bool(args[0].type.kind == Kind.BAG)
 }

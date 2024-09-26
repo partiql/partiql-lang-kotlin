@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_GTE__INT8_INT8__BOOL = Function.standard(
+internal val Fn_GTE__INT8_INT8__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -17,13 +17,13 @@ internal val Fn_GTE__INT8_INT8__BOOL = Function.standard(
         Parameter("rhs", PType.tinyint()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].byte
     val rhs = args[1].byte
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__INT16_INT16__BOOL = Function.standard(
+internal val Fn_GTE__INT16_INT16__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -32,13 +32,13 @@ internal val Fn_GTE__INT16_INT16__BOOL = Function.standard(
         Parameter("rhs", PType.smallint()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].short
     val rhs = args[1].short
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__INT32_INT32__BOOL = Function.standard(
+internal val Fn_GTE__INT32_INT32__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -47,13 +47,13 @@ internal val Fn_GTE__INT32_INT32__BOOL = Function.standard(
         Parameter("rhs", PType.integer()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].int
     val rhs = args[1].int
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__INT64_INT64__BOOL = Function.standard(
+internal val Fn_GTE__INT64_INT64__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -62,13 +62,13 @@ internal val Fn_GTE__INT64_INT64__BOOL = Function.standard(
         Parameter("rhs", PType.bigint()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].long
     val rhs = args[1].long
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__INT_INT__BOOL = Function.standard(
+internal val Fn_GTE__INT_INT__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -77,13 +77,13 @@ internal val Fn_GTE__INT_INT__BOOL = Function.standard(
         @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].bigInteger
     val rhs = args[1].bigInteger
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL = Function.standard(
+internal val Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -92,13 +92,13 @@ internal val Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL = Function.standa
         @Suppress("DEPRECATION") Parameter("rhs", PType.decimal()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].bigDecimal
     val rhs = args[1].bigDecimal
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__FLOAT32_FLOAT32__BOOL = Function.standard(
+internal val Fn_GTE__FLOAT32_FLOAT32__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -107,13 +107,13 @@ internal val Fn_GTE__FLOAT32_FLOAT32__BOOL = Function.standard(
         Parameter("rhs", PType.real()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].float
     val rhs = args[1].float
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__FLOAT64_FLOAT64__BOOL = Function.standard(
+internal val Fn_GTE__FLOAT64_FLOAT64__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -122,13 +122,13 @@ internal val Fn_GTE__FLOAT64_FLOAT64__BOOL = Function.standard(
         Parameter("rhs", PType.doublePrecision()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].double
     val rhs = args[1].double
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__STRING_STRING__BOOL = Function.standard(
+internal val Fn_GTE__STRING_STRING__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -137,13 +137,13 @@ internal val Fn_GTE__STRING_STRING__BOOL = Function.standard(
         Parameter("rhs", PType.string()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].string
     val rhs = args[1].string
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__SYMBOL_SYMBOL__BOOL = Function.standard(
+internal val Fn_GTE__SYMBOL_SYMBOL__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -152,13 +152,13 @@ internal val Fn_GTE__SYMBOL_SYMBOL__BOOL = Function.standard(
         Parameter("rhs", PType.symbol()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].string
     val rhs = args[1].string
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__DATE_DATE__BOOL = Function.standard(
+internal val Fn_GTE__DATE_DATE__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -167,13 +167,13 @@ internal val Fn_GTE__DATE_DATE__BOOL = Function.standard(
         Parameter("rhs", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].string
     val rhs = args[1].string
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__TIME_TIME__BOOL = Function.standard(
+internal val Fn_GTE__TIME_TIME__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -182,13 +182,13 @@ internal val Fn_GTE__TIME_TIME__BOOL = Function.standard(
         Parameter("rhs", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].time
     val rhs = args[1].time
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL = Function.standard(
+internal val Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -197,13 +197,13 @@ internal val Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL = Function.standard(
         Parameter("rhs", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].timestamp
     val rhs = args[1].timestamp
     Datum.bool(lhs >= rhs)
 }
 
-internal val Fn_GTE__BOOL_BOOL__BOOL = Function.standard(
+internal val Fn_GTE__BOOL_BOOL__BOOL = Function.static(
 
     name = "gte",
     returns = PType.bool(),
@@ -212,7 +212,7 @@ internal val Fn_GTE__BOOL_BOOL__BOOL = Function.standard(
         Parameter("rhs", PType.bool()),
     ),
 
-    ) { args ->
+) { args ->
     val lhs = args[0].boolean
     val rhs = args[1].boolean
     Datum.bool(lhs >= rhs)

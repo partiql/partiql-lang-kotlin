@@ -10,7 +10,7 @@ import org.partiql.types.PType
 import kotlin.math.absoluteValue
 
 // TODO: When negate a negative value, we need to consider overflow
-internal val Fn_ABS__INT8__INT8 = Function.standard(
+internal val Fn_ABS__INT8__INT8 = Function.static(
     name = "abs",
     parameters = arrayOf(Parameter("value", PType.tinyint())),
     returns = PType.tinyint(),
@@ -20,7 +20,7 @@ internal val Fn_ABS__INT8__INT8 = Function.standard(
     if (value < 0) Datum.tinyint(value.times(-1).toByte()) else Datum.tinyint(value)
 }
 
-internal val Fn_ABS__INT16__INT16 = Function.standard(
+internal val Fn_ABS__INT16__INT16 = Function.static(
     name = "abs",
     returns = PType.smallint(),
     parameters = arrayOf(Parameter("value", PType.smallint())),
@@ -29,7 +29,7 @@ internal val Fn_ABS__INT16__INT16 = Function.standard(
     if (value < 0) Datum.smallint(value.times(-1).toShort()) else Datum.smallint(value)
 }
 
-internal val Fn_ABS__INT32__INT32 = Function.standard(
+internal val Fn_ABS__INT32__INT32 = Function.static(
     name = "abs",
     returns = PType.integer(),
     parameters = arrayOf(Parameter("value", PType.integer())),
@@ -38,7 +38,7 @@ internal val Fn_ABS__INT32__INT32 = Function.standard(
     Datum.integer(value.absoluteValue)
 }
 
-internal val Fn_ABS__INT64__INT64 = Function.standard(
+internal val Fn_ABS__INT64__INT64 = Function.static(
     name = "abs",
     returns = PType.bigint(),
     parameters = arrayOf(Parameter("value", PType.bigint())),
@@ -47,7 +47,7 @@ internal val Fn_ABS__INT64__INT64 = Function.standard(
     Datum.bigint(value.absoluteValue)
 }
 
-internal val Fn_ABS__INT__INT = Function.standard(
+internal val Fn_ABS__INT__INT = Function.static(
     name = "abs",
     returns = PType.numeric(),
     parameters = arrayOf(Parameter("value", PType.numeric())),
@@ -56,7 +56,7 @@ internal val Fn_ABS__INT__INT = Function.standard(
     Datum.numeric(value.abs())
 }
 
-internal val Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.standard(
+internal val Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
     name = "abs",
     returns = PType.decimal(),
     parameters = arrayOf(Parameter("value", PType.decimal())),
@@ -65,7 +65,7 @@ internal val Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.standard(
     Datum.decimal(value.abs())
 }
 
-internal val Fn_ABS__FLOAT32__FLOAT32 = Function.standard(
+internal val Fn_ABS__FLOAT32__FLOAT32 = Function.static(
     name = "abs",
     returns = PType.real(),
     parameters = arrayOf(Parameter("value", PType.real())),
@@ -74,7 +74,7 @@ internal val Fn_ABS__FLOAT32__FLOAT32 = Function.standard(
     Datum.real(value.absoluteValue)
 }
 
-internal val Fn_ABS__FLOAT64__FLOAT64 = Function.standard(
+internal val Fn_ABS__FLOAT64__FLOAT64 = Function.static(
     name = "abs",
     returns = PType.doublePrecision(),
     parameters = arrayOf(Parameter("value", PType.doublePrecision())),

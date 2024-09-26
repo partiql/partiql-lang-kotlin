@@ -38,37 +38,37 @@ import org.partiql.types.PType
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-internal val Fn_TRIM__STRING__STRING = Function.standard(
+internal val Fn_TRIM__STRING__STRING = Function.static(
 
     name = "trim",
     returns = PType.string(),
     parameters = arrayOf(Parameter("value", PType.string())),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val result = value.codepointTrim()
     Datum.string(result)
 }
 
-internal val Fn_TRIM__SYMBOL__SYMBOL = Function.standard(
+internal val Fn_TRIM__SYMBOL__SYMBOL = Function.static(
 
     name = "trim",
     returns = PType.symbol(),
     parameters = arrayOf(Parameter("value", PType.symbol())),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val result = value.codepointTrim()
     Datum.symbol(result)
 }
 
-internal val Fn_TRIM__CLOB__CLOB = Function.standard(
+internal val Fn_TRIM__CLOB__CLOB = Function.static(
 
     name = "trim",
     returns = PType.clob(Int.MAX_VALUE),
     parameters = arrayOf(Parameter("value", PType.clob(Int.MAX_VALUE))),
 
-    ) { args ->
+) { args ->
     val string = args[0].bytes.toString(Charsets.UTF_8)
     val result = string.codepointTrim()
     Datum.clob(result.toByteArray())

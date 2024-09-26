@@ -9,11 +9,14 @@ import org.partiql.types.PType
 public interface RexCallDynamic : Rex {
 
     /**
-     * Returns the function to invoke.
-     *
-     * @return
+     * Dynamic function name.
      */
-    public fun getFunctions(): List<Function>
+    public fun getName(): String
+
+    /**
+     * Returns the functions to dispatch to.
+     */
+    public fun getFunctions(): List<Function.Instance>
 
     /**
      * Returns the list of function arguments.
@@ -28,19 +31,21 @@ public interface RexCallDynamic : Rex {
 /**
  * Default [RexCallDynamic] implementation meant for extension.
  */
-internal class RexCallDynamicImpl(functions: List<Function>, args: List<Rex>) : RexCallDynamic {
+internal class RexCallDynamicImpl(
+    private var name: String,
+    private var functions: List<Function.Instance>,
+    private var args: List<Rex>,
+) : RexCallDynamic {
 
-    // DO NOT USE FINAL
-    private var _functions = functions
-    private var _args = args
+    override fun getName(): String = name
 
-    override fun getFunctions(): List<Function> = _functions
+    override fun getFunctions(): List<Function.Instance> = functions
 
-    override fun getArgs(): List<Rex> = _args
+    override fun getArgs(): List<Rex> = args
 
     override fun getType(): PType {
         TODO("Function .getType()")
     }
 
-    override fun getChildren(): Collection<Rex> = _args
+    override fun getChildren(): Collection<Rex> = args
 }

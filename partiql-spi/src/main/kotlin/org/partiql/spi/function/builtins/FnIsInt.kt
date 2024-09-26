@@ -16,7 +16,7 @@ private val INT_TYPES = setOf(
     PType.Kind.NUMERIC
 )
 
-internal val Fn_IS_INT__ANY__BOOL = Function.standard(
+internal val Fn_IS_INT__ANY__BOOL = Function.static(
     name = "is_int",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic()))

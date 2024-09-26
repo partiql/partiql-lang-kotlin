@@ -10,7 +10,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_DATE_ADD_MINUTE__INT32_TIME__TIME = Function.standard(
+internal val Fn_DATE_ADD_MINUTE__INT32_TIME__TIME = Function.static(
 
     name = "date_add_minute",
     returns = PType.time(6),
@@ -19,7 +19,7 @@ internal val Fn_DATE_ADD_MINUTE__INT32_TIME__TIME = Function.standard(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0].int
     val datetime = args[1]
     val datetimeValue = datetime.time
@@ -27,7 +27,7 @@ internal val Fn_DATE_ADD_MINUTE__INT32_TIME__TIME = Function.standard(
     Datum.time(datetimeValue.plusMinutes(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MINUTE__INT64_TIME__TIME = Function.standard(
+internal val Fn_DATE_ADD_MINUTE__INT64_TIME__TIME = Function.static(
 
     name = "date_add_minute",
     returns = PType.time(6),
@@ -36,7 +36,7 @@ internal val Fn_DATE_ADD_MINUTE__INT64_TIME__TIME = Function.standard(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0]
     val datetime = args[1]
     val datetimeValue = datetime.time
@@ -44,7 +44,7 @@ internal val Fn_DATE_ADD_MINUTE__INT64_TIME__TIME = Function.standard(
     Datum.time(datetimeValue.plusMinutes(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MINUTE__INT_TIME__TIME = Function.standard(
+internal val Fn_DATE_ADD_MINUTE__INT_TIME__TIME = Function.static(
 
     name = "date_add_minute",
     returns = PType.time(6),
@@ -53,7 +53,7 @@ internal val Fn_DATE_ADD_MINUTE__INT_TIME__TIME = Function.standard(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0]
     val datetime = args[1]
     val datetimeValue = datetime.time
@@ -65,7 +65,7 @@ internal val Fn_DATE_ADD_MINUTE__INT_TIME__TIME = Function.standard(
     Datum.time(datetimeValue.plusMinutes(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP = Function.standard(
+internal val Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP = Function.static(
 
     name = "date_add_minute",
     returns = PType.timestamp(6),
@@ -74,7 +74,7 @@ internal val Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0].int
     val datetime = args[1]
     val datetimeValue = datetime.timestamp
@@ -82,7 +82,7 @@ internal val Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP = Function.standard(
     Datum.timestamp(datetimeValue.plusMinutes(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP = Function.standard(
+internal val Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP = Function.static(
 
     name = "date_add_minute",
     returns = PType.timestamp(6),
@@ -91,7 +91,7 @@ internal val Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0]
     val datetime = args[1]
     val datetimeValue = datetime.timestamp
@@ -99,7 +99,7 @@ internal val Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP = Function.standard(
     Datum.timestamp(datetimeValue.plusMinutes(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP = Function.standard(
+internal val Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP = Function.static(
 
     name = "date_add_minute",
     returns = PType.timestamp(6),
@@ -108,7 +108,7 @@ internal val Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0]
     val datetime = args[1]
     val datetimeValue = datetime.timestamp

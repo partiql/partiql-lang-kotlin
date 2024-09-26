@@ -548,21 +548,26 @@ public final class org/partiql/spi/function/Aggregation$DefaultImpls {
 public abstract interface class org/partiql/spi/function/Function : org/partiql/spi/function/Routine {
 	public static final field Companion Lorg/partiql/spi/function/Function$Companion;
 	public abstract fun getInstance ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Function$Instance;
-	public abstract fun isNullCall ()Z
-	public static fun standard (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
+	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
 }
 
 public final class org/partiql/spi/function/Function$Companion {
-	public final fun standard (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
+	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
+	public static synthetic fun static$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function;
 }
 
 public final class org/partiql/spi/function/Function$DefaultImpls {
 	public static fun getInstance (Lorg/partiql/spi/function/Function;[Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Function$Instance;
 	public static fun getParameters (Lorg/partiql/spi/function/Function;)[Lorg/partiql/spi/function/Parameter;
-	public static fun isNullCall (Lorg/partiql/spi/function/Function;)Z
 }
 
-public abstract interface class org/partiql/spi/function/Function$Instance {
+public abstract class org/partiql/spi/function/Function$Instance {
+	public final field isMissingCall Z
+	public final field isNullCall Z
+	public final field parameters [Lorg/partiql/types/PType;
+	public final field returns Lorg/partiql/types/PType;
+	public fun <init> ([Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZZ)V
+	public synthetic fun <init> ([Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public abstract fun invoke ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
 }
 

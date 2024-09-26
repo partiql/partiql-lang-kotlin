@@ -31,7 +31,10 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
     override fun getReturnType(args: Array<PType>): PType = returns
     override fun getInstance(args: Array<PType>): Function.Instance = instance
 
-    private val instance = object : Function.Instance {
+    private val instance = object : Function.Instance(
+        parameters = arrayOf(PType.bag()),
+        returns = PType.dynamic(),
+    ) {
         override fun invoke(args: Array<Datum>): Datum {
             val bag = args[0]
             val accumulator = when (isDistinct) {

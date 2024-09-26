@@ -5,7 +5,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_EXISTS__BAG__BOOL = Function.standard(
+internal val Fn_EXISTS__BAG__BOOL = Function.static(
 
     name = "exists",
     returns = PType.bool(),
@@ -13,13 +13,13 @@ internal val Fn_EXISTS__BAG__BOOL = Function.standard(
         Parameter("container", PType.bag()),
     ),
 
-    ) { args ->
+) { args ->
     val container = args[0]
     val exists = container.iterator().hasNext()
     Datum.bool(exists)
 }
 
-internal val Fn_EXISTS__LIST__BOOL = Function.standard(
+internal val Fn_EXISTS__LIST__BOOL = Function.static(
 
     name = "exists",
     returns = PType.bool(),
@@ -27,13 +27,13 @@ internal val Fn_EXISTS__LIST__BOOL = Function.standard(
         Parameter("container", PType.array()),
     ),
 
-    ) { args ->
+) { args ->
     val container = args[0]
     val exists = container.iterator().hasNext()
     Datum.bool(exists)
 }
 
-internal val Fn_EXISTS__SEXP__BOOL = Function.standard(
+internal val Fn_EXISTS__SEXP__BOOL = Function.static(
 
     name = "exists",
     returns = PType.bool(),
@@ -41,13 +41,13 @@ internal val Fn_EXISTS__SEXP__BOOL = Function.standard(
         Parameter("container", PType.sexp()),
     ),
 
-    ) { args ->
+) { args ->
     val container = args[0]
     val exists = container.iterator().hasNext()
     Datum.bool(exists)
 }
 
-internal val Fn_EXISTS__STRUCT__BOOL = Function.standard(
+internal val Fn_EXISTS__STRUCT__BOOL = Function.static(
 
     name = "exists",
     returns = PType.bool(),
@@ -55,7 +55,7 @@ internal val Fn_EXISTS__STRUCT__BOOL = Function.standard(
         Parameter("container", PType.struct()),
     ),
 
-    ) { args ->
+) { args ->
     val container = args[0]
     val exists = container.fields.iterator().hasNext()
     Datum.bool(exists)

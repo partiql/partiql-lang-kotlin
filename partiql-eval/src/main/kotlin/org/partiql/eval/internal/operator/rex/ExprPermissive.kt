@@ -7,13 +7,11 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 
-internal class ExprPermissive(
-    val target: Operator.Expr
-) : Operator.Expr {
+internal class ExprPermissive(private var expr: Operator.Expr) : Operator.Expr {
 
     override fun eval(env: Environment): Datum {
         return try {
-            target.eval(env)
+            expr.eval(env)
         } catch (e: TypeCheckException) {
             Datum.missing()
         } catch (e: CardinalityViolation) {

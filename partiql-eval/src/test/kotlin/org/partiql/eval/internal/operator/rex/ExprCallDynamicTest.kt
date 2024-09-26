@@ -7,9 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.function.FnSignature
 import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Datum.bag
 import org.partiql.spi.value.Datum.bool
@@ -37,7 +35,7 @@ class ExprCallDynamicTest {
         fun assert() {
             val expr = ExprCallDynamic(
                 name = "example_function",
-                candidateFns = candidates,
+                functions = functions,
                 args = arrayOf(ExprLit(lhs), ExprLit(rhs)),
             )
             val result = expr.eval(Environment.empty).check(PartiQLValueType.INT32)
@@ -64,17 +62,11 @@ class ExprCallDynamicTest {
             )
 
             @OptIn(PartiQLValueExperimental::class)
-            internal val candidates: Array<Function> = params.mapIndexed { index, it ->
-                object : Function {
-                    override val signature: FnSignature = FnSignature(
-                        name = "example_function",
-                        returns = PType.integer(),
-                        parameters = listOf(
-                            Parameter("first", type = it.first.toPType()),
-                            Parameter("second", type = it.second.toPType()),
-                        )
-                    )
-
+            internal val functions: Array<Function.Instance> = params.mapIndexed { index, it ->
+                object : Function.Instance(
+                    returns = PType.integer(),
+                    parameters = arrayOf(it.first.toPType(), it.second.toPType())
+                ) {
                     override fun invoke(args: Array<Datum>): Datum = integer(index)
                 }
             }.toTypedArray()
@@ -83,7 +75,6 @@ class ExprCallDynamicTest {
 
     companion object {
 
-        @OptIn(PartiQLValueExperimental::class)
         @JvmStatic
         fun sanityTestsCases() = listOf(
             DynamicTestCase(

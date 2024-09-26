@@ -8,13 +8,13 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_IS_INT8__ANY__BOOL = Function.standard(
+internal val Fn_IS_INT8__ANY__BOOL = Function.static(
 
     name = "is_int8",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
-    ) { args ->
+) { args ->
     val arg = args[0]
     when (arg.type.kind) {
         PType.Kind.TINYINT -> Datum.bool(true)

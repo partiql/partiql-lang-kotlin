@@ -13,7 +13,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import java.util.regex.Pattern
 
-internal val Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL = Function.standard(
+internal val Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL = Function.static(
 
     name = "like_escape",
     returns = PType.bool(),
@@ -23,7 +23,7 @@ internal val Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL = Function.standard(
         Parameter("escape", PType.string()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val pattern = args[1].string
     val escape = args[2].string
@@ -43,7 +43,7 @@ internal val Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL = Function.standard(
     }
 }
 
-internal val Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL = Function.standard(
+internal val Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL = Function.static(
 
     name = "like_escape",
     returns = PType.bool(),
@@ -53,7 +53,7 @@ internal val Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL = Function.standard(
         Parameter("escape", PType.symbol()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val pattern = args[1].string
     val escape = args[2].string
@@ -73,7 +73,7 @@ internal val Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL = Function.standard(
     }
 }
 
-internal val Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL = Function.standard(
+internal val Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL = Function.static(
 
     name = "like_escape",
     returns = PType.bool(),
@@ -83,7 +83,7 @@ internal val Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL = Function.standard(
         Parameter("escape", PType.clob(Int.MAX_VALUE)),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].bytes.toString(Charsets.UTF_8)
     val pattern = args[1].bytes.toString(Charsets.UTF_8)
     val escape = args[2].bytes.toString(Charsets.UTF_8)

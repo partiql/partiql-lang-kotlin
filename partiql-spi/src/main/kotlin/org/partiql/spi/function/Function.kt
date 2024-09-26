@@ -16,24 +16,25 @@ public interface Function : Routine {
     }
 
     /**
-     * Indicates that this function returns NULL on NULL inputs; optional with default true.
-     */
-    public fun isNullCall(): Boolean = true
-
-    /**
      * Invocable implementation of a function.
+     *
+     * TODO replace isNullCall and isMissingCall with routine characteristics.
      *
      * @see Function.getInstance
      */
-    public interface Instance {
-
+    public abstract class Instance(
+        @JvmField public val parameters: Array<PType>,
+        @JvmField public val returns: PType,
+        @JvmField public val isNullCall: Boolean = true,
+        @JvmField public val isMissingCall: Boolean = true,
+    ) {
         /**
          * Invoke the function with the given arguments. Required.
          *
          * @param args the arguments to the function
          * @return the result of the function
          */
-        public fun invoke(args: Array<Datum>): Datum
+        public abstract fun invoke(args: Array<Datum>): Datum
     }
 
     /**
@@ -41,17 +42,35 @@ public interface Function : Routine {
      */
     public companion object {
 
+        /**
+         * TODO INTERNALIZE TO SPI AND REPLACE WITH A BUILDER (OR SOMETHING..)
+         *
+         * @param name
+         * @param parameters
+         * @param returns
+         * @param isNullCall
+         * @param isMissingCall
+         * @param invoke
+         * @return
+         */
         @JvmStatic
-        public fun standard(
+        public fun static(
             name: String,
             parameters: Array<Parameter>,
             returns: PType,
+            isNullCall: Boolean = true,
+            isMissingCall: Boolean = true,
             invoke: (Array<Datum>) -> Datum,
         ): Function = _Function(
             name, parameters, returns,
-            object : Instance {
+            object : Instance(
+                Array(parameters.size) { parameters[it].getType() },
+                returns,
+                isNullCall,
+                isMissingCall,
+            ) {
                 override fun invoke(args: Array<Datum>): Datum = invoke(args)
-            }
+            },
         )
     }
 

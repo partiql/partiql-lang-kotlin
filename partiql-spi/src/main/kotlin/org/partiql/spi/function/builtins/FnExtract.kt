@@ -12,7 +12,7 @@ import org.partiql.value.datetime.TimeZone
 //
 // Extract Year
 //
-internal val Fn_EXTRACT_YEAR__DATE__INT32 = Function.standard(
+internal val Fn_EXTRACT_YEAR__DATE__INT32 = Function.static(
 
     name = "extract_year",
     returns = PType.integer(),
@@ -20,12 +20,12 @@ internal val Fn_EXTRACT_YEAR__DATE__INT32 = Function.standard(
         Parameter("datetime", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].date
     Datum.integer(v.year)
 }
 
-internal val Fn_EXTRACT_YEAR__TIMESTAMP__INT32 = Function.standard(
+internal val Fn_EXTRACT_YEAR__TIMESTAMP__INT32 = Function.static(
 
     name = "extract_year",
     returns = PType.integer(),
@@ -33,7 +33,7 @@ internal val Fn_EXTRACT_YEAR__TIMESTAMP__INT32 = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].timestamp
     Datum.integer(v.year)
 }
@@ -41,7 +41,7 @@ internal val Fn_EXTRACT_YEAR__TIMESTAMP__INT32 = Function.standard(
 //
 // Extract Month
 //
-internal val Fn_EXTRACT_MONTH__DATE__INT32 = Function.standard(
+internal val Fn_EXTRACT_MONTH__DATE__INT32 = Function.static(
 
     name = "extract_month",
     returns = PType.integer(),
@@ -49,12 +49,12 @@ internal val Fn_EXTRACT_MONTH__DATE__INT32 = Function.standard(
         Parameter("datetime", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].date
     Datum.integer(v.month)
 }
 
-internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = Function.standard(
+internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = Function.static(
 
     name = "extract_month",
     returns = PType.integer(),
@@ -62,7 +62,7 @@ internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].timestamp
     Datum.integer(v.month)
 }
@@ -71,7 +71,7 @@ internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = Function.standard(
 //  Extract Day
 //
 
-internal val Fn_EXTRACT_DAY__DATE__INT32 = Function.standard(
+internal val Fn_EXTRACT_DAY__DATE__INT32 = Function.static(
 
     name = "extract_day",
     returns = PType.integer(),
@@ -79,12 +79,12 @@ internal val Fn_EXTRACT_DAY__DATE__INT32 = Function.standard(
         Parameter("datetime", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].date
     Datum.integer(v.day)
 }
 
-internal val Fn_EXTRACT_DAY__TIMESTAMP__INT32 = Function.standard(
+internal val Fn_EXTRACT_DAY__TIMESTAMP__INT32 = Function.static(
 
     name = "extract_day",
     returns = PType.integer(),
@@ -92,7 +92,7 @@ internal val Fn_EXTRACT_DAY__TIMESTAMP__INT32 = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].timestamp
     Datum.integer(v.day)
 }
@@ -100,7 +100,7 @@ internal val Fn_EXTRACT_DAY__TIMESTAMP__INT32 = Function.standard(
 //
 // Extract Hour
 //
-internal val Fn_EXTRACT_HOUR__TIME__INT32 = Function.standard(
+internal val Fn_EXTRACT_HOUR__TIME__INT32 = Function.static(
 
     name = "extract_hour",
     returns = PType.integer(),
@@ -108,12 +108,12 @@ internal val Fn_EXTRACT_HOUR__TIME__INT32 = Function.standard(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].time
     Datum.integer(v.hour)
 }
 
-internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = Function.standard(
+internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = Function.static(
 
     name = "extract_hour",
     returns = PType.integer(),
@@ -121,7 +121,7 @@ internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].timestamp
     Datum.integer(v.hour)
 }
@@ -129,7 +129,7 @@ internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = Function.standard(
 //
 // Extract Minute
 //
-internal val Fn_EXTRACT_MINUTE__TIME__INT32 = Function.standard(
+internal val Fn_EXTRACT_MINUTE__TIME__INT32 = Function.static(
 
     name = "extract_minute",
     returns = PType.integer(),
@@ -137,12 +137,12 @@ internal val Fn_EXTRACT_MINUTE__TIME__INT32 = Function.standard(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].time
     Datum.integer(v.minute)
 }
 
-internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = Function.standard(
+internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = Function.static(
 
     name = "extract_minute",
     returns = PType.integer(),
@@ -150,7 +150,7 @@ internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].timestamp
     Datum.integer(v.minute)
 }
@@ -158,7 +158,7 @@ internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = Function.standard(
 //
 // Extract Second
 //
-internal val Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY = Function.standard(
+internal val Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY = Function.static(
 
     name = "extract_second",
     returns = PType.decimal(),
@@ -166,12 +166,12 @@ internal val Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY = Function.standard(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].time
     Datum.decimal(v.decimalSecond)
 }
 
-internal val Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY = Function.standard(
+internal val Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY = Function.static(
 
     name = "extract_second",
     returns = PType.decimal(),
@@ -179,7 +179,7 @@ internal val Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY = Function.standard
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].timestamp
     Datum.decimal(v.decimalSecond)
 }
@@ -187,7 +187,7 @@ internal val Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY = Function.standard
 //
 // Extract Timezone Hour
 //
-internal val Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 = Function.standard(
+internal val Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 = Function.static(
 
     name = "extract_timezone_hour",
     returns = PType.integer(),
@@ -195,7 +195,7 @@ internal val Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 = Function.standard(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].time
     when (val tz = v.timeZone) {
         TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
@@ -204,7 +204,7 @@ internal val Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 = Function.standard(
     }
 }
 
-internal val Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 = Function.standard(
+internal val Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 = Function.static(
 
     name = "extract_timezone_hour",
     returns = PType.integer(),
@@ -212,7 +212,7 @@ internal val Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].timestamp
     when (val tz = v.timeZone) {
         TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
@@ -224,7 +224,7 @@ internal val Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 = Function.standard(
 //
 // Extract Timezone Minute
 //
-internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 = Function.standard(
+internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 = Function.static(
 
     name = "extract_timezone_minute",
     returns = PType.integer(),
@@ -232,7 +232,7 @@ internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 = Function.standard(
         Parameter("datetime", PType.time(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].time
     when (val tz = v.timeZone) {
         TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
@@ -241,7 +241,7 @@ internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 = Function.standard(
     }
 }
 
-internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIMESTAMP__INT32 = Function.standard(
+internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIMESTAMP__INT32 = Function.static(
 
     name = "extract_timezone_minute",
     returns = PType.integer(),
@@ -249,7 +249,7 @@ internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIMESTAMP__INT32 = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val v = args[0].timestamp
     when (val tz = v.timeZone) {
         TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?

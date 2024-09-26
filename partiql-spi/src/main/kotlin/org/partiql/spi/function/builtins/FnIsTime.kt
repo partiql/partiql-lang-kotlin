@@ -8,18 +8,18 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_IS_TIME__ANY__BOOL = Function.standard(
+internal val Fn_IS_TIME__ANY__BOOL = Function.static(
 
     name = "is_time",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
-    ) { args ->
+) { args ->
     val argKind = args[0].type.kind
     Datum.bool(argKind == PType.Kind.TIMEZ || argKind == PType.Kind.TIME)
 }
 
-internal val Fn_IS_TIME__BOOL_INT32_ANY__BOOL = Function.standard(
+internal val Fn_IS_TIME__BOOL_INT32_ANY__BOOL = Function.static(
 
     name = "is_time",
     returns = PType.bool(),
@@ -29,6 +29,6 @@ internal val Fn_IS_TIME__BOOL_INT32_ANY__BOOL = Function.standard(
         Parameter("value", PType.dynamic()),
     ),
 
-    ) { args ->
+) { args ->
     TODO("Function is_time not implemented")
 }

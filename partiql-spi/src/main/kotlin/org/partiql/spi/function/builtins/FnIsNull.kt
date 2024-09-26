@@ -19,7 +19,15 @@ internal val Fn_IS_NULL__ANY__BOOL = object : Function {
 
     private var returns = PType.bool()
 
-    private var instance = object : Function.Instance {
+    /**
+     * IS NULL implementation.
+     */
+    private var instance = object : Function.Instance(
+        parameters = arrayOf(PType.dynamic()),
+        returns = PType.bool(),
+        isNullCall = false,
+        isMissingCall = false,
+    ) {
         override fun invoke(args: Array<Datum>): Datum {
             if (args[0].isMissing) {
                 return Datum.bool(true)
@@ -29,8 +37,6 @@ internal val Fn_IS_NULL__ANY__BOOL = object : Function {
     }
 
     override fun getName(): String = name
-
-    override fun isNullCall(): Boolean = false
 
     override fun getParameters(): Array<Parameter> = parameters
 

@@ -16,8 +16,12 @@ internal val Fn_NOT__BOOL__BOOL = object : Function {
 
     private var returns = PType.bool()
 
-    private var instance = object : Function.Instance {
-
+    private var instance = object : Function.Instance(
+        parameters = arrayOf(PType.dynamic()),
+        returns = PType.bool(),
+        isNullCall = true,
+        isMissingCall = false
+    ) {
         override fun invoke(args: Array<Datum>): Datum {
             val arg = args[0]
             if (arg.isMissing) {
@@ -29,8 +33,6 @@ internal val Fn_NOT__BOOL__BOOL = object : Function {
     }
 
     override fun getName(): String = name
-
-    override fun isNullCall(): Boolean = false
 
     override fun getParameters(): Array<Parameter> = parameters
 

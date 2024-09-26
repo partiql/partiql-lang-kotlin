@@ -5,7 +5,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_CARDINALITY__BAG__INT32 = Function.standard(
+internal val Fn_CARDINALITY__BAG__INT32 = Function.static(
 
     name = "cardinality",
     returns = PType.integer(),
@@ -13,12 +13,12 @@ internal val Fn_CARDINALITY__BAG__INT32 = Function.standard(
         Parameter("container", PType.bag()),
     ),
 
-    ) { args ->
+) { args ->
     val container = args[0]
     Datum.integer(container.count())
 }
 
-internal val Fn_CARDINALITY__LIST__INT32 = Function.standard(
+internal val Fn_CARDINALITY__LIST__INT32 = Function.static(
 
     name = "cardinality",
     returns = PType.integer(),
@@ -26,12 +26,12 @@ internal val Fn_CARDINALITY__LIST__INT32 = Function.standard(
         Parameter("container", PType.array()),
     ),
 
-    ) { args ->
+) { args ->
     val container = args[0]
     Datum.integer(container.count())
 }
 
-internal val Fn_CARDINALITY__SEXP__INT32 = Function.standard(
+internal val Fn_CARDINALITY__SEXP__INT32 = Function.static(
 
     name = "cardinality",
     returns = PType.integer(),
@@ -39,12 +39,12 @@ internal val Fn_CARDINALITY__SEXP__INT32 = Function.standard(
         Parameter("container", PType.sexp()),
     ),
 
-    ) { args ->
+) { args ->
     val container = args[0]
     Datum.integer(container.count())
 }
 
-internal val Fn_CARDINALITY__STRUCT__INT32 = Function.standard(
+internal val Fn_CARDINALITY__STRUCT__INT32 = Function.static(
 
     name = "cardinality",
     returns = PType.integer(),
@@ -52,7 +52,7 @@ internal val Fn_CARDINALITY__STRUCT__INT32 = Function.standard(
         Parameter("container", PType.struct()),
     ),
 
-    ) { args ->
+) { args ->
     val container = args[0]
     var count = 0
     val iter = container.fields.iterator()

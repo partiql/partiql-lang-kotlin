@@ -25,12 +25,15 @@ private val comparator = Datum.comparator()
  * TODO: The PartiQL Specification needs to clearly define the semantics of MISSING. That being said, this implementation
  *  follows the existing conformance tests and SQL:1999.
  */
-internal val Fn_EQ__ANY_ANY__BOOL = Function.standard(
-    name = "eq", returns = PType.bool(),
+internal val Fn_EQ__ANY_ANY__BOOL = Function.static(
+    name = "eq",
+    returns = PType.bool(),
     parameters = arrayOf(
         Parameter("lhs", PType.dynamic()),
         Parameter("rhs", PType.dynamic()),
-    )
+    ),
+    isNullCall = true,
+    isMissingCall = false,
 ) { args ->
     val lhs = args[0]
     val rhs = args[1]

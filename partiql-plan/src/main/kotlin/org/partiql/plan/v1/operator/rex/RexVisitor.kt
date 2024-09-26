@@ -23,7 +23,7 @@ public interface RexVisitor<R, C> {
 
     public fun visitBag(rex: RexBag, ctx: C): R = defaultVisit(rex, ctx)
 
-    public fun visitCallStatic(rex: RexCallStatic, ctx: C): R = defaultVisit(rex, ctx)
+    public fun visitCall(rex: RexCall, ctx: C): R = defaultVisit(rex, ctx)
 
     public fun visitCallDynamic(rex: RexCallDynamic, ctx: C): R = defaultVisit(rex, ctx)
 

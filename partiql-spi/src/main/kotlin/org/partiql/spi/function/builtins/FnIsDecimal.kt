@@ -10,17 +10,17 @@ import org.partiql.types.PType
 import java.math.RoundingMode
 import kotlin.math.max
 
-internal val Fn_IS_DECIMAL__ANY__BOOL = Function.standard(
+internal val Fn_IS_DECIMAL__ANY__BOOL = Function.static(
 
     name = "is_decimal",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
-    ) { args ->
+) { args ->
     Datum.bool(args[0].type.kind == PType.Kind.DECIMAL)
 }
 
-internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.standard(
+internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
 
     name = "is_decimal",
     returns = PType.bool(),
@@ -30,7 +30,7 @@ internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.standard(
         Parameter("value", PType.dynamic()),
     ),
 
-    )
+)
 
 /**
  * Checks a Java BigDecimal precision and scale match PartiQL DECIMAL precision and scale.

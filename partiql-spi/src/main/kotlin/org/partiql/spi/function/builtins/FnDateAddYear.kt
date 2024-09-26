@@ -10,7 +10,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_DATE_ADD_YEAR__INT32_DATE__DATE = Function.standard(
+internal val Fn_DATE_ADD_YEAR__INT32_DATE__DATE = Function.static(
 
     name = "date_add_year",
     returns = PType.date(),
@@ -19,7 +19,7 @@ internal val Fn_DATE_ADD_YEAR__INT32_DATE__DATE = Function.standard(
         Parameter("datetime", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0].int
     val datetime = args[1].date
     val datetimeValue = datetime
@@ -27,7 +27,7 @@ internal val Fn_DATE_ADD_YEAR__INT32_DATE__DATE = Function.standard(
     Datum.date(datetimeValue.plusYears(intervalValue))
 }
 
-internal val Fn_DATE_ADD_YEAR__INT64_DATE__DATE = Function.standard(
+internal val Fn_DATE_ADD_YEAR__INT64_DATE__DATE = Function.static(
 
     name = "date_add_year",
     returns = PType.date(),
@@ -36,7 +36,7 @@ internal val Fn_DATE_ADD_YEAR__INT64_DATE__DATE = Function.standard(
         Parameter("datetime", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0].long
     val datetime = args[1].date
     val datetimeValue = datetime
@@ -44,7 +44,7 @@ internal val Fn_DATE_ADD_YEAR__INT64_DATE__DATE = Function.standard(
     Datum.date(datetimeValue.plusYears(intervalValue))
 }
 
-internal val Fn_DATE_ADD_YEAR__INT_DATE__DATE = Function.standard(
+internal val Fn_DATE_ADD_YEAR__INT_DATE__DATE = Function.static(
 
     name = "date_add_year",
     returns = PType.date(),
@@ -53,7 +53,7 @@ internal val Fn_DATE_ADD_YEAR__INT_DATE__DATE = Function.standard(
         Parameter("datetime", PType.date()),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0].bigInteger
     val datetime = args[1].date
     val datetimeValue = datetime
@@ -65,7 +65,7 @@ internal val Fn_DATE_ADD_YEAR__INT_DATE__DATE = Function.standard(
     Datum.date(datetimeValue.plusYears(intervalValue))
 }
 
-internal val Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP = Function.standard(
+internal val Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP = Function.static(
 
     name = "date_add_year",
     returns = PType.timestamp(6),
@@ -74,7 +74,7 @@ internal val Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0].int
     val datetime = args[1].timestamp
     val datetimeValue = datetime
@@ -82,7 +82,7 @@ internal val Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP = Function.standard(
     Datum.timestamp(datetimeValue.plusYears(intervalValue))
 }
 
-internal val Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP = Function.standard(
+internal val Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP = Function.static(
 
     name = "date_add_year",
     returns = PType.timestamp(6),
@@ -91,7 +91,7 @@ internal val Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0].long
     val datetime = args[1].timestamp
     val datetimeValue = datetime
@@ -99,7 +99,7 @@ internal val Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP = Function.standard(
     Datum.timestamp(datetimeValue.plusYears(intervalValue))
 }
 
-internal val Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP = Function.standard(
+internal val Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP = Function.static(
 
     name = "date_add_year",
     returns = PType.timestamp(6),
@@ -108,7 +108,7 @@ internal val Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP = Function.standard(
         Parameter("datetime", PType.timestamp(6)),
     ),
 
-    ) { args ->
+) { args ->
     val interval = args[0].bigInteger
     val datetime = args[1].timestamp
     val datetimeValue = datetime

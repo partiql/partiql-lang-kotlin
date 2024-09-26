@@ -19,15 +19,21 @@ internal val Fn_IS_MISSING__ANY__BOOL = object : Function {
 
     private var returns = PType.bool()
 
-    private var instance = object : Function.Instance {
+    /**
+     * IS MISSING implementation.
+     */
+    private var instance = object : Function.Instance(
+        parameters = arrayOf(PType.dynamic()),
+        returns = PType.bool(),
+        isNullCall = false,
+        isMissingCall = false,
+    ) {
         override fun invoke(args: Array<Datum>): Datum {
             return Datum.bool(args[0].isMissing)
         }
     }
 
     override fun getName(): String = name
-
-    override fun isNullCall(): Boolean = false
 
     override fun getParameters(): Array<Parameter> = parameters
 

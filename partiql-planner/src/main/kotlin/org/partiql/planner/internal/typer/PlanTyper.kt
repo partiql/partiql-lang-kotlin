@@ -794,19 +794,25 @@ internal class PlanTyper(private val env: Env) {
                     else -> it
                 }
             }
+            // TODO pass argument types to compute the return type.
+            val returnType = node.fn.signature.getReturnType(emptyArray())
 
             // Check if any arg is always missing
             val argIsAlwaysMissing = args.any { it.type.isMissingValue }
-            if (node.fn.signature.isMissingCall() && argIsAlwaysMissing) {
+
+            // TODO REMOVE ME !!! THIS IS A HACK (:
+            val instance = node.fn.signature.getInstance(emptyArray())
+
+            if (argIsAlwaysMissing && instance.isMissingCall) {
                 return ProblemGenerator.missingRex(
                     node,
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments."),
-                    CompilerType(node.fn.signature.getReturnType(), isMissingValue = true)
+                    CompilerType(returnType, isMissingValue = true)
                 )
             }
 
             // Infer fn return type
-            return rex(CompilerType(node.fn.signature.getReturnType()), Rex.Op.Call.Static(node.fn, args))
+            return rex(CompilerType(returnType), Rex.Op.Call.Static(node.fn, args))
         }
 
         /**
@@ -817,7 +823,10 @@ internal class PlanTyper(private val env: Env) {
          * @return
          */
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: CompilerType?): Rex {
-            val types = node.candidates.map { candidate -> candidate.fn.signature.getReturnType() }.toMutableSet()
+            // TODO pass argument types to compute the return type
+            val types = node.candidates
+                .map { it.fn.signature.getReturnType(emptyArray()) }
+                .toMutableSet()
             // TODO: Should this always be DYNAMIC?
             return Rex(type = CompilerType(anyOf(types) ?: PType.dynamic()), op = node)
         }
@@ -1248,7 +1257,9 @@ internal class PlanTyper(private val env: Env) {
 
             // Resolve the function
             val call = env.resolveAgg(node.name, node.setq, args) ?: return argsResolved to CompilerType(PType.dynamic())
-            return call to CompilerType(call.agg.signature.getReturnType())
+            // TODO pass argument types to compute the return type.
+            val returnType = call.agg.signature.getReturnType(emptyArray())
+            return call to CompilerType(returnType)
         }
     }
 

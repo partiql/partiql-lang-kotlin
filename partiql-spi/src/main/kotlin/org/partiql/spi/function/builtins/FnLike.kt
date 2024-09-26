@@ -11,7 +11,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import java.util.regex.Pattern
 
-internal val Fn_LIKE__STRING_STRING__BOOL = Function.standard(
+internal val Fn_LIKE__STRING_STRING__BOOL = Function.static(
 
     name = "like",
     returns = PType.bool(),
@@ -20,7 +20,7 @@ internal val Fn_LIKE__STRING_STRING__BOOL = Function.standard(
         Parameter("pattern", PType.string()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val pattern = args[1].string
     val likeRegexPattern = when {
@@ -33,7 +33,7 @@ internal val Fn_LIKE__STRING_STRING__BOOL = Function.standard(
     }
 }
 
-internal val Fn_LIKE__SYMBOL_SYMBOL__BOOL = Function.standard(
+internal val Fn_LIKE__SYMBOL_SYMBOL__BOOL = Function.static(
 
     name = "like",
     returns = PType.bool(),
@@ -42,7 +42,7 @@ internal val Fn_LIKE__SYMBOL_SYMBOL__BOOL = Function.standard(
         Parameter("pattern", PType.symbol()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val pattern = args[1].string
     val likeRegexPattern = when {
@@ -55,7 +55,7 @@ internal val Fn_LIKE__SYMBOL_SYMBOL__BOOL = Function.standard(
     }
 }
 
-internal val Fn_LIKE__CLOB_CLOB__BOOL = Function.standard(
+internal val Fn_LIKE__CLOB_CLOB__BOOL = Function.static(
 
     name = "like",
     returns = PType.bool(),
@@ -64,7 +64,7 @@ internal val Fn_LIKE__CLOB_CLOB__BOOL = Function.standard(
         Parameter("pattern", PType.clob(Int.MAX_VALUE)),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].bytes.toString(Charsets.UTF_8)
     val pattern = args[1].bytes.toString(Charsets.UTF_8)
     val likeRegexPattern = when {

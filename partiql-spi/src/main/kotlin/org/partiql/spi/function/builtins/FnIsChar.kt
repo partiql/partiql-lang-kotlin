@@ -9,7 +9,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_IS_CHAR__ANY__BOOL = Function.standard(
+internal val Fn_IS_CHAR__ANY__BOOL = Function.static(
     name = "is_char",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
@@ -22,7 +22,7 @@ private val TEXT_TYPES_WITH_LENGTH = setOf(
     PType.Kind.VARCHAR
 )
 
-internal val Fn_IS_CHAR__INT32_ANY__BOOL = Function.standard(
+internal val Fn_IS_CHAR__INT32_ANY__BOOL = Function.static(
     name = "is_char",
     returns = PType.bool(),
     parameters = arrayOf(

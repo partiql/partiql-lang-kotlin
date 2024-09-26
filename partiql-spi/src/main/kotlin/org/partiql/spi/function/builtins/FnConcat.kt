@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_CONCAT__STRING_STRING__STRING = Function.standard(
+internal val Fn_CONCAT__STRING_STRING__STRING = Function.static(
 
     name = "concat",
     returns = PType.string(),
@@ -17,13 +17,13 @@ internal val Fn_CONCAT__STRING_STRING__STRING = Function.standard(
         Parameter("rhs", PType.string()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].string
     val arg1 = args[1].string
     Datum.string(arg0 + arg1)
 }
 
-internal val Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL = Function.standard(
+internal val Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL = Function.static(
 
     name = "concat",
     returns = PType.symbol(),
@@ -32,13 +32,13 @@ internal val Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL = Function.standard(
         Parameter("rhs", PType.symbol()),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].string
     val arg1 = args[1].string
     Datum.symbol(arg0 + arg1)
 }
 
-internal val Fn_CONCAT__CLOB_CLOB__CLOB = Function.standard(
+internal val Fn_CONCAT__CLOB_CLOB__CLOB = Function.static(
 
     name = "concat",
     returns = PType.clob(Int.MAX_VALUE),
@@ -47,7 +47,7 @@ internal val Fn_CONCAT__CLOB_CLOB__CLOB = Function.standard(
         Parameter("rhs", PType.clob(Int.MAX_VALUE)),
     ),
 
-    ) { args ->
+) { args ->
     val arg0 = args[0].bytes
     val arg1 = args[1].bytes
     Datum.clob(arg0 + arg1)

@@ -9,47 +9,67 @@ import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 
 /**
- * This represents Dynamic Dispatch.
+ * Implementation of Dynamic Dispatch.
  *
- * For the purposes of efficiency, this implementation aims to reduce any re-execution of compiled arguments. It
- * does this by avoiding the compilation of [Candidate.fn] into
- * [ExprCallStatic]'s. By doing this, this implementation can evaluate ([eval]) the input [Record], execute and gather the
- * arguments, and pass the [PartiQLValue]s directly to the [Candidate.eval]. This implementation also caches previously
- * resolved candidates.
+ * For the purposes of efficiency, this implementation aims to reduce any re-execution of compiled arguments.
  *
- * @param name the name of the function
- * @param candidates the ordered set of applicable functions.
- * @param args the arguments to the function
- * @property paramIndices the last index of the [args]
- * @property paramTypes represents a two dimensional array, where the first dimension maps to the [candidates], and the
- * second dimensions maps to the [org.partiql.spi.function.FnSignature.parameters]'s [PType].
- * @property paramFamilies represents a two dimensional array, where the first dimension maps to the [candidates], and the
- * second dimensions maps to the [org.partiql.spi.function.FnSignature.parameters]'s [CoercionFamily]. This allows the algorithm
- * to know if an argument is coercible to the target parameter.
- * @property cachedMatches a memoization cache for the [match] function.
+ * The basic algorithm is,
+ *  1. Fetch the next input record.
+ *  2. Evaluate the input arguments.
+ *  3. Lookup the candidate to dispatch to and invoke.
+ *
+ * This implementation can evaluate ([eval]) the input [Record], execute and gather the
+ * arguments, and pass the [PartiQLValue]s directly to the [Candidate.eval].
+ *
+ * This implementation also caches previously resolved candidates.
+ *
+ * TODO paramTypes and paramFamilies _may_ be able to be merged.
  */
 internal class ExprCallDynamic(
     private val name: String,
-    candidateFns: Array<Function>,
+    private val functions: Array<Function.Instance>,
     private val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
-    private val candidates = Array(candidateFns.size) { Candidate(candidateFns[it]) }
+    /**
+     * @property paramIndices the last index of the [args]
+     */
     private val paramIndices: IntRange = args.indices
-    private val paramTypes: List<List<PType>> = this.candidates.map { candidate -> candidate.fn.signature.parameters.map { it.getType() } }
-    private val paramFamilies: List<List<CoercionFamily>> = this.candidates.map { candidate -> candidate.fn.signature.parameters.map { family(it.getType().kind) } }
-    private val cachedMatches: MutableMap<List<PType>, Int> = mutableMapOf()
+
+    /**
+     * @property paramTypes represents a two-dimensional array.
+     *
+     *  1. Dimension-1 maps to a candidate.
+     *  2. Dimension-2 maps to that candidate's parameter types.
+     *
+     * TODO actually make this an array instead of lists.
+     */
+    private val paramTypes: List<List<PType>> = functions.map { c -> c.parameters.toList() }
+
+    /**
+     * @property paramFamilies is a two-dimensional array.
+     *
+     *   1. Dimension-1 maps to the [candidates]
+     *   2. Dimension-2 maps to the [CoercionFamily].
+     *
+     * TODO actually make this an array instead of lists.
+     */
+    private val paramFamilies: List<List<CoercionFamily>> = functions.map { c -> c.parameters.map { p -> family(p.kind) } }
+
+    /**
+     * A memoization cache for the [match] function.
+     */
+    private val candidates: MutableMap<List<PType>, Candidate> = mutableMapOf()
 
     override fun eval(env: Environment): Datum {
         val actualArgs = args.map { it.eval(env) }.toTypedArray()
         val actualTypes = actualArgs.map { it.type }
-        val cached = cachedMatches[actualTypes]
-        if (cached != null) {
-            return candidates[cached].eval(actualArgs)
+        var candidate = candidates[actualTypes]
+        if (candidate == null) {
+            candidate = match(actualTypes) ?: throw TypeCheckException("Could not find function $name with types: $actualTypes.")
+            candidates[actualTypes] = candidate
         }
-        val candidateIndex = match(actualTypes) ?: throw TypeCheckException("Could not find function $name with types: $actualTypes.")
-        cachedMatches[actualTypes] = candidateIndex
-        return candidates[candidateIndex].eval(actualArgs)
+        return candidate.eval(actualArgs)
     }
 
     /**
@@ -59,11 +79,11 @@ internal class ExprCallDynamic(
      *
      * @return the index of the candidate to invoke; null if method cannot resolve.
      */
-    private fun match(args: List<PType>): Int? {
+    private fun match(args: List<PType>): Candidate? {
         var exactMatches: Int = -1
         var currentMatch: Int? = null
         val argFamilies = args.map { family(it.kind) }
-        candidates.indices.forEach { candidateIndex ->
+        functions.indices.forEach { candidateIndex ->
             var currentExactMatches = 0
             for (paramIndex in paramIndices) {
                 val argType = args[paramIndex]
@@ -78,7 +98,7 @@ internal class ExprCallDynamic(
                 exactMatches = currentExactMatches
             }
         }
-        return currentMatch
+        return if (currentMatch == null) null else Candidate(functions[currentMatch!!])
     }
 
     /**
@@ -148,33 +168,32 @@ internal class ExprCallDynamic(
     /**
      * This represents a single candidate for dynamic dispatch.
      *
-     * This implementation assumes that the [eval] input [Record] contains the original arguments for the desired [fn].
+     * This implementation assumes that the [eval] input values contains the original arguments for the desired [function].
      * It performs the coercions (if necessary) before computing the result.
+     *
+     * TODO what about MISSING calls?
      *
      * @see ExprCallDynamic
      */
-    private class Candidate(
-        val fn: Function,
-    ) {
+    private class Candidate(private var function: Function.Instance) {
+
+        private var nil = { Datum.nullValue(function.returns) }
 
         /**
-         * Memoize creation of nulls
+         * Function instance parameters (just types).
          */
-        private val nil = { Datum.nullValue(fn.signature.returns) }
-
-        fun eval(originalArgs: Array<Datum>): Datum {
-            val args = originalArgs.mapIndexed { i, arg ->
-                if (arg.isNull && fn.signature.isNullCall) {
-                    return nil.invoke()
-                }
+        fun eval(args: Array<Datum>): Datum {
+            val coerced = Array(args.size) { i ->
+                val arg = args[i]
+                if (function.isNullCall && arg.isNull) nil.invoke()
                 val argType = arg.type
-                val paramType = fn.signature.parameters[i].getType()
+                val paramType = function.parameters[i]
                 when (paramType == argType) {
                     true -> arg
                     false -> CastTable.cast(arg, paramType)
                 }
-            }.toTypedArray()
-            return fn.invoke(args)
+            }
+            return function.invoke(coerced)
         }
     }
 }

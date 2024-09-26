@@ -79,7 +79,7 @@ import org.partiql.types.PType
  *              L1 = E1 - S1
  *              java's substring(C, S1, E1)
  */
-internal val Fn_SUBSTRING__STRING_INT32__STRING = Function.standard(
+internal val Fn_SUBSTRING__STRING_INT32__STRING = Function.static(
 
     name = "substring",
     returns = PType.string(),
@@ -88,14 +88,14 @@ internal val Fn_SUBSTRING__STRING_INT32__STRING = Function.standard(
         Parameter("start", PType.integer()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val start = args[1].int
     val result = value.codepointSubstring(start)
     Datum.string(result)
 }
 
-internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = Function.standard(
+internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = Function.static(
 
     name = "substring",
     returns = PType.string(),
@@ -105,7 +105,7 @@ internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = Function.standard(
         Parameter("end", PType.integer()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val start = args[1].int
     val end = args[2].int
@@ -114,7 +114,7 @@ internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = Function.standard(
     Datum.string(result)
 }
 
-internal val Fn_SUBSTRING__SYMBOL_INT64__SYMBOL = Function.standard(
+internal val Fn_SUBSTRING__SYMBOL_INT64__SYMBOL = Function.static(
 
     name = "substring",
     returns = PType.symbol(),
@@ -123,14 +123,14 @@ internal val Fn_SUBSTRING__SYMBOL_INT64__SYMBOL = Function.standard(
         Parameter("start", PType.integer()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val start = args[1].int
     val result = value.codepointSubstring(start)
     Datum.symbol(result)
 }
 
-internal val Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL = Function.standard(
+internal val Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL = Function.static(
 
     name = "substring",
     returns = PType.symbol(),
@@ -140,7 +140,7 @@ internal val Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL = Function.standard(
         Parameter("end", PType.integer()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].string
     val start = args[1].int
     val end = args[1].int
@@ -149,7 +149,7 @@ internal val Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL = Function.standard(
     Datum.symbol(result)
 }
 
-internal val Fn_SUBSTRING__CLOB_INT64__CLOB = Function.standard(
+internal val Fn_SUBSTRING__CLOB_INT64__CLOB = Function.static(
 
     name = "substring",
     returns = PType.clob(Int.MAX_VALUE),
@@ -158,14 +158,14 @@ internal val Fn_SUBSTRING__CLOB_INT64__CLOB = Function.standard(
         Parameter("start", PType.integer()),
     ),
 
-    ) { args ->
+) { args ->
     val value = args[0].bytes.toString(Charsets.UTF_8)
     val start = args[1].int
     val result = value.codepointSubstring(start)
     Datum.clob(result.toByteArray())
 }
 
-internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = Function.standard(
+internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = Function.static(
 
     name = "substring",
     returns = PType.clob(Int.MAX_VALUE),
@@ -175,7 +175,7 @@ internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = Function.standard(
         Parameter("end", PType.integer()),
     ),
 
-    ) { args ->
+) { args ->
     val string = args[0].bytes.toString(Charsets.UTF_8)
     val start = args[1].int
     val end = args[2].int
