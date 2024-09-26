@@ -22,10 +22,8 @@ import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int32Value
-import org.partiql.value.stringValue
 import kotlin.io.path.toPath
 
 class PlanTyperTest {
@@ -40,20 +38,19 @@ class PlanTyperTest {
         private val DOUBLE_PRECISION = PType.doublePrecision().toCType()
         private val DECIMAL = PType.decimal().toCType()
 
-        @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1 = rex(
             ANY,
             rexOpStruct(
                 fields = listOf(
                     rexOpStructField(
-                        k = rex(STRING, rexOpLit(stringValue("FiRsT_KeY"))),
+                        k = rex(STRING, rexOpLit(Datum.string(("FiRsT_KeY")))),
                         v = rex(
                             ANY,
                             rexOpStruct(
                                 fields = listOf(
                                     rexOpStructField(
-                                        k = rex(STRING, rexOpLit(stringValue("sEcoNd_KEY"))),
-                                        v = rex(INT4, rexOpLit(int32Value(5)))
+                                        k = rex(STRING, rexOpLit(Datum.string(("sEcoNd_KEY")))),
+                                        v = rex(INT4, rexOpLit(Datum.integer(5)))
                                     )
                                 )
                             )
@@ -67,7 +64,6 @@ class PlanTyperTest {
             listOf(CompilerType.Field("sEcoNd_KEY", INT4)),
         ).toCType()
 
-        @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1_TYPED: Rex
             get() {
                 val topLevelStruct = PType.row(
@@ -78,14 +74,14 @@ class PlanTyperTest {
                     rexOpStruct(
                         fields = listOf(
                             rexOpStructField(
-                                k = rex(STRING, rexOpLit(stringValue("FiRsT_KeY"))),
+                                k = rex(STRING, rexOpLit(Datum.string(("FiRsT_KeY")))),
                                 v = rex(
                                     type = LITERAL_STRUCT_1_FIRST_KEY_TYPE,
                                     rexOpStruct(
                                         fields = listOf(
                                             rexOpStructField(
-                                                k = rex(STRING, rexOpLit(stringValue("sEcoNd_KEY"))),
-                                                v = rex(INT4, rexOpLit(int32Value(5)))
+                                                k = rex(STRING, rexOpLit(Datum.string(("sEcoNd_KEY")))),
+                                                v = rex(INT4, rexOpLit(Datum.integer(5)))
                                             )
                                         )
                                     )
@@ -307,8 +303,7 @@ class PlanTyperTest {
         assertEquals(expected, actual)
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
+    private fun rexString(str: String) = rex(STRING, rexOpLit(Datum.string((str))))
 
     private fun Rex.pathKey(key: String, type: CompilerType = ANY): Rex = Rex(type, rexOpPathKey(this, rexString(key)))
 

@@ -72,7 +72,7 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.fn.Aggregation
 import org.partiql.spi.fn.Function
-import org.partiql.value.PartiQLValue
+import org.partiql.spi.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 import kotlin.random.Random
 
@@ -234,7 +234,7 @@ internal data class Rex(
         }
 
         internal data class Lit(
-            @JvmField internal val `value`: PartiQLValue,
+            @JvmField internal val `value`: Datum,
         ) : Op() {
             public override val children: List<PlanNode> = emptyList()
 

@@ -14,6 +14,7 @@ import com.amazon.ionelement.api.ElementType.STRING
 import com.amazon.ionelement.api.ElementType.STRUCT
 import com.amazon.ionelement.api.ElementType.SYMBOL
 import com.amazon.ionelement.api.ElementType.TIMESTAMP
+import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
@@ -131,6 +132,16 @@ public class IonDatum private constructor(value: AnyElement, type: PType) :
                 }
             }
             return IonDatum(value, type)
+        }
+
+        @JvmStatic
+        public fun of(value: String): Datum {
+            val ion = try {
+                loadSingleElement(value)
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Invalid Ion value: $value", e)
+            }
+            return of(ion)
         }
     }
 

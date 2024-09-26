@@ -3,34 +3,9 @@ package org.partiql.planner.internal.typer
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.typer.PlanTyper.Companion.anyOf
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
-import org.partiql.value.MissingValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.bagValue
-import org.partiql.value.blobValue
-import org.partiql.value.boolValue
-import org.partiql.value.charValue
-import org.partiql.value.clobValue
-import org.partiql.value.dateValue
-import org.partiql.value.decimalValue
-import org.partiql.value.float32Value
-import org.partiql.value.float64Value
-import org.partiql.value.int16Value
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.int8Value
-import org.partiql.value.intValue
-import org.partiql.value.listValue
-import org.partiql.value.missingValue
-import org.partiql.value.nullValue
-import org.partiql.value.sexpValue
-import org.partiql.value.stringValue
-import org.partiql.value.structValue
-import org.partiql.value.symbolValue
-import org.partiql.value.timeValue
-import org.partiql.value.timestampValue
 
 /**
  * Graph of super types for quick lookup because we don't have a tree.
@@ -66,7 +41,6 @@ internal class DynamicTyper {
     /**
      * Checks for literal NULL
      */
-    @OptIn(PartiQLValueExperimental::class)
     private fun Rex.isLiteralNull(): Boolean {
         val op = this.op
         return op is Rex.Op.Lit && op.value.isNull
@@ -75,10 +49,9 @@ internal class DynamicTyper {
     /**
      * Checks for literal MISSING
      */
-    @OptIn(PartiQLValueExperimental::class)
     private fun Rex.isLiteralMissing(): Boolean {
         val op = this.op
-        return op is Rex.Op.Lit && op.value is MissingValue
+        return op is Rex.Op.Lit && op.value.isMissing
     }
 
     /**
@@ -107,7 +80,6 @@ internal class DynamicTyper {
      *
      * @return
      */
-    @OptIn(PartiQLValueExperimental::class)
     fun mapping(): Pair<CompilerType, List<Mapping?>?> {
         var s = supertype ?: return CompilerType(PType.dynamic()) to null
         val superTypeBase = s.kind
@@ -137,8 +109,8 @@ internal class DynamicTyper {
         // Otherwise, return the supertype along with the coercion mapping
         val mapping = args.map {
             when {
-                it.isLiteralNull() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(nullValue(s.kind))))
-                it.isLiteralMissing() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(missingValue())))
+                it.isLiteralNull() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(Datum.nullValue(s))))
+                it.isLiteralMissing() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(Datum.missing())))
                 it.type == s -> Mapping.Coercion(s)
                 else -> null
             }
@@ -219,7 +191,7 @@ internal class DynamicTyper {
     companion object {
 
         @JvmStatic
-        private val N = Kind.values().size
+        private val N = Kind.entries.size
 
         @JvmStatic
         private fun edges(vararg edges: Pair<Kind, Kind>): Array<Kind?> {
@@ -456,40 +428,7 @@ internal class DynamicTyper {
             Kind.SEXP -> PType.sexp() // TODO: To be updated
             Kind.STRUCT -> PType.struct() // TODO: To be updated
             Kind.UNKNOWN -> PType.unknown() // TODO: To be updated
+            Kind.VARIANT -> PType.dynamic()
         }.toCType()
-
-        @OptIn(PartiQLValueExperimental::class)
-        private fun nullValue(kind: Kind): PartiQLValue {
-            return when (kind) {
-                Kind.DYNAMIC -> nullValue()
-                Kind.BOOL -> boolValue(null)
-                Kind.TINYINT -> int8Value(null)
-                Kind.SMALLINT -> int16Value(null)
-                Kind.INTEGER -> int32Value(null)
-                Kind.BIGINT -> int64Value(null)
-                Kind.NUMERIC -> intValue(null)
-                Kind.DECIMAL -> decimalValue(null)
-                Kind.DECIMAL_ARBITRARY -> decimalValue(null)
-                Kind.REAL -> float32Value(null)
-                Kind.DOUBLE -> float64Value(null)
-                Kind.CHAR -> charValue(null)
-                Kind.VARCHAR -> TODO("No implementation of VAR CHAR")
-                Kind.STRING -> stringValue(null)
-                Kind.SYMBOL -> symbolValue(null)
-                Kind.BLOB -> blobValue(null)
-                Kind.CLOB -> clobValue(null)
-                Kind.DATE -> dateValue(null)
-                Kind.TIMEZ,
-                Kind.TIME -> timeValue(null)
-                Kind.TIMESTAMPZ,
-                Kind.TIMESTAMP -> timestampValue(null)
-                Kind.BAG -> bagValue<PartiQLValue>(null)
-                Kind.ARRAY -> listValue<PartiQLValue>(null)
-                Kind.ROW -> structValue<PartiQLValue>(null)
-                Kind.SEXP -> sexpValue<PartiQLValue>(null)
-                Kind.STRUCT -> structValue<PartiQLValue>()
-                Kind.UNKNOWN -> nullValue()
-            }
-        }
     }
 }

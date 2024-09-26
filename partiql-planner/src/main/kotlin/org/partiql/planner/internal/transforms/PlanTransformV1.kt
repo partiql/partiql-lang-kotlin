@@ -21,10 +21,8 @@ import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
-import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
 import org.partiql.planner.internal.ir.PlanNode as INode
 import org.partiql.planner.internal.ir.Rel as IRel
@@ -244,9 +242,8 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
             return factory.rexVar(depth = node.depth, offset = node.ref)
         }
 
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpLit(node: IRex.Op.Lit, ctx: PType): Any {
-            return factory.rexLit(Datum.of(node.value))
+            return factory.rexLit(node.value)
         }
 
         // RELATION OPERATORS
