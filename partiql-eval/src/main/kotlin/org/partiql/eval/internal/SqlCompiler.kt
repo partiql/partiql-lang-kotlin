@@ -376,17 +376,13 @@ internal class SqlCompiler(
         }
 
         override fun visitCall(rex: RexCall, ctx: Unit): Operator.Expr {
-            val function = rex.getFunction()
+            val func = rex.getFunction()
             val args = rex.getArgs()
-            // TODO HANDLE CALLS WITH DYNAMIC INPUT
-            // val fnTakesInMissing = fn.getParameters().any {
-            //     it.getType().kind == PType.Kind.DYNAMIC // TODO: Is this needed?
-            // }
-            // return when (fnTakesInMissing) {
-            //     true -> ExprCall(fn, args.map { it.catch() }.toTypedArray())
-            //     else -> ExprCall(fn, args.toTypedArray())
-            // }
-            return ExprCall(function, Array(args.size) { i -> compile(args[i]) })
+            val catch = func.parameters.any { it.kind == PType.Kind.DYNAMIC }
+            return when (catch) {
+                true -> ExprCall(func, Array(args.size) { i -> compile(args[i]).catch() })
+                else -> ExprCall(func, Array(args.size) { i -> compile(args[i]) })
+            }
         }
 
         override fun visitCase(rex: RexCase, ctx: Unit): Operator.Expr {

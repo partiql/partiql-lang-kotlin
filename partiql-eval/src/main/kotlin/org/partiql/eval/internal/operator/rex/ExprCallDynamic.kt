@@ -32,7 +32,7 @@ internal class ExprCallDynamic(
 ) : Operator.Expr {
 
     /**
-     * @property paramIndices the last index of the [args]
+     * @property paramIndices the indices of the [args]
      */
     private val paramIndices: IntRange = args.indices
 
@@ -185,7 +185,9 @@ internal class ExprCallDynamic(
         fun eval(args: Array<Datum>): Datum {
             val coerced = Array(args.size) { i ->
                 val arg = args[i]
-                if (function.isNullCall && arg.isNull) nil.invoke()
+                if (function.isNullCall && arg.isNull) {
+                    return nil.invoke()
+                }
                 val argType = arg.type
                 val paramType = function.parameters[i]
                 when (paramType == argType) {
