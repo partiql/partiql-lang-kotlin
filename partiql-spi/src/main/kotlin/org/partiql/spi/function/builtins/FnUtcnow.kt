@@ -9,12 +9,10 @@ import org.partiql.types.PType
 import org.partiql.value.datetime.TimestampWithTimeZone
 
 internal val Fn_UTCNOW____TIMESTAMP = Function.static(
-
     name = "utcnow",
     returns = PType.timestamp(6),
     parameters = arrayOf(),
-
-) { args ->
+) {
     val now = TimestampWithTimeZone.nowZ()
     Datum.timestamp(now)
 }

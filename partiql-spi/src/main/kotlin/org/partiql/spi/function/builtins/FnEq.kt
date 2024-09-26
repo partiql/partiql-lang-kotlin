@@ -38,7 +38,7 @@ internal val Fn_EQ__ANY_ANY__BOOL = Function.static(
     val lhs = args[0]
     val rhs = args[1]
     if (lhs.isMissing || rhs.isMissing) {
-        Datum.nullValue(PType.bool())
+        return@static Datum.nullValue(PType.bool())
     }
     Datum.bool(comparator.compare(lhs, rhs) == 0)
 }

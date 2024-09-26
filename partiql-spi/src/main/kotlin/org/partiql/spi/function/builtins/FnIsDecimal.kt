@@ -11,17 +11,14 @@ import java.math.RoundingMode
 import kotlin.math.max
 
 internal val Fn_IS_DECIMAL__ANY__BOOL = Function.static(
-
     name = "is_decimal",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
-
 ) { args ->
     Datum.bool(args[0].type.kind == PType.Kind.DECIMAL)
 }
 
 internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
-
     name = "is_decimal",
     returns = PType.bool(),
     parameters = arrayOf(
@@ -29,7 +26,6 @@ internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
         Parameter("type_parameter_2", PType.integer()),
         Parameter("value", PType.dynamic()),
     ),
-
 )
 
 /**
@@ -50,15 +46,14 @@ internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
 { args ->
     val v = args[2]
     if (v.type.kind != PType.Kind.DECIMAL && v.type.kind != PType.Kind.DECIMAL_ARBITRARY) {
-        Datum.bool(false)
+        return@static Datum.bool(false)
     }
-
     val p = args[0].int
     val s = args[1].int
     val d = v.bigDecimal
     val dp = max(d.scale(), 0)
     if (dp > s) {
-        Datum.bool(false)
+        return@static Datum.bool(false)
     }
     val ip = d.setScale(0, RoundingMode.DOWN)
     val il = if (ip.signum() != 0) ip.precision() - ip.scale() else 0
