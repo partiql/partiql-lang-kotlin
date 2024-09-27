@@ -510,21 +510,6 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
-public final class org/partiql/spi/function/AggSignature {
-	public final field description Ljava/lang/String;
-	public final field isDecomposable Z
-	public final field isNullable Z
-	public final field name Ljava/lang/String;
-	public final field parameters Ljava/util/List;
-	public final field returns Lorg/partiql/types/PType;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZ)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getSpecific ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {
 	public static final field Companion Lorg/partiql/spi/function/Aggregation$Companion;
 	public abstract fun getAccumulator ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;

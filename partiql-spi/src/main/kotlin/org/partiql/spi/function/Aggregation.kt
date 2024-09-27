@@ -8,16 +8,6 @@ import org.partiql.types.PType
  */
 public interface Aggregation : Routine {
 
-    // /**
-    //  * !! DO NOT OVERRIDE !!
-    //  */
-    // public override fun getSpecific(): String {
-    //     val name = getName()
-    //     val parameters = getParameters().joinToString("__") { it.getType().kind.name }
-    //     val returnType = getReturnType().kind.name
-    //     return "AGG_${name}___${parameters}___$returnType"
-    // }
-
     /**
      * Instantiates a stateful accumulator for this aggregation function.
      */
