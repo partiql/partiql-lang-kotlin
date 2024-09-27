@@ -33,12 +33,12 @@ public final class org/partiql/eval/PartiQLResult$Error : org/partiql/eval/Parti
 }
 
 public final class org/partiql/eval/PartiQLResult$Value : org/partiql/eval/PartiQLResult {
-	public fun <init> (Lorg/partiql/eval/value/Datum;)V
-	public final fun component1 ()Lorg/partiql/eval/value/Datum;
-	public final fun copy (Lorg/partiql/eval/value/Datum;)Lorg/partiql/eval/PartiQLResult$Value;
-	public static synthetic fun copy$default (Lorg/partiql/eval/PartiQLResult$Value;Lorg/partiql/eval/value/Datum;ILjava/lang/Object;)Lorg/partiql/eval/PartiQLResult$Value;
+	public fun <init> (Lorg/partiql/spi/value/Datum;)V
+	public final fun component1 ()Lorg/partiql/spi/value/Datum;
+	public final fun copy (Lorg/partiql/spi/value/Datum;)Lorg/partiql/eval/PartiQLResult$Value;
+	public static synthetic fun copy$default (Lorg/partiql/eval/PartiQLResult$Value;Lorg/partiql/spi/value/Datum;ILjava/lang/Object;)Lorg/partiql/eval/PartiQLResult$Value;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getValue ()Lorg/partiql/eval/value/Datum;
+	public final fun getValue ()Lorg/partiql/spi/value/Datum;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

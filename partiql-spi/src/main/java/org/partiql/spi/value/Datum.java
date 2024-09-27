@@ -637,8 +637,8 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      *
-     * @param value the string to place in the varchar
-     * @return a varchar value with a default length of 255
+     * @param value the string to place in the char
+     * @return a char value with a default length of 255
      */
     @NotNull
     static Datum character(@NotNull String value) {
@@ -647,8 +647,8 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      *
-     * @param value the string to place in the varchar
-     * @return a varchar value
+     * @param value the string to place in the char
+     * @return a char value
      */
     @NotNull
     static Datum character(@NotNull String value, int length) {

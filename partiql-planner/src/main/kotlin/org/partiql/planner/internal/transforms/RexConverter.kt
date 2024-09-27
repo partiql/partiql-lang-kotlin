@@ -876,45 +876,66 @@ internal object RexConverter {
                 is Type.Real -> PType.real()
                 is Type.Float32 -> PType.real()
                 is Type.Float64 -> PType.doublePrecision()
-                is Type.Decimal -> when {
-                    type.precision == null && type.scale == null -> PType.decimal()
-                    type.precision != null && type.scale != null -> {
-                        if (type.precision!! < 0 || type.scale!! < 0) {
-                            throw TypeCheckException("Decimal precision/scale cannot be less than 0.")
+                is Type.Decimal -> {
+                    val p = type.precision
+                    val s = type.scale
+                    when {
+                        p == null && s == null -> PType.decimal()
+                        p != null && s != null -> {
+                            assertParamCompToZero(PType.Kind.DECIMAL, "precision", p, false)
+                            assertParamCompToZero(PType.Kind.DECIMAL, "scale", s, true)
+                            if (s > p) {
+                                throw TypeCheckException("Decimal scale cannot be greater than precision.")
+                            }
+                            PType.decimal(p, s)
                         }
-                        if (type.precision == 0) {
-                            throw TypeCheckException("Decimal precision cannot be 0.")
+                        p != null && s == null -> {
+                            assertParamCompToZero(PType.Kind.DECIMAL, "precision", p, false)
+                            PType.decimal(p, 0)
                         }
-                        if (type.scale!! > type.precision!!) {
-                            throw TypeCheckException("Decimal scale cannot be greater than precision.")
-                        }
-                        PType.decimal(type.precision!!, type.scale!!)
+                        else -> error("Precision can never be null while scale is specified.")
                     }
-                    type.precision != null && type.scale == null -> PType.decimal(type.precision!!, 0)
-                    else -> error("Precision can never be null while scale is specified.")
                 }
-
-                is Type.Numeric -> when {
-                    type.precision == null && type.scale == null -> PType.decimal()
-                    type.precision != null && type.scale != null -> PType.decimal(type.precision!!, type.scale!!)
-                    type.precision != null && type.scale == null -> PType.decimal(type.precision!!, 0)
-                    else -> error("Precision can never be null while scale is specified.")
+                is Type.Numeric -> {
+                    val p = type.precision
+                    val s = type.scale
+                    when {
+                        p == null && s == null -> PType.decimal()
+                        p != null && s != null -> {
+                            assertParamCompToZero(PType.Kind.NUMERIC, "precision", p, false)
+                            assertParamCompToZero(PType.Kind.NUMERIC, "scale", s, true)
+                            if (s > p) {
+                                throw TypeCheckException("Numeric scale cannot be greater than precision.")
+                            }
+                            PType.decimal(type.precision!!, type.scale!!)
+                        }
+                        p != null && s == null -> {
+                            assertParamCompToZero(PType.Kind.NUMERIC, "precision", p, false)
+                            PType.decimal(p, 0)
+                        }
+                        else -> error("Precision can never be null while scale is specified.")
+                    }
                 }
-
-                is Type.Char -> PType.character(type.length ?: 1)
-                is Type.Varchar -> PType.varchar(type.length ?: 1)
+                is Type.Char -> {
+                    val length = type.length ?: 1
+                    assertGtZeroAndCreate(PType.Kind.CHAR, "length", length, PType::character)
+                }
+                is Type.Varchar -> {
+                    val length = type.length ?: 1
+                    assertGtZeroAndCreate(PType.Kind.VARCHAR, "length", length, PType::varchar)
+                }
                 is Type.String -> PType.string()
                 is Type.Symbol -> PType.symbol()
                 is Type.Bit -> error("BIT is not supported yet.")
                 is Type.BitVarying -> error("BIT VARYING is not supported yet.")
                 is Type.ByteString -> error("BINARY is not supported yet.")
-                is Type.Blob -> PType.blob(type.length ?: Int.MAX_VALUE)
-                is Type.Clob -> PType.clob(type.length ?: Int.MAX_VALUE)
+                is Type.Blob -> assertGtZeroAndCreate(PType.Kind.BLOB, "length", type.length ?: Int.MAX_VALUE, PType::blob)
+                is Type.Clob -> assertGtZeroAndCreate(PType.Kind.CLOB, "length", type.length ?: Int.MAX_VALUE, PType::clob)
                 is Type.Date -> PType.date()
-                is Type.Time -> PType.time(type.precision ?: 6)
-                is Type.TimeWithTz -> PType.timez(type.precision ?: 6)
-                is Type.Timestamp -> PType.timestamp(type.precision ?: 6)
-                is Type.TimestampWithTz -> PType.timestampz(type.precision ?: 6)
+                is Type.Time -> assertGtEqZeroAndCreate(PType.Kind.TIME, "precision", type.precision ?: 0, PType::time)
+                is Type.TimeWithTz -> assertGtEqZeroAndCreate(PType.Kind.TIMEZ, "precision", type.precision ?: 0, PType::timez)
+                is Type.Timestamp -> assertGtEqZeroAndCreate(PType.Kind.TIMESTAMP, "precision", type.precision ?: 6, PType::timestamp)
+                is Type.TimestampWithTz -> assertGtEqZeroAndCreate(PType.Kind.TIMESTAMPZ, "precision", type.precision ?: 6, PType::timestampz)
                 is Type.Interval -> error("INTERVAL is not supported yet.")
                 is Type.Bag -> PType.bag()
                 is Type.Sexp -> PType.sexp()
@@ -924,6 +945,29 @@ internal object RexConverter {
                 is Type.Tuple -> PType.struct()
                 is Type.Struct -> PType.struct()
             }.toCType()
+        }
+
+        private fun assertGtZeroAndCreate(type: PType.Kind, param: String, value: Int, create: (Int) -> PType): PType {
+            assertParamCompToZero(type, param, value, false)
+            return create.invoke(value)
+        }
+
+        private fun assertGtEqZeroAndCreate(type: PType.Kind, param: String, value: Int, create: (Int) -> PType): PType {
+            assertParamCompToZero(type, param, value, true)
+            return create.invoke(value)
+        }
+
+        /**
+         * @param allowZero when FALSE, this asserts that [value] > 0. If TRUE, this asserts that [value] >= 0.
+         */
+        private fun assertParamCompToZero(type: PType.Kind, param: String, value: Int, allowZero: Boolean) {
+            val (result, compString) = when (allowZero) {
+                true -> (value >= 0) to "greater than"
+                false -> (value > 0) to "greater than or equal to"
+            }
+            if (!result) {
+                throw TypeCheckException("$type $param must be an integer value $compString 0.")
+            }
         }
 
         override fun visitExprDateAdd(node: Expr.DateAdd, ctx: Env): Rex {
