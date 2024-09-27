@@ -5,9 +5,8 @@ import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.fn.FnSignature
-import org.partiql.spi.fn.Function
-import org.partiql.spi.fn.Parameter
+import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -22,14 +21,15 @@ class FnResolverTest {
     fun sanity() {
         // 1 + 1.0 -> 2.0
         val variants = listOf(
-            FnSignature(
+            Function.static(
                 name = "plus",
                 returns = PType.doublePrecision(),
-                parameters = listOf(
+                parameters = arrayOf(
                     Parameter("arg-0", PType.doublePrecision()),
                     Parameter("arg-1", PType.doublePrecision()),
                 ),
-            ).toFunction(),
+                invoke = { Datum.nullValue() }
+            )
         )
         val args = listOf(PType.integer().toCType(), PType.doublePrecision().toCType())
         val expectedImplicitCasts = listOf(true, false)
@@ -40,28 +40,20 @@ class FnResolverTest {
     @Test
     fun split() {
         val variants = listOf(
-            FnSignature(
+            Function.static(
                 name = "split",
                 returns = PType.array(),
-                parameters = listOf(
+                parameters = arrayOf(
                     Parameter("value", PType.string()),
                     Parameter("delimiter", PType.string()),
                 ),
-                isNullable = false,
-            ).toFunction()
+                invoke = { Datum.nullValue() }
+            )
         )
         val args = listOf(PType.string().toCType(), PType.string().toCType())
         val expectedImplicitCasts = listOf(false, false)
         val case = Case.Success(variants, args, expectedImplicitCasts)
         case.assert()
-    }
-
-    private fun FnSignature.toFunction(): Function {
-        val self = this
-        return object : Function {
-            override val signature: FnSignature = self
-            override fun invoke(args: Array<Datum>): Datum = Datum.nullValue()
-        }
     }
 
     private sealed class Case {

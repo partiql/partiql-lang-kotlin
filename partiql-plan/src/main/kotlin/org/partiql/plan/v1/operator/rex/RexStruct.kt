@@ -25,9 +25,12 @@ public interface RexStruct : Rex {
     /**
      * TODO DOCUMENTATION
      */
-    public interface Field {
-        public fun getKey(): Rex
-        public fun getValue(): Rex
+    public class Field(
+        private var key: Rex,
+        private var value: Rex,
+    ) {
+        public fun getKey(): Rex = key
+        public fun getValue(): Rex = value
     }
 }
 

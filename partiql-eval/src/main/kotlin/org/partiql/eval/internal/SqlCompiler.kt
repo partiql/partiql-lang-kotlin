@@ -28,8 +28,8 @@ import org.partiql.eval.internal.operator.rel.RelOpUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelOpUnpivot
 import org.partiql.eval.internal.operator.rex.ExprArray
 import org.partiql.eval.internal.operator.rex.ExprBag
+import org.partiql.eval.internal.operator.rex.ExprCall
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic
-import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCaseBranch
 import org.partiql.eval.internal.operator.rex.ExprCaseSearched
 import org.partiql.eval.internal.operator.rex.ExprCast
@@ -90,8 +90,8 @@ import org.partiql.plan.v1.operator.rel.RelVisitor
 import org.partiql.plan.v1.operator.rex.Rex
 import org.partiql.plan.v1.operator.rex.RexArray
 import org.partiql.plan.v1.operator.rex.RexBag
+import org.partiql.plan.v1.operator.rex.RexCall
 import org.partiql.plan.v1.operator.rex.RexCallDynamic
-import org.partiql.plan.v1.operator.rex.RexCallStatic
 import org.partiql.plan.v1.operator.rex.RexCase
 import org.partiql.plan.v1.operator.rex.RexCast
 import org.partiql.plan.v1.operator.rex.RexCoalesce
@@ -114,7 +114,7 @@ import org.partiql.plan.v1.operator.rex.RexTable
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVisitor
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.plan.Rel as IRel
@@ -348,45 +348,40 @@ internal class SqlCompiler(
         }
 
         override fun visitCallDynamic(rex: RexCallDynamic, ctx: Unit): Operator.Expr {
-            // Check candidate name and arity for uniformity
+            // Check candidate arity for uniformity
             var arity: Int = -1
-            var name = "unknown"
+            val name = rex.getName()
             // Check the candidate list size
             val functions = rex.getFunctions()
             if (functions.isEmpty()) {
-                error("Rex.Op.Call.Dynamic had an empty candidates list: $rex.")
+                error("Dynamic call had an empty candidates list: $rex.")
             }
             // Compile the candidates
             val candidates = Array(functions.size) {
                 val fn = functions[it]
-                val fnArity = fn.signature.parameters.size
-                val fnName = fn.signature.name.uppercase()
+                val fnArity = fn.parameters.size
                 if (arity == -1) {
+                    // set first
                     arity = fnArity
-                    name = fnName
                 } else {
                     if (fnArity != arity) {
                         error("Dynamic call candidate had different arity than others; found $fnArity but expected $arity")
                     }
-                    if (fnName != name) {
-                        error("Dynamic call candidate had different name than others; found $fnName but expected $name")
-                    }
                 }
+                // make a candidate
                 fn
             }
             val args = rex.getArgs().map { compile(it, ctx).catch() }.toTypedArray()
             return ExprCallDynamic(name, candidates, args)
         }
 
-        override fun visitCallStatic(rex: RexCallStatic, ctx: Unit): Operator.Expr {
-            val fn = rex.getFunction()
-            val args = rex.getArgs().map { compile(it, ctx) }
-            val fnTakesInMissing = fn.signature.parameters.any {
-                it.getType().kind == PType.Kind.DYNAMIC // TODO: Is this needed?
-            }
-            return when (fnTakesInMissing) {
-                true -> ExprCallStatic(fn, args.map { it.catch() }.toTypedArray())
-                else -> ExprCallStatic(fn, args.toTypedArray())
+        override fun visitCall(rex: RexCall, ctx: Unit): Operator.Expr {
+            val func = rex.getFunction()
+            val args = rex.getArgs()
+            val catch = func.parameters.any { it.kind == PType.Kind.DYNAMIC }
+            return when (catch) {
+                true -> ExprCall(func, Array(args.size) { i -> compile(args[i]).catch() })
+                else -> ExprCall(func, Array(args.size) { i -> compile(args[i]) })
             }
         }
 

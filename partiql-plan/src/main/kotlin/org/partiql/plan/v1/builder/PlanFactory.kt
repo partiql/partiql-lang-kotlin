@@ -44,10 +44,10 @@ import org.partiql.plan.v1.operator.rex.RexArray
 import org.partiql.plan.v1.operator.rex.RexArrayImpl
 import org.partiql.plan.v1.operator.rex.RexBag
 import org.partiql.plan.v1.operator.rex.RexBagImpl
+import org.partiql.plan.v1.operator.rex.RexCall
 import org.partiql.plan.v1.operator.rex.RexCallDynamic
 import org.partiql.plan.v1.operator.rex.RexCallDynamicImpl
-import org.partiql.plan.v1.operator.rex.RexCallStatic
-import org.partiql.plan.v1.operator.rex.RexCallStaticImpl
+import org.partiql.plan.v1.operator.rex.RexCallImpl
 import org.partiql.plan.v1.operator.rex.RexCase
 import org.partiql.plan.v1.operator.rex.RexCaseImpl
 import org.partiql.plan.v1.operator.rex.RexCast
@@ -89,8 +89,8 @@ import org.partiql.plan.v1.operator.rex.RexTableImpl
 import org.partiql.plan.v1.operator.rex.RexVar
 import org.partiql.plan.v1.operator.rex.RexVarImpl
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.fn.Aggregation
-import org.partiql.spi.fn.Function
+import org.partiql.spi.function.Aggregation
+import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -341,13 +341,13 @@ public interface PlanFactory {
     public fun rexBag(values: Collection<Rex>): RexBag = RexBagImpl(values)
 
     /**
-     * Create a [RexCallStatic] instance.
+     * Create a [RexCall] instance.
      *
      * @param function
      * @param args
      * @return
      */
-    public fun rexCall(function: Function, args: List<Rex>): RexCallStatic = RexCallStaticImpl(function, args)
+    public fun rexCall(function: Function.Instance, args: List<Rex>): RexCall = RexCallImpl(function, args)
 
     /**
      * Create a [RexCallDynamic] instance.
@@ -356,7 +356,7 @@ public interface PlanFactory {
      * @param args
      * @return
      */
-    public fun rexCall(functions: List<Function>, args: List<Rex>): RexCallDynamic = RexCallDynamicImpl(functions, args)
+    public fun rexCallDynamic(name: String, functions: List<Function.Instance>, args: List<Rex>): RexCallDynamic = RexCallDynamicImpl(name, functions, args)
 
     /**
      * Create a [RexCase] instance for a searched case-when.

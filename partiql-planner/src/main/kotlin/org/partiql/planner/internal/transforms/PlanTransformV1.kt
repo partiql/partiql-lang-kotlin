@@ -168,13 +168,16 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
-            val fns = node.candidates.map { it.fn.signature }
+            // TODO add argument types and move to plan typer!!
+            val fns = node.candidates.map { it.fn.signature.getInstance(emptyArray()) }
             val args = node.args.map { visitRex(it, ctx) }
-            return factory.rexCall(fns, args)
+            // TODO assert on function name in plan typer .. here is not the place.
+            return factory.rexCallDynamic("unknown", fns, args)
         }
 
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
-            val fn = node.fn.signature
+            // TODO add argument types and move to PlanTyper!!
+            val fn = node.fn.signature.getInstance(emptyArray())
             val args = node.args.map { visitRex(it, ctx) }
             return factory.rexCall(fn, args)
         }
@@ -408,10 +411,7 @@ internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
         private fun field(field: IRex.Op.Struct.Field): RexStruct.Field {
             val key = visitRex(field.k, field.k.type)
             val value = visitRex(field.v, field.v.type)
-            return object : RexStruct.Field {
-                override fun getKey(): Rex = key
-                override fun getValue(): Rex = value
-            }
+            return RexStruct.Field(key, value)
         }
 
         private fun branch(branch: IRex.Op.Case.Branch): RexCase.Branch {

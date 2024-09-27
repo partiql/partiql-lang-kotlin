@@ -26,7 +26,7 @@ internal sealed interface Operator {
 
     interface Aggregation : Operator {
 
-        val delegate: org.partiql.spi.fn.Aggregation
+        val delegate: org.partiql.spi.function.Aggregation
 
         val args: List<Expr>
 

@@ -3,8 +3,9 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.spi.fn.Aggregation
+import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
+import org.partiql.types.PType
 import java.util.TreeMap
 import java.util.TreeSet
 
@@ -40,10 +41,14 @@ internal class RelOpAggregate(
                     false -> key
                 }
             }
+
+            // TODO IT DOES NOT MATTER NOW, BUT SqlCompiler SHOULD HANDLE GET THE ARGUMENT TYPES FOR .getAccumulator
+            val args: Array<PType> = emptyArray()
+
             val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
                 functions.map {
                     AccumulatorWrapper(
-                        delegate = it.delegate.accumulator(),
+                        delegate = it.delegate.getAccumulator(args),
                         args = it.args,
                         seen = when (it.setQuantifier) {
                             Operator.Aggregation.SetQuantifier.DISTINCT -> TreeSet(DatumArrayComparator)
@@ -75,7 +80,7 @@ internal class RelOpAggregate(
         if (keys.isEmpty() && aggregationMap.isEmpty()) {
             val record = mutableListOf<Datum>()
             functions.forEach { function ->
-                val accumulator = function.delegate.accumulator()
+                val accumulator = function.delegate.getAccumulator(args = emptyArray())
                 record.add(accumulator.value())
             }
             records = iterator { yield(Record.of(*record.toTypedArray())) }
