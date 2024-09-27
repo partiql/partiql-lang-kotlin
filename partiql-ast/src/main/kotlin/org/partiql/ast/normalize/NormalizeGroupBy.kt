@@ -25,7 +25,7 @@ import org.partiql.ast.util.AstRewriter
 /**
  * Adds a unique binder to each group key.
  */
-object NormalizeGroupBy : AstPass {
+internal object NormalizeGroupBy : AstPass {
 
     override fun apply(statement: Statement) = Visitor.visitStatement(statement, 0) as Statement
 

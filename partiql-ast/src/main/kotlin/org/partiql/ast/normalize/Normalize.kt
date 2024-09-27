@@ -1,3 +1,4 @@
+@file:JvmName("Normalize")
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
@@ -19,7 +20,7 @@ import org.partiql.ast.Statement
 /**
  * AST normalization
  */
-public fun Statement.normalize(): Statement {
+public fun Statement.normalize(): Statement { // TODO: Make this Java friendly and consider moving to planner package.
     // could be a fold, but this is nice for setting breakpoints
     var ast = this
     ast = NormalizeFromSource.apply(ast)

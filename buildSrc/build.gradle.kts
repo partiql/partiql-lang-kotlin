@@ -29,7 +29,6 @@ object Versions {
     const val kotlin = "1.9.20"
     const val ktlintGradle = "10.2.1"
     const val nexusPublish = "2.0.0"
-    const val pig = "0.6.3"
     const val shadow = "8.1.1"
 }
 
@@ -40,7 +39,6 @@ object Plugins {
     const val kotlinGradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val ktlintGradle = "org.jlleitschuh.gradle:ktlint-gradle:${Versions.ktlintGradle}"
     const val nexusPublish = "io.github.gradle-nexus:publish-plugin:${Versions.nexusPublish}"
-    const val pig = "org.partiql:pig-gradle-plugin:${Versions.pig}"
     const val shadow = "com.github.johnrengelman:shadow:${Versions.shadow}"
 }
 
@@ -50,7 +48,6 @@ dependencies {
     implementation(Plugins.kotlinGradle)
     implementation(Plugins.ktlintGradle)
     implementation(Plugins.nexusPublish)
-    implementation(Plugins.pig)
     implementation(Plugins.binaryCompatibilityValidator)
     implementation(Plugins.shadow)
 }

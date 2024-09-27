@@ -27,7 +27,6 @@ dependencies {
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
     // Test
-    testImplementation(project(":lib:isl"))
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
