@@ -1,3 +1,4 @@
+@file:JvmName("Normalize")
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
  *

@@ -4988,82 +4988,49 @@ public final class org/partiql/ast/helpers/ToBinderKt {
 	public static final fun toBinder (Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function0;)Lorg/partiql/ast/Identifier$Symbol;
 }
 
-public final class org/partiql/ast/normalize/NormalizeKt {
+public final class org/partiql/ast/normalize/Normalize {
 	public static final fun normalize (Lorg/partiql/ast/Statement;)Lorg/partiql/ast/Statement;
 }
 
-public abstract class org/partiql/ast/sql/BlockBaseVisitor : org/partiql/ast/sql/BlockVisitor {
+public abstract class org/partiql/ast/sql/SqlBlock {
+	public static final field Companion Lorg/partiql/ast/sql/SqlBlock$Companion;
+	public field next Lorg/partiql/ast/sql/SqlBlock;
+	public static final fun line ()Lorg/partiql/ast/sql/SqlBlock;
+	public static final fun none ()Lorg/partiql/ast/sql/SqlBlock;
+}
+
+public final class org/partiql/ast/sql/SqlBlock$Companion {
+	public final fun line ()Lorg/partiql/ast/sql/SqlBlock;
+	public final fun none ()Lorg/partiql/ast/sql/SqlBlock;
+}
+
+public final class org/partiql/ast/sql/SqlBlock$Line : org/partiql/ast/sql/SqlBlock {
 	public fun <init> ()V
-	public abstract fun defaultReturn (Lorg/partiql/ast/sql/SqlBlock;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun defaultVisit (Lorg/partiql/ast/sql/SqlBlock;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visit (Lorg/partiql/ast/sql/SqlBlock;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitLink (Lorg/partiql/ast/sql/SqlBlock$Link;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitNest (Lorg/partiql/ast/sql/SqlBlock$Nest;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitNewline (Lorg/partiql/ast/sql/SqlBlock$NL;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitNil (Lorg/partiql/ast/sql/SqlBlock$Nil;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitText (Lorg/partiql/ast/sql/SqlBlock$Text;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public abstract interface class org/partiql/ast/sql/BlockVisitor {
-	public abstract fun visit (Lorg/partiql/ast/sql/SqlBlock;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitLink (Lorg/partiql/ast/sql/SqlBlock$Link;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitNest (Lorg/partiql/ast/sql/SqlBlock$Nest;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitNewline (Lorg/partiql/ast/sql/SqlBlock$NL;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitNil (Lorg/partiql/ast/sql/SqlBlock$Nil;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitText (Lorg/partiql/ast/sql/SqlBlock$Text;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public abstract interface class org/partiql/ast/sql/SqlBlock {
-	public abstract fun accept (Lorg/partiql/ast/sql/BlockVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/sql/SqlBlock$Link : org/partiql/ast/sql/SqlBlock {
-	public fun <init> (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlBlock;)V
-	public fun accept (Lorg/partiql/ast/sql/BlockVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public final fun getLhs ()Lorg/partiql/ast/sql/SqlBlock;
-	public final fun getRhs ()Lorg/partiql/ast/sql/SqlBlock;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/sql/SqlBlock$NL : org/partiql/ast/sql/SqlBlock {
-	public static final field INSTANCE Lorg/partiql/ast/sql/SqlBlock$NL;
-	public fun accept (Lorg/partiql/ast/sql/BlockVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/ast/sql/SqlBlock$Nest : org/partiql/ast/sql/SqlBlock {
-	public fun <init> (Lorg/partiql/ast/sql/SqlBlock;)V
-	public fun accept (Lorg/partiql/ast/sql/BlockVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public final fun getChild ()Lorg/partiql/ast/sql/SqlBlock;
-	public fun toString ()Ljava/lang/String;
+	public field child Lorg/partiql/ast/sql/SqlBlock;
+	public field postfix Ljava/lang/String;
+	public field prefix Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lorg/partiql/ast/sql/SqlBlock;)V
 }
 
-public final class org/partiql/ast/sql/SqlBlock$Nil : org/partiql/ast/sql/SqlBlock {
-	public static final field INSTANCE Lorg/partiql/ast/sql/SqlBlock$Nil;
-	public fun accept (Lorg/partiql/ast/sql/BlockVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun toString ()Ljava/lang/String;
+public final class org/partiql/ast/sql/SqlBlock$None : org/partiql/ast/sql/SqlBlock {
+	public fun <init> ()V
 }
 
 public final class org/partiql/ast/sql/SqlBlock$Text : org/partiql/ast/sql/SqlBlock {
+	public field text Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;)V
-	public fun accept (Lorg/partiql/ast/sql/BlockVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public final fun getText ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/sql/SqlBlockKt {
-	public static final fun sql (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlLayout;)Ljava/lang/String;
-	public static synthetic fun sql$default (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlLayout;ILjava/lang/Object;)Ljava/lang/String;
 }
 
 public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/AstBaseVisitor {
 	public static final field Companion Lorg/partiql/ast/sql/SqlDialect$Companion;
 	public fun <init> ()V
-	public final fun apply (Lorg/partiql/ast/AstNode;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun defaultReturn (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public static final fun getPARTIQL ()Lorg/partiql/ast/sql/SqlDialect;
+	public static final fun getSTANDARD ()Lorg/partiql/ast/sql/SqlDialect;
+	public final fun transform (Lorg/partiql/ast/AstNode;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExcludeItem (Lorg/partiql/ast/Exclude$Item;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5276,44 +5243,28 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/visitor/A
 }
 
 public final class org/partiql/ast/sql/SqlDialect$Companion {
-	public final fun getPARTIQL ()Lorg/partiql/ast/sql/SqlDialect;
+	public final fun getSTANDARD ()Lorg/partiql/ast/sql/SqlDialect;
 }
 
 public final class org/partiql/ast/sql/SqlKt {
 	public static final fun sql (Lorg/partiql/ast/AstNode;)Ljava/lang/String;
-	public static final fun sql (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlDialect;)Ljava/lang/String;
 	public static final fun sql (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;)Ljava/lang/String;
 	public static final fun sql (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;Lorg/partiql/ast/sql/SqlDialect;)Ljava/lang/String;
-	public static synthetic fun sql$default (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlDialect;ILjava/lang/Object;)Ljava/lang/String;
-	public static synthetic fun sql$default (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun sql (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlLayout;)Ljava/lang/String;
+	public static synthetic fun sql$default (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlLayout;Lorg/partiql/ast/sql/SqlDialect;ILjava/lang/Object;)Ljava/lang/String;
+	public static synthetic fun sql$default (Lorg/partiql/ast/sql/SqlBlock;Lorg/partiql/ast/sql/SqlLayout;ILjava/lang/Object;)Ljava/lang/String;
 }
 
-public abstract class org/partiql/ast/sql/SqlLayout {
+public abstract interface class org/partiql/ast/sql/SqlLayout {
 	public static final field Companion Lorg/partiql/ast/sql/SqlLayout$Companion;
-	public fun <init> ()V
-	public fun format (Lorg/partiql/ast/sql/SqlBlock;)Ljava/lang/String;
-	public abstract fun getIndent ()Lorg/partiql/ast/sql/SqlLayout$Indent;
+	public static fun getONELINE ()Lorg/partiql/ast/sql/SqlLayout;
+	public static fun getSTANDARD ()Lorg/partiql/ast/sql/SqlLayout;
+	public abstract fun print (Lorg/partiql/ast/sql/SqlBlock;)Ljava/lang/String;
 }
 
 public final class org/partiql/ast/sql/SqlLayout$Companion {
-	public final fun getDEFAULT ()Lorg/partiql/ast/sql/SqlLayout;
 	public final fun getONELINE ()Lorg/partiql/ast/sql/SqlLayout;
-}
-
-public final class org/partiql/ast/sql/SqlLayout$Indent {
-	public fun <init> (ILorg/partiql/ast/sql/SqlLayout$Indent$Type;)V
-	public final fun getCount ()I
-	public final fun getType ()Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/sql/SqlLayout$Indent$Type : java/lang/Enum {
-	public static final field SPACE Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
-	public static final field TAB Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
-	public final fun getChar ()C
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
-	public static fun values ()[Lorg/partiql/ast/sql/SqlLayout$Indent$Type;
+	public final fun getSTANDARD ()Lorg/partiql/ast/sql/SqlLayout;
 }
 
 public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor/AstBaseVisitor {

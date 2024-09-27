@@ -1,93 +1,72 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
 package org.partiql.ast.sql
 
 /**
- * Write this [SqlBlock] tree as SQL text with the given [SqlLayout].
- *
- * @param layout    SQL formatting ruleset
- * @return SQL text
+ * Representation of some textual elements as a token (singly-linked) list.
  */
-@Deprecated("To be removed in the next major version")
-public fun SqlBlock.sql(layout: SqlLayout = SqlLayout.DEFAULT): String = layout.format(this)
+public sealed class SqlBlock {
 
-/**
- * Representation of some textual corpus; akin to Wadler's "A prettier printer" Document type.
- */
-@Deprecated("This will be changed in the next major version")
-public sealed interface SqlBlock {
+    /**
+     * Next token (if any) in the list.
+     */
+    @JvmField
+    public var next: SqlBlock? = null
 
-    public override fun toString(): String
+    /**
+     * An empty [SqlBlock] to be used as a root.
+     */
+    public class None : SqlBlock()
 
-    public fun <R, C> accept(visitor: BlockVisitor<R, C>, ctx: C): R
+    /**
+     * A newline token.
+     */
+    public class Line : SqlBlock()
 
-    public object Nil : SqlBlock {
+    /**
+     * A raw text token. Cannot be broken.
+     */
+    public class Text(@JvmField public var text: String) : SqlBlock()
 
-        override fun toString(): String = ""
+    /**
+     * A nest token representing a (possible indented) token sublist.
+     *
+     * @property prefix     A prefix character such as '{', '(', or '['.
+     * @property postfix    A postfix character such as  '}', ')', or ']'.
+     * @property child
+     */
+    public class Nest(
+        @JvmField public var prefix: String?,
+        @JvmField public var postfix: String?,
+        @JvmField public var child: SqlBlock,
+    ) : SqlBlock()
 
-        override fun <R, C> accept(visitor: BlockVisitor<R, C>, ctx: C): R = visitor.visitNil(this, ctx)
+    public companion object {
+
+        /**
+         * Helper function to create root node (empty).
+         */
+        @JvmStatic
+        public fun none(): SqlBlock = None()
+
+        /**
+         * Helper function to create a newline node.
+         *
+         * @return
+         */
+        @JvmStatic
+        public fun line(): SqlBlock = Line()
     }
-
-    public object NL : SqlBlock {
-
-        override fun toString(): String = "\n"
-
-        override fun <R, C> accept(visitor: BlockVisitor<R, C>, ctx: C): R = visitor.visitNewline(this, ctx)
-    }
-
-    public class Text(public val text: String) : SqlBlock {
-
-        override fun toString(): String = text
-
-        override fun <R, C> accept(visitor: BlockVisitor<R, C>, ctx: C): R = visitor.visitText(this, ctx)
-    }
-
-    public class Nest(public val child: SqlBlock) : SqlBlock {
-
-        override fun toString(): String = child.toString()
-
-        override fun <R, C> accept(visitor: BlockVisitor<R, C>, ctx: C): R = visitor.visitNest(this, ctx)
-    }
-
-    // Use link block rather than linked-list block.next as it makes pre-order traversal trivial
-    public class Link(public val lhs: SqlBlock, public val rhs: SqlBlock) : SqlBlock {
-
-        override fun toString(): String = lhs.toString() + rhs.toString()
-
-        override fun <R, C> accept(visitor: BlockVisitor<R, C>, ctx: C): R = visitor.visitLink(this, ctx)
-    }
-}
-
-@Deprecated("This will be changed in the next major version")
-public interface BlockVisitor<R, C> {
-
-    public fun visit(block: SqlBlock, ctx: C): R
-
-    public fun visitNil(block: SqlBlock.Nil, ctx: C): R
-
-    public fun visitNewline(block: SqlBlock.NL, ctx: C): R
-
-    public fun visitText(block: SqlBlock.Text, ctx: C): R
-
-    public fun visitNest(block: SqlBlock.Nest, ctx: C): R
-
-    public fun visitLink(block: SqlBlock.Link, ctx: C): R
-}
-
-@Deprecated("This will be changed in the next major version")
-public abstract class BlockBaseVisitor<R, C> : BlockVisitor<R, C> {
-
-    public abstract fun defaultReturn(block: SqlBlock, ctx: C): R
-
-    public open fun defaultVisit(block: SqlBlock, ctx: C): R = defaultReturn(block, ctx)
-
-    public override fun visit(block: SqlBlock, ctx: C): R = block.accept(this, ctx)
-
-    public override fun visitNil(block: SqlBlock.Nil, ctx: C): R = defaultVisit(block, ctx)
-
-    public override fun visitNewline(block: SqlBlock.NL, ctx: C): R = defaultVisit(block, ctx)
-
-    public override fun visitText(block: SqlBlock.Text, ctx: C): R = defaultVisit(block, ctx)
-
-    public override fun visitNest(block: SqlBlock.Nest, ctx: C): R = defaultVisit(block, ctx)
-
-    public override fun visitLink(block: SqlBlock.Link, ctx: C): R = defaultVisit(block, ctx)
 }
