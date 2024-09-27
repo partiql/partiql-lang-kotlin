@@ -23,7 +23,7 @@ application {
 }
 
 dependencies {
-    implementation(project(":partiql-lang"))
+    implementation("org.partiql:partiql-lang-kotlin:0.14.8")
     implementation(Deps.kotlinxCoroutines)
     implementation(Deps.kotlinxCoroutinesJdk8)
     implementation(Deps.awsSdkS3)

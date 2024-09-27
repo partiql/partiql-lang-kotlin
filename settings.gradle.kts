@@ -20,7 +20,6 @@ include(
     "partiql-cli",
     "partiql-coverage",
     "partiql-eval",
-    "partiql-lang",
     "partiql-parser",
     "partiql-plan",
     "partiql-planner",

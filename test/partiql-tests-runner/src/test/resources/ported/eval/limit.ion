@@ -1,0 +1,175 @@
+
+envs::{
+  foo:[
+    {
+      a:1
+    },
+    {
+      a:2
+    },
+    {
+      a:3
+    },
+    {
+      a:4
+    },
+    {
+      a:5
+    }
+  ]
+}
+{
+  name:"SELECT * FROM foo LIMIT 2",
+  statement:"SELECT * FROM foo LIMIT 2",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:1
+      },
+      {
+        a:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo LIMIT 1",
+  statement:"SELECT * FROM foo LIMIT 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo LIMIT 2147483647",
+  statement:"SELECT * FROM foo LIMIT 2147483647",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:1
+      },
+      {
+        a:2
+      },
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1",
+  statement:"SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        g:$bag::[
+          {
+            f:{
+              foo:1,
+              bar:10
+            }
+          },
+          {
+            f:{
+              foo:1,
+              bar:11
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+{
+  name:" select * from <<1>> limit 'this won''t work' ",
+  statement:" select * from <<1>> limit 'this won''t work' ",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo LIMIT 0",
+  statement:"SELECT * FROM foo LIMIT 0",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo LIMIT 9223372036854775807",
+  statement:"SELECT * FROM foo LIMIT 9223372036854775807",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:1
+      },
+      {
+        a:2
+      },
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"select * from <<1>> limit -1",
+  statement:"select * from <<1>> limit -1",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}

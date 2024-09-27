@@ -3,15 +3,19 @@ package org.partiql.runner
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.CompileOptions
 import org.partiql.runner.schema.TestCase
 import org.partiql.runner.test.TestProvider
 import org.partiql.runner.test.TestRunner
 
 abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>
-    abstract val skipListForEvaluation: List<Pair<String, CompileOptions>>
-    abstract val skipListForEquivalence: List<Pair<String, CompileOptions>>
+    abstract val skipListForEvaluation: Set<Pair<String, CompileType>>
+    abstract val skipListForEquivalence: Set<Pair<String, CompileType>>
+
+    companion object {
+        val COERCE_EVAL_MODE_COMPILE_OPTIONS = CompileType.PERMISSIVE
+        val ERROR_EVAL_MODE_COMPILE_OPTIONS = CompileType.STRICT
+    }
 
     // Tests the eval tests with the Kotlin implementation
     // Unit is second.
@@ -37,5 +41,30 @@ abstract class ConformanceTestBase<T, V> {
             is TestCase.Equiv -> runner.test(tc, skipListForEquivalence)
             else -> error("Unsupported test case category")
         }
+    }
+
+    protected fun getSkipList(path: String): Set<Pair<String, CompileType>> {
+        val reader = this::class.java.getResourceAsStream(path)?.bufferedReader() ?: error("Could not find skip list file.")
+        val skipList = mutableSetOf<Pair<String, CompileType>>()
+        reader.lines().forEach { line ->
+            // Skip empty lines
+            if (line.isEmpty()) {
+                return@forEach
+            }
+            // Skip comments
+            if (line.startsWith("//")) {
+                return@forEach
+            }
+            val parts = line.split(":::")
+            assert(parts.size == 2)
+            val compileOptions = when (parts[0]) {
+                "PERMISSIVE" -> COERCE_EVAL_MODE_COMPILE_OPTIONS
+                "STRICT" -> ERROR_EVAL_MODE_COMPILE_OPTIONS
+                else -> throw IllegalArgumentException("Unknown typing mode: ${parts[0]}")
+            }
+            skipList.add(Pair(parts[1], compileOptions))
+        }
+        reader.close()
+        return skipList
     }
 }

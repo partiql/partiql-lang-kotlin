@@ -2,6 +2,8 @@ name: Conformance Test Report Generation
 on: [push, pull_request]
 
 env:
+  LEGACY_VERSION: v0.14.8
+  CONFORMANCE_REPORT_NAME: conformance_test_results.ion
   PATH_TO_TEST_RUNNER: test/partiql-tests-runner
   CONFORMANCE_REPORT_RELATIVE_PATH: build/conformance-test-report
   COMPARISON_REPORT_NAME: comparison_report.md
@@ -35,7 +37,7 @@ jobs:
       - name: Upload `conformance-test-report` folder
         uses: actions/upload-artifact@v3
         with:
-          path: ${{ env.PATH_TO_TEST_RUNNER }}/build/conformance-test-report
+          path: ${{ env.PATH_TO_TEST_RUNNER }}/${{ env.CONFORMANCE_REPORT_RELATIVE_PATH }}
       # Cache the conformance report for `conformance-report-comparison` job (pull_request event only)
       - name: Cache conformance report and build
         if: github.event_name == 'pull_request'
@@ -96,11 +98,31 @@ jobs:
         run: |
           mkdir -p $GITHUB_WORKSPACE/artifact
           cp -r $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH $GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_RELATIVE_PATH
-      # Run conformance report comparison. Generates `comparison_report.md`
-      - name: Run conformance report comparison for artifact. Generates `comparison_report.md`
+      - name: "Artifact CROSS-ENGINE Report (creates comparison_report.md)"
         continue-on-error: true
         run: |
-          ARGS="$GITHUB_WORKSPACE/artifact $CONFORMANCE_REPORT_RELATIVE_PATH ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME"
+          T="CROSS-ENGINE-REPORT"
+          BF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/src/main/resources/config/legacy/$CONFORMANCE_REPORT_NAME"
+          BL="LEGACY"
+          BT="$LEGACY_VERSION"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
+          TL="EVAL"
+          TT="$GITHUB_SHA"
+          O="$COMPARISON_REPORT_NAME"
+          ARGS="-t $T -bf $BF -bl $BL -bt $BT -tf $TF -tl $TL -tt $TT -o $O"
+          gradle :test:partiql-tests-runner:run --args="$ARGS"
+      - name: "Artifact CROSS-COMMIT Report (appends to comparison_report.md)"
+        continue-on-error: true
+        run: |
+          T="CROSS-COMMIT-REPORT"
+          BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
+          BL="EVAL"
+          BT="${{ github.event.pull_request.base.sha }}"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
+          TL="EVAL"
+          TT="$GITHUB_SHA"
+          O="$COMPARISON_REPORT_NAME"
+          ARGS="-t $T -bf $BF -bl $BL -bt $BT -tf $TF -tl $TL -tt $TT -o $O"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Print conformance report to GitHub actions workflow summary page
       - name: Print markdown in run
@@ -111,11 +133,33 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ${{ env.PATH_TO_TEST_RUNNER }}/comparison_report.md
-      # Rebuild the test report with a size limit for comment
-      - name: Run conformance report comparison for comment. Generates `comparison_report_limited.md`
+      - name: "Comment CROSS-ENGINE Report (creates comparison_report_limited.md)"
         continue-on-error: true
         run: |
-          ARGS="$GITHUB_WORKSPACE/artifact $CONFORMANCE_REPORT_RELATIVE_PATH ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME_WITH_LIMIT $COMMENT_SIZE_LIMIT"
+          T="CROSS-ENGINE-REPORT"
+          BF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/src/main/resources/config/legacy/$CONFORMANCE_REPORT_NAME"
+          BL="LEGACY"
+          BT="$LEGACY_VERSION"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
+          TL="EVAL"
+          TT="$GITHUB_SHA"
+          O="$COMPARISON_REPORT_NAME_WITH_LIMIT"
+          L="$COMMENT_SIZE_LIMIT"
+          ARGS="-t $T -bf $BF -bl $BL -bt $BT -tf $TF -tl $TL -tt $TT -o $O -l $L"
+          gradle :test:partiql-tests-runner:run --args="$ARGS"
+      - name: "Comment CROSS-COMMIT Report (appends to comparison_report_limited.md)"
+        continue-on-error: true
+        run: |
+          T="CROSS-COMMIT-REPORT"
+          BF="$GITHUB_WORKSPACE/artifact/eval/$CONFORMANCE_REPORT_NAME"
+          BL="EVAL"
+          BT="${{ github.event.pull_request.base.sha }}"
+          TF="$GITHUB_WORKSPACE/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH/eval/$CONFORMANCE_REPORT_NAME"
+          TL="EVAL"
+          TT="$GITHUB_SHA"
+          O="$COMPARISON_REPORT_NAME_WITH_LIMIT"
+          L="$COMMENT_SIZE_LIMIT"
+          ARGS="-t $T -bf $BF -bl $BL -bt $BT -tf $TF -tl $TL -tt $TT -o $O -l $L"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Find comment w/ conformance comparison if previous comment published
       - name: Find Comment

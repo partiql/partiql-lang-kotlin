@@ -18,13 +18,12 @@ plugins {
 }
 
 dependencies {
-    // partiql-lang + tests
-    testImplementation project(':partiql-lang')
-    testImplementation project(':partiql-lang').sourceSets.test.output
-    testImplementation testFixtures(project(':partiql-lang'))
-    // partiql-eval + tests
+    testImplementation project(':partiql-ast')
     testImplementation project(':partiql-eval')
-    testImplementation project(':partiql-eval').sourceSets.test.output
+    testImplementation project(':partiql-parser')
+    testImplementation project(':partiql-plan')
+    testImplementation project(':partiql-planner')
+
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
     testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'

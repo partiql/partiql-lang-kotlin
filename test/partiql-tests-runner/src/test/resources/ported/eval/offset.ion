@@ -1,0 +1,383 @@
+
+envs::{
+  foo:[
+    {
+      a:1
+    },
+    {
+      a:2
+    },
+    {
+      a:3
+    },
+    {
+      a:4
+    },
+    {
+      a:5
+    }
+  ]
+}
+{
+  name:"SELECT * FROM foo OFFSET 0",
+  statement:"SELECT * FROM foo OFFSET 0",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:1
+      },
+      {
+        a:2
+      },
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo OFFSET 1",
+  statement:"SELECT * FROM foo OFFSET 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:2
+      },
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo OFFSET 2",
+  statement:"SELECT * FROM foo OFFSET 2",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo OFFSET 2147483647",
+  statement:"SELECT * FROM foo OFFSET 2147483647",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo OFFSET 9223372036854775807",
+  statement:"SELECT * FROM foo OFFSET 9223372036854775807",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo LIMIT 1 OFFSET 1",
+  statement:"SELECT * FROM foo LIMIT 1 OFFSET 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo LIMIT 10 OFFSET 1",
+  statement:"SELECT * FROM foo LIMIT 10 OFFSET 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:2
+      },
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo LIMIT 10 OFFSET 10",
+  statement:"SELECT * FROM foo LIMIT 10 OFFSET 10",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo GROUP BY a LIMIT 2 OFFSET 2",
+  statement:"SELECT * FROM foo GROUP BY a LIMIT 2 OFFSET 2",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:3
+      },
+      {
+        a:4
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo GROUP BY a LIMIT 1 OFFSET 1",
+  statement:"SELECT * FROM foo GROUP BY a LIMIT 1 OFFSET 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo OFFSET 2 - 1",
+  statement:"SELECT * FROM foo OFFSET 2 - 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:2
+      },
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo OFFSET 2 + 1",
+  statement:"SELECT * FROM foo OFFSET 2 + 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo OFFSET 2 * 1",
+  statement:"SELECT * FROM foo OFFSET 2 * 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo OFFSET 4 / 2",
+  statement:"SELECT * FROM foo OFFSET 4 / 2",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:3
+      },
+      {
+        a:4
+      },
+      {
+        a:5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM foo GROUP BY a HAVING a > 2 LIMIT 1 OFFSET 1",
+  statement:"SELECT * FROM foo GROUP BY a HAVING a > 2 LIMIT 1 OFFSET 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:4
+      }
+    ]
+  }
+}
+{
+  name:"PIVOT foo.a AT foo.b FROM <<{'a': 1, 'b':'I'}, {'a': 2, 'b':'II'}, {'a': 3, 'b':'III'}>> AS foo LIMIT 1 OFFSET 1",
+  statement:"PIVOT foo.a AT foo.b FROM <<{'a': 1, 'b':'I'}, {'a': 2, 'b':'II'}, {'a': 3, 'b':'III'}>> AS foo LIMIT 1 OFFSET 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:{
+      II:2
+    }
+  }
+}
+{
+  name:"select * from foo OFFSET -1",
+  statement:"select * from foo OFFSET -1",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"select * from foo OFFSET 1 - 2",
+  statement:"select * from foo OFFSET 1 - 2",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"select * from foo OFFSET 'this won''t work'",
+  statement:"select * from foo OFFSET 'this won''t work'",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"select * from foo OFFSET 2.5",
+  statement:"select * from foo OFFSET 2.5",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"select * from foo OFFSET 92233720368547758070",
+  statement:"select * from foo OFFSET 92233720368547758070",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
