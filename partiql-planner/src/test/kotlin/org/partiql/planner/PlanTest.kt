@@ -5,7 +5,6 @@ import org.junit.jupiter.api.DynamicContainer.dynamicContainer
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import org.junit.jupiter.api.fail
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.internal.TestCatalog
@@ -24,6 +23,7 @@ import java.io.File
 import java.nio.file.Path
 import java.util.stream.Stream
 import kotlin.io.path.toPath
+import kotlin.test.assertEquals
 
 // Prevent Unintentional break of the plan
 // We currently don't have a good way to assert on the result plan
@@ -129,9 +129,9 @@ class PlanTest {
     }
 
     private fun assertPlanEqual(inputPlan: PartiQLPlan, outputPlan: PartiQLPlan) {
-        fail {
-            "assertPlanEqual is not implemented"
-        }
+        val iStatement = inputPlan.getStatement()
+        val oStatement = outputPlan.getStatement()
+        assertEquals(iStatement, oStatement)
         // assert(inputPlan.isEquaivalentTo(outputPlan)) {
         //     buildString {
         //         this.appendLine("expect plan equivalence")

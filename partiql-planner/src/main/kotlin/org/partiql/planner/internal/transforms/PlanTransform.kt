@@ -36,7 +36,7 @@ import org.partiql.planner.internal.ir.Statement as IStatement
  *
  * TODO types and schemas!
  */
-internal class PlanTransformV1(private val flags: Set<PlannerFlag>) {
+internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
     /**
      * Transform the internal IR to the public plan interfaces.
