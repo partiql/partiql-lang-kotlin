@@ -5,8 +5,6 @@ import org.partiql.planner.internal.ir.Ref.Cast
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).
@@ -14,7 +12,6 @@ import org.partiql.value.PartiQLValueType
  * @property types
  * @property graph      Going with a matrix here (using enum ordinals) as it's simple and avoids walking.
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class CastTable private constructor(
     private val types: Array<Kind>,
     private val graph: Array<Array<Status>>,
@@ -29,8 +26,6 @@ internal class CastTable private constructor(
         }
     }
 
-    private operator fun <T> Array<T>.get(t: PartiQLValueType): T = get(t.ordinal)
-
     /**
      * This represents the Y, M, and N in the table listed in SQL:1999 Section 6.22.
      */
@@ -42,9 +37,7 @@ internal class CastTable private constructor(
 
     companion object {
 
-        private val N = Kind.values().size
-
-        private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
+        private val N = Kind.entries.size
 
         private fun relationships(block: RelationshipBuilder.() -> Unit): Array<Status> {
             return with(RelationshipBuilder()) {
@@ -60,7 +53,7 @@ internal class CastTable private constructor(
          */
         @JvmStatic
         val partiql: CastTable = run {
-            val types = Kind.values()
+            val types = Kind.entries.toTypedArray()
             val graph = arrayOfNulls<Array<Status>>(N)
             for (type in types) {
                 // initialize all with empty relationships
@@ -68,7 +61,7 @@ internal class CastTable private constructor(
             }
             graph[Kind.DYNAMIC.ordinal] = relationships {
                 cast(Kind.DYNAMIC)
-                Kind.values().filterNot { it == Kind.DYNAMIC }.forEach {
+                Kind.entries.filterNot { it == Kind.DYNAMIC }.forEach {
                     cast(it)
                 }
             }

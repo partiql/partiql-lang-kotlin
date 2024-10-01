@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorGroupAs
 import org.partiql.types.PType
 
-internal val Agg_GROUP_AS__ANY__ANY = Aggregation.standard(
+internal val Agg_GROUP_AS__ANY__ANY = Aggregation.static(
     name = "group_as",
     returns = PType.dynamic(),
     parameters = arrayOf(

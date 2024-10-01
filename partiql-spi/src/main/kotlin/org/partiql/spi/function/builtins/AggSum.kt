@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorSum
 import org.partiql.types.PType
 
-internal val Agg_SUM__INT8__INT8 = Aggregation.standard(
+internal val Agg_SUM__INT8__INT8 = Aggregation.static(
     name = "sum",
     returns = PType.tinyint(),
     parameters = arrayOf(
@@ -17,7 +17,7 @@ internal val Agg_SUM__INT8__INT8 = Aggregation.standard(
     accumulator = { AccumulatorSum(PType.tinyint()) },
 )
 
-internal val Agg_SUM__INT16__INT16 = Aggregation.standard(
+internal val Agg_SUM__INT16__INT16 = Aggregation.static(
     name = "sum",
     returns = PType.smallint(),
     parameters = arrayOf(
@@ -26,7 +26,7 @@ internal val Agg_SUM__INT16__INT16 = Aggregation.standard(
     accumulator = { AccumulatorSum(PType.smallint()) },
 )
 
-internal val Agg_SUM__INT32__INT32 = Aggregation.standard(
+internal val Agg_SUM__INT32__INT32 = Aggregation.static(
     name = "sum",
     returns = PType.integer(),
     parameters = arrayOf(
@@ -35,7 +35,7 @@ internal val Agg_SUM__INT32__INT32 = Aggregation.standard(
     accumulator = { AccumulatorSum(PType.integer()) },
 )
 
-internal val Agg_SUM__INT64__INT64 = Aggregation.standard(
+internal val Agg_SUM__INT64__INT64 = Aggregation.static(
     name = "sum",
     returns = PType.bigint(),
     parameters = arrayOf(
@@ -44,7 +44,7 @@ internal val Agg_SUM__INT64__INT64 = Aggregation.standard(
     accumulator = { AccumulatorSum(PType.bigint()) },
 )
 
-internal val Agg_SUM__INT__INT = Aggregation.standard(
+internal val Agg_SUM__INT__INT = Aggregation.static(
     name = "sum",
     returns = PType.numeric(),
     parameters = arrayOf(
@@ -53,7 +53,7 @@ internal val Agg_SUM__INT__INT = Aggregation.standard(
     accumulator = { AccumulatorSum(PType.numeric()) },
 )
 
-internal val Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.standard(
+internal val Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
     name = "sum",
     returns = PType.decimal(),
     parameters = arrayOf(
@@ -62,7 +62,7 @@ internal val Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.standar
     accumulator = { AccumulatorSum(PType.decimal()) },
 )
 
-internal val Agg_SUM__FLOAT32__FLOAT32 = Aggregation.standard(
+internal val Agg_SUM__FLOAT32__FLOAT32 = Aggregation.static(
     name = "sum",
     returns = PType.real(),
     parameters = arrayOf(
@@ -71,7 +71,7 @@ internal val Agg_SUM__FLOAT32__FLOAT32 = Aggregation.standard(
     accumulator = { AccumulatorSum(PType.real()) },
 )
 
-internal val Agg_SUM__FLOAT64__FLOAT64 = Aggregation.standard(
+internal val Agg_SUM__FLOAT64__FLOAT64 = Aggregation.static(
     name = "sum",
     returns = PType.doublePrecision(),
     parameters = arrayOf(
@@ -80,7 +80,7 @@ internal val Agg_SUM__FLOAT64__FLOAT64 = Aggregation.standard(
     accumulator = { AccumulatorSum(PType.doublePrecision()) },
 )
 
-internal val Agg_SUM__ANY__ANY = Aggregation.standard(
+internal val Agg_SUM__ANY__ANY = Aggregation.static(
     name = "sum",
     returns = PType.dynamic(),
     parameters = arrayOf(

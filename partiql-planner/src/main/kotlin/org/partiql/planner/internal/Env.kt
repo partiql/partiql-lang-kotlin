@@ -1,7 +1,6 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.internal.casts.CastTable
-import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -15,6 +14,7 @@ import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.Scope.Companion.toPath
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Catalogs
@@ -23,7 +23,6 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.function.Aggregation
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -265,13 +264,12 @@ internal class Env(private val session: Session) {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-
     private fun Aggregation.matches(args: List<PType>): Boolean {
         val parameters = getParameters()
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.getType().kind != Kind.DYNAMIC && a != p.getType()) return false
+            if (p.getMatch(a) != a) return false
         }
         return true
     }
@@ -286,20 +284,19 @@ internal class Env(private val session: Session) {
         val parameters = getParameters()
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
-            val arg = args[i]
+            val a = args[i]
             val p = parameters[i]
+            val m = p.getMatch(a)
             when {
-                // 1. Exact match
-                arg == p.getType() -> continue
-                // 2. Match ANY, no coercion needed
-                p.getType().kind == Kind.DYNAMIC -> continue
-                // 3. Check for a coercion
-                else -> when (val coercion = Coercions.get(arg, p.getType())) {
-                    null -> return null // short-circuit
-                    else -> mapping[i] = coercion
-                }
+                m == null -> return null
+                m == a -> continue
+                else -> mapping[i] = coercion(a, m)
             }
         }
         return this to mapping
+    }
+
+    private fun coercion(arg: PType, target: PType): Ref.Cast {
+        return Ref.Cast(arg.toCType(), target.toCType(), Ref.Cast.Safety.COERCION, true)
     }
 }

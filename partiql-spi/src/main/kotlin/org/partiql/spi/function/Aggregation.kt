@@ -38,8 +38,17 @@ public interface Aggregation : Routine {
 
     public companion object {
 
+        /**
+         * TODO consider replacing with a builder prior to 1.0
+         *
+         * @param name
+         * @param parameters
+         * @param returns
+         * @param accumulator
+         * @return
+         */
         @JvmStatic
-        public fun standard(
+        public fun static(
             name: String,
             parameters: Array<Parameter>,
             returns: PType,
