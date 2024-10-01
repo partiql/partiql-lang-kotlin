@@ -22,18 +22,19 @@ public abstract class Identifier extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * TODO docs, equals, hashcode; TODO change to other name pending comment followup to
+     * https://github.com/partiql/partiql-lang-kotlin/pull/1579#discussion_r1775983916
+     *
      */
     public static class Symbol extends Identifier {
         @NotNull
         public String symbol;
 
-        @NotNull
-        public CaseSensitivity caseSensitivity;
+        public boolean isDelimited;
 
-        public Symbol(@NotNull String symbol, @NotNull CaseSensitivity caseSensitivity) {
+        public Symbol(@NotNull String symbol, boolean isDelimited) {
         this.symbol = symbol;
-        this.caseSensitivity = caseSensitivity;
+        this.isDelimited = isDelimited;
     }
 
         @NotNull

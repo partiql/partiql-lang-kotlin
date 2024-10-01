@@ -12,7 +12,6 @@ import org.partiql.ast.v1.expr.ExprDateAdd;
 import org.partiql.ast.v1.expr.ExprDateDiff;
 import org.partiql.ast.v1.expr.ExprExtract;
 import org.partiql.ast.v1.expr.ExprInCollection;
-import org.partiql.ast.v1.expr.ExprIon;
 import org.partiql.ast.v1.expr.ExprIsType;
 import org.partiql.ast.v1.expr.ExprLike;
 import org.partiql.ast.v1.expr.ExprLit;
@@ -32,7 +31,8 @@ import org.partiql.ast.v1.expr.ExprStruct;
 import org.partiql.ast.v1.expr.ExprSubstring;
 import org.partiql.ast.v1.expr.ExprTrim;
 import org.partiql.ast.v1.expr.ExprValues;
-import org.partiql.ast.v1.expr.ExprVar;
+import org.partiql.ast.v1.expr.ExprVarRef;
+import org.partiql.ast.v1.expr.ExprVariant;
 import org.partiql.ast.v1.expr.ExprWindow;
 import org.partiql.ast.v1.graph.GraphLabel;
 import org.partiql.ast.v1.graph.GraphMatch;
@@ -41,21 +41,19 @@ import org.partiql.ast.v1.graph.GraphPattern;
 import org.partiql.ast.v1.graph.GraphQuantifier;
 import org.partiql.ast.v1.graph.GraphSelector;
 import org.partiql.ast.v1.type.Type;
-import org.partiql.ast.v1.type.TypeAny;
 import org.partiql.ast.v1.type.TypeBag;
 import org.partiql.ast.v1.type.TypeBigint;
 import org.partiql.ast.v1.type.TypeBit;
 import org.partiql.ast.v1.type.TypeBitVarying;
 import org.partiql.ast.v1.type.TypeBlob;
 import org.partiql.ast.v1.type.TypeBool;
-import org.partiql.ast.v1.type.TypeByteString;
 import org.partiql.ast.v1.type.TypeChar;
 import org.partiql.ast.v1.type.TypeClob;
-import org.partiql.ast.v1.type.TypeCustom;
+import org.partiql.ast.v1.type.TypeUserDefined;
 import org.partiql.ast.v1.type.TypeDate;
 import org.partiql.ast.v1.type.TypeDecimal;
-import org.partiql.ast.v1.type.TypeFloat32;
-import org.partiql.ast.v1.type.TypeFloat64;
+import org.partiql.ast.v1.type.TypeDoublePrecision;
+import org.partiql.ast.v1.type.TypeFloat;
 import org.partiql.ast.v1.type.TypeInt;
 import org.partiql.ast.v1.type.TypeInt2;
 import org.partiql.ast.v1.type.TypeInt4;
@@ -116,9 +114,9 @@ public interface AstVisitor<R, C> {
 
     R visitTypeReal(TypeReal node, C ctx);
 
-    R visitTypeFloat32(TypeFloat32 node, C ctx);
+    R visitTypeFloat(TypeFloat node, C ctx);
 
-    R visitTypeFloat64(TypeFloat64 node, C ctx);
+    R visitTypeDoublePrecision(TypeDoublePrecision node, C ctx);
 
     R visitTypeDecimal(TypeDecimal node, C ctx);
 
@@ -135,8 +133,6 @@ public interface AstVisitor<R, C> {
     R visitTypeBit(TypeBit node, C ctx);
 
     R visitTypeBitVarying(TypeBitVarying node, C ctx);
-
-    R visitTypeByteString(TypeByteString node, C ctx);
 
     R visitTypeBlob(TypeBlob node, C ctx);
 
@@ -164,9 +160,7 @@ public interface AstVisitor<R, C> {
 
     R visitTypeStruct(TypeStruct node, C ctx);
 
-    R visitTypeAny(TypeAny node, C ctx);
-
-    R visitTypeCustom(TypeCustom node, C ctx);
+    R visitTypeUserDefined(TypeUserDefined node, C ctx);
 
     R visitIdentifier(Identifier node, C ctx);
 
@@ -186,9 +180,9 @@ public interface AstVisitor<R, C> {
 
     R visitExprLit(ExprLit node, C ctx);
 
-    R visitExprIon(ExprIon node, C ctx);
+    R visitExprVariant(ExprVariant node, C ctx);
 
-    R visitExprVar(ExprVar node, C ctx);
+    R visitExprVarRef(ExprVarRef node, C ctx);
 
     R visitExprSessionAttribute(ExprSessionAttribute node, C ctx);
 

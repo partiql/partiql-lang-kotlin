@@ -32,10 +32,10 @@ public abstract class Type extends AstNode {
             return visitor.visitTypeInt((TypeInt) this, ctx);
         } else if (this instanceof TypeReal) {
             return visitor.visitTypeReal((TypeReal) this, ctx);
-        } else if (this instanceof TypeFloat32) {
-            return visitor.visitTypeFloat32((TypeFloat32) this, ctx);
-        } else if (this instanceof TypeFloat64) {
-            return visitor.visitTypeFloat64((TypeFloat64) this, ctx);
+        } else if (this instanceof TypeFloat) {
+            return visitor.visitTypeFloat((TypeFloat) this, ctx);
+        } else if (this instanceof TypeDoublePrecision) {
+            return visitor.visitTypeDoublePrecision((TypeDoublePrecision) this, ctx);
         } else if (this instanceof TypeDecimal) {
             return visitor.visitTypeDecimal((TypeDecimal) this, ctx);
         } else if (this instanceof TypeNumeric) {
@@ -52,8 +52,6 @@ public abstract class Type extends AstNode {
             return visitor.visitTypeBit((TypeBit) this, ctx);
         } else if (this instanceof TypeBitVarying) {
             return visitor.visitTypeBitVarying((TypeBitVarying) this, ctx);
-        } else if (this instanceof TypeByteString) {
-            return visitor.visitTypeByteString((TypeByteString) this, ctx);
         } else if (this instanceof TypeBlob) {
             return visitor.visitTypeBlob((TypeBlob) this, ctx);
         } else if (this instanceof TypeClob) {
@@ -80,10 +78,8 @@ public abstract class Type extends AstNode {
             return visitor.visitTypeTuple((TypeTuple) this, ctx);
         } else if (this instanceof TypeStruct) {
             return visitor.visitTypeStruct((TypeStruct) this, ctx);
-        } else if (this instanceof TypeAny) {
-            return visitor.visitTypeAny((TypeAny) this, ctx);
-        } else if (this instanceof TypeCustom) {
-            return visitor.visitTypeCustom((TypeCustom) this, ctx);
+        } else if (this instanceof TypeUserDefined) {
+            return visitor.visitTypeUserDefined((TypeUserDefined) this, ctx);
         } else {
             throw new IllegalStateException("Unexpected value: " + this);
         }

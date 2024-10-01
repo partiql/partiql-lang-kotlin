@@ -12,14 +12,14 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-public class ExprVar extends Expr {
+public class ExprVarRef extends Expr {
     @NotNull
     public Identifier identifier;
 
     @NotNull
     public Scope scope;
 
-    public ExprVar(@NotNull Identifier identifier, @NotNull Scope scope) {
+    public ExprVarRef(@NotNull Identifier identifier, @NotNull Scope scope) {
         this.identifier = identifier;
         this.scope = scope;
     }
@@ -34,7 +34,7 @@ public class ExprVar extends Expr {
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitExprVar(this, ctx);
+        return visitor.visitExprVarRef(this, ctx);
     }
 
     /**

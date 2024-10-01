@@ -19,10 +19,9 @@ public class ExprInCollection extends Expr {
     @NotNull
     public Expr rhs;
 
-    @Nullable
-    public Boolean not;
+    public boolean not;
 
-    public ExprInCollection(@NotNull Expr lhs, @NotNull Expr rhs, @Nullable Boolean not) {
+    public ExprInCollection(@NotNull Expr lhs, @NotNull Expr rhs, boolean not) {
         this.lhs = lhs;
         this.rhs = rhs;
         this.not = not;

@@ -12,10 +12,10 @@ public abstract class Expr extends AstNode {
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         if (this instanceof ExprLit) {
             return visitor.visitExprLit((ExprLit) this, ctx);
-        } else if (this instanceof ExprIon) {
-            return visitor.visitExprIon((ExprIon) this, ctx);
-        } else if (this instanceof ExprVar) {
-            return visitor.visitExprVar((ExprVar) this, ctx);
+        } else if (this instanceof ExprVariant) {
+            return visitor.visitExprVariant((ExprVariant) this, ctx);
+        } else if (this instanceof ExprVarRef) {
+            return visitor.visitExprVarRef((ExprVarRef) this, ctx);
         } else if (this instanceof ExprSessionAttribute) {
             return visitor.visitExprSessionAttribute((ExprSessionAttribute) this, ctx);
         } else if (this instanceof ExprPath) {

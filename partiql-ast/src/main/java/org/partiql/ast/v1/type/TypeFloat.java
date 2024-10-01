@@ -1,7 +1,6 @@
 package org.partiql.ast.v1.type;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
 
@@ -11,14 +10,7 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
-public class TypeByteString extends Type {
-    @Nullable
-    public Integer length;
-
-    public TypeByteString(@Nullable Integer length) {
-        this.length = length;
-    }
-
+public class TypeFloat extends Type {
     @NotNull
     @Override
     public Collection<AstNode> children() {
@@ -27,6 +19,6 @@ public class TypeByteString extends Type {
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitTypeByteString(this, ctx);
+        return visitor.visitTypeFloat(this, ctx);
     }
 }

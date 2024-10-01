@@ -1,32 +1,24 @@
-package org.partiql.ast.v1.expr;
+package org.partiql.ast.v1.type;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
-import com.amazon.ionelement.api.IonElement;
 
-import java.util.Collections;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
-public class ExprIon extends Expr {
+public class TypeDoublePrecision extends Type {
     @NotNull
-    public IonElement value;
-
-    public ExprIon(@NotNull IonElement value) {
-        this.value = value;
-    }
-
     @Override
-    @NotNull
     public Collection<AstNode> children() {
         return Collections.emptyList();
     }
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitExprIon(this, ctx);
+        return visitor.visitTypeDoublePrecision(this, ctx);
     }
 }

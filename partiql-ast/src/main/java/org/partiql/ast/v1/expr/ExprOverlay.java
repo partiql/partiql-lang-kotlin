@@ -1,6 +1,7 @@
 package org.partiql.ast.v1.expr;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
 
@@ -21,10 +22,10 @@ public class ExprOverlay extends Expr {
     @NotNull
     public Expr from;
 
-    @NotNull
+    @Nullable
     public Expr forLength;
 
-    public ExprOverlay(@NotNull Expr value, @NotNull Expr placing, @NotNull Expr from, @NotNull Expr forLength) {
+    public ExprOverlay(@NotNull Expr value, @NotNull Expr placing, @NotNull Expr from, @Nullable Expr forLength) {
         this.value = value;
         this.placing = placing;
         this.from = from;
@@ -38,7 +39,9 @@ public class ExprOverlay extends Expr {
         kids.add(value);
         kids.add(placing);
         kids.add(from);
-        kids.add(forLength);
+        if (forLength != null) {
+            kids.add(forLength);
+        }
         return kids;
     }
 

@@ -10,7 +10,14 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
-public class TypeAny extends Type {
+public class TypeUserDefined extends Type {
+    @NotNull
+    public String name;
+
+    public TypeUserDefined(@NotNull String name) {
+        this.name = name;
+    }
+
     @NotNull
     @Override
     public Collection<AstNode> children() {
@@ -19,6 +26,6 @@ public class TypeAny extends Type {
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitTypeAny(this, ctx);
+        return visitor.visitTypeUserDefined(this, ctx);
     }
 }

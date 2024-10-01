@@ -1,7 +1,6 @@
 package org.partiql.ast.v1.expr;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
 import org.partiql.ast.v1.type.Type;
@@ -20,10 +19,9 @@ public class ExprIsType extends Expr {
     @NotNull
     public Type type;
 
-    @Nullable
-    public Boolean not;
+    public boolean not;
 
-    public ExprIsType(@NotNull Expr value, @NotNull Type type, @Nullable Boolean not) {
+    public ExprIsType(@NotNull Expr value, @NotNull Type type, boolean not) {
         this.value = value;
         this.type = type;
         this.not = not;

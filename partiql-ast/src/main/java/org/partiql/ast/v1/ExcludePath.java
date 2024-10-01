@@ -1,7 +1,7 @@
 package org.partiql.ast.v1;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.ast.v1.expr.ExprVar;
+import org.partiql.ast.v1.expr.ExprVarRef;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,12 +12,12 @@ import java.util.List;
  */
 public class ExcludePath extends AstNode {
     @NotNull
-    public ExprVar root;
+    public ExprVarRef root;
 
     @NotNull
     public List<ExcludeStep> excludeSteps;
 
-    public ExcludePath(@NotNull ExprVar root, @NotNull List<ExcludeStep> excludeSteps) {
+    public ExcludePath(@NotNull ExprVarRef root, @NotNull List<ExcludeStep> excludeSteps) {
         this.root = root;
         this.excludeSteps = excludeSteps;
     }

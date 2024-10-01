@@ -22,10 +22,9 @@ public class ExprLike extends Expr {
     @Nullable
     public Expr escape;
 
-    @Nullable
-    public Boolean not;
+    public boolean not;
 
-    public ExprLike(@NotNull Expr value, @NotNull Expr pattern, @Nullable Expr escape, @Nullable Boolean not) {
+    public ExprLike(@NotNull Expr value, @NotNull Expr pattern, @Nullable Expr escape, boolean not) {
         this.value = value;
         this.pattern = pattern;
         this.escape = escape;
