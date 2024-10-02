@@ -2,21 +2,15 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
-import org.partiql.plan.v1.PartiQLPlan
-import org.partiql.plan.v1.Schema
-import org.partiql.plan.v1.Statement
-import org.partiql.plan.v1.builder.PlanFactory
-import org.partiql.plan.v1.operator.rel.Rel
-import org.partiql.plan.v1.operator.rel.RelAggregateCall
-import org.partiql.plan.v1.operator.rel.RelCollation
-import org.partiql.plan.v1.operator.rel.RelError
-import org.partiql.plan.v1.operator.rel.RelExcludePath
-import org.partiql.plan.v1.operator.rel.RelExcludeStep
-import org.partiql.plan.v1.operator.rel.RelJoinType
-import org.partiql.plan.v1.operator.rex.Rex
-import org.partiql.plan.v1.operator.rex.RexCase
-import org.partiql.plan.v1.operator.rex.RexStruct
-import org.partiql.plan.v1.operator.rex.RexVar
+import org.partiql.plan.AggregateCall
+import org.partiql.plan.Collation
+import org.partiql.plan.ExcludePath
+import org.partiql.plan.ExcludeStep
+import org.partiql.plan.JoinType
+import org.partiql.plan.rex.Rex
+import org.partiql.plan.rex.RexCase
+import org.partiql.plan.rex.RexStruct
+import org.partiql.plan.rex.RexVar
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.SetQuantifier
@@ -45,14 +39,14 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
      * @param onProblem
      * @return
      */
-    fun transform(internal: IPlan, onProblem: ProblemCallback): PartiQLPlan {
+    fun transform(internal: IPlan, onProblem: ProblemCallback): org.partiql.plan.Plan {
         val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
         val query = (internal.statement as IStatement.Query)
         val visitor = Visitor(onProblem, signal)
         val root = visitor.visitRex(query.root, query.root.type)
         // TODO replace with standard implementations (or just remove plan transform altogether when possible).
-        return object : PartiQLPlan {
-            override fun getStatement(): Statement = object : Statement.Query {
+        return object : org.partiql.plan.Plan {
+            override fun getStatement(): org.partiql.plan.Statement = object : org.partiql.plan.Statement.Query {
                 override fun getRoot(): Rex = root
             }
         }
@@ -63,7 +57,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         private val signal: Boolean,
     ) : PlanBaseVisitor<Any, PType>() {
 
-        private val factory = PlanFactory.STANDARD
+        private val factory = org.partiql.plan.builder.PlanFactory.STANDARD
 
         override fun defaultReturn(node: INode, ctx: PType): Any {
             TODO("Translation not supported for ${node::class.simpleName}")
@@ -95,7 +89,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         override fun visitRelOpErr(node: org.partiql.planner.internal.ir.Rel.Op.Err, ctx: PType): Any {
             val message = node.message
             onProblem(ProblemGenerator.compilerError(message))
-            return RelError(message)
+            return org.partiql.plan.rel.RelError(message)
         }
 
         // EXPRESSIONS
@@ -254,13 +248,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         // RELATION OPERATORS
 
-        override fun visitRel(node: IRel, ctx: PType): Rel = super.visitRelOp(node.op, ctx) as Rel
+        override fun visitRel(node: IRel, ctx: PType): org.partiql.plan.rel.Rel = super.visitRelOp(node.op, ctx) as org.partiql.plan.rel.Rel
 
-        override fun visitRelOp(node: IRel.Op, ctx: PType): Rel = super.visitRelOp(node, ctx) as Rel
+        override fun visitRelOp(node: IRel.Op, ctx: PType): org.partiql.plan.rel.Rel = super.visitRelOp(node, ctx) as org.partiql.plan.rel.Rel
 
         override fun visitRelOpAggregate(node: IRel.Op.Aggregate, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
-            val calls = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregateCall }
+            val calls = node.calls.map { visitRelOpAggregateCall(it, ctx) as AggregateCall }
             val groups = node.groups.map { visitRex(it, ctx) }
             return factory.relAggregate(input, calls, groups)
         }
@@ -286,34 +280,34 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             val rhsType = toSchema(node.rhs.type)
 
             val type = when (node.type) {
-                IRel.Op.Join.Type.INNER -> RelJoinType.INNER
-                IRel.Op.Join.Type.LEFT -> RelJoinType.LEFT
-                IRel.Op.Join.Type.RIGHT -> RelJoinType.RIGHT
-                IRel.Op.Join.Type.FULL -> RelJoinType.FULL
+                IRel.Op.Join.Type.INNER -> JoinType.INNER
+                IRel.Op.Join.Type.LEFT -> JoinType.LEFT
+                IRel.Op.Join.Type.RIGHT -> JoinType.RIGHT
+                IRel.Op.Join.Type.FULL -> JoinType.FULL
             }
             return factory.relJoin(lhs, rhs, condition, type, lhsType, rhsType)
         }
 
         override fun visitRelOpExclude(node: IRel.Op.Exclude, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
-            val paths = node.paths.map { visitRelOpExcludePath(it, ctx) as RelExcludePath }
+            val paths = node.paths.map { visitRelOpExcludePath(it, ctx) as ExcludePath }
             return factory.relExclude(input, paths)
         }
 
         override fun visitRelOpExcludePath(node: IRel.Op.Exclude.Path, ctx: PType): Any {
             val root = visitRexOp(node.root, ctx) as RexVar
-            val steps = node.steps.map { visitRelOpExcludeStep(it, ctx) as RelExcludeStep }
-            return RelExcludePath.of(root, steps)
+            val steps = node.steps.map { visitRelOpExcludeStep(it, ctx) as ExcludeStep }
+            return ExcludePath.of(root, steps)
         }
 
         override fun visitRelOpExcludeStep(node: IRel.Op.Exclude.Step, ctx: PType): Any {
-            val substeps = node.substeps.map { visitRelOpExcludeStep(it, ctx) as RelExcludeStep }
+            val substeps = node.substeps.map { visitRelOpExcludeStep(it, ctx) as ExcludeStep }
             return when (node.type) {
-                is IRel.Op.Exclude.Type.CollIndex -> RelExcludeStep.index(node.type.index, substeps)
-                is IRel.Op.Exclude.Type.CollWildcard -> RelExcludeStep.collection(substeps)
-                is IRel.Op.Exclude.Type.StructKey -> RelExcludeStep.key(node.type.key, substeps)
-                is IRel.Op.Exclude.Type.StructSymbol -> RelExcludeStep.symbol(node.type.symbol, substeps)
-                is IRel.Op.Exclude.Type.StructWildcard -> RelExcludeStep.struct(substeps)
+                is IRel.Op.Exclude.Type.CollIndex -> ExcludeStep.index(node.type.index, substeps)
+                is IRel.Op.Exclude.Type.CollWildcard -> ExcludeStep.collection(substeps)
+                is IRel.Op.Exclude.Type.StructKey -> ExcludeStep.key(node.type.key, substeps)
+                is IRel.Op.Exclude.Type.StructSymbol -> ExcludeStep.symbol(node.type.symbol, substeps)
+                is IRel.Op.Exclude.Type.StructWildcard -> ExcludeStep.struct(substeps)
             }
         }
 
@@ -393,18 +387,18 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         /**
          * TODO STANDARD COLLATION IMPLEMENTATION.
          */
-        private fun collation(spec: IRel.Op.Sort.Spec): RelCollation {
+        private fun collation(spec: IRel.Op.Sort.Spec): Collation {
             val rex = visitRex(spec.rex, spec.rex.type)
             val (order, nulls) = when (spec.order) {
-                IRel.Op.Sort.Order.ASC_NULLS_LAST -> RelCollation.Order.ASC to RelCollation.Nulls.LAST
-                IRel.Op.Sort.Order.ASC_NULLS_FIRST -> RelCollation.Order.ASC to RelCollation.Nulls.FIRST
-                IRel.Op.Sort.Order.DESC_NULLS_LAST -> RelCollation.Order.DESC to RelCollation.Nulls.LAST
-                IRel.Op.Sort.Order.DESC_NULLS_FIRST -> RelCollation.Order.DESC to RelCollation.Nulls.FIRST
+                IRel.Op.Sort.Order.ASC_NULLS_LAST -> Collation.Order.ASC to Collation.Nulls.LAST
+                IRel.Op.Sort.Order.ASC_NULLS_FIRST -> Collation.Order.ASC to Collation.Nulls.FIRST
+                IRel.Op.Sort.Order.DESC_NULLS_LAST -> Collation.Order.DESC to Collation.Nulls.LAST
+                IRel.Op.Sort.Order.DESC_NULLS_FIRST -> Collation.Order.DESC to Collation.Nulls.FIRST
             }
-            return object : RelCollation {
+            return object : Collation {
                 override fun getRex(): Rex = rex
-                override fun getOrder(): RelCollation.Order = order
-                override fun getNulls(): RelCollation.Nulls = nulls
+                override fun getOrder(): Collation.Order = order
+                override fun getNulls(): Collation.Nulls = nulls
             }
         }
 
@@ -437,7 +431,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         /**
          * TODO TEMPORARY!
          */
-        private fun toSchema(type: IRel.Type): Schema = object : Schema {
+        private fun toSchema(type: IRel.Type): org.partiql.plan.Schema = object : org.partiql.plan.Schema {
             private val fields = type.schema.map { Field.of(it.name, it.type) }
             override fun getFields(): List<Field> = fields
             override fun getField(name: String): Field = fields.first { it.name == name }

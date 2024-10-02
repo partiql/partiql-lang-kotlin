@@ -4,7 +4,7 @@ import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicTest
 import org.partiql.errors.ProblemCallback
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.v1.Statement
+import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
@@ -90,7 +90,7 @@ abstract class PartiQLTyperTestBase {
                         val pc = ProblemCollector()
                         if (key is TestResult.Success) {
                             val result = testingPipeline(statement, testName, metadata, pc)
-                            val root = (result.plan.getStatement() as Statement.Query).getRoot()
+                            val root = (result.plan.getStatement() as org.partiql.plan.Statement.Query).getRoot()
                             val actualType = root.getType()
                             assert(actualType == key.expectedType) {
                                 buildString {
@@ -115,7 +115,7 @@ abstract class PartiQLTyperTestBase {
                             }
                         } else {
                             val result = testingPipeline(statement, testName, metadata, pc)
-                            val root = (result.plan.getStatement() as Statement.Query).getRoot()
+                            val root = (result.plan.getStatement() as org.partiql.plan.Statement.Query).getRoot()
                             val actualType = root.getType()
                             assert(actualType.kind == Kind.DYNAMIC) {
                                 buildString {

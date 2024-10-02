@@ -14,8 +14,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.Problem
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.v1.PartiQLPlan
-import org.partiql.plan.v1.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.TestCatalog
@@ -3864,7 +3862,7 @@ internal class PlanTyperTestsPorted {
         query: String,
         session: Session,
         problemCollector: ProblemCollector,
-    ): PartiQLPlan {
+    ): org.partiql.plan.Plan {
         val ast = parser.parse(query).root
         return planner.plan(ast, session, problemCollector).plan
     }
@@ -3892,7 +3890,7 @@ internal class PlanTyperTestsPorted {
         val collector = ProblemCollector()
         val plan = infer(input, session, collector)
         when (val statement = plan.getStatement()) {
-            is Statement.Query -> {
+            is org.partiql.plan.Statement.Query -> {
                 assert(collector.problems.isEmpty()) {
                     buildString {
                         appendLine(collector.problems.toString())
@@ -3931,7 +3929,7 @@ internal class PlanTyperTestsPorted {
         val plan = infer(input, session, collector)
 
         when (val statement = plan.getStatement()) {
-            is Statement.Query -> {
+            is org.partiql.plan.Statement.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {
                         appendLine("Expected to find problems, but none were found.")

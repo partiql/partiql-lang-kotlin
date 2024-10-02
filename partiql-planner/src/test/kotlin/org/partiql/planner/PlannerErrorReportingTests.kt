@@ -6,7 +6,6 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
-import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.PlanPrinter
@@ -57,7 +56,7 @@ internal class PlannerErrorReportingTests {
     }
 
     private fun assertProblem(
-        plan: PartiQLPlan,
+        plan: org.partiql.plan.Plan,
         problems: List<Problem>,
         block: (List<Problem>) -> Unit
     ) {
@@ -401,7 +400,7 @@ internal class PlannerErrorReportingTests {
             plan, problems,
             tc.assertion
         )
-        val statement = plan.getStatement() as org.partiql.plan.v1.Statement.Query
+        val statement = plan.getStatement() as org.partiql.plan.Statement.Query
         assertEquals(tc.expectedType, statement.getRoot().getType())
     }
 

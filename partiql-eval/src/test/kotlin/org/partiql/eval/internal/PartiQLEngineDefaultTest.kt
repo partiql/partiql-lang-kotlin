@@ -10,13 +10,11 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.value.Datum
 import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.types.StaticType
@@ -1355,7 +1353,11 @@ class PartiQLEngineDefaultTest {
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: PartiQLPlan): String {
+        private fun comparisonString(
+            expected: PartiQLValue,
+            actual: PartiQLValue,
+            plan: org.partiql.plan.Plan,
+        ): String {
             val expectedBuffer = ByteArrayOutputStream()
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
             expectedWriter.append(expected)
@@ -1382,10 +1384,11 @@ class PartiQLEngineDefaultTest {
 
         private val engine = PartiQLEngine.builder().build()
         private val parser = PartiQLParser.standard()
+        private val planner = PartiQLPlanner.standard()
 
         internal fun assert() {
             val (permissiveResult, plan) = run(mode = PartiQLEngine.Mode.PERMISSIVE)
-            val permissiveResultPValue = permissiveResult.toPartiQLValue()
+            val permissiveResultPValue = permissiveResult
             val assertionCondition = try {
                 expectedPermissive == permissiveResultPValue // TODO: Assert using Datum
             } catch (t: Throwable) {
@@ -1412,7 +1415,7 @@ class PartiQLEngineDefaultTest {
             assertNotNull(error)
         }
 
-        private fun run(mode: PartiQLEngine.Mode): Pair<Datum, PartiQLPlan> {
+        private fun run(mode: PartiQLEngine.Mode): Pair<PartiQLValue, org.partiql.plan.Plan> {
             val statement = parser.parse(input).root
             val catalog = MemoryCatalog.builder().name("memory").build()
             val session = Session.builder()
@@ -1435,7 +1438,11 @@ class PartiQLEngineDefaultTest {
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: PartiQLPlan): String {
+        private fun comparisonString(
+            expected: PartiQLValue,
+            actual: PartiQLValue,
+            plan: org.partiql.plan.Plan,
+        ): String {
             val expectedBuffer = ByteArrayOutputStream()
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
             expectedWriter.append(expected)

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.v1.PartiQLPlan
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
@@ -128,7 +127,7 @@ class PlanTest {
         return dynamicContainer(file.nameWithoutExtension, children)
     }
 
-    private fun assertPlanEqual(inputPlan: PartiQLPlan, outputPlan: PartiQLPlan) {
+    private fun assertPlanEqual(inputPlan: org.partiql.plan.Plan, outputPlan: org.partiql.plan.Plan) {
         val iStatement = inputPlan.getStatement()
         val oStatement = outputPlan.getStatement()
         assertEquals(iStatement, oStatement)

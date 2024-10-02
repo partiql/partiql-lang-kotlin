@@ -165,7 +165,7 @@ class EvalExecutor(
                 .build()
             val stmt = parser.parse("`$env`").root
             val plan = planner.plan(stmt, session).plan
-            return (plan.getStatement() as org.partiql.plan.v1.Statement.Query).getRoot().getType()
+            return (plan.getStatement() as org.partiql.plan.Statement.Query).getRoot().getType()
         }
 
         /**

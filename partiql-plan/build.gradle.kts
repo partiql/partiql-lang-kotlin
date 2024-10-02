@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -36,10 +38,8 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     }
 }
 
-// Disabled for partiql-plan project.
-// TODO enable before PR
 kotlin {
-    explicitApi = null
+    explicitApi = ExplicitApiMode.Strict
 }
 
 publish {

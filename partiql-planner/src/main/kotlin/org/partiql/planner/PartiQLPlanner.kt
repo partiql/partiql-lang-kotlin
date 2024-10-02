@@ -3,7 +3,7 @@ package org.partiql.planner
 import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
-import org.partiql.plan.v1.PartiQLPlan
+import org.partiql.plan.Plan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.spi.catalog.Session
 
@@ -13,7 +13,7 @@ import org.partiql.spi.catalog.Session
 public interface PartiQLPlanner {
 
     /**
-     * Transform an AST to a [PartiQLPlan].
+     * Transform an AST to a [Plan].
      *
      * @param statement
      * @param session
@@ -28,7 +28,7 @@ public interface PartiQLPlanner {
      * @property plan
      */
     public class Result(
-        public val plan: PartiQLPlan,
+        public val plan: Plan,
         public val problems: List<Problem>,
     )
 

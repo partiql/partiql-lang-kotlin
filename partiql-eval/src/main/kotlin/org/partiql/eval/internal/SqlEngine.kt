@@ -3,16 +3,14 @@ package org.partiql.eval.internal
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLStatement
 import org.partiql.eval.internal.statement.QueryStatement
-import org.partiql.plan.v1.PartiQLPlan
-import org.partiql.plan.v1.Statement
 import org.partiql.spi.catalog.Session
 
 internal class SqlEngine : PartiQLEngine {
 
-    override fun prepare(plan: PartiQLPlan, mode: PartiQLEngine.Mode, session: Session): PartiQLStatement {
+    override fun prepare(plan: org.partiql.plan.Plan, mode: PartiQLEngine.Mode, session: Session): PartiQLStatement {
         try {
             val statement = plan.getStatement()
-            if (statement !is Statement.Query) {
+            if (statement !is org.partiql.plan.Statement.Query) {
                 throw IllegalArgumentException("Only query statements are supported")
             }
             val compiler = SqlCompiler(mode, session)

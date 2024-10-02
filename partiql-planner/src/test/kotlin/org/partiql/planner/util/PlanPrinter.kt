@@ -1,6 +1,7 @@
 package org.partiql.planner.util
 
-import org.partiql.plan.v1.PartiQLPlan
+import org.partiql.plan.Plan
+import org.partiql.plan.Schema
 import org.partiql.types.PType
 
 /**
@@ -10,9 +11,9 @@ import org.partiql.types.PType
  */
 public object PlanPrinter {
 
-    fun toString(plan: PartiQLPlan): String = buildString { append(this, plan) }
+    fun toString(plan: Plan): String = buildString { append(this, plan) }
 
-    fun append(out: Appendable, plan: PartiQLPlan) {
+    fun append(out: Appendable, plan: Plan) {
         out.append("TODO PRINTING OF PLANS FOR TEST DEBUGGING")
         // val ctx = Args(out)
         // Visitor.visit(plan, ctx)
@@ -26,7 +27,7 @@ public object PlanPrinter {
         val type: TypeInfo = TypeInfo.Nil,
     ) {
         sealed interface TypeInfo {
-            class Rel(val type: org.partiql.plan.Rel.Type) : TypeInfo
+            class Rel(val type: Schema) : TypeInfo
             class Rex(val type: PType) : TypeInfo
             object Nil : TypeInfo
         }

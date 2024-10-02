@@ -1,13 +1,12 @@
 package org.partiql.eval.internal
 
-// OLD IMPORTS FOR EXCLUDE
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
 import org.partiql.eval.internal.operator.rel.RelOpExceptAll
 import org.partiql.eval.internal.operator.rel.RelOpExceptDistinct
-import org.partiql.eval.internal.operator.rel.RelOpExcludeOld
+import org.partiql.eval.internal.operator.rel.RelOpExclude
 import org.partiql.eval.internal.operator.rel.RelOpFilter
 import org.partiql.eval.internal.operator.rel.RelOpIntersectAll
 import org.partiql.eval.internal.operator.rel.RelOpIntersectDistinct
@@ -52,72 +51,56 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
-import org.partiql.plan.relOpExcludePath
-import org.partiql.plan.relOpExcludeStep
-import org.partiql.plan.relOpExcludeTypeCollIndex
-import org.partiql.plan.relOpExcludeTypeCollWildcard
-import org.partiql.plan.relOpExcludeTypeStructKey
-import org.partiql.plan.relOpExcludeTypeStructSymbol
-import org.partiql.plan.relOpExcludeTypeStructWildcard
-import org.partiql.plan.rexOpVar
-import org.partiql.plan.v1.operator.rel.Rel
-import org.partiql.plan.v1.operator.rel.RelAggregate
-import org.partiql.plan.v1.operator.rel.RelCollation
-import org.partiql.plan.v1.operator.rel.RelDistinct
-import org.partiql.plan.v1.operator.rel.RelError
-import org.partiql.plan.v1.operator.rel.RelExcept
-import org.partiql.plan.v1.operator.rel.RelExclude
-import org.partiql.plan.v1.operator.rel.RelExcludeCollectionWildcard
-import org.partiql.plan.v1.operator.rel.RelExcludeIndex
-import org.partiql.plan.v1.operator.rel.RelExcludeKey
-import org.partiql.plan.v1.operator.rel.RelExcludePath
-import org.partiql.plan.v1.operator.rel.RelExcludeStep
-import org.partiql.plan.v1.operator.rel.RelExcludeStructWildcard
-import org.partiql.plan.v1.operator.rel.RelExcludeSymbol
-import org.partiql.plan.v1.operator.rel.RelFilter
-import org.partiql.plan.v1.operator.rel.RelIntersect
-import org.partiql.plan.v1.operator.rel.RelIterate
-import org.partiql.plan.v1.operator.rel.RelJoin
-import org.partiql.plan.v1.operator.rel.RelJoinType
-import org.partiql.plan.v1.operator.rel.RelLimit
-import org.partiql.plan.v1.operator.rel.RelOffset
-import org.partiql.plan.v1.operator.rel.RelProject
-import org.partiql.plan.v1.operator.rel.RelScan
-import org.partiql.plan.v1.operator.rel.RelSort
-import org.partiql.plan.v1.operator.rel.RelUnion
-import org.partiql.plan.v1.operator.rel.RelUnpivot
-import org.partiql.plan.v1.operator.rel.RelVisitor
-import org.partiql.plan.v1.operator.rex.Rex
-import org.partiql.plan.v1.operator.rex.RexArray
-import org.partiql.plan.v1.operator.rex.RexBag
-import org.partiql.plan.v1.operator.rex.RexCall
-import org.partiql.plan.v1.operator.rex.RexCallDynamic
-import org.partiql.plan.v1.operator.rex.RexCase
-import org.partiql.plan.v1.operator.rex.RexCast
-import org.partiql.plan.v1.operator.rex.RexCoalesce
-import org.partiql.plan.v1.operator.rex.RexError
-import org.partiql.plan.v1.operator.rex.RexLit
-import org.partiql.plan.v1.operator.rex.RexMissing
-import org.partiql.plan.v1.operator.rex.RexNullIf
-import org.partiql.plan.v1.operator.rex.RexPathIndex
-import org.partiql.plan.v1.operator.rex.RexPathKey
-import org.partiql.plan.v1.operator.rex.RexPathSymbol
-import org.partiql.plan.v1.operator.rex.RexPivot
-import org.partiql.plan.v1.operator.rex.RexSelect
-import org.partiql.plan.v1.operator.rex.RexSpread
-import org.partiql.plan.v1.operator.rex.RexStruct
-import org.partiql.plan.v1.operator.rex.RexSubquery
-import org.partiql.plan.v1.operator.rex.RexSubqueryComp
-import org.partiql.plan.v1.operator.rex.RexSubqueryIn
-import org.partiql.plan.v1.operator.rex.RexSubqueryTest
-import org.partiql.plan.v1.operator.rex.RexTable
-import org.partiql.plan.v1.operator.rex.RexVar
-import org.partiql.plan.v1.operator.rex.RexVisitor
+import org.partiql.plan.Collation
+import org.partiql.plan.JoinType
+import org.partiql.plan.rel.Rel
+import org.partiql.plan.rel.RelAggregate
+import org.partiql.plan.rel.RelDistinct
+import org.partiql.plan.rel.RelError
+import org.partiql.plan.rel.RelExcept
+import org.partiql.plan.rel.RelExclude
+import org.partiql.plan.rel.RelFilter
+import org.partiql.plan.rel.RelIntersect
+import org.partiql.plan.rel.RelIterate
+import org.partiql.plan.rel.RelJoin
+import org.partiql.plan.rel.RelLimit
+import org.partiql.plan.rel.RelOffset
+import org.partiql.plan.rel.RelProject
+import org.partiql.plan.rel.RelScan
+import org.partiql.plan.rel.RelSort
+import org.partiql.plan.rel.RelUnion
+import org.partiql.plan.rel.RelUnpivot
+import org.partiql.plan.rel.RelVisitor
+import org.partiql.plan.rex.Rex
+import org.partiql.plan.rex.RexArray
+import org.partiql.plan.rex.RexBag
+import org.partiql.plan.rex.RexCall
+import org.partiql.plan.rex.RexCallDynamic
+import org.partiql.plan.rex.RexCase
+import org.partiql.plan.rex.RexCast
+import org.partiql.plan.rex.RexCoalesce
+import org.partiql.plan.rex.RexError
+import org.partiql.plan.rex.RexLit
+import org.partiql.plan.rex.RexMissing
+import org.partiql.plan.rex.RexNullIf
+import org.partiql.plan.rex.RexPathIndex
+import org.partiql.plan.rex.RexPathKey
+import org.partiql.plan.rex.RexPathSymbol
+import org.partiql.plan.rex.RexPivot
+import org.partiql.plan.rex.RexSelect
+import org.partiql.plan.rex.RexSpread
+import org.partiql.plan.rex.RexStruct
+import org.partiql.plan.rex.RexSubquery
+import org.partiql.plan.rex.RexSubqueryComp
+import org.partiql.plan.rex.RexSubqueryIn
+import org.partiql.plan.rex.RexSubqueryTest
+import org.partiql.plan.rex.RexTable
+import org.partiql.plan.rex.RexVar
+import org.partiql.plan.rex.RexVisitor
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.plan.Rel as IRel
 
 /**
  * This class is responsible for producing a tree of evaluable operators from a tree of logical operators.
@@ -190,38 +173,8 @@ internal class SqlCompiler(
 
         override fun visitExclude(rel: RelExclude, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
-
-            // !! TEMPORARY BLOCK !!
-            //
-            // TODO REPLACE ME WITH NEW IMPLEMENTATION IN LATER PR
-            //
-            fun translate(step: RelExcludeStep): IRel.Op.Exclude.Step {
-                val type = when (step) {
-                    is RelExcludeKey -> relOpExcludeTypeStructKey(step.getKey())
-                    is RelExcludeIndex -> relOpExcludeTypeCollIndex(step.getIndex())
-                    is RelExcludeSymbol -> relOpExcludeTypeStructSymbol(step.getSymbol())
-                    is RelExcludeCollectionWildcard -> relOpExcludeTypeCollWildcard()
-                    is RelExcludeStructWildcard -> relOpExcludeTypeStructWildcard()
-                    else -> error("Unsupported exclude step: $step")
-                }
-                val substeps = step.getSubsteps().map { translate(it) }
-                return relOpExcludeStep(type, substeps)
-            }
-
-            fun translate(path: RelExcludePath): IRel.Op.Exclude.Path {
-                val root = path.getRoot()
-                val steps = path.getSteps().map { translate(it) }
-                return relOpExcludePath(
-                    root = rexOpVar(root.getDepth(), root.getOffset()),
-                    steps = steps
-                )
-            }
-
-            val paths = rel.getPaths().map { translate(it) }
-            //
-            // !! TEMPORARY BLOCK !!
-
-            return RelOpExcludeOld(input, paths)
+            val paths = rel.getPaths()
+            return RelOpExclude(input, paths)
         }
 
         override fun visitFilter(rel: RelFilter, ctx: Unit): Operator.Relation {
@@ -257,10 +210,10 @@ internal class SqlCompiler(
             val rhsType = rel.getRightSchema()
 
             return when (rel.getJoinType()) {
-                RelJoinType.INNER -> RelOpJoinInner(lhs, rhs, condition)
-                RelJoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType!!)
-                RelJoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType!!)
-                RelJoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType!!, rhsType!!)
+                JoinType.INNER -> RelOpJoinInner(lhs, rhs, condition)
+                JoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType!!)
+                JoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType!!)
+                JoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType!!, rhsType!!)
             }
         }
 
@@ -294,8 +247,8 @@ internal class SqlCompiler(
             val input = compile(rel.getInput(), ctx)
             val collations = rel.getCollations().map {
                 val expr = compile(it.getRex(), ctx)
-                val desc = it.getOrder() == RelCollation.Order.DESC
-                val last = it.getNulls() == RelCollation.Nulls.LAST
+                val desc = it.getOrder() == Collation.Order.DESC
+                val last = it.getNulls() == Collation.Nulls.LAST
                 RelOpSort.Collation(expr, desc, last)
             }
             return RelOpSort(input, collations)
@@ -418,8 +371,8 @@ internal class SqlCompiler(
         }
 
         override fun visitNullIf(rex: RexNullIf, ctx: Unit): Operator.Expr {
-            val value = compile(rex.getValue(), ctx)
-            val nullifier = compile(rex.getNullifier(), ctx)
+            val value = compile(rex.getV1(), ctx)
+            val nullifier = compile(rex.getV2(), ctx)
             return ExprNullIf(value, nullifier)
         }
 

@@ -8,14 +8,13 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.v1.Statement
-import org.partiql.plan.v1.builder.PlanFactory
-import org.partiql.plan.v1.operator.rel.RelExclude
-import org.partiql.plan.v1.operator.rel.RelExcludePath
-import org.partiql.plan.v1.operator.rel.RelExcludeStep
-import org.partiql.plan.v1.operator.rel.RelProject
-import org.partiql.plan.v1.operator.rex.RexSelect
-import org.partiql.plan.v1.operator.rex.RexVar
+import org.partiql.plan.ExcludePath
+import org.partiql.plan.ExcludeStep
+import org.partiql.plan.Statement
+import org.partiql.plan.rel.RelExclude
+import org.partiql.plan.rel.RelProject
+import org.partiql.plan.rex.RexSelect
+import org.partiql.plan.rex.RexVar
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.spi.catalog.Session
@@ -46,7 +45,7 @@ class SubsumptionTest {
         assertEquals(tc.expectedExcludeExprs, excludeClause)
     }
 
-    data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<RelExcludePath>)
+    data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<ExcludePath>)
 
     @ParameterizedTest
     @ArgumentsSource(ExcludeSubsumptionTests::class)
@@ -58,7 +57,7 @@ class SubsumptionTest {
             return parameters.map { Arguments.of(it) }.stream()
         }
 
-        private val factory = PlanFactory.STANDARD
+        private val factory = org.partiql.plan.builder.PlanFactory.STANDARD
 
         private fun rexOpVar(binding: Int, position: Int): RexVar = factory.rexVar(binding, position)
 
@@ -66,22 +65,22 @@ class SubsumptionTest {
             SubsumptionTC(
                 "s.a, t.a", // different roots
                 listOf(
-                    RelExcludePath.of(
-                        root = rexOpVar(0, 0), steps = listOf(RelExcludeStep.symbol("a"))
+                    ExcludePath.of(
+                        root = rexOpVar(0, 0), steps = listOf(org.partiql.plan.ExcludeStep.symbol("a"))
                     ),
-                    RelExcludePath.of(
-                        root = rexOpVar(0, 1), steps = listOf(RelExcludeStep.symbol("a"))
+                    ExcludePath.of(
+                        root = rexOpVar(0, 1), steps = listOf(org.partiql.plan.ExcludeStep.symbol("a"))
                     ),
                 )
             ),
             SubsumptionTC(
                 "t.a, t.b", // different steps
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol("a"),
-                            RelExcludeStep.symbol("b"),
+                            org.partiql.plan.ExcludeStep.symbol("a"),
+                            org.partiql.plan.ExcludeStep.symbol("b"),
                         )
                     ),
                 )
@@ -89,18 +88,18 @@ class SubsumptionTest {
             SubsumptionTC(
                 "s.a, t.a, t.b, s.b", // different roots and steps
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 0),
                         steps = listOf(
-                            RelExcludeStep.symbol("a"),
-                            RelExcludeStep.symbol("b"),
+                            ExcludeStep.symbol("a"),
+                            ExcludeStep.symbol("b"),
                         )
                     ),
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol("a"),
-                            RelExcludeStep.symbol("b"),
+                            ExcludeStep.symbol("a"),
+                            ExcludeStep.symbol("b"),
                         )
                     )
                 )
@@ -116,35 +115,35 @@ class SubsumptionTest {
                 t.i['j'], t.i."j"
                 """.trimIndent(),
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol("a"),
-                            RelExcludeStep.symbol("b"),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol("a"),
+                            ExcludeStep.symbol("b"),
+                            ExcludeStep.symbol(
                                 symbol = "c",
-                                substeps = listOf(RelExcludeStep.struct()),
+                                substeps = listOf(ExcludeStep.struct()),
                             ),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "d",
                                 substeps = listOf(
-                                    RelExcludeStep.struct(
+                                    ExcludeStep.struct(
                                         substeps = listOf(
-                                            RelExcludeStep.symbol(
-                                                symbol = "e", substeps = listOf(RelExcludeStep.symbol("f"))
+                                            ExcludeStep.symbol(
+                                                symbol = "e", substeps = listOf(ExcludeStep.symbol("f"))
                                             ),
                                         ),
                                     ),
                                 ),
                             ),
-                            RelExcludeStep.symbol(
-                                symbol = "g", substeps = listOf(RelExcludeStep.collection())
+                            ExcludeStep.symbol(
+                                symbol = "g", substeps = listOf(ExcludeStep.collection())
                             ),
-                            RelExcludeStep.symbol(
-                                symbol = "h", substeps = listOf(RelExcludeStep.index(1))
+                            ExcludeStep.symbol(
+                                symbol = "h", substeps = listOf(ExcludeStep.index(1))
                             ),
-                            RelExcludeStep.symbol(
-                                symbol = "i", substeps = listOf(RelExcludeStep.key("j"))
+                            ExcludeStep.symbol(
+                                symbol = "i", substeps = listOf(ExcludeStep.key("j"))
                             ),
                         )
                     ),
@@ -164,43 +163,43 @@ class SubsumptionTest {
                 t."j".*, t."j"
                 """.trimIndent(),
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol("a"),
-                            RelExcludeStep.symbol("b"),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol("a"),
+                            ExcludeStep.symbol("b"),
+                            ExcludeStep.symbol(
                                 symbol = "c",
                                 substeps = listOf(
-                                    RelExcludeStep.struct(
+                                    ExcludeStep.struct(
                                         substeps = listOf(
-                                            RelExcludeStep.symbol("c1")
+                                            ExcludeStep.symbol("c1")
                                         )
                                     )
                                 )
                             ),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "d",
                                 substeps = listOf(
-                                    RelExcludeStep.struct(
-                                        substeps = listOf(RelExcludeStep.symbol("d1")),
+                                    ExcludeStep.struct(
+                                        substeps = listOf(ExcludeStep.symbol("d1")),
                                     )
                                 )
                             ),
-                            RelExcludeStep.symbol(
-                                symbol = "e", substeps = listOf(RelExcludeStep.index(1))
+                            ExcludeStep.symbol(
+                                symbol = "e", substeps = listOf(ExcludeStep.index(1))
                             ),
-                            RelExcludeStep.symbol(
-                                symbol = "f", substeps = listOf(RelExcludeStep.index(1))
+                            ExcludeStep.symbol(
+                                symbol = "f", substeps = listOf(ExcludeStep.index(1))
                             ),
-                            RelExcludeStep.symbol(
-                                symbol = "g", substeps = listOf(RelExcludeStep.collection())
+                            ExcludeStep.symbol(
+                                symbol = "g", substeps = listOf(ExcludeStep.collection())
                             ),
-                            RelExcludeStep.symbol(
-                                symbol = "h", substeps = listOf(RelExcludeStep.collection())
+                            ExcludeStep.symbol(
+                                symbol = "h", substeps = listOf(ExcludeStep.collection())
                             ),
-                            RelExcludeStep.key("i"),
-                            RelExcludeStep.key("j"),
+                            ExcludeStep.key("i"),
+                            ExcludeStep.key("j"),
                         )
                     ),
                 )
@@ -211,19 +210,19 @@ class SubsumptionTest {
                 t."b".*, t."b"."b1"[1], t."b".b2."b3"[*]    -- t."b".* subsumes
                 """,
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "a",
                                 substeps = listOf(
-                                    RelExcludeStep.struct(
+                                    ExcludeStep.struct(
                                         substeps = emptyList()
                                     )
                                 )
                             ),
-                            RelExcludeStep.key(
-                                key = "b", substeps = listOf(RelExcludeStep.struct())
+                            ExcludeStep.key(
+                                key = "b", substeps = listOf(ExcludeStep.struct())
                             ),
                         )
                     ),
@@ -235,19 +234,19 @@ class SubsumptionTest {
                 t.b."b1"[*], t.b."b1"[2], t.b."b1"[3][*]    -- t.b."b1"[*] subsumes
                 """,
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "a",
-                                substeps = listOf(RelExcludeStep.collection()),
+                                substeps = listOf(ExcludeStep.collection()),
                             ),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "b",
                                 substeps = listOf(
-                                    RelExcludeStep.key(
+                                    ExcludeStep.key(
                                         key = "b1",
-                                        substeps = listOf(RelExcludeStep.collection()),
+                                        substeps = listOf(ExcludeStep.collection()),
                                     ),
                                 ),
                             ),
@@ -261,13 +260,13 @@ class SubsumptionTest {
                 t."bAr"."bAz", t."bAr".baz      -- t."bAr".baz subsumes
                 """,
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol(symbol = "foo"),
-                            RelExcludeStep.key(
+                            ExcludeStep.symbol(symbol = "foo"),
+                            ExcludeStep.key(
                                 key = "bAr",
-                                substeps = listOf(RelExcludeStep.symbol(symbol = "baz")),
+                                substeps = listOf(ExcludeStep.symbol(symbol = "baz")),
                             ),
                         ),
                     ),
@@ -280,35 +279,35 @@ class SubsumptionTest {
                 t.c[*].c2, t.c[1].c2.*[*].c3    -- t.c[*].c2 subsumes
                 """,
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "a",
                                 substeps = listOf(
-                                    RelExcludeStep.collection(
-                                        substeps = listOf(RelExcludeStep.symbol("a2"))
+                                    ExcludeStep.collection(
+                                        substeps = listOf(ExcludeStep.symbol("a2"))
                                     ),
                                 ),
                             ),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "b",
                                 substeps = listOf(
-                                    RelExcludeStep.collection(
+                                    ExcludeStep.collection(
                                         substeps = listOf(
-                                            RelExcludeStep.symbol(
+                                            ExcludeStep.symbol(
                                                 symbol = "b2",
-                                                substeps = listOf(RelExcludeStep.symbol("b3")),
+                                                substeps = listOf(ExcludeStep.symbol("b3")),
                                             ),
                                         )
                                     ),
                                 ),
                             ),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "c",
                                 substeps = listOf(
-                                    RelExcludeStep.collection(
-                                        substeps = listOf(RelExcludeStep.symbol("c2"))
+                                    ExcludeStep.collection(
+                                        substeps = listOf(ExcludeStep.symbol("c2"))
                                     ),
                                 ),
                             ),
@@ -322,28 +321,28 @@ class SubsumptionTest {
                 t.b.b1.foo.b2.b3, t.b.b1.bar.b2.b3.b4, t.b.b1."bat".b2.b3, t.b.b1.*.*.b3    -- t.b.b1.*.*.b3 subsumes
                 """,
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "a",
                                 substeps = listOf(
-                                    RelExcludeStep.struct(
-                                        substeps = listOf(RelExcludeStep.symbol("a1"))
+                                    ExcludeStep.struct(
+                                        substeps = listOf(ExcludeStep.symbol("a1"))
                                     ),
                                 ),
                             ),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "b",
                                 substeps = listOf(
-                                    RelExcludeStep.symbol(
+                                    ExcludeStep.symbol(
                                         symbol = "b1",
                                         substeps = listOf(
-                                            RelExcludeStep.struct(
+                                            ExcludeStep.struct(
                                                 substeps = listOf(
-                                                    RelExcludeStep.struct(
+                                                    ExcludeStep.struct(
                                                         substeps = listOf(
-                                                            RelExcludeStep.symbol("b3")
+                                                            ExcludeStep.symbol("b3")
                                                         )
                                                     )
                                                 )
@@ -362,32 +361,32 @@ class SubsumptionTest {
                 t.b."B1"."Bar".b2.b3, t.b.b1."Bar".b2.b3, t.b.b1."Bar".*.b3, t.b.b1.bar.*.b3 -- t.b.b1.bar.*.b3 subsumes
                 """,
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "a",
                                 substeps = listOf(
-                                    RelExcludeStep.symbol(
+                                    ExcludeStep.symbol(
                                         symbol = "bar",
                                         substeps = listOf(
-                                            RelExcludeStep.symbol("a1")
+                                            ExcludeStep.symbol("a1")
                                         ),
                                     ),
                                 ),
                             ),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "b",
                                 substeps = listOf(
-                                    RelExcludeStep.symbol(
+                                    ExcludeStep.symbol(
                                         symbol = "b1",
                                         substeps = listOf(
-                                            RelExcludeStep.symbol(
+                                            ExcludeStep.symbol(
                                                 symbol = "bar",
                                                 substeps = listOf(
-                                                    RelExcludeStep.struct(
+                                                    ExcludeStep.struct(
                                                         substeps = listOf(
-                                                            RelExcludeStep.symbol("b3")
+                                                            ExcludeStep.symbol("b3")
                                                         )
                                                     )
                                                 )
@@ -410,15 +409,15 @@ class SubsumptionTest {
                 "t"."f"         -- included under resolved variable 1
                 """,
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol(symbol = "a"),
-                            RelExcludeStep.symbol(symbol = "b"),
-                            RelExcludeStep.symbol(symbol = "c"),
-                            RelExcludeStep.symbol(symbol = "d"),
-                            RelExcludeStep.symbol(symbol = "e"),
-                            RelExcludeStep.key("f")
+                            ExcludeStep.symbol(symbol = "a"),
+                            ExcludeStep.symbol(symbol = "b"),
+                            ExcludeStep.symbol(symbol = "c"),
+                            ExcludeStep.symbol(symbol = "d"),
+                            ExcludeStep.symbol(symbol = "e"),
+                            ExcludeStep.key("f")
                         )
                     ),
                 )
@@ -429,30 +428,30 @@ class SubsumptionTest {
                 t.b.*.b2, t.b.b1.foo
                 """,
                 listOf(
-                    RelExcludePath.of(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "a",
                                 substeps = listOf(
-                                    RelExcludeStep.struct(
+                                    ExcludeStep.struct(
                                         substeps = listOf(
-                                            RelExcludeStep.symbol("a1"),
-                                            RelExcludeStep.symbol("a2"),
+                                            ExcludeStep.symbol("a1"),
+                                            ExcludeStep.symbol("a2"),
                                         )
                                     )
                                 )
                             ),
-                            RelExcludeStep.symbol(
+                            ExcludeStep.symbol(
                                 symbol = "b",
                                 substeps = listOf(
-                                    RelExcludeStep.struct(
-                                        substeps = listOf(RelExcludeStep.symbol("b2"))
+                                    ExcludeStep.struct(
+                                        substeps = listOf(ExcludeStep.symbol("b2"))
                                     ),
-                                    RelExcludeStep.symbol(
+                                    ExcludeStep.symbol(
                                         symbol = "b1",
                                         substeps = listOf(
-                                            RelExcludeStep.symbol("foo")
+                                            ExcludeStep.symbol("foo")
                                         )
                                     )
                                 ),

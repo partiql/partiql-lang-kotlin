@@ -15,13 +15,13 @@ public final class org/partiql/planner/PartiQLPlanner$DefaultImpls {
 }
 
 public final class org/partiql/planner/PartiQLPlanner$Result {
-	public fun <init> (Lorg/partiql/plan/v1/PartiQLPlan;Ljava/util/List;)V
-	public final fun getPlan ()Lorg/partiql/plan/v1/PartiQLPlan;
+	public fun <init> (Lorg/partiql/plan/Plan;Ljava/util/List;)V
+	public final fun getPlan ()Lorg/partiql/plan/Plan;
 	public final fun getProblems ()Ljava/util/List;
 }
 
 public abstract interface class org/partiql/planner/PartiQLPlannerPass {
-	public abstract fun apply (Lorg/partiql/plan/v1/PartiQLPlan;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/v1/PartiQLPlan;
+	public abstract fun apply (Lorg/partiql/plan/Plan;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Plan;
 }
 
 public final class org/partiql/planner/builder/PartiQLPlannerBuilder {
