@@ -9,14 +9,14 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
-import org.partiql.eval.internal.PartiQLEngineDefaultTest.SuccessTestCase.TypingTestCase
 import org.partiql.parser.PartiQLParser
-import org.partiql.planner.PartiQLPlanner
 import org.partiql.plan.Plan
+import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.value.Datum
 import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.types.StaticType
@@ -1386,7 +1386,7 @@ class PartiQLEngineDefaultTest {
 
         internal fun assert() {
             val (permissiveResult, plan) = run(mode = PartiQLEngine.Mode.PERMISSIVE)
-            val permissiveResultPValue = permissiveResult
+            val permissiveResultPValue = permissiveResult.toPartiQLValue()
             val assertionCondition = try {
                 expectedPermissive == permissiveResultPValue // TODO: Assert using Datum
             } catch (t: Throwable) {
@@ -1413,7 +1413,7 @@ class PartiQLEngineDefaultTest {
             assertNotNull(error)
         }
 
-        private fun run(mode: PartiQLEngine.Mode): Pair<PartiQLValue, Plan> {
+        private fun run(mode: PartiQLEngine.Mode): Pair<Datum, Plan> {
             val statement = parser.parse(input).root
             val catalog = MemoryCatalog.builder().name("memory").build()
             val session = Session.builder()
