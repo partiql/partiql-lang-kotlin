@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorCount
 import org.partiql.types.PType
 
-internal val Agg_COUNT__ANY__INT64 = Aggregation.standard(
+internal val Agg_COUNT__ANY__INT64 = Aggregation.static(
     name = "count",
     returns = PType.bigint(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),

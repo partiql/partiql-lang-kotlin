@@ -510,25 +510,10 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
-public final class org/partiql/spi/function/AggSignature {
-	public final field description Ljava/lang/String;
-	public final field isDecomposable Z
-	public final field isNullable Z
-	public final field name Ljava/lang/String;
-	public final field parameters Ljava/util/List;
-	public final field returns Lorg/partiql/types/PType;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZ)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;Ljava/util/List;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getSpecific ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {
 	public static final field Companion Lorg/partiql/spi/function/Aggregation$Companion;
 	public abstract fun getAccumulator ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
-	public static fun standard (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
+	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
 }
 
 public abstract interface class org/partiql/spi/function/Aggregation$Accumulator {
@@ -537,7 +522,7 @@ public abstract interface class org/partiql/spi/function/Aggregation$Accumulator
 }
 
 public final class org/partiql/spi/function/Aggregation$Companion {
-	public final fun standard (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
+	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
 }
 
 public final class org/partiql/spi/function/Aggregation$DefaultImpls {
@@ -572,9 +557,22 @@ public abstract class org/partiql/spi/function/Function$Instance {
 }
 
 public final class org/partiql/spi/function/Parameter {
+	public static final field Companion Lorg/partiql/spi/function/Parameter$Companion;
 	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;)V
+	public static final fun collection (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public static final fun dynamic (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public final fun getMatch (Lorg/partiql/types/PType;)Lorg/partiql/types/PType;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getType ()Lorg/partiql/types/PType;
+	public static final fun numeric (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public static final fun text (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+}
+
+public final class org/partiql/spi/function/Parameter$Companion {
+	public final fun collection (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public final fun dynamic (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public final fun numeric (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public final fun text (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 }
 
 public abstract interface class org/partiql/spi/function/Routine {

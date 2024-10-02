@@ -2,249 +2,167 @@ package org.partiql.spi.internal
 
 import org.partiql.types.Field
 import org.partiql.types.PType
+import org.partiql.types.PType.Kind
 
 /**
- * A factory for single-source of truth for type creations — DO NOT CREATE PTYPE DIRECTLY.
+ * Important SQL Definitions:
+ * - assignable: The characteristic of a data type that permits a value of that data type to be
+ * assigned to a site of a specified data type.
  *
- * This allows us to raise an interface if we need custom type factories; for now just use defaults with static methods.
+ * This came from the internal planner Coercion.kt
+ *
+ * TODO consider modeling with enums and/or additional optimizations.
  */
 internal object SqlTypes {
 
-    private const val MAX_SIZE = Int.MAX_VALUE
-
-    //
-    // DYNAMIC
-    //
-
-    @JvmStatic
-    fun dynamic(): PType = PType.dynamic()
-
-    //
-    // BOOLEAN
-    //
-
-    @JvmStatic
-    fun bool(): PType = PType.bool()
-
-    //
-    // NUMERIC
-    //
-
-    @JvmStatic
-    fun tinyint(): PType = PType.tinyint()
-
-    @JvmStatic
-    fun smallint(): PType = PType.smallint()
-
-    @JvmStatic
-    fun int(): PType = PType.integer()
-
-    @JvmStatic
-    fun bigint(): PType = PType.bigint()
-
     /**
-     * NUMERIC represents an integer with arbitrary precision. It is equivalent to Ion’s integer type, and is conformant to SQL-99s rules for the NUMERIC type. In SQL-99, if a scale is omitted then we choose zero — and if a precision is omitted then the precision is implementation defined. For PartiQL, we define this precision to be inf — aka arbitrary precision.
-     *
-     * @param precision     Defaults to inf.
-     * @param scale         Defaults to 0.
-     * @return
+     * Remaining coercions from SQL:1999:
+     * - Values corresponding to the binary data type are mutually assignable.
+     * - Values corresponding to the data types BIT and BIT VARYING are always mutually comparable and
+     * are mutually assignable.
+     * - Values of type interval are mutually assignable only if the source and target of the assignment are
+     * both year-month intervals or if they are both day-time intervals.
+     * - Values corresponding to user-defined types are discussed in Subclause 4.8.4, ‘‘User-defined type
+     * comparison and assignment’’.
      */
-    @JvmStatic
-    fun numeric(precision: Int? = null, scale: Int? = null): PType {
-        if (scale != null && precision == null) {
-            error("Precision can never be null while scale is specified.")
-        }
-        return when {
-            precision != null && scale != null -> PType.decimal(precision, scale)
-            precision != null -> PType.decimal(precision, 0)
-            else -> PType.numeric()
-        }
+    fun isAssignable(input: PType, target: PType): Boolean {
+        return areAssignableNumberTypes(input, target) ||
+            areAssignableTextTypes(input, target) ||
+            areAssignableBooleanTypes(input, target) ||
+            areAssignableDateTimeTypes(input, target) ||
+            areAssignableCollectionTypes(input, target) ||
+            areAssignableStructuralTypes(input, target) ||
+            areAssignableDynamicTypes(target)
     }
 
     /**
-     * DECIMAL represents an exact numeric type with arbitrary precision and arbitrary scale. It is equivalent to Ion’s decimal type. For a DECIMAL with no given scale we choose inf rather than the SQL prescribed 0 (zero). Here we diverge from SQL-99 for Ion compatibility. Finally, SQL defines decimals as having precision equal to or greater than the given precision. Like other systems, we truncate extraneous precision so that NUMERIC(p,s) is equivalent to DECIMAL(p,s). The only difference between them is the default scale when it’s not specified — we follow SQL-99 for NUMERIC, and we follow Postgres for DECIMAL.
-     *
-     * @param precision     Defaults to inf.
-     * @param scale         Defaults to 0 when precision is given, otherwise inf.
-     * @return
+     * NOT specified by SQL:1999. We assume that we can coerce a collection of one type to another if the subtype
+     * of each collection is assignable.
      */
-    @JvmStatic
-    fun decimal(precision: Int? = null, scale: Int? = null): PType {
-        if (scale != null && precision == null) {
-            error("Precision can never be null while scale is specified.")
-        }
+    private fun areAssignableCollectionTypes(input: PType, target: PType): Boolean {
+        return input in SqlTypeFamily.COLLECTION && target in SqlTypeFamily.COLLECTION && isAssignable(input.typeParameter, target.typeParameter)
+    }
+
+    /**
+     * NOT specified by SQL:1999. We assume that we can statically coerce anything to DYNAMIC. However, note that
+     * CAST(<v> AS DYNAMIC) is NEVER inserted. We check for the use of DYNAMIC at function resolution. This is merely
+     * for the [PType.getTypeParameter] and [PType.getFields]
+     */
+    private fun areAssignableDynamicTypes(target: PType): Boolean {
+        return target.kind == Kind.DYNAMIC
+    }
+
+    /**
+     * NOT completely specified by SQL:1999.
+     *
+     * From SQL:1999:
+     * ```
+     * Values corresponding to row types are mutually assignable if and only if both have the same degree
+     * and every field in one row type is mutually assignable to the field in the same ordinal position of
+     * the other row type. Values corresponding to row types are mutually comparable if and only if both
+     * have the same degree and every field in one row type is mutually comparable to the field in the
+     * same ordinal position of the other row type.
+     * ```
+     */
+    private fun areAssignableStructuralTypes(input: PType, target: PType): Boolean {
         return when {
-            precision != null && scale != null -> PType.decimal(precision, scale)
-            precision != null -> PType.decimal(precision, 0)
-            else -> PType.decimal()
+            input.kind == Kind.ROW && target.kind == Kind.ROW -> fieldsAreAssignable(input.fields.toList(), target.fields!!.toList())
+            input.kind == Kind.STRUCT && target.kind == Kind.ROW -> true
+            input.kind == Kind.ROW && target.kind == Kind.STRUCT -> true
+            input.kind == Kind.STRUCT && target.kind == Kind.STRUCT -> true
+            else -> false
         }
     }
 
-    @JvmStatic
-    fun real(): PType = PType.real()
-
-    @JvmStatic
-    fun double(): PType = PType.doublePrecision()
-
-    //
-    // CHARACTER STRINGS
-    //
-
-    @JvmStatic
-    fun char(length: Int? = null): PType = PType.character(length ?: 1)
-
-    @JvmStatic
-    fun varchar(length: Int? = null): PType = PType.varchar(length ?: MAX_SIZE)
-
-    @JvmStatic
-    fun string(): PType = PType.string()
-
-    @JvmStatic
-    fun clob(length: Int? = null) = PType.clob(length ?: MAX_SIZE)
-
-    //
-    // BIT STRINGS
-    //
-
-    @JvmStatic
-    fun blob(length: Int? = null) = PType.blob(length ?: MAX_SIZE)
-
-    //
-    // DATETIME
-    //
-
-    @JvmStatic
-    fun date(): PType = TODO()
-
-    @JvmStatic
-    fun time(precision: Int? = null): PType = PType.time(precision ?: 6)
-
-    @JvmStatic
-    fun timez(precision: Int? = null): PType = PType.timez(precision ?: 6)
-
-    @JvmStatic
-    fun timestamp(precision: Int? = null): PType = PType.time(precision ?: 6)
-
-    @JvmStatic
-    fun timestampz(precision: Int? = null): PType = PType.timestampz(precision ?: 6)
-
-    //
-    // COLLECTIONS
-    //
-
-    @JvmStatic
-    fun array(element: PType? = null, size: Int? = null): PType {
-        if (size != null) {
-            error("Fixed-length ARRAY [N] is not supported.")
+    private fun fieldsAreAssignable(input: List<Field>, target: List<Field>): Boolean {
+        if (input.size != target.size) { return false }
+        val iIter = input.iterator()
+        val tIter = target.iterator()
+        while (iIter.hasNext()) {
+            val iField = iIter.next()
+            val tField = tIter.next()
+            if (!isAssignable(iField.type, tField.type)) {
+                return false
+            }
         }
-        return when (element) {
-            null -> PType.array()
-            else -> PType.array(element)
-        }
+        return true
     }
 
-    @JvmStatic
-    fun bag(element: PType? = null, size: Int? = null): PType {
-        if (size != null) {
-            error("Fixed-length BAG [N] is not supported.")
+    /**
+     * This is a PartiQL extension. We assume that structs/rows with the same field names may be assignable
+     * if all names match AND types are assignable.
+     */
+    private fun namedFieldsAreAssignableUnordered(input: List<Field>, target: List<Field>): Boolean {
+        if (input.size != target.size) { return false }
+        val inputSorted = input.sortedBy { it.name }
+        val targetSorted = target.sortedBy { it.name }
+        val iIter = inputSorted.iterator()
+        val tIter = targetSorted.iterator()
+        while (iIter.hasNext()) {
+            val iField = iIter.next()
+            val tField = tIter.next()
+            if (iField.name != tField.name) {
+                return false
+            }
+            if (!isAssignable(iField.type, tField.type)) {
+                return false
+            }
         }
-        return when (element) {
-            null -> PType.bag()
-            else -> PType.bag(element)
-        }
+        return true
     }
 
-    //
-    // STRUCTURAL
-    //
+    /**
+     * From SQL:1999:
+     * ```
+     * Values of the data types NUMERIC, DECIMAL, INTEGER, SMALLINT, FLOAT, REAL, and
+     * DOUBLE PRECISION are numbers and are all mutually comparable and mutually assignable.
+     * ```
+     */
+    private fun areAssignableNumberTypes(input: PType, target: PType): Boolean {
+        return input in SqlTypeFamily.NUMERIC && target in SqlTypeFamily.NUMERIC
+    }
 
-    @JvmStatic
-    fun struct(): PType = PType.struct()
+    /**
+     * From SQL:1999:
+     * ```
+     * Values corresponding to the data type boolean are always mutually comparable and are mutually
+     * assignable.
+     * ```
+     */
+    private fun areAssignableBooleanTypes(input: PType, target: PType): Boolean {
+        return input.kind == Kind.BOOL && target.kind == Kind.BOOL
+    }
 
-    @JvmStatic
-    fun row(fields: List<Field>): PType = PType.row(fields)
+    /**
+     * From SQL:1999:
+     * ```
+     * Values corresponding to the data types CHARACTER, CHARACTER VARYING, and CHARACTER
+     * LARGE OBJECT are mutually assignable if and only if they are taken from the same character
+     * repertoire. (For this implementation, we shall assume that all text types share the same
+     * character repertoire.)
+     * ```
+     */
+    private fun areAssignableTextTypes(input: PType, target: PType): Boolean {
+        return input in SqlTypeFamily.TEXT && target in SqlTypeFamily.TEXT
+    }
 
-    // /**
-    //  * Create PType from the AST type.
-    //  */
-    // @JvmStatic
-    // fun from(type: Type): PType = when (type) {
-    //     is Type.NullType -> error("Casting to NULL is not supported.")
-    //     is Type.Missing -> error("Casting to MISSING is not supported.")
-    //     is Type.Bool -> bool()
-    //     is Type.Tinyint -> tinyint()
-    //     is Type.Smallint, is Type.Int2 -> smallint()
-    //     is Type.Int4, is Type.Int -> int()
-    //     is Type.Bigint, is Type.Int8 -> bigint()
-    //     is Type.Numeric -> numeric(type.precision, type.scale)
-    //     is Type.Decimal -> decimal(type.precision, type.scale)
-    //     is Type.Real -> real()
-    //     is Type.Float32 -> real()
-    //     is Type.Float64 -> double()
-    //     is Type.Char -> char(type.length)
-    //     is Type.Varchar -> varchar(type.length)
-    //     is Type.String -> string()
-    //     is Type.Symbol -> {
-    //         // TODO will we continue supporting symbol?
-    //         PType.typeSymbol()
-    //     }
-    //     is Type.Bit -> error("BIT is not supported yet.")
-    //     is Type.BitVarying -> error("BIT VARYING is not supported yet.")
-    //     is Type.ByteString -> error("BINARY is not supported yet.")
-    //     is Type.Blob -> blob(type.length)
-    //     is Type.Clob -> clob(type.length)
-    //     is Type.Date -> date()
-    //     is Type.Time -> time(type.precision)
-    //     is Type.TimeWithTz -> timez(type.precision)
-    //     is Type.Timestamp -> timestamp(type.precision)
-    //     is Type.TimestampWithTz -> timestampz(type.precision)
-    //     is Type.Interval -> error("INTERVAL is not supported yet.")
-    //     is Type.Bag -> bag()
-    //     is Type.Sexp -> {
-    //         // TODO will we continue supporting s-expression?
-    //         PType.typeSexp()
-    //     }
-    //     is Type.Any -> dynamic()
-    //     is Type.List -> array()
-    //     is Type.Tuple -> struct()
-    //     is Type.Struct -> struct()
-    //     is Type.Custom -> TODO("Custom type not supported ")
-    // }
-
-    @JvmStatic
-    fun from(kind: PType.Kind): PType = when (kind) {
-        PType.Kind.DYNAMIC -> dynamic()
-        PType.Kind.BOOL -> bool()
-        PType.Kind.TINYINT -> tinyint()
-        PType.Kind.SMALLINT -> smallint()
-        PType.Kind.INTEGER -> int()
-        PType.Kind.BIGINT -> bigint()
-        PType.Kind.NUMERIC -> numeric()
-        PType.Kind.DECIMAL, PType.Kind.DECIMAL_ARBITRARY -> decimal()
-        PType.Kind.REAL -> real()
-        PType.Kind.DOUBLE -> double()
-        PType.Kind.CHAR -> char()
-        PType.Kind.VARCHAR -> varchar()
-        PType.Kind.STRING -> string()
-        PType.Kind.SYMBOL -> {
-            // TODO will we continue supporting symbol?
-            PType.symbol()
+    /**
+     * From SQL:1999:
+     * ```
+     * Values of type datetime are mutually assignable only if the source and target of the assignment are
+     * both of type DATE, or both of type TIME (regardless whether WITH TIME ZONE or WITHOUT
+     * TIME ZONE is specified or implicit), or both of type TIMESTAMP (regardless whether WITH TIME
+     * ZONE or WITHOUT TIME ZONE is specified or implicit)
+     * ```
+     */
+    private fun areAssignableDateTimeTypes(input: PType, target: PType): Boolean {
+        val i = input.kind
+        val t = target.kind
+        return when {
+            i == Kind.DATE && t == Kind.DATE -> true
+            (i == Kind.TIMEZ || i == Kind.TIME) && (t == Kind.TIMEZ || t == Kind.TIME) -> true
+            (i == Kind.TIMESTAMPZ || i == Kind.TIMESTAMP) && (t == Kind.TIMESTAMPZ || t == Kind.TIMESTAMP) -> true
+            else -> false
         }
-        PType.Kind.BLOB -> blob()
-        PType.Kind.CLOB -> clob()
-        PType.Kind.DATE -> date()
-        PType.Kind.TIMEZ -> timez()
-        PType.Kind.TIME -> time()
-        PType.Kind.TIMESTAMPZ -> timestampz()
-        PType.Kind.TIMESTAMP -> timestamp()
-        PType.Kind.BAG -> bag()
-        PType.Kind.ARRAY -> array()
-        PType.Kind.ROW -> error("Cannot create a ROW from Kind")
-        PType.Kind.SEXP -> {
-            // TODO will we continue supporting sexp?
-            PType.sexp()
-        }
-        PType.Kind.STRUCT -> struct()
-        PType.Kind.UNKNOWN -> PType.unknown()
     }
 }

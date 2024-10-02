@@ -1,10 +1,10 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.function.Function
+import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 
 /**
@@ -121,13 +121,13 @@ internal object FnResolver {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (a != p.getType()) return false
+            if (p.getMatch(a) != a) return false
         }
         return true
     }
 
     /**
-     * Attempt to match arguments to the parameters; return the implicit casts if necessary.
+     * Attempt to match arguments to the parameters; return the coercions if necessary.
      *
      * @param args
      * @return
@@ -135,34 +135,29 @@ internal object FnResolver {
     private fun Function.match(args: List<CompilerType>): MatchResult? {
         val parameters = getParameters()
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
-        var exactInputTypes: Int = 0
+        var exactInputTypes = 0
         for (i in args.indices) {
-            val arg = args[i]
+            val a = args[i]
+            if (a.kind == Kind.UNKNOWN) {
+                continue // skip unknown arguments
+            }
+            // check match
             val p = parameters[i]
+            val m = p.getMatch(a)
             when {
-                // 1. Exact match
-                arg == p.getType() -> {
-                    exactInputTypes++
-                    continue
-                }
-                // 2. Match ANY parameter, no coercion needed
-                p.getType().kind == Kind.DYNAMIC -> continue
-                arg.kind == Kind.UNKNOWN -> continue
-                // 3. Allow for ANY arguments
-                arg.kind == Kind.DYNAMIC -> {
-                    mapping[i] = Ref.Cast(arg, p.getType().toCType(), Ref.Cast.Safety.UNSAFE, true)
-                }
-                // 4. Check for a coercion
-                else -> when (val coercion = Coercions.get(arg, p.getType())) {
-                    null -> return null // short-circuit
-                    else -> mapping[i] = coercion
-                }
+                m == null -> return null // short-circuit
+                m == a -> exactInputTypes++
+                else -> mapping[i] = coercion(a, m)
             }
         }
         return MatchResult(
             FnMatch.Static(this, mapping),
             exactInputTypes,
         )
+    }
+
+    private fun coercion(arg: PType, target: PType): Ref.Cast {
+        return Ref.Cast(arg.toCType(), target.toCType(), Ref.Cast.Safety.COERCION, true)
     }
 
     private class MatchResult(

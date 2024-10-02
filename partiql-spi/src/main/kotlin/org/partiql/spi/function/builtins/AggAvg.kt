@@ -8,21 +8,21 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorAvg
 import org.partiql.types.PType
 
-internal val Agg_AVG__INT8__INT8 = Aggregation.standard(
+internal val Agg_AVG__INT8__INT8 = Aggregation.static(
     name = "avg",
     returns = PType.decimal(),
     parameters = arrayOf(Parameter("value", PType.tinyint())),
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__INT16__INT16 = Aggregation.standard(
+internal val Agg_AVG__INT16__INT16 = Aggregation.static(
     name = "avg",
     returns = PType.decimal(),
     parameters = arrayOf(Parameter("value", PType.smallint())),
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__INT32__INT32 = Aggregation.standard(
+internal val Agg_AVG__INT32__INT32 = Aggregation.static(
 
     name = "avg",
     returns = PType.decimal(),
@@ -32,7 +32,7 @@ internal val Agg_AVG__INT32__INT32 = Aggregation.standard(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__INT64__INT64 = Aggregation.standard(
+internal val Agg_AVG__INT64__INT64 = Aggregation.static(
 
     name = "avg",
     returns = PType.decimal(),
@@ -42,7 +42,7 @@ internal val Agg_AVG__INT64__INT64 = Aggregation.standard(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__INT__INT = Aggregation.standard(
+internal val Agg_AVG__INT__INT = Aggregation.static(
 
     name = "avg",
     returns = PType.decimal(),
@@ -52,7 +52,7 @@ internal val Agg_AVG__INT__INT = Aggregation.standard(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.standard(
+internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
 
     name = "avg",
     returns = PType.decimal(),
@@ -62,7 +62,7 @@ internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.standar
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__FLOAT32__FLOAT32 = Aggregation.standard(
+internal val Agg_AVG__FLOAT32__FLOAT32 = Aggregation.static(
 
     name = "avg",
     returns = PType.real(),
@@ -72,7 +72,7 @@ internal val Agg_AVG__FLOAT32__FLOAT32 = Aggregation.standard(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__FLOAT64__FLOAT64 = Aggregation.standard(
+internal val Agg_AVG__FLOAT64__FLOAT64 = Aggregation.static(
 
     name = "avg",
     returns = PType.doublePrecision(),
@@ -82,7 +82,7 @@ internal val Agg_AVG__FLOAT64__FLOAT64 = Aggregation.standard(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__ANY__ANY = Aggregation.standard(
+internal val Agg_AVG__ANY__ANY = Aggregation.static(
 
     name = "avg",
     returns = PType.decimal(),

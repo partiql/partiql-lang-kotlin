@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorMin
 import org.partiql.types.PType
 
-internal val Agg_MIN__INT8__INT8 = Aggregation.standard(
+internal val Agg_MIN__INT8__INT8 = Aggregation.static(
     name = "min",
     returns = PType.tinyint(),
     parameters = arrayOf(
@@ -17,7 +17,7 @@ internal val Agg_MIN__INT8__INT8 = Aggregation.standard(
     accumulator = ::AccumulatorMin,
 )
 
-internal val Agg_MIN__INT16__INT16 = Aggregation.standard(
+internal val Agg_MIN__INT16__INT16 = Aggregation.static(
     name = "min",
     returns = PType.smallint(),
     parameters = arrayOf(
@@ -26,7 +26,7 @@ internal val Agg_MIN__INT16__INT16 = Aggregation.standard(
     accumulator = ::AccumulatorMin,
 )
 
-internal val Agg_MIN__INT32__INT32 = Aggregation.standard(
+internal val Agg_MIN__INT32__INT32 = Aggregation.static(
     name = "min",
     returns = PType.integer(),
     parameters = arrayOf(
@@ -35,7 +35,7 @@ internal val Agg_MIN__INT32__INT32 = Aggregation.standard(
     accumulator = ::AccumulatorMin,
 )
 
-internal val Agg_MIN__INT64__INT64 = Aggregation.standard(
+internal val Agg_MIN__INT64__INT64 = Aggregation.static(
     name = "min",
     returns = PType.bigint(),
     parameters = arrayOf(
@@ -44,7 +44,7 @@ internal val Agg_MIN__INT64__INT64 = Aggregation.standard(
     accumulator = ::AccumulatorMin,
 )
 
-internal val Agg_MIN__INT__INT = Aggregation.standard(
+internal val Agg_MIN__INT__INT = Aggregation.static(
     name = "min",
     returns = PType.numeric(),
     parameters = arrayOf(
@@ -53,7 +53,7 @@ internal val Agg_MIN__INT__INT = Aggregation.standard(
     accumulator = ::AccumulatorMin,
 )
 
-internal val Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.standard(
+internal val Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
     name = "min",
     returns = PType.decimal(),
     parameters = arrayOf(
@@ -62,7 +62,7 @@ internal val Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.standar
     accumulator = ::AccumulatorMin,
 )
 
-internal val Agg_MIN__FLOAT32__FLOAT32 = Aggregation.standard(
+internal val Agg_MIN__FLOAT32__FLOAT32 = Aggregation.static(
     name = "min",
     returns = PType.real(),
     parameters = arrayOf(
@@ -71,7 +71,7 @@ internal val Agg_MIN__FLOAT32__FLOAT32 = Aggregation.standard(
     accumulator = ::AccumulatorMin,
 )
 
-internal val Agg_MIN__FLOAT64__FLOAT64 = Aggregation.standard(
+internal val Agg_MIN__FLOAT64__FLOAT64 = Aggregation.static(
     name = "min",
     returns = PType.doublePrecision(),
     parameters = arrayOf(
@@ -80,7 +80,7 @@ internal val Agg_MIN__FLOAT64__FLOAT64 = Aggregation.standard(
     accumulator = ::AccumulatorMin,
 )
 
-internal val Agg_MIN__ANY__ANY = Aggregation.standard(
+internal val Agg_MIN__ANY__ANY = Aggregation.static(
     name = "min",
     returns = PType.dynamic(),
     parameters = arrayOf(
