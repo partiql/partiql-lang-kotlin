@@ -663,7 +663,7 @@ public interface Datum extends Iterable<Datum> {
         } else {
             newValue = value.substring(0, length);
         }
-        return new DatumString(newValue, PType.varchar(length));
+        return new DatumString(newValue, PType.character(length));
     }
 
     @NotNull
