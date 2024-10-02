@@ -48,20 +48,22 @@ class EvalExecutor(
 
     override fun fromIon(value: IonValue): PartiQLResult {
         val partiql = PartiQLValueIonReaderBuilder.standard().build(value.toIonElement()).read()
+        val datum = Datum.of(partiql)
 
-        return PartiQLResult.Value(partiql)
+        return PartiQLResult.Value(datum)
     }
 
     override fun toIon(value: PartiQLResult): IonValue {
         if (value is PartiQLResult.Value) {
-            return value.value.toIon().toIonValue(ION)
+            return value.value.toPartiQLValue().toIon().toIonValue(ION)
         }
         error("PartiQLResult cannot be converted to Ion")
     }
 
+    // TODO: Use DATUM
     override fun compare(actual: PartiQLResult, expect: PartiQLResult): Boolean {
         if (actual is PartiQLResult.Value && expect is PartiQLResult.Value) {
-            return valueComparison(actual.value, expect.value)
+            return valueComparison(actual.value.toPartiQLValue(), expect.value.toPartiQLValue())
         }
         if (actual is PartiQLResult.Error) {
             throw actual.cause

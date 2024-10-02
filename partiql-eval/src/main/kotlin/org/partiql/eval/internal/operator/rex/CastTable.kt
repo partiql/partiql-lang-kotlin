@@ -11,6 +11,9 @@ import org.partiql.types.PType.Kind.ARRAY
 import org.partiql.types.PType.Kind.BAG
 import org.partiql.types.PType.Kind.BIGINT
 import org.partiql.types.PType.Kind.BOOL
+import org.partiql.types.PType.Kind.CHAR
+import org.partiql.types.PType.Kind.CLOB
+import org.partiql.types.PType.Kind.DATE
 import org.partiql.types.PType.Kind.DECIMAL
 import org.partiql.types.PType.Kind.DECIMAL_ARBITRARY
 import org.partiql.types.PType.Kind.DOUBLE
@@ -23,9 +26,13 @@ import org.partiql.types.PType.Kind.SMALLINT
 import org.partiql.types.PType.Kind.STRING
 import org.partiql.types.PType.Kind.STRUCT
 import org.partiql.types.PType.Kind.SYMBOL
+import org.partiql.types.PType.Kind.TIME
 import org.partiql.types.PType.Kind.TIMESTAMP
 import org.partiql.types.PType.Kind.TIMESTAMPZ
+import org.partiql.types.PType.Kind.TIMEZ
 import org.partiql.types.PType.Kind.TINYINT
+import org.partiql.types.PType.Kind.VARCHAR
+import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -102,6 +109,8 @@ internal object CastTable {
         registerList()
         registerSexp()
         registerTimestamp()
+        registerDate()
+        registerTime()
     }
 
     private fun PType.Kind.pad(): String {
@@ -151,7 +160,6 @@ internal object CastTable {
 
     /**
      * CAST(<bool> AS <type>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerBool() {
         register(BOOL, BOOL) { x, _ -> x }
@@ -177,12 +185,14 @@ internal object CastTable {
             DOUBLE
         ) { x, _ -> Datum.doublePrecision(if (x.boolean) 1.0 else 0.0) }
         register(BOOL, STRING) { x, _ -> Datum.string(if (x.boolean) "true" else "false") }
-        register(BOOL, SYMBOL) { x, _ -> Datum.string(if (x.boolean) "true" else "false") }
+        register(BOOL, SYMBOL) { x, _ -> Datum.symbol(if (x.boolean) "true" else "false") }
+        register(BOOL, VARCHAR) { x, t -> Datum.varchar(if (x.boolean) "true" else "false", t.length) }
+        register(BOOL, CHAR) { x, t -> Datum.character(if (x.boolean) "true" else "false", t.length) }
+        register(BOOL, CLOB) { x, t -> Datum.clob((if (x.boolean) "true" else "false").toByteArray(), t.length) }
     }
 
     /**
      * CAST(<tinyint> AS <type>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerTinyInt() {
         register(TINYINT, BOOL) { x, _ -> Datum.bool(x.byte.toInt() != 0) }
@@ -210,12 +220,14 @@ internal object CastTable {
         register(TINYINT, REAL) { x, _ -> Datum.real(x.byte.toFloat()) }
         register(TINYINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.byte.toDouble()) }
         register(TINYINT, STRING) { x, _ -> Datum.string(x.byte.toString()) }
-        register(TINYINT, SYMBOL) { x, _ -> Datum.string(x.byte.toString()) }
+        register(TINYINT, SYMBOL) { x, _ -> Datum.symbol(x.byte.toString()) }
+        register(TINYINT, VARCHAR) { x, t -> Datum.varchar(x.byte.toString(), t.length) }
+        register(TINYINT, CHAR) { x, t -> Datum.character(x.byte.toString(), t.length) }
+        register(TINYINT, CLOB) { x, t -> Datum.clob(x.byte.toString().toByteArray(), t.length) }
     }
 
     /**
      * CAST(<smallint> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerSmallInt() {
         register(SMALLINT, BOOL) { x, _ -> Datum.bool(x.short.toInt() != 0) }
@@ -243,12 +255,14 @@ internal object CastTable {
         register(SMALLINT, REAL) { x, _ -> Datum.real(x.short.toFloat()) }
         register(SMALLINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.short.toDouble()) }
         register(SMALLINT, STRING) { x, _ -> Datum.string(x.short.toString()) }
-        register(SMALLINT, SYMBOL) { x, _ -> Datum.string(x.short.toString()) }
+        register(SMALLINT, SYMBOL) { x, _ -> Datum.symbol(x.short.toString()) }
+        register(SMALLINT, VARCHAR) { x, t -> Datum.varchar(x.short.toString(), t.length) }
+        register(SMALLINT, CHAR) { x, t -> Datum.character(x.short.toString(), t.length) }
+        register(SMALLINT, CLOB) { x, t -> Datum.clob(x.short.toString().toByteArray(), t.length) }
     }
 
     /**
      * CAST(<int> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerInt() {
         register(INTEGER, BOOL) { x, _ -> Datum.bool(x.int != 0) }
@@ -268,12 +282,14 @@ internal object CastTable {
         register(INTEGER, REAL) { x, _ -> Datum.real(x.int.toFloat()) }
         register(INTEGER, DOUBLE) { x, _ -> Datum.doublePrecision(x.int.toDouble()) }
         register(INTEGER, STRING) { x, _ -> Datum.string(x.int.toString()) }
-        register(INTEGER, SYMBOL) { x, _ -> Datum.string(x.int.toString()) }
+        register(INTEGER, SYMBOL) { x, _ -> Datum.symbol(x.int.toString()) }
+        register(INTEGER, VARCHAR) { x, t -> Datum.varchar(x.int.toString(), t.length) }
+        register(INTEGER, CHAR) { x, t -> Datum.character(x.int.toString(), t.length) }
+        register(INTEGER, CLOB) { x, t -> Datum.clob(x.int.toString().toByteArray(), t.length) }
     }
 
     /**
      * CAST(<bigint> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerBigInt() {
         register(BIGINT, BOOL) { x, _ -> Datum.bool(x.long != 0L) }
@@ -296,12 +312,14 @@ internal object CastTable {
         register(BIGINT, REAL) { x, _ -> Datum.real(x.long.toFloat()) }
         register(BIGINT, DOUBLE) { x, _ -> Datum.doublePrecision(x.long.toDouble()) }
         register(BIGINT, STRING) { x, _ -> Datum.string(x.long.toString()) }
-        register(BIGINT, SYMBOL) { x, _ -> Datum.string(x.long.toString()) }
+        register(BIGINT, SYMBOL) { x, _ -> Datum.symbol(x.long.toString()) }
+        register(BIGINT, VARCHAR) { x, t -> Datum.varchar(x.long.toString(), t.length) }
+        register(BIGINT, CHAR) { x, t -> Datum.character(x.long.toString(), t.length) }
+        register(BIGINT, CLOB) { x, t -> Datum.clob(x.long.toString().toByteArray(), t.length) }
     }
 
     /**
      * CAST(<int arbitrary> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerIntArbitrary() {
         register(NUMERIC, BOOL) { x, _ -> Datum.bool(x.bigInteger != BigInteger.ZERO) }
@@ -327,12 +345,14 @@ internal object CastTable {
             DOUBLE
         ) { x, _ -> datumDoublePrecision(x.bigInteger) }
         register(NUMERIC, STRING) { x, _ -> Datum.string(x.bigInteger.toString()) }
-        register(NUMERIC, SYMBOL) { x, _ -> Datum.string(x.bigInteger.toString()) }
+        register(NUMERIC, SYMBOL) { x, _ -> Datum.symbol(x.bigInteger.toString()) }
+        register(NUMERIC, VARCHAR) { x, t -> Datum.varchar(x.bigInteger.toString(), t.length) }
+        register(NUMERIC, CHAR) { x, t -> Datum.character(x.bigInteger.toString(), t.length) }
+        register(NUMERIC, CLOB) { x, t -> Datum.clob(x.bigInteger.toString().toByteArray(), t.length) }
     }
 
     /**
      * CAST(<decimal> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerDecimal() {
         register(DECIMAL, BOOL) { x, _ -> Datum.bool(x.bigDecimal != BigDecimal.ZERO) }
@@ -352,12 +372,14 @@ internal object CastTable {
             DOUBLE
         ) { x, _ -> datumDoublePrecision(x.bigDecimal) }
         register(DECIMAL, STRING) { x, _ -> Datum.string(x.bigDecimal.toString()) }
-        register(DECIMAL, SYMBOL) { x, _ -> Datum.string(x.bigDecimal.toString()) }
+        register(DECIMAL, SYMBOL) { x, _ -> Datum.symbol(x.bigDecimal.toString()) }
+        register(DECIMAL, VARCHAR) { x, t -> Datum.varchar(x.bigDecimal.toString(), t.length) }
+        register(DECIMAL, CHAR) { x, t -> Datum.character(x.bigDecimal.toString(), t.length) }
+        register(DECIMAL, CLOB) { x, t -> Datum.clob(x.bigDecimal.toString().toByteArray(), t.length) }
     }
 
     /**
      * CAST(<decimal arbitrary> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerDecimalArbitrary() {
         register(
@@ -386,12 +408,14 @@ internal object CastTable {
             DOUBLE
         ) { x, _ -> datumDoublePrecision(x.bigDecimal) }
         register(DECIMAL_ARBITRARY, STRING) { x, _ -> Datum.string(x.bigDecimal.toString()) }
-        register(DECIMAL_ARBITRARY, SYMBOL) { x, _ -> Datum.string(x.bigDecimal.toString()) }
+        register(DECIMAL_ARBITRARY, SYMBOL) { x, _ -> Datum.symbol(x.bigDecimal.toString()) }
+        register(DECIMAL_ARBITRARY, VARCHAR) { x, t -> Datum.varchar(x.bigDecimal.toString(), t.length) }
+        register(DECIMAL_ARBITRARY, CHAR) { x, t -> Datum.character(x.bigDecimal.toString(), t.length) }
+        register(DECIMAL_ARBITRARY, CLOB) { x, t -> Datum.clob(x.bigDecimal.toString().toByteArray(), t.length) }
     }
 
     /**
      * CAST(<real> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerReal() {
         register(REAL, BOOL) { x, _ -> Datum.bool(x.float != 0F) }
@@ -418,12 +442,14 @@ internal object CastTable {
         register(REAL, REAL) { x, _ -> x }
         register(REAL, DOUBLE) { x, _ -> Datum.doublePrecision(x.float.toDouble()) }
         register(REAL, STRING) { x, _ -> Datum.string(x.float.toString()) }
-        register(REAL, SYMBOL) { x, _ -> Datum.string(x.float.toString()) }
+        register(REAL, SYMBOL) { x, _ -> Datum.symbol(x.float.toString()) }
+        register(REAL, VARCHAR) { x, t -> Datum.varchar(x.float.toString(), t.length) }
+        register(REAL, CHAR) { x, t -> Datum.character(x.float.toString(), t.length) }
+        register(REAL, CLOB) { x, t -> Datum.clob(x.float.toString().toByteArray(), t.length) }
     }
 
     /**
      * CAST(<double precision> AS <target>)
-     * TODO: CHAR, VARCHAR, SYMBOL
      */
     private fun registerDoublePrecision() {
         register(DOUBLE, BOOL) { x, _ -> Datum.bool(x.double != 0.0) }
@@ -452,7 +478,10 @@ internal object CastTable {
         register(DOUBLE, REAL) { x, _ -> datumReal(x.double) }
         register(DOUBLE, DOUBLE) { x, _ -> x }
         register(DOUBLE, STRING) { x, _ -> Datum.string(x.double.toString()) }
-        register(DOUBLE, SYMBOL) { x, _ -> Datum.string(x.double.toString()) }
+        register(DOUBLE, SYMBOL) { x, _ -> Datum.symbol(x.double.toString()) }
+        register(DOUBLE, VARCHAR) { x, t -> Datum.varchar(x.double.toString(), t.length) }
+        register(DOUBLE, CHAR) { x, t -> Datum.character(x.double.toString(), t.length) }
+        register(DOUBLE, CLOB) { x, t -> Datum.clob(x.double.toString().toByteArray(), t.length) }
     }
 
     /**
@@ -484,7 +513,10 @@ internal object CastTable {
         register(STRING, REAL) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, DOUBLE) { x, t -> cast(numberFromString(x.string), t) }
         register(STRING, STRING) { x, _ -> x }
-        register(STRING, SYMBOL) { x, _ -> Datum.string(x.string) }
+        register(STRING, SYMBOL) { x, _ -> Datum.symbol(x.string) }
+        register(STRING, VARCHAR) { x, t -> Datum.varchar(x.string, t.length) }
+        register(STRING, CHAR) { x, t -> Datum.character(x.string, t.length) }
+        register(STRING, CLOB) { x, t -> Datum.clob(x.string.toByteArray(), t.length) }
     }
     /**
      * CAST(<string> AS <target>)
@@ -509,6 +541,9 @@ internal object CastTable {
         register(SYMBOL, DOUBLE) { x, t -> cast(numberFromString(x.string), t) }
         register(SYMBOL, STRING) { x, _ -> Datum.string(x.string) }
         register(SYMBOL, SYMBOL) { x, _ -> x }
+        register(SYMBOL, VARCHAR) { x, t -> Datum.varchar(x.string, t.length) }
+        register(SYMBOL, CHAR) { x, t -> Datum.character(x.string, t.length) }
+        register(SYMBOL, CLOB) { x, t -> Datum.clob(x.string.toByteArray(), t.length) }
     }
 
     private fun registerBag() {
@@ -533,7 +568,58 @@ internal object CastTable {
      * TODO: Flush this out.
      */
     private fun registerTimestamp() {
+        // WITHOUT TZ
+        register(TIMESTAMP, VARCHAR) { x, t -> Datum.varchar(x.timestamp.toString(), t.length) }
+        register(TIMESTAMP, CHAR) { x, t -> Datum.character(x.timestamp.toString(), t.length) }
+        register(TIMESTAMP, CLOB) { x, t -> Datum.clob(x.timestamp.toString().toByteArray(), t.length) }
+        register(TIMESTAMP, STRING) { x, _ -> Datum.string(x.timestamp.toString()) }
+        register(TIMESTAMP, SYMBOL) { x, _ -> Datum.symbol(x.timestamp.toString()) }
+        register(TIMESTAMP, TIMESTAMP) { x, _ -> Datum.timestamp(x.timestamp) }
+        register(TIMESTAMP, TIMESTAMPZ) { x, _ -> Datum.timestamp(x.timestamp) }
+        register(TIMESTAMP, TIME) { x, _ -> Datum.time(x.timestamp.toTime()) }
+        register(TIMESTAMP, DATE) { x, _ -> Datum.date(x.timestamp.toDate()) }
+        // WITH TZ
+        register(TIMESTAMPZ, VARCHAR) { x, t -> Datum.varchar(x.timestamp.toString(), t.length) }
+        register(TIMESTAMPZ, CHAR) { x, t -> Datum.character(x.timestamp.toString(), t.length) }
+        register(TIMESTAMPZ, CLOB) { x, t -> Datum.clob(x.timestamp.toString().toByteArray(), t.length) }
+        register(TIMESTAMPZ, STRING) { x, _ -> Datum.string(x.timestamp.toString()) }
+        register(TIMESTAMPZ, SYMBOL) { x, _ -> Datum.symbol(x.timestamp.toString()) }
         register(TIMESTAMPZ, TIMESTAMP) { x, _ -> Datum.timestamp(x.timestamp) }
+        register(TIMESTAMPZ, TIMESTAMPZ) { x, _ -> Datum.timestamp(x.timestamp) }
+        register(TIMESTAMPZ, TIME) { x, _ -> Datum.time(x.timestamp.toTime()) }
+        register(TIMESTAMPZ, DATE) { x, _ -> Datum.date(x.timestamp.toDate()) }
+    }
+    private fun registerDate() {
+        register(DATE, VARCHAR) { x, t -> Datum.varchar(x.date.toString(), t.length) }
+        register(DATE, CHAR) { x, t -> Datum.character(x.date.toString(), t.length) }
+        register(DATE, CLOB) { x, t -> Datum.clob(x.date.toString().toByteArray(), t.length) }
+        register(DATE, STRING) { x, _ -> Datum.string(x.date.toString()) }
+        register(DATE, SYMBOL) { x, _ -> Datum.symbol(x.date.toString()) }
+        register(DATE, DATE) { x, _ -> Datum.date(x.date) }
+        register(DATE, TIMESTAMP) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(x.date, DateTimeValue.time(0, 0, 0))) }
+        register(DATE, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(x.date, DateTimeValue.time(0, 0, 0))) }
+    }
+
+    private fun registerTime() {
+        // WITHOUT TZ
+        register(TIME, VARCHAR) { x, t -> Datum.varchar(x.time.toString(), t.length) }
+        register(TIME, CHAR) { x, t -> Datum.character(x.time.toString(), t.length) }
+        register(TIME, CLOB) { x, t -> Datum.clob(x.time.toString().toByteArray(), t.length) }
+        register(TIME, STRING) { x, _ -> Datum.string(x.time.toString()) }
+        register(TIME, SYMBOL) { x, _ -> Datum.symbol(x.time.toString()) }
+        register(TIME, TIME) { x, _ -> Datum.time(x.time) }
+        register(TIME, TIMESTAMP) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
+        register(TIME, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
+
+        // WITH TZ
+        register(TIMEZ, VARCHAR) { x, t -> Datum.varchar(x.time.toString(), t.length) }
+        register(TIMEZ, CHAR) { x, t -> Datum.character(x.time.toString(), t.length) }
+        register(TIMEZ, CLOB) { x, t -> Datum.clob(x.time.toString().toByteArray(), t.length) }
+        register(TIMEZ, STRING) { x, _ -> Datum.string(x.time.toString()) }
+        register(TIMEZ, SYMBOL) { x, _ -> Datum.symbol(x.time.toString()) }
+        register(TIMEZ, TIME) { x, _ -> Datum.time(x.time) }
+        register(TIMEZ, TIMESTAMP) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
+        register(TIMEZ, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
     }
 
     private fun register(source: PType.Kind, target: PType.Kind, cast: (Datum, PType) -> Datum) {
@@ -614,7 +700,7 @@ internal object CastTable {
 
     private fun datumInt(value: BigDecimal): Datum {
         val int = try {
-            value.setScale(0, RoundingMode.DOWN).intValueExact()
+            value.setScale(0, RoundingMode.HALF_EVEN).intValueExact()
         } catch (e: ArithmeticException) {
             throw DataException("Overflow when casting $value to INT")
         }
@@ -659,7 +745,7 @@ internal object CastTable {
 
     private fun datumTinyInt(value: BigDecimal): Datum {
         val byte = try {
-            value.setScale(0, RoundingMode.DOWN).byteValueExact()
+            value.setScale(0, RoundingMode.HALF_EVEN).byteValueExact()
         } catch (e: ArithmeticException) {
             throw DataException("Overflow when casting $value to TINYINT")
         }
@@ -703,7 +789,7 @@ internal object CastTable {
     }
     private fun datumSmallInt(value: BigDecimal): Datum {
         val short = try {
-            value.setScale(0, RoundingMode.DOWN).shortValueExact()
+            value.setScale(0, RoundingMode.HALF_EVEN).shortValueExact()
         } catch (e: ArithmeticException) {
             throw DataException("Overflow when casting $value to SMALLINT")
         }
@@ -741,7 +827,7 @@ internal object CastTable {
     }
 
     private fun datumIntArbitrary(value: BigDecimal): Datum {
-        return Datum.numeric(value.setScale(0, RoundingMode.DOWN).toBigInteger())
+        return Datum.numeric(value.setScale(0, RoundingMode.HALF_EVEN).toBigInteger())
     }
 
     private fun datumIntArbitrary(value: Double): Datum {
@@ -753,7 +839,7 @@ internal object CastTable {
     }
 
     private fun datumBigInt(value: BigDecimal): Datum {
-        return Datum.bigint(value.setScale(0, RoundingMode.DOWN).longValueExact())
+        return Datum.bigint(value.setScale(0, RoundingMode.HALF_EVEN).longValueExact())
     }
 
     private fun datumBigInt(value: Double): Datum {

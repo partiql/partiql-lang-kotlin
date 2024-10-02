@@ -1,6 +1,5 @@
 package org.partiql.eval.internal
 
-import com.amazon.ionelement.api.createIonElementLoader
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -12,16 +11,15 @@ import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.v1.PartiQLPlan
-import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.planner.internal.SqlPlannerV1
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.value.Datum
 import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.types.StaticType
-import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -36,6 +34,7 @@ import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
+import org.partiql.value.symbolValue
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -77,7 +76,69 @@ class PartiQLEngineDefaultTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun globalsTests(tc: SuccessTestCase) = tc.assert()
 
+    @ParameterizedTest
+    @MethodSource("castTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun castTests(tc: SuccessTestCase) = tc.assert()
+
     companion object {
+
+        @JvmStatic
+        fun castTestCases() = listOf(
+            SuccessTestCase(
+                input = """
+                    CAST(20 AS DECIMAL(10, 5));
+                """.trimIndent(),
+                expected = decimalValue(BigDecimal.valueOf(2000000, 5))
+            ),
+            SuccessTestCase(
+                input = """
+                    CAST(20 AS DECIMAL(10, 3));
+                """.trimIndent(),
+                expected = decimalValue(BigDecimal.valueOf(20000, 3))
+            ),
+            SuccessTestCase(
+                input = """
+                    CAST(20 AS DECIMAL(2, 0));
+                """.trimIndent(),
+                expected = decimalValue(BigDecimal.valueOf(20, 0))
+            ),
+            SuccessTestCase(
+                input = """
+                    CAST(20 AS DECIMAL(1, 0));
+                """.trimIndent(),
+                expected = missingValue(),
+                mode = PartiQLEngine.Mode.PERMISSIVE
+            ),
+            SuccessTestCase(
+                input = """
+                    1 + 2.0
+                """.trimIndent(),
+                expected = decimalValue(BigDecimal.valueOf(30, 1))
+            ),
+            SuccessTestCase(
+                input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
+                expected = bagValue(
+                    int32Value(0),
+                    int32Value(100),
+                    decimalValue(BigDecimal.valueOf(2000, 1)),
+                    decimalValue(BigDecimal.valueOf(3000, 1)),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    CAST(20 AS SYMBOL);
+                """.trimIndent(),
+                expected = symbolValue("20"),
+            ),
+            // TODO: Use Datum for assertions. Currently, PartiQLValue doesn't support parameterized CHAR/VARCHAR
+//            SuccessTestCase(
+//                input = """
+//                    CAST(20 AS CHAR(2));
+//                """.trimIndent(),
+//                expected = charValue("20"),
+//            ),
+        )
 
         @JvmStatic
         fun globalsTestCases() = listOf(
@@ -1246,9 +1307,7 @@ class PartiQLEngineDefaultTest {
     ) {
 
         private val engine = PartiQLEngine.builder().build()
-        private val planner = PartiQLPlannerBuilder().build()
         private val parser = PartiQLParser.default()
-        private val loader = createIonElementLoader()
 
         /**
          * @property value is a serialized Ion value.
@@ -1288,7 +1347,7 @@ class PartiQLEngineDefaultTest {
                     throw returned.cause
                 }
             }
-            val output = result.value
+            val output = result.value.toPartiQLValue() // TODO: Assert directly on Datum
             assert(expected == output) {
                 comparisonString(expected, output, plan)
             }
@@ -1321,29 +1380,30 @@ class PartiQLEngineDefaultTest {
     ) {
 
         private val engine = PartiQLEngine.builder().build()
-        private val planner = PartiQLPlannerBuilder().build()
         private val parser = PartiQLParser.default()
 
         internal fun assert() {
-            val permissiveResult = run(mode = PartiQLEngine.Mode.PERMISSIVE)
+            val (permissiveResult, plan) = run(mode = PartiQLEngine.Mode.PERMISSIVE)
+            val permissiveResultPValue = permissiveResult.toPartiQLValue()
             val assertionCondition = try {
-                expectedPermissive == permissiveResult.first
+                expectedPermissive == permissiveResultPValue // TODO: Assert using Datum
             } catch (t: Throwable) {
                 val str = buildString {
                     appendLine("Test Name: $name")
                     // TODO pretty-print V1 plans!
-                    appendLine(permissiveResult.second)
+                    appendLine(plan)
                 }
                 throw RuntimeException(str, t)
             }
             assert(assertionCondition) {
-                comparisonString(expectedPermissive, permissiveResult.first, permissiveResult.second)
+                comparisonString(expectedPermissive, permissiveResultPValue, plan)
             }
             var error: Throwable? = null
             try {
-                when (val result = run(mode = PartiQLEngine.Mode.STRICT).first) {
-                    is CollectionValue<*> -> result.toList()
-                    else -> result
+                val (strictResult, _) = run(mode = PartiQLEngine.Mode.STRICT)
+                when (strictResult.type.kind) {
+                    PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> strictResult.toList()
+                    else -> strictResult
                 }
             } catch (e: Throwable) {
                 error = e
@@ -1351,7 +1411,7 @@ class PartiQLEngineDefaultTest {
             assertNotNull(error)
         }
 
-        private fun run(mode: PartiQLEngine.Mode): Pair<PartiQLValue, PartiQLPlan> {
+        private fun run(mode: PartiQLEngine.Mode): Pair<Datum, PartiQLPlan> {
             val statement = parser.parse(input).root
             val catalog = MemoryCatalog.builder().name("memory").build()
             val session = Session.builder()
@@ -1418,20 +1478,6 @@ class PartiQLEngineDefaultTest {
         )
         tc.assert()
     }
-
-    @Test
-    @Disabled("CASTS have not yet been implemented.")
-    fun testCast1() = SuccessTestCase(
-        input = "1 + 2.0",
-        expected = int32Value(3),
-    ).assert()
-
-    @Test
-    @Disabled("CASTS have not yet been implemented.")
-    fun testCasts() = SuccessTestCase(
-        input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
-        expected = bagValue(int32Value(0), int32Value(100), int32Value(200), int32Value(300))
-    ).assert()
 
     @Test
     @Disabled("We need to support section 5.1")

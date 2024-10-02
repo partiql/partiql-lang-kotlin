@@ -178,7 +178,7 @@ internal class MainCommand : Runnable {
             }
             is PartiQLResult.Value -> {
                 val writer = PartiQLValueTextWriter(System.out)
-                writer.append(result.value)
+                writer.append(result.value.toPartiQLValue()) // TODO: Create a Datum writer
                 println()
             }
         }

@@ -18,7 +18,9 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
 import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -162,15 +164,35 @@ public class IonDatum private constructor(value: AnyElement, type: PType) :
     // }
 
     override fun getDate(): Date {
-        TODO("IonDatum does not support DATE")
+        return when (_kind) {
+            TIMESTAMP -> {
+                val ts = _value.timestampValue
+                DateTimeValue.date(ts.year, ts.month, ts.day)
+            }
+            else -> super.getDate()
+        }
     }
 
     override fun getTime(): Time {
-        TODO("IonDatum does not support TIME")
+        return when (_kind) {
+            TIMESTAMP -> {
+                val ts = _value.timestampValue
+                val tz = when (ts.localOffset) {
+                    null -> TimeZone.UnknownTimeZone
+                    else -> TimeZone.UtcOffset.of(ts.zHour, ts.zMinute)
+                }
+                DateTimeValue.time(ts.hour, ts.minute, ts.second, tz)
+            }
+            else -> super.getTime()
+        }
     }
 
+    // TODO: Handle struct notation
     override fun getTimestamp(): Timestamp {
-        TODO("IonDatum does not support TIMESTAMP")
+        return when (_kind) {
+            TIMESTAMP -> DateTimeValue.timestamp(_value.timestampValue)
+            else -> super.getTimestamp()
+        }
     }
 
     override fun getBigInteger(): BigInteger = when (_kind) {
