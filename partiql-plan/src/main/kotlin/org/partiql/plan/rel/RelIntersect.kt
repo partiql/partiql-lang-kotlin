@@ -44,7 +44,7 @@ internal class RelIntersectImpl(left: Rel, right: Rel, isAll: Boolean) :
         return _children!!
     }
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Not yet implemented")
     }
 

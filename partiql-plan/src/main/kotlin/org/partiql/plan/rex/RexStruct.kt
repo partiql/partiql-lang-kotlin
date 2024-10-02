@@ -18,8 +18,6 @@ public interface RexStruct : Rex {
         return children
     }
 
-    override fun getType(): PType = PType.struct()
-
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitStruct(this, ctx)
 
     /**
@@ -42,8 +40,11 @@ internal class RexStructImpl(fields: List<RexStruct.Field>) : RexStruct {
     // DO NOT USE FINAL
     private var _fields = fields
     private var _children: Collection<Rex>? = null
+    private var _type = RexType.of(PType.struct())
 
     override fun getFields(): List<RexStruct.Field> = _fields
+
+    override fun getType(): RexType = _type
 
     override fun getChildren(): Collection<Rex> {
         if (_children == null) {

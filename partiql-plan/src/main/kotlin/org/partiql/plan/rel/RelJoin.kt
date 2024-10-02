@@ -11,12 +11,12 @@ public interface RelJoin : Rel {
     public fun getLeft(): Rel
 
     // TODO REMOVE ME TEMPORARY – https://github.com/partiql/partiql-lang-kotlin/issues/1575
-    public fun getLeftSchema(): org.partiql.plan.Schema?
+    public fun getLeftSchema(): RelType?
 
     public fun getRight(): Rel
 
     // TODO REMOVE ME TEMPORARY – https://github.com/partiql/partiql-lang-kotlin/issues/1575
-    public fun getRightSchema(): org.partiql.plan.Schema?
+    public fun getRightSchema(): RelType?
 
     public fun getCondition(): Rex?
 
@@ -37,8 +37,8 @@ internal class RelJoinImpl(
     right: Rel,
     condition: Rex?,
     joinType: JoinType,
-    leftSchema: org.partiql.plan.Schema?,
-    rightSchema: org.partiql.plan.Schema?,
+    leftSchema: RelType?,
+    rightSchema: RelType?,
 ) : RelJoin {
 
     // DO NOT USE FINAL
@@ -59,9 +59,9 @@ internal class RelJoinImpl(
 
     override fun getJoinType(): JoinType = _joinType
 
-    override fun getLeftSchema(): org.partiql.plan.Schema? = _leftSchema
+    override fun getLeftSchema(): RelType? = _leftSchema
 
-    override fun getRightSchema(): org.partiql.plan.Schema? = _rightSchema
+    override fun getRightSchema(): RelType? = _rightSchema
 
     override fun getChildren(): Collection<Rel> {
         if (_children == null) {
@@ -70,7 +70,7 @@ internal class RelJoinImpl(
         return _children!!
     }
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Not yet implemented")
     }
 

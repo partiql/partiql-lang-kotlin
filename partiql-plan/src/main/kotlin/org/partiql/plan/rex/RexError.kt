@@ -1,14 +1,12 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 public interface RexError : Rex {
 
     public fun getMessage(): String
 
     public fun getTrace(): List<Rex>
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 
@@ -33,7 +31,7 @@ public interface RexMissing : Rex {
 
     public fun getTrace(): List<Rex>
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

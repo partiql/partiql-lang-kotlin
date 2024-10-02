@@ -3,7 +3,6 @@ package org.partiql.plan.rex
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rex.RexSubqueryComp.Comp
 import org.partiql.plan.rex.RexSubqueryComp.Quantifier
-import org.partiql.types.PType
 
 /**
  * Logical operator for SQL subquery comparisons.
@@ -69,7 +68,7 @@ internal class RexSubqueryCompImpl(
     private var _quantifier = quantifier
     private var _rel = rel
 
-    override fun getType(): PType = TODO("Not yet implemented")
+    override fun getType(): RexType = TODO("Not yet implemented")
 
     override fun getArgs(): List<Rex> = _args
 

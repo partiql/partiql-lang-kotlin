@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.rel.Rel
 import org.partiql.types.PType
 
 /**
@@ -7,27 +8,27 @@ import org.partiql.types.PType
  */
 public interface RexSelect : Rex {
 
-    public fun getInput(): org.partiql.plan.rel.Rel
+    public fun getInput(): Rel
 
     public fun getConstructor(): Rex
-
-    override fun getType(): PType = PType.bag(getConstructor().getType())
 
     override fun getChildren(): Collection<Rex> = listOf(getConstructor())
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSelect(this, ctx)
 }
 
-internal class RexSelectImpl(input: org.partiql.plan.rel.Rel, constructor: Rex) : RexSelect {
+internal class RexSelectImpl(input: Rel, constructor: Rex) : RexSelect {
 
     private var _input = input
     private var _constructor = constructor
 
-    override fun getInput(): org.partiql.plan.rel.Rel = _input
+    override fun getInput(): Rel = _input
 
     override fun getConstructor(): Rex = _constructor
 
-    override fun getType(): PType = PType.bag(_constructor.getType())
+    override fun getType(): RexType {
+        return RexType.of(PType.bag(_constructor.getType().getPType()))
+    }
 
     override fun getChildren(): Collection<Rex> = listOf(_constructor)
 

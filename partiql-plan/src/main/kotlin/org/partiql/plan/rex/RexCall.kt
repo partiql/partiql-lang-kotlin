@@ -1,7 +1,6 @@
 package org.partiql.plan.rex
 
 import org.partiql.spi.function.Function
-import org.partiql.types.PType
 
 /**
  * Logical operator for a scalar function call.
@@ -37,7 +36,7 @@ internal class RexCallImpl(
 
     override fun getArgs(): List<Rex> = args
 
-    override fun getType(): PType = function.returns
+    override fun getType(): RexType = RexType.of(function.returns)
 
     override fun getChildren(): Collection<Rex> = args
 }

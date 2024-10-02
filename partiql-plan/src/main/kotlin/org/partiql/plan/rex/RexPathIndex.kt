@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * Logical path index operator.
  */
@@ -27,7 +25,7 @@ internal class RexPathIndexImpl(operand: Rex, index: Rex) : RexPathIndex {
 
     override fun getIndex() = _index
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

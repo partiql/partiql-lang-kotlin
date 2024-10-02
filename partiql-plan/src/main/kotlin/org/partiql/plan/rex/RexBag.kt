@@ -26,7 +26,7 @@ internal class RexBagImpl(values: Collection<Rex>) : RexBag {
 
     override fun getChildren(): Collection<Rex> = _values
 
-    override fun getType(): PType = PType.bag()
+    override fun getType(): RexType = RexType.of(PType.bag())
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

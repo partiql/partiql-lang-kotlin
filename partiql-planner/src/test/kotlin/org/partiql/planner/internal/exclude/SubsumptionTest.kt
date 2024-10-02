@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.ExcludePath
 import org.partiql.plan.ExcludeStep
-import org.partiql.plan.Statement
+import org.partiql.plan.Operation
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelProject
 import org.partiql.plan.rex.RexSelect
@@ -30,8 +30,8 @@ class SubsumptionTest {
         private val catalog = MemoryCatalog.builder().name("default").build()
     }
 
-    private fun getExcludeClause(statement: Statement): RelExclude {
-        val queryExpr = (statement as Statement.Query).getRoot()
+    private fun getExcludeClause(statement: Operation): RelExclude {
+        val queryExpr = (statement as Operation.Query).getRoot()
         val relProject = (queryExpr as RexSelect).getInput() as RelProject
         return (relProject.getInput()) as RelExclude
     }
@@ -41,7 +41,7 @@ class SubsumptionTest {
         val statement = parser.parse(text).root
         val session = Session.builder().catalog("default").catalogs(catalog).build()
         val plan = planner.plan(statement, session).plan
-        val excludeClause = getExcludeClause(plan.getStatement()).getPaths()
+        val excludeClause = getExcludeClause(plan.getOperation()).getPaths()
         assertEquals(tc.expectedExcludeExprs, excludeClause)
     }
 

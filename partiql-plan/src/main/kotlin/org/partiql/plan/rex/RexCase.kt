@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * Representative of the simple CASE-WHEN.
  */
@@ -66,7 +64,7 @@ internal class RexCaseImpl(match: Rex?, branches: List<RexCase.Branch>, default:
         return _children!!
     }
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

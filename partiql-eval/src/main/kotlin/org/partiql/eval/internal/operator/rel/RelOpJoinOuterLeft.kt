@@ -4,7 +4,7 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.plan.Schema
+import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
 /**
@@ -18,7 +18,7 @@ internal class RelOpJoinOuterLeft(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
     private val condition: Operator.Expr,
-    rhsType: org.partiql.plan.Schema,
+    rhsType: RelType,
 ) : RelOpPeeking() {
 
     // TODO BETTER MECHANISM FOR NULL PADDING

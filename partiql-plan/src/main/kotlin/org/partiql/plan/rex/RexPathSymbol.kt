@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * Logical operator for path lookup by symbol.
  */
@@ -27,7 +25,7 @@ internal class RexPathSymbolImpl(operand: Rex, symbol: String) : RexPathSymbol {
 
     override fun getSymbol() = _symbol
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

@@ -32,7 +32,7 @@ internal class RelUnpivotImpl(input: Rex) : RelUnpivot {
         return _input == other.getInput()
     }
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Not yet implemented")
     }
 

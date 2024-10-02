@@ -38,7 +38,7 @@ internal class RelExcludeImpl(input: Rel, paths: List<ExcludePath>) :
 
     override fun isOrdered(): Boolean = _ordered
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Not yet implemented")
     }
 

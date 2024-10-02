@@ -31,7 +31,7 @@ public class RelProjectImpl(input: Rel, projections: List<Rex>) : RelProject {
 
     override fun getProjections(): List<Rex> = _projections
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Not yet implemented")
     }
 

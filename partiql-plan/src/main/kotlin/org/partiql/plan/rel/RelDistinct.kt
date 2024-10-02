@@ -9,7 +9,7 @@ public interface RelDistinct : Rel {
 
     override fun getChildren(): Collection<Rel> = listOf(getInput())
 
-    override fun getSchema(): org.partiql.plan.Schema = getInput().getSchema()
+    override fun getType(): RelType = getInput().getType()
 
     override fun isOrdered(): Boolean = getInput().isOrdered()
 
@@ -36,7 +36,7 @@ internal class RelDistinctImpl(input: Rel) : RelDistinct {
         return _children!!
     }
 
-    override fun getSchema(): org.partiql.plan.Schema = _input.getSchema()
+    override fun getType(): RelType = _input.getType()
 
     override fun isOrdered(): Boolean = _ordered
 

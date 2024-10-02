@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.rel.Rel
 import org.partiql.types.PType
 
 /**
@@ -7,13 +8,11 @@ import org.partiql.types.PType
  */
 public interface RexPivot : Rex {
 
-    public fun getInput(): org.partiql.plan.rel.Rel
+    public fun getInput(): Rel
 
     public fun getKey(): Rex
 
     public fun getValue(): Rex
-
-    override fun getType(): PType = PType.struct()
 
     override fun getChildren(): Collection<Rex> = listOf(getKey(), getValue())
 
@@ -21,9 +20,9 @@ public interface RexPivot : Rex {
 }
 
 /**
- * An abstract [RexPivot] implementation intended for extension.
+ * Default [RexPivot] operator.
  */
-internal class RexPivotImpl(input: org.partiql.plan.rel.Rel, key: Rex, value: Rex) : RexPivot {
+internal class RexPivotImpl(input: Rel, key: Rex, value: Rex) : RexPivot {
 
     // DO NOT USE FINAL
     private var _input = input
@@ -33,17 +32,17 @@ internal class RexPivotImpl(input: org.partiql.plan.rel.Rel, key: Rex, value: Re
     private var children: List<Rex>? = null
     private var type: PType? = null
 
-    override fun getInput(): org.partiql.plan.rel.Rel = _input
+    override fun getInput(): Rel = _input
 
     override fun getKey(): Rex = _key
 
     override fun getValue(): Rex = _value
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         if (type == null) {
             type = PType.struct()
         }
-        return type!!
+        return RexType.of(type!!)
     }
 
     override fun getChildren(): Collection<Rex> {

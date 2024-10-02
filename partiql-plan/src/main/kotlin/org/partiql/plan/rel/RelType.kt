@@ -1,4 +1,4 @@
-package org.partiql.plan
+package org.partiql.plan.rel
 
 import org.partiql.types.Field
 
@@ -7,7 +7,7 @@ import org.partiql.types.Field
  *
  * TODO does not need to be an interface.
  */
-public interface Schema {
+public interface RelType {
 
     public fun getSize(): Int = getFields().size
 

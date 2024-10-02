@@ -4,6 +4,7 @@ import org.partiql.plan.AggregateCall
 import org.partiql.plan.Collation
 import org.partiql.plan.ExcludePath
 import org.partiql.plan.JoinType
+import org.partiql.plan.rel.Rel
 
 /**
  * DataFrame style fluent-builder for PartiQL logical plans.
@@ -19,12 +20,12 @@ public class RelBuilder private constructor(builder: Builder) {
     /**
      * Invoke the builder with the default [PlanFactory] implementation.
      */
-    public fun build(): org.partiql.plan.rel.Rel = build(PlanFactory.STANDARD)
+    public fun build(): Rel = build(PlanFactory.STANDARD)
 
     /**
      * Invoke the builder with the given [PlanFactory] implementation.
      */
-    public fun build(factory: PlanFactory): org.partiql.plan.rel.Rel = self.build(factory)
+    public fun build(factory: PlanFactory): Rel = self.build(factory)
 
     /**
      * This object holds named constructors for the [RelBuilder] class.
@@ -80,7 +81,7 @@ public class RelBuilder private constructor(builder: Builder) {
     /**
      * Appends a RelExcept to the current operator builder.
      */
-    public fun except(rhs: org.partiql.plan.rel.Rel): RelBuilder = RelBuilder {
+    public fun except(rhs: Rel): RelBuilder = RelBuilder {
         val lhs = self.build(it)
         it.relIntersect(lhs, rhs)
     }
@@ -206,7 +207,7 @@ public class RelBuilder private constructor(builder: Builder) {
     /**
      * Appends a RelUnion to the current operator builder.
      */
-    public fun union(rhs: org.partiql.plan.rel.Rel): RelBuilder = RelBuilder {
+    public fun union(rhs: Rel): RelBuilder = RelBuilder {
         val lhs = self.build(it)
         it.relUnion(lhs, rhs)
     }
@@ -226,6 +227,6 @@ public class RelBuilder private constructor(builder: Builder) {
 
     // PRIVATE FUNCTIONAL INTERFACE COMPILES DOWN TO PRIVATE STATIC METHODS.
     private fun interface Builder {
-        fun build(factory: PlanFactory): org.partiql.plan.rel.Rel
+        fun build(factory: PlanFactory): Rel
     }
 }

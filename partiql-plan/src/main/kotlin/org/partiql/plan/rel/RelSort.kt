@@ -13,7 +13,7 @@ public interface RelSort : Rel {
 
     override fun getChildren(): Collection<Rel> = listOf(getInput())
 
-    override fun getSchema(): org.partiql.plan.Schema = getInput().getSchema()
+    override fun getType(): RelType = getInput().getType()
 
     override fun isOrdered(): Boolean = true
 
@@ -36,7 +36,7 @@ internal class RelSortImpl(input: Rel, collations: List<Collation>) :
 
     override fun getCollations(): List<Collation> = _collations
 
-    override fun getSchema(): org.partiql.plan.Schema = _input.getSchema()
+    override fun getType(): RelType = _input.getType()
 
     override fun getChildren(): Collection<Rel> {
         if (_children == null) {

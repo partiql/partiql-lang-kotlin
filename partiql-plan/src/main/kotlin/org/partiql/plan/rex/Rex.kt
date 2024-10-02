@@ -1,13 +1,11 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * TODO DOCUMENTATION
  */
 public interface Rex {
 
-    public fun getType(): PType
+    public fun getType(): RexType
 
     public fun getChildren(): Collection<Rex>
 

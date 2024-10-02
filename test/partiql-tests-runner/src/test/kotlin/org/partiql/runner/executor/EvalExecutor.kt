@@ -11,6 +11,7 @@ import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
@@ -165,7 +166,7 @@ class EvalExecutor(
                 .build()
             val stmt = parser.parse("`$env`").root
             val plan = planner.plan(stmt, session).plan
-            return (plan.getStatement() as org.partiql.plan.Statement.Query).getRoot().getType()
+            return (plan.getOperation() as Query).getRoot().getType().getPType()
         }
 
         /**

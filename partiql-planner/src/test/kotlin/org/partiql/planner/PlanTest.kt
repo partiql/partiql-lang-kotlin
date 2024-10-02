@@ -128,8 +128,8 @@ class PlanTest {
     }
 
     private fun assertPlanEqual(inputPlan: org.partiql.plan.Plan, outputPlan: org.partiql.plan.Plan) {
-        val iStatement = inputPlan.getStatement()
-        val oStatement = outputPlan.getStatement()
+        val iStatement = inputPlan.getOperation()
+        val oStatement = outputPlan.getOperation()
         assertEquals(iStatement, oStatement)
         // assert(inputPlan.isEquaivalentTo(outputPlan)) {
         //     buildString {

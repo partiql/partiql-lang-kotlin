@@ -13,7 +13,7 @@ public interface RelOffset : Rel {
 
     override fun getChildren(): Collection<Rel> = listOf(getInput())
 
-    override fun getSchema(): org.partiql.plan.Schema = getInput().getSchema()
+    override fun getType(): RelType = getInput().getType()
 
     override fun isOrdered(): Boolean = getInput().isOrdered()
 
@@ -35,7 +35,7 @@ internal class RelOffsetImpl(input: Rel, offset: Rex) : RelOffset {
 
     override fun getChildren(): Collection<Rel> = listOf(_input)
 
-    override fun getSchema(): org.partiql.plan.Schema = _input.getSchema()
+    override fun getType(): RelType = _input.getType()
 
     override fun isOrdered(): Boolean = _input.isOrdered()
 

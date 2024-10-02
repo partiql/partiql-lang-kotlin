@@ -15,8 +15,11 @@ import org.partiql.plan.rel.RelDistinctImpl
 import org.partiql.plan.rel.RelExcept
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelFilter
+import org.partiql.plan.rel.RelFilterImpl
 import org.partiql.plan.rel.RelIntersect
+import org.partiql.plan.rel.RelIntersectImpl
 import org.partiql.plan.rel.RelIterate
+import org.partiql.plan.rel.RelIterateImpl
 import org.partiql.plan.rel.RelJoin
 import org.partiql.plan.rel.RelLimit
 import org.partiql.plan.rel.RelLimitImpl
@@ -28,6 +31,7 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelScanImpl
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelSortImpl
+import org.partiql.plan.rel.RelType
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnionImpl
 import org.partiql.plan.rel.RelUnpivot
@@ -153,8 +157,7 @@ public interface PlanFactory {
      * @param joinType
      * @return
      */
-    public fun relCorrelate(lhs: Rel, rhs: Rel, joinType: JoinType): RelCorrelate =
-        RelCorrelateImpl(lhs, rhs, joinType)
+    public fun relCorrelate(lhs: Rel, rhs: Rel, joinType: JoinType): RelCorrelate = RelCorrelateImpl(lhs, rhs, joinType)
 
     /**
      * Create a [RelDistinct] instance.
@@ -205,7 +208,7 @@ public interface PlanFactory {
      * @param predicate
      * @return
      */
-    public fun relFilter(input: Rel, predicate: Rex): RelFilter = org.partiql.plan.rel.RelFilterImpl(input, predicate)
+    public fun relFilter(input: Rel, predicate: Rex): RelFilter = RelFilterImpl(input, predicate)
 
     /**
      * Create a [RelIntersect] instance for the default INTERSECT.
@@ -230,7 +233,7 @@ public interface PlanFactory {
         lhs: Rel,
         rhs: Rel,
         isAll: Boolean,
-    ): RelIntersect = org.partiql.plan.rel.RelIntersectImpl(lhs, rhs, isAll)
+    ): RelIntersect = RelIntersectImpl(lhs, rhs, isAll)
 
     /**
      * Create a [RelIterate] instance.
@@ -238,7 +241,7 @@ public interface PlanFactory {
      * @param input
      * @return
      */
-    public fun relIterate(input: Rex): RelIterate = org.partiql.plan.rel.RelIterateImpl(input)
+    public fun relIterate(input: Rex): RelIterate = RelIterateImpl(input)
 
     /**
      * Create a [RelJoin] instance for a cross join.
@@ -267,8 +270,8 @@ public interface PlanFactory {
         rhs: Rel,
         condition: Rex?,
         type: JoinType,
-        lhsSchema: org.partiql.plan.Schema? = null,
-        rhsSchema: org.partiql.plan.Schema? = null,
+        lhsSchema: RelType? = null,
+        rhsSchema: RelType? = null,
     ): RelJoin = org.partiql.plan.rel.RelJoinImpl(lhs, rhs, condition, type, lhsSchema, rhsSchema)
 
     /**

@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * TODO DOCUMENTATION
  */
@@ -26,7 +24,7 @@ internal class RexArrayImpl(values: Collection<Rex>) : RexArray {
 
     override fun getChildren(): Collection<Rex> = _values.toList()
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

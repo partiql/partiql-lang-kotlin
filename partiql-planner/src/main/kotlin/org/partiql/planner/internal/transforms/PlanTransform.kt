@@ -7,6 +7,8 @@ import org.partiql.plan.Collation
 import org.partiql.plan.ExcludePath
 import org.partiql.plan.ExcludeStep
 import org.partiql.plan.JoinType
+import org.partiql.plan.Plan
+import org.partiql.plan.rel.RelType
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexStruct
@@ -39,14 +41,14 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
      * @param onProblem
      * @return
      */
-    fun transform(internal: IPlan, onProblem: ProblemCallback): org.partiql.plan.Plan {
+    fun transform(internal: IPlan, onProblem: ProblemCallback): Plan {
         val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
         val query = (internal.statement as IStatement.Query)
         val visitor = Visitor(onProblem, signal)
         val root = visitor.visitRex(query.root, query.root.type)
         // TODO replace with standard implementations (or just remove plan transform altogether when possible).
-        return object : org.partiql.plan.Plan {
-            override fun getStatement(): org.partiql.plan.Statement = object : org.partiql.plan.Statement.Query {
+        return object : Plan {
+            override fun getOperation(): org.partiql.plan.Operation = object : org.partiql.plan.Operation.Query {
                 override fun getRoot(): Rex = root
             }
         }
@@ -431,7 +433,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         /**
          * TODO TEMPORARY!
          */
-        private fun toSchema(type: IRel.Type): org.partiql.plan.Schema = object : org.partiql.plan.Schema {
+        private fun toSchema(type: IRel.Type): RelType = object : RelType {
             private val fields = type.schema.map { Field.of(it.name, it.type) }
             override fun getFields(): List<Field> = fields
             override fun getField(name: String): Field = fields.first { it.name == name }

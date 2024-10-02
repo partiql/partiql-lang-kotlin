@@ -9,8 +9,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
+import org.partiql.eval.internal.PartiQLEngineDefaultTest.SuccessTestCase.TypingTestCase
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.plan.Plan
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Name
@@ -1353,11 +1355,7 @@ class PartiQLEngineDefaultTest {
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(
-            expected: PartiQLValue,
-            actual: PartiQLValue,
-            plan: org.partiql.plan.Plan,
-        ): String {
+        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: Plan): String {
             val expectedBuffer = ByteArrayOutputStream()
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
             expectedWriter.append(expected)
@@ -1415,7 +1413,7 @@ class PartiQLEngineDefaultTest {
             assertNotNull(error)
         }
 
-        private fun run(mode: PartiQLEngine.Mode): Pair<PartiQLValue, org.partiql.plan.Plan> {
+        private fun run(mode: PartiQLEngine.Mode): Pair<PartiQLValue, Plan> {
             val statement = parser.parse(input).root
             val catalog = MemoryCatalog.builder().name("memory").build()
             val session = Session.builder()
@@ -1438,11 +1436,7 @@ class PartiQLEngineDefaultTest {
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(
-            expected: PartiQLValue,
-            actual: PartiQLValue,
-            plan: org.partiql.plan.Plan,
-        ): String {
+        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: Plan): String {
             val expectedBuffer = ByteArrayOutputStream()
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
             expectedWriter.append(expected)

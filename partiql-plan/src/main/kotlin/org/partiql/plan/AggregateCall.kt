@@ -5,6 +5,8 @@ import org.partiql.spi.function.Aggregation
 
 /**
  * TODO DOCUMENTATION
+ *
+ * TODO this does not need to be an interface.
  */
 public interface AggregateCall {
 

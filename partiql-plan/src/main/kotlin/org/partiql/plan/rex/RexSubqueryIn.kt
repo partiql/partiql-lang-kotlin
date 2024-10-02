@@ -1,7 +1,6 @@
 package org.partiql.plan.rex
 
 import org.partiql.plan.rel.Rel
-import org.partiql.types.PType
 
 public interface RexSubqueryIn : Rex {
 
@@ -23,7 +22,7 @@ internal class RexSubqueryInImpl(args: List<Rex>, rel: Rel) : RexSubqueryIn {
     private var _args = args
     private var _rel = rel
 
-    override fun getType(): PType = TODO("Not yet implemented")
+    override fun getType(): RexType = TODO("Not yet implemented")
 
     override fun getArgs(): List<Rex> = _args
 

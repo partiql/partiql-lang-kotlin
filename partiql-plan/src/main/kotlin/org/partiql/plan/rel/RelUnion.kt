@@ -45,7 +45,7 @@ internal class RelUnionImpl(left: Rel, right: Rel, isAll: Boolean) :
 
     override fun isOrdered(): Boolean = false
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Not yet implemented")
     }
 

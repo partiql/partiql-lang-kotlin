@@ -1,7 +1,6 @@
 package org.partiql.plan.rex
 
 import org.partiql.plan.rex.RexSubqueryTest.Test
-import org.partiql.types.PType
 
 /**
  * Logical expression for subquery tests EXISTS and UNIQUE.
@@ -40,7 +39,7 @@ internal class RexSubqueryTestImpl(test: Test, rel: org.partiql.plan.rel.Rel) : 
     private var _test = test
     private var _rel = rel
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

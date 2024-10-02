@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * TODO DOCUMENTATION
  * TODO NAMING??
@@ -31,14 +29,13 @@ internal class RexVarImpl(depth: Int, offset: Int) : RexVar {
     // DO NOT USE FINAL
     private var _depth = depth
     private var _offset = offset
-
+    // private var _type = type
+    //
     override fun getDepth(): Int = _depth
 
     override fun getOffset(): Int = _offset
 
-    override fun getType(): PType {
-        TODO("Not yet implemented")
-    }
+    override fun getType(): RexType = TODO("getType not yet implemented")
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

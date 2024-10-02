@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * Scalar subquery coercion.
  */
@@ -34,7 +32,7 @@ internal class RexSubqueryImpl(rel: org.partiql.plan.rel.Rel, constructor: Rex, 
 
     override fun asScalar(): Boolean = _asScalar
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

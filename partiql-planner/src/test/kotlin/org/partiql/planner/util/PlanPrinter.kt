@@ -1,7 +1,7 @@
 package org.partiql.planner.util
 
 import org.partiql.plan.Plan
-import org.partiql.plan.Schema
+import org.partiql.plan.rel.RelType
 import org.partiql.types.PType
 
 /**
@@ -27,7 +27,7 @@ public object PlanPrinter {
         val type: TypeInfo = TypeInfo.Nil,
     ) {
         sealed interface TypeInfo {
-            class Rel(val type: Schema) : TypeInfo
+            class Rel(val type: RelType) : TypeInfo
             class Rex(val type: PType) : TypeInfo
             object Nil : TypeInfo
         }

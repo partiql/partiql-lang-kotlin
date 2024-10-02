@@ -7,7 +7,7 @@ public class RelError(public val message: String) : Rel {
 
     override fun getChildren(): Collection<Rel> = emptyList()
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Not yet implemented")
     }
 

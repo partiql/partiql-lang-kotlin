@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * TODO DOCUMENTATION
  */
@@ -23,7 +21,7 @@ internal class RexCoalesceImpl(args: List<Rex>) : RexCoalesce {
 
     override fun getChildren(): Collection<Rex> = _args
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

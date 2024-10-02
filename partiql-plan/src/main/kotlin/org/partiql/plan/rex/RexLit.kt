@@ -1,7 +1,6 @@
 package org.partiql.plan.rex
 
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * TODO DOCUMENTATION
@@ -12,8 +11,6 @@ public interface RexLit : Rex {
 
     override fun getChildren(): Collection<Rex> = emptyList()
 
-    override fun getType(): PType = getValue().type
-
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitLit(this, ctx)
 }
 
@@ -23,6 +20,8 @@ internal class RexLitImpl(value: Datum) : RexLit {
     private var _value = value
 
     override fun getValue(): Datum = _value
+
+    override fun getType(): RexType = RexType.of(_value.type)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

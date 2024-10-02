@@ -11,8 +11,6 @@ public interface RexSpread : Rex {
 
     override fun getChildren(): Collection<Rex> = getArgs()
 
-    override fun getType(): PType = PType.struct()
-
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSpread(this, ctx)
 }
 
@@ -23,8 +21,11 @@ internal class RexSpreadImpl(args: List<Rex>) : RexSpread {
 
     // DO NOT USE FINAL
     private var _args = args
+    private var _type = RexType.of(PType.struct())
 
     override fun getArgs(): List<Rex> = _args
+
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

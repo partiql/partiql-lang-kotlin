@@ -27,7 +27,7 @@ internal class RelIterateImpl(input: Rex) : RelIterate {
 
     override fun getInput(): Rex = _input
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Implement getSchema for scan")
     }
 

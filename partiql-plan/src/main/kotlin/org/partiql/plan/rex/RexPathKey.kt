@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * Logical operator for path lookup by key.
  */
@@ -27,7 +25,7 @@ internal class RexPathKeyImpl(operand: Rex, key: Rex) : RexPathKey {
 
     override fun getKey() = _key
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

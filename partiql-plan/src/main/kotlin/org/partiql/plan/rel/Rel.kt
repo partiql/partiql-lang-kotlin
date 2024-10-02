@@ -1,13 +1,11 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Schema
-
 /**
  * TODO DOCUMENTATION
  */
 public interface Rel {
 
-    public fun getSchema(): Schema
+    public fun getType(): RelType
 
     public fun isOrdered(): Boolean
 

@@ -1,7 +1,6 @@
 package org.partiql.plan.rex
 
 import org.partiql.spi.catalog.Table
-import org.partiql.types.PType
 
 /**
  * Global variable references e.g. tables and views.
@@ -25,7 +24,7 @@ internal class RexTableImpl(table: Table) : RexTable {
 
     override fun getTable(): Table = _table
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Not yet implemented")
     }
 

@@ -1,6 +1,7 @@
 package org.partiql.eval
 
 import org.partiql.eval.builder.PartiQLEngineBuilder
+import org.partiql.plan.Plan
 import org.partiql.spi.catalog.Session
 
 /**
@@ -23,7 +24,7 @@ import org.partiql.spi.catalog.Session
  */
 public interface PartiQLEngine {
 
-    public fun prepare(plan: org.partiql.plan.Plan, mode: Mode, session: Session): PartiQLStatement
+    public fun prepare(plan: Plan, mode: Mode, session: Session): PartiQLStatement
 
     companion object {
 

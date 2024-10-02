@@ -46,7 +46,7 @@ internal class RelCorrelateImpl(left: Rel, right: Rel, joinType: JoinType) : Rel
         return _children!!
     }
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Not yet implemented")
     }
 

@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * Logical operator for the SQL NULLIF special form.
  */
@@ -29,7 +27,7 @@ internal class RexNullIfImpl(v1: Rex, v2: Rex) : RexNullIf {
 
     override fun getV2(): Rex = _v2
 
-    override fun getType(): PType = _v1.getType()
+    override fun getType(): RexType = _v1.getType()
 
     override fun getChildren(): Collection<Rex> = listOf(_v2)
 

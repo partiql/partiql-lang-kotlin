@@ -1,7 +1,6 @@
 package org.partiql.plan.rex
 
 import org.partiql.spi.function.Function
-import org.partiql.types.PType
 
 /**
  * Logical operator for a dynamic dispatch call.
@@ -43,7 +42,7 @@ internal class RexCallDynamicImpl(
 
     override fun getArgs(): List<Rex> = args
 
-    override fun getType(): PType {
+    override fun getType(): RexType {
         TODO("Function .getType()")
     }
 

@@ -5,12 +5,12 @@ import org.partiql.plan.rex.Rex
 /**
  * TODO DOCUMENTATION
  */
-public interface Statement {
+public interface Operation {
 
     /**
      * PartiQL Query Statement — i.e. SELECT-FROM
      */
-    public interface Query : Statement {
+    public interface Query : Operation {
 
         /**
          * Returns the root rex of a PartiQL Query expression.

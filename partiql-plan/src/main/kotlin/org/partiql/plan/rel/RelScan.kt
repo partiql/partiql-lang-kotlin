@@ -26,7 +26,7 @@ internal class RelScanImpl(input: Rex) : RelScan {
 
     override fun getInput(): Rex = _input
 
-    override fun getSchema(): org.partiql.plan.Schema {
+    override fun getType(): RelType {
         TODO("Implement getSchema for scan")
     }
 

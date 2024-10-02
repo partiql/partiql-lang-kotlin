@@ -3889,8 +3889,8 @@ internal class PlanTyperTestsPorted {
 
         val collector = ProblemCollector()
         val plan = infer(input, session, collector)
-        when (val statement = plan.getStatement()) {
-            is org.partiql.plan.Statement.Query -> {
+        when (val statement = plan.getOperation()) {
+            is org.partiql.plan.Operation.Query -> {
                 assert(collector.problems.isEmpty()) {
                     buildString {
                         appendLine(collector.problems.toString())
@@ -3928,8 +3928,8 @@ internal class PlanTyperTestsPorted {
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
         val plan = infer(input, session, collector)
 
-        when (val statement = plan.getStatement()) {
-            is org.partiql.plan.Statement.Query -> {
+        when (val statement = plan.getOperation()) {
+            is org.partiql.plan.Operation.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {
                         appendLine("Expected to find problems, but none were found.")
