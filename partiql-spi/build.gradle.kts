@@ -41,6 +41,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
 tasks.withType<Javadoc> {
     enabled = false
 }
+
 tasks.withType<Jar> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
