@@ -76,6 +76,7 @@ tasks.compileTestKotlin {
 tasks.withType<Jar>().configureEach {
     // ensure "generateGrammarSource" is called before "sourcesJar".
     dependsOn(tasks.withType<AntlrTask>())
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
@@ -97,7 +98,7 @@ tasks.processResources {
 publish {
     artifactId = "partiql-parser"
     name = "PartiQL Parser"
-    description = "PartiQL's experimental Parser"
+    description = "PartiQL's Parser"
     // `antlr` dependency configuration adds the ANTLR API configuration (and Maven `compile` dependency scope on
     // publish). It's a known issue w/ the ANTLR gradle plugin. Follow https://github.com/gradle/gradle/issues/820
     // for context. In the maven publishing step, any API or IMPLEMENTATION dependencies w/ "antlr4" non-runtime
