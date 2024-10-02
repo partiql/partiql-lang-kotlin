@@ -14,10 +14,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.Problem
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Identifier
-import org.partiql.plan.PartiQLPlan
-import org.partiql.plan.Statement
-import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.TestCatalog
@@ -27,9 +23,11 @@ import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessT
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
+import org.partiql.planner.util.PlanPrinter
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
 import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
@@ -124,7 +122,7 @@ internal class PlanTyperTestsPorted {
 
     companion object {
 
-        private val parser = PartiQLParser.default()
+        private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.builder().signal().build()
 
         private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
@@ -143,19 +141,17 @@ internal class PlanTyperTestsPorted {
             }
         }
 
-        private fun id(vararg parts: Identifier.Symbol): Identifier {
-            return when (parts.size) {
-                0 -> error("Identifier requires more than one part.")
-                1 -> parts.first()
-                else -> Identifier.Qualified(parts.first(), parts.drop(1))
-            }
-        }
+        // private fun id(vararg parts: Identifier.Symbol): Identifier {
+        //     return when (parts.size) {
+        //         0 -> error("Identifier requires more than one part.")
+        //         1 -> parts.first()
+        //         else -> Identifier.Qualified(parts.first(), parts.drop(1))
+        //     }
+        // }
+        //
+        private fun sensitive(text: String): Identifier = Identifier.delimited(text)
 
-        private fun sensitive(part: String): Identifier.Symbol =
-            Identifier.Symbol(part, Identifier.CaseSensitivity.SENSITIVE)
-
-        private fun insensitive(part: String): Identifier.Symbol =
-            Identifier.Symbol(part, Identifier.CaseSensitivity.INSENSITIVE)
+        private fun insensitive(text: String): Identifier = Identifier.regular(text)
 
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
@@ -3141,7 +3137,7 @@ internal class PlanTyperTestsPorted {
                 expected = BagType(StaticType.INT4),
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(
-                        id(sensitive("pql"), sensitive("main"))
+                        Identifier.delimited("pql", "main")
                     )
                 )
             ),
@@ -3523,7 +3519,7 @@ internal class PlanTyperTestsPorted {
                 expected = BagType(ANY),
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(
-                        Identifier.Symbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                        Identifier.regular("a"),
                         setOf("t"),
                     )
                 )
@@ -3866,7 +3862,7 @@ internal class PlanTyperTestsPorted {
         query: String,
         session: Session,
         problemCollector: ProblemCollector,
-    ): PartiQLPlan {
+    ): org.partiql.plan.Plan {
         val ast = parser.parse(query).root
         return planner.plan(ast, session, problemCollector).plan
     }
@@ -3893,8 +3889,8 @@ internal class PlanTyperTestsPorted {
 
         val collector = ProblemCollector()
         val plan = infer(input, session, collector)
-        when (val statement = plan.statement) {
-            is Statement.Query -> {
+        when (val statement = plan.getOperation()) {
+            is org.partiql.plan.Operation.Query -> {
                 assert(collector.problems.isEmpty()) {
                     buildString {
                         appendLine(collector.problems.toString())
@@ -3902,7 +3898,7 @@ internal class PlanTyperTestsPorted {
                         PlanPrinter.append(this, plan)
                     }
                 }
-                val actual = statement.root.type
+                val actual = statement.getRoot().getType()
                 assert(tc.expected == actual) {
                     buildString {
                         appendLine()
@@ -3932,8 +3928,8 @@ internal class PlanTyperTestsPorted {
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
         val plan = infer(input, session, collector)
 
-        when (val statement = plan.statement) {
-            is Statement.Query -> {
+        when (val statement = plan.getOperation()) {
+            is org.partiql.plan.Operation.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {
                         appendLine("Expected to find problems, but none were found.")
@@ -3942,11 +3938,12 @@ internal class PlanTyperTestsPorted {
                     }
                 }
                 if (tc.expected != null) {
-                    assert(tc.expected == statement.root.type) {
+                    val actual = statement.getRoot().getType()
+                    assert(tc.expected == actual) {
                         buildString {
                             appendLine()
                             appendLine("Expect: ${tc.expected}")
-                            appendLine("Actual: ${statement.root.type}")
+                            appendLine("Actual: $actual")
                             appendLine()
                             PlanPrinter.append(this, plan)
                         }
@@ -4105,7 +4102,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(id(insensitive("ddb"), insensitive("pets")))
+                    ProblemGenerator.undefinedVariable(Identifier.regular("ddb", "pets"))
                 )
             ),
             TestCase.SuccessTestCase(

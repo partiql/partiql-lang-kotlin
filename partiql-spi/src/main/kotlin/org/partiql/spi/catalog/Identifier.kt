@@ -192,20 +192,20 @@ public class Identifier private constructor(
         public fun regular(text: String): Identifier = Identifier(emptyArray(), Part.regular(text))
 
         @JvmStatic
-        public fun delimited(text: String): Identifier = Identifier(emptyArray(), Part.delimited(text))
+        public fun regular(vararg parts: String): Identifier = regular(parts.toList())
 
         @JvmStatic
-        public fun of(vararg parts: Part): Identifier = of(parts.toList())
-
-        @JvmStatic
-        public fun of(parts: Collection<Part>): Identifier {
+        public fun regular(parts: Collection<String>): Identifier {
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }
-            val qualifier = parts.take(parts.size - 1).toTypedArray()
-            val identifier = parts.last()
+            val qualifier = parts.take(parts.size - 1).map { Part.regular(it) }.toTypedArray()
+            val identifier = Part.regular(parts.last())
             return Identifier(qualifier, identifier)
         }
+
+        @JvmStatic
+        public fun delimited(text: String): Identifier = Identifier(emptyArray(), Part.delimited(text))
 
         @JvmStatic
         public fun delimited(vararg parts: String): Identifier = delimited(parts.toList())
@@ -217,6 +217,19 @@ public class Identifier private constructor(
             }
             val qualifier = parts.take(parts.size - 1).map { Part.delimited(it) }.toTypedArray()
             val identifier = Part.delimited(parts.last())
+            return Identifier(qualifier, identifier)
+        }
+
+        @JvmStatic
+        public fun of(vararg parts: Part): Identifier = of(parts.toList())
+
+        @JvmStatic
+        public fun of(parts: Collection<Part>): Identifier {
+            if (parts.isEmpty()) {
+                error("Cannot create an identifier with no parts")
+            }
+            val qualifier = parts.take(parts.size - 1).toTypedArray()
+            val identifier = parts.last()
             return Identifier(qualifier, identifier)
         }
     }

@@ -8,17 +8,13 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Rel
-import org.partiql.plan.Rex
-import org.partiql.plan.Statement
-import org.partiql.plan.relOpExcludePath
-import org.partiql.plan.relOpExcludeStep
-import org.partiql.plan.relOpExcludeTypeCollIndex
-import org.partiql.plan.relOpExcludeTypeCollWildcard
-import org.partiql.plan.relOpExcludeTypeStructKey
-import org.partiql.plan.relOpExcludeTypeStructSymbol
-import org.partiql.plan.relOpExcludeTypeStructWildcard
-import org.partiql.plan.rexOpVar
+import org.partiql.plan.ExcludePath
+import org.partiql.plan.ExcludeStep
+import org.partiql.plan.Operation
+import org.partiql.plan.rel.RelExclude
+import org.partiql.plan.rel.RelProject
+import org.partiql.plan.rex.RexSelect
+import org.partiql.plan.rex.RexVar
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.spi.catalog.Session
@@ -30,29 +26,26 @@ class SubsumptionTest {
     companion object {
 
         private val planner = PartiQLPlanner.standard()
-        private val parser = PartiQLParser.default()
+        private val parser = PartiQLParser.standard()
         private val catalog = MemoryCatalog.builder().name("default").build()
     }
 
-    private fun getExcludeClause(statement: Statement): Rel.Op.Exclude {
-        val queryExpr = (statement as Statement.Query).root
-        val relProject = ((queryExpr.op as Rex.Op.Select).rel).op as Rel.Op.Project
-        return ((relProject.input).op) as Rel.Op.Exclude
+    private fun getExcludeClause(statement: Operation): RelExclude {
+        val queryExpr = (statement as Operation.Query).getRoot()
+        val relProject = (queryExpr as RexSelect).getInput() as RelProject
+        return (relProject.getInput()) as RelExclude
     }
 
     private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
         val text = "SELECT * EXCLUDE ${tc.excludeExprStr} FROM <<>> AS s, <<>> AS t;"
         val statement = parser.parse(text).root
-        val session = Session.builder()
-            .catalog("default")
-            .catalogs(catalog)
-            .build()
+        val session = Session.builder().catalog("default").catalogs(catalog).build()
         val plan = planner.plan(statement, session).plan
-        val excludeClause = getExcludeClause(plan.statement).paths
+        val excludeClause = getExcludeClause(plan.getOperation()).getPaths()
         assertEquals(tc.expectedExcludeExprs, excludeClause)
     }
 
-    data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<Rel.Op.Exclude.Path>)
+    data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<ExcludePath>)
 
     @ParameterizedTest
     @ArgumentsSource(ExcludeSubsumptionTests::class)
@@ -64,52 +57,30 @@ class SubsumptionTest {
             return parameters.map { Arguments.of(it) }.stream()
         }
 
+        private val factory = org.partiql.plan.builder.PlanFactory.STANDARD
+
+        private fun rexOpVar(binding: Int, position: Int): RexVar = factory.rexVar(binding, position)
+
         private val parameters = listOf(
             SubsumptionTC(
                 "s.a, t.a", // different roots
                 listOf(
-                    relOpExcludePath(
-                        root = rexOpVar(0, 0),
-                        steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(
-                                    symbol = "a"
-                                ),
-                                substeps = emptyList()
-                            ),
-                        )
+                    ExcludePath.of(
+                        root = rexOpVar(0, 0), steps = listOf(org.partiql.plan.ExcludeStep.symbol("a"))
                     ),
-                    relOpExcludePath(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(
-                                    symbol = "a"
-                                ),
-                                substeps = emptyList()
-                            ),
-                        )
+                    ExcludePath.of(
+                        root = rexOpVar(0, 1), steps = listOf(org.partiql.plan.ExcludeStep.symbol("a"))
                     ),
                 )
             ),
             SubsumptionTC(
                 "t.a, t.b", // different steps
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(
-                                    symbol = "a"
-                                ),
-                                substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(
-                                    symbol = "b"
-                                ),
-                                substeps = emptyList()
-                            )
+                            org.partiql.plan.ExcludeStep.symbol("a"),
+                            org.partiql.plan.ExcludeStep.symbol("b"),
                         )
                     ),
                 )
@@ -117,26 +88,18 @@ class SubsumptionTest {
             SubsumptionTC(
                 "s.a, t.a, t.b, s.b", // different roots and steps
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 0),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
-                            )
+                            ExcludeStep.symbol("a"),
+                            ExcludeStep.symbol("b"),
                         )
                     ),
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
-                            )
+                            ExcludeStep.symbol("a"),
+                            ExcludeStep.symbol("b"),
                         )
                     )
                 )
@@ -152,65 +115,35 @@ class SubsumptionTest {
                 t.i['j'], t.i."j"
                 """.trimIndent(),
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
+                            ExcludeStep.symbol("a"),
+                            ExcludeStep.symbol("b"),
+                            ExcludeStep.symbol(
+                                symbol = "c",
+                                substeps = listOf(ExcludeStep.struct()),
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "c"),
+                            ExcludeStep.symbol(
+                                symbol = "d",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(), substeps = emptyList()
-                                    )
-                                )
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "d"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
+                                    ExcludeStep.struct(
                                         substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "e"),
-                                                substeps = listOf(
-                                                    relOpExcludeStep(
-                                                        type = relOpExcludeTypeStructSymbol(symbol = "f"),
-                                                        substeps = emptyList()
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
+                                            ExcludeStep.symbol(
+                                                symbol = "e", substeps = listOf(ExcludeStep.symbol("f"))
+                                            ),
+                                        ),
+                                    ),
+                                ),
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "g"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.symbol(
+                                symbol = "g", substeps = listOf(ExcludeStep.collection())
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "h"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollIndex(index = 1), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.symbol(
+                                symbol = "h", substeps = listOf(ExcludeStep.index(1))
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "i"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructKey(key = "j"), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.symbol(
+                                symbol = "i", substeps = listOf(ExcludeStep.key("j"))
                             ),
                         )
                     ),
@@ -230,81 +163,43 @@ class SubsumptionTest {
                 t."j".*, t."j"
                 """.trimIndent(),
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "c"),
+                            ExcludeStep.symbol("a"),
+                            ExcludeStep.symbol("b"),
+                            ExcludeStep.symbol(
+                                symbol = "c",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
+                                    ExcludeStep.struct(
                                         substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "c1"),
-                                                substeps = emptyList()
-                                            )
+                                            ExcludeStep.symbol("c1")
                                         )
                                     )
                                 )
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "d"),
+                            ExcludeStep.symbol(
+                                symbol = "d",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
-                                        substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "d1"),
-                                                substeps = emptyList()
-                                            )
-                                        )
+                                    ExcludeStep.struct(
+                                        substeps = listOf(ExcludeStep.symbol("d1")),
                                     )
                                 )
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "e"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollIndex(index = 1), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.symbol(
+                                symbol = "e", substeps = listOf(ExcludeStep.index(1))
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "f"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollIndex(index = 1), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.symbol(
+                                symbol = "f", substeps = listOf(ExcludeStep.index(1))
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "g"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.symbol(
+                                symbol = "g", substeps = listOf(ExcludeStep.collection())
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "h"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.symbol(
+                                symbol = "h", substeps = listOf(ExcludeStep.collection())
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructKey(key = "i"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructKey(key = "j"), substeps = emptyList()
-                            ),
+                            ExcludeStep.key("i"),
+                            ExcludeStep.key("j"),
                         )
                     ),
                 )
@@ -315,24 +210,19 @@ class SubsumptionTest {
                 t."b".*, t."b"."b1"[1], t."b".b2."b3"[*]    -- t."b".* subsumes
                 """,
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
+                            ExcludeStep.symbol(
+                                symbol = "a",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(), substeps = emptyList()
+                                    ExcludeStep.struct(
+                                        substeps = emptyList()
                                     )
                                 )
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructKey(key = "b"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.key(
+                                key = "b", substeps = listOf(ExcludeStep.struct())
                             ),
                         )
                     ),
@@ -344,29 +234,21 @@ class SubsumptionTest {
                 t.b."b1"[*], t.b."b1"[2], t.b."b1"[3][*]    -- t.b."b1"[*] subsumes
                 """,
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
-                                    )
-                                )
+                            ExcludeStep.symbol(
+                                symbol = "a",
+                                substeps = listOf(ExcludeStep.collection()),
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
+                            ExcludeStep.symbol(
+                                symbol = "b",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructKey(key = "b1"),
-                                        substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
-                                            )
-                                        )
-                                    )
-                                )
+                                    ExcludeStep.key(
+                                        key = "b1",
+                                        substeps = listOf(ExcludeStep.collection()),
+                                    ),
+                                ),
                             ),
                         )
                     ),
@@ -378,21 +260,15 @@ class SubsumptionTest {
                 t."bAr"."bAz", t."bAr".baz      -- t."bAr".baz subsumes
                 """,
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "foo"), substeps = emptyList()
+                            ExcludeStep.symbol(symbol = "foo"),
+                            ExcludeStep.key(
+                                key = "bAr",
+                                substeps = listOf(ExcludeStep.symbol(symbol = "baz")),
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructKey(key = "bAr"),
-                                substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructSymbol(symbol = "baz"), substeps = emptyList()
-                                    )
-                                )
-                            ),
-                        )
+                        ),
                     ),
                 )
             ),
@@ -403,55 +279,37 @@ class SubsumptionTest {
                 t.c[*].c2, t.c[1].c2.*[*].c3    -- t.c[*].c2 subsumes
                 """,
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
+                            ExcludeStep.symbol(
+                                symbol = "a",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(),
-                                        substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "a2"),
-                                                substeps = emptyList()
-                                            )
-                                        )
-                                    )
-                                )
+                                    ExcludeStep.collection(
+                                        substeps = listOf(ExcludeStep.symbol("a2"))
+                                    ),
+                                ),
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
+                            ExcludeStep.symbol(
+                                symbol = "b",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(),
+                                    ExcludeStep.collection(
                                         substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "b2"),
-                                                substeps = listOf(
-                                                    relOpExcludeStep(
-                                                        type = relOpExcludeTypeStructSymbol(symbol = "b3"),
-                                                        substeps = emptyList()
-                                                    )
-                                                )
-                                            )
+                                            ExcludeStep.symbol(
+                                                symbol = "b2",
+                                                substeps = listOf(ExcludeStep.symbol("b3")),
+                                            ),
                                         )
-                                    )
-                                )
+                                    ),
+                                ),
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "c"),
+                            ExcludeStep.symbol(
+                                symbol = "c",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(),
-                                        substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "c2"),
-                                                substeps = emptyList()
-                                            )
-                                        )
-                                    )
-                                )
+                                    ExcludeStep.collection(
+                                        substeps = listOf(ExcludeStep.symbol("c2"))
+                                    ),
+                                ),
                             ),
                         )
                     ),
@@ -463,50 +321,39 @@ class SubsumptionTest {
                 t.b.b1.foo.b2.b3, t.b.b1.bar.b2.b3.b4, t.b.b1."bat".b2.b3, t.b.b1.*.*.b3    -- t.b.b1.*.*.b3 subsumes
                 """,
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
+                            ExcludeStep.symbol(
+                                symbol = "a",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
-                                        substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "a1"),
-                                                substeps = emptyList()
-                                            )
-                                        )
-                                    )
-                                )
+                                    ExcludeStep.struct(
+                                        substeps = listOf(ExcludeStep.symbol("a1"))
+                                    ),
+                                ),
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
+                            ExcludeStep.symbol(
+                                symbol = "b",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructSymbol(symbol = "b1"),
+                                    ExcludeStep.symbol(
+                                        symbol = "b1",
                                         substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructWildcard(),
+                                            ExcludeStep.struct(
                                                 substeps = listOf(
-                                                    relOpExcludeStep(
-                                                        type = relOpExcludeTypeStructWildcard(),
+                                                    ExcludeStep.struct(
                                                         substeps = listOf(
-                                                            relOpExcludeStep(
-                                                                type = relOpExcludeTypeStructSymbol(symbol = "b3"),
-                                                                substeps = emptyList()
-                                                            )
+                                                            ExcludeStep.symbol("b3")
                                                         )
                                                     )
                                                 )
                                             )
                                         )
-                                    )
-                                )
-                            ),
-                        )
-                    ),
-                )
+                                    ),
+                                ),
+                            )
+                        ),
+                    )
+                ),
             ),
             SubsumptionTC(
                 """-- struct symbol subsumes struct key when tail subsumes
@@ -514,46 +361,39 @@ class SubsumptionTest {
                 t.b."B1"."Bar".b2.b3, t.b.b1."Bar".b2.b3, t.b.b1."Bar".*.b3, t.b.b1.bar.*.b3 -- t.b.b1.bar.*.b3 subsumes
                 """,
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
+                            ExcludeStep.symbol(
+                                symbol = "a",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructSymbol(symbol = "bar"),
+                                    ExcludeStep.symbol(
+                                        symbol = "bar",
                                         substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "a1"),
-                                                substeps = emptyList()
-                                            )
-                                        )
-                                    )
-                                )
+                                            ExcludeStep.symbol("a1")
+                                        ),
+                                    ),
+                                ),
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
+                            ExcludeStep.symbol(
+                                symbol = "b",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructSymbol(symbol = "b1"),
+                                    ExcludeStep.symbol(
+                                        symbol = "b1",
                                         substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "bar"),
+                                            ExcludeStep.symbol(
+                                                symbol = "bar",
                                                 substeps = listOf(
-                                                    relOpExcludeStep(
-                                                        type = relOpExcludeTypeStructWildcard(),
+                                                    ExcludeStep.struct(
                                                         substeps = listOf(
-                                                            relOpExcludeStep(
-                                                                type = relOpExcludeTypeStructSymbol(symbol = "b3"),
-                                                                substeps = emptyList()
-                                                            )
+                                                            ExcludeStep.symbol("b3")
                                                         )
                                                     )
                                                 )
                                             )
                                         )
-                                    )
-                                )
+                                    ),
+                                ),
                             ),
                         )
                     ),
@@ -569,27 +409,15 @@ class SubsumptionTest {
                 "t"."f"         -- included under resolved variable 1
                 """,
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "c"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "d"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "e"), substeps = emptyList()
-                            ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructKey(key = "f"), substeps = emptyList()
-                            ),
+                            ExcludeStep.symbol(symbol = "a"),
+                            ExcludeStep.symbol(symbol = "b"),
+                            ExcludeStep.symbol(symbol = "c"),
+                            ExcludeStep.symbol(symbol = "d"),
+                            ExcludeStep.symbol(symbol = "e"),
+                            ExcludeStep.key("f")
                         )
                     ),
                 )
@@ -600,54 +428,38 @@ class SubsumptionTest {
                 t.b.*.b2, t.b.b1.foo
                 """,
                 listOf(
-                    relOpExcludePath(
+                    ExcludePath.of(
                         root = rexOpVar(0, 1),
                         steps = listOf(
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
+                            ExcludeStep.symbol(
+                                symbol = "a",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
+                                    ExcludeStep.struct(
                                         substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "a1"),
-                                                substeps = emptyList()
-                                            ),
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "a2"),
-                                                substeps = emptyList()
-                                            )
+                                            ExcludeStep.symbol("a1"),
+                                            ExcludeStep.symbol("a2"),
                                         )
                                     )
                                 )
                             ),
-                            relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
+                            ExcludeStep.symbol(
+                                symbol = "b",
                                 substeps = listOf(
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
-                                        substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "b2"),
-                                                substeps = emptyList()
-                                            )
-                                        )
+                                    ExcludeStep.struct(
+                                        substeps = listOf(ExcludeStep.symbol("b2"))
                                     ),
-                                    relOpExcludeStep(
-                                        type = relOpExcludeTypeStructSymbol(symbol = "b1"),
+                                    ExcludeStep.symbol(
+                                        symbol = "b1",
                                         substeps = listOf(
-                                            relOpExcludeStep(
-                                                type = relOpExcludeTypeStructSymbol(symbol = "foo"),
-                                                substeps = emptyList()
-                                            )
+                                            ExcludeStep.symbol("foo")
                                         )
                                     )
-                                )
-                            ),
-                        )
-                    ),
-                )
-            ),
+                                ),
+                            )
+                        ),
+                    )
+                ),
+            )
         )
     }
 }

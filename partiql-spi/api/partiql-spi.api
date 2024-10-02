@@ -345,6 +345,8 @@ public final class org/partiql/spi/catalog/Identifier : java/lang/Iterable, kotl
 	public static final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun of ([Lorg/partiql/spi/catalog/Identifier$Part;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun regular (Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
+	public static final fun regular (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public static final fun regular ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
 	public fun spliterator ()Ljava/util/Spliterator;
 	public fun toString ()Ljava/lang/String;
 }
@@ -356,6 +358,8 @@ public final class org/partiql/spi/catalog/Identifier$Companion {
 	public final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun of ([Lorg/partiql/spi/catalog/Identifier$Part;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun regular (Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
+	public final fun regular (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public final fun regular ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
 }
 
 public final class org/partiql/spi/catalog/Identifier$Part {
