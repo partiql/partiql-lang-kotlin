@@ -11,9 +11,8 @@ import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Statement
+import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.SqlPlannerV1
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.CompileType
@@ -29,6 +28,10 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
 
+/**
+ * @property session
+ * @property mode
+ */
 @OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(
     private val session: Session,
@@ -37,8 +40,7 @@ class EvalExecutor(
 
     override fun prepare(statement: String): PartiQLStatement {
         val stmt = parser.parse(statement).root
-        // TODO TEMPORARY REMOVE SqlPlannerV1 once existing public plan is removed.
-        val plan = SqlPlannerV1.plan(stmt, session) {}
+        val plan = planner.plan(stmt, session).plan
         return engine.prepare(plan, mode, session)
     }
 
@@ -113,7 +115,7 @@ class EvalExecutor(
     }
 
     companion object {
-        val parser = PartiQLParser.default()
+        val parser = PartiQLParser.standard()
         val planner = PartiQLPlanner.standard()
         val engine = PartiQLEngine.standard()
         // TODO REPLACE WITH DATUM COMPARATOR
@@ -163,26 +165,23 @@ class EvalExecutor(
                 .catalogs(catalog)
                 .build()
             val stmt = parser.parse("`$env`").root
-            val plan = planner.plan(stmt, session)
-            return (plan.plan.statement as Statement.Query).root.type
+            val plan = planner.plan(stmt, session).plan
+            return (plan.getOperation() as Query).getRoot().getType().getPType()
         }
 
         /**
          * Loads each declared global of the catalog from the data element.
          *
          * TODO until this point, PartiQL Kotlin has only done top-level bindings.
+         * TODO https://github.com/partiql/partiql-tests/issues/127
+         *
+         * Test data is "PartiQL encoded as Ion" hence we need the PartiQLValueIonReader.
          */
         private fun MemoryCatalog.Builder.load(env: StructElement) {
             for (f in env.fields) {
                 val name = Name.of(f.name)
-
-                // TODO REMOVE SHIM
                 val value = PartiQLValueIonReaderBuilder.standard().build(f.value).read()
                 val datum = Datum.of(value)
-
-                // TODO REMOVE SHIM
-                // val datum = IonDatum.of(f.value)
-
                 val table = MemoryTable.of(
                     name = name,
                     schema = PType.dynamic(),

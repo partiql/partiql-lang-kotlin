@@ -7,7 +7,7 @@ import org.partiql.errors.ProblemSeverity
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.v1.PartiQLPlan
+import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Session
 
@@ -31,7 +31,7 @@ internal class Pipeline private constructor(
         return result.root
     }
 
-    private fun plan(statement: Statement, session: Session): PartiQLPlan {
+    private fun plan(statement: Statement, session: Session): Plan {
         val callback = ProblemListener()
         val result = planner.plan(statement, session, callback)
         val errors = callback.problems.filter { it.details.severity == ProblemSeverity.ERROR }
@@ -41,7 +41,7 @@ internal class Pipeline private constructor(
         TODO("Add V1 planner to the CLI")
     }
 
-    private fun execute(plan: PartiQLPlan, session: Session): PartiQLResult {
+    private fun execute(plan: Plan, session: Session): PartiQLResult {
         // val statement = engine.prepare(plan, session.mode, session.planner())
         // return engine.execute(statement)
         TODO("Add V1 planner to the CLI")
@@ -59,14 +59,14 @@ internal class Pipeline private constructor(
     companion object {
 
         fun default(): Pipeline {
-            val parser = PartiQLParser.default()
+            val parser = PartiQLParser.standard()
             val planner = PartiQLPlanner.standard()
             val engine = PartiQLEngine.standard()
             return Pipeline(parser, planner, engine)
         }
 
         fun strict(): Pipeline {
-            val parser = PartiQLParser.default()
+            val parser = PartiQLParser.standard()
             val planner = PartiQLPlanner.builder().signal().build()
             val engine = PartiQLEngine.standard()
             return Pipeline(parser, planner, engine)

@@ -35,6 +35,7 @@ dependencies {
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
+    testImplementation(Deps.kotlinReflect)
     // Test Fixtures
     testFixturesImplementation(project(":partiql-spi"))
 }

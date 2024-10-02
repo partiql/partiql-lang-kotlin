@@ -4,13 +4,13 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.plan.v1.operator.rel.RelExcludeCollectionWildcard
-import org.partiql.plan.v1.operator.rel.RelExcludeIndex
-import org.partiql.plan.v1.operator.rel.RelExcludeKey
-import org.partiql.plan.v1.operator.rel.RelExcludePath
-import org.partiql.plan.v1.operator.rel.RelExcludeStep
-import org.partiql.plan.v1.operator.rel.RelExcludeStructWildcard
-import org.partiql.plan.v1.operator.rel.RelExcludeSymbol
+import org.partiql.plan.ExcludeCollectionWildcard
+import org.partiql.plan.ExcludeIndex
+import org.partiql.plan.ExcludeKey
+import org.partiql.plan.ExcludePath
+import org.partiql.plan.ExcludeStep
+import org.partiql.plan.ExcludeStructWildcard
+import org.partiql.plan.ExcludeSymbol
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
@@ -18,11 +18,11 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueType
 
 /**
- * TODO THERE ARE BUGS IN THIS IMPLEMENTATION POSSIBLY DUE TO HASHCODE/EQUALS OF [RelExcludePath].
+ * TODO THERE ARE BUGS IN THIS IMPLEMENTATION POSSIBLY DUE TO HASHCODE/EQUALS OF [ExcludePath].
  */
 internal class RelOpExclude(
     private val input: Operator.Relation,
-    private val exclusions: List<RelExcludePath>,
+    private val exclusions: List<ExcludePath>,
 ) : Operator.Relation {
 
     override fun open(env: Environment) {
@@ -49,31 +49,31 @@ internal class RelOpExclude(
 
     private fun excludeFields(
         structValue: Datum,
-        exclusions: List<RelExcludeStep>,
+        exclusions: List<ExcludeStep>,
     ): Datum {
         val structSymbolsToRemove = mutableSetOf<String>()
         val structKeysToRemove = mutableSetOf<String>() // keys stored as lowercase strings
-        val branches = mutableMapOf<RelExcludeStep, List<RelExcludeStep>>()
+        val branches = mutableMapOf<ExcludeStep, List<ExcludeStep>>()
         exclusions.forEach { exclusion ->
             val substeps = exclusion.getSubsteps()
             when (substeps.isEmpty()) {
                 true -> {
                     when (exclusion) {
-                        is RelExcludeStructWildcard -> {
+                        is ExcludeStructWildcard -> {
                             // struct wildcard at current level. return empty struct
                             return Datum.struct(emptyList())
                         }
-                        is RelExcludeSymbol -> structSymbolsToRemove.add(exclusion.getSymbol())
-                        is RelExcludeKey -> structKeysToRemove.add(exclusion.getKey().lowercase())
+                        is ExcludeSymbol -> structSymbolsToRemove.add(exclusion.getSymbol())
+                        is ExcludeKey -> structKeysToRemove.add(exclusion.getKey().lowercase())
                         else -> { /* coll step; do nothing */
                         }
                     }
                 }
                 false -> {
                     when (exclusion) {
-                        is RelExcludeStructWildcard,
-                        is RelExcludeSymbol,
-                        is RelExcludeKey,
+                        is ExcludeStructWildcard,
+                        is ExcludeSymbol,
+                        is ExcludeKey,
                         -> {
                             branches[exclusion] = exclusion.getSubsteps().toList()
                         }
@@ -93,17 +93,17 @@ internal class RelOpExclude(
                 val name = structField.name
                 var value = structField.value
                 // apply struct key exclusions at deeper levels
-                val structKey = RelExcludeStep.key(name)
+                val structKey = ExcludeStep.key(name)
                 branches[structKey]?.let {
                     value = excludeValue(value, it)
                 }
                 // apply struct symbol exclusions at deeper levels
-                val structSymbol = RelExcludeStep.symbol(name)
+                val structSymbol = ExcludeStep.symbol(name)
                 branches[structSymbol]?.let {
                     value = excludeValue(value, it)
                 }
                 // apply struct wildcard exclusions at deeper levels
-                val structWildcard = RelExcludeStep.struct()
+                val structWildcard = ExcludeStep.struct()
                 branches[structWildcard]?.let {
                     value = excludeValue(value, it)
                 }
@@ -129,20 +129,20 @@ internal class RelOpExclude(
     private fun excludeCollection(
         coll: Iterable<Datum>,
         type: PType,
-        exclusions: List<RelExcludeStep>,
+        exclusions: List<ExcludeStep>,
     ): Datum {
         val indexesToRemove = mutableSetOf<Int>()
-        val branches = mutableMapOf<RelExcludeStep, List<RelExcludeStep>>()
+        val branches = mutableMapOf<ExcludeStep, List<ExcludeStep>>()
         exclusions.forEach { exclusion ->
             val substeps = exclusion.getSubsteps()
             when (substeps.isEmpty()) {
                 true -> {
                     when (exclusion) {
-                        is RelExcludeCollectionWildcard -> {
+                        is ExcludeCollectionWildcard -> {
                             // collection wildcard at current level. return empty collection
                             return newCollValue(type, emptyList())
                         }
-                        is RelExcludeIndex -> {
+                        is ExcludeIndex -> {
                             indexesToRemove.add(exclusion.getIndex())
                         }
                         else -> { /* struct step; do nothing */
@@ -151,8 +151,8 @@ internal class RelOpExclude(
                 }
                 false -> {
                     when (exclusion) {
-                        is RelExcludeCollectionWildcard,
-                        is RelExcludeIndex,
+                        is ExcludeCollectionWildcard,
+                        is ExcludeIndex,
                         -> {
                             branches[exclusion] = exclusion.getSubsteps().toList()
                         }
@@ -171,13 +171,13 @@ internal class RelOpExclude(
                 var value = element
                 if (type.kind == PType.Kind.ARRAY || type.kind == PType.Kind.SEXP) {
                     // apply collection index exclusions at deeper levels for lists and sexps
-                    val collIndex = RelExcludeStep.index(index)
+                    val collIndex = ExcludeStep.index(index)
                     branches[collIndex]?.let {
                         value = excludeValue(element, it)
                     }
                 }
                 // apply collection wildcard exclusions at deeper levels for lists, bags, and sexps
-                val collWildcard = RelExcludeStep.collection()
+                val collWildcard = ExcludeStep.collection()
                 branches[collWildcard]?.let {
                     value = excludeValue(value, it)
                 }
@@ -187,7 +187,7 @@ internal class RelOpExclude(
         return newCollValue(type, finalColl)
     }
 
-    private fun excludeValue(initialPartiQLValue: Datum, exclusions: List<RelExcludeStep>): Datum {
+    private fun excludeValue(initialPartiQLValue: Datum, exclusions: List<ExcludeStep>): Datum {
         return when (initialPartiQLValue.type.kind) {
             PType.Kind.ROW, PType.Kind.STRUCT -> excludeFields(initialPartiQLValue, exclusions)
             PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> excludeCollection(

@@ -6,9 +6,9 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
-import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.planner.util.PlanPrinter
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.spi.catalog.Session
@@ -51,12 +51,12 @@ internal class PlannerErrorReportingTests {
 
     val parser = PartiQLParserBuilder().build()
 
-    val statement: ((String) -> Statement) = { query ->
+    val operation: ((String) -> Statement) = { query ->
         parser.parse(query).root
     }
 
     private fun assertProblem(
-        plan: org.partiql.plan.PlanNode,
+        plan: org.partiql.plan.Plan,
         problems: List<Problem>,
         block: (List<Problem>) -> Unit
     ) {
@@ -392,7 +392,7 @@ internal class PlannerErrorReportingTests {
     private fun runTestCase(tc: TestCase) {
         val planner = PartiQLPlanner.builder().signal(tc.isSignal).build()
         val pc = ProblemCollector()
-        val res = planner.plan(statement(tc.query), session, pc)
+        val res = planner.plan(getOperation(tc.query), session, pc)
         val problems = pc.problems
         val plan = res.plan
 
@@ -400,7 +400,8 @@ internal class PlannerErrorReportingTests {
             plan, problems,
             tc.assertion
         )
-        assertEquals(tc.expectedType, (plan.statement as org.partiql.plan.Statement.Query).root.type)
+        val statement = plan.getOperation() as org.partiql.plan.Operation.Query
+        assertEquals(tc.expectedType, statement.getRoot().getType())
     }
 
     @ParameterizedTest

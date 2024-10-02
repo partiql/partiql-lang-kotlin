@@ -14,11 +14,11 @@ import org.partiql.spi.catalog.Session
  * Default PartiQL logical query planner.
  */
 internal class SqlPlanner(
-    private val passes: List<PartiQLPlannerPass>,
-    private val flags: Set<PlannerFlag>,
+    private var passes: List<PartiQLPlannerPass>,
+    private var flags: Set<PlannerFlag>,
 ) : PartiQLPlanner {
 
-    override fun plan(
+    public override fun plan(
         statement: Statement,
         session: Session,
         onProblem: ProblemCallback,

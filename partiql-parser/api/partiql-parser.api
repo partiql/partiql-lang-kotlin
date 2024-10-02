@@ -8,13 +8,13 @@ public final class org/partiql/parser/PartiQLLexerException : org/partiql/parser
 public abstract interface class org/partiql/parser/PartiQLParser {
 	public static final field Companion Lorg/partiql/parser/PartiQLParser$Companion;
 	public static fun builder ()Lorg/partiql/parser/PartiQLParserBuilder;
-	public static fun default ()Lorg/partiql/parser/PartiQLParser;
 	public abstract fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParser$Result;
+	public static fun standard ()Lorg/partiql/parser/PartiQLParser;
 }
 
 public final class org/partiql/parser/PartiQLParser$Companion {
 	public final fun builder ()Lorg/partiql/parser/PartiQLParserBuilder;
-	public final fun default ()Lorg/partiql/parser/PartiQLParser;
+	public final fun standard ()Lorg/partiql/parser/PartiQLParser;
 }
 
 public final class org/partiql/parser/PartiQLParser$Result {

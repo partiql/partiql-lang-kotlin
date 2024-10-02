@@ -50,7 +50,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
-import org.partiql.planner.internal.utils.PlanUtils
+import org.partiql.spi.catalog.Identifier
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -596,11 +596,10 @@ internal class PlanTyper(private val env: Env) {
             }
             val resolvedVar = typeEnv.resolve(node.identifier, strategy)
             if (resolvedVar == null) {
-                val id = PlanUtils.externalize(node.identifier)
                 val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
                 val err = ProblemGenerator.errorRex(
                     causes = emptyList(),
-                    problem = ProblemGenerator.undefinedVariable(id, inScopeVariables)
+                    problem = ProblemGenerator.undefinedVariable(node.identifier, inScopeVariables)
                 )
                 return err
             }
@@ -721,7 +720,7 @@ internal class PlanTyper(private val env: Env) {
                 return ProblemGenerator.missingRex(
                     Rex.Op.Path.Symbol(root, node.key),
                     ProblemGenerator.undefinedVariable(
-                        org.partiql.plan.Identifier.Symbol(node.key, org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE),
+                        Identifier.regular(node.key),
                         inScopeVariables
                     )
                 )
