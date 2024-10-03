@@ -2,9 +2,9 @@ package org.partiql.planner.internal
 
 import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
-import org.partiql.errors.ProblemCallback
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
+import org.partiql.planner.PlannerConfig
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
@@ -21,7 +21,7 @@ internal class SqlPlanner(
     public override fun plan(
         statement: Statement,
         session: Session,
-        onProblem: ProblemCallback,
+        config: PlannerConfig,
     ): PartiQLPlanner.Result {
 
         // 0. Initialize the planning environment
@@ -34,16 +34,16 @@ internal class SqlPlanner(
         val root = AstToPlan.apply(ast, env)
 
         // 3. Resolve variables
-        val typer = PlanTyper(env)
+        val typer = PlanTyper(env, config)
         val typed = typer.resolve(root)
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
 
         // 4. Assert plan has been resolved — translating to public API
-        var plan = PlanTransform(flags).transform(internal, onProblem)
+        var plan = PlanTransform(flags).transform(internal, config.getErrorListener())
 
         // 5. Apply all passes
         for (pass in passes) {
-            plan = pass.apply(plan, onProblem)
+            plan = pass.apply(plan, config.getErrorListener())
         }
 
         return PartiQLPlanner.Result(plan, emptyList())

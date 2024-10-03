@@ -1,7 +1,6 @@
 package org.partiql.planner.internal.transforms
 
 import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
 import org.partiql.plan.AggregateCall
 import org.partiql.plan.Collation
 import org.partiql.plan.ExcludePath
@@ -17,6 +16,10 @@ import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.spi.errors.Error
+import org.partiql.spi.errors.ErrorCode
+import org.partiql.spi.errors.ErrorListener
+import org.partiql.spi.errors.Property
 import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
@@ -38,13 +41,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
      * Transform the internal IR to the public plan interfaces.
      *
      * @param internal
-     * @param onProblem
+     * @param listener
      * @return
      */
-    fun transform(internal: IPlan, onProblem: ProblemCallback): Plan {
+    fun transform(internal: IPlan, listener: ErrorListener): Plan {
         val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
         val query = (internal.statement as IStatement.Query)
-        val visitor = Visitor(onProblem, signal)
+        val visitor = Visitor(listener, signal)
         val root = visitor.visitRex(query.root, query.root.type)
         // TODO replace with standard implementations (or just remove plan transform altogether when possible).
         return object : Plan {
@@ -54,8 +57,20 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
     }
 
+    companion object {
+        private fun ErrorListener.error(problem: Problem) {
+            val error = Error.of(ErrorCode.INTERNAL_ERROR, mapOf(Property.CAUSE to problem.details.javaClass.simpleName))
+            this.error(error)
+        }
+
+        private fun ErrorListener.warning(problem: Problem) {
+            val error = Error.of(ErrorCode.INTERNAL_ERROR, mapOf(Property.CAUSE to problem.details.javaClass.simpleName))
+            this.warning(error)
+        }
+    }
+
     private class Visitor(
-        private val onProblem: ProblemCallback,
+        private val listener: ErrorListener,
         private val signal: Boolean,
     ) : PlanBaseVisitor<Any, PType>() {
 
@@ -71,11 +86,11 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             val trace = node.causes.map { visitRexOp(it, ctx) }
             return when (signal) {
                 true -> {
-                    onProblem.invoke(ProblemGenerator.asError(node.problem))
+                    listener.error(ProblemGenerator.asError(node.problem))
                     err(node.problem, trace)
                 }
                 false -> {
-                    onProblem.invoke(ProblemGenerator.asWarning(node.problem))
+                    listener.warning(ProblemGenerator.asWarning(node.problem))
                     factory.rexMissing(node.problem.toString(), trace)
                 }
             }
@@ -84,13 +99,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         override fun visitRexOpErr(node: IRex.Op.Err, ctx: PType): Any {
             val message = node.problem.toString()
             val trace = node.causes.map { visitRexOp(it, ctx) }
-            onProblem(ProblemGenerator.asError(node.problem))
+            listener.error(ProblemGenerator.asError(node.problem))
             return factory.rexError(message, trace)
         }
 
         override fun visitRelOpErr(node: org.partiql.planner.internal.ir.Rel.Op.Err, ctx: PType): Any {
             val message = node.message
-            onProblem(ProblemGenerator.compilerError(message))
+            listener.error(ProblemGenerator.compilerError(message))
             return org.partiql.plan.rel.RelError(message)
         }
 
@@ -197,11 +212,11 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             val problem = ProblemGenerator.undefinedCast(node.arg.type, node.target)
             return when (signal) {
                 true -> {
-                    onProblem.invoke(problem)
+                    listener.error(problem)
                     err(problem, emptyList())
                 }
                 false -> {
-                    onProblem.invoke(ProblemGenerator.asWarning(problem))
+                    listener.warning(ProblemGenerator.asWarning(problem))
                     factory.rexMissing(problem.toString(), emptyList())
                 }
             }
@@ -421,11 +436,11 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         private fun err(problem: Problem, trace: List<Rex>): Rex = when (signal) {
             true -> {
-                onProblem(ProblemGenerator.asError(problem))
+                listener.error(ProblemGenerator.asError(problem))
                 factory.rexError(message = problem.toString(), trace)
             }
             false -> {
-                onProblem(ProblemGenerator.asWarning(problem))
+                listener.warning(ProblemGenerator.asWarning(problem))
                 factory.rexMissing(message = problem.toString(), trace)
             }
         }

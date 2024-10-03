@@ -1339,7 +1339,8 @@ class PartiQLEngineDefaultTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val stmt = engine.prepare(plan, mode, session)
+            val compilerConfig = org.partiql.eval.CompilerConfigBuilder().setMode(mode).build()
+            val stmt = engine.prepare(plan, session, compilerConfig)
             val result = when (val returned = stmt.execute(session)) {
                 is PartiQLResult.Value -> returned
                 is PartiQLResult.Error -> {
@@ -1421,7 +1422,8 @@ class PartiQLEngineDefaultTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val stmt = engine.prepare(plan, mode, session)
+            val compilerConfig = org.partiql.eval.CompilerConfigBuilder().setMode(mode).build()
+            val stmt = engine.prepare(plan, session, compilerConfig)
             when (val result = stmt.execute(session)) {
                 is PartiQLResult.Value -> return result.value to plan
                 is PartiQLResult.Error -> {
@@ -1456,22 +1458,14 @@ class PartiQLEngineDefaultTest {
     }
 
     @Test
-    @Disabled
+    // @Disabled
     fun developmentTest() {
         val tc = SuccessTestCase(
             input = """
-                SELECT VALUE
-                    CASE x + 1
-                        WHEN NULL THEN 'shouldnt be null'
-                        WHEN MISSING THEN 'shouldnt be missing'
-                        WHEN i THEN 'ONE'
-                        WHEN f THEN 'TWO'
-                        WHEN d THEN 'THREE'
-                        ELSE '?'
-                    END
-                FROM << i, f, d, null, missing >> AS x
+                SELECT VALUE 1 FROM <<0, 1>>;
             """,
             expected = boolValue(true),
+            mode = PartiQLEngine.Mode.STRICT,
             globals = listOf(
                 SuccessTestCase.Global("i", "1"),
                 SuccessTestCase.Global("f", "2e0"),

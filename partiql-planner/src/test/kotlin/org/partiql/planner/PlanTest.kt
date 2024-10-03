@@ -9,7 +9,6 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.planner.util.ProblemCollector
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -70,10 +69,9 @@ class PlanTest {
             .catalogs(buildCatalog("default"))
             .namespace("SCHEMA")
             .build()
-        val problemCollector = ProblemCollector()
         val ast = PartiQLParser.standard().parse(test.statement).root
         val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
-        planner.plan(ast, session, problemCollector)
+        planner.plan(ast, session)
     }
 
     private fun buildCatalog(catalogName: String): Catalog {

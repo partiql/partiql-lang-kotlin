@@ -2,7 +2,6 @@ package org.partiql.planner
 
 import org.partiql.ast.Statement
 import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
 import org.partiql.plan.Plan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.spi.catalog.Session
@@ -17,10 +16,10 @@ public interface PartiQLPlanner {
      *
      * @param statement
      * @param session
-     * @param onProblem
+     * @param listener
      * @return
      */
-    public fun plan(statement: Statement, session: Session, onProblem: ProblemCallback = {}): Result
+    public fun plan(statement: Statement, session: Session, config: PlannerConfig = PlannerConfigBuilder().build()): Result
 
     /**
      * Planner result along with any warnings.

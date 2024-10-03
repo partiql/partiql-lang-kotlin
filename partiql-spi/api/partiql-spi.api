@@ -514,6 +514,46 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
+public abstract interface class org/partiql/spi/errors/Error {
+	public abstract fun getCode ()I
+	public abstract fun getProperties ()Ljava/util/Collection;
+	public abstract fun getProperty (I)Ljava/lang/Object;
+	public static fun of (I)Lorg/partiql/spi/errors/Error;
+	public static fun of (ILjava/util/Map;)Lorg/partiql/spi/errors/Error;
+}
+
+public class org/partiql/spi/errors/ErrorCode {
+	public static final field ALWAYS_MISSING I
+	public static final field INTERNAL_ERROR I
+	public static final field UNEXPECTED_TOKEN I
+	public static final field UNKNOWN I
+	public static final field UNRECOGNIZED_TOKEN I
+	public fun <init> ()V
+}
+
+public abstract interface class org/partiql/spi/errors/ErrorListener {
+	public static fun chain ([Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/spi/errors/ErrorListener;
+	public abstract fun error (Lorg/partiql/spi/errors/Error;)V
+	public static fun noop ()Lorg/partiql/spi/errors/ErrorListener;
+	public abstract fun warning (Lorg/partiql/spi/errors/Error;)V
+}
+
+public class org/partiql/spi/errors/ErrorListenerException : java/lang/Exception {
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public class org/partiql/spi/errors/Property {
+	public static final field CAUSE I
+	public static final field COLUMN_NO I
+	public static final field EXPECTED_TOKENS I
+	public static final field LENGTH I
+	public static final field LINE_NO I
+	public static final field RULE I
+	public static final field TOKEN_CONTENT I
+	public static final field TOKEN_NAME I
+	public static final field UNKNOWN I
+}
+
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {
 	public static final field Companion Lorg/partiql/spi/function/Aggregation$Companion;
 	public abstract fun getAccumulator ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;

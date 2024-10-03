@@ -8,7 +8,7 @@ public class TypeCheckException(message: String? = null) : RuntimeException(mess
     /**
      * This does not provide the stack trace, as this is very expensive in permissive mode.
      */
-    override fun fillInStackTrace(): Throwable = this
+    // override fun fillInStackTrace(): Throwable = this
 }
 
 /**

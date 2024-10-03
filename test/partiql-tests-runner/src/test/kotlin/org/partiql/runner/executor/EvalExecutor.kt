@@ -41,7 +41,8 @@ class EvalExecutor(
     override fun prepare(statement: String): PartiQLStatement {
         val stmt = parser.parse(statement).root
         val plan = planner.plan(stmt, session).plan
-        return engine.prepare(plan, mode, session)
+        val config = org.partiql.eval.CompilerConfigBuilder().setMode(mode).build()
+        return engine.prepare(plan, session, config)
     }
 
     override fun execute(statement: PartiQLStatement): PartiQLResult {
