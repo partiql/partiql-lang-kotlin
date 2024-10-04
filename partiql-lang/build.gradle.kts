@@ -21,7 +21,7 @@ plugins {
 dependencies {
     api(project(":partiql-ast"))
     api(project(":partiql-eval"))
-    api(project(":partiql-parser"))
+    api(project(":partiql-parser", configuration = "shadow"))
     api(project(":partiql-plan"))
     api(project(":partiql-planner"))
     api(project(":partiql-spi"))
