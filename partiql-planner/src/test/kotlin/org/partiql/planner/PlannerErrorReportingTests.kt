@@ -6,6 +6,7 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.plan.Operation
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.PlanPrinter
@@ -13,6 +14,7 @@ import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
+import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -21,37 +23,29 @@ import java.lang.AssertionError
 import kotlin.test.assertEquals
 
 internal class PlannerErrorReportingTests {
-    val catalogName = "mode_test"
-    val userId = "test-user"
-    val queryId = "query"
+
+    private val catalogName = "mode_test"
 
     // TODO REMOVE fromStaticType
-    val catalog = MemoryCatalog
+    private val catalog = MemoryCatalog
         .builder()
         .name(catalogName)
-        .define("missing_binding", PType.fromStaticType(StaticType.ANY))
-        .define("atomic", PType.fromStaticType(StaticType.INT2))
-        .define("collection_no_missing_atomic", PType.fromStaticType(BagType(StaticType.INT2)))
-        .define("collection_contain_missing_atomic", PType.fromStaticType(BagType(StaticType.INT2)))
-        .define("struct_no_missing", PType.fromStaticType(closedStruct(StructType.Field("f1", StaticType.INT2))))
-        .define(
-            "struct_with_missing",
-            PType.fromStaticType(
-                closedStruct(
-                    StructType.Field("f1", StaticType.INT2),
-                )
-            )
-        )
+        .define("missing_binding", PType.dynamic())
+        .define("atomic", PType.smallint())
+        .define("collection_no_missing_atomic", PType.bag(PType.smallint()))
+        .define("collection_contain_missing_atomic", PType.bag(PType.smallint()))
+        .define("struct_no_missing", PType.row(listOf(Field.of("f1", PType.smallint()))))
+        .define("struct_with_missing", PType.row(listOf(Field.of("f1", PType.smallint()))))
         .build()
 
-    val session = Session.builder()
+    private val session = Session.builder()
         .catalog(catalogName)
         .catalogs(catalog)
         .build()
 
-    val parser = PartiQLParserBuilder().build()
+    private val parser = PartiQLParserBuilder().build()
 
-    val operation: ((String) -> Statement) = { query ->
+    private val statement: ((String) -> Statement) = { query ->
         parser.parse(query).root
     }
 
@@ -392,16 +386,16 @@ internal class PlannerErrorReportingTests {
     private fun runTestCase(tc: TestCase) {
         val planner = PartiQLPlanner.builder().signal(tc.isSignal).build()
         val pc = ProblemCollector()
-        val res = planner.plan(getOperation(tc.query), session, pc)
+        val res = planner.plan(statement(tc.query), session, pc)
         val problems = pc.problems
         val plan = res.plan
-
         assertProblem(
             plan, problems,
             tc.assertion
         )
-        val statement = plan.getOperation() as org.partiql.plan.Operation.Query
-        assertEquals(tc.expectedType, statement.getRoot().getType())
+        val statement = plan.getOperation() as Operation.Query
+        val actualType = statement.getType().getPType()
+        assertEquals(tc.expectedType, actualType)
     }
 
     @ParameterizedTest

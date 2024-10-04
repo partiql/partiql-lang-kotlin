@@ -16,7 +16,7 @@ internal class SqlEngine : PartiQLEngine {
                 throw IllegalArgumentException("Only query statements are supported")
             }
             val compiler = SqlCompiler(mode, session)
-            val root = compiler.compile(operation.getRoot())
+            val root = compiler.compile(operation.getRex())
             return QueryStatement(root)
         } catch (ex: Exception) {
             // TODO wrap in some PartiQL Exception

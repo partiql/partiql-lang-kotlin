@@ -94,7 +94,12 @@ public abstract interface class org/partiql/plan/Operation {
 }
 
 public abstract interface class org/partiql/plan/Operation$Query : org/partiql/plan/Operation {
-	public abstract fun getRoot ()Lorg/partiql/plan/rex/Rex;
+	public abstract fun getRex ()Lorg/partiql/plan/rex/Rex;
+	public abstract fun getType ()Lorg/partiql/plan/rex/RexType;
+}
+
+public final class org/partiql/plan/Operation$Query$DefaultImpls {
+	public static fun getType (Lorg/partiql/plan/Operation$Query;)Lorg/partiql/plan/rex/RexType;
 }
 
 public abstract interface class org/partiql/plan/Plan {

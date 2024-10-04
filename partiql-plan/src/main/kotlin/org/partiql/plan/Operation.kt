@@ -1,6 +1,7 @@
 package org.partiql.plan
 
 import org.partiql.plan.rex.Rex
+import org.partiql.plan.rex.RexType
 
 /**
  * TODO DOCUMENTATION
@@ -13,8 +14,13 @@ public interface Operation {
     public interface Query : Operation {
 
         /**
-         * Returns the root rex of a PartiQL Query expression.
+         * Returns the root expression of the query.
          */
-        public fun getRoot(): Rex
+        public fun getRex(): Rex
+
+        /**
+         * Returns the type of the root expression of the query.
+         */
+        public fun getType(): RexType = getRex().getType()
     }
 }

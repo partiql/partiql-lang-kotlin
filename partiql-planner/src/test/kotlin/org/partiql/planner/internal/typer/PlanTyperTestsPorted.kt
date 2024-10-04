@@ -3898,7 +3898,7 @@ internal class PlanTyperTestsPorted {
                         PlanPrinter.append(this, plan)
                     }
                 }
-                val actual = statement.getRoot().getType()
+                val actual = statement.getType().getPType()
                 assert(tc.expected == actual) {
                     buildString {
                         appendLine()
@@ -3928,7 +3928,7 @@ internal class PlanTyperTestsPorted {
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
         val plan = infer(input, session, collector)
 
-        when (val statement = plan.getOperation()) {
+        when (val operation = plan.getOperation()) {
             is org.partiql.plan.Operation.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {
@@ -3938,7 +3938,7 @@ internal class PlanTyperTestsPorted {
                     }
                 }
                 if (tc.expected != null) {
-                    val actual = statement.getRoot().getType()
+                    val actual = operation.getType().getPType()
                     assert(tc.expected == actual) {
                         buildString {
                             appendLine()

@@ -31,7 +31,7 @@ class SubsumptionTest {
     }
 
     private fun getExcludeClause(statement: Operation): RelExclude {
-        val queryExpr = (statement as Operation.Query).getRoot()
+        val queryExpr = (statement as Operation.Query).getRex()
         val relProject = (queryExpr as RexSelect).getInput() as RelProject
         return (relProject.getInput()) as RelExclude
     }

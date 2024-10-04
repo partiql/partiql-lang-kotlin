@@ -166,7 +166,7 @@ class EvalExecutor(
                 .build()
             val stmt = parser.parse("`$env`").root
             val plan = planner.plan(stmt, session).plan
-            return (plan.getOperation() as Query).getRoot().getType().getPType()
+            return (plan.getOperation() as Query).getRex().getType().getPType()
         }
 
         /**

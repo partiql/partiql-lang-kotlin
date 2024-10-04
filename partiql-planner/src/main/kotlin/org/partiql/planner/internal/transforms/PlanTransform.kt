@@ -49,7 +49,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         // TODO replace with standard implementations (or just remove plan transform altogether when possible).
         return object : Plan {
             override fun getOperation(): org.partiql.plan.Operation = object : org.partiql.plan.Operation.Query {
-                override fun getRoot(): Rex = root
+                override fun getRex(): Rex = root
             }
         }
     }
