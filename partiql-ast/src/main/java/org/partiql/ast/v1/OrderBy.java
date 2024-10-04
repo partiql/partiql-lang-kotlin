@@ -17,11 +17,10 @@ public class OrderBy extends AstNode {
         this.sorts = sorts;
     }
 
+    @NotNull
     @Override
     public Collection<AstNode> children() {
-        List<AstNode> kids = new ArrayList<>();
-        kids.addAll(sorts);
-        return kids;
+        return new ArrayList<>(sorts);
     }
 
     @Override

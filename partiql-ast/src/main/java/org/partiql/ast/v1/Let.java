@@ -37,12 +37,12 @@ public class Let extends AstNode {
         public Expr expr;
 
         @NotNull
-        public Identifier.Symbol asAlias;
+        public Identifier asAlias;
 
-        public Binding(@NotNull Expr expr, @NotNull Identifier.Symbol asAlias) {
-        this.expr = expr;
-        this.asAlias = asAlias;
-    }
+        public Binding(@NotNull Expr expr, @NotNull Identifier asAlias) {
+            this.expr = expr;
+            this.asAlias = asAlias;
+        }
 
         @NotNull
         @Override

@@ -34,8 +34,10 @@ public abstract class Expr extends AstNode {
             return visitor.visitExprOr((ExprOr) this, ctx);
         } else if (this instanceof ExprValues) {
             return visitor.visitExprValues((ExprValues) this, ctx);
-        } else if (this instanceof ExprCollection) {
-            return visitor.visitExprCollection((ExprCollection) this, ctx);
+        } else if (this instanceof ExprArray) {
+            return visitor.visitExprArray((ExprArray) this, ctx);
+        } else if (this instanceof ExprBag) {
+            return visitor.visitExprBag((ExprBag) this, ctx);
         } else if (this instanceof ExprStruct) {
             return visitor.visitExprStruct((ExprStruct) this, ctx);
         } else if (this instanceof ExprLike) {
@@ -64,10 +66,6 @@ public abstract class Expr extends AstNode {
             return visitor.visitExprExtract((ExprExtract) this, ctx);
         } else if (this instanceof ExprCast) {
             return visitor.visitExprCast((ExprCast) this, ctx);
-        } else if (this instanceof ExprDateAdd) {
-            return visitor.visitExprDateAdd((ExprDateAdd) this, ctx);
-        } else if (this instanceof ExprDateDiff) {
-            return visitor.visitExprDateDiff((ExprDateDiff) this, ctx);
         } else if (this instanceof ExprQuerySet) {
             return visitor.visitExprQuerySet((ExprQuerySet) this, ctx);
         } else if (this instanceof ExprMatch) {

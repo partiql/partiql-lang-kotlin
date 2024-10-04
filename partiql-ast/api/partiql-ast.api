@@ -5562,15 +5562,14 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitExplain (Lorg/partiql/ast/v1/Explain;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExpr (Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprAnd (Lorg/partiql/ast/v1/expr/ExprAnd;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprArray (Lorg/partiql/ast/v1/expr/ExprArray;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitExprBag (Lorg/partiql/ast/v1/expr/ExprBag;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprBetween (Lorg/partiql/ast/v1/expr/ExprBetween;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCall (Lorg/partiql/ast/v1/expr/ExprCall;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCase (Lorg/partiql/ast/v1/expr/ExprCase;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCaseBranch (Lorg/partiql/ast/v1/expr/ExprCase$Branch;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCast (Lorg/partiql/ast/v1/expr/ExprCast;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprCoalesce (Lorg/partiql/ast/v1/expr/ExprCoalesce;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprCollection (Lorg/partiql/ast/v1/expr/ExprCollection;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprDateAdd (Lorg/partiql/ast/v1/expr/ExprDateAdd;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprDateDiff (Lorg/partiql/ast/v1/expr/ExprDateDiff;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprExtract (Lorg/partiql/ast/v1/expr/ExprExtract;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprInCollection (Lorg/partiql/ast/v1/expr/ExprInCollection;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprIsType (Lorg/partiql/ast/v1/expr/ExprIsType;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5584,11 +5583,6 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitExprOverlay (Lorg/partiql/ast/v1/expr/ExprOverlay;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprParameter (Lorg/partiql/ast/v1/expr/ExprParameter;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprPath (Lorg/partiql/ast/v1/expr/ExprPath;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprPathStep (Lorg/partiql/ast/v1/expr/ExprPathStep;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprPathStepIndex (Lorg/partiql/ast/v1/expr/ExprPathStep$Index;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprPathStepSymbol (Lorg/partiql/ast/v1/expr/ExprPathStep$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprPathStepUnpivot (Lorg/partiql/ast/v1/expr/ExprPathStep$Unpivot;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprPathStepWildcard (Lorg/partiql/ast/v1/expr/ExprPathStep$Wildcard;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprPosition (Lorg/partiql/ast/v1/expr/ExprPosition;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprQuerySet (Lorg/partiql/ast/v1/expr/ExprQuerySet;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprSessionAttribute (Lorg/partiql/ast/v1/expr/ExprSessionAttribute;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5628,15 +5622,15 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitGroupBy (Lorg/partiql/ast/v1/GroupBy;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitGroupByKey (Lorg/partiql/ast/v1/GroupBy$Key;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitIdentifier (Lorg/partiql/ast/v1/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitIdentifierQualified (Lorg/partiql/ast/v1/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitIdentifierSymbol (Lorg/partiql/ast/v1/Identifier$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitIdentifierChain (Lorg/partiql/ast/v1/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitLet (Lorg/partiql/ast/v1/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitLetBinding (Lorg/partiql/ast/v1/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitOrderBy (Lorg/partiql/ast/v1/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathLit (Lorg/partiql/ast/v1/PathLit;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathLitStep (Lorg/partiql/ast/v1/PathLitStep;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathLitStepIndex (Lorg/partiql/ast/v1/PathLitStep$Index;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathLitStepSymbol (Lorg/partiql/ast/v1/PathLitStep$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPathStep (Lorg/partiql/ast/v1/expr/PathStep;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPathStepAllElements (Lorg/partiql/ast/v1/expr/PathStep$AllElements;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPathStepAllFields (Lorg/partiql/ast/v1/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPathStepElement (Lorg/partiql/ast/v1/expr/PathStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPathStepField (Lorg/partiql/ast/v1/expr/PathStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitProjectItem (Lorg/partiql/ast/v1/ProjectItem;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitProjectItemAll (Lorg/partiql/ast/v1/ProjectItem$All;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitProjectItemExpression (Lorg/partiql/ast/v1/ProjectItem$Expression;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5654,56 +5648,141 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitStatement (Lorg/partiql/ast/v1/Statement;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTarget (Lorg/partiql/ast/v1/Target;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTargetDomain (Lorg/partiql/ast/v1/Target$Domain;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitType (Lorg/partiql/ast/v1/type/Type;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeBag (Lorg/partiql/ast/v1/type/TypeBag;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeBigint (Lorg/partiql/ast/v1/type/TypeBigint;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeBit (Lorg/partiql/ast/v1/type/TypeBit;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeBitVarying (Lorg/partiql/ast/v1/type/TypeBitVarying;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeBlob (Lorg/partiql/ast/v1/type/TypeBlob;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeBool (Lorg/partiql/ast/v1/type/TypeBool;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeChar (Lorg/partiql/ast/v1/type/TypeChar;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeClob (Lorg/partiql/ast/v1/type/TypeClob;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeDate (Lorg/partiql/ast/v1/type/TypeDate;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeDecimal (Lorg/partiql/ast/v1/type/TypeDecimal;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeDoublePrecision (Lorg/partiql/ast/v1/type/TypeDoublePrecision;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeFloat (Lorg/partiql/ast/v1/type/TypeFloat;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeInt (Lorg/partiql/ast/v1/type/TypeInt;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeInt2 (Lorg/partiql/ast/v1/type/TypeInt2;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeInt4 (Lorg/partiql/ast/v1/type/TypeInt4;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeInt8 (Lorg/partiql/ast/v1/type/TypeInt8;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeInterval (Lorg/partiql/ast/v1/type/TypeInterval;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeList (Lorg/partiql/ast/v1/type/TypeList;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeMissing (Lorg/partiql/ast/v1/type/TypeMissing;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeNull (Lorg/partiql/ast/v1/type/TypeNull;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeNumeric (Lorg/partiql/ast/v1/type/TypeNumeric;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeReal (Lorg/partiql/ast/v1/type/TypeReal;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeSexp (Lorg/partiql/ast/v1/type/TypeSexp;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeSmallint (Lorg/partiql/ast/v1/type/TypeSmallint;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeString (Lorg/partiql/ast/v1/type/TypeString;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeStruct (Lorg/partiql/ast/v1/type/TypeStruct;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeSymbol (Lorg/partiql/ast/v1/type/TypeSymbol;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeTime (Lorg/partiql/ast/v1/type/TypeTime;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeTimeWithTz (Lorg/partiql/ast/v1/type/TypeTimeWithTz;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeTimestamp (Lorg/partiql/ast/v1/type/TypeTimestamp;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeTimestampWithTz (Lorg/partiql/ast/v1/type/TypeTimestampWithTz;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeTinyint (Lorg/partiql/ast/v1/type/TypeTinyint;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeTuple (Lorg/partiql/ast/v1/type/TypeTuple;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeUserDefined (Lorg/partiql/ast/v1/type/TypeUserDefined;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTypeVarchar (Lorg/partiql/ast/v1/type/TypeVarchar;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class org/partiql/ast/v1/DatetimeField : java/lang/Enum {
-	public static final field DAY Lorg/partiql/ast/v1/DatetimeField;
-	public static final field HOUR Lorg/partiql/ast/v1/DatetimeField;
-	public static final field MINUTE Lorg/partiql/ast/v1/DatetimeField;
-	public static final field MONTH Lorg/partiql/ast/v1/DatetimeField;
-	public static final field OTHER Lorg/partiql/ast/v1/DatetimeField;
-	public static final field SECOND Lorg/partiql/ast/v1/DatetimeField;
-	public static final field TIMEZONE_HOUR Lorg/partiql/ast/v1/DatetimeField;
-	public static final field TIMEZONE_MINUTE Lorg/partiql/ast/v1/DatetimeField;
-	public static final field YEAR Lorg/partiql/ast/v1/DatetimeField;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/DatetimeField;
-	public static fun values ()[Lorg/partiql/ast/v1/DatetimeField;
+public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
+	public static final field BAG I
+	public static final field BIGINT I
+	public static final field BIT I
+	public static final field BIT_VARYING I
+	public static final field BLOB I
+	public static final field BOOL I
+	public static final field BOOLEAN I
+	public static final field CHAR I
+	public static final field CHARACTER I
+	public static final field CHARACTER_VARYING I
+	public static final field CLOB I
+	public static final field DATE I
+	public static final field DEC I
+	public static final field DECIMAL I
+	public static final field DOUBLE_PRECISION I
+	public static final field FLOAT I
+	public static final field INT I
+	public static final field INT2 I
+	public static final field INT4 I
+	public static final field INT8 I
+	public static final field INTEGER I
+	public static final field INTEGER2 I
+	public static final field INTEGER4 I
+	public static final field INTEGER8 I
+	public static final field INTERVAL I
+	public static final field LIST I
+	public static final field MISSING I
+	public static final field NULL I
+	public static final field NUMERIC I
+	public static final field REAL I
+	public static final field SEXP I
+	public static final field SMALLINT I
+	public static final field STRING I
+	public static final field STRUCT I
+	public static final field SYMBOL I
+	public static final field TIME I
+	public static final field TIMESTAMP I
+	public static final field TIMESTAMP_WITH_TIME_ZONE I
+	public static final field TIME_WITH_TIME_ZONE I
+	public static final field TINYINT I
+	public static final field TUPLE I
+	public static final field UNKNOWN I
+	public static final field USER_DEFINED I
+	public static final field VARCHAR I
+	public static fun BAG ()Lorg/partiql/ast/v1/DataType;
+	public static fun BIGINT ()Lorg/partiql/ast/v1/DataType;
+	public static fun BIT ()Lorg/partiql/ast/v1/DataType;
+	public static fun BIT (I)Lorg/partiql/ast/v1/DataType;
+	public static fun BIT_VARYING ()Lorg/partiql/ast/v1/DataType;
+	public static fun BIT_VARYING (I)Lorg/partiql/ast/v1/DataType;
+	public static fun BLOB ()Lorg/partiql/ast/v1/DataType;
+	public static fun BLOB (I)Lorg/partiql/ast/v1/DataType;
+	public static fun BOOL ()Lorg/partiql/ast/v1/DataType;
+	public static fun BOOLEAN ()Lorg/partiql/ast/v1/DataType;
+	public static fun CHAR ()Lorg/partiql/ast/v1/DataType;
+	public static fun CHAR (I)Lorg/partiql/ast/v1/DataType;
+	public static fun CHARACTER ()Lorg/partiql/ast/v1/DataType;
+	public static fun CHARACTER (I)Lorg/partiql/ast/v1/DataType;
+	public static fun CHARACTER_VARYING ()Lorg/partiql/ast/v1/DataType;
+	public static fun CHARACTER_VARYING (I)Lorg/partiql/ast/v1/DataType;
+	public static fun CLOB ()Lorg/partiql/ast/v1/DataType;
+	public static fun CLOB (I)Lorg/partiql/ast/v1/DataType;
+	public static fun DATE ()Lorg/partiql/ast/v1/DataType;
+	public static fun DEC ()Lorg/partiql/ast/v1/DataType;
+	public static fun DECIMAL ()Lorg/partiql/ast/v1/DataType;
+	public static fun DECIMAL (I)Lorg/partiql/ast/v1/DataType;
+	public static fun DECIMAL (II)Lorg/partiql/ast/v1/DataType;
+	public static fun DOUBLE_PRECISION ()Lorg/partiql/ast/v1/DataType;
+	public static fun FLOAT ()Lorg/partiql/ast/v1/DataType;
+	public static fun INT ()Lorg/partiql/ast/v1/DataType;
+	public static fun INT2 ()Lorg/partiql/ast/v1/DataType;
+	public static fun INT4 ()Lorg/partiql/ast/v1/DataType;
+	public static fun INT8 ()Lorg/partiql/ast/v1/DataType;
+	public static fun INTEGER ()Lorg/partiql/ast/v1/DataType;
+	public static fun INTEGER2 ()Lorg/partiql/ast/v1/DataType;
+	public static fun INTEGER4 ()Lorg/partiql/ast/v1/DataType;
+	public static fun INTEGER8 ()Lorg/partiql/ast/v1/DataType;
+	public static fun INTERVAL ()Lorg/partiql/ast/v1/DataType;
+	public static fun LIST ()Lorg/partiql/ast/v1/DataType;
+	public static fun MISSING ()Lorg/partiql/ast/v1/DataType;
+	public static fun NULL ()Lorg/partiql/ast/v1/DataType;
+	public static fun NUMERIC ()Lorg/partiql/ast/v1/DataType;
+	public static fun NUMERIC (I)Lorg/partiql/ast/v1/DataType;
+	public static fun NUMERIC (II)Lorg/partiql/ast/v1/DataType;
+	public static fun REAL ()Lorg/partiql/ast/v1/DataType;
+	public static fun SEXP ()Lorg/partiql/ast/v1/DataType;
+	public static fun SMALLINT ()Lorg/partiql/ast/v1/DataType;
+	public static fun STRING ()Lorg/partiql/ast/v1/DataType;
+	public static fun STRING (I)Lorg/partiql/ast/v1/DataType;
+	public static fun STRUCT ()Lorg/partiql/ast/v1/DataType;
+	public static fun SYMBOL ()Lorg/partiql/ast/v1/DataType;
+	public static fun TIME ()Lorg/partiql/ast/v1/DataType;
+	public static fun TIME (I)Lorg/partiql/ast/v1/DataType;
+	public static fun TIMESTAMP ()Lorg/partiql/ast/v1/DataType;
+	public static fun TIMESTAMP (I)Lorg/partiql/ast/v1/DataType;
+	public static fun TIMESTAMP_WITH_TIME_ZONE ()Lorg/partiql/ast/v1/DataType;
+	public static fun TIMESTAMP_WITH_TIME_ZONE (I)Lorg/partiql/ast/v1/DataType;
+	public static fun TIME_WITH_TIME_ZONE ()Lorg/partiql/ast/v1/DataType;
+	public static fun TIME_WITH_TIME_ZONE (I)Lorg/partiql/ast/v1/DataType;
+	public static fun TINYINT ()Lorg/partiql/ast/v1/DataType;
+	public static fun TUPLE ()Lorg/partiql/ast/v1/DataType;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/DataType;
+	public static fun USER_DEFINED ()Lorg/partiql/ast/v1/DataType;
+	public static fun VARCHAR ()Lorg/partiql/ast/v1/DataType;
+	public static fun VARCHAR (I)Lorg/partiql/ast/v1/DataType;
+	public fun code ()I
+}
+
+public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/Enum {
+	public static final field DAY I
+	public static final field HOUR I
+	public static final field MINUTE I
+	public static final field MONTH I
+	public static final field SECOND I
+	public static final field TIMEZONE_HOUR I
+	public static final field TIMEZONE_MINUTE I
+	public static final field UNKNOWN I
+	public static final field YEAR I
+	public static fun DAY ()Lorg/partiql/ast/v1/DatetimeField;
+	public static fun HOUR ()Lorg/partiql/ast/v1/DatetimeField;
+	public static fun MINUTE ()Lorg/partiql/ast/v1/DatetimeField;
+	public static fun MONTH ()Lorg/partiql/ast/v1/DatetimeField;
+	public static fun SECOND ()Lorg/partiql/ast/v1/DatetimeField;
+	public static fun TIMEZONE_HOUR ()Lorg/partiql/ast/v1/DatetimeField;
+	public static fun TIMEZONE_MINUTE ()Lorg/partiql/ast/v1/DatetimeField;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/DatetimeField;
+	public static fun YEAR ()Lorg/partiql/ast/v1/DatetimeField;
+	public fun code ()I
+}
+
+public abstract interface class org/partiql/ast/v1/Enum {
+	public abstract fun code ()I
 }
 
 public class org/partiql/ast/v1/Exclude : org/partiql/ast/v1/AstNode {
@@ -5739,8 +5818,8 @@ public class org/partiql/ast/v1/ExcludeStep$CollWildcard : org/partiql/ast/v1/Ex
 }
 
 public class org/partiql/ast/v1/ExcludeStep$StructField : org/partiql/ast/v1/ExcludeStep {
-	public field symbol Lorg/partiql/ast/v1/Identifier$Symbol;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier$Symbol;)V
+	public field symbol Lorg/partiql/ast/v1/Identifier;
+	public fun <init> (Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -5765,92 +5844,100 @@ public abstract class org/partiql/ast/v1/From : org/partiql/ast/v1/AstNode {
 
 public class org/partiql/ast/v1/FromJoin : org/partiql/ast/v1/From {
 	public field condition Lorg/partiql/ast/v1/expr/Expr;
+	public field joinType Lorg/partiql/ast/v1/JoinType;
 	public field lhs Lorg/partiql/ast/v1/From;
 	public field rhs Lorg/partiql/ast/v1/From;
-	public field type Lorg/partiql/ast/v1/FromJoin$Type;
-	public fun <init> (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/FromJoin$Type;Lorg/partiql/ast/v1/expr/Expr;)V
+	public fun <init> (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
-public final class org/partiql/ast/v1/FromJoin$Type : java/lang/Enum {
-	public static final field COMMA Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field CROSS Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field FULL Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field FULL_OUTER Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field INNER Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field LEFT Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field LEFT_OUTER Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field OTHER Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field RIGHT Lorg/partiql/ast/v1/FromJoin$Type;
-	public static final field RIGHT_OUTER Lorg/partiql/ast/v1/FromJoin$Type;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/FromJoin$Type;
-	public static fun values ()[Lorg/partiql/ast/v1/FromJoin$Type;
+public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/Enum {
+	public static final field SCAN I
+	public static final field UNKNOWN I
+	public static final field UNPIVOT I
+	public static fun SCAN ()Lorg/partiql/ast/v1/FromType;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/FromType;
+	public static fun UNPIVOT ()Lorg/partiql/ast/v1/FromType;
+	public fun code ()I
 }
 
 public class org/partiql/ast/v1/FromValue : org/partiql/ast/v1/From {
-	public field asAlias Lorg/partiql/ast/v1/Identifier$Symbol;
-	public field atAlias Lorg/partiql/ast/v1/Identifier$Symbol;
-	public field byAlias Lorg/partiql/ast/v1/Identifier$Symbol;
+	public field asAlias Lorg/partiql/ast/v1/Identifier;
+	public field atAlias Lorg/partiql/ast/v1/Identifier;
+	public field byAlias Lorg/partiql/ast/v1/Identifier;
 	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public field type Lorg/partiql/ast/v1/FromValue$Type;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromValue$Type;Lorg/partiql/ast/v1/Identifier$Symbol;Lorg/partiql/ast/v1/Identifier$Symbol;Lorg/partiql/ast/v1/Identifier$Symbol;)V
+	public field fromType Lorg/partiql/ast/v1/FromType;
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
-public final class org/partiql/ast/v1/FromValue$Type : java/lang/Enum {
-	public static final field OTHER Lorg/partiql/ast/v1/FromValue$Type;
-	public static final field SCAN Lorg/partiql/ast/v1/FromValue$Type;
-	public static final field UNPIVOT Lorg/partiql/ast/v1/FromValue$Type;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/FromValue$Type;
-	public static fun values ()[Lorg/partiql/ast/v1/FromValue$Type;
-}
-
 public class org/partiql/ast/v1/GroupBy : org/partiql/ast/v1/AstNode {
-	public field asAlias Lorg/partiql/ast/v1/Identifier$Symbol;
+	public field asAlias Lorg/partiql/ast/v1/Identifier;
 	public field keys Ljava/util/List;
-	public field strategy Lorg/partiql/ast/v1/GroupBy$Strategy;
-	public fun <init> (Lorg/partiql/ast/v1/GroupBy$Strategy;Ljava/util/List;Lorg/partiql/ast/v1/Identifier$Symbol;)V
+	public field strategy Lorg/partiql/ast/v1/GroupByStrategy;
+	public fun <init> (Lorg/partiql/ast/v1/GroupByStrategy;Ljava/util/List;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/GroupBy$Key : org/partiql/ast/v1/AstNode {
-	public field asAlias Lorg/partiql/ast/v1/Identifier$Symbol;
+	public field asAlias Lorg/partiql/ast/v1/Identifier;
 	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier$Symbol;)V
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
-public final class org/partiql/ast/v1/GroupBy$Strategy : java/lang/Enum {
-	public static final field FULL Lorg/partiql/ast/v1/GroupBy$Strategy;
-	public static final field OTHER Lorg/partiql/ast/v1/GroupBy$Strategy;
-	public static final field PARTIAL Lorg/partiql/ast/v1/GroupBy$Strategy;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/GroupBy$Strategy;
-	public static fun values ()[Lorg/partiql/ast/v1/GroupBy$Strategy;
+public class org/partiql/ast/v1/GroupByStrategy : org/partiql/ast/v1/Enum {
+	public static final field FULL I
+	public static final field PARTIAL I
+	public static final field UNKNOWN I
+	public static fun FULL ()Lorg/partiql/ast/v1/GroupByStrategy;
+	public static fun PARTIAL ()Lorg/partiql/ast/v1/GroupByStrategy;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/GroupByStrategy;
+	public fun code ()I
 }
 
-public abstract class org/partiql/ast/v1/Identifier : org/partiql/ast/v1/AstNode {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public class org/partiql/ast/v1/Identifier$Qualified : org/partiql/ast/v1/Identifier {
-	public field root Lorg/partiql/ast/v1/Identifier$Symbol;
-	public field steps Ljava/util/List;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier$Symbol;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/Identifier$Symbol : org/partiql/ast/v1/Identifier {
+public class org/partiql/ast/v1/Identifier : org/partiql/ast/v1/AstNode {
 	public field isDelimited Z
 	public field symbol Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/IdentifierChain : org/partiql/ast/v1/AstNode {
+	public field next Lorg/partiql/ast/v1/IdentifierChain;
+	public field root Lorg/partiql/ast/v1/Identifier;
+	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/IdentifierChain;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
+	public static final field COMMA I
+	public static final field CROSS I
+	public static final field FULL I
+	public static final field FULL_OUTER I
+	public static final field INNER I
+	public static final field LEFT I
+	public static final field LEFT_OUTER I
+	public static final field RIGHT I
+	public static final field RIGHT_OUTER I
+	public static final field UNKNOWN I
+	public static fun COMMA ()Lorg/partiql/ast/v1/JoinType;
+	public static fun CROSS ()Lorg/partiql/ast/v1/JoinType;
+	public static fun FULL ()Lorg/partiql/ast/v1/JoinType;
+	public static fun FULL_OUTER ()Lorg/partiql/ast/v1/JoinType;
+	public static fun INNER ()Lorg/partiql/ast/v1/JoinType;
+	public static fun LEFT ()Lorg/partiql/ast/v1/JoinType;
+	public static fun LEFT_OUTER ()Lorg/partiql/ast/v1/JoinType;
+	public static fun RIGHT ()Lorg/partiql/ast/v1/JoinType;
+	public static fun RIGHT_OUTER ()Lorg/partiql/ast/v1/JoinType;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/JoinType;
+	public fun code ()I
 }
 
 public class org/partiql/ast/v1/Let : org/partiql/ast/v1/AstNode {
@@ -5861,42 +5948,36 @@ public class org/partiql/ast/v1/Let : org/partiql/ast/v1/AstNode {
 }
 
 public class org/partiql/ast/v1/Let$Binding : org/partiql/ast/v1/AstNode {
-	public field asAlias Lorg/partiql/ast/v1/Identifier$Symbol;
+	public field asAlias Lorg/partiql/ast/v1/Identifier;
 	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier$Symbol;)V
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/Nulls : org/partiql/ast/v1/Enum {
+	public static final field FIRST I
+	public static final field LAST I
+	public static final field UNKNOWN I
+	public static fun FIRST ()Lorg/partiql/ast/v1/Nulls;
+	public static fun LAST ()Lorg/partiql/ast/v1/Nulls;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/Nulls;
+	public fun code ()I
+}
+
+public class org/partiql/ast/v1/Order : org/partiql/ast/v1/Enum {
+	public static final field ASC I
+	public static final field DESC I
+	public static final field UNKNOWN I
+	public static fun ASC ()Lorg/partiql/ast/v1/Order;
+	public static fun DESC ()Lorg/partiql/ast/v1/Order;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/Order;
+	public fun code ()I
 }
 
 public class org/partiql/ast/v1/OrderBy : org/partiql/ast/v1/AstNode {
 	public field sorts Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/PathLit : org/partiql/ast/v1/AstNode {
-	public field root Lorg/partiql/ast/v1/Identifier$Symbol;
-	public field steps Ljava/util/List;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier$Symbol;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public abstract class org/partiql/ast/v1/PathLitStep : org/partiql/ast/v1/AstNode {
-	public fun <init> ()V
-}
-
-public class org/partiql/ast/v1/PathLitStep$Index : org/partiql/ast/v1/PathLitStep {
-	public field index I
-	public fun <init> (I)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/PathLitStep$Symbol : org/partiql/ast/v1/PathLitStep {
-	public field symbol Lorg/partiql/ast/v1/Identifier$Symbol;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier$Symbol;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -5914,9 +5995,9 @@ public class org/partiql/ast/v1/ProjectItem$All : org/partiql/ast/v1/ProjectItem
 }
 
 public class org/partiql/ast/v1/ProjectItem$Expression : org/partiql/ast/v1/ProjectItem {
-	public field asAlias Lorg/partiql/ast/v1/Identifier$Symbol;
+	public field asAlias Lorg/partiql/ast/v1/Identifier;
 	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier$Symbol;)V
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -5992,53 +6073,38 @@ public class org/partiql/ast/v1/SelectValue : org/partiql/ast/v1/Select {
 }
 
 public class org/partiql/ast/v1/SetOp : org/partiql/ast/v1/AstNode {
+	public field setOpType Lorg/partiql/ast/v1/SetOpType;
 	public field setq Lorg/partiql/ast/v1/SetQuantifier;
-	public field type Lorg/partiql/ast/v1/SetOp$Type;
-	public fun <init> (Lorg/partiql/ast/v1/SetOp$Type;Lorg/partiql/ast/v1/SetQuantifier;)V
+	public fun <init> (Lorg/partiql/ast/v1/SetOpType;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
-public final class org/partiql/ast/v1/SetOp$Type : java/lang/Enum {
-	public static final field EXCEPT Lorg/partiql/ast/v1/SetOp$Type;
-	public static final field INTERSECT Lorg/partiql/ast/v1/SetOp$Type;
-	public static final field OTHER Lorg/partiql/ast/v1/SetOp$Type;
-	public static final field UNION Lorg/partiql/ast/v1/SetOp$Type;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/SetOp$Type;
-	public static fun values ()[Lorg/partiql/ast/v1/SetOp$Type;
+public class org/partiql/ast/v1/SetOpType : org/partiql/ast/v1/Enum {
+	public static fun EXCEPT ()Lorg/partiql/ast/v1/SetOpType;
+	public static fun INTERSECT ()Lorg/partiql/ast/v1/SetOpType;
+	public static fun UNION ()Lorg/partiql/ast/v1/SetOpType;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/SetOpType;
+	public fun code ()I
 }
 
-public final class org/partiql/ast/v1/SetQuantifier : java/lang/Enum {
-	public static final field ALL Lorg/partiql/ast/v1/SetQuantifier;
-	public static final field DISTINCT Lorg/partiql/ast/v1/SetQuantifier;
-	public static final field OTHER Lorg/partiql/ast/v1/SetQuantifier;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/SetQuantifier;
-	public static fun values ()[Lorg/partiql/ast/v1/SetQuantifier;
+public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/Enum {
+	public static final field ALL I
+	public static final field DISTINCT I
+	public static final field UNKNOWN I
+	public static fun ALL ()Lorg/partiql/ast/v1/SetQuantifier;
+	public static fun DISTINCT ()Lorg/partiql/ast/v1/SetQuantifier;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/SetQuantifier;
+	public fun code ()I
 }
 
 public class org/partiql/ast/v1/Sort : org/partiql/ast/v1/AstNode {
-	public field dir Lorg/partiql/ast/v1/Sort$Dir;
 	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public field nulls Lorg/partiql/ast/v1/Sort$Nulls;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Sort$Dir;Lorg/partiql/ast/v1/Sort$Nulls;)V
+	public field nulls Lorg/partiql/ast/v1/Nulls;
+	public field order Lorg/partiql/ast/v1/Order;
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Order;Lorg/partiql/ast/v1/Nulls;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
-}
-
-public final class org/partiql/ast/v1/Sort$Dir : java/lang/Enum {
-	public static final field ASC Lorg/partiql/ast/v1/Sort$Dir;
-	public static final field DESC Lorg/partiql/ast/v1/Sort$Dir;
-	public static final field OTHER Lorg/partiql/ast/v1/Sort$Dir;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/Sort$Dir;
-	public static fun values ()[Lorg/partiql/ast/v1/Sort$Dir;
-}
-
-public final class org/partiql/ast/v1/Sort$Nulls : java/lang/Enum {
-	public static final field FIRST Lorg/partiql/ast/v1/Sort$Nulls;
-	public static final field LAST Lorg/partiql/ast/v1/Sort$Nulls;
-	public static final field OTHER Lorg/partiql/ast/v1/Sort$Nulls;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/Sort$Nulls;
-	public static fun values ()[Lorg/partiql/ast/v1/Sort$Nulls;
 }
 
 public abstract class org/partiql/ast/v1/Statement : org/partiql/ast/v1/AstNode {
@@ -6073,6 +6139,20 @@ public class org/partiql/ast/v1/expr/ExprAnd : org/partiql/ast/v1/expr/Expr {
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/expr/ExprArray : org/partiql/ast/v1/expr/Expr {
+	public final field values Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprBag : org/partiql/ast/v1/expr/Expr {
+	public final field values Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
 public class org/partiql/ast/v1/expr/ExprBetween : org/partiql/ast/v1/expr/Expr {
 	public final field from Lorg/partiql/ast/v1/expr/Expr;
 	public final field not Z
@@ -6085,9 +6165,9 @@ public class org/partiql/ast/v1/expr/ExprBetween : org/partiql/ast/v1/expr/Expr 
 
 public class org/partiql/ast/v1/expr/ExprCall : org/partiql/ast/v1/expr/Expr {
 	public field args Ljava/util/List;
-	public field function Lorg/partiql/ast/v1/Identifier;
+	public field function Lorg/partiql/ast/v1/IdentifierChain;
 	public field setq Lorg/partiql/ast/v1/SetQuantifier;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier;Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)V
+	public fun <init> (Lorg/partiql/ast/v1/IdentifierChain;Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -6110,9 +6190,9 @@ public class org/partiql/ast/v1/expr/ExprCase$Branch : org/partiql/ast/v1/AstNod
 }
 
 public class org/partiql/ast/v1/expr/ExprCast : org/partiql/ast/v1/expr/Expr {
-	public final field asType Lorg/partiql/ast/v1/type/Type;
+	public final field asType Lorg/partiql/ast/v1/DataType;
 	public final field value Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/type/Type;)V
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -6120,43 +6200,6 @@ public class org/partiql/ast/v1/expr/ExprCast : org/partiql/ast/v1/expr/Expr {
 public class org/partiql/ast/v1/expr/ExprCoalesce : org/partiql/ast/v1/expr/Expr {
 	public final field args Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/expr/ExprCollection : org/partiql/ast/v1/expr/Expr {
-	public final field type Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-	public final field values Ljava/util/List;
-	public fun <init> (Lorg/partiql/ast/v1/expr/ExprCollection$Type;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public final class org/partiql/ast/v1/expr/ExprCollection$Type : java/lang/Enum {
-	public static final field ARRAY Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-	public static final field BAG Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-	public static final field LIST Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-	public static final field OTHER Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-	public static final field SEXP Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-	public static final field VALUES Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/ExprCollection$Type;
-}
-
-public class org/partiql/ast/v1/expr/ExprDateAdd : org/partiql/ast/v1/expr/Expr {
-	public field field Lorg/partiql/ast/v1/DatetimeField;
-	public field lhs Lorg/partiql/ast/v1/expr/Expr;
-	public field rhs Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/DatetimeField;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/expr/ExprDateDiff : org/partiql/ast/v1/expr/Expr {
-	public field field Lorg/partiql/ast/v1/DatetimeField;
-	public field lhs Lorg/partiql/ast/v1/expr/Expr;
-	public field rhs Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/DatetimeField;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -6180,9 +6223,9 @@ public class org/partiql/ast/v1/expr/ExprInCollection : org/partiql/ast/v1/expr/
 
 public class org/partiql/ast/v1/expr/ExprIsType : org/partiql/ast/v1/expr/Expr {
 	public field not Z
-	public field type Lorg/partiql/ast/v1/type/Type;
+	public field type Lorg/partiql/ast/v1/DataType;
 	public field value Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/type/Type;Z)V
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -6220,8 +6263,8 @@ public class org/partiql/ast/v1/expr/ExprNot : org/partiql/ast/v1/expr/Expr {
 }
 
 public class org/partiql/ast/v1/expr/ExprNullIf : org/partiql/ast/v1/expr/Expr {
-	public field nullifier Lorg/partiql/ast/v1/expr/Expr;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public field v1 Lorg/partiql/ast/v1/expr/Expr;
+	public field v2 Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
@@ -6262,39 +6305,9 @@ public class org/partiql/ast/v1/expr/ExprParameter : org/partiql/ast/v1/expr/Exp
 }
 
 public class org/partiql/ast/v1/expr/ExprPath : org/partiql/ast/v1/expr/Expr {
+	public field next Lorg/partiql/ast/v1/expr/PathStep;
 	public field root Lorg/partiql/ast/v1/expr/Expr;
-	public field steps Ljava/util/List;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public abstract class org/partiql/ast/v1/expr/ExprPathStep : org/partiql/ast/v1/AstNode {
-	public fun <init> ()V
-}
-
-public class org/partiql/ast/v1/expr/ExprPathStep$Index : org/partiql/ast/v1/expr/ExprPathStep {
-	public field key Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/expr/ExprPathStep$Symbol : org/partiql/ast/v1/expr/ExprPathStep {
-	public field symbol Lorg/partiql/ast/v1/Identifier$Symbol;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier$Symbol;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/expr/ExprPathStep$Unpivot : org/partiql/ast/v1/expr/ExprPathStep {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/expr/ExprPathStep$Wildcard : org/partiql/ast/v1/expr/ExprPathStep {
-	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -6318,18 +6331,10 @@ public class org/partiql/ast/v1/expr/ExprQuerySet : org/partiql/ast/v1/expr/Expr
 }
 
 public class org/partiql/ast/v1/expr/ExprSessionAttribute : org/partiql/ast/v1/expr/Expr {
-	public field attribute Lorg/partiql/ast/v1/expr/ExprSessionAttribute$Attribute;
-	public fun <init> (Lorg/partiql/ast/v1/expr/ExprSessionAttribute$Attribute;)V
+	public field sessionAttribute Lorg/partiql/ast/v1/expr/SessionAttribute;
+	public fun <init> (Lorg/partiql/ast/v1/expr/SessionAttribute;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
-}
-
-public final class org/partiql/ast/v1/expr/ExprSessionAttribute$Attribute : java/lang/Enum {
-	public static final field CURRENT_DATE Lorg/partiql/ast/v1/expr/ExprSessionAttribute$Attribute;
-	public static final field CURRENT_USER Lorg/partiql/ast/v1/expr/ExprSessionAttribute$Attribute;
-	public static final field OTHER Lorg/partiql/ast/v1/expr/ExprSessionAttribute$Attribute;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprSessionAttribute$Attribute;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/ExprSessionAttribute$Attribute;
 }
 
 public class org/partiql/ast/v1/expr/ExprStruct : org/partiql/ast/v1/expr/Expr {
@@ -6358,20 +6363,11 @@ public class org/partiql/ast/v1/expr/ExprSubstring : org/partiql/ast/v1/expr/Exp
 
 public class org/partiql/ast/v1/expr/ExprTrim : org/partiql/ast/v1/expr/Expr {
 	public field chars Lorg/partiql/ast/v1/expr/Expr;
-	public field spec Lorg/partiql/ast/v1/expr/ExprTrim$Spec;
+	public field trimSpec Lorg/partiql/ast/v1/expr/TrimSpec;
 	public field value Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/ExprTrim$Spec;)V
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/TrimSpec;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
-}
-
-public final class org/partiql/ast/v1/expr/ExprTrim$Spec : java/lang/Enum {
-	public static final field BOTH Lorg/partiql/ast/v1/expr/ExprTrim$Spec;
-	public static final field LEADING Lorg/partiql/ast/v1/expr/ExprTrim$Spec;
-	public static final field OTHER Lorg/partiql/ast/v1/expr/ExprTrim$Spec;
-	public static final field TRAILING Lorg/partiql/ast/v1/expr/ExprTrim$Spec;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprTrim$Spec;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/ExprTrim$Spec;
 }
 
 public class org/partiql/ast/v1/expr/ExprValues : org/partiql/ast/v1/expr/Expr {
@@ -6389,19 +6385,11 @@ public class org/partiql/ast/v1/expr/ExprValues$Row : org/partiql/ast/v1/AstNode
 }
 
 public class org/partiql/ast/v1/expr/ExprVarRef : org/partiql/ast/v1/expr/Expr {
-	public field identifier Lorg/partiql/ast/v1/Identifier;
-	public field scope Lorg/partiql/ast/v1/expr/ExprVarRef$Scope;
-	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/expr/ExprVarRef$Scope;)V
+	public field identifierChain Lorg/partiql/ast/v1/IdentifierChain;
+	public field scope Lorg/partiql/ast/v1/expr/Scope;
+	public fun <init> (Lorg/partiql/ast/v1/IdentifierChain;Lorg/partiql/ast/v1/expr/Scope;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
-}
-
-public final class org/partiql/ast/v1/expr/ExprVarRef$Scope : java/lang/Enum {
-	public static final field DEFAULT Lorg/partiql/ast/v1/expr/ExprVarRef$Scope;
-	public static final field LOCAL Lorg/partiql/ast/v1/expr/ExprVarRef$Scope;
-	public static final field OTHER Lorg/partiql/ast/v1/expr/ExprVarRef$Scope;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprVarRef$Scope;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/ExprVarRef$Scope;
 }
 
 public class org/partiql/ast/v1/expr/ExprVariant : org/partiql/ast/v1/expr/Expr {
@@ -6416,20 +6404,12 @@ public class org/partiql/ast/v1/expr/ExprVariant : org/partiql/ast/v1/expr/Expr 
 public class org/partiql/ast/v1/expr/ExprWindow : org/partiql/ast/v1/expr/Expr {
 	public field defaultValue Lorg/partiql/ast/v1/expr/Expr;
 	public field expression Lorg/partiql/ast/v1/expr/Expr;
-	public field function Lorg/partiql/ast/v1/expr/ExprWindow$Function;
 	public field offset Lorg/partiql/ast/v1/expr/Expr;
 	public field over Lorg/partiql/ast/v1/expr/ExprWindow$Over;
-	public fun <init> (Lorg/partiql/ast/v1/expr/ExprWindow$Function;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/ExprWindow$Over;)V
+	public field windowFunction Lorg/partiql/ast/v1/expr/WindowFunction;
+	public fun <init> (Lorg/partiql/ast/v1/expr/WindowFunction;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/ExprWindow$Over;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
-}
-
-public final class org/partiql/ast/v1/expr/ExprWindow$Function : java/lang/Enum {
-	public static final field LAG Lorg/partiql/ast/v1/expr/ExprWindow$Function;
-	public static final field LEAD Lorg/partiql/ast/v1/expr/ExprWindow$Function;
-	public static final field OTHER Lorg/partiql/ast/v1/expr/ExprWindow$Function;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprWindow$Function;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/ExprWindow$Function;
 }
 
 public class org/partiql/ast/v1/expr/ExprWindow$Over : org/partiql/ast/v1/AstNode {
@@ -6440,17 +6420,99 @@ public class org/partiql/ast/v1/expr/ExprWindow$Over : org/partiql/ast/v1/AstNod
 	public fun children ()Ljava/util/Collection;
 }
 
-public final class org/partiql/ast/v1/graph/GraphDirection : java/lang/Enum {
-	public static final field LEFT Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static final field LEFT_OR_RIGHT Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static final field LEFT_OR_UNDIRECTED Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static final field LEFT_UNDIRECTED_OR_RIGHT Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static final field OTHER Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static final field RIGHT Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static final field UNDIRECTED Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static final field UNDIRECTED_OR_RIGHT Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static fun values ()[Lorg/partiql/ast/v1/graph/GraphDirection;
+public abstract class org/partiql/ast/v1/expr/PathStep : org/partiql/ast/v1/AstNode {
+	public field next Lorg/partiql/ast/v1/expr/PathStep;
+	public fun <init> ()V
+}
+
+public class org/partiql/ast/v1/expr/PathStep$AllElements : org/partiql/ast/v1/expr/PathStep {
+	public fun <init> (Lorg/partiql/ast/v1/expr/PathStep;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/PathStep$AllFields : org/partiql/ast/v1/expr/PathStep {
+	public fun <init> (Lorg/partiql/ast/v1/expr/PathStep;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/PathStep$Element : org/partiql/ast/v1/expr/PathStep {
+	public field element Lorg/partiql/ast/v1/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/PathStep;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/PathStep$Field : org/partiql/ast/v1/expr/PathStep {
+	public field field Lorg/partiql/ast/v1/Identifier;
+	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/expr/PathStep;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/Scope : org/partiql/ast/v1/Enum {
+	public static final field DEFAULT I
+	public static final field LOCAL I
+	public static final field UNKNOWN I
+	public static fun DEFAULT ()Lorg/partiql/ast/v1/expr/Scope;
+	public static fun LOCAL ()Lorg/partiql/ast/v1/expr/Scope;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/Scope;
+	public fun code ()I
+}
+
+public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/Enum {
+	public static final field CURRENT_DATE I
+	public static final field CURRENT_USER I
+	public static final field UNKNOWN I
+	public fun <init> (I)V
+	public static fun CURRENT_DATE ()Lorg/partiql/ast/v1/expr/SessionAttribute;
+	public static fun CURRENT_USER ()Lorg/partiql/ast/v1/expr/SessionAttribute;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/SessionAttribute;
+	public fun code ()I
+}
+
+public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/Enum {
+	public static final field BOTH I
+	public static final field LEADING I
+	public static final field TRAILING I
+	public static final field UNKNOWN I
+	public static fun BOTH ()Lorg/partiql/ast/v1/expr/TrimSpec;
+	public static fun LEADING ()Lorg/partiql/ast/v1/expr/TrimSpec;
+	public static fun TRAILING ()Lorg/partiql/ast/v1/expr/TrimSpec;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/TrimSpec;
+	public fun code ()I
+}
+
+public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/Enum {
+	public static final field LAG I
+	public static final field LEAD I
+	public static final field UNKNOWN I
+	public fun <init> (I)V
+	public static fun LAG ()Lorg/partiql/ast/v1/expr/WindowFunction;
+	public static fun LEAD ()Lorg/partiql/ast/v1/expr/WindowFunction;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/WindowFunction;
+	public fun code ()I
+}
+
+public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/Enum {
+	public static final field LEFT I
+	public static final field LEFT_OR_RIGHT I
+	public static final field LEFT_OR_UNDIRECTED I
+	public static final field LEFT_UNDIRECTED_OR_RIGHT I
+	public static final field RIGHT I
+	public static final field UNDIRECTED I
+	public static final field UNDIRECTED_OR_RIGHT I
+	public static final field UNKNOWN I
+	public static fun LEFT ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun LEFT_OR_RIGHT ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun LEFT_OR_UNDIRECTED ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun LEFT_UNDIRECTED_OR_RIGHT ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun RIGHT ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun UNDIRECTED ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun UNDIRECTED_OR_RIGHT ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public fun code ()I
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphLabel : org/partiql/ast/v1/AstNode {
@@ -6551,13 +6613,16 @@ public class org/partiql/ast/v1/graph/GraphQuantifier : org/partiql/ast/v1/AstNo
 	public fun children ()Ljava/util/Collection;
 }
 
-public final class org/partiql/ast/v1/graph/GraphRestrictor : java/lang/Enum {
-	public static final field ACYCLIC Lorg/partiql/ast/v1/graph/GraphRestrictor;
-	public static final field OTHER Lorg/partiql/ast/v1/graph/GraphRestrictor;
-	public static final field SIMPLE Lorg/partiql/ast/v1/graph/GraphRestrictor;
-	public static final field TRAIL Lorg/partiql/ast/v1/graph/GraphRestrictor;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphRestrictor;
-	public static fun values ()[Lorg/partiql/ast/v1/graph/GraphRestrictor;
+public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/Enum {
+	public static final field ACYCLIC I
+	public static final field SIMPLE I
+	public static final field TRAIL I
+	public static final field UNKNOWN I
+	public static fun ACYCLIC ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	public static fun SIMPLE ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	public static fun TRAIL ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	public static fun UNKNOWN ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	public fun code ()I
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphSelector : org/partiql/ast/v1/AstNode {
@@ -6600,238 +6665,6 @@ public class org/partiql/ast/v1/graph/GraphSelector$ShortestK : org/partiql/ast/
 public class org/partiql/ast/v1/graph/GraphSelector$ShortestKGroup : org/partiql/ast/v1/graph/GraphSelector {
 	public field k J
 	public fun <init> (J)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public abstract class org/partiql/ast/v1/type/Type : org/partiql/ast/v1/AstNode {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public class org/partiql/ast/v1/type/TypeBag : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeBigint : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeBit : org/partiql/ast/v1/type/Type {
-	public field length Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeBitVarying : org/partiql/ast/v1/type/Type {
-	public field length Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeBlob : org/partiql/ast/v1/type/Type {
-	public field length Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeBool : org/partiql/ast/v1/type/Type {
-	public static final field INSTANCE Lorg/partiql/ast/v1/type/TypeBool;
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeChar : org/partiql/ast/v1/type/Type {
-	public field length Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeClob : org/partiql/ast/v1/type/Type {
-	public field length Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeDate : org/partiql/ast/v1/type/Type {
-	public static final field INSTANCE Lorg/partiql/ast/v1/type/TypeDate;
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeDecimal : org/partiql/ast/v1/type/Type {
-	public field precision Ljava/lang/Integer;
-	public field scale Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeDoublePrecision : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeFloat : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeInt : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeInt2 : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeInt4 : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeInt8 : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeInterval : org/partiql/ast/v1/type/Type {
-	public field precision Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeList : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeMissing : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeNull : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeNumeric : org/partiql/ast/v1/type/Type {
-	public field precision Ljava/lang/Integer;
-	public field scale Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeReal : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeSexp : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeSmallint : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeString : org/partiql/ast/v1/type/Type {
-	public field length Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeStruct : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeSymbol : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeTime : org/partiql/ast/v1/type/Type {
-	public field precision Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeTimeWithTz : org/partiql/ast/v1/type/Type {
-	public field precision Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeTimestamp : org/partiql/ast/v1/type/Type {
-	public field precision Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeTimestampWithTz : org/partiql/ast/v1/type/Type {
-	public field precision Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeTinyint : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeTuple : org/partiql/ast/v1/type/Type {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeUserDefined : org/partiql/ast/v1/type/Type {
-	public field name Ljava/lang/String;
-	public fun <init> (Ljava/lang/String;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/type/TypeVarchar : org/partiql/ast/v1/type/Type {
-	public field length Ljava/lang/Integer;
-	public fun <init> (Ljava/lang/Integer;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }

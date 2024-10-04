@@ -11,13 +11,13 @@ import java.util.Collections;
  */
 public class SetOp extends AstNode {
     @NotNull
-    public Type type;
+    public SetOpType setOpType;
 
     @Nullable
     public SetQuantifier setq;
 
-    public SetOp(@NotNull Type type, @Nullable SetQuantifier setq) {
-        this.type = type;
+    public SetOp(@NotNull SetOpType setOpType, @Nullable SetQuantifier setq) {
+        this.setOpType = setOpType;
         this.setq = setq;
     }
 
@@ -30,15 +30,5 @@ public class SetOp extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitSetOp(this, ctx);
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
-    public enum Type {
-        UNION,
-        INTERSECT,
-        EXCEPT,
-        OTHER
     }
 }

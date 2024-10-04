@@ -13,15 +13,15 @@ import java.util.List;
  */
 public class GroupBy extends AstNode {
     @NotNull
-    public Strategy strategy;
+    public GroupByStrategy strategy;
 
     @NotNull
     public List<Key> keys;
 
     @Nullable
-    public Identifier.Symbol asAlias;
+    public Identifier asAlias;
 
-    public GroupBy(@NotNull Strategy strategy, @NotNull List<Key> keys, @Nullable Identifier.Symbol asAlias) {
+    public GroupBy(@NotNull GroupByStrategy strategy, @NotNull List<Key> keys, @Nullable Identifier asAlias) {
         this.strategy = strategy;
         this.keys = keys;
         this.asAlias = asAlias;
@@ -45,23 +45,14 @@ public class GroupBy extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    public enum Strategy {
-        FULL,
-        PARTIAL,
-        OTHER
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
     public static class Key extends AstNode {
         @NotNull
         public Expr expr;
 
         @Nullable
-        public Identifier.Symbol asAlias;
+        public Identifier asAlias;
 
-        public Key(@NotNull Expr expr, @Nullable Identifier.Symbol asAlias) {
+        public Key(@NotNull Expr expr, @Nullable Identifier asAlias) {
         this.expr = expr;
         this.asAlias = asAlias;
     }

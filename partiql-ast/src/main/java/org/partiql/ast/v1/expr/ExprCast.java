@@ -3,7 +3,7 @@ package org.partiql.ast.v1.expr;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
-import org.partiql.ast.v1.type.Type;
+import org.partiql.ast.v1.DataType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,9 +17,9 @@ public class ExprCast extends Expr {
     public final Expr value;
 
     @NotNull
-    public final Type asType;
+    public final DataType asType;
 
-    public ExprCast(@NotNull Expr value, @NotNull Type asType) {
+    public ExprCast(@NotNull Expr value, @NotNull DataType asType) {
         this.value = value;
         this.asType = asType;
     }
@@ -29,7 +29,6 @@ public class ExprCast extends Expr {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(value);
-        kids.add(asType);
         return kids;
     }
 

@@ -19,15 +19,15 @@ public class FromJoin extends From {
     public From rhs;
 
     @Nullable
-    public Type type;
+    public JoinType joinType;
 
     @Nullable
     public Expr condition;
 
-    public FromJoin(@NotNull From lhs, @NotNull From rhs, @Nullable Type type, @Nullable Expr condition) {
+    public FromJoin(@NotNull From lhs, @NotNull From rhs, @Nullable JoinType joinType, @Nullable Expr condition) {
         this.lhs = lhs;
         this.rhs = rhs;
-        this.type = type;
+        this.joinType = joinType;
         this.condition = condition;
     }
 
@@ -46,21 +46,5 @@ public class FromJoin extends From {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitFromJoin(this, ctx);
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
-    public enum Type {
-        INNER,
-        LEFT,
-        LEFT_OUTER,
-        RIGHT,
-        RIGHT_OUTER,
-        FULL,
-        FULL_OUTER,
-        CROSS,
-        COMMA,
-        OTHER
     }
 }

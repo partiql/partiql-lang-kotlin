@@ -3,7 +3,7 @@ package org.partiql.ast.v1.expr;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
-import org.partiql.ast.v1.type.Type;
+import org.partiql.ast.v1.DataType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,11 +17,11 @@ public class ExprIsType extends Expr {
     public Expr value;
 
     @NotNull
-    public Type type;
+    public DataType type;
 
     public boolean not;
 
-    public ExprIsType(@NotNull Expr value, @NotNull Type type, boolean not) {
+    public ExprIsType(@NotNull Expr value, @NotNull DataType type, boolean not) {
         this.value = value;
         this.type = type;
         this.not = not;
@@ -32,7 +32,6 @@ public class ExprIsType extends Expr {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(value);
-        kids.add(type);
         return kids;
     }
 

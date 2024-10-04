@@ -15,9 +15,9 @@ public abstract class ExcludeStep extends AstNode {
      */
     public static class StructField extends ExcludeStep {
         @NotNull
-        public Identifier.Symbol symbol;
+        public Identifier symbol;
 
-        public StructField(@NotNull Identifier.Symbol symbol) {
+        public StructField(@NotNull Identifier symbol) {
             this.symbol = symbol;
         }
 

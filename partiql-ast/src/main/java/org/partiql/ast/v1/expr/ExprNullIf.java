@@ -13,22 +13,22 @@ import java.util.List;
  */
 public class ExprNullIf extends Expr {
     @NotNull
-    public Expr value;
+    public Expr v1;
 
     @NotNull
-    public Expr nullifier;
+    public Expr v2;
 
-    public ExprNullIf(@NotNull Expr value, @NotNull Expr nullifier) {
-        this.value = value;
-        this.nullifier = nullifier;
+    public ExprNullIf(@NotNull Expr v1, @NotNull Expr v2) {
+        this.v1 = v1;
+        this.v2 = v2;
     }
 
     @Override
     @NotNull
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
-        kids.add(value);
-        kids.add(nullifier);
+        kids.add(v1);
+        kids.add(v2);
         return kids;
     }
 

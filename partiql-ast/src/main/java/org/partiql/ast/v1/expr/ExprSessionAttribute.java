@@ -12,10 +12,10 @@ import java.util.Collections;
  */
 public class ExprSessionAttribute extends Expr {
     @NotNull
-    public Attribute attribute;
+    public SessionAttribute sessionAttribute;
 
-    public ExprSessionAttribute(@NotNull Attribute attribute) {
-        this.attribute = attribute;
+    public ExprSessionAttribute(@NotNull SessionAttribute sessionAttribute) {
+        this.sessionAttribute = sessionAttribute;
     }
 
     @Override
@@ -27,14 +27,5 @@ public class ExprSessionAttribute extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprSessionAttribute(this, ctx);
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
-    public enum Attribute {
-        CURRENT_USER,
-        CURRENT_DATE,
-        OTHER
     }
 }

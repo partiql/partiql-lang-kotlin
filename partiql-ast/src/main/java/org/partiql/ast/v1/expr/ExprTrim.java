@@ -20,12 +20,12 @@ public class ExprTrim extends Expr {
     public Expr chars;
 
     @Nullable
-    public Spec spec;
+    public TrimSpec trimSpec;
 
-    public ExprTrim(@NotNull Expr value, @Nullable Expr chars, @Nullable Spec spec) {
+    public ExprTrim(@NotNull Expr value, @Nullable Expr chars, @Nullable TrimSpec trimSpec) {
         this.value = value;
         this.chars = chars;
-        this.spec = spec;
+        this.trimSpec = trimSpec;
     }
 
     @Override
@@ -42,12 +42,5 @@ public class ExprTrim extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprTrim(this, ctx);
-    }
-
-    public enum Spec {
-            LEADING,
-            TRAILING,
-            BOTH,
-            OTHER
     }
 }

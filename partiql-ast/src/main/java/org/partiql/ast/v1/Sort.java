@@ -16,14 +16,14 @@ public class Sort extends AstNode {
     public Expr expr;
 
     @Nullable
-    public Dir dir;
+    public Order order;
 
     @Nullable
     public Nulls nulls;
 
-    public Sort(@NotNull Expr expr, @Nullable Dir dir, @Nullable Nulls nulls) {
+    public Sort(@NotNull Expr expr, @Nullable Order order, @Nullable Nulls nulls) {
         this.expr = expr;
-        this.dir = dir;
+        this.order = order;
         this.nulls = nulls;
     }
 
@@ -38,23 +38,5 @@ public class Sort extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitSort(this, ctx);
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
-    public enum Dir {
-        ASC,
-        DESC,
-        OTHER
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
-    public enum Nulls {
-        FIRST,
-        LAST,
-        OTHER
     }
 }

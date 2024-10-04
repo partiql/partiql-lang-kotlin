@@ -3,7 +3,7 @@ package org.partiql.ast.v1.expr;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
-import org.partiql.ast.v1.Identifier;
+import org.partiql.ast.v1.IdentifierChain;
 import org.partiql.ast.v1.SetQuantifier;
 
 import java.util.ArrayList;
@@ -14,11 +14,11 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 public class ExprCall extends Expr {
-    public Identifier function;
+    public IdentifierChain function;
     public List<Expr> args;
     public SetQuantifier setq;
 
-    public ExprCall(Identifier function, List<Expr> args, SetQuantifier setq) {
+    public ExprCall(IdentifierChain function, List<Expr> args, SetQuantifier setq) {
         this.function = function;
         this.args = args;
         this.setq = setq;

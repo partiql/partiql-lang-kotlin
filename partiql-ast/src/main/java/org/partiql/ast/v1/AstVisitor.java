@@ -2,14 +2,13 @@ package org.partiql.ast.v1;
 
 import org.partiql.ast.v1.expr.Expr;
 import org.partiql.ast.v1.expr.ExprAnd;
+import org.partiql.ast.v1.expr.ExprArray;
+import org.partiql.ast.v1.expr.ExprBag;
 import org.partiql.ast.v1.expr.ExprBetween;
 import org.partiql.ast.v1.expr.ExprCall;
 import org.partiql.ast.v1.expr.ExprCase;
 import org.partiql.ast.v1.expr.ExprCast;
 import org.partiql.ast.v1.expr.ExprCoalesce;
-import org.partiql.ast.v1.expr.ExprCollection;
-import org.partiql.ast.v1.expr.ExprDateAdd;
-import org.partiql.ast.v1.expr.ExprDateDiff;
 import org.partiql.ast.v1.expr.ExprExtract;
 import org.partiql.ast.v1.expr.ExprInCollection;
 import org.partiql.ast.v1.expr.ExprIsType;
@@ -23,7 +22,7 @@ import org.partiql.ast.v1.expr.ExprOr;
 import org.partiql.ast.v1.expr.ExprOverlay;
 import org.partiql.ast.v1.expr.ExprParameter;
 import org.partiql.ast.v1.expr.ExprPath;
-import org.partiql.ast.v1.expr.ExprPathStep;
+import org.partiql.ast.v1.expr.PathStep;
 import org.partiql.ast.v1.expr.ExprPosition;
 import org.partiql.ast.v1.expr.ExprQuerySet;
 import org.partiql.ast.v1.expr.ExprSessionAttribute;
@@ -40,42 +39,6 @@ import org.partiql.ast.v1.graph.GraphPart;
 import org.partiql.ast.v1.graph.GraphPattern;
 import org.partiql.ast.v1.graph.GraphQuantifier;
 import org.partiql.ast.v1.graph.GraphSelector;
-import org.partiql.ast.v1.type.Type;
-import org.partiql.ast.v1.type.TypeBag;
-import org.partiql.ast.v1.type.TypeBigint;
-import org.partiql.ast.v1.type.TypeBit;
-import org.partiql.ast.v1.type.TypeBitVarying;
-import org.partiql.ast.v1.type.TypeBlob;
-import org.partiql.ast.v1.type.TypeBool;
-import org.partiql.ast.v1.type.TypeChar;
-import org.partiql.ast.v1.type.TypeClob;
-import org.partiql.ast.v1.type.TypeUserDefined;
-import org.partiql.ast.v1.type.TypeDate;
-import org.partiql.ast.v1.type.TypeDecimal;
-import org.partiql.ast.v1.type.TypeDoublePrecision;
-import org.partiql.ast.v1.type.TypeFloat;
-import org.partiql.ast.v1.type.TypeInt;
-import org.partiql.ast.v1.type.TypeInt2;
-import org.partiql.ast.v1.type.TypeInt4;
-import org.partiql.ast.v1.type.TypeInt8;
-import org.partiql.ast.v1.type.TypeInterval;
-import org.partiql.ast.v1.type.TypeList;
-import org.partiql.ast.v1.type.TypeMissing;
-import org.partiql.ast.v1.type.TypeNull;
-import org.partiql.ast.v1.type.TypeNumeric;
-import org.partiql.ast.v1.type.TypeReal;
-import org.partiql.ast.v1.type.TypeSexp;
-import org.partiql.ast.v1.type.TypeSmallint;
-import org.partiql.ast.v1.type.TypeString;
-import org.partiql.ast.v1.type.TypeStruct;
-import org.partiql.ast.v1.type.TypeSymbol;
-import org.partiql.ast.v1.type.TypeTime;
-import org.partiql.ast.v1.type.TypeTimeWithTz;
-import org.partiql.ast.v1.type.TypeTimestamp;
-import org.partiql.ast.v1.type.TypeTimestampWithTz;
-import org.partiql.ast.v1.type.TypeTinyint;
-import org.partiql.ast.v1.type.TypeTuple;
-import org.partiql.ast.v1.type.TypeVarchar;
 
 public interface AstVisitor<R, C> {
     R visit(AstNode node, C ctx);
@@ -90,91 +53,9 @@ public interface AstVisitor<R, C> {
 
     R visitTargetDomain(Target.Domain node, C ctx);
 
-    R visitType(Type node, C ctx);
-
-    R visitTypeNull(TypeNull node, C ctx);
-
-    R visitTypeMissing(TypeMissing node, C ctx);
-
-    R visitTypeBool(TypeBool node, C ctx);
-
-    R visitTypeTinyint(TypeTinyint node, C ctx);
-
-    R visitTypeSmallint(TypeSmallint node, C ctx);
-
-    R visitTypeInt2(TypeInt2 node, C ctx);
-
-    R visitTypeInt4(TypeInt4 node, C ctx);
-
-    R visitTypeBigint(TypeBigint node, C ctx);
-
-    R visitTypeInt8(TypeInt8 node, C ctx);
-
-    R visitTypeInt(TypeInt node, C ctx);
-
-    R visitTypeReal(TypeReal node, C ctx);
-
-    R visitTypeFloat(TypeFloat node, C ctx);
-
-    R visitTypeDoublePrecision(TypeDoublePrecision node, C ctx);
-
-    R visitTypeDecimal(TypeDecimal node, C ctx);
-
-    R visitTypeNumeric(TypeNumeric node, C ctx);
-
-    R visitTypeChar(TypeChar node, C ctx);
-
-    R visitTypeVarchar(TypeVarchar node, C ctx);
-
-    R visitTypeString(TypeString node, C ctx);
-
-    R visitTypeSymbol(TypeSymbol node, C ctx);
-
-    R visitTypeBit(TypeBit node, C ctx);
-
-    R visitTypeBitVarying(TypeBitVarying node, C ctx);
-
-    R visitTypeBlob(TypeBlob node, C ctx);
-
-    R visitTypeClob(TypeClob node, C ctx);
-
-    R visitTypeDate(TypeDate node, C ctx);
-
-    R visitTypeTime(TypeTime node, C ctx);
-
-    R visitTypeTimeWithTz(TypeTimeWithTz node, C ctx);
-
-    R visitTypeTimestamp(TypeTimestamp node, C ctx);
-
-    R visitTypeTimestampWithTz(TypeTimestampWithTz node, C ctx);
-
-    R visitTypeInterval(TypeInterval node, C ctx);
-
-    R visitTypeBag(TypeBag node, C ctx);
-
-    R visitTypeList(TypeList node, C ctx);
-
-    R visitTypeSexp(TypeSexp node, C ctx);
-
-    R visitTypeTuple(TypeTuple node, C ctx);
-
-    R visitTypeStruct(TypeStruct node, C ctx);
-
-    R visitTypeUserDefined(TypeUserDefined node, C ctx);
-
     R visitIdentifier(Identifier node, C ctx);
 
-    R visitIdentifierSymbol(Identifier.Symbol node, C ctx);
-
-    R visitIdentifierQualified(Identifier.Qualified node, C ctx);
-
-    R visitPathLit(PathLit node, C ctx);
-
-    R visitPathLitStep(PathLitStep node, C ctx);
-
-    R visitPathLitStepSymbol(PathLitStep.Symbol node, C ctx);
-
-    R visitPathLitStepIndex(PathLitStep.Index node, C ctx);
+    R visitIdentifierChain(IdentifierChain node, C ctx);
 
     R visitExpr(Expr node, C ctx);
 
@@ -188,15 +69,15 @@ public interface AstVisitor<R, C> {
 
     R visitExprPath(ExprPath node, C ctx);
 
-    R visitExprPathStep(ExprPathStep node, C ctx);
+    R visitPathStep(PathStep node, C ctx);
 
-    R visitExprPathStepSymbol(ExprPathStep.Symbol node, C ctx);
+    R visitPathStepField(PathStep.Field node, C ctx);
 
-    R visitExprPathStepIndex(ExprPathStep.Index node, C ctx);
+    R visitPathStepElement(PathStep.Element node, C ctx);
 
-    R visitExprPathStepWildcard(ExprPathStep.Wildcard node, C ctx);
+    R visitPathStepAllElements(PathStep.AllElements node, C ctx);
 
-    R visitExprPathStepUnpivot(ExprPathStep.Unpivot node, C ctx);
+    R visitPathStepAllFields(PathStep.AllFields node, C ctx);
 
     R visitExprCall(ExprCall node, C ctx);
 
@@ -214,7 +95,9 @@ public interface AstVisitor<R, C> {
 
     R visitExprValuesRow(ExprValues.Row node, C ctx);
 
-    R visitExprCollection(ExprCollection node, C ctx);
+    R visitExprArray(ExprArray node, C ctx);
+
+    R visitExprBag(ExprBag node, C ctx);
 
     R visitExprStruct(ExprStruct node, C ctx);
 
@@ -247,10 +130,6 @@ public interface AstVisitor<R, C> {
     R visitExprExtract(ExprExtract node, C ctx);
 
     R visitExprCast(ExprCast node, C ctx);
-
-    R visitExprDateAdd(ExprDateAdd node, C ctx);
-
-    R visitExprDateDiff(ExprDateDiff node, C ctx);
 
     R visitExprQuerySet(ExprQuerySet node, C ctx);
 

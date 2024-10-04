@@ -1,6 +1,7 @@
 package org.partiql.ast.v1.expr;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
 
@@ -15,12 +16,12 @@ public class ExprPath extends Expr {
     @NotNull
     public Expr root;
 
-    @NotNull
-    public List<ExprPathStep> steps;
+    @Nullable
+    public PathStep next;
 
-    public ExprPath(@NotNull Expr root, @NotNull List<ExprPathStep> steps) {
+    public ExprPath(@NotNull Expr root, @Nullable PathStep next) {
         this.root = root;
-        this.steps = steps;
+        this.next = next;
     }
 
     @Override
@@ -28,7 +29,9 @@ public class ExprPath extends Expr {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(root);
-        kids.addAll(steps);
+        if (next != null) {
+            kids.add(next);
+        }
         return kids;
     }
 

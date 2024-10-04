@@ -1,7 +1,6 @@
 package org.partiql.ast.v1.expr;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
 

@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class ExprWindow extends Expr {
     @NotNull
-    public Function function;
+    public WindowFunction windowFunction;
 
     @NotNull
     public Expr expression;
@@ -29,8 +29,8 @@ public class ExprWindow extends Expr {
     @NotNull
     public Over over;
 
-    public ExprWindow(@NotNull Function function, @NotNull Expr expression, @Nullable Expr offset, @Nullable Expr defaultValue, @NotNull Over over) {
-        this.function = function;
+    public ExprWindow(@NotNull WindowFunction windowFunction, @NotNull Expr expression, @Nullable Expr offset, @Nullable Expr defaultValue, @NotNull Over over) {
+        this.windowFunction = windowFunction;
         this.expression = expression;
         this.offset = offset;
         this.defaultValue = defaultValue;
@@ -55,15 +55,6 @@ public class ExprWindow extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprWindow(this, ctx);
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
-    public enum Function {
-            LAG,
-            LEAD,
-            OTHER
     }
 
     /**

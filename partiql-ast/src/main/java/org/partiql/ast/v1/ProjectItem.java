@@ -56,9 +56,9 @@ public abstract class ProjectItem extends AstNode {
         public Expr expr;
 
         @Nullable
-        public Identifier.Symbol asAlias;
+        public Identifier asAlias;
 
-        public Expression(@NotNull Expr expr, @Nullable Identifier.Symbol asAlias) {
+        public Expression(@NotNull Expr expr, @Nullable Identifier asAlias) {
         this.expr = expr;
         this.asAlias = asAlias;
     }

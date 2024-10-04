@@ -23,7 +23,7 @@ public class ExprBetween extends Expr {
 
     public final boolean not;
 
-    public ExprBetween(@NotNull Expr value, @NotNull Expr from, @NotNull Expr to, @NotNull boolean not) {
+    public ExprBetween(@NotNull Expr value, @NotNull Expr from, @NotNull Expr to, boolean not) {
         this.value = value;
         this.from = from;
         this.to = to;

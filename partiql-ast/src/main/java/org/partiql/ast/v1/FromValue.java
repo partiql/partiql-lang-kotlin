@@ -16,29 +16,30 @@ public class FromValue extends From {
     public Expr expr;
 
     @NotNull
-    public Type type;
+    public FromType fromType;
 
     @Nullable
-    public Identifier.Symbol asAlias;
+    public Identifier asAlias;
 
     @Nullable
-    public Identifier.Symbol atAlias;
+    public Identifier atAlias;
 
     /**
      * TODO get rid of `BY`
      */
     @Nullable
-    public Identifier.Symbol byAlias;
+    public Identifier byAlias;
 
-    public FromValue(@NotNull Expr expr, @NotNull Type type, @Nullable Identifier.Symbol asAlias,
-    @Nullable Identifier.Symbol atAlias, @Nullable Identifier.Symbol byAlias) {
+    public FromValue(@NotNull Expr expr, @NotNull FromType fromType, @Nullable Identifier asAlias,
+    @Nullable Identifier atAlias, @Nullable Identifier byAlias) {
         this.expr = expr;
-        this.type = type;
+        this.fromType = fromType;
         this.asAlias = asAlias;
         this.atAlias = atAlias;
         this.byAlias = byAlias;
     }
 
+    @NotNull
     @Override
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
@@ -52,14 +53,5 @@ public class FromValue extends From {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitFromValue(this, ctx);
-    }
-
-    /**
-     * TODO docs, equals, hashcode
-     */
-    public enum Type {
-        SCAN,
-        UNPIVOT,
-        OTHER
     }
 }
