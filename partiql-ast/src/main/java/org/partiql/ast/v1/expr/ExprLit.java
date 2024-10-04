@@ -13,7 +13,7 @@ import java.util.Collections;
  */
 public class ExprLit extends Expr {
     @NotNull
-    public PartiQLValue value;
+    public PartiQLValue value; // This representation be changed in https://github.com/partiql/partiql-lang-kotlin/issues/1589
 
     public ExprLit(@NotNull PartiQLValue value) {
         this.value = value;

@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 public abstract class From extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        if (this instanceof FromValue) {
-            return visitor.visitFromValue((FromValue) this, ctx);
+        if (this instanceof FromExpr) {
+            return visitor.visitFromExpr((FromExpr) this, ctx);
         } else if (this instanceof FromJoin) {
             return visitor.visitFromJoin((FromJoin) this, ctx);
         } else {

@@ -5597,8 +5597,8 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitExprWindow (Lorg/partiql/ast/v1/expr/ExprWindow;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExprWindowOver (Lorg/partiql/ast/v1/expr/ExprWindow$Over;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitFrom (Lorg/partiql/ast/v1/From;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitFromExpr (Lorg/partiql/ast/v1/FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitFromJoin (Lorg/partiql/ast/v1/FromJoin;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitFromValue (Lorg/partiql/ast/v1/FromValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitGraphLabel (Lorg/partiql/ast/v1/graph/GraphLabel;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitGraphLabelConj (Lorg/partiql/ast/v1/graph/GraphLabel$Conj;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitGraphLabelDisj (Lorg/partiql/ast/v1/graph/GraphLabel$Disj;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5633,7 +5633,7 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitPathStepField (Lorg/partiql/ast/v1/expr/PathStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitProjectItem (Lorg/partiql/ast/v1/ProjectItem;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitProjectItemAll (Lorg/partiql/ast/v1/ProjectItem$All;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitProjectItemExpression (Lorg/partiql/ast/v1/ProjectItem$Expression;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitProjectItemExpr (Lorg/partiql/ast/v1/ProjectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitQuery (Lorg/partiql/ast/v1/Query;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitQueryBody (Lorg/partiql/ast/v1/QueryBody;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitQueryBodySFW (Lorg/partiql/ast/v1/QueryBody$SFW;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5646,13 +5646,12 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitSetOp (Lorg/partiql/ast/v1/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSort (Lorg/partiql/ast/v1/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatement (Lorg/partiql/ast/v1/Statement;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTarget (Lorg/partiql/ast/v1/Target;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTargetDomain (Lorg/partiql/ast/v1/Target$Domain;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static final field BAG I
 	public static final field BIGINT I
+	public static final field BINARY_LARGE_OBJECT I
 	public static final field BIT I
 	public static final field BIT_VARYING I
 	public static final field BLOB I
@@ -5660,7 +5659,10 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static final field BOOLEAN I
 	public static final field CHAR I
 	public static final field CHARACTER I
+	public static final field CHARACTER_LARGE_OBJECT I
 	public static final field CHARACTER_VARYING I
+	public static final field CHAR_LARGE_OBJECT I
+	public static final field CHAR_VARYING I
 	public static final field CLOB I
 	public static final field DATE I
 	public static final field DEC I
@@ -5697,6 +5699,8 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static final field VARCHAR I
 	public static fun BAG ()Lorg/partiql/ast/v1/DataType;
 	public static fun BIGINT ()Lorg/partiql/ast/v1/DataType;
+	public static fun BINARY_LARGE_OBJECT ()Lorg/partiql/ast/v1/DataType;
+	public static fun BINARY_LARGE_OBJECT (I)Lorg/partiql/ast/v1/DataType;
 	public static fun BIT ()Lorg/partiql/ast/v1/DataType;
 	public static fun BIT (I)Lorg/partiql/ast/v1/DataType;
 	public static fun BIT_VARYING ()Lorg/partiql/ast/v1/DataType;
@@ -5709,8 +5713,14 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static fun CHAR (I)Lorg/partiql/ast/v1/DataType;
 	public static fun CHARACTER ()Lorg/partiql/ast/v1/DataType;
 	public static fun CHARACTER (I)Lorg/partiql/ast/v1/DataType;
+	public static fun CHARACTER_LARGE_OBJECT ()Lorg/partiql/ast/v1/DataType;
+	public static fun CHARACTER_LARGE_OBJECT (I)Lorg/partiql/ast/v1/DataType;
 	public static fun CHARACTER_VARYING ()Lorg/partiql/ast/v1/DataType;
 	public static fun CHARACTER_VARYING (I)Lorg/partiql/ast/v1/DataType;
+	public static fun CHAR_LARGE_OBJECT ()Lorg/partiql/ast/v1/DataType;
+	public static fun CHAR_LARGE_OBJECT (I)Lorg/partiql/ast/v1/DataType;
+	public static fun CHAR_VARYING ()Lorg/partiql/ast/v1/DataType;
+	public static fun CHAR_VARYING (I)Lorg/partiql/ast/v1/DataType;
 	public static fun CLOB ()Lorg/partiql/ast/v1/DataType;
 	public static fun CLOB (I)Lorg/partiql/ast/v1/DataType;
 	public static fun DATE ()Lorg/partiql/ast/v1/DataType;
@@ -5720,6 +5730,7 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static fun DECIMAL (II)Lorg/partiql/ast/v1/DataType;
 	public static fun DOUBLE_PRECISION ()Lorg/partiql/ast/v1/DataType;
 	public static fun FLOAT ()Lorg/partiql/ast/v1/DataType;
+	public static fun FLOAT (I)Lorg/partiql/ast/v1/DataType;
 	public static fun INT ()Lorg/partiql/ast/v1/DataType;
 	public static fun INT2 ()Lorg/partiql/ast/v1/DataType;
 	public static fun INT4 ()Lorg/partiql/ast/v1/DataType;
@@ -5753,7 +5764,7 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static fun TINYINT ()Lorg/partiql/ast/v1/DataType;
 	public static fun TUPLE ()Lorg/partiql/ast/v1/DataType;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/DataType;
-	public static fun USER_DEFINED ()Lorg/partiql/ast/v1/DataType;
+	public static fun USER_DEFINED (Lorg/partiql/ast/v1/IdentifierChain;)Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR ()Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR (I)Lorg/partiql/ast/v1/DataType;
 	public fun code ()I
@@ -5831,8 +5842,9 @@ public class org/partiql/ast/v1/ExcludeStep$StructWildcard : org/partiql/ast/v1/
 }
 
 public class org/partiql/ast/v1/Explain : org/partiql/ast/v1/Statement {
-	public field target Lorg/partiql/ast/v1/Target;
-	public fun <init> (Lorg/partiql/ast/v1/Target;)V
+	public field options Ljava/util/Map;
+	public field statement Lorg/partiql/ast/v1/Statement;
+	public fun <init> (Ljava/util/Map;Lorg/partiql/ast/v1/Statement;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
@@ -5840,6 +5852,17 @@ public class org/partiql/ast/v1/Explain : org/partiql/ast/v1/Statement {
 public abstract class org/partiql/ast/v1/From : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public class org/partiql/ast/v1/FromExpr : org/partiql/ast/v1/From {
+	public field asAlias Lorg/partiql/ast/v1/Identifier;
+	public field atAlias Lorg/partiql/ast/v1/Identifier;
+	public field byAlias Lorg/partiql/ast/v1/Identifier;
+	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public field fromType Lorg/partiql/ast/v1/FromType;
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/FromJoin : org/partiql/ast/v1/From {
@@ -5860,17 +5883,6 @@ public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/Enum {
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/FromType;
 	public static fun UNPIVOT ()Lorg/partiql/ast/v1/FromType;
 	public fun code ()I
-}
-
-public class org/partiql/ast/v1/FromValue : org/partiql/ast/v1/From {
-	public field asAlias Lorg/partiql/ast/v1/Identifier;
-	public field atAlias Lorg/partiql/ast/v1/Identifier;
-	public field byAlias Lorg/partiql/ast/v1/Identifier;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public field fromType Lorg/partiql/ast/v1/FromType;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/GroupBy : org/partiql/ast/v1/AstNode {
@@ -5994,7 +6006,7 @@ public class org/partiql/ast/v1/ProjectItem$All : org/partiql/ast/v1/ProjectItem
 	public fun children ()Ljava/util/Collection;
 }
 
-public class org/partiql/ast/v1/ProjectItem$Expression : org/partiql/ast/v1/ProjectItem {
+public class org/partiql/ast/v1/ProjectItem$Expr : org/partiql/ast/v1/ProjectItem {
 	public field asAlias Lorg/partiql/ast/v1/Identifier;
 	public field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
@@ -6110,20 +6122,6 @@ public class org/partiql/ast/v1/Sort : org/partiql/ast/v1/AstNode {
 public abstract class org/partiql/ast/v1/Statement : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public abstract class org/partiql/ast/v1/Target : org/partiql/ast/v1/AstNode {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public class org/partiql/ast/v1/Target$Domain : org/partiql/ast/v1/Target {
-	public field format Ljava/lang/String;
-	public field statement Lorg/partiql/ast/v1/Statement;
-	public field type Ljava/lang/String;
-	public fun <init> (Lorg/partiql/ast/v1/Statement;Ljava/lang/String;Ljava/lang/String;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
 }
 
 public abstract class org/partiql/ast/v1/expr/Expr : org/partiql/ast/v1/AstNode {

@@ -49,10 +49,6 @@ public interface AstVisitor<R, C> {
 
     R visitExplain(Explain node, C ctx);
 
-    R visitTarget(Target node, C ctx);
-
-    R visitTargetDomain(Target.Domain node, C ctx);
-
     R visitIdentifier(Identifier node, C ctx);
 
     R visitIdentifierChain(IdentifierChain node, C ctx);
@@ -155,7 +151,7 @@ public interface AstVisitor<R, C> {
 
     R visitProjectItemAll(ProjectItem.All node, C ctx);
 
-    R visitProjectItemExpression(ProjectItem.Expression node, C ctx);
+    R visitProjectItemExpr(ProjectItem.Expr node, C ctx);
 
     R visitSelectPivot(SelectPivot node, C ctx);
 
@@ -177,7 +173,7 @@ public interface AstVisitor<R, C> {
 
     R visitFrom(From node, C ctx);
 
-    R visitFromValue(FromValue node, C ctx);
+    R visitFromExpr(FromExpr node, C ctx);
 
     R visitFromJoin(FromJoin node, C ctx);
 

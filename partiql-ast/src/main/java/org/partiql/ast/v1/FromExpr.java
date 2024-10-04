@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-public class FromValue extends From {
+public class FromExpr extends From {
     @NotNull
     public Expr expr;
 
@@ -30,8 +30,8 @@ public class FromValue extends From {
     @Nullable
     public Identifier byAlias;
 
-    public FromValue(@NotNull Expr expr, @NotNull FromType fromType, @Nullable Identifier asAlias,
-    @Nullable Identifier atAlias, @Nullable Identifier byAlias) {
+    public FromExpr(@NotNull Expr expr, @NotNull FromType fromType, @Nullable Identifier asAlias,
+                    @Nullable Identifier atAlias, @Nullable Identifier byAlias) {
         this.expr = expr;
         this.fromType = fromType;
         this.asAlias = asAlias;
@@ -52,6 +52,6 @@ public class FromValue extends From {
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitFromValue(this, ctx);
+        return visitor.visitFromExpr(this, ctx);
     }
 }

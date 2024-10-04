@@ -2,49 +2,65 @@ package org.partiql.ast.v1;
 
 public class DataType implements Enum {
     public static final int UNKNOWN = 0;
+    // <absent types>
     public static final int NULL = 1;
     public static final int MISSING = 2;
-    public static final int BOOL = 3;
-    public static final int BOOLEAN = 4;
-    public static final int TINYINT = 5; // TODO not defined in parser yet
-    public static final int SMALLINT = 6;
-    public static final int INTEGER2 = 7;
-    public static final int INT2 = 8;
-    public static final int INTEGER = 9;
-    public static final int INT = 10;
-    public static final int INTEGER4 = 11;
-    public static final int INT4 = 12;
-    public static final int INTEGER8 = 13;
-    public static final int INT8 = 14;
-    public static final int BIGINT = 15;
-    public static final int REAL = 16;
-    public static final int DOUBLE_PRECISION = 17;
-    public static final int FLOAT = 18;
-    public static final int DECIMAL = 19;
-    public static final int DEC = 20;
-    public static final int NUMERIC = 21;
-    public static final int BIT = 22; // TODO not defined in parser yet
-    public static final int BIT_VARYING = 23; // TODO not defined in parser yet
-    public static final int CHAR = 24;
-    public static final int CHARACTER = 25;
-    public static final int VARCHAR = 26;
-    public static final int CHARACTER_VARYING = 27;
-    public static final int STRING = 28;
-    public static final int SYMBOL = 29;
-    public static final int BLOB = 30;
-    public static final int CLOB = 31;
-    public static final int DATE = 32;
-    public static final int STRUCT = 33;
-    public static final int TUPLE = 34;
-    public static final int LIST = 35;
-    public static final int SEXP = 36;
-    public static final int BAG = 37;
-    public static final int TIME = 38;
+    // <character string type>
+    public static final int CHARACTER = 3;
+    public static final int CHAR = 4;
+    public static final int CHARACTER_VARYING = 5;
+    public static final int CHAR_VARYING = 6; // TODO not defined in parser yet
+    public static final int VARCHAR = 7;
+    public static final int CHARACTER_LARGE_OBJECT = 8; // TODO not defined in parser yet
+    public static final int CHAR_LARGE_OBJECT = 9; // TODO not defined in parser yet
+    public static final int CLOB = 10;
+    public static final int STRING = 11;
+    public static final int SYMBOL = 12;
+    // <binary large object string type>
+    public static final int BLOB = 13;
+    public static final int BINARY_LARGE_OBJECT = 14; // TODO not defined in parser yet
+    // <bit string type>
+    public static final int BIT = 15; // TODO not defined in parser yet
+    public static final int BIT_VARYING = 16; // TODO not defined in parser yet
+    // <numeric type> - <exact numeric type>
+    public static final int NUMERIC = 17;
+    public static final int DECIMAL = 18;
+    public static final int DEC = 19;
+    public static final int BIGINT = 20;
+    public static final int INT8 = 21;
+    public static final int INTEGER8 = 22;
+    public static final int INT4 = 23;
+    public static final int INTEGER4 = 24;
+    public static final int INTEGER = 25;
+    public static final int INT = 26;
+    public static final int INT2 = 27;
+    public static final int INTEGER2 = 28;
+    public static final int SMALLINT = 29;
+    public static final int TINYINT = 30; // TODO not defined in parser yet
+    // <numeric type> - <approximate numeric type>
+    public static final int FLOAT = 31;
+    public static final int REAL = 32;
+    public static final int DOUBLE_PRECISION = 33;
+    // <boolean type>
+    public static final int BOOLEAN = 34;
+    public static final int BOOL = 35;
+    // <datetime type>
+    public static final int DATE = 36;
+    public static final int TIME = 37;
+    public static final int TIME_WITH_TIME_ZONE = 38;
     public static final int TIMESTAMP = 39;
-    public static final int TIME_WITH_TIME_ZONE = 40;
-    public static final int TIMESTAMP_WITH_TIME_ZONE = 41;
-    public static final int INTERVAL = 42; // TODO not defined in parser yet
-    public static final int USER_DEFINED = 43;
+    public static final int TIMESTAMP_WITH_TIME_ZONE = 40;
+    // <interval type>
+    public static final int INTERVAL = 41; // TODO not defined in parser yet
+    // <container type>
+    public static final int STRUCT = 42;
+    public static final int TUPLE = 43;
+    // <collection type>
+    public static final int LIST = 44;
+    public static final int BAG = 45;
+    public static final int SEXP = 46;
+    // <user defined type>
+    public static final int USER_DEFINED = 47;
 
     public static DataType UNKNOWN() {
         return new DataType(UNKNOWN);
@@ -122,6 +138,10 @@ public class DataType implements Enum {
         return new DataType(FLOAT);
     }
 
+    public static DataType FLOAT(int precision) {
+        return new DataType(FLOAT, precision, null, null);
+    }
+
     public static DataType DECIMAL() {
         return new DataType(DECIMAL);
     }
@@ -190,8 +210,32 @@ public class DataType implements Enum {
         return new DataType(VARCHAR, null, null, length);
     }
 
+    public static DataType CHARACTER_LARGE_OBJECT() {
+        return new DataType(CHARACTER_LARGE_OBJECT);
+    }
+
+    public static DataType CHARACTER_LARGE_OBJECT(int length) {
+        return new DataType(CHARACTER_LARGE_OBJECT, null, null, length);
+    }
+
+    public static DataType CHAR_LARGE_OBJECT() {
+        return new DataType(CHAR_LARGE_OBJECT);
+    }
+
+    public static DataType CHAR_LARGE_OBJECT(int length) {
+        return new DataType(CHAR_LARGE_OBJECT, null, null, length);
+    }
+
     public static DataType CHARACTER_VARYING() {
         return new DataType(CHARACTER_VARYING);
+    }
+
+    public static DataType CHAR_VARYING() {
+        return new DataType(CHAR_VARYING);
+    }
+
+    public static DataType CHAR_VARYING(int length) {
+        return new DataType(CHAR_VARYING, null, null, length);
     }
 
     public static DataType CHARACTER_VARYING(int length) {
@@ -216,6 +260,14 @@ public class DataType implements Enum {
 
     public static DataType BLOB(int length) {
         return new DataType(BLOB, null, null, length);
+    }
+
+    public static DataType BINARY_LARGE_OBJECT() {
+        return new DataType(BINARY_LARGE_OBJECT);
+    }
+
+    public static DataType BINARY_LARGE_OBJECT(int length) {
+        return new DataType(BINARY_LARGE_OBJECT, null, null, length);
     }
 
     public static DataType CLOB() {
@@ -286,14 +338,15 @@ public class DataType implements Enum {
         return new DataType(INTERVAL);
     }
 
-    public static DataType USER_DEFINED() {
-        return new DataType(USER_DEFINED);
+    public static DataType USER_DEFINED(IdentifierChain name) {
+        return new DataType(USER_DEFINED, name);
     }
 
     private final int code;
     private final Integer precision;
     private final Integer scale;
     private final Integer length;
+    private final IdentifierChain name;
 
     // Private constructor for no parameter DataTypes
     private DataType(int code) {
@@ -301,14 +354,25 @@ public class DataType implements Enum {
         this.precision = null;
         this.scale = null;
         this.length = null;
+        this.name = null;
     }
 
-    // Private constructor for DataTypes with parameters
+    // Private constructor for DataTypes with Integer parameters; set `name` to null
     private DataType(int code, Integer precision, Integer scale, Integer length) {
         this.code = code;
         this.precision = precision;
         this.scale = scale;
         this.length = length;
+        this.name = null;
+    }
+
+    // Private constructor for user-defined type w/ an `IdentifierChain` `name`; other parameters set to null
+    private DataType(int code, IdentifierChain name) {
+        this.code = code;
+        this.name = name;
+        this.precision = null;
+        this.scale = null;
+        this.length = null;
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.util.Random;
 
 /**
  * TODO docs, equals, hashcode
+ * TODO support source location -- https://github.com/partiql/partiql-lang-kotlin/issues/1608
  */
 public abstract class AstNode {
     @NotNull

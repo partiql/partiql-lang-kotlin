@@ -2,7 +2,6 @@ package org.partiql.ast.v1;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.ast.v1.expr.Expr;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,8 +15,8 @@ public abstract class ProjectItem extends AstNode {
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         if (this instanceof All) {
             return visitor.visitProjectItemAll((All) this, ctx);
-        } else if (this instanceof Expression) {
-            return visitor.visitProjectItemExpression((Expression) this, ctx);
+        } else if (this instanceof Expr) {
+            return visitor.visitProjectItemExpr((Expr) this, ctx);
         } else {
             throw new IllegalStateException("Unexpected value: " + this);
         }
@@ -28,9 +27,9 @@ public abstract class ProjectItem extends AstNode {
      */
     public static class All extends ProjectItem {
         @NotNull
-        public Expr expr;
+        public org.partiql.ast.v1.expr.Expr expr;
 
-        public All(@NotNull Expr expr) {
+        public All(@NotNull org.partiql.ast.v1.expr.Expr expr) {
             this.expr = expr;
         }
 
@@ -51,17 +50,17 @@ public abstract class ProjectItem extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    public static class Expression extends ProjectItem {
+    public static class Expr extends ProjectItem {
         @NotNull
-        public Expr expr;
+        public org.partiql.ast.v1.expr.Expr expr;
 
         @Nullable
         public Identifier asAlias;
 
-        public Expression(@NotNull Expr expr, @Nullable Identifier asAlias) {
-        this.expr = expr;
-        this.asAlias = asAlias;
-    }
+        public Expr(@NotNull org.partiql.ast.v1.expr.Expr expr, @Nullable Identifier asAlias) {
+            this.expr = expr;
+            this.asAlias = asAlias;
+        }
 
         @NotNull
         @Override
@@ -76,7 +75,7 @@ public abstract class ProjectItem extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitProjectItemExpression(this, ctx);
+            return visitor.visitProjectItemExpr(this, ctx);
         }
     }
 }
