@@ -173,7 +173,7 @@ internal class SqlCompiler(
 
         override fun visitExclude(rel: RelExclude, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
-            val paths = rel.getPaths()
+            val paths = rel.getExclusions()
             return RelOpExclude(input, paths)
         }
 

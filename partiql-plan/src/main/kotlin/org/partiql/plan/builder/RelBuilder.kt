@@ -2,7 +2,7 @@ package org.partiql.plan.builder
 
 import org.partiql.plan.AggregateCall
 import org.partiql.plan.Collation
-import org.partiql.plan.ExcludePath
+import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
 import org.partiql.plan.rel.Rel
 
@@ -89,9 +89,9 @@ public class RelBuilder private constructor(builder: Builder) {
     /**
      * Appends a RelExclude to the current operator builder.
      */
-    public fun exclude(paths: List<ExcludePath>): RelBuilder = RelBuilder {
+    public fun exclude(exclusions: List<Exclusion>): RelBuilder = RelBuilder {
         val _input = self.build(it)
-        it.relExclude(_input, paths)
+        it.relExclude(_input, exclusions)
     }
 
     /**
