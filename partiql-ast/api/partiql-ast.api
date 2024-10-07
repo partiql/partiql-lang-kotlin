@@ -6138,24 +6138,24 @@ public class org/partiql/ast/v1/expr/ExprAnd : org/partiql/ast/v1/expr/Expr {
 }
 
 public class org/partiql/ast/v1/expr/ExprArray : org/partiql/ast/v1/expr/Expr {
-	public final field values Ljava/util/List;
+	public field values Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/expr/ExprBag : org/partiql/ast/v1/expr/Expr {
-	public final field values Ljava/util/List;
+	public field values Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/expr/ExprBetween : org/partiql/ast/v1/expr/Expr {
-	public final field from Lorg/partiql/ast/v1/expr/Expr;
-	public final field not Z
-	public final field to Lorg/partiql/ast/v1/expr/Expr;
-	public final field value Lorg/partiql/ast/v1/expr/Expr;
+	public field from Lorg/partiql/ast/v1/expr/Expr;
+	public field not Z
+	public field to Lorg/partiql/ast/v1/expr/Expr;
+	public field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
@@ -6171,32 +6171,32 @@ public class org/partiql/ast/v1/expr/ExprCall : org/partiql/ast/v1/expr/Expr {
 }
 
 public class org/partiql/ast/v1/expr/ExprCase : org/partiql/ast/v1/expr/Expr {
-	public final field branches Ljava/util/List;
-	public final field defaultExpr Lorg/partiql/ast/v1/expr/Expr;
-	public final field expr Lorg/partiql/ast/v1/expr/Expr;
+	public field branches Ljava/util/List;
+	public field defaultExpr Lorg/partiql/ast/v1/expr/Expr;
+	public field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Ljava/util/List;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/expr/ExprCase$Branch : org/partiql/ast/v1/AstNode {
-	public final field condition Lorg/partiql/ast/v1/expr/Expr;
-	public final field expr Lorg/partiql/ast/v1/expr/Expr;
+	public field condition Lorg/partiql/ast/v1/expr/Expr;
+	public field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/expr/ExprCast : org/partiql/ast/v1/expr/Expr {
-	public final field asType Lorg/partiql/ast/v1/DataType;
-	public final field value Lorg/partiql/ast/v1/expr/Expr;
+	public field asType Lorg/partiql/ast/v1/DataType;
+	public field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/expr/ExprCoalesce : org/partiql/ast/v1/expr/Expr {
-	public final field args Ljava/util/List;
+	public field args Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;

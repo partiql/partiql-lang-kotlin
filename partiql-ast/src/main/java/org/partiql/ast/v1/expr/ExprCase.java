@@ -14,13 +14,13 @@ import java.util.List;
  */
 public class ExprCase extends Expr {
     @Nullable
-    public final Expr expr;
+    public Expr expr;
 
     @NotNull
-    public final List<Branch> branches;
+    public List<Branch> branches;
 
     @Nullable
-    public final Expr defaultExpr;
+    public Expr defaultExpr;
 
     public ExprCase(@Nullable Expr expr, @NotNull List<Branch> branches, @Nullable Expr defaultExpr) {
         this.expr = expr;
@@ -52,10 +52,10 @@ public class ExprCase extends Expr {
      */
     public static class Branch extends AstNode {
         @NotNull
-        public final Expr condition;
+        public Expr condition;
 
         @NotNull
-        public final Expr expr;
+        public Expr expr;
 
         public Branch(@NotNull Expr condition, @NotNull Expr expr) {
         this.condition = condition;

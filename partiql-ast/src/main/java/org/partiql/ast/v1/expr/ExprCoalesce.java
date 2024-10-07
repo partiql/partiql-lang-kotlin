@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class ExprCoalesce extends Expr {
     @NotNull
-    public final List<Expr> args;
+    public List<Expr> args;
 
     public ExprCoalesce(@NotNull List<Expr> args) {
         this.args = args;

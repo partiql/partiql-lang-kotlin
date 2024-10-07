@@ -13,15 +13,15 @@ import java.util.List;
  */
 public class ExprBetween extends Expr {
     @NotNull
-    public final Expr value;
+    public Expr value;
 
     @NotNull
-    public final Expr from;
+    public Expr from;
 
     @NotNull
-    public final Expr to;
+    public Expr to;
 
-    public final boolean not;
+    public boolean not;
 
     public ExprBetween(@NotNull Expr value, @NotNull Expr from, @NotNull Expr to, boolean not) {
         this.value = value;

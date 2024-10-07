@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class ExprBag extends Expr {
     @NotNull
-    public final List<Expr> values;
+    public List<Expr> values;
 
     public ExprBag(@NotNull List<Expr> values) {
         this.values = values;

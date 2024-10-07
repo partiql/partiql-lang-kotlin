@@ -14,10 +14,10 @@ import java.util.List;
  */
 public class ExprCast extends Expr {
     @NotNull
-    public final Expr value;
+    public Expr value;
 
     @NotNull
-    public final DataType asType;
+    public DataType asType;
 
     public ExprCast(@NotNull Expr value, @NotNull DataType asType) {
         this.value = value;
