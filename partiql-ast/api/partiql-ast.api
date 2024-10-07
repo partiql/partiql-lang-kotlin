@@ -5646,6 +5646,7 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitSetOp (Lorg/partiql/ast/v1/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSort (Lorg/partiql/ast/v1/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatement (Lorg/partiql/ast/v1/Statement;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTableRef (Lorg/partiql/ast/v1/FromTableRef;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
@@ -5768,6 +5769,10 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static fun VARCHAR ()Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR (I)Lorg/partiql/ast/v1/DataType;
 	public fun code ()I
+	public fun getLength ()Ljava/lang/Integer;
+	public fun getName ()Lorg/partiql/ast/v1/IdentifierChain;
+	public fun getPrecision ()Ljava/lang/Integer;
+	public fun getScale ()Ljava/lang/Integer;
 }
 
 public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/Enum {
@@ -5849,23 +5854,24 @@ public class org/partiql/ast/v1/Explain : org/partiql/ast/v1/Statement {
 	public fun children ()Ljava/util/Collection;
 }
 
-public abstract class org/partiql/ast/v1/From : org/partiql/ast/v1/AstNode {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public class org/partiql/ast/v1/FromExpr : org/partiql/ast/v1/From {
-	public field asAlias Lorg/partiql/ast/v1/Identifier;
-	public field atAlias Lorg/partiql/ast/v1/Identifier;
-	public field byAlias Lorg/partiql/ast/v1/Identifier;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public field fromType Lorg/partiql/ast/v1/FromType;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)V
+public class org/partiql/ast/v1/From : org/partiql/ast/v1/AstNode {
+	public field tableRefs Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
-public class org/partiql/ast/v1/FromJoin : org/partiql/ast/v1/From {
+public class org/partiql/ast/v1/FromExpr : org/partiql/ast/v1/FromTableRef {
+	public field asAlias Lorg/partiql/ast/v1/Identifier;
+	public field atAlias Lorg/partiql/ast/v1/Identifier;
+	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public field fromType Lorg/partiql/ast/v1/FromType;
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/FromJoin : org/partiql/ast/v1/FromTableRef {
 	public field condition Lorg/partiql/ast/v1/expr/Expr;
 	public field joinType Lorg/partiql/ast/v1/JoinType;
 	public field lhs Lorg/partiql/ast/v1/From;
@@ -5873,6 +5879,11 @@ public class org/partiql/ast/v1/FromJoin : org/partiql/ast/v1/From {
 	public fun <init> (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
+}
+
+public abstract class org/partiql/ast/v1/FromTableRef : org/partiql/ast/v1/AstNode {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/Enum {
@@ -5929,7 +5940,6 @@ public class org/partiql/ast/v1/IdentifierChain : org/partiql/ast/v1/AstNode {
 }
 
 public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
-	public static final field COMMA I
 	public static final field CROSS I
 	public static final field FULL I
 	public static final field FULL_OUTER I
@@ -5939,7 +5949,6 @@ public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
 	public static final field RIGHT I
 	public static final field RIGHT_OUTER I
 	public static final field UNKNOWN I
-	public static fun COMMA ()Lorg/partiql/ast/v1/JoinType;
 	public static fun CROSS ()Lorg/partiql/ast/v1/JoinType;
 	public static fun FULL ()Lorg/partiql/ast/v1/JoinType;
 	public static fun FULL_OUTER ()Lorg/partiql/ast/v1/JoinType;

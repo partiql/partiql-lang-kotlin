@@ -2,18 +2,29 @@ package org.partiql.ast.v1;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * TODO docs, equals, hashcode
  */
-public abstract class From extends AstNode {
+public class From extends AstNode {
+    @NotNull
+    public List<FromTableRef> tableRefs;
+
+    public From(@NotNull List<FromTableRef> tableRefs) {
+        this.tableRefs = tableRefs;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return new ArrayList<>(tableRefs);
+    }
+
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        if (this instanceof FromExpr) {
-            return visitor.visitFromExpr((FromExpr) this, ctx);
-        } else if (this instanceof FromJoin) {
-            return visitor.visitFromJoin((FromJoin) this, ctx);
-        } else {
-            throw new IllegalStateException("Unexpected value: " + this);
-        }
+        return visitor.visitFrom(this, ctx);
     }
 }

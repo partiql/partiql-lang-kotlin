@@ -379,4 +379,36 @@ public class DataType implements Enum {
     public int code() {
         return code;
     }
+
+    /**
+     * TODO docs
+     * @return
+     */
+    public Integer getPrecision() {
+        return precision;
+    }
+
+    /**
+     * TODO docs
+     * @return
+     */
+    public Integer getScale() {
+        return scale;
+    }
+
+    /**
+     * TODO docs
+     * @return
+     */
+    public Integer getLength() {
+        return length;
+    }
+
+    /**
+     * TODO docs
+     * @return
+     */
+    public IdentifierChain getName() {
+        return name;
+    }
 }

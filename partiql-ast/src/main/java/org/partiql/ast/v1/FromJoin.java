@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-public class FromJoin extends From {
+public class FromJoin extends FromTableRef {
     @NotNull
     public From lhs;
 

@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-public class FromExpr extends From {
+public class FromExpr extends FromTableRef {
     @NotNull
     public Expr expr;
 
@@ -24,19 +24,12 @@ public class FromExpr extends From {
     @Nullable
     public Identifier atAlias;
 
-    /**
-     * TODO get rid of `BY`
-     */
-    @Nullable
-    public Identifier byAlias;
-
     public FromExpr(@NotNull Expr expr, @NotNull FromType fromType, @Nullable Identifier asAlias,
-                    @Nullable Identifier atAlias, @Nullable Identifier byAlias) {
+                    @Nullable Identifier atAlias) {
         this.expr = expr;
         this.fromType = fromType;
         this.asAlias = asAlias;
         this.atAlias = atAlias;
-        this.byAlias = byAlias;
     }
 
     @NotNull
@@ -46,7 +39,6 @@ public class FromExpr extends From {
         kids.add(expr);
         if (asAlias != null) kids.add(asAlias);
         if (atAlias != null) kids.add(atAlias);
-        if (byAlias != null) kids.add(byAlias);
         return kids;
     }
 

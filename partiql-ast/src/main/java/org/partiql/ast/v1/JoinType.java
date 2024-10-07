@@ -13,7 +13,6 @@ public class JoinType implements Enum {
     public static final int FULL = 6;
     public static final int FULL_OUTER = 7;
     public static final int CROSS = 8;
-    public static final int COMMA = 9;
 
     public static JoinType UNKNOWN() {
         return new JoinType(UNKNOWN);
@@ -49,10 +48,6 @@ public class JoinType implements Enum {
 
     public static JoinType CROSS() {
         return new JoinType(CROSS);
-    }
-
-    public static JoinType COMMA() {
-        return new JoinType(COMMA);
     }
 
     private final int code;

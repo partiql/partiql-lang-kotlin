@@ -173,6 +173,8 @@ public interface AstVisitor<R, C> {
 
     R visitFrom(From node, C ctx);
 
+    R visitTableRef(FromTableRef node, C ctx);
+
     R visitFromExpr(FromExpr node, C ctx);
 
     R visitFromJoin(FromJoin node, C ctx);
