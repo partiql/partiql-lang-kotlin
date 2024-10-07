@@ -14,9 +14,9 @@ public abstract class SelectItem extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         if (this instanceof Star) {
-            return visitor.visitProjectItemAll((Star) this, ctx);
+            return visitor.visitSelectItemAll((Star) this, ctx);
         } else if (this instanceof Expr) {
-            return visitor.visitProjectItemExpr((Expr) this, ctx);
+            return visitor.visitSelectItemExpr((Expr) this, ctx);
         } else {
             throw new IllegalStateException("Unexpected value: " + this);
         }
@@ -43,7 +43,7 @@ public abstract class SelectItem extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitProjectItemAll(this, ctx);
+            return visitor.visitSelectItemAll(this, ctx);
         }
     }
 
@@ -75,7 +75,7 @@ public abstract class SelectItem extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitProjectItemExpr(this, ctx);
+            return visitor.visitSelectItemExpr(this, ctx);
         }
     }
 }

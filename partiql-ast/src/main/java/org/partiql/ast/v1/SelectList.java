@@ -30,6 +30,6 @@ public class SelectList extends Select {
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitSelectProject(this, ctx);
+        return visitor.visitSelectList(this, ctx);
     }
 }

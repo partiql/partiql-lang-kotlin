@@ -11,7 +11,7 @@ public abstract class Select extends AstNode {
         if (this instanceof SelectStar) {
             return visitor.visitSelectStar((SelectStar) this, ctx);
         } else if (this instanceof SelectList) {
-            return visitor.visitSelectProject((SelectList) this, ctx);
+            return visitor.visitSelectList((SelectList) this, ctx);
         } else if (this instanceof SelectPivot) {
             return visitor.visitSelectPivot((SelectPivot) this, ctx);
         } else if (this instanceof SelectValue) {
