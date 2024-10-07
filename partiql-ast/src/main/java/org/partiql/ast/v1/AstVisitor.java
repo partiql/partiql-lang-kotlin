@@ -145,13 +145,13 @@ public interface AstVisitor<R, C> {
 
     R visitSelectStar(SelectStar node, C ctx);
 
-    R visitSelectProject(SelectProject node, C ctx);
+    R visitSelectProject(SelectList node, C ctx);
 
-    R visitProjectItem(ProjectItem node, C ctx);
+    R visitProjectItem(SelectItem node, C ctx);
 
-    R visitProjectItemAll(ProjectItem.All node, C ctx);
+    R visitProjectItemAll(SelectItem.Star node, C ctx);
 
-    R visitProjectItemExpr(ProjectItem.Expr node, C ctx);
+    R visitProjectItemExpr(SelectItem.Expr node, C ctx);
 
     R visitSelectPivot(SelectPivot node, C ctx);
 

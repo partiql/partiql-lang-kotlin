@@ -5631,16 +5631,16 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitPathStepAllFields (Lorg/partiql/ast/v1/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPathStepElement (Lorg/partiql/ast/v1/expr/PathStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPathStepField (Lorg/partiql/ast/v1/expr/PathStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitProjectItem (Lorg/partiql/ast/v1/ProjectItem;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitProjectItemAll (Lorg/partiql/ast/v1/ProjectItem$All;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitProjectItemExpr (Lorg/partiql/ast/v1/ProjectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitProjectItem (Lorg/partiql/ast/v1/SelectItem;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitProjectItemAll (Lorg/partiql/ast/v1/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitProjectItemExpr (Lorg/partiql/ast/v1/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitQuery (Lorg/partiql/ast/v1/Query;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitQueryBody (Lorg/partiql/ast/v1/QueryBody;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitQueryBodySFW (Lorg/partiql/ast/v1/QueryBody$SFW;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitQueryBodySetOp (Lorg/partiql/ast/v1/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelect (Lorg/partiql/ast/v1/Select;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelectPivot (Lorg/partiql/ast/v1/SelectPivot;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectProject (Lorg/partiql/ast/v1/SelectProject;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitSelectProject (Lorg/partiql/ast/v1/SelectList;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelectStar (Lorg/partiql/ast/v1/SelectStar;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelectValue (Lorg/partiql/ast/v1/SelectValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSetOp (Lorg/partiql/ast/v1/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
@@ -5994,26 +5994,6 @@ public class org/partiql/ast/v1/OrderBy : org/partiql/ast/v1/AstNode {
 	public fun children ()Ljava/util/Collection;
 }
 
-public abstract class org/partiql/ast/v1/ProjectItem : org/partiql/ast/v1/AstNode {
-	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public class org/partiql/ast/v1/ProjectItem$All : org/partiql/ast/v1/ProjectItem {
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
-public class org/partiql/ast/v1/ProjectItem$Expr : org/partiql/ast/v1/ProjectItem {
-	public field asAlias Lorg/partiql/ast/v1/Identifier;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun children ()Ljava/util/Collection;
-}
-
 public class org/partiql/ast/v1/Query : org/partiql/ast/v1/Statement {
 	public field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
@@ -6053,18 +6033,38 @@ public abstract class org/partiql/ast/v1/Select : org/partiql/ast/v1/AstNode {
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public class org/partiql/ast/v1/SelectPivot : org/partiql/ast/v1/Select {
-	public field key Lorg/partiql/ast/v1/expr/Expr;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
-	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
+public abstract class org/partiql/ast/v1/SelectItem : org/partiql/ast/v1/AstNode {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public class org/partiql/ast/v1/SelectItem$Expr : org/partiql/ast/v1/SelectItem {
+	public field asAlias Lorg/partiql/ast/v1/Identifier;
+	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
-public class org/partiql/ast/v1/SelectProject : org/partiql/ast/v1/Select {
+public class org/partiql/ast/v1/SelectItem$Star : org/partiql/ast/v1/SelectItem {
+	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/SelectList : org/partiql/ast/v1/Select {
 	public field items Ljava/util/List;
 	public field setq Lorg/partiql/ast/v1/SetQuantifier;
 	public fun <init> (Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)V
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/SelectPivot : org/partiql/ast/v1/Select {
+	public field key Lorg/partiql/ast/v1/expr/Expr;
+	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }

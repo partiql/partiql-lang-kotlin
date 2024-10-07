@@ -10,14 +10,14 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-public class SelectProject extends Select {
+public class SelectList extends Select {
     @NotNull
-    public List<ProjectItem> items;
+    public List<SelectItem> items;
 
     @Nullable
     public SetQuantifier setq;
 
-    public SelectProject(@NotNull List<ProjectItem> items, @Nullable SetQuantifier setq) {
+    public SelectList(@NotNull List<SelectItem> items, @Nullable SetQuantifier setq) {
         this.items = items;
         this.setq = setq;
     }

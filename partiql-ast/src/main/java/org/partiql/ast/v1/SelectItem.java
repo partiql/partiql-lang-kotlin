@@ -10,11 +10,11 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-public abstract class ProjectItem extends AstNode {
+public abstract class SelectItem extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        if (this instanceof All) {
-            return visitor.visitProjectItemAll((All) this, ctx);
+        if (this instanceof Star) {
+            return visitor.visitProjectItemAll((Star) this, ctx);
         } else if (this instanceof Expr) {
             return visitor.visitProjectItemExpr((Expr) this, ctx);
         } else {
@@ -25,11 +25,11 @@ public abstract class ProjectItem extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    public static class All extends ProjectItem {
+    public static class Star extends SelectItem {
         @NotNull
         public org.partiql.ast.v1.expr.Expr expr;
 
-        public All(@NotNull org.partiql.ast.v1.expr.Expr expr) {
+        public Star(@NotNull org.partiql.ast.v1.expr.Expr expr) {
             this.expr = expr;
         }
 
@@ -50,7 +50,7 @@ public abstract class ProjectItem extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    public static class Expr extends ProjectItem {
+    public static class Expr extends SelectItem {
         @NotNull
         public org.partiql.ast.v1.expr.Expr expr;
 
