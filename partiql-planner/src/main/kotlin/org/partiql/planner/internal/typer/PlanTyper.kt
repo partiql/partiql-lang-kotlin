@@ -52,8 +52,6 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.Error
-import org.partiql.spi.errors.ErrorCode
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -375,10 +373,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
             val limit = node.limit.type(input.type.schema, outer, Strategy.GLOBAL)
             // check types
             if (limit.type.isNumeric().not()) {
-                val err = ProblemGenerator.missingRex(
-                    causes = listOf(limit.op),
-                    problem = ProblemGenerator.unexpectedType(limit.type, setOf(PType.numeric()))
-                )
+                val err = ProblemGenerator.reportUnexpectedType(_listener, limit.type, setOf(PType.numeric()))
                 return rel(input.type, relOpLimit(input, err))
             }
             // rewrite
@@ -395,10 +390,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
             val offset = node.offset.type(input.type.schema, outer, Strategy.GLOBAL)
             // check types
             if (offset.type.isNumeric().not()) {
-                val err = ProblemGenerator.missingRex(
-                    causes = listOf(offset.op),
-                    problem = ProblemGenerator.unexpectedType(offset.type, setOf(PType.numeric()))
-                )
+                val err = ProblemGenerator.reportUnexpectedType(_listener, offset.type, setOf(PType.numeric()))
                 return rel(input.type, relOpLimit(input, err))
             }
             // rewrite
@@ -494,10 +486,8 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
                         val typeEnv = TypeEnv(env, locals)
                         val resolved = typeEnv.resolve(root.identifier)
                         if (resolved == null) {
-                            ProblemGenerator.missingRex(
-                                emptyList(),
-                                ProblemGenerator.unresolvedExcludedExprRoot(root.identifier)
-                            ).op
+                            val rex = ProblemGenerator.reportUndefinedVariable(_listener, root.identifier)
+                            rex.op
                         } else {
                             // root of exclude is always a symbol
                             resolved.op as Rex.Op.Var
@@ -589,11 +579,6 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
             return rex(type, node)
         }
 
-        override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: CompilerType?): PlanNode {
-            val type = ctx ?: CompilerType(PType.dynamic(), isMissingValue = true)
-            return rex(type, node)
-        }
-
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: CompilerType?): Rex {
             val strategy = when (node.scope) {
                 Rex.Op.Var.Scope.DEFAULT -> strategy
@@ -602,11 +587,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
             val resolvedVar = typeEnv.resolve(node.identifier, strategy)
             if (resolvedVar == null) {
                 val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
-                val err = ProblemGenerator.errorRex(
-                    causes = emptyList(),
-                    problem = ProblemGenerator.undefinedVariable(node.identifier, inScopeVariables)
-                )
-                return err
+                return ProblemGenerator.reportUndefinedVariable(_listener, node.identifier, inScopeVariables)
             }
             return visitRex(resolvedVar, null)
         }
@@ -622,10 +603,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Key Type (INT or coercible to INT). TODO: Allow coercions to INT
             if (key.type.kind !in setOf(Kind.TINYINT, Kind.SMALLINT, Kind.INTEGER, Kind.BIGINT, Kind.NUMERIC)) {
-                return ProblemGenerator.missingRex(
-                    rexOpPathIndex(root, key),
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Collections must be indexed with integers, found ${key.type}")
-                )
+                return ProblemGenerator.reportAlwaysMissing(_listener, "Collections must be indexed with integers, found ${key.type}")
             }
 
             // Check if Root is DYNAMIC
@@ -635,18 +613,12 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Root Type (LIST/SEXP)
             if (root.type.kind != Kind.ARRAY && root.type.kind != Kind.SEXP) {
-                return ProblemGenerator.missingRex(
-                    rexOpPathIndex(root, key),
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Path indexing must occur only on LIST/SEXP.")
-                )
+                return ProblemGenerator.reportAlwaysMissing(_listener, "Path indexing must occur only on LIST/SEXP.")
             }
 
             // Check that root is not literal missing
             if (root.isLiteralMissing()) {
-                return ProblemGenerator.missingRex(
-                    rexOpPathIndex(root, key),
-                    ProblemGenerator.expressionAlwaysReturnsMissing()
-                )
+                return ProblemGenerator.reportAlwaysMissing(_listener)
             }
 
             return rex(root.type.typeParameter, rexOpPathIndex(root, key))
@@ -660,10 +632,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Key Type (STRING). TODO: Allow coercions to STRING
             if (key.type.kind != Kind.STRING) {
-                return ProblemGenerator.missingRex(
-                    rexOpPathKey(root, key),
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Expected string but found: ${key.type}.")
-                )
+                return ProblemGenerator.reportAlwaysMissing(_listener, "Expected string but found: ${key.type}.")
             }
 
             // Check if Root is DYNAMIC
@@ -673,10 +642,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Root Type (STRUCT)
             if (root.type.kind != Kind.STRUCT && root.type.kind != Kind.ROW) {
-                return ProblemGenerator.missingRex(
-                    rexOpPathKey(root, key),
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Key lookup may only occur on structs, not ${root.type}.")
-                )
+                return ProblemGenerator.reportAlwaysMissing(_listener, "Key lookup may only occur on structs, not ${root.type}.")
             }
 
             // Get Literal Key
@@ -687,10 +653,9 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
             }
 
             // Find Type
-            val elementType = root.type.getField(keyLiteral, false) ?: return ProblemGenerator.missingRex(
-                Rex.Op.Path.Key(root, key),
-                ProblemGenerator.expressionAlwaysReturnsMissing("Path key does not exist.")
-            )
+            val elementType = root.type.getField(keyLiteral, false) ?: run {
+                return ProblemGenerator.reportAlwaysMissing(_listener, "Path key does not exist.")
+            }
 
             return rex(elementType, rexOpPathKey(root, key))
         }
@@ -705,29 +670,21 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Root Type (STRUCT)
             if (root.type.kind != Kind.STRUCT && root.type.kind != Kind.ROW) {
-                return ProblemGenerator.missingRex(
-                    Rex.Op.Path.Symbol(root, node.key),
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Symbol lookup may only occur on structs, not ${root.type}.")
-                )
+                return ProblemGenerator.reportAlwaysMissing(_listener, "Symbol lookup may only occur on structs, not ${root.type}.")
             }
 
             // Check that root is not literal missing
             if (root.isLiteralMissing()) {
-                return ProblemGenerator.missingRex(
-                    Rex.Op.Path.Symbol(root, node.key),
-                    ProblemGenerator.expressionAlwaysReturnsMissing()
-                )
+                return ProblemGenerator.reportAlwaysMissing(_listener)
             }
 
             // Find Type
             val field = root.type.getSymbol(node.key) ?: run {
                 val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
-                return ProblemGenerator.missingRex(
-                    Rex.Op.Path.Symbol(root, node.key),
-                    ProblemGenerator.undefinedVariable(
-                        Identifier.regular(node.key),
-                        inScopeVariables
-                    )
+                return ProblemGenerator.reportUndefinedVariable(
+                    _listener,
+                    Identifier.regular(node.key),
+                    inScopeVariables
                 )
             }
             return when (field.first.isRegular()) {
@@ -756,10 +713,9 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: CompilerType?): Rex {
             val arg = visitRex(node.arg, null)
-            val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.missingRex(
-                node.copy(node.target, arg),
-                ProblemGenerator.undefinedFunction(listOf(arg.type), "CAST(<arg> AS ${node.target})")
-            )
+            val cast = env.resolveCast(arg, node.target) ?: run {
+                return ProblemGenerator.reportUndefinedCast(_listener, arg.type, node.target)
+            }
             return visitRexOpCastResolved(cast, null)
         }
 
@@ -773,10 +729,8 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
             // Attempt to resolve in the environment
             val rex = env.resolveFn(node.identifier, args)
             if (rex == null) {
-                return ProblemGenerator.errorRex(
-                    causes = args.map { it.op },
-                    problem = ProblemGenerator.undefinedFunction(args.map { it.type }, node.identifier),
-                )
+                val variants = env.fnVariants(node.identifier, args)
+                return ProblemGenerator.reportUndefinedFunction(_listener, args.map { it.type }, node.identifier, variants = variants)
             }
             // Pass off to Rex.Op.Call.Static or Rex.Op.Call.Dynamic for typing.
             return visitRex(rex, null)
@@ -808,12 +762,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
             val instance = node.fn.signature.getInstance(emptyArray())
 
             if (argIsAlwaysMissing && instance.isMissingCall) {
-                _listener.warning(Error.of(ErrorCode.ALWAYS_MISSING))
-                return ProblemGenerator.missingRex(
-                    node,
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments."),
-                    CompilerType(returnType, isMissingValue = true)
-                )
+                return ProblemGenerator.reportAlwaysMissing(_listener, "Static function always receives MISSING arguments.")
             }
 
             // Infer fn return type
@@ -989,10 +938,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: CompilerType?): Rex {
             if (ctx!!.kind !in setOf(Kind.ARRAY, Kind.SEXP, Kind.BAG)) {
-                return ProblemGenerator.missingRex(
-                    node,
-                    ProblemGenerator.unexpectedType(ctx, setOf(PType.array(), PType.bag(), PType.sexp()))
-                )
+                return ProblemGenerator.reportUnexpectedType(_listener, ctx, setOf(PType.array(), PType.bag(), PType.sexp()))
             }
             val values = node.values.map { visitRex(it, it.type) }
             val t = when (values.size) {
@@ -1121,11 +1067,9 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
                 0 -> CompilerType(PType.row(emptyList()))
                 else -> {
                     val argTypes = args.map { it.type }
-                    calculateTupleUnionOutputType(argTypes) ?: return ProblemGenerator.missingRex(
-                        args.map { it.op },
-                        ProblemGenerator.undefinedFunction(args.map { it.type }, "TUPLEUNION"),
-                        PType.struct().toCType()
-                    )
+                    calculateTupleUnionOutputType(argTypes) ?: run {
+                        return ProblemGenerator.reportUndefinedFunction(_listener, args.map { it.type }, Identifier.regular("TUPLEUNION"))
+                    }
                 }
             }
             return Rex(type, result)

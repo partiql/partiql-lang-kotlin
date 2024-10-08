@@ -847,7 +847,7 @@ internal class PlanTyperTestsPorted {
                 query = "1 & MISSING",
                 expected = INT4,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
+                    ProblemGenerator.alwaysMissing("Static function always receives MISSING arguments.")
                 )
             ),
             ErrorTestCase(
@@ -2124,7 +2124,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.unresolvedExcludedExprRoot("nonsense")
+                    ProblemGenerator.undefinedVariable(Identifier.regular("nonsense"))
                 )
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
@@ -3166,7 +3166,7 @@ internal class PlanTyperTestsPorted {
                 """,
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Collections must be indexed with integers, found STRING")
+                    ProblemGenerator.alwaysMissing("Collections must be indexed with integers, found STRING")
                 )
             ),
             // The reason this is ANY is because we do not have support for constant-folding. We don't know what
@@ -3534,7 +3534,7 @@ internal class PlanTyperTestsPorted {
                 """.trimIndent(),
                 expected = StaticType.DECIMAL, // This is due to it being the highest precedence type
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
+                    ProblemGenerator.alwaysMissing("Static function always receives MISSING arguments.")
                 )
             ),
         )
@@ -3899,7 +3899,7 @@ internal class PlanTyperTestsPorted {
                     }
                 }
                 val actual = statement.getRoot().getType()
-                assert(tc.expected == actual) {
+                assert(tc.expected == actual.getPType()) {
                     buildString {
                         appendLine()
                         appendLine("Expect: ${tc.expected}")
@@ -3939,7 +3939,7 @@ internal class PlanTyperTestsPorted {
                 }
                 if (tc.expected != null) {
                     val actual = statement.getRoot().getType()
-                    assert(tc.expected == actual) {
+                    assert(tc.expected == actual.getPType()) {
                         buildString {
                             appendLine()
                             appendLine("Expect: ${tc.expected}")

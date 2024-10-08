@@ -58,8 +58,8 @@ public class Property {
     /**
      * In the case of {@link ErrorCode#UNEXPECTED_TOKEN}, this property represents the expected tokens.
      * <br><br>
-     * Result of {@link Error#getProperty(int)} shall be a {@link java.util.Set<java.lang.String>}. The value returned
-     * may change without prior notice.
+     * Result of {@link Error#getProperty(int)} shall be a {@link java.util.Set} of {@link java.lang.String}. The value
+     * returned may change without prior notice.
      * @deprecated INTERNAL NOTE: IS THIS NEEDED?
      */
     public static final int EXPECTED_TOKENS = 6;
@@ -76,5 +76,74 @@ public class Property {
      * Result of {@link Error#getProperty(int)} shall be a {@link java.lang.String}. This is for debugging purposes and
      * should not be exposed to end users. The value returned may change without prior notice.
      */
-    public static final int CAUSE = 7;
+    public static final int CAUSE = 8;
+
+    /**
+     * The name of the feature that caused the {@link Error} with {@link ErrorCode#FEATURE_NOT_SUPPORTED}.
+     * Result of {@link Error#getProperty(int)} shall be a {@link java.lang.String}. This is for debugging purposes and
+     * should not be exposed to end users. The value returned may change without prior notice.
+     */
+    public static final int FEATURE_NAME = 9;
+
+    /**
+     * The type of the input that caused the {@link Error} with {@link ErrorCode#UNDEFINED_CAST}.
+     * Result of {@link Error#getProperty(int)} shall be a {@link org.partiql.types.PType}. The value returned may change
+     * without prior notice.
+     */
+    public static final int INPUT_TYPE = 10;
+
+    /**
+     * The type of the target that caused the {@link Error} with {@link ErrorCode#UNDEFINED_CAST}.
+     * Result of {@link Error#getProperty(int)} shall be a {@link org.partiql.types.PType}. The value returned may change
+     * without prior notice.
+     */
+    public static final int TARGET_TYPE = 11;
+
+    /**
+     * The stack trace of the error. This shall be used for debugging purposes only.
+     * <br><br>
+     * Result of {@link Error#getProperty(int)} shall be an array of {@link java.lang.StackTraceElement}. The value
+     * returned may change without prior notice.
+     */
+    public static final int STACK_TRACE = 12;
+
+    /**
+     * The identifier chain associated with the {@link Error}
+     * <br><br>
+     * Result of {@link Error#getProperty(int)} shall be a {@link org.partiql.spi.catalog.Identifier>}. The value returned
+     * may change without prior notice.
+     */
+    public static final int IDENTIFIER_CHAIN = 13;
+
+    /**
+     * The input argument types of the function call.
+     * <br><br>
+     * Result of {@link Error#getProperty(int)} shall be a {@link java.util.List} of
+     * {@link org.partiql.types.PType}. The value returned may change without prior notice.
+     */
+    public static final int INPUT_ARGUMENT_TYPES = 14;
+
+    /**
+     * The potential candidates of the function call.
+     * <br><br>
+     * Result of {@link Error#getProperty(int)} shall be a {@link java.util.List} of
+     * {@link org.partiql.spi.function.Function}. The value returned may change without prior notice.
+     */
+    public static final int FN_VARIANTS = 15;
+
+    /**
+     * The allowed types.
+     * <br><br>
+     * Result of {@link Error#getProperty(int)} shall be a {@link java.util.Set} of
+     * {@link org.partiql.types.PType}. The value returned may change without prior notice.
+     */
+    public static final int ALLOWED_TYPES = 16;
+
+    /**
+     * The local variables.
+     * <br><br>
+     * Result of {@link Error#getProperty(int)} shall be a {@link java.util.Set} of
+     * {@link java.lang.String}. The value returned may change without prior notice.
+     */
+    public static final int LOCALS = 17;
 }

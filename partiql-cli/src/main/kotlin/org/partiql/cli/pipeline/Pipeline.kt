@@ -12,6 +12,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.ErrorListenerException
 import java.io.PrintStream
+import kotlin.jvm.Throws
 
 internal class Pipeline private constructor(
     private val parser: PartiQLParser,
@@ -24,7 +25,9 @@ internal class Pipeline private constructor(
 
     /**
      * TODO replace with the ResultSet equivalent?
+     * @throws Exception when there are accumulated errors, or if the components have thrown an [ErrorListenerException].
      */
+    @Throws(Exception::class)
     fun execute(statement: String, session: Session): PartiQLResult {
         val ast = parse(statement)
         val plan = plan(ast, session)

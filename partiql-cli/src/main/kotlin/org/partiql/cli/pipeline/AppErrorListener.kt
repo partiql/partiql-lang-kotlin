@@ -3,11 +3,13 @@ package org.partiql.cli.pipeline
 import org.partiql.cli.ErrorCodeString
 import org.partiql.cli.shell.error
 import org.partiql.cli.shell.warn
+import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.Error
 import org.partiql.spi.errors.ErrorCode
 import org.partiql.spi.errors.ErrorListener
 import org.partiql.spi.errors.ErrorListenerException
 import org.partiql.spi.errors.Property
+import org.partiql.spi.function.Function
 import java.io.PrintStream
 
 class AppErrorListener(
@@ -61,6 +63,36 @@ class AppErrorListener(
             ErrorCode.UNRECOGNIZED_TOKEN -> {
                 val token = error.getProperty(Property.TOKEN_CONTENT)
                 "Unrecognized token ($token)."
+            }
+            ErrorCode.UNDEFINED_FUNCTION -> {
+                val functionName = error.getProperty(Property.IDENTIFIER_CHAIN) as Identifier?
+                val variants = error.getProperty(Property.FN_VARIANTS) as List<*>?
+                val args = error.getProperty(Property.INPUT_ARGUMENT_TYPES) as List<*>?
+                buildString {
+                    append("Undefined function: ")
+                    append(functionName)
+                    append(args?.joinToString(", ", "(", ")") { it.toString() })
+                    append(".")
+                    if (variants != null && variants.isNotEmpty()) {
+                        appendLine(" Did you mean: ")
+                        for (variant in variants) {
+                            variant as Function
+                            append("- ")
+                            append(variant.getName())
+                            append(
+                                variant.getParameters().joinToString(", ", "(", ")") {
+                                    "${it.getName()}: ${it.getType()}"
+                                }
+                            )
+                            appendLine()
+                        }
+                    }
+                }
+            }
+            ErrorCode.UNDEFINED_CAST -> {
+                val castFrom = error.getProperty(Property.INPUT_TYPE)
+                val castTo = error.getProperty(Property.TARGET_TYPE)
+                "Undefined cast from $castFrom to $castTo."
             }
             ErrorCode.INTERNAL_ERROR -> {
                 when (_verbose) {
