@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,12 +11,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class SelectList extends Select {
     @NotNull
-    public List<SelectItem> items;
+    public final List<SelectItem> items;
 
     @Nullable
-    public SetQuantifier setq;
+    public final SetQuantifier setq;
 
     public SelectList(@NotNull List<SelectItem> items, @Nullable SetQuantifier setq) {
         this.items = items;

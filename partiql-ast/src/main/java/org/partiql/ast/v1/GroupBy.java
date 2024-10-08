@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.expr.Expr;
@@ -11,15 +12,16 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class GroupBy extends AstNode {
     @NotNull
-    public GroupByStrategy strategy;
+    public final GroupByStrategy strategy;
 
     @NotNull
-    public List<Key> keys;
+    public final List<Key> keys;
 
     @Nullable
-    public Identifier asAlias;
+    public final Identifier asAlias;
 
     public GroupBy(@NotNull GroupByStrategy strategy, @NotNull List<Key> keys, @Nullable Identifier asAlias) {
         this.strategy = strategy;

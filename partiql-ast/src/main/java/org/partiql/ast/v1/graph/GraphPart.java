@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.graph;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -30,6 +31,7 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Node extends GraphPart {
         @Nullable
         public Expr prefilter;
@@ -68,6 +70,7 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Edge extends GraphPart {
         @NotNull
         public GraphDirection direction;
@@ -118,6 +121,7 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Pattern extends GraphPart {
         @NotNull
         public GraphPattern pattern;

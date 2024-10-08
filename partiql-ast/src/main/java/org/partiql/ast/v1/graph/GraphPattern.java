@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.graph;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -13,21 +14,22 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class GraphPattern extends AstNode {
     @Nullable
-    public GraphRestrictor restrictor;
+    public final GraphRestrictor restrictor;
 
     @Nullable
-    public Expr prefilter;
+    public final Expr prefilter;
 
     @Nullable
-    public String variable;
+    public final String variable;
 
     @Nullable
-    public GraphQuantifier quantifier;
+    public final GraphQuantifier quantifier;
 
     @NotNull
-    public List<GraphPart> parts;
+    public final List<GraphPart> parts;
 
     public GraphPattern(@Nullable GraphRestrictor restrictor, @Nullable Expr prefilter,
                         @Nullable String variable, @Nullable GraphQuantifier quantifier,

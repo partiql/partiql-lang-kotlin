@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.graph;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -32,6 +33,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Name extends GraphLabel {
         @NotNull
         public String name;
@@ -55,6 +57,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Wildcard extends GraphLabel {
         @Override
         @NotNull
@@ -71,6 +74,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Negation extends GraphLabel {
         @NotNull
         public GraphLabel arg;
@@ -96,6 +100,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Conj extends GraphLabel {
         @NotNull
         public List<GraphLabel> args;
@@ -119,6 +124,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Disj extends GraphLabel {
         @NotNull
         public List<GraphLabel> args;
