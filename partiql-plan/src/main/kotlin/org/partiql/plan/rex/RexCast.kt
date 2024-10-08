@@ -25,6 +25,7 @@ internal class RexCastImpl(operand: Rex, target: PType) : RexCast {
     private var _operand = operand
     private var _target = target
     private var _children: List<Rex>? = null
+    private var _type = RexType(_target)
 
     override fun getOperand(): Rex = _operand
 
@@ -37,7 +38,7 @@ internal class RexCastImpl(operand: Rex, target: PType) : RexCast {
         return _children!!
     }
 
-    override fun getType(): RexType = RexType.of(_target)
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -83,6 +83,7 @@ import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexSubqueryTestImpl
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexTableImpl
+import org.partiql.plan.rex.RexType
 import org.partiql.plan.rex.RexVar
 import org.partiql.plan.rex.RexVarImpl
 import org.partiql.spi.catalog.Table
@@ -347,20 +348,38 @@ public interface PlanFactory {
     // --- REX OPERATORS ------------------------------------------------------------------------------------------------
 
     /**
-     * Create a [RexArray] instance.
+     * Create a [RexArray] instance with dynamic array type.
      *
      * @param values
      * @return
      */
-    public fun rexArray(values: Collection<Rex>): RexArray = RexArrayImpl(values)
+    public fun rexArray(values: Collection<Rex>): RexArray = RexArrayImpl(values, RexType(PType.array()))
 
     /**
-     * Create a [RexBag] instance.
+     * Create a [RexArray] instance with the given array type.
+     *
+     * @param values
+     * @param type
+     * @return
+     */
+    public fun rexArray(values: Collection<Rex>, type: RexType): RexArray = RexArrayImpl(values, type)
+
+    /**
+     * Create a [RexBag] instance with dynamic bag type.
      *
      * @param values
      * @return
      */
-    public fun rexBag(values: Collection<Rex>): RexBag = RexBagImpl(values)
+    public fun rexBag(values: Collection<Rex>): RexBag = RexBagImpl(values, RexType(PType.bag()))
+
+    /**
+     * Create a [RexBag] instance with the given array type.
+     *
+     * @param values
+     * @param type
+     * @return
+     */
+    public fun rexBag(values: Collection<Rex>, type: RexType): RexBag = RexBagImpl(values, type)
 
     /**
      * Create a [RexCall] instance.
@@ -382,7 +401,7 @@ public interface PlanFactory {
         RexCallDynamicImpl(name, functions, args)
 
     /**
-     * Create a [RexCase] instance for a searched case-when.
+     * Create a [RexCase] instance for a searched case-when with dynamic type.
      *
      * @param branches
      * @param default
@@ -391,7 +410,17 @@ public interface PlanFactory {
     public fun rexCase(branches: List<RexCase.Branch>, default: Rex?): RexCase = rexCase(null, branches, default)
 
     /**
-     * Create a [RexCase] instance for a case-when.
+     * Create a [RexCase] instance for a searched case-when with the given type.
+     *
+     * @param branches
+     * @param default
+     * @param type
+     * @return
+     */
+    public fun rexCase(branches: List<RexCase.Branch>, default: Rex?, type: RexType): RexCase = rexCase(null, branches, default, type)
+
+    /**
+     * Create a [RexCase] instance for a case-when with dynamic type.
      *
      * @param match
      * @param branches
@@ -399,7 +428,19 @@ public interface PlanFactory {
      * @return
      */
     public fun rexCase(match: Rex?, branches: List<RexCase.Branch>, default: Rex?): RexCase =
-        RexCaseImpl(match, branches, default)
+        RexCaseImpl(match, branches, default, RexType.dynamic())
+
+    /**
+     * Create a [RexCase] instance for a case-when with the given type.
+     *
+     * @param match
+     * @param branches
+     * @param default
+     * @param type
+     * @return
+     */
+    public fun rexCase(match: Rex?, branches: List<RexCase.Branch>, default: Rex?, type: RexType): RexCase =
+        RexCaseImpl(match, branches, default, type)
 
     /**
      * Create a [RexCast] instance.
@@ -411,21 +452,39 @@ public interface PlanFactory {
     public fun rexCast(operand: Rex, target: PType): RexCast = RexCastImpl(operand, target)
 
     /**
-     * Create a [RexCoalesce] instance.
+     * Create a [RexCoalesce] instance with dynamic type.
      *
      * @param args
      * @return
      */
-    public fun rexCoalesce(args: List<Rex>): RexCoalesce = RexCoalesceImpl(args)
+    public fun rexCoalesce(args: List<Rex>): RexCoalesce = RexCoalesceImpl(args, RexType.dynamic())
 
     /**
-     * Create a [RexVar] instance.
+     * Create a [RexCoalesce] instance with the given type.
+     *
+     * @param args
+     * @return
+     */
+    public fun rexCoalesce(args: List<Rex>, type: RexType): RexCoalesce = RexCoalesceImpl(args, type)
+
+    /**
+     * Create a [RexVar] instance with dynamic type.
      *
      * @param depth
      * @param offset
      * @return
      */
-    public fun rexVar(depth: Int, offset: Int): RexVar = RexVarImpl(depth, offset)
+    public fun rexVar(depth: Int, offset: Int): RexVar = RexVarImpl(depth, offset, RexType.dynamic())
+
+    /**
+     * Create a [RexVar] instance with the given type.
+     *
+     * @param depth
+     * @param offset
+     * @param type
+     * @return
+     */
+    public fun rexVar(depth: Int, offset: Int, type: RexType): RexVar = RexVarImpl(depth, offset, type)
 
     /**
      * TODO AUDIT ME
@@ -461,31 +520,65 @@ public interface PlanFactory {
     public fun rexNullIf(value: Rex, nullifier: Rex): RexNullIf = RexNullIfImpl(value, nullifier)
 
     /**
-     * Create a [RexPathIndex] instance.
+     * Create a [RexPathIndex] instance with dynamic type.
      *
      * @param operand
      * @param index
      * @return
      */
-    public fun rexPathIndex(operand: Rex, index: Rex): RexPathIndex = RexPathIndexImpl(operand, index)
+    public fun rexPathIndex(operand: Rex, index: Rex): RexPathIndex =
+        RexPathIndexImpl(operand, index, RexType.dynamic())
 
     /**
-     * Create a [RexPathKey] instance.
+     * Create a [RexPathIndex] instance with the given type.
+     *
+     * @param operand
+     * @param index
+     * @param type
+     * @return
+     */
+    public fun rexPathIndex(operand: Rex, index: Rex, type: RexType): RexPathIndex =
+        RexPathIndexImpl(operand, index, type)
+
+    /**
+     * Create a [RexPathKey] instance with dynamic type.
      *
      * @param operand
      * @param key
      * @return
      */
-    public fun rexPathKey(operand: Rex, key: Rex): RexPathKey = RexPathKeyImpl(operand, key)
+    public fun rexPathKey(operand: Rex, key: Rex): RexPathKey = RexPathKeyImpl(operand, key, RexType.dynamic())
 
     /**
-     * Create a [RexPathSymbol] instance.
+     * Create a [RexPathKey] instance with the given type.
+     *
+     * @param operand
+     * @param key
+     * @param type
+     * @return
+     */
+    public fun rexPathKey(operand: Rex, key: Rex, type: RexType): RexPathKey = RexPathKeyImpl(operand, key, type)
+
+    /**
+     * Create a [RexPathSymbol] instance with dynamic type.
      *
      * @param operand
      * @param symbol
      * @return
      */
-    public fun rexPathSymbol(operand: Rex, symbol: String): RexPathSymbol = RexPathSymbolImpl(operand, symbol)
+    public fun rexPathSymbol(operand: Rex, symbol: String): RexPathSymbol =
+        RexPathSymbolImpl(operand, symbol, RexType.dynamic())
+
+    /**
+     * Create a [RexPathSymbol] instance with the given type.
+     *
+     * @param operand
+     * @param symbol
+     * @param type
+     * @return
+     */
+    public fun rexPathSymbol(operand: Rex, symbol: String, type: RexType): RexPathSymbol =
+        RexPathSymbolImpl(operand, symbol, type)
 
     /**
      * Create a [RexPivot] instance.
@@ -507,20 +600,36 @@ public interface PlanFactory {
     public fun rexSelect(input: Rel, constructor: Rex): RexSelect = RexSelectImpl(input, constructor)
 
     /**
-     * Create a [RexSpread] instance.
+     * Create a [RexSpread] instance with open struct type.
      *
      * @param args
      * @return
      */
-    public fun rexSpread(args: List<Rex>): RexSpread = RexSpreadImpl(args)
+    public fun rexSpread(args: List<Rex>): RexSpread = RexSpreadImpl(args, RexType(PType.struct()))
 
     /**
-     * Create a [RexStruct] instance.
+     * Create a [RexSpread] instance with the given type.
+     *
+     * @param args
+     * @return
+     */
+    public fun rexSpread(args: List<Rex>, type: RexType): RexSpread = RexSpreadImpl(args, type)
+
+    /**
+     * Create a [RexStruct] instance with open struct type.
      *
      * @param fields
      * @return
      */
-    public fun rexStruct(fields: List<RexStruct.Field>): RexStruct = RexStructImpl(fields)
+    public fun rexStruct(fields: List<RexStruct.Field>): RexStruct = RexStructImpl(fields, RexType(PType.struct()))
+
+    /**
+     * Create a [RexStruct] instance with the given type.
+     *
+     * @param fields
+     * @return
+     */
+    public fun rexStruct(fields: List<RexStruct.Field>, type: RexType): RexStruct = RexStructImpl(fields, type)
 
     /**
      * Create a [RexSubquery] instance.

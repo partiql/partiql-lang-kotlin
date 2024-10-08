@@ -42,7 +42,7 @@ internal class RexPivotImpl(input: Rel, key: Rex, value: Rex) : RexPivot {
         if (type == null) {
             type = PType.struct()
         }
-        return RexType.of(type!!)
+        return RexType(type!!)
     }
 
     override fun getChildren(): Collection<Rex> {

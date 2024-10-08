@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * TODO DOCUMENTATION
  */
@@ -17,16 +15,17 @@ public interface RexBag : Rex {
 /**
  * Default [RexBag] operator for extension.
  */
-internal class RexBagImpl(values: Collection<Rex>) : RexBag {
+internal class RexBagImpl(values: Collection<Rex>, type: RexType) : RexBag {
 
     // DO NOT USE FINAL
     private var _values = values
+    private var _type = type
 
     override fun getValues(): Collection<Rex> = _values
 
     override fun getChildren(): Collection<Rex> = _values
 
-    override fun getType(): RexType = RexType.of(PType.bag())
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

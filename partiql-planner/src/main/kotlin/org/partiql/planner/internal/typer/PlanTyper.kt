@@ -568,7 +568,10 @@ internal class PlanTyper(private val env: Env) {
         private val strategy: Strategy,
     ) : PlanRewriter<CompilerType?>() {
 
-        override fun visitRex(node: Rex, ctx: CompilerType?): Rex = visitRexOp(node.op, node.type) as Rex
+        override fun visitRex(node: Rex, ctx: CompilerType?): Rex {
+            val rex = visitRexOp(node.op, node.type) as Rex
+            return rex
+        }
 
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: CompilerType?): Rex {
             // type comes from RexConverter
@@ -1108,7 +1111,9 @@ internal class PlanTyper(private val env: Env) {
 
             // Replace Generated Tuple Union if Schema Present
             // This should occur before typing, however, we don't type on the AST or have an appropriate IR
-            replaceGeneratedTupleUnion(result)?.let { return it }
+            replaceGeneratedTupleUnion(result)?.let {
+                return it
+            }
 
             // Calculate Type
             val type = when (args.size) {

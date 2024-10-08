@@ -12,18 +12,17 @@ public interface RexCoalesce : Rex {
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCoalesce(this, ctx)
 }
 
-internal class RexCoalesceImpl(args: List<Rex>) : RexCoalesce {
+internal class RexCoalesceImpl(args: List<Rex>, type: RexType) : RexCoalesce {
 
     // DO NOT USE FINAL
     private var _args = args
+    private var _type = type
 
     override fun getArgs(): List<Rex> = _args
 
     override fun getChildren(): Collection<Rex> = _args
 
-    override fun getType(): RexType {
-        TODO("Not yet implemented")
-    }
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

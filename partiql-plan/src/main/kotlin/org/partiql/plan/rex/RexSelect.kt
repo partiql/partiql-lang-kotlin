@@ -21,13 +21,23 @@ internal class RexSelectImpl(input: Rel, constructor: Rex) : RexSelect {
 
     private var _input = input
     private var _constructor = constructor
+    private var _type: RexType? = null
 
     override fun getInput(): Rel = _input
 
     override fun getConstructor(): Rex = _constructor
 
     override fun getType(): RexType {
-        return RexType.of(PType.bag(_constructor.getType().getPType()))
+        // compute type
+        if (_type == null) {
+            val e = _constructor.getType().getPType()
+            _type = if (_input.isOrdered()) {
+                RexType(PType.array(e))
+            } else {
+                RexType(PType.bag(e))
+            }
+        }
+        return _type!!
     }
 
     override fun getChildren(): Collection<Rex> = listOf(_constructor)

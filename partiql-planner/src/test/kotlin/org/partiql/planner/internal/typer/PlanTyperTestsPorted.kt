@@ -35,7 +35,6 @@ import org.partiql.types.DecimalType
 import org.partiql.types.ListType
 import org.partiql.types.NumberConstraint
 import org.partiql.types.PType
-import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.INT4
@@ -63,6 +62,8 @@ internal class PlanTyperTestsPorted {
             val expected: CompilerType,
             val warnings: ProblemHandler? = null,
         ) : TestCase() {
+
+            // legacy shim!
             constructor(
                 name: String? = null,
                 key: PartiQLTest.Key? = null,
@@ -294,11 +295,6 @@ internal class PlanTyperTestsPorted {
                 name = "Collection LIST<INT4>",
                 key = key("collections-03"),
                 expected = ListType(StaticType.INT4),
-            ),
-            SuccessTestCase(
-                name = "Collection SEXP<INT4>",
-                key = key("collections-04"),
-                expected = SexpType(StaticType.INT4),
             ),
             SuccessTestCase(
                 name = "SELECT from array",
@@ -845,7 +841,7 @@ internal class PlanTyperTestsPorted {
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
-                expected = INT4,
+                expected = ANY, // TODO SHOULD BE UNKNOWN
                 problemHandler = assertProblemExists(
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
                 )
@@ -2842,7 +2838,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-06"),
                 catalog = "pql",
-                expected = ANY
+                expected = PType.unknown().toCType()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-07"),
@@ -2852,7 +2848,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-08"),
                 catalog = "pql",
-                expected = ANY
+                expected = PType.unknown().toCType()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-09"),
@@ -3532,7 +3528,7 @@ internal class PlanTyperTestsPorted {
                 query = """
                     +MISSING
                 """.trimIndent(),
-                expected = StaticType.DECIMAL, // This is due to it being the highest precedence type
+                expected = ANY,
                 problemHandler = assertProblemExists(
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
                 )

@@ -23,8 +23,7 @@ public interface RelSort : Rel {
 /**
  * Default [RelSort] implementation.
  */
-internal class RelSortImpl(input: Rel, collations: List<Collation>) :
-    RelSort {
+internal class RelSortImpl(input: Rel, collations: List<Collation>) : RelSort {
 
     // DO NOT USE FINAL
     private var _input = input

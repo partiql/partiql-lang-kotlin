@@ -21,12 +21,11 @@ internal class RexTableImpl(table: Table) : RexTable {
 
     // DO NOT USE FINAL
     private var _table = table
+    private var _type = RexType(table.getSchema())
 
     override fun getTable(): Table = _table
 
-    override fun getType(): RexType {
-        TODO("Not yet implemented")
-    }
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -15,18 +15,17 @@ public interface RexArray : Rex {
 /**
  * Default [RexArray] operator for extension.
  */
-internal class RexArrayImpl(values: Collection<Rex>) : RexArray {
+internal class RexArrayImpl(values: Collection<Rex>, type: RexType) : RexArray {
 
     // DO NOT USE FINAL
     private var _values = values
+    private var _type = type
 
     override fun getValues(): Collection<Rex> = _values
 
     override fun getChildren(): Collection<Rex> = _values.toList()
 
-    override fun getType(): RexType {
-        TODO("Not yet implemented")
-    }
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

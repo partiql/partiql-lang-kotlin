@@ -18,10 +18,11 @@ internal class RexLitImpl(value: Datum) : RexLit {
 
     // DO NOT USE FINAL
     private var _value = value
+    private var _type = RexType(_value.type)
 
     override fun getValue(): Datum = _value
 
-    override fun getType(): RexType = RexType.of(_value.type)
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

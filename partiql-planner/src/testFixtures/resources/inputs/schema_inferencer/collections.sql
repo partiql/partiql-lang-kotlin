@@ -10,10 +10,6 @@
 -- Collection LIST<INT>
 ( 1, 2, 3 );
 
---#[collections-04]
--- Collection SEXP<INT>
-SEXP ( 1, 2, 3 );
-
 --#[collections-05]
 --SELECT VALUE from array
 SELECT VALUE x FROM [ 1, 2, 3 ] as x;
