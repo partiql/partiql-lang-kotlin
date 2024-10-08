@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -11,9 +12,10 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprArray extends Expr {
     @NotNull
-    public List<Expr> values;
+    public final List<Expr> values;
 
     public ExprArray(@NotNull List<Expr> values) {
         this.values = values;

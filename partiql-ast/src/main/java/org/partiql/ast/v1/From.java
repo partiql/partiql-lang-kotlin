@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class From extends AstNode {
     @NotNull
-    public List<FromTableRef> tableRefs;
+    public final List<FromTableRef> tableRefs;
 
     public From(@NotNull List<FromTableRef> tableRefs) {
         this.tableRefs = tableRefs;

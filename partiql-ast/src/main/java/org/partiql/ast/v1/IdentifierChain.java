@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,12 +11,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class IdentifierChain extends AstNode {
     @NotNull
-    public Identifier root;
+    public final Identifier root;
 
     @Nullable
-    public IdentifierChain next;
+    public final IdentifierChain next;
 
     public IdentifierChain(@NotNull Identifier root, @Nullable IdentifierChain next) {
         this.root = root;

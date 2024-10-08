@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -11,12 +12,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprNullIf extends Expr {
     @NotNull
-    public Expr v1;
+    public final Expr v1;
 
     @NotNull
-    public Expr v2;
+    public final Expr v2;
 
     public ExprNullIf(@NotNull Expr v1, @NotNull Expr v2) {
         this.v1 = v1;

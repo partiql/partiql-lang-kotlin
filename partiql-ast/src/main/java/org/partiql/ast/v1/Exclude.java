@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -9,9 +10,10 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class Exclude extends AstNode {
     @NotNull
-    public List<ExcludePath> excludePaths;
+    public final List<ExcludePath> excludePaths;
 
     public Exclude(@NotNull List<ExcludePath> excludePaths) {
         this.excludePaths = excludePaths;

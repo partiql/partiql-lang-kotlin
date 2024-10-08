@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -10,9 +11,10 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprSessionAttribute extends Expr {
     @NotNull
-    public SessionAttribute sessionAttribute;
+    public final SessionAttribute sessionAttribute;
 
     public ExprSessionAttribute(@NotNull SessionAttribute sessionAttribute) {
         this.sessionAttribute = sessionAttribute;

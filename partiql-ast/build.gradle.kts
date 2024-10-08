@@ -16,6 +16,7 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
+    id("org.jetbrains.kotlin.plugin.lombok") version "1.9.20"
 }
 
 dependencies {
@@ -24,6 +25,8 @@ dependencies {
     // TODO REMOVE ME ONCE PartiQLValue IS REMOVED
     // THE AST NEEDS ITS OWN "VALUE" REPRESENTATION
     api(project(":partiql-spi"))
+    compileOnly("org.projectlombok:lombok:1.18.34")
+    annotationProcessor("org.projectlombok:lombok:1.18.34")
 }
 
 tasks.shadowJar {
