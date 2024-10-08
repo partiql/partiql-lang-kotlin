@@ -14,19 +14,29 @@
 
 package org.partiql.parser
 
+import org.partiql.ast.Expr
 import org.partiql.ast.Statement
 import org.partiql.parser.internal.PartiQLParserDefault
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.nullValue
 
 public interface PartiQLParser {
 
-    @Throws(PartiQLSyntaxException::class, InterruptedException::class)
-    public fun parse(source: String): Result
+    public fun parse(source: String, config: ParserConfig = ParserConfigBuilder().build()): Result
 
     public data class Result(
         val source: String,
         val root: Statement,
         val locations: SourceLocations,
-    )
+    ) {
+        public companion object {
+            @OptIn(PartiQLValueExperimental::class)
+            internal fun empty(source: String): Result {
+                val locations = SourceLocations.Mutable().toMap()
+                return Result(source, Statement.Query(Expr.Lit(nullValue())), locations)
+            }
+        }
+    }
 
     public companion object {
 
@@ -34,6 +44,6 @@ public interface PartiQLParser {
         public fun builder(): PartiQLParserBuilder = PartiQLParserBuilder()
 
         @JvmStatic
-        public fun default(): PartiQLParser = PartiQLParserDefault()
+        public fun standard(): PartiQLParser = PartiQLParserDefault()
     }
 }

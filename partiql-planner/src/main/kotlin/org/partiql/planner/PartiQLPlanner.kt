@@ -2,8 +2,7 @@ package org.partiql.planner
 
 import org.partiql.ast.Statement
 import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
-import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.Plan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.spi.catalog.Session
 
@@ -13,14 +12,14 @@ import org.partiql.spi.catalog.Session
 public interface PartiQLPlanner {
 
     /**
-     * Transform an AST to a [PartiQLPlan].
+     * Transform an AST to a [Plan].
      *
      * @param statement
      * @param session
-     * @param onProblem
+     * @param listener
      * @return
      */
-    public fun plan(statement: Statement, session: Session, onProblem: ProblemCallback = {}): Result
+    public fun plan(statement: Statement, session: Session, config: PlannerConfig = PlannerConfigBuilder().build()): Result
 
     /**
      * Planner result along with any warnings.
@@ -28,7 +27,7 @@ public interface PartiQLPlanner {
      * @property plan
      */
     public class Result(
-        public val plan: PartiQLPlan,
+        public val plan: Plan,
         public val problems: List<Problem>,
     )
 

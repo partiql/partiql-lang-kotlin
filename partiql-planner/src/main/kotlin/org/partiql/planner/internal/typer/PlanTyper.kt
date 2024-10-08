@@ -16,6 +16,7 @@
 
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.PlannerConfig
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.exclude.ExcludeRepr
@@ -50,7 +51,9 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
-import org.partiql.planner.internal.utils.PlanUtils
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.errors.Error
+import org.partiql.spi.errors.ErrorCode
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -67,7 +70,9 @@ import kotlin.math.max
  * @property env
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class PlanTyper(private val env: Env) {
+internal class PlanTyper(private val env: Env, config: PlannerConfig) {
+
+    private val _listener = config.errorListener
 
     /**
      * Rewrite the statement with inferred types and resolved variables
@@ -596,11 +601,10 @@ internal class PlanTyper(private val env: Env) {
             }
             val resolvedVar = typeEnv.resolve(node.identifier, strategy)
             if (resolvedVar == null) {
-                val id = PlanUtils.externalize(node.identifier)
                 val inScopeVariables = typeEnv.locals.schema.map { it.name }.toSet()
                 val err = ProblemGenerator.errorRex(
                     causes = emptyList(),
-                    problem = ProblemGenerator.undefinedVariable(id, inScopeVariables)
+                    problem = ProblemGenerator.undefinedVariable(node.identifier, inScopeVariables)
                 )
                 return err
             }
@@ -721,7 +725,7 @@ internal class PlanTyper(private val env: Env) {
                 return ProblemGenerator.missingRex(
                     Rex.Op.Path.Symbol(root, node.key),
                     ProblemGenerator.undefinedVariable(
-                        org.partiql.plan.Identifier.Symbol(node.key, org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE),
+                        Identifier.regular(node.key),
                         inScopeVariables
                     )
                 )
@@ -804,6 +808,7 @@ internal class PlanTyper(private val env: Env) {
             val instance = node.fn.signature.getInstance(emptyArray())
 
             if (argIsAlwaysMissing && instance.isMissingCall) {
+                _listener.warning(Error.of(ErrorCode.ALWAYS_MISSING))
                 return ProblemGenerator.missingRex(
                     node,
                     ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments."),

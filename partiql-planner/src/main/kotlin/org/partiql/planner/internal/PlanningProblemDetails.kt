@@ -2,8 +2,7 @@ package org.partiql.planner.internal
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
-import org.partiql.plan.Identifier
-import org.partiql.planner.internal.utils.PlanUtils
+import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 
@@ -28,18 +27,6 @@ internal open class PlanningProblemDetails(
             } else {
                 ""
             }
-
-        private fun Identifier.sql(): String = when (this) {
-            is Identifier.Qualified -> this.sql()
-            is Identifier.Symbol -> this.sql()
-        }
-
-        private fun Identifier.Qualified.sql(): String = root.sql() + "." + steps.joinToString(".") { it.sql() }
-
-        private fun Identifier.Symbol.sql(): String = when (caseSensitivity) {
-            Identifier.CaseSensitivity.SENSITIVE -> "\"$symbol\""
-            Identifier.CaseSensitivity.INSENSITIVE -> symbol
-        }
     }
 
     override fun toString(): String = message
@@ -57,50 +44,18 @@ internal open class PlanningProblemDetails(
     ) : PlanningProblemDetails(
         ProblemSeverity.ERROR,
         {
-            val humanReadableName = PlanUtils.identifierToString(name)
-            "Variable $humanReadableName does not exist in the database environment and is not an attribute of the following in-scope variables $inScopeVariables." +
+            "Variable $name does not exist in the database environment and is not an attribute of the following in-scope variables $inScopeVariables." +
                 quotationHint(isSymbolAndCaseSensitive(name))
         }
     ) {
 
-        @Deprecated("This will be removed in a future major version release.", replaceWith = ReplaceWith("name"))
-        val variableName: String = when (name) {
-            is Identifier.Symbol -> name.symbol
-            is Identifier.Qualified -> when (name.steps.size) {
-                0 -> name.root.symbol
-                else -> name.steps.last().symbol
-            }
-        }
-
-        @Deprecated("This will be removed in a future major version release.", replaceWith = ReplaceWith("name"))
-        val caseSensitive: Boolean = when (name) {
-            is Identifier.Symbol -> name.caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
-            is Identifier.Qualified -> when (name.steps.size) {
-                0 -> name.root.caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
-                else -> name.steps.last().caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
-            }
-        }
-
-        @Deprecated("This will be removed in a future major version release.", replaceWith = ReplaceWith("UndefinedVariable(Identifier, Set<String>)"))
-        public constructor(variableName: String, caseSensitive: Boolean) : this(
-            Identifier.Symbol(
-                variableName,
-                when (caseSensitive) {
-                    true -> Identifier.CaseSensitivity.SENSITIVE
-                    false -> Identifier.CaseSensitivity.INSENSITIVE
-                }
-            ),
-            emptySet()
-        )
-
         private companion object {
-            /**
-             * Used to check whether the [id] is an [Identifier.Symbol] and whether it is case-sensitive. This is helpful
-             * for giving the [quotationHint] to the user.
-             */
-            private fun isSymbolAndCaseSensitive(id: Identifier): Boolean = when (id) {
-                is Identifier.Symbol -> id.caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
-                is Identifier.Qualified -> false
+
+            private fun isSymbolAndCaseSensitive(id: Identifier): Boolean {
+                if (id.hasQualifier()) {
+                    return false
+                }
+                return !id.getIdentifier().isRegular()
             }
         }
     }

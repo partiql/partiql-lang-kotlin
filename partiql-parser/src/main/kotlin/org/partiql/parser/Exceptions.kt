@@ -21,28 +21,11 @@ package org.partiql.parser
  * @property cause
  * @property location
  */
-public open class PartiQLSyntaxException(
+internal open class PartiQLSyntaxException(
     override val message: String,
     override val cause: Throwable? = null,
-    public val location: SourceLocation = SourceLocation.UNKNOWN,
-) : Exception() {
-
-    internal companion object {
-
-        internal fun wrap(cause: Throwable) = when (cause) {
-            is PartiQLSyntaxException -> cause
-            is StackOverflowError -> PartiQLSyntaxException(
-                message = """
-                    |Input query too large. This error typically occurs when there are several nested
-                    |expressions/predicates and can usually be fixed by simplifying expressions.
-                    """.trimMargin(),
-                cause = cause,
-            )
-            is InterruptedException -> cause
-            else -> PartiQLSyntaxException("Unhandled exception.", cause)
-        }
-    }
-}
+    val location: SourceLocation = SourceLocation.UNKNOWN,
+) : Exception()
 
 /**
  * PartiQLParser Exception upon lexing.
@@ -54,7 +37,7 @@ public open class PartiQLSyntaxException(
  * @param cause
  * @param location
  */
-public class PartiQLLexerException(
+internal class PartiQLLexerException(
     public val token: String,
     public val tokenType: String,
     message: String = "",
@@ -73,7 +56,7 @@ public class PartiQLLexerException(
  * @param cause
  * @param location
  */
-public class PartiQLParserException(
+internal class PartiQLParserException(
     public val rule: String,
     public val token: String,
     public val tokenType: String,

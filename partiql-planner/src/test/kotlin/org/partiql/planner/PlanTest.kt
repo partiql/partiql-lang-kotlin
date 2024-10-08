@@ -6,14 +6,9 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.PartiQLPlan
-import org.partiql.plan.PlanNode
-import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.planner.util.PlanNodeEquivalentVisitor
-import org.partiql.planner.util.ProblemCollector
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -26,6 +21,7 @@ import java.io.File
 import java.nio.file.Path
 import java.util.stream.Stream
 import kotlin.io.path.toPath
+import kotlin.test.assertEquals
 
 // Prevent Unintentional break of the plan
 // We currently don't have a good way to assert on the result plan
@@ -73,10 +69,9 @@ class PlanTest {
             .catalogs(buildCatalog("default"))
             .namespace("SCHEMA")
             .build()
-        val problemCollector = ProblemCollector()
-        val ast = PartiQLParser.default().parse(test.statement).root
+        val ast = PartiQLParser.standard().parse(test.statement).root
         val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
-        planner.plan(ast, session, problemCollector)
+        planner.plan(ast, session)
     }
 
     private fun buildCatalog(catalogName: String): Catalog {
@@ -130,14 +125,17 @@ class PlanTest {
         return dynamicContainer(file.nameWithoutExtension, children)
     }
 
-    private fun assertPlanEqual(inputPlan: PartiQLPlan, outputPlan: PartiQLPlan) {
-        assert(inputPlan.isEquaivalentTo(outputPlan)) {
-            buildString {
-                this.appendLine("expect plan equivalence")
-                PlanPrinter.append(this, inputPlan)
-                PlanPrinter.append(this, outputPlan)
-            }
-        }
+    private fun assertPlanEqual(inputPlan: org.partiql.plan.Plan, outputPlan: org.partiql.plan.Plan) {
+        val iStatement = inputPlan.getOperation()
+        val oStatement = outputPlan.getOperation()
+        assertEquals(iStatement, oStatement)
+        // assert(inputPlan.isEquaivalentTo(outputPlan)) {
+        //     buildString {
+        //         this.appendLine("expect plan equivalence")
+        //         PlanPrinter.append(this, inputPlan)
+        //         PlanPrinter.append(this, outputPlan)
+        //     }
+        // }
     }
 
     private fun parse(group: String, file: File): List<PartiQLTest> {
@@ -167,7 +165,4 @@ class PlanTest {
         }
         return tests
     }
-
-    private fun PlanNode.isEquaivalentTo(other: PlanNode): Boolean =
-        PlanNodeEquivalentVisitor().visit(this, other)
 }

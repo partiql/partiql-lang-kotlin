@@ -5,47 +5,50 @@ import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemLocation
 import org.partiql.errors.ProblemSeverity
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.plan.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpMissing
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.types.StaticType
-import org.partiql.spi.catalog.Identifier as InternalIdentifier
 
 /**
  * Used to report problems during planning phase.
  */
 internal object ProblemGenerator {
     fun problem(problemLocation: ProblemLocation, problemDetails: ProblemDetails): Problem = Problem(
-        problemLocation,
-        problemDetails
+        problemLocation, problemDetails
     )
 
     fun asWarning(problem: Problem): Problem {
         val details = problem.details as PlanningProblemDetails
         return if (details.severity == ProblemSeverity.WARNING) problem
         else Problem(
-            problem.sourceLocation,
-            PlanningProblemDetails(ProblemSeverity.WARNING, details.messageFormatter)
+            problem.sourceLocation, PlanningProblemDetails(ProblemSeverity.WARNING, details.messageFormatter)
         )
     }
+
     fun asError(problem: Problem): Problem {
         val details = problem.details as PlanningProblemDetails
         return if (details.severity == ProblemSeverity.ERROR) problem
         else Problem(
-            problem.sourceLocation,
-            PlanningProblemDetails(ProblemSeverity.ERROR, details.messageFormatter)
+            problem.sourceLocation, PlanningProblemDetails(ProblemSeverity.ERROR, details.messageFormatter)
         )
     }
 
-    fun missingRex(causes: List<Rex.Op>, problem: Problem, type: CompilerType = CompilerType(PType.dynamic(), isMissingValue = true)): Rex =
-        rex(type, rexOpMissing(problem, causes))
+    fun missingRex(
+        causes: List<Rex.Op>,
+        problem: Problem,
+        type: CompilerType = CompilerType(PType.dynamic(), isMissingValue = true),
+    ): Rex = rex(type, rexOpMissing(problem, causes))
 
-    fun missingRex(causes: Rex.Op, problem: Problem, type: CompilerType = CompilerType(PType.dynamic(), isMissingValue = true)): Rex =
-        rex(type, rexOpMissing(problem, listOf(causes)))
+    fun missingRex(
+        causes: Rex.Op,
+        problem: Problem,
+        type: CompilerType = CompilerType(PType.dynamic(), isMissingValue = true),
+    ): Rex = rex(type, rexOpMissing(problem, listOf(causes)))
 
     fun errorRex(causes: List<Rex.Op>, problem: Problem): Rex =
         rex(CompilerType(PType.dynamic(), isMissingValue = true), rexOpErr(problem, causes))
@@ -56,49 +59,77 @@ internal object ProblemGenerator {
     /**
      * TODO CURRENT TESTS HAVE IDENTIFIERS AS NORMALIZED UPPER.
      */
-    private fun InternalIdentifier.normalize(): String = toString().uppercase()
+    private fun Identifier.normalize(): String = toString().uppercase()
 
     fun undefinedFunction(
         args: List<PType>,
-        identifier: InternalIdentifier,
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION
-    ): Problem =
-        problem(location, PlanningProblemDetails.UnknownFunction(identifier.normalize(), args))
+        identifier: Identifier,
+        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+    ): Problem = problem(location, PlanningProblemDetails.UnknownFunction(identifier.normalize(), args))
 
-    fun undefinedFunction(args: List<PType>, identifier: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UnknownFunction(identifier, args))
+    fun undefinedFunction(
+        args: List<PType>,
+        identifier: String,
+        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+    ): Problem = problem(location, PlanningProblemDetails.UnknownFunction(identifier, args))
 
     fun undefinedCast(source: PType, target: PType, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
         problem(location, PlanningProblemDetails.UnknownCast(source, target))
 
-    fun undefinedVariable(id: Identifier, inScopeVariables: Set<String> = emptySet(), location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UndefinedVariable(id, inScopeVariables))
-
-    fun incompatibleTypesForOp(actualTypes: List<StaticType>, operator: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.IncompatibleTypesForOp(actualTypes.map { PType.fromStaticType(it) }, operator.uppercase()))
+    fun undefinedVariable(
+        id: Identifier,
+        inScopeVariables: Set<String> = emptySet(),
+        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+    ): Problem = problem(location, PlanningProblemDetails.UndefinedVariable(id, inScopeVariables))
 
     fun incompatibleTypesForOp(
+        actualTypes: List<StaticType>,
         operator: String,
-        actualTypes: List<PType>,
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION
-    ): Problem =
-        problem(location, PlanningProblemDetails.IncompatibleTypesForOp(actualTypes, operator.uppercase()))
+        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+    ): Problem = problem(
+        location,
+        PlanningProblemDetails.IncompatibleTypesForOp(
+            actualTypes.map { PType.fromStaticType(it) }, operator.uppercase()
+            )
+        )
 
-    fun unresolvedExcludedExprRoot(root: InternalIdentifier, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UnresolvedExcludeExprRoot(root.toString()))
+        fun incompatibleTypesForOp(
+            operator: String,
+            actualTypes: List<PType>,
+            location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+        ): Problem = problem(location, PlanningProblemDetails.IncompatibleTypesForOp(actualTypes, operator.uppercase()))
 
-    fun unresolvedExcludedExprRoot(root: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UnresolvedExcludeExprRoot(root))
+        fun unresolvedExcludedExprRoot(
+            root: Identifier,
+            location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+        ): Problem = problem(location, PlanningProblemDetails.UnresolvedExcludeExprRoot(root.toString()))
 
-    fun expressionAlwaysReturnsMissing(reason: String? = null, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.ExpressionAlwaysReturnsMissing(reason))
+        fun unresolvedExcludedExprRoot(root: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
+            problem(location, PlanningProblemDetails.UnresolvedExcludeExprRoot(root))
 
-    fun unexpectedType(actualType: StaticType, expectedTypes: Set<StaticType>, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UnexpectedType(PType.fromStaticType(actualType), expectedTypes.map { PType.fromStaticType(it) }.toSet()))
+        fun expressionAlwaysReturnsMissing(
+            reason: String? = null,
+            location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+        ): Problem = problem(location, PlanningProblemDetails.ExpressionAlwaysReturnsMissing(reason))
 
-    fun unexpectedType(actualType: PType, expectedTypes: Set<PType>, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.UnexpectedType(actualType, expectedTypes))
+        fun unexpectedType(
+            actualType: StaticType,
+            expectedTypes: Set<StaticType>,
+            location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+        ): Problem = problem(
+            location,
+            PlanningProblemDetails.UnexpectedType(
+                PType.fromStaticType(actualType), expectedTypes.map { PType.fromStaticType(it) }.toSet()
+            )
+        )
 
-    fun compilerError(message: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
-        problem(location, PlanningProblemDetails.CompileError(message))
-}
+        fun unexpectedType(
+            actualType: PType,
+            expectedTypes: Set<PType>,
+            location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
+        ): Problem = problem(location, PlanningProblemDetails.UnexpectedType(actualType, expectedTypes))
+
+        fun compilerError(message: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
+            problem(location, PlanningProblemDetails.CompileError(message))
+    }
+    

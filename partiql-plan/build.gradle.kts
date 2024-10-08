@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -23,8 +25,6 @@ plugins {
 dependencies {
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
-    implementation(Deps.ionElement)
-    implementation(Deps.kotlinReflect)
 }
 
 tasks.shadowJar {
@@ -38,36 +38,12 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     }
 }
 
-// Disabled for partiql-plan project.
 kotlin {
-    explicitApi = null
+    explicitApi = ExplicitApiMode.Strict
 }
 
 publish {
     artifactId = "partiql-plan"
     name = "PartiQL Plan"
-    description = "PartiQL Plan experimental data structures"
-}
-
-val generate = tasks.register<Exec>("generate") {
-    dependsOn(":lib:sprout:install")
-    workingDir(projectDir)
-    commandLine(
-        "../lib/sprout/build/install/sprout/bin/sprout",
-        "generate",
-        "kotlin",
-        "-o", "$buildDir/generated-src",
-        "-p", "org.partiql.plan",
-        "-u", "Plan",
-        "--poems", "factory",
-        "--poems", "visitor",
-        "--poems", "builder",
-        "--poems", "util",
-        "--opt-in", "org.partiql.value.PartiQLValueExperimental",
-        "./src/main/resources/partiql_plan.ion"
-    )
-}
-
-tasks.compileKotlin {
-    dependsOn(generate)
+    description = "PartiQL logical plan data structures"
 }
