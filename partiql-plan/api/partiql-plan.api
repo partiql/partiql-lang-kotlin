@@ -28,56 +28,87 @@ public final class org/partiql/plan/Collation$Order : java/lang/Enum {
 	public static fun values ()[Lorg/partiql/plan/Collation$Order;
 }
 
-public abstract interface class org/partiql/plan/ExcludeCollectionWildcard : org/partiql/plan/ExcludeStep {
+public final class org/partiql/plan/Exclusion {
+	public static final field Companion Lorg/partiql/plan/Exclusion$Companion;
+	public fun <init> (Lorg/partiql/plan/rex/RexVar;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/plan/rex/RexVar;[Lorg/partiql/plan/Exclusion$Item;)V
+	public static final fun collIndex (I)Lorg/partiql/plan/Exclusion$CollIndex;
+	public static final fun collIndex (ILjava/util/List;)Lorg/partiql/plan/Exclusion$CollIndex;
+	public static final fun collIndex (I[Lorg/partiql/plan/Exclusion$Item;)Lorg/partiql/plan/Exclusion$CollIndex;
+	public static final fun collWildcard ()Lorg/partiql/plan/Exclusion$CollWildcard;
+	public static final fun collWildcard (Ljava/util/List;)Lorg/partiql/plan/Exclusion$CollWildcard;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getItems ()Ljava/util/List;
+	public final fun getVar ()Lorg/partiql/plan/rex/RexVar;
+	public fun hashCode ()I
+	public static final fun structKey (Ljava/lang/String;)Lorg/partiql/plan/Exclusion$StructKey;
+	public static final fun structKey (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Exclusion$StructKey;
+	public static final fun structSymbol (Ljava/lang/String;)Lorg/partiql/plan/Exclusion$StructSymbol;
+	public static final fun structSymbol (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Exclusion$StructSymbol;
+	public static final fun structWildCard ()Lorg/partiql/plan/Exclusion$StructWildcard;
+	public static final fun structWildCard (Ljava/util/List;)Lorg/partiql/plan/Exclusion$StructWildcard;
 }
 
-public abstract interface class org/partiql/plan/ExcludeIndex : org/partiql/plan/ExcludeStep {
-	public abstract fun getIndex ()I
+public final class org/partiql/plan/Exclusion$CollIndex : org/partiql/plan/Exclusion$Item {
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIndex ()I
+	public fun getItems ()Ljava/util/List;
+	public fun hasItems ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/plan/ExcludeKey : org/partiql/plan/ExcludeStep {
-	public abstract fun getKey ()Ljava/lang/String;
+public final class org/partiql/plan/Exclusion$CollWildcard : org/partiql/plan/Exclusion$Item {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getItems ()Ljava/util/List;
+	public fun hasItems ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/plan/ExcludePath {
-	public static final field Companion Lorg/partiql/plan/ExcludePath$Companion;
-	public abstract fun getRoot ()Lorg/partiql/plan/rex/RexVar;
-	public abstract fun getSteps ()Ljava/util/Collection;
-	public static fun of (Lorg/partiql/plan/rex/RexVar;Ljava/util/Collection;)Lorg/partiql/plan/ExcludePath;
+public final class org/partiql/plan/Exclusion$Companion {
+	public final fun collIndex (I)Lorg/partiql/plan/Exclusion$CollIndex;
+	public final fun collIndex (ILjava/util/List;)Lorg/partiql/plan/Exclusion$CollIndex;
+	public final fun collIndex (I[Lorg/partiql/plan/Exclusion$Item;)Lorg/partiql/plan/Exclusion$CollIndex;
+	public final fun collWildcard ()Lorg/partiql/plan/Exclusion$CollWildcard;
+	public final fun collWildcard (Ljava/util/List;)Lorg/partiql/plan/Exclusion$CollWildcard;
+	public final fun structKey (Ljava/lang/String;)Lorg/partiql/plan/Exclusion$StructKey;
+	public final fun structKey (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Exclusion$StructKey;
+	public final fun structSymbol (Ljava/lang/String;)Lorg/partiql/plan/Exclusion$StructSymbol;
+	public final fun structSymbol (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Exclusion$StructSymbol;
+	public final fun structWildCard ()Lorg/partiql/plan/Exclusion$StructWildcard;
+	public final fun structWildCard (Ljava/util/List;)Lorg/partiql/plan/Exclusion$StructWildcard;
 }
 
-public final class org/partiql/plan/ExcludePath$Companion {
-	public final fun of (Lorg/partiql/plan/rex/RexVar;Ljava/util/Collection;)Lorg/partiql/plan/ExcludePath;
+public abstract interface class org/partiql/plan/Exclusion$Item {
+	public abstract fun getItems ()Ljava/util/List;
+	public abstract fun hasItems ()Z
 }
 
-public abstract interface class org/partiql/plan/ExcludeStep {
-	public static final field Companion Lorg/partiql/plan/ExcludeStep$Companion;
-	public static fun collection (Ljava/util/List;)Lorg/partiql/plan/ExcludeCollectionWildcard;
-	public abstract fun getSubsteps ()Ljava/util/Collection;
-	public static fun index (ILjava/util/List;)Lorg/partiql/plan/ExcludeIndex;
-	public static fun key (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/ExcludeKey;
-	public static fun struct (Ljava/util/List;)Lorg/partiql/plan/ExcludeStructWildcard;
-	public static fun symbol (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/ExcludeSymbol;
+public final class org/partiql/plan/Exclusion$StructKey : org/partiql/plan/Exclusion$Item {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getItems ()Ljava/util/List;
+	public final fun getKey ()Ljava/lang/String;
+	public fun hasItems ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/plan/ExcludeStep$Companion {
-	public final fun collection (Ljava/util/List;)Lorg/partiql/plan/ExcludeCollectionWildcard;
-	public static synthetic fun collection$default (Lorg/partiql/plan/ExcludeStep$Companion;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/ExcludeCollectionWildcard;
-	public final fun index (ILjava/util/List;)Lorg/partiql/plan/ExcludeIndex;
-	public static synthetic fun index$default (Lorg/partiql/plan/ExcludeStep$Companion;ILjava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/ExcludeIndex;
-	public final fun key (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/ExcludeKey;
-	public static synthetic fun key$default (Lorg/partiql/plan/ExcludeStep$Companion;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/ExcludeKey;
-	public final fun struct (Ljava/util/List;)Lorg/partiql/plan/ExcludeStructWildcard;
-	public static synthetic fun struct$default (Lorg/partiql/plan/ExcludeStep$Companion;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/ExcludeStructWildcard;
-	public final fun symbol (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/ExcludeSymbol;
-	public static synthetic fun symbol$default (Lorg/partiql/plan/ExcludeStep$Companion;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/ExcludeSymbol;
+public final class org/partiql/plan/Exclusion$StructSymbol : org/partiql/plan/Exclusion$Item {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getItems ()Ljava/util/List;
+	public final fun getSymbol ()Ljava/lang/String;
+	public fun hasItems ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/plan/ExcludeStructWildcard : org/partiql/plan/ExcludeStep {
-}
-
-public abstract interface class org/partiql/plan/ExcludeSymbol : org/partiql/plan/ExcludeStep {
-	public abstract fun getSymbol ()Ljava/lang/String;
+public final class org/partiql/plan/Exclusion$StructWildcard : org/partiql/plan/Exclusion$Item {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getItems ()Ljava/util/List;
+	public fun hasItems ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/plan/JoinType : java/lang/Enum {
@@ -407,8 +438,8 @@ public final class org/partiql/plan/rel/RelExcept$DefaultImpls {
 public abstract interface class org/partiql/plan/rel/RelExclude : org/partiql/plan/rel/Rel {
 	public abstract fun accept (Lorg/partiql/plan/rel/RelVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getChildren ()Ljava/util/Collection;
+	public abstract fun getExclusions ()Ljava/util/List;
 	public abstract fun getInput ()Lorg/partiql/plan/rel/Rel;
-	public abstract fun getPaths ()Ljava/util/List;
 	public abstract fun isOrdered ()Z
 }
 

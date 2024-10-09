@@ -1,6 +1,5 @@
 package org.partiql.planner.internal.exclude
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -9,9 +8,9 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.ExcludePath
-import org.partiql.plan.ExcludeStep
+import org.partiql.plan.Exclusion
 import org.partiql.plan.Operation
+import org.partiql.plan.builder.PlanFactory
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelProject
 import org.partiql.plan.rex.RexSelect
@@ -22,10 +21,6 @@ import org.partiql.spi.catalog.Session
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
-/**
- * TODO re-enable after merging https://github.com/partiql/partiql-lang-kotlin/pull/1611
- */
-@Disabled
 class SubsumptionTest {
 
     companion object {
@@ -46,11 +41,11 @@ class SubsumptionTest {
         val statement = parser.parse(text).root
         val session = Session.builder().catalog("default").catalogs(catalog).build()
         val plan = planner.plan(statement, session).plan
-        val excludeClause = getExcludeClause(plan.getOperation()).getPaths()
+        val excludeClause = getExcludeClause(plan.getOperation()).getExclusions()
         assertEquals(tc.expectedExcludeExprs, excludeClause)
     }
 
-    data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<ExcludePath>)
+    data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<Exclusion>)
 
     @ParameterizedTest
     @ArgumentsSource(ExcludeSubsumptionTests::class)
@@ -62,49 +57,51 @@ class SubsumptionTest {
             return parameters.map { Arguments.of(it) }.stream()
         }
 
-        private val factory = org.partiql.plan.builder.PlanFactory.STANDARD
+        private val factory = PlanFactory.STANDARD
 
-        private fun rexOpVar(binding: Int, position: Int): RexVar = factory.rexVar(binding, position)
+        private fun rexOpVar(depth: Int, offset: Int): RexVar = factory.rexVar(depth, offset)
 
         private val parameters = listOf(
             SubsumptionTC(
-                "s.a, t.a", // different roots
+                "s.a, t.a", // different variables
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 0), steps = listOf(org.partiql.plan.ExcludeStep.symbol("a"))
+                    Exclusion(
+                        variable = rexOpVar(0, 0),
+                        items = listOf(Exclusion.structSymbol("a")),
                     ),
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1), steps = listOf(org.partiql.plan.ExcludeStep.symbol("a"))
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(Exclusion.structSymbol("a")),
                     ),
                 )
             ),
             SubsumptionTC(
-                "t.a, t.b", // different steps
+                "t.a, t.b", // different items
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            org.partiql.plan.ExcludeStep.symbol("a"),
-                            org.partiql.plan.ExcludeStep.symbol("b"),
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol("a"),
+                            Exclusion.structSymbol("b"),
                         )
                     ),
                 )
             ),
             SubsumptionTC(
-                "s.a, t.a, t.b, s.b", // different roots and steps
+                "s.a, t.a, t.b, s.b", // different variables and items
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 0),
-                        steps = listOf(
-                            ExcludeStep.symbol("a"),
-                            ExcludeStep.symbol("b"),
+                    Exclusion(
+                        variable = rexOpVar(0, 0),
+                        items = listOf(
+                            Exclusion.structSymbol("a"),
+                            Exclusion.structSymbol("b"),
                         )
                     ),
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol("a"),
-                            ExcludeStep.symbol("b"),
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol("a"),
+                            Exclusion.structSymbol("b"),
                         )
                     )
                 )
@@ -120,35 +117,35 @@ class SubsumptionTest {
                 t.i['j'], t.i."j"
                 """.trimIndent(),
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol("a"),
-                            ExcludeStep.symbol("b"),
-                            ExcludeStep.symbol(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol("a"),
+                            Exclusion.structSymbol("b"),
+                            Exclusion.structSymbol(
                                 symbol = "c",
-                                substeps = listOf(ExcludeStep.struct()),
+                                children = listOf(Exclusion.structWildCard()),
                             ),
-                            ExcludeStep.symbol(
+                            Exclusion.structSymbol(
                                 symbol = "d",
-                                substeps = listOf(
-                                    ExcludeStep.struct(
-                                        substeps = listOf(
-                                            ExcludeStep.symbol(
-                                                symbol = "e", substeps = listOf(ExcludeStep.symbol("f"))
+                                children = listOf(
+                                    Exclusion.structWildCard(
+                                        children = listOf(
+                                            Exclusion.structSymbol(
+                                                symbol = "e", children = listOf(Exclusion.structSymbol("f"))
                                             ),
                                         ),
                                     ),
                                 ),
                             ),
-                            ExcludeStep.symbol(
-                                symbol = "g", substeps = listOf(ExcludeStep.collection())
+                            Exclusion.structSymbol(
+                                symbol = "g", children = listOf(Exclusion.collWildcard())
                             ),
-                            ExcludeStep.symbol(
-                                symbol = "h", substeps = listOf(ExcludeStep.index(1))
+                            Exclusion.structSymbol(
+                                symbol = "h", children = listOf(Exclusion.collIndex(1))
                             ),
-                            ExcludeStep.symbol(
-                                symbol = "i", substeps = listOf(ExcludeStep.key("j"))
+                            Exclusion.structSymbol(
+                                symbol = "i", children = listOf(Exclusion.structKey("j"))
                             ),
                         )
                     ),
@@ -168,43 +165,43 @@ class SubsumptionTest {
                 t."j".*, t."j"
                 """.trimIndent(),
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol("a"),
-                            ExcludeStep.symbol("b"),
-                            ExcludeStep.symbol(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol("a"),
+                            Exclusion.structSymbol("b"),
+                            Exclusion.structSymbol(
                                 symbol = "c",
-                                substeps = listOf(
-                                    ExcludeStep.struct(
-                                        substeps = listOf(
-                                            ExcludeStep.symbol("c1")
+                                children = listOf(
+                                    Exclusion.structWildCard(
+                                        children = listOf(
+                                            Exclusion.structSymbol("c1")
                                         )
                                     )
                                 )
                             ),
-                            ExcludeStep.symbol(
+                            Exclusion.structSymbol(
                                 symbol = "d",
-                                substeps = listOf(
-                                    ExcludeStep.struct(
-                                        substeps = listOf(ExcludeStep.symbol("d1")),
+                                children = listOf(
+                                    Exclusion.structWildCard(
+                                        children = listOf(Exclusion.structSymbol("d1")),
                                     )
                                 )
                             ),
-                            ExcludeStep.symbol(
-                                symbol = "e", substeps = listOf(ExcludeStep.index(1))
+                            Exclusion.structSymbol(
+                                symbol = "e", children = listOf(Exclusion.collIndex(1))
                             ),
-                            ExcludeStep.symbol(
-                                symbol = "f", substeps = listOf(ExcludeStep.index(1))
+                            Exclusion.structSymbol(
+                                symbol = "f", children = listOf(Exclusion.collIndex(1))
                             ),
-                            ExcludeStep.symbol(
-                                symbol = "g", substeps = listOf(ExcludeStep.collection())
+                            Exclusion.structSymbol(
+                                symbol = "g", children = listOf(Exclusion.collWildcard())
                             ),
-                            ExcludeStep.symbol(
-                                symbol = "h", substeps = listOf(ExcludeStep.collection())
+                            Exclusion.structSymbol(
+                                symbol = "h", children = listOf(Exclusion.collWildcard())
                             ),
-                            ExcludeStep.key("i"),
-                            ExcludeStep.key("j"),
+                            Exclusion.structKey("i"),
+                            Exclusion.structKey("j"),
                         )
                     ),
                 )
@@ -215,19 +212,19 @@ class SubsumptionTest {
                 t."b".*, t."b"."b1"[1], t."b".b2."b3"[*]    -- t."b".* subsumes
                 """,
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol(
                                 symbol = "a",
-                                substeps = listOf(
-                                    ExcludeStep.struct(
-                                        substeps = emptyList()
+                                children = listOf(
+                                    Exclusion.structWildCard(
+                                        children = emptyList()
                                     )
                                 )
                             ),
-                            ExcludeStep.key(
-                                key = "b", substeps = listOf(ExcludeStep.struct())
+                            Exclusion.structKey(
+                                key = "b", children = listOf(Exclusion.structWildCard())
                             ),
                         )
                     ),
@@ -239,19 +236,19 @@ class SubsumptionTest {
                 t.b."b1"[*], t.b."b1"[2], t.b."b1"[3][*]    -- t.b."b1"[*] subsumes
                 """,
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol(
                                 symbol = "a",
-                                substeps = listOf(ExcludeStep.collection()),
+                                children = listOf(Exclusion.collWildcard()),
                             ),
-                            ExcludeStep.symbol(
+                            Exclusion.structSymbol(
                                 symbol = "b",
-                                substeps = listOf(
-                                    ExcludeStep.key(
+                                children = listOf(
+                                    Exclusion.structKey(
                                         key = "b1",
-                                        substeps = listOf(ExcludeStep.collection()),
+                                        children = listOf(Exclusion.collWildcard()),
                                     ),
                                 ),
                             ),
@@ -265,13 +262,13 @@ class SubsumptionTest {
                 t."bAr"."bAz", t."bAr".baz      -- t."bAr".baz subsumes
                 """,
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol(symbol = "foo"),
-                            ExcludeStep.key(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol(symbol = "foo"),
+                            Exclusion.structKey(
                                 key = "bAr",
-                                substeps = listOf(ExcludeStep.symbol(symbol = "baz")),
+                                children = listOf(Exclusion.structSymbol(symbol = "baz")),
                             ),
                         ),
                     ),
@@ -284,35 +281,35 @@ class SubsumptionTest {
                 t.c[*].c2, t.c[1].c2.*[*].c3    -- t.c[*].c2 subsumes
                 """,
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol(
                                 symbol = "a",
-                                substeps = listOf(
-                                    ExcludeStep.collection(
-                                        substeps = listOf(ExcludeStep.symbol("a2"))
+                                children = listOf(
+                                    Exclusion.collWildcard(
+                                        children = listOf(Exclusion.structSymbol("a2"))
                                     ),
                                 ),
                             ),
-                            ExcludeStep.symbol(
+                            Exclusion.structSymbol(
                                 symbol = "b",
-                                substeps = listOf(
-                                    ExcludeStep.collection(
-                                        substeps = listOf(
-                                            ExcludeStep.symbol(
+                                children = listOf(
+                                    Exclusion.collWildcard(
+                                        children = listOf(
+                                            Exclusion.structSymbol(
                                                 symbol = "b2",
-                                                substeps = listOf(ExcludeStep.symbol("b3")),
+                                                children = listOf(Exclusion.structSymbol("b3")),
                                             ),
                                         )
                                     ),
                                 ),
                             ),
-                            ExcludeStep.symbol(
+                            Exclusion.structSymbol(
                                 symbol = "c",
-                                substeps = listOf(
-                                    ExcludeStep.collection(
-                                        substeps = listOf(ExcludeStep.symbol("c2"))
+                                children = listOf(
+                                    Exclusion.collWildcard(
+                                        children = listOf(Exclusion.structSymbol("c2"))
                                     ),
                                 ),
                             ),
@@ -326,28 +323,28 @@ class SubsumptionTest {
                 t.b.b1.foo.b2.b3, t.b.b1.bar.b2.b3.b4, t.b.b1."bat".b2.b3, t.b.b1.*.*.b3    -- t.b.b1.*.*.b3 subsumes
                 """,
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol(
                                 symbol = "a",
-                                substeps = listOf(
-                                    ExcludeStep.struct(
-                                        substeps = listOf(ExcludeStep.symbol("a1"))
+                                children = listOf(
+                                    Exclusion.structWildCard(
+                                        children = listOf(Exclusion.structSymbol("a1"))
                                     ),
                                 ),
                             ),
-                            ExcludeStep.symbol(
+                            Exclusion.structSymbol(
                                 symbol = "b",
-                                substeps = listOf(
-                                    ExcludeStep.symbol(
+                                children = listOf(
+                                    Exclusion.structSymbol(
                                         symbol = "b1",
-                                        substeps = listOf(
-                                            ExcludeStep.struct(
-                                                substeps = listOf(
-                                                    ExcludeStep.struct(
-                                                        substeps = listOf(
-                                                            ExcludeStep.symbol("b3")
+                                        children = listOf(
+                                            Exclusion.structWildCard(
+                                                children = listOf(
+                                                    Exclusion.structWildCard(
+                                                        children = listOf(
+                                                            Exclusion.structSymbol("b3")
                                                         )
                                                     )
                                                 )
@@ -366,32 +363,32 @@ class SubsumptionTest {
                 t.b."B1"."Bar".b2.b3, t.b.b1."Bar".b2.b3, t.b.b1."Bar".*.b3, t.b.b1.bar.*.b3 -- t.b.b1.bar.*.b3 subsumes
                 """,
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol(
                                 symbol = "a",
-                                substeps = listOf(
-                                    ExcludeStep.symbol(
+                                children = listOf(
+                                    Exclusion.structSymbol(
                                         symbol = "bar",
-                                        substeps = listOf(
-                                            ExcludeStep.symbol("a1")
+                                        children = listOf(
+                                            Exclusion.structSymbol("a1")
                                         ),
                                     ),
                                 ),
                             ),
-                            ExcludeStep.symbol(
+                            Exclusion.structSymbol(
                                 symbol = "b",
-                                substeps = listOf(
-                                    ExcludeStep.symbol(
+                                children = listOf(
+                                    Exclusion.structSymbol(
                                         symbol = "b1",
-                                        substeps = listOf(
-                                            ExcludeStep.symbol(
+                                        children = listOf(
+                                            Exclusion.structSymbol(
                                                 symbol = "bar",
-                                                substeps = listOf(
-                                                    ExcludeStep.struct(
-                                                        substeps = listOf(
-                                                            ExcludeStep.symbol("b3")
+                                                children = listOf(
+                                                    Exclusion.structWildCard(
+                                                        children = listOf(
+                                                            Exclusion.structSymbol("b3")
                                                         )
                                                     )
                                                 )
@@ -405,7 +402,7 @@ class SubsumptionTest {
                 )
             ),
             SubsumptionTC(
-                """-- case sensitive and case-insensitive roots
+                """-- case sensitive and case-insensitive variables
                 t.a, "t".a,     -- t.a subsumes
                 "t".b, t.b,     -- t.b subsumes
                 t."c", t.c,     -- t.c subsumes
@@ -414,15 +411,15 @@ class SubsumptionTest {
                 "t"."f"         -- included under resolved variable 1
                 """,
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol(symbol = "a"),
-                            ExcludeStep.symbol(symbol = "b"),
-                            ExcludeStep.symbol(symbol = "c"),
-                            ExcludeStep.symbol(symbol = "d"),
-                            ExcludeStep.symbol(symbol = "e"),
-                            ExcludeStep.key("f")
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol(symbol = "a"),
+                            Exclusion.structSymbol(symbol = "b"),
+                            Exclusion.structSymbol(symbol = "c"),
+                            Exclusion.structSymbol(symbol = "d"),
+                            Exclusion.structSymbol(symbol = "e"),
+                            Exclusion.structKey("f")
                         )
                     ),
                 )
@@ -433,30 +430,30 @@ class SubsumptionTest {
                 t.b.*.b2, t.b.b1.foo
                 """,
                 listOf(
-                    ExcludePath.of(
-                        root = rexOpVar(0, 1),
-                        steps = listOf(
-                            ExcludeStep.symbol(
+                    Exclusion(
+                        variable = rexOpVar(0, 1),
+                        items = listOf(
+                            Exclusion.structSymbol(
                                 symbol = "a",
-                                substeps = listOf(
-                                    ExcludeStep.struct(
-                                        substeps = listOf(
-                                            ExcludeStep.symbol("a1"),
-                                            ExcludeStep.symbol("a2"),
+                                children = listOf(
+                                    Exclusion.structWildCard(
+                                        children = listOf(
+                                            Exclusion.structSymbol("a1"),
+                                            Exclusion.structSymbol("a2"),
                                         )
                                     )
                                 )
                             ),
-                            ExcludeStep.symbol(
+                            Exclusion.structSymbol(
                                 symbol = "b",
-                                substeps = listOf(
-                                    ExcludeStep.struct(
-                                        substeps = listOf(ExcludeStep.symbol("b2"))
+                                children = listOf(
+                                    Exclusion.structWildCard(
+                                        children = listOf(Exclusion.structSymbol("b2"))
                                     ),
-                                    ExcludeStep.symbol(
+                                    Exclusion.structSymbol(
                                         symbol = "b1",
-                                        substeps = listOf(
-                                            ExcludeStep.symbol("foo")
+                                        children = listOf(
+                                            Exclusion.structSymbol("foo")
                                         )
                                     )
                                 ),

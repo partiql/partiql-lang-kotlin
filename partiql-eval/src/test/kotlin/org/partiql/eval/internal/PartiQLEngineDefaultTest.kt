@@ -908,74 +908,72 @@ class PartiQLEngineDefaultTest {
                     "c" to stringValue("z"),
                 )
             ),
-            // TODO re-enable after merging https://github.com/partiql/partiql-lang-kotlin/pull/1611
-            // SuccessTestCase(
-            //     input = """
-            //         SELECT t
-            //         EXCLUDE t.a.b
-            //         FROM <<
-            //             {'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}
-            //         >> AS t
-            //     """.trimIndent(),
-            //     expected = bagValue(
-            //         structValue(
-            //             "t" to structValue(
-            //                 "a" to structValue<PartiQLValue>(
-            //                     // field `b` excluded
-            //                 ),
-            //                 "foo" to stringValue("bar"),
-            //                 "foo2" to stringValue("bar2")
-            //             )
-            //         ),
-            //     )
-            // ),
-            // TODO re-enable after merging https://github.com/partiql/partiql-lang-kotlin/pull/1611
-            // SuccessTestCase(
-            //     input = """
-            //         SELECT *
-            //         EXCLUDE
-            //             t.a.b.c[*].field_x
-            //         FROM [{
-            //             'a': {
-            //                 'b': {
-            //                     'c': [
-            //                         {                    -- c[0]; field_x to be removed
-            //                             'field_x': 0,
-            //                             'field_y': 0
-            //                         },
-            //                         {                    -- c[1]; field_x to be removed
-            //                             'field_x': 1,
-            //                             'field_y': 1
-            //                         },
-            //                         {                    -- c[2]; field_x to be removed
-            //                             'field_x': 2,
-            //                             'field_y': 2
-            //                         }
-            //                     ]
-            //                 }
-            //             }
-            //         }] AS t
-            //     """.trimIndent(),
-            //     expected = bagValue(
-            //         structValue(
-            //             "a" to structValue(
-            //                 "b" to structValue(
-            //                     "c" to listValue(
-            //                         structValue(
-            //                             "field_y" to int32Value(0)
-            //                         ),
-            //                         structValue(
-            //                             "field_y" to int32Value(1)
-            //                         ),
-            //                         structValue(
-            //                             "field_y" to int32Value(2)
-            //                         )
-            //                     )
-            //                 )
-            //             )
-            //         )
-            //     )
-            // ),
+            SuccessTestCase(
+                input = """
+                    SELECT t
+                    EXCLUDE t.a.b
+                    FROM <<
+                        {'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}
+                    >> AS t
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "t" to structValue(
+                            "a" to structValue<PartiQLValue>(
+                                // field `b` excluded
+                            ),
+                            "foo" to stringValue("bar"),
+                            "foo2" to stringValue("bar2")
+                        )
+                    ),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT *
+                    EXCLUDE
+                        t.a.b.c[*].field_x
+                    FROM [{
+                        'a': {
+                            'b': {
+                                'c': [
+                                    {                    -- c[0]; field_x to be removed
+                                        'field_x': 0,
+                                        'field_y': 0
+                                    },
+                                    {                    -- c[1]; field_x to be removed
+                                        'field_x': 1,
+                                        'field_y': 1
+                                    },
+                                    {                    -- c[2]; field_x to be removed
+                                        'field_x': 2,
+                                        'field_y': 2
+                                    }
+                                ]
+                            }
+                        }
+                    }] AS t
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "a" to structValue(
+                            "b" to structValue(
+                                "c" to listValue(
+                                    structValue(
+                                        "field_y" to int32Value(0)
+                                    ),
+                                    structValue(
+                                        "field_y" to int32Value(1)
+                                    ),
+                                    structValue(
+                                        "field_y" to int32Value(2)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
             SuccessTestCase(
                 input = """
                     CASE (1)

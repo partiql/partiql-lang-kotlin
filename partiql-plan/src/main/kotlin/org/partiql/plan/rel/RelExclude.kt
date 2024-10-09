@@ -1,6 +1,6 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.ExcludePath
+import org.partiql.plan.Exclusion
 
 /**
  * Logical `EXCLUDE` operation.
@@ -9,7 +9,7 @@ public interface RelExclude : Rel {
 
     public fun getInput(): Rel
 
-    public fun getPaths(): List<ExcludePath>
+    public fun getExclusions(): List<Exclusion>
 
     override fun getChildren(): Collection<Rel> = listOf(getInput())
 
@@ -22,19 +22,18 @@ public interface RelExclude : Rel {
 /**
  * Default [RelExclude] implementation.
  */
-internal class RelExcludeImpl(input: Rel, paths: List<ExcludePath>) :
-    RelExclude {
+internal class RelExcludeImpl(input: Rel, exclusions: List<Exclusion>) : RelExclude {
 
     // DO NOT USE FINAL
     private var _input: Rel = input
-    private var _paths: List<ExcludePath> = paths
+    private var _exclusions: List<Exclusion> = exclusions
     private var _ordered: Boolean = input.isOrdered()
 
     override fun getInput(): Rel = _input
 
     override fun getChildren(): Collection<Rel> = listOf(_input)
 
-    override fun getPaths(): List<ExcludePath> = _paths
+    override fun getExclusions(): List<Exclusion> = _exclusions
 
     override fun isOrdered(): Boolean = _ordered
 
@@ -46,14 +45,14 @@ internal class RelExcludeImpl(input: Rel, paths: List<ExcludePath>) :
         if (this === other) return true
         if (other !is RelExclude) return false
         if (_input != other.getInput()) return false
-        if (_paths != other.getPaths()) return false
+        if (_exclusions != other.getExclusions()) return false
         return true
     }
 
     override fun hashCode(): Int {
         var result = 1
         result = 31 * result + _input.hashCode()
-        result = 31 * result + _paths.hashCode()
+        result = 31 * result + _exclusions.hashCode()
         return result
     }
 }

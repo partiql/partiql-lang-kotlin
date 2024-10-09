@@ -4,8 +4,7 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.AggregateCall
 import org.partiql.plan.Collation
-import org.partiql.plan.ExcludePath
-import org.partiql.plan.ExcludeStep
+import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
 import org.partiql.plan.Plan
 import org.partiql.plan.rel.RelType
@@ -291,20 +290,20 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             return factory.relExclude(input, paths)
         }
 
-        override fun visitRelOpExcludePath(node: IRel.Op.Exclude.Path, ctx: PType): ExcludePath? {
-            val root = visitRexOp(node.root, ctx) as? RexVar ?: return null
-            val steps = node.steps.map { visitRelOpExcludeStep(it, ctx) as ExcludeStep }
-            return ExcludePath.of(root, steps)
+        override fun visitRelOpExcludePath(node: IRel.Op.Exclude.Path, ctx: PType): Exclusion? {
+            val variable = visitRexOp(node.root, ctx) as? RexVar ?: return null
+            val items = node.steps.map { visitRelOpExcludeStep(it, ctx) }
+            return Exclusion(variable, items)
         }
 
-        override fun visitRelOpExcludeStep(node: IRel.Op.Exclude.Step, ctx: PType): Any {
-            val substeps = node.substeps.map { visitRelOpExcludeStep(it, ctx) as ExcludeStep }
+        override fun visitRelOpExcludeStep(node: IRel.Op.Exclude.Step, ctx: PType): Exclusion.Item {
+            val items = node.substeps.map { visitRelOpExcludeStep(it, ctx) }
             return when (node.type) {
-                is IRel.Op.Exclude.Type.CollIndex -> ExcludeStep.index(node.type.index, substeps)
-                is IRel.Op.Exclude.Type.CollWildcard -> ExcludeStep.collection(substeps)
-                is IRel.Op.Exclude.Type.StructKey -> ExcludeStep.key(node.type.key, substeps)
-                is IRel.Op.Exclude.Type.StructSymbol -> ExcludeStep.symbol(node.type.symbol, substeps)
-                is IRel.Op.Exclude.Type.StructWildcard -> ExcludeStep.struct(substeps)
+                is IRel.Op.Exclude.Type.CollIndex -> Exclusion.collIndex(node.type.index, items)
+                is IRel.Op.Exclude.Type.CollWildcard -> Exclusion.collWildcard(items)
+                is IRel.Op.Exclude.Type.StructKey -> Exclusion.structKey(node.type.key, items)
+                is IRel.Op.Exclude.Type.StructSymbol -> Exclusion.structSymbol(node.type.symbol, items)
+                is IRel.Op.Exclude.Type.StructWildcard -> Exclusion.structWildCard(items)
             }
         }
 

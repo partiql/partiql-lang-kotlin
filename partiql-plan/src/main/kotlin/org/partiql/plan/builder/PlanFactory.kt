@@ -2,7 +2,7 @@ package org.partiql.plan.builder
 
 import org.partiql.plan.AggregateCall
 import org.partiql.plan.Collation
-import org.partiql.plan.ExcludePath
+import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
 import org.partiql.plan.RelAggregateCallImpl
 import org.partiql.plan.rel.Rel
@@ -13,7 +13,9 @@ import org.partiql.plan.rel.RelCorrelateImpl
 import org.partiql.plan.rel.RelDistinct
 import org.partiql.plan.rel.RelDistinctImpl
 import org.partiql.plan.rel.RelExcept
+import org.partiql.plan.rel.RelExceptImpl
 import org.partiql.plan.rel.RelExclude
+import org.partiql.plan.rel.RelExcludeImpl
 import org.partiql.plan.rel.RelFilter
 import org.partiql.plan.rel.RelFilterImpl
 import org.partiql.plan.rel.RelIntersect
@@ -21,6 +23,7 @@ import org.partiql.plan.rel.RelIntersectImpl
 import org.partiql.plan.rel.RelIterate
 import org.partiql.plan.rel.RelIterateImpl
 import org.partiql.plan.rel.RelJoin
+import org.partiql.plan.rel.RelJoinImpl
 import org.partiql.plan.rel.RelLimit
 import org.partiql.plan.rel.RelLimitImpl
 import org.partiql.plan.rel.RelOffset
@@ -188,19 +191,16 @@ public interface PlanFactory {
         lhs: Rel,
         rhs: Rel,
         isAll: Boolean,
-    ): RelExcept = org.partiql.plan.rel.RelExceptImpl(lhs, rhs, isAll)
+    ): RelExcept = RelExceptImpl(lhs, rhs, isAll)
 
     /**
      * Create a [RelExclude] instance.
      *
      * @param input
-     * @param paths
+     * @param exclusions
      * @return
      */
-    public fun relExclude(
-        input: Rel,
-        paths: List<ExcludePath>,
-    ): RelExclude = org.partiql.plan.rel.RelExcludeImpl(input, paths)
+    public fun relExclude(input: Rel, exclusions: List<Exclusion>): RelExclude = RelExcludeImpl(input, exclusions)
 
     /**
      * Create a [RelFilter] instance.
@@ -273,7 +273,7 @@ public interface PlanFactory {
         type: JoinType,
         lhsSchema: RelType? = null,
         rhsSchema: RelType? = null,
-    ): RelJoin = org.partiql.plan.rel.RelJoinImpl(lhs, rhs, condition, type, lhsSchema, rhsSchema)
+    ): RelJoin = RelJoinImpl(lhs, rhs, condition, type, lhsSchema, rhsSchema)
 
     /**
      * Create a [RelLimit] instance.

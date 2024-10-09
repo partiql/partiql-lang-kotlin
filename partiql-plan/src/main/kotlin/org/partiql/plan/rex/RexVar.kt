@@ -42,7 +42,6 @@ internal class RexVarImpl(depth: Int, offset: Int, type: RexType) : RexVar {
         if (other !is RexVar) return false
         if (_depth != other.getDepth()) return false
         if (_offset != other.getOffset()) return false
-        if (_type != other.getType()) return false
         return true
     }
 
@@ -50,7 +49,6 @@ internal class RexVarImpl(depth: Int, offset: Int, type: RexType) : RexVar {
         var result = 1
         result = 31 * result + _depth
         result = 31 * result + _offset
-        result = 31 * result + _type.hashCode()
         return result
     }
 }
