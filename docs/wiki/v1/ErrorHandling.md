@@ -85,7 +85,7 @@ public class Foo {
 
         // Planner Component
         PartiQLPlanner planner = PartiQLPlanner.standard();
-        PlannerConfig plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build();
+        PlannerConfig plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build(); // Registration here!!
 
         // Planning and catching the ErrorListenerException
         Plan plan;
@@ -143,7 +143,7 @@ public class ConsoleErrorListener extends ErrorListener {
         System.out.println(message);
     }
 
-    private String getMessage(@NotNull Error error, @NotNull String prefix) {
+    static String getMessage(@NotNull Error error, @NotNull String prefix) {
         switch (error.getCode()) {
             case ErrorCode.ALWAYS_MISSING:
                 Integer line = (Integer) error.getProperty(Property.LINE_NO);
@@ -155,13 +155,13 @@ public class ConsoleErrorListener extends ErrorListener {
                 if (name == null) {
                     name = "UNKNOWN";
                 }
-                return "e: Feature (" + name + ") not yet supported.";
+                return prefix + "Feature (" + name + ") not yet supported.";
             default:
                 return "Unhandled error code received.";
         }
     }
 
-    private String getNullSafeLocation(Integer line, Integer col) {
+    String getNullSafeLocation(Integer line, Integer col) {
         // Internal implementation
     }
 }
@@ -200,6 +200,28 @@ class Example {
             throw new PlanningFailure("Errors encountered. Exiting.");
         }
         return plan;
+    }
+}
+```
+
+## What about Execution?
+
+Error listeners are specifically meant to provide control over the reporting of errors for PartiQL's major components (parser,
+planner, and compiler). However, for the execution of compiled statements, PartiQL still provides errors (and error codes)
+by throwing an `EvaluationException` which exposes a method, `Error getError()`. The `EvaluationException` does not
+expose a message, cause, or stacktrace.
+
+Here is an example of how you can leverage this functionality below:
+```java
+class MyApplication {
+    void executeAndPrint(PreparedStatement stmt, Session session) {
+        Datum lazyData;
+        try {
+            lazyData = stmt.execute(session);
+            // Iterate through the lazyData and print to the console.
+        } catch (EvaluationException e) {
+            System.out.println(ConsoleErrorListener.getMessage(e.getError(), "e: "));
+        }
     }
 }
 ```
