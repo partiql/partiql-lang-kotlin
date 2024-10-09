@@ -36,15 +36,16 @@ internal class RexCallDynamicImpl(
     private var args: List<Rex>,
 ) : RexCallDynamic {
 
+    // DO NOT USE FINAL
+    private var _type: RexType = RexType.dynamic()
+
     override fun getName(): String = name
 
     override fun getFunctions(): List<Function.Instance> = functions
 
     override fun getArgs(): List<Rex> = args
 
-    override fun getType(): RexType {
-        TODO("Function .getType()")
-    }
+    override fun getType(): RexType = _type
 
     override fun getChildren(): Collection<Rex> = args
 }

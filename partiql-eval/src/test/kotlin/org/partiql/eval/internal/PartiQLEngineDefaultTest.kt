@@ -938,7 +938,7 @@ class PartiQLEngineDefaultTest {
                             'b': {
                                 'c': [
                                     {                    -- c[0]; field_x to be removed
-                                        'field_x': 0, 
+                                        'field_x': 0,
                                         'field_y': 0
                                     },
                                     {                    -- c[1]; field_x to be removed

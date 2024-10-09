@@ -15,19 +15,18 @@ public interface RexPathKey : Rex {
 /**
  * Standard internal implementation for [RexPathKey].
  */
-internal class RexPathKeyImpl(operand: Rex, key: Rex) : RexPathKey {
+internal class RexPathKeyImpl(operand: Rex, key: Rex, type: RexType) : RexPathKey {
 
     // DO NOT USE FINAL
     private var _operand = operand
     private var _key = key
+    private var _type = type
 
     override fun getOperand() = _operand
 
     override fun getKey() = _key
 
-    override fun getType(): RexType {
-        TODO("Not yet implemented")
-    }
+    override fun getType(): RexType = _type
 
     override fun getChildren(): Collection<Rex> = listOf(_operand, _key)
 }

@@ -29,7 +29,7 @@ internal class RexNullIfImpl(v1: Rex, v2: Rex) : RexNullIf {
 
     override fun getType(): RexType = _v1.getType()
 
-    override fun getChildren(): Collection<Rex> = listOf(_v2)
+    override fun getChildren(): Collection<Rex> = listOf(_v1, _v2)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

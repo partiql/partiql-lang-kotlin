@@ -24,18 +24,18 @@ public interface RexVar : Rex {
 /**
  * Default [RexVar] implementation intended for extension.
  */
-internal class RexVarImpl(depth: Int, offset: Int) : RexVar {
+internal class RexVarImpl(depth: Int, offset: Int, type: RexType) : RexVar {
 
     // DO NOT USE FINAL
     private var _depth = depth
     private var _offset = offset
-    // private var _type = type
-    //
+    private var _type = type
+
     override fun getDepth(): Int = _depth
 
     override fun getOffset(): Int = _offset
 
-    override fun getType(): RexType = TODO("getType not yet implemented")
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

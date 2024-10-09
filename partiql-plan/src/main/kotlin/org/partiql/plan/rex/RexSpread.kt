@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * TODO DOCUMENTATION
  */
@@ -17,11 +15,11 @@ public interface RexSpread : Rex {
 /**
  * Default [RexSpread] operator intended for extension.
  */
-internal class RexSpreadImpl(args: List<Rex>) : RexSpread {
+internal class RexSpreadImpl(args: List<Rex>, type: RexType) : RexSpread {
 
     // DO NOT USE FINAL
     private var _args = args
-    private var _type = RexType.of(PType.struct())
+    private var _type = type
 
     override fun getArgs(): List<Rex> = _args
 
@@ -29,12 +27,15 @@ internal class RexSpreadImpl(args: List<Rex>) : RexSpread {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is RexSpread) return false
-        if (_args != other.getArgs()) return false
+        if (other !is RexSpreadImpl) return false
+        if (_args != other._args) return false
+        if (_type != other._type) return false
         return true
     }
 
     override fun hashCode(): Int {
-        return _args.hashCode()
+        var result = _args.hashCode()
+        result = 31 * result + _type.hashCode()
+        return result
     }
 }

@@ -172,24 +172,34 @@ public abstract interface class org/partiql/plan/builder/PlanFactory {
 	public abstract fun relUnion (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public abstract fun relUnpivot (Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public abstract fun rexArray (Ljava/util/Collection;)Lorg/partiql/plan/rex/RexArray;
+	public abstract fun rexArray (Ljava/util/Collection;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexArray;
 	public abstract fun rexBag (Ljava/util/Collection;)Lorg/partiql/plan/rex/RexBag;
+	public abstract fun rexBag (Ljava/util/Collection;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexBag;
 	public abstract fun rexCall (Lorg/partiql/spi/function/Function$Instance;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
 	public abstract fun rexCallDynamic (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexCallDynamic;
 	public abstract fun rexCase (Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
+	public abstract fun rexCase (Ljava/util/List;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCase;
 	public abstract fun rexCase (Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
+	public abstract fun rexCase (Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCase;
 	public abstract fun rexCast (Lorg/partiql/plan/rex/Rex;Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexCast;
 	public abstract fun rexCoalesce (Ljava/util/List;)Lorg/partiql/plan/rex/RexCoalesce;
+	public abstract fun rexCoalesce (Ljava/util/List;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCoalesce;
 	public abstract fun rexError (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/rex/RexError;
 	public abstract fun rexLit (Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/rex/RexLit;
 	public abstract fun rexMissing (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/rex/RexMissing;
 	public abstract fun rexNullIf (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexNullIf;
 	public abstract fun rexPathIndex (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPathIndex;
+	public abstract fun rexPathIndex (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexPathIndex;
 	public abstract fun rexPathKey (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPathKey;
+	public abstract fun rexPathKey (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexPathKey;
 	public abstract fun rexPathSymbol (Lorg/partiql/plan/rex/Rex;Ljava/lang/String;)Lorg/partiql/plan/rex/RexPathSymbol;
+	public abstract fun rexPathSymbol (Lorg/partiql/plan/rex/Rex;Ljava/lang/String;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexPathSymbol;
 	public abstract fun rexPivot (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPivot;
 	public abstract fun rexSelect (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexSelect;
 	public abstract fun rexSpread (Ljava/util/List;)Lorg/partiql/plan/rex/RexSpread;
+	public abstract fun rexSpread (Ljava/util/List;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexSpread;
 	public abstract fun rexStruct (Ljava/util/List;)Lorg/partiql/plan/rex/RexStruct;
+	public abstract fun rexStruct (Ljava/util/List;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexStruct;
 	public abstract fun rexSubquery (Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;Z)Lorg/partiql/plan/rex/RexSubquery;
 	public abstract fun rexSubqueryComp (Ljava/util/List;Lorg/partiql/plan/rex/RexSubqueryComp$Comp;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rex/RexSubqueryComp;
 	public abstract fun rexSubqueryComp (Ljava/util/List;Lorg/partiql/plan/rex/RexSubqueryComp$Comp;Lorg/partiql/plan/rex/RexSubqueryComp$Quantifier;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rex/RexSubqueryComp;
@@ -198,6 +208,7 @@ public abstract interface class org/partiql/plan/builder/PlanFactory {
 	public abstract fun rexSubqueryTest (Lorg/partiql/plan/rex/RexSubqueryTest$Test;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rex/RexSubqueryTest;
 	public abstract fun rexTable (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/rex/RexTable;
 	public abstract fun rexVar (II)Lorg/partiql/plan/rex/RexVar;
+	public abstract fun rexVar (IILorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexVar;
 }
 
 public final class org/partiql/plan/builder/PlanFactory$Companion {
@@ -230,24 +241,34 @@ public final class org/partiql/plan/builder/PlanFactory$DefaultImpls {
 	public static fun relUnion (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rel/Rel;Z)Lorg/partiql/plan/rel/RelUnion;
 	public static fun relUnpivot (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rel/RelUnpivot;
 	public static fun rexArray (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/Collection;)Lorg/partiql/plan/rex/RexArray;
+	public static fun rexArray (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/Collection;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexArray;
 	public static fun rexBag (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/Collection;)Lorg/partiql/plan/rex/RexBag;
+	public static fun rexBag (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/Collection;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexBag;
 	public static fun rexCall (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/spi/function/Function$Instance;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
 	public static fun rexCallDynamic (Lorg/partiql/plan/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexCallDynamic;
 	public static fun rexCase (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
+	public static fun rexCase (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCase;
 	public static fun rexCase (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
+	public static fun rexCase (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCase;
 	public static fun rexCast (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexCast;
 	public static fun rexCoalesce (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;)Lorg/partiql/plan/rex/RexCoalesce;
+	public static fun rexCoalesce (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCoalesce;
 	public static fun rexError (Lorg/partiql/plan/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/rex/RexError;
 	public static fun rexLit (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/rex/RexLit;
 	public static fun rexMissing (Lorg/partiql/plan/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/rex/RexMissing;
 	public static fun rexNullIf (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexNullIf;
 	public static fun rexPathIndex (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPathIndex;
+	public static fun rexPathIndex (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexPathIndex;
 	public static fun rexPathKey (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPathKey;
+	public static fun rexPathKey (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexPathKey;
 	public static fun rexPathSymbol (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Ljava/lang/String;)Lorg/partiql/plan/rex/RexPathSymbol;
+	public static fun rexPathSymbol (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Ljava/lang/String;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexPathSymbol;
 	public static fun rexPivot (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPivot;
 	public static fun rexSelect (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexSelect;
 	public static fun rexSpread (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;)Lorg/partiql/plan/rex/RexSpread;
+	public static fun rexSpread (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexSpread;
 	public static fun rexStruct (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;)Lorg/partiql/plan/rex/RexStruct;
+	public static fun rexStruct (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexStruct;
 	public static fun rexSubquery (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rel/Rel;Lorg/partiql/plan/rex/Rex;Z)Lorg/partiql/plan/rex/RexSubquery;
 	public static fun rexSubqueryComp (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/RexSubqueryComp$Comp;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rex/RexSubqueryComp;
 	public static fun rexSubqueryComp (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/RexSubqueryComp$Comp;Lorg/partiql/plan/rex/RexSubqueryComp$Quantifier;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rex/RexSubqueryComp;
@@ -256,6 +277,7 @@ public final class org/partiql/plan/builder/PlanFactory$DefaultImpls {
 	public static fun rexSubqueryTest (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/RexSubqueryTest$Test;Lorg/partiql/plan/rel/Rel;)Lorg/partiql/plan/rex/RexSubqueryTest;
 	public static fun rexTable (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/rex/RexTable;
 	public static fun rexVar (Lorg/partiql/plan/builder/PlanFactory;II)Lorg/partiql/plan/rex/RexVar;
+	public static fun rexVar (Lorg/partiql/plan/builder/PlanFactory;IILorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexVar;
 }
 
 public final class org/partiql/plan/builder/RelBuilder {
@@ -758,13 +780,11 @@ public abstract interface class org/partiql/plan/rex/RexError : org/partiql/plan
 	public abstract fun getChildren ()Ljava/util/Collection;
 	public abstract fun getMessage ()Ljava/lang/String;
 	public abstract fun getTrace ()Ljava/util/List;
-	public abstract fun getType ()Lorg/partiql/plan/rex/RexType;
 }
 
 public final class org/partiql/plan/rex/RexError$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexError;Lorg/partiql/plan/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun getChildren (Lorg/partiql/plan/rex/RexError;)Ljava/util/Collection;
-	public static fun getType (Lorg/partiql/plan/rex/RexError;)Lorg/partiql/plan/rex/RexType;
 }
 
 public abstract interface class org/partiql/plan/rex/RexLit : org/partiql/plan/rex/Rex {
@@ -783,13 +803,11 @@ public abstract interface class org/partiql/plan/rex/RexMissing : org/partiql/pl
 	public abstract fun getChildren ()Ljava/util/Collection;
 	public abstract fun getMessage ()Ljava/lang/String;
 	public abstract fun getTrace ()Ljava/util/List;
-	public abstract fun getType ()Lorg/partiql/plan/rex/RexType;
 }
 
 public final class org/partiql/plan/rex/RexMissing$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexMissing;Lorg/partiql/plan/rex/RexVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun getChildren (Lorg/partiql/plan/rex/RexMissing;)Ljava/util/Collection;
-	public static fun getType (Lorg/partiql/plan/rex/RexMissing;)Lorg/partiql/plan/rex/RexType;
 }
 
 public abstract interface class org/partiql/plan/rex/RexNullIf : org/partiql/plan/rex/Rex {
@@ -975,15 +993,16 @@ public final class org/partiql/plan/rex/RexTable$DefaultImpls {
 
 public final class org/partiql/plan/rex/RexType {
 	public static final field Companion Lorg/partiql/plan/rex/RexType$Companion;
+	public fun <init> (Lorg/partiql/types/PType;)V
+	public static final fun dynamic ()Lorg/partiql/plan/rex/RexType;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getPType ()Lorg/partiql/types/PType;
 	public fun hashCode ()I
-	public static final fun of (Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexType;
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/plan/rex/RexType$Companion {
-	public final fun of (Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexType;
+	public final fun dynamic ()Lorg/partiql/plan/rex/RexType;
 }
 
 public abstract interface class org/partiql/plan/rex/RexVar : org/partiql/plan/rex/Rex {

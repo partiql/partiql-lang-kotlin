@@ -41,15 +41,16 @@ public interface RexCase : Rex {
 }
 
 /**
- * Default [RexCase] meant for extension.
+ * Internal implementation of [RexCase].
  */
-internal class RexCaseImpl(match: Rex?, branches: List<RexCase.Branch>, default: Rex?) : RexCase {
+internal class RexCaseImpl(match: Rex?, branches: List<RexCase.Branch>, default: Rex?, type: RexType) : RexCase {
 
     // DO NOT USE FINAL
     private var _match = match
     private var _branches = branches
     private var _default = default
     private var _children: Collection<Rex>? = null
+    private var _type = type
 
     override fun getMatch(): Rex? = _match
 
@@ -64,9 +65,7 @@ internal class RexCaseImpl(match: Rex?, branches: List<RexCase.Branch>, default:
         return _children!!
     }
 
-    override fun getType(): RexType {
-        TODO("Not yet implemented")
-    }
+    override fun getType(): RexType = _type
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

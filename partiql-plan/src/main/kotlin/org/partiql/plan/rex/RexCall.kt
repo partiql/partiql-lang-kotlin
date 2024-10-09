@@ -24,19 +24,19 @@ public interface RexCall : Rex {
 
 /**
  * Default [RexCall] implementation meant for extension.
- *
- * DO NOT USE FINAL
  */
-internal class RexCallImpl(
-    private var function: Function.Instance,
-    private var args: List<Rex>,
-) : RexCall {
+internal class RexCallImpl(function: Function.Instance, args: List<Rex>) : RexCall {
 
-    override fun getFunction(): Function.Instance = function
+    // DO NOT USE FINAL
+    private var _function: Function.Instance = function
+    private var _args: List<Rex> = args
+    private var _type: RexType = RexType(function.returns)
 
-    override fun getArgs(): List<Rex> = args
+    override fun getFunction(): Function.Instance = _function
 
-    override fun getType(): RexType = RexType.of(function.returns)
+    override fun getArgs(): List<Rex> = _args
 
-    override fun getChildren(): Collection<Rex> = args
+    override fun getType(): RexType = _type
+
+    override fun getChildren(): Collection<Rex> = _args
 }

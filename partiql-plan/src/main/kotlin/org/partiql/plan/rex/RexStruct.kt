@@ -1,7 +1,5 @@
 package org.partiql.plan.rex
 
-import org.partiql.types.PType
-
 /**
  * TODO DOCUMENTATION
  */
@@ -35,12 +33,12 @@ public interface RexStruct : Rex {
 /**
  * Default [RexStruct] implementation intended for extension.
  */
-internal class RexStructImpl(fields: List<RexStruct.Field>) : RexStruct {
+internal class RexStructImpl(fields: List<RexStruct.Field>, type: RexType) : RexStruct {
 
     // DO NOT USE FINAL
     private var _fields = fields
     private var _children: Collection<Rex>? = null
-    private var _type = RexType.of(PType.struct())
+    private var _type = type
 
     override fun getFields(): List<RexStruct.Field> = _fields
 

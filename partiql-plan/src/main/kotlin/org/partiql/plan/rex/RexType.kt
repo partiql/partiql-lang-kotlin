@@ -3,12 +3,14 @@ package org.partiql.plan.rex
 import org.partiql.types.PType
 
 /**
- * [RexType] is a simple wrapper over [PType].
+ * [RexType] is a simple wrapper over [PType], but does not necessarily only hold a PType.
  *
- * In later releases, a [RexType] may hold metadata to aid custom planner implementations.
+ *
+ * Developer Note: In later releases, a [RexType] may hold metadata to aid custom planner implementations.
  */
-public class RexType internal constructor(type: PType) {
+public class RexType public constructor(type: PType) {
 
+    // PRIVATE VAR
     private var _type: PType = type
 
     public fun getPType(): PType = _type
@@ -22,12 +24,9 @@ public class RexType internal constructor(type: PType) {
     public companion object {
 
         /**
-         * Create a [RexType] from a PType.
-         *
-         * @param type
-         * @return
+         * A [RexType] for an "untyped" logical plan node.
          */
         @JvmStatic
-        public fun of(type: PType): RexType = RexType(type)
+        public fun dynamic(): RexType = RexType(PType.dynamic())
     }
 }
