@@ -345,6 +345,8 @@ public final class org/partiql/spi/catalog/Identifier : java/lang/Iterable, kotl
 	public static final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun of ([Lorg/partiql/spi/catalog/Identifier$Part;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun regular (Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
+	public static final fun regular (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public static final fun regular ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
 	public fun spliterator ()Ljava/util/Spliterator;
 	public fun toString ()Ljava/lang/String;
 }
@@ -356,6 +358,8 @@ public final class org/partiql/spi/catalog/Identifier$Companion {
 	public final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun of ([Lorg/partiql/spi/catalog/Identifier$Part;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun regular (Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
+	public final fun regular (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public final fun regular ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
 }
 
 public final class org/partiql/spi/catalog/Identifier$Part {
@@ -634,6 +638,7 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun sexp (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun smallint (S)Lorg/partiql/spi/value/Datum;
 	public static fun string (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
+	public static fun struct ()Lorg/partiql/spi/value/Datum;
 	public static fun struct (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun symbol (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public static fun time (Lorg/partiql/value/datetime/Time;)Lorg/partiql/spi/value/Datum;

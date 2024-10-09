@@ -17,7 +17,6 @@ package org.partiql.planner.test
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Path
-import kotlin.io.path.toPath
 
 /**
  * The PartiQLTestProvider is a simple utility for indexing SQL statements within files for re-use across library tests.
@@ -28,11 +27,6 @@ class PartiQLTestProvider {
      * Backing map for test input lookup.
      */
     private val map: MutableMap<PartiQLTest.Key, PartiQLTest> = mutableMapOf()
-
-    /**
-     * Default database of test inputs.
-     */
-    private val default = this::class.java.getResource("/inputs")!!.toURI().toPath()
 
     /**
      * Load test groups from a directory.

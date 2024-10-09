@@ -4,12 +4,12 @@ import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicTest
 import org.partiql.errors.ProblemCallback
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Statement
-import org.partiql.plan.debug.PlanPrinter
+import org.partiql.plan.Operation
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
+import org.partiql.planner.util.PlanPrinter
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
@@ -37,7 +37,7 @@ abstract class PartiQLTyperTestBase {
 
     companion object {
 
-        public val parser = PartiQLParser.default()
+        public val parser = PartiQLParser.standard()
         public val planner = PartiQLPlanner.standard()
 
         internal val session: ((String, Catalog) -> Session) = { catalog, metadata ->
@@ -90,8 +90,8 @@ abstract class PartiQLTyperTestBase {
                         val pc = ProblemCollector()
                         if (key is TestResult.Success) {
                             val result = testingPipeline(statement, testName, metadata, pc)
-                            val root = (result.plan.statement as Statement.Query).root
-                            val actualType = root.type
+                            val query = result.plan.getOperation() as Operation.Query
+                            val actualType = query.getType().getPType()
                             assert(actualType == key.expectedType) {
                                 buildString {
                                     this.appendLine("expected Type is : ${key.expectedType}")
@@ -115,8 +115,8 @@ abstract class PartiQLTyperTestBase {
                             }
                         } else {
                             val result = testingPipeline(statement, testName, metadata, pc)
-                            val root = (result.plan.statement as Statement.Query).root
-                            val actualType = root.type
+                            val query = result.plan.getOperation() as Operation.Query
+                            val actualType = query.getType().getPType()
                             assert(actualType.kind == Kind.DYNAMIC) {
                                 buildString {
                                     this.appendLine("expected Type is : DYNAMIC")

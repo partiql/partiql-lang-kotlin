@@ -6,15 +6,10 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.PartiQLPlan
-import org.partiql.plan.PlanNode
-import org.partiql.plan.debug.PlanPrinter
+import org.partiql.plan.Plan
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.planner.util.PlanNodeEquivalentVisitor
-import org.partiql.planner.util.ProblemCollector
-import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
@@ -27,63 +22,62 @@ import java.nio.file.Path
 import java.util.stream.Stream
 import kotlin.io.path.toPath
 
-// Prevent Unintentional break of the plan
-// We currently don't have a good way to assert on the result plan
-// so we assert on having the partiql text.
-// The input text and the normalized partiql text should produce identical plan.
-// I.e.,
-// if the input text is `SELECT a,b,c FROM T`
-// the produced plan will be identical as the normalized query:
-// `SELECT "T"['a'] AS "a", "T"['b'] AS "b", "T"['c'] AS "c" FROM "default"."T" AS "T";`
+/**
+ * This class test asserts a normalized query produces the same plans as the original input query.
+ *
+ * assert(plan(normalize(query)) == plan(query))
+ */
 class PlanTest {
-    val root: Path = this::class.java.getResource("/outputs")!!.toURI().toPath()
 
-    val input = PartiQLTestProvider().apply { load() }
+    private val root: Path = this::class.java.getResource("/outputs")!!.toURI().toPath()
+    private val input = PartiQLTestProvider().apply { load() }
 
-    val type = BagType(
-        StructType(
-            listOf(
-                StructType.Field("a", StaticType.BOOL),
-                StructType.Field("b", StaticType.INT4),
-                StructType.Field("c", StaticType.STRING),
-                StructType.Field(
-                    "d",
-                    StructType(
-                        listOf(StructType.Field("e", StaticType.STRING)),
-                        contentClosed = true,
-                        emptyList(),
-                        setOf(TupleConstraint.Open(false)),
-                        emptyMap()
-                    )
+    /**
+     * Table schema
+     */
+    private val schema = PType.fromStaticType(
+        BagType(
+            StructType(
+                listOf(
+                    StructType.Field("a", StaticType.BOOL),
+                    StructType.Field("b", StaticType.INT4),
+                    StructType.Field("c", StaticType.STRING),
+                    StructType.Field(
+                        "d",
+                        StructType(
+                            listOf(StructType.Field("e", StaticType.STRING)),
+                            contentClosed = true,
+                            emptyList(),
+                            setOf(TupleConstraint.Open(false)),
+                            emptyMap()
+                        )
+                    ),
+                    StructType.Field("x", StaticType.ANY),
+                    StructType.Field("z", StaticType.STRING),
+                    StructType.Field("v", StaticType.STRING),
                 ),
-                StructType.Field("x", StaticType.ANY),
-                StructType.Field("z", StaticType.STRING),
-                StructType.Field("v", StaticType.STRING),
-            ),
-            contentClosed = true,
-            emptyList(),
-            setOf(TupleConstraint.Open(false)),
-            emptyMap()
+                contentClosed = true,
+                emptyList(),
+                setOf(TupleConstraint.Open(false)),
+                emptyMap()
+            )
         )
     )
 
-    val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
+    private val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
         val session = Session.builder()
             .catalog("default")
-            .catalogs(buildCatalog("default"))
+            .catalogs(
+                TestCatalog.builder()
+                    .name("default")
+                    .createTable(Name.of("SCHEMA", "T"), schema)
+                    .build()
+            )
             .namespace("SCHEMA")
             .build()
-        val problemCollector = ProblemCollector()
-        val ast = PartiQLParser.default().parse(test.statement).root
+        val ast = PartiQLParser.standard().parse(test.statement).root
         val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
-        planner.plan(ast, session, problemCollector)
-    }
-
-    private fun buildCatalog(catalogName: String): Catalog {
-        return TestCatalog.builder()
-            .name(catalogName)
-            .createTable(Name.of("SCHEMA", "T"), PType.fromStaticType(type))
-            .build()
+        planner.plan(ast, session)
     }
 
     @TestFactory
@@ -130,12 +124,11 @@ class PlanTest {
         return dynamicContainer(file.nameWithoutExtension, children)
     }
 
-    private fun assertPlanEqual(inputPlan: PartiQLPlan, outputPlan: PartiQLPlan) {
-        assert(inputPlan.isEquaivalentTo(outputPlan)) {
+    private fun assertPlanEqual(actual: Plan, expected: Plan) {
+        assert(PlanEquivalenceVisitor.equals(actual, expected)) {
             buildString {
-                this.appendLine("expect plan equivalence")
-                PlanPrinter.append(this, inputPlan)
-                PlanPrinter.append(this, outputPlan)
+                appendLine("plans were not equivalent")
+                // TODO print diff
             }
         }
     }
@@ -167,7 +160,4 @@ class PlanTest {
         }
         return tests
     }
-
-    private fun PlanNode.isEquaivalentTo(other: PlanNode): Boolean =
-        PlanNodeEquivalentVisitor().visit(this, other)
 }

@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
@@ -723,6 +724,11 @@ public interface Datum extends Iterable<Datum> {
     }
 
     // STRUCTURAL
+
+    @NotNull
+    static Datum struct() {
+        return struct(Collections.emptyList());
+    }
 
     @NotNull
     static Datum struct(@NotNull Iterable<Field> values) {

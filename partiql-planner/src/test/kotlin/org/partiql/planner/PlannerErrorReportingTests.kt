@@ -6,13 +6,15 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
-import org.partiql.plan.debug.PlanPrinter
+import org.partiql.plan.Operation
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.planner.util.PlanPrinter
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
+import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -21,42 +23,33 @@ import java.lang.AssertionError
 import kotlin.test.assertEquals
 
 internal class PlannerErrorReportingTests {
-    val catalogName = "mode_test"
-    val userId = "test-user"
-    val queryId = "query"
 
-    // TODO REMOVE fromStaticType
-    val catalog = MemoryCatalog
+    private val catalogName = "mode_test"
+
+    private val catalog = MemoryCatalog
         .builder()
         .name(catalogName)
-        .define("missing_binding", PType.fromStaticType(StaticType.ANY))
-        .define("atomic", PType.fromStaticType(StaticType.INT2))
-        .define("collection_no_missing_atomic", PType.fromStaticType(BagType(StaticType.INT2)))
-        .define("collection_contain_missing_atomic", PType.fromStaticType(BagType(StaticType.INT2)))
-        .define("struct_no_missing", PType.fromStaticType(closedStruct(StructType.Field("f1", StaticType.INT2))))
-        .define(
-            "struct_with_missing",
-            PType.fromStaticType(
-                closedStruct(
-                    StructType.Field("f1", StaticType.INT2),
-                )
-            )
-        )
+        .define("missing_binding", PType.dynamic())
+        .define("atomic", PType.smallint())
+        .define("collection_no_missing_atomic", PType.bag(PType.smallint()))
+        .define("collection_contain_missing_atomic", PType.bag(PType.smallint()))
+        .define("struct_no_missing", PType.row(listOf(Field.of("f1", PType.smallint()))))
+        .define("struct_with_missing", PType.row(listOf(Field.of("f1", PType.smallint()))))
         .build()
 
-    val session = Session.builder()
+    private val session = Session.builder()
         .catalog(catalogName)
         .catalogs(catalog)
         .build()
 
-    val parser = PartiQLParserBuilder().build()
+    private val parser = PartiQLParserBuilder().build()
 
-    val statement: ((String) -> Statement) = { query ->
+    private val statement: ((String) -> Statement) = { query ->
         parser.parse(query).root
     }
 
     private fun assertProblem(
-        plan: org.partiql.plan.PlanNode,
+        plan: org.partiql.plan.Plan,
         problems: List<Problem>,
         block: (List<Problem>) -> Unit
     ) {
@@ -140,7 +133,6 @@ internal class PlannerErrorReportingTests {
                 "1 + MISSING",
                 false,
                 assertOnProblemCount(1, 0),
-                expectedType = PType.integer().toCType()
             ),
             // This will be a non-resolved function error.
             // As plus does not contain a function that match argument type with
@@ -150,7 +142,6 @@ internal class PlannerErrorReportingTests {
                 "1 + MISSING",
                 true,
                 assertOnProblemCount(0, 1),
-                expectedType = PType.integer().toCType()
             ),
             // Attempting to do path navigation(symbol) on missing(which is not tuple)
             //  returns missing in quite mode, and error out in signal mode
@@ -395,12 +386,13 @@ internal class PlannerErrorReportingTests {
         val res = planner.plan(statement(tc.query), session, pc)
         val problems = pc.problems
         val plan = res.plan
-
         assertProblem(
             plan, problems,
             tc.assertion
         )
-        assertEquals(tc.expectedType, (plan.statement as org.partiql.plan.Statement.Query).root.type)
+        val statement = plan.getOperation() as Operation.Query
+        val actualType = statement.getType().getPType()
+        assertEquals(tc.expectedType, actualType)
     }
 
     @ParameterizedTest
