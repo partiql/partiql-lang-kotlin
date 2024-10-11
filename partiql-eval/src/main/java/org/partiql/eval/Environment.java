@@ -73,10 +73,10 @@ public class Environment {
             sb.append("$i: $row");
             sb.append("---------------------");
         }
-//        if (scope.isEmpty()) {
-//            appendLine("empty")
-//            appendLine("---------------------")
-//        }
-        return "stack";
+        if (stack.length == 0) {
+            sb.append("empty\n");
+            sb.append("---------------------\n");
+        }
+        return sb.toString();
     }
 }
