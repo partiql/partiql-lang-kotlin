@@ -34,11 +34,9 @@ internal class RelOpAggregate(
         input.open(env)
         for (inputRecord in input) {
 
-            // Push scope
-            val env = env.push(inputRecord)
-
             // Initialize the AggregationMap
             val evaluatedGroupByKeys = Array(keys.size) { keyIndex ->
+                val env = env.push(inputRecord)
                 val key = keys[keyIndex].eval(env)
                 when (key.isMissing) {
                     true -> Datum.nullValue()
