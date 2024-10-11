@@ -33,9 +33,13 @@ internal class RelOpAggregate(
     override fun open(env: Environment) {
         input.open(env)
         for (inputRecord in input) {
+
+            // Push scope
+            val env = env.push(inputRecord)
+
             // Initialize the AggregationMap
             val evaluatedGroupByKeys = Array(keys.size) { keyIndex ->
-                val key = keys[keyIndex].eval(env.push(inputRecord))
+                val key = keys[keyIndex].eval(env)
                 when (key.isMissing) {
                     true -> Datum.nullValue()
                     false -> key
@@ -74,6 +78,8 @@ internal class RelOpAggregate(
                 }
                 accumulators[index].delegate.next(arguments)
             }
+
+            // TODO env.pop() which happens automatically because the variable is dropped.
         }
 
         // No Aggregations Created

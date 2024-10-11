@@ -1,62 +1,21 @@
 package org.partiql.eval.internal
 
-import org.partiql.spi.value.Datum
-
 /**
- * This class represents the Variables Environment defined in the PartiQL Specification.
+ * This class holds the evaluation environment.
  */
-internal class Environment(
-    private val bindings: Record,
-    private val parent: Environment? = null
+internal class Environment private constructor(
+    @JvmField public val parameters: Parameters,
+    @JvmField public val scope: Scope,
 ) {
 
-    companion object {
-        @JvmStatic
-        val empty: Environment = Environment(Record.empty, null)
-    }
+    constructor() : this(Parameters.EMPTY, Scope.empty)
 
-    operator fun get(index: Int): Datum {
-        try {
-            return this.bindings[index]
-        } catch (_: Throwable) {
-            throw IllegalStateException("Received error when searching for binding at index $index. Current bindings are: $this.")
-        }
-    }
-
-    fun getOrNull(index: Int): Datum? {
-        return this.bindings.values.getOrNull(index)
-    }
-
-    internal fun next(): Environment? {
-        return this.parent
-    }
+    constructor(parameters: Parameters) : this(parameters, Scope.empty)
 
     /**
-     * Returns a new [Environment] that contains the [record] and encloses the current [Environment]. This is used to:
-     * 1. Pass on a [Record] from a Rel to a Rex. Consider `SELECT a + 1 FROM t`. The PROJECT would likely grab the input
-     * record from the SCAN, [push] it into the current environment, and pass it to the Expr representing `a + 1`.
-     * 2. Create a nested scope. Consider `SELECT 1 + (SELECT t1.a + t2.b FROM t2 LIMIT 1) FROM t1`. Since the inner
-     * SELECT (ExprSubquery) is creating a "nested scope", it would invoke [push].
-     *
-     * Here are the general rules to follow:
-     * 1. When evaluating Expressions from within a Relation, one should always use [push] to "push" onto the stack.
-     * 2. When evaluating Relations from within an Expression, one should always use [push] to "push" onto the stack.
-     * 3. When evaluating Expressions from within a Relation, there is no need to use [push].
-     * 4. When evaluating Relations from within a Relation, one **might** want to use [push]. Consider the LATERAL JOIN, for instance.
-     *
-     * @see [org.partiql.eval.internal.operator.Operator.Expr]
-     * @see [org.partiql.eval.internal.operator.Operator.Relation]
-     * @see [org.partiql.eval.internal.operator.rex.ExprSubquery]
+     * TODO make push(scope) and use pop() to avoid extra instantiations.
      */
-    internal fun push(record: Record): Environment = Environment(
-        record,
-        this
-    )
+    public fun push(record: Record): Environment = Environment(parameters, scope.push(record))
 
-    override fun toString(): String {
-        return when (parent) {
-            null -> bindings.toString()
-            else -> "$bindings --> $parent"
-        }
-    }
+    override fun toString(): String = scope.toString()
 }

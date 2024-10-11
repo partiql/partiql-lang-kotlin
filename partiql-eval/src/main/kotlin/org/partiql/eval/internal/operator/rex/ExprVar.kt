@@ -16,10 +16,10 @@ internal class ExprVar(depth: Int, offset: Int) : Operator.Expr {
     override fun eval(env: Environment): Datum {
         // shortcut for depth 0
         if (_depth == 0) {
-            return env[_offset]
+            return env.scope[_offset]
         }
-        // walk up environments
-        var curr = env
+        // walk up scopes
+        var curr = env.scope
         repeat(_depth) {
             curr = curr.next() ?: error("We ran out of environments for depth ($_depth) and env: $env.")
         }

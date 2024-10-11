@@ -1,54 +1,36 @@
-public abstract interface class org/partiql/eval/PartiQLEngine {
-	public static final field Companion Lorg/partiql/eval/PartiQLEngine$Companion;
-	public static fun builder ()Lorg/partiql/eval/builder/PartiQLEngineBuilder;
-	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/PartiQLEngine$Mode;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLStatement;
-	public static fun standard ()Lorg/partiql/eval/PartiQLEngine;
+public class org/partiql/eval/Mode {
+	public static final field PERMISSIVE I
+	public static final field STRICT I
+	public static fun PERMISSIVE ()Lorg/partiql/eval/Mode;
+	public static fun STRICT ()Lorg/partiql/eval/Mode;
+	public fun code ()I
 }
 
-public final class org/partiql/eval/PartiQLEngine$Companion {
-	public final fun builder ()Lorg/partiql/eval/builder/PartiQLEngineBuilder;
-	public final fun standard ()Lorg/partiql/eval/PartiQLEngine;
+public abstract interface class org/partiql/eval/PartiQLCompiler {
+	public static fun builder ()Lorg/partiql/eval/PartiQLCompiler$Builder;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;)Lorg/partiql/eval/Statement;
+	public static fun standard ()Lorg/partiql/eval/PartiQLCompiler;
+	public static fun standard (Lorg/partiql/eval/Mode;)Lorg/partiql/eval/PartiQLCompiler;
 }
 
-public final class org/partiql/eval/PartiQLEngine$Mode : java/lang/Enum {
-	public static final field PERMISSIVE Lorg/partiql/eval/PartiQLEngine$Mode;
-	public static final field STRICT Lorg/partiql/eval/PartiQLEngine$Mode;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/eval/PartiQLEngine$Mode;
-	public static fun values ()[Lorg/partiql/eval/PartiQLEngine$Mode;
+public class org/partiql/eval/PartiQLCompiler$Builder {
+	public fun build ()Lorg/partiql/eval/PartiQLCompiler;
+	public fun mode (Lorg/partiql/eval/Mode;)Lorg/partiql/eval/PartiQLCompiler$Builder;
 }
 
-public abstract interface class org/partiql/eval/PartiQLResult {
+public abstract interface class org/partiql/eval/PartiQLEvaluator {
+	public static fun builder ()Lorg/partiql/eval/PartiQLEvaluator$Builder;
+	public abstract fun eval (Lorg/partiql/plan/Plan;)Lorg/partiql/spi/value/Datum;
+	public static fun standard ()Lorg/partiql/eval/PartiQLEvaluator;
+	public static fun standard (Lorg/partiql/eval/Mode;)Lorg/partiql/eval/PartiQLEvaluator;
 }
 
-public final class org/partiql/eval/PartiQLResult$Error : org/partiql/eval/PartiQLResult {
-	public fun <init> (Ljava/lang/Throwable;)V
-	public final fun component1 ()Ljava/lang/Throwable;
-	public final fun copy (Ljava/lang/Throwable;)Lorg/partiql/eval/PartiQLResult$Error;
-	public static synthetic fun copy$default (Lorg/partiql/eval/PartiQLResult$Error;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/partiql/eval/PartiQLResult$Error;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCause ()Ljava/lang/Throwable;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
+public class org/partiql/eval/PartiQLEvaluator$Builder {
+	public fun build ()Lorg/partiql/eval/PartiQLEvaluator;
+	public fun compiler (Lorg/partiql/eval/PartiQLCompiler;)Lorg/partiql/eval/PartiQLEvaluator$Builder;
 }
 
-public final class org/partiql/eval/PartiQLResult$Value : org/partiql/eval/PartiQLResult {
-	public fun <init> (Lorg/partiql/spi/value/Datum;)V
-	public final fun component1 ()Lorg/partiql/spi/value/Datum;
-	public final fun copy (Lorg/partiql/spi/value/Datum;)Lorg/partiql/eval/PartiQLResult$Value;
-	public static synthetic fun copy$default (Lorg/partiql/eval/PartiQLResult$Value;Lorg/partiql/spi/value/Datum;ILjava/lang/Object;)Lorg/partiql/eval/PartiQLResult$Value;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getValue ()Lorg/partiql/spi/value/Datum;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class org/partiql/eval/PartiQLStatement {
-	public abstract fun execute (Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLResult;
-}
-
-public final class org/partiql/eval/builder/PartiQLEngineBuilder {
-	public fun <init> ()V
-	public final fun build ()Lorg/partiql/eval/PartiQLEngine;
+public abstract interface class org/partiql/eval/Statement {
+	public abstract fun execute ()Lorg/partiql/spi/value/Datum;
 }
 

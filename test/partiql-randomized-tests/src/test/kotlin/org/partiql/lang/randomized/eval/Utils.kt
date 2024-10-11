@@ -1,6 +1,6 @@
 package org.partiql.lang.randomized.eval
 
-import org.partiql.eval.PartiQLEngine
+import org.partiql.eval.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
@@ -28,7 +28,7 @@ private fun execute(query: String): PartiQLValue {
         override fun getName(): String = "default"
     }
     val session = Session.builder().catalog("default").catalogs(catalog).build()
-    val engine = PartiQLEngine.builder().build()
+    val engine = PartiQLCompiler.builder().build()
 
     // Execute
     val stmt = parser.parse(query)

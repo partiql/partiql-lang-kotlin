@@ -1,6 +1,6 @@
-package org.partiql.eval.internal
+package org.partiql.eval
 
-import org.partiql.eval.PartiQLEngine
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
@@ -53,6 +53,8 @@ import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
+import org.partiql.plan.Operation
+import org.partiql.plan.Plan
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelDistinct
@@ -97,27 +99,44 @@ import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
 import org.partiql.plan.rex.RexVisitor
-import org.partiql.spi.catalog.Session
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * This class is responsible for producing a tree of evaluable operators from a tree of logical operators.
- *
- * @property mode
- * @property session
+ * This class is responsible for producing an executable statement from logical operators.
  */
-internal class SqlCompiler(
-    @JvmField var mode: PartiQLEngine.Mode,
-    @JvmField var session: Session,
-) {
+internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
 
+    private val mode = mode.code()
     private val relCompiler = RelCompiler()
-
     private val rexCompiler = RexCompiler()
 
-    fun compile(rex: Rex): Operator.Expr = compile(rex, Unit).catch()
+    override fun prepare(plan: Plan): Statement = try {
+        val operation = plan.getOperation()
+        val statement: Statement = when {
+            operation is Operation.Query -> compile(operation)
+            else -> throw IllegalArgumentException("Only query statements are supported")
+        }
+        statement
+    } catch (ex: Exception) {
+        // TODO wrap in some PartiQL Exception
+        throw ex
+    }
+
+    /**
+     * Compile a query operation to a query statement.
+     */
+    private fun compile(operation: Operation.Query) = object : Statement {
+
+        // compile the query root
+        private val root = compile(operation.getRex())
+
+        // execute with no parameters
+        override fun execute(): Datum = root.eval(Environment())
+    }
+
+    private fun compile(rex: Rex): Operator.Expr = compile(rex, Unit).catch()
 
     private fun compile(rel: Rel, ctx: Unit): Operator.Relation = rel.accept(relCompiler, ctx)
 
@@ -195,8 +214,9 @@ internal class SqlCompiler(
         override fun visitIterate(rel: RelIterate, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> RelOpIteratePermissive(input)
-                PartiQLEngine.Mode.STRICT -> RelOpIterate(input)
+                Mode.PERMISSIVE -> RelOpIteratePermissive(input)
+                Mode.STRICT -> RelOpIterate(input)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
 
@@ -238,8 +258,9 @@ internal class SqlCompiler(
         override fun visitScan(rel: RelScan, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> RelOpScanPermissive(input)
-                PartiQLEngine.Mode.STRICT -> RelOpScan(input)
+                Mode.PERMISSIVE -> RelOpScanPermissive(input)
+                Mode.STRICT -> RelOpScan(input)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
 
@@ -266,8 +287,9 @@ internal class SqlCompiler(
         override fun visitUnpivot(rel: RelUnpivot, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> RelOpUnpivot.Permissive(input)
-                PartiQLEngine.Mode.STRICT -> RelOpUnpivot.Strict(input)
+                Mode.PERMISSIVE -> RelOpUnpivot.Permissive(input)
+                Mode.STRICT -> RelOpUnpivot.Strict(input)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
     }
@@ -399,8 +421,9 @@ internal class SqlCompiler(
             val key = compile(rex.getKey(), ctx)
             val value = compile(rex.getValue(), ctx)
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> ExprPivotPermissive(input, key, value)
-                PartiQLEngine.Mode.STRICT -> ExprPivot(input, key, value)
+                Mode.PERMISSIVE -> ExprPivotPermissive(input, key, value)
+                Mode.STRICT -> ExprPivot(input, key, value)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
 
@@ -418,8 +441,9 @@ internal class SqlCompiler(
                 ExprStructField(k, v)
             }
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> ExprStructPermissive(fields)
-                PartiQLEngine.Mode.STRICT -> ExprStructStrict(fields)
+                Mode.PERMISSIVE -> ExprStructPermissive(fields)
+                Mode.STRICT -> ExprStructStrict(fields)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
 
@@ -464,7 +488,8 @@ internal class SqlCompiler(
      * Some places "catch" an error and return the MISSING value.
      */
     private fun Operator.Expr.catch(): Operator.Expr = when (mode) {
-        PartiQLEngine.Mode.PERMISSIVE -> ExprPermissive(this)
-        PartiQLEngine.Mode.STRICT -> this
+        Mode.PERMISSIVE -> ExprPermissive(this)
+        Mode.STRICT -> this
+        else -> throw IllegalStateException("Unsupported execution mode: $mode")
     }
 }
