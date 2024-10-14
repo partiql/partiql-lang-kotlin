@@ -1,9 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Record
 import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
@@ -67,16 +67,16 @@ internal class RelOpJoinOuterLeft(
             var lhsMatched = false
             rhs.open(env.push(lhsRecord))
             for (rhsRecord in rhs) {
-                val input = lhsRecord + rhsRecord
+                val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
                 if (result.isTrue()) {
                     lhsMatched = true
-                    yield(lhsRecord + rhsRecord)
+                    yield(lhsRecord.concat(rhsRecord))
                 }
             }
             rhs.close()
             if (!lhsMatched) {
-                yield(lhsRecord + rhsPadded)
+                yield(lhsRecord.concat(rhsPadded))
             }
         }
     }

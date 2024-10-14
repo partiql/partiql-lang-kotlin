@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Record
 
 internal class RelOpProject(
     private val input: Operator.Relation,

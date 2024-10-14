@@ -1,6 +1,7 @@
 package org.partiql.eval
 
 import org.partiql.eval.internal.Environment
+import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
@@ -55,6 +56,7 @@ import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operation
 import org.partiql.plan.Plan
+import org.partiql.plan.Visitor
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelDistinct
@@ -72,7 +74,6 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnpivot
-import org.partiql.plan.rel.RelVisitor
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
@@ -98,19 +99,19 @@ import org.partiql.plan.rex.RexSubqueryIn
 import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
-import org.partiql.plan.rex.RexVisitor
-import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
  * This class is responsible for producing an executable statement from logical operators.
+ *
+ * The compiler works by applying the first matching strategy.
  */
 internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
 
     private val mode = mode.code()
-    private val relCompiler = RelCompiler()
-    private val rexCompiler = RexCompiler()
+    private val unknown = PType.unknown()
+    private val visitor = _Visitor()
 
     override fun prepare(plan: Plan): Statement = try {
         val operation = plan.getOperation()
@@ -130,25 +131,24 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
     private fun compile(operation: Operation.Query) = object : Statement {
 
         // compile the query root
-        private val root = compile(operation.getRex())
+        private val root = compile(operation.getRex(), Unit).catch()
 
         // execute with no parameters
         override fun execute(): Datum = root.eval(Environment())
     }
 
-    private fun compile(rex: Rex): Operator.Expr = compile(rex, Unit).catch()
+    private fun compile(rel: Rel, ctx: Unit): Operator.Relation = rel.accept(visitor, ctx) as Operator.Relation
 
-    private fun compile(rel: Rel, ctx: Unit): Operator.Relation = rel.accept(relCompiler, ctx)
-
-    private fun compile(rex: Rex, ctx: Unit): Operator.Expr = rex.accept(rexCompiler, ctx)
+    private fun compile(rex: Rex, ctx: Unit): Operator.Expr = rex.accept(visitor, ctx) as Operator.Expr
 
     /**
      * Transforms plan relation operators into the internal physical operators.
      */
-    private inner class RelCompiler : RelVisitor<Operator.Relation, Unit> {
+    @Suppress("ClassName")
+    private inner class _Visitor : Visitor<Operator, Unit> {
 
-        override fun defaultReturn(rel: Rel, ctx: Unit): Operator.Relation {
-            TODO("Evaluation is not implemented for rel: ${rel::class.simpleName}")
+        override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): Operator {
+            error("Evaluation is not implemented for operator: ${operator::class.simpleName}")
         }
 
         override fun visitError(rel: RelError, ctx: Unit): Operator.Relation {
@@ -159,21 +159,14 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
 
         override fun visitAggregate(rel: RelAggregate, ctx: Unit): Operator.Relation {
             val input = compile(rel.getInput(), ctx)
-            val keys = rel.getGroups().map { compile(it, ctx).catch() }
             val aggs = rel.getCalls().map { call ->
                 val agg = call.getAgg()
                 val args = call.getArgs().map { compile(it, ctx).catch() }
-                val setq = when (call.isDistinct()) {
-                    true -> Operator.Aggregation.SetQuantifier.DISTINCT
-                    else -> Operator.Aggregation.SetQuantifier.ALL
-                }
-                object : Operator.Aggregation {
-                    override val delegate: Aggregation = agg
-                    override val args: List<Operator.Expr> = args
-                    override val setQuantifier: Operator.Aggregation.SetQuantifier = setq
-                }
+                val distinct = call.isDistinct()
+                Aggregate(agg, args, distinct)
             }
-            return RelOpAggregate(input, keys, aggs)
+            val groups = rel.getGroups().map { compile(it, ctx).catch() }
+            return RelOpAggregate(input, aggs, groups)
         }
 
         override fun visitDistinct(rel: RelDistinct, ctx: Unit): Operator.Relation {
@@ -292,19 +285,6 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
                 else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
-    }
-
-    /**
-     * Transforms plan expression operators into the internal physical expressions.
-     */
-    private inner class RexCompiler : RexVisitor<Operator.Expr, Unit> {
-
-        //
-        private val unknown = PType.unknown()
-
-        override fun defaultReturn(rex: Rex, ctx: Unit): Operator.Expr {
-            TODO("Not yet implemented")
-        }
 
         override fun visitError(rex: RexError, ctx: Unit): Operator.Expr {
             throw IllegalStateException(rex.getMessage())
@@ -355,8 +335,8 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             val args = rex.getArgs()
             val catch = func.parameters.any { it.kind == PType.Kind.DYNAMIC }
             return when (catch) {
-                true -> ExprCall(func, Array(args.size) { i -> compile(args[i]).catch() })
-                else -> ExprCall(func, Array(args.size) { i -> compile(args[i]) })
+                true -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit).catch() })
+                else -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit) })
             }
         }
 

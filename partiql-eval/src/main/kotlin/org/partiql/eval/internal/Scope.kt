@@ -1,5 +1,6 @@
 package org.partiql.eval.internal
 
+import org.partiql.eval.operator.Record
 import org.partiql.spi.value.Datum
 
 /**
@@ -12,7 +13,7 @@ internal class Scope(
 
     companion object {
         @JvmStatic
-        val empty: Scope = Scope(Record.empty, null)
+        val empty: Scope = Scope(Record(emptyArray()), null)
     }
 
     operator fun get(index: Int): Datum {

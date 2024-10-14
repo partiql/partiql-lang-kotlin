@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.eval.internal.Record
+import org.partiql.eval.operator.Record
 import org.partiql.spi.value.Datum
 
 /**

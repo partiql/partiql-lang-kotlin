@@ -36,6 +36,7 @@ dependencies {
 }
 
 kotlin {
+    // TODO enable strict
     explicitApi = null
 }
 
@@ -53,7 +54,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
 publish {
     artifactId = "partiql-eval"
     name = "PartiQL Lang Kotlin Evaluator"
-    description = "Experimental PartiQL plan-based evaluator"
+    description = "The PartiQL reference implementation evaluator."
 }
 
 tasks.processTestResources {

@@ -1,9 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.IteratorPeeking
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Record
 
 /**
  * For [Operator.Relation]'s that MUST materialize data in order to execute [hasNext], this abstract class caches the

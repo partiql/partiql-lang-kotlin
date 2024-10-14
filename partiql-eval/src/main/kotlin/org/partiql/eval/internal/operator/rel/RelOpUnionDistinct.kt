@@ -1,10 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.IteratorChain
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Record
 import java.util.TreeSet
 
 internal class RelOpUnionDistinct(

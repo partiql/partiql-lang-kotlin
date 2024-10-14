@@ -1,9 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.ValueUtility.getBigIntCoerced
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Record
 import org.partiql.value.PartiQLValueExperimental
 import java.math.BigInteger
 
@@ -20,7 +20,7 @@ internal class RelOpLimit(
         input.open(env)
         _seen = BigInteger.ZERO
 
-        val l = limit.eval(env.push(Record.empty))
+        val l = limit.eval(env.push(Record()))
         _limit = l.getBigIntCoerced() // TODO: The planner should handle the coercion
     }
 

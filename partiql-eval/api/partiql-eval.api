@@ -34,3 +34,34 @@ public abstract interface class org/partiql/eval/Statement {
 	public abstract fun execute ()Lorg/partiql/spi/value/Datum;
 }
 
+public abstract interface class org/partiql/eval/operator/Expression : org/partiql/eval/operator/Operation {
+	public abstract fun eval ()Lorg/partiql/spi/value/Datum;
+}
+
+public abstract interface class org/partiql/eval/operator/Operation {
+}
+
+public class org/partiql/eval/operator/Record {
+	public final field values [Lorg/partiql/spi/value/Datum;
+	public fun <init> ()V
+	public fun <init> ([Lorg/partiql/spi/value/Datum;)V
+	public fun concat (Lorg/partiql/eval/operator/Record;)Lorg/partiql/eval/operator/Record;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun get (I)Lorg/partiql/spi/value/Datum;
+	public fun hashCode ()I
+	public static fun of ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/eval/operator/Record;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/eval/operator/Relation : java/lang/AutoCloseable, java/util/Iterator, org/partiql/eval/operator/Operation {
+	public abstract fun close ()V
+	public abstract fun hasNext ()Z
+	public synthetic fun next ()Ljava/lang/Object;
+	public abstract fun next ()Lorg/partiql/eval/operator/Record;
+	public abstract fun open ()V
+}
+
+public abstract interface class org/partiql/eval/operator/Strategy {
+	public abstract fun apply (Lorg/partiql/plan/Operator;)Lorg/partiql/eval/operator/Operation;
+}
+

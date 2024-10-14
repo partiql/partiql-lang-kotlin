@@ -1,10 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.operator.Record
 
 /**
  * Inner Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true.
@@ -54,15 +53,14 @@ internal class RelOpJoinInner(
      *
      * Development Note: The non-lateral version wouldn't need to push to the current environment.
      */
-    @OptIn(PartiQLValueExperimental::class)
     private fun implementation() = iterator {
         for (lhsRecord in lhs) {
             rhs.open(env.push(lhsRecord))
             for (rhsRecord in rhs) {
-                val input = lhsRecord + rhsRecord
+                val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
                 if (result.isTrue()) {
-                    yield(lhsRecord + rhsRecord)
+                    yield(lhsRecord.concat(rhsRecord))
                 }
             }
         }

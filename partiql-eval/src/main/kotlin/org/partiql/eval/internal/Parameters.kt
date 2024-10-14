@@ -3,7 +3,7 @@ package org.partiql.eval.internal
 import org.partiql.spi.value.Datum
 
 /**
- * Statement execution parameters.
+ * Statement execution parameters; make public Java class in later PR.
  */
 internal class Parameters(private val values: Array<Datum>) {
 
