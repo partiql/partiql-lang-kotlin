@@ -13,8 +13,9 @@ import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.Error
-import org.partiql.spi.errors.ErrorListenerException
+import org.partiql.spi.errors.Classification
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.types.PType
 
 /**
@@ -53,11 +54,11 @@ internal class SqlPlanner(
                 plan = pass.apply(plan, config.getErrorListener())
             }
             return PartiQLPlanner.Result(plan)
-        } catch (e: ErrorListenerException) {
+        } catch (e: PErrorListenerException) {
             throw e
         } catch (t: Throwable) {
-            val error = Error.INTERNAL_ERROR(null, t)
-            config.errorListener.error(error)
+            val error = PError.INTERNAL_ERROR(Classification.SEMANTIC(), null, t)
+            config.errorListener.report(error)
             val plan = object : Plan {
                 override fun getOperation(): Operation {
                     return object : Operation.Query {

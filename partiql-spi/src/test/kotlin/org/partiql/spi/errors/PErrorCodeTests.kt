@@ -2,10 +2,10 @@ package org.partiql.spi.errors
 
 import org.junit.jupiter.api.Test
 
-class ErrorCodeTests {
+class PErrorCodeTests {
     /**
      * This ensures that we don't accidentally duplicate error codes. It also ensures that we don't change error codes.
-     * Whenever a new code is added to [Error], we should add an entry to the `manualEntries` map with the new code
+     * Whenever a new code is added to [PError], we should add an entry to the `manualEntries` map with the new code
      * and a unique value.
      *
      * This test will fail if we accidentally duplicate an error code or if we change an existing error code.
@@ -34,7 +34,7 @@ class ErrorCodeTests {
         )
 
         // Preparation
-        val reflectionEntries = Error::class.java.fields.filter {
+        val reflectionEntries = PError::class.java.fields.filter {
             java.lang.reflect.Modifier.isStatic(it.modifiers) // && java.lang.reflect.Modifier.isPublic(it.modifiers)
         }.map {
             it.isAccessible = true

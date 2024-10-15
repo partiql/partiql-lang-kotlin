@@ -3,7 +3,7 @@ package org.partiql.cli.pipeline
 import org.partiql.planner.PlannerConfig
 
 class PlannerConfigImpl(
-    private val listener: AppErrorListener
+    private val listener: AppPErrorListener
 ) : PlannerConfig {
-    override fun getErrorListener(): AppErrorListener = listener
+    override fun getErrorListener(): AppPErrorListener = listener
 }

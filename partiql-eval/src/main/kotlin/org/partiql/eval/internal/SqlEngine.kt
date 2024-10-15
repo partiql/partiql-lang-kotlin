@@ -8,8 +8,9 @@ import org.partiql.eval.internal.statement.QueryStatement
 import org.partiql.plan.Operation.Query
 import org.partiql.plan.Plan
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.Error
-import org.partiql.spi.errors.ErrorListenerException
+import org.partiql.spi.errors.Classification
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.types.PType
 
 internal class SqlEngine : PartiQLEngine {
@@ -23,11 +24,11 @@ internal class SqlEngine : PartiQLEngine {
             val compiler = SqlCompiler(config.mode, session)
             val root = compiler.compile(operation.getRex())
             return QueryStatement(root)
-        } catch (e: ErrorListenerException) {
+        } catch (e: PErrorListenerException) {
             throw e
         } catch (t: Throwable) {
-            val error = Error.INTERNAL_ERROR(null, t)
-            config.errorListener.error(error)
+            val error = PError.INTERNAL_ERROR(Classification.COMPILATION(), null, t)
+            config.errorListener.report(error)
             return QueryStatement(ExprMissing(PType.unknown()))
         }
     }

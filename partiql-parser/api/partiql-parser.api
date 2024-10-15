@@ -1,11 +1,11 @@
 public abstract interface class org/partiql/parser/ParserConfig {
-	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/ErrorListener;
+	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
 }
 
 public class org/partiql/parser/ParserConfigBuilder {
 	public fun <init> ()V
 	public fun build ()Lorg/partiql/parser/ParserConfig;
-	public fun setErrorListener (Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/parser/ParserConfigBuilder;
+	public fun setErrorListener (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/parser/ParserConfigBuilder;
 }
 
 public abstract interface class org/partiql/parser/PartiQLParser {

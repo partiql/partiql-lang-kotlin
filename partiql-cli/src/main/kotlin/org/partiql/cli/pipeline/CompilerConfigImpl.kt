@@ -5,9 +5,9 @@ import org.partiql.eval.PartiQLEngine
 
 class CompilerConfigImpl(
     private val mode: PartiQLEngine.Mode,
-    private val listener: AppErrorListener
+    private val listener: AppPErrorListener
 ) : CompilerConfig {
-    override fun getErrorListener(): AppErrorListener = listener
+    override fun getErrorListener(): AppPErrorListener = listener
 
     override fun getMode(): PartiQLEngine.Mode = mode
 }

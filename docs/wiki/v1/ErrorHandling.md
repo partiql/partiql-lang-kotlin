@@ -32,8 +32,8 @@ have the ability to throw an `ErrorListenerException`. This exception acts as a 
 halt with. For example:
 
 ```java
-import org.partiql.spi.errors.Error;
-import org.partiql.spi.errors.ErrorListener;
+import org.partiql.spi.errors.PError;
+import org.partiql.spi.errors.PErrorListener;
 
 import java.lang.annotation.Native;
 

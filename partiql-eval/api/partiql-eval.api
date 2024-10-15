@@ -1,12 +1,12 @@
 public abstract interface class org/partiql/eval/CompilerConfig {
-	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/ErrorListener;
+	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
 	public abstract fun getMode ()Lorg/partiql/eval/PartiQLEngine$Mode;
 }
 
 public class org/partiql/eval/CompilerConfigBuilder {
 	public fun <init> ()V
 	public fun build ()Lorg/partiql/eval/CompilerConfig;
-	public fun setErrorListener (Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/eval/CompilerConfigBuilder;
+	public fun setErrorListener (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/eval/CompilerConfigBuilder;
 	public fun setMode (Lorg/partiql/eval/PartiQLEngine$Mode;)Lorg/partiql/eval/CompilerConfigBuilder;
 }
 

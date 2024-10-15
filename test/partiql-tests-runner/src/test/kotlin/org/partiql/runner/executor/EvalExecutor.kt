@@ -22,9 +22,10 @@ import org.partiql.runner.test.TestExecutor
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.Error
-import org.partiql.spi.errors.ErrorException
-import org.partiql.spi.errors.ErrorListener
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorException
+import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.errors.Severity
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
@@ -51,20 +52,27 @@ class EvalExecutor(
         return engine.prepare(plan, session, config)
     }
 
-    private fun getErrorListener(mode: PartiQLEngine.Mode): ErrorListener {
+    private fun getErrorListener(mode: PartiQLEngine.Mode): PErrorListener {
         return when (mode) {
-            PartiQLEngine.Mode.PERMISSIVE -> ErrorListener.abortOnError()
-            PartiQLEngine.Mode.STRICT -> object : ErrorListener {
-                override fun error(error: Error) {
-                    throw ErrorException(error)
+            PartiQLEngine.Mode.PERMISSIVE -> PErrorListener.abortOnError()
+            PartiQLEngine.Mode.STRICT -> object : PErrorListener {
+                override fun report(error: PError) {
+                    when (error.severity.code()) {
+                        Severity.ERROR -> throw PErrorException(error)
+                        Severity.WARNING -> warning(error)
+                        else -> error("Unhandled severity.")
+                    }
                 }
 
-                override fun warning(error: Error) {
-                    when (error.code) {
-                        Error.PATH_KEY_NEVER_SUCCEEDS,
-                        Error.PATH_INDEX_NEVER_SUCCEEDS,
-                        Error.VAR_REF_NOT_FOUND,
-                        Error.PATH_SYMBOL_NEVER_SUCCEEDS -> error(error)
+                private fun warning(error: PError) {
+                    when (error.code()) {
+                        PError.PATH_KEY_NEVER_SUCCEEDS,
+                        PError.PATH_INDEX_NEVER_SUCCEEDS,
+                        PError.VAR_REF_NOT_FOUND,
+                        PError.PATH_SYMBOL_NEVER_SUCCEEDS -> {
+                            error.severity = Severity.ERROR()
+                            report(error)
+                        }
                         else -> {
                             // Do nothing
                         }

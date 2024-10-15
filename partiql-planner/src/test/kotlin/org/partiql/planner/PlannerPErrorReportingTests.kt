@@ -7,8 +7,8 @@ import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Operation
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.planner.util.ErrorAlwaysMissingCollector
-import org.partiql.planner.util.ErrorCollector
+import org.partiql.planner.util.PErrorAlwaysMissingCollector
+import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.spi.catalog.Session
@@ -21,7 +21,7 @@ import org.partiql.types.TupleConstraint
 import java.lang.AssertionError
 import kotlin.test.assertEquals
 
-internal class PlannerErrorReportingTests {
+internal class PlannerPErrorReportingTests {
 
     private val catalogName = "mode_test"
 
@@ -49,8 +49,8 @@ internal class PlannerErrorReportingTests {
 
     private fun assertProblem(
         plan: org.partiql.plan.Plan,
-        collector: ErrorCollector,
-        block: (ErrorCollector) -> Unit
+        collector: PErrorCollector,
+        block: (PErrorCollector) -> Unit
     ) {
         try {
             block.invoke(collector)
@@ -73,13 +73,13 @@ internal class PlannerErrorReportingTests {
     data class TestCase(
         val query: String,
         val isSignal: Boolean,
-        val assertion: (ErrorCollector) -> Unit,
+        val assertion: (PErrorCollector) -> Unit,
         val expectedType: CompilerType
     ) {
         constructor(
             query: String,
             isSignal: Boolean,
-            assertion: (ErrorCollector) -> Unit,
+            assertion: (PErrorCollector) -> Unit,
             expectedType: StaticType = StaticType.ANY
         ) : this(query, isSignal, assertion, PType.fromStaticType(expectedType).toCType())
     }
@@ -97,7 +97,7 @@ internal class PlannerErrorReportingTests {
                 )
             )
 
-        private fun assertOnProblemCount(warningCount: Int, errorCount: Int): (ErrorCollector) -> Unit = { collector ->
+        private fun assertOnProblemCount(warningCount: Int, errorCount: Int): (PErrorCollector) -> Unit = { collector ->
             val actualErrorCount = collector.errors.size
             val actualWarningCount = collector.warnings.size
             val message = buildString {
@@ -390,8 +390,8 @@ internal class PlannerErrorReportingTests {
     private fun runTestCase(tc: TestCase) {
         val planner = PartiQLPlanner.builder().signal(tc.isSignal).build()
         val pc = when (tc.isSignal) {
-            true -> ErrorAlwaysMissingCollector()
-            false -> ErrorCollector()
+            true -> PErrorAlwaysMissingCollector()
+            false -> PErrorCollector()
         }
         val pConfig = PlannerConfigBuilder().setErrorListener(pc).build()
         val res = planner.plan(statement(tc.query), session, pConfig)

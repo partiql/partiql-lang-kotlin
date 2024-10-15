@@ -10,7 +10,7 @@ import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.ErrorListenerException
+import org.partiql.spi.errors.PErrorListenerException
 import java.io.PrintStream
 import kotlin.jvm.Throws
 
@@ -25,7 +25,7 @@ internal class Pipeline private constructor(
 
     /**
      * TODO replace with the ResultSet equivalent?
-     * @throws PipelineException when there are accumulated errors, or if the components have thrown an [ErrorListenerException].
+     * @throws PipelineException when there are accumulated errors, or if the components have thrown an [PErrorListenerException].
      */
     @Throws(PipelineException::class)
     fun execute(statement: String, session: Session): PartiQLResult {
@@ -35,36 +35,35 @@ internal class Pipeline private constructor(
     }
 
     private fun parse(source: String): Statement {
-        val result = listen("Parser", parserConfig.errorListener) {
+        val result = listen(parserConfig.errorListener) {
             parser.parse(source, parserConfig)
         }
         return result.root
     }
 
     private fun plan(statement: Statement, session: Session): Plan {
-        val result = listen("Planner", plannerConfig.errorListener) {
+        val result = listen(plannerConfig.errorListener) {
             planner.plan(statement, session, plannerConfig)
         }
         return result.plan
     }
 
     private fun execute(plan: Plan, session: Session): PartiQLResult {
-        val statement = listen("Compiler", compilerConfig.errorListener) {
+        val statement = listen(compilerConfig.errorListener) {
             engine.prepare(plan, session, compilerConfig)
         }
         return statement.execute(session)
     }
 
-    private fun <T> listen(name: String, listener: AppErrorListener, action: () -> T): T {
+    private fun <T> listen(listener: AppPErrorListener, action: () -> T): T {
         listener.clear()
-        listener.setComponent(name)
         val result = try {
             action.invoke()
         } catch (e: PipelineException) {
             throw e
         }
         if (listener.hasErrors()) {
-            throw PipelineException("$name failed with given input. Please see the above errors.")
+            throw PipelineException("Failed with given input. Please see the above errors.")
         }
         return result
     }
@@ -94,7 +93,7 @@ internal class Pipeline private constructor(
     /**
      * Halts execution.
      */
-    class PipelineException(override val message: String?) : ErrorListenerException(message)
+    class PipelineException(override val message: String?) : PErrorListenerException(message)
 
     /**
      * Configuration for passing through user-defined configurations to the underlying components.
@@ -104,8 +103,8 @@ internal class Pipeline private constructor(
         private val inhibitWarnings: Boolean,
         private val warningsAsErrors: Array<ErrorCodeString>
     ) {
-        fun getErrorListener(out: PrintStream): AppErrorListener {
-            return AppErrorListener(out, maxErrors, inhibitWarnings, warningsAsErrors)
+        fun getErrorListener(out: PrintStream): AppPErrorListener {
+            return AppPErrorListener(out, maxErrors, inhibitWarnings, warningsAsErrors)
         }
     }
 }

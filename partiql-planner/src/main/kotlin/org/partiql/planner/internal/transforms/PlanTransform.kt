@@ -14,7 +14,7 @@ import org.partiql.plan.rex.RexVar
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
-import org.partiql.spi.errors.ErrorListener
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
@@ -39,7 +39,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
      * @param listener
      * @return
      */
-    fun transform(internal: IPlan, listener: ErrorListener): Plan {
+    fun transform(internal: IPlan, listener: PErrorListener): Plan {
         val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
         val query = (internal.statement as IStatement.Query)
         val visitor = Visitor(listener, signal)
@@ -53,7 +53,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
     }
 
     private class Visitor(
-        private val listener: ErrorListener,
+        private val listener: PErrorListener,
         private val signal: Boolean,
     ) : PlanBaseVisitor<Any?, PType>() {
 
