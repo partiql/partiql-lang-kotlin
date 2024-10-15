@@ -2,10 +2,15 @@ package org.partiql.planner.internal
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
+import org.partiql.planner.internal.problems.AlwaysMissing
+import org.partiql.planner.internal.problems.CastUndefined
+import org.partiql.planner.internal.problems.FunctionTypeMismatch
+import org.partiql.planner.internal.problems.TypeUnexpected
+import org.partiql.planner.internal.problems.VarRefNotFound
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.Error
-import org.partiql.spi.function.Function
+import org.partiql.spi.errors.Classification
+import org.partiql.spi.errors.PError
 import org.partiql.types.PType
 
 /**
@@ -23,9 +28,9 @@ internal open class PlanningProblemDetails(
      * TODO: This is a temporary internal measure to convert the old PlanningProblemDetails to
      *  the new error reporting mechanism.
      */
-    open fun toError(line: Int?, column: Int?, length: Int?): Error {
+    open fun toError(line: Int?, column: Int?, length: Int?): PError {
         val location = location(line, column, length)
-        return Error.INTERNAL_ERROR(location, null)
+        return PError.INTERNAL_ERROR(Classification.SEMANTIC(), location, null)
     }
 
     companion object {
@@ -54,9 +59,9 @@ internal open class PlanningProblemDetails(
         }
     ) {
 
-        override fun toError(line: Int?, column: Int?, length: Int?): Error {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return Error.VAR_REF_NOT_FOUND(location, name, inScopeVariables.toList())
+            return VarRefNotFound(location, name, inScopeVariables.toList())
         }
 
         private companion object {
@@ -70,42 +75,15 @@ internal open class PlanningProblemDetails(
         }
     }
 
-    data class UnimplementedFeature(val featureName: String) : PlanningProblemDetails(
-        ProblemSeverity.ERROR,
-        { "The syntax at this location is valid but utilizes unimplemented PartiQL feature '$featureName'" }
-    ) {
-        override fun toError(line: Int?, column: Int?, length: Int?): Error {
-            val location = when (line != null && column != null && length != null) {
-                true -> SourceLocation(line.toLong(), column.toLong(), length.toLong())
-                false -> null
-            }
-            return Error.FEATURE_NOT_SUPPORTED(location, featureName)
-        }
-    }
-
     data class UnexpectedType(
         val actualType: PType,
         val expectedTypes: Set<PType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         "Unexpected type $actualType, expected one of ${expectedTypes.joinToString { it.toString() }}"
     }) {
-        override fun toError(line: Int?, column: Int?, length: Int?): Error {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return Error.TYPE_UNEXPECTED(location, actualType, expectedTypes.toList())
-        }
-    }
-
-    data class UnknownFunction(
-        val identifier: Identifier,
-        val args: List<PType>,
-        val variants: List<Function> = emptyList()
-    ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
-        val types = args.joinToString { "<${it.toString().lowercase()}>" }
-        "Unknown function `$identifier($types)"
-    }) {
-        override fun toError(line: Int?, column: Int?, length: Int?): Error {
-            val location = location(line, column, length)
-            return Error.FUNCTION_NOT_FOUND(location, identifier, args)
+            return TypeUnexpected(location, actualType, expectedTypes.toList())
         }
     }
 
@@ -115,9 +93,9 @@ internal open class PlanningProblemDetails(
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         "Cast does not exist for $source to $target."
     }) {
-        override fun toError(line: Int?, column: Int?, length: Int?): Error {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return Error.UNDEFINED_CAST(location, source, target)
+            return CastUndefined(location, source, target)
         }
     }
 
@@ -125,9 +103,9 @@ internal open class PlanningProblemDetails(
         severity = ProblemSeverity.ERROR,
         messageFormatter = { "Expression always returns missing: caused by $reason" }
     ) {
-        override fun toError(line: Int?, column: Int?, length: Int?): Error {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return Error.ALWAYS_MISSING(location)
+            return AlwaysMissing(location)
         }
     }
 
@@ -138,9 +116,9 @@ internal open class PlanningProblemDetails(
         severity = ProblemSeverity.ERROR,
         messageFormatter = { "${actualTypes.joinToString { it.toString() }} is/are incompatible data types for the '$operator' operator." }
     ) {
-        override fun toError(line: Int?, column: Int?, length: Int?): Error {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return Error.FUNCTION_TYPE_MISMATCH(location, Identifier.delimited(operator), actualTypes, null)
+            return FunctionTypeMismatch(location, Identifier.delimited(operator), actualTypes, null)
         }
     }
 

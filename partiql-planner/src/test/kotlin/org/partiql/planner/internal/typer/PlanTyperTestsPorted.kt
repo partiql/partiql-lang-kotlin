@@ -25,14 +25,14 @@ import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessT
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.planner.util.ErrorCollector
+import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
 import org.partiql.plugins.local.toStaticType
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.ErrorListener
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
 import org.partiql.types.ListType
@@ -63,7 +63,7 @@ internal class PlanTyperTestsPorted {
             val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val expected: CompilerType,
-            val warnings: ErrorListener? = null,
+            val warnings: PErrorListener? = null,
         ) : TestCase() {
 
             // legacy shim!
@@ -74,7 +74,7 @@ internal class PlanTyperTestsPorted {
                 catalog: String = "pql",
                 catalogPath: List<String> = emptyList(),
                 expected: StaticType,
-                warnings: ErrorListener? = null,
+                warnings: PErrorListener? = null,
             ) : this(name, key, query, catalog, catalogPath, PType.fromStaticType(expected).toCType(), warnings)
 
             override fun toString(): String {
@@ -141,7 +141,7 @@ internal class PlanTyperTestsPorted {
                 appendLine("]")
             }
             // TODO: This only asserts on the code, not the properties.
-            assertTrue(message) { problems.problems.any { it.code == expectedError.code } }
+            assertTrue(message) { problems.problems.any { it.code() == expectedError.code() } }
         }
 
         // private fun id(vararg parts: Identifier.Symbol): Identifier {
@@ -3859,7 +3859,7 @@ internal class PlanTyperTestsPorted {
     private fun infer(
         query: String,
         session: Session,
-        listener: ErrorListener,
+        listener: PErrorListener,
     ): org.partiql.plan.Plan {
         val ast = parser.parse(query).root
         val plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build()
@@ -3886,7 +3886,7 @@ internal class PlanTyperTestsPorted {
         }
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
 
-        val collector = ErrorCollector()
+        val collector = PErrorCollector()
         val plan = infer(input, session, collector)
         when (val statement = plan.getOperation()) {
             is org.partiql.plan.Operation.Query -> {
@@ -3917,7 +3917,7 @@ internal class PlanTyperTestsPorted {
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)
             .build()
-        val collector = ErrorCollector()
+        val collector = PErrorCollector()
         val hasQuery = tc.query != null
         val hasKey = tc.key != null
         if (hasQuery == hasKey) {
@@ -3961,7 +3961,7 @@ internal class PlanTyperTestsPorted {
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)
             .build()
-        val collector = ErrorCollector()
+        val collector = PErrorCollector()
         val exception = assertThrows<Throwable> {
             infer(tc.query, session, collector)
             Unit
@@ -4604,5 +4604,5 @@ internal class PlanTyperTestsPorted {
 }
 
 fun interface ProblemHandler {
-    fun handle(problems: ErrorCollector, ignoreSourceLocation: Boolean)
+    fun handle(problems: PErrorCollector, ignoreSourceLocation: Boolean)
 }

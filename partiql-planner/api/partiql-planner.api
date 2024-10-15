@@ -20,17 +20,17 @@ public final class org/partiql/planner/PartiQLPlanner$Result {
 }
 
 public abstract interface class org/partiql/planner/PartiQLPlannerPass {
-	public abstract fun apply (Lorg/partiql/plan/Plan;Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/plan/Plan;
+	public abstract fun apply (Lorg/partiql/plan/Plan;Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/plan/Plan;
 }
 
 public abstract interface class org/partiql/planner/PlannerConfig {
-	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/ErrorListener;
+	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
 }
 
 public class org/partiql/planner/PlannerConfigBuilder {
 	public fun <init> ()V
 	public fun build ()Lorg/partiql/planner/PlannerConfig;
-	public fun setErrorListener (Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/planner/PlannerConfigBuilder;
+	public fun setErrorListener (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/planner/PlannerConfigBuilder;
 }
 
 public final class org/partiql/planner/builder/PartiQLPlannerBuilder {

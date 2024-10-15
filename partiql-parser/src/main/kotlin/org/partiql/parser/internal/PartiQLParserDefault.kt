@@ -178,10 +178,13 @@ import org.partiql.parser.PartiQLParserException
 import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
+import org.partiql.parser.internal.problems.UnexpectedToken
+import org.partiql.parser.internal.problems.UnrecognizedToken
 import org.partiql.parser.internal.util.DateTimeUtils
-import org.partiql.spi.errors.Error
-import org.partiql.spi.errors.ErrorListener
-import org.partiql.spi.errors.ErrorListenerException
+import org.partiql.spi.errors.Classification
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
@@ -228,15 +231,15 @@ import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
  */
 internal class PartiQLParserDefault : PartiQLParser {
 
-    @Throws(ErrorListenerException::class)
+    @Throws(PErrorListenerException::class)
     override fun parse(source: String, config: ParserConfig): PartiQLParser.Result {
         try {
             return parse(source, config.errorListener)
-        } catch (e: ErrorListenerException) {
+        } catch (e: PErrorListenerException) {
             throw e
         } catch (throwable: Throwable) {
-            val error = Error.INTERNAL_ERROR(null, throwable)
-            config.errorListener.error(error)
+            val error = PError.INTERNAL_ERROR(Classification.SYNTAX(), null, throwable)
+            config.errorListener.report(error)
             return PartiQLParser.Result.empty(source)
         }
     }
@@ -247,7 +250,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          * To reduce latency costs, the [PartiQLParserDefault] attempts to use [PredictionMode.SLL] and falls back to
          * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy].
          */
-        private fun parse(source: String, listener: ErrorListener): PartiQLParser.Result = try {
+        private fun parse(source: String, listener: PErrorListener): PartiQLParser.Result = try {
             parse(source, PredictionMode.SLL, listener)
         } catch (ex: ParseCancellationException) {
             parse(source, PredictionMode.LL, listener)
@@ -256,7 +259,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Parses an input string [source] using the given prediction mode.
          */
-        private fun parse(source: String, mode: PredictionMode, listener: ErrorListener): PartiQLParser.Result {
+        private fun parse(source: String, mode: PredictionMode, listener: PErrorListener): PartiQLParser.Result {
             val tokens = createTokenStream(source, listener)
             val parser = InterruptibleParser(tokens)
             parser.reset()
@@ -271,7 +274,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             return Visitor.translate(source, tokens, tree)
         }
 
-        private fun createTokenStream(source: String, listener: ErrorListener): CountingTokenStream {
+        private fun createTokenStream(source: String, listener: PErrorListener): CountingTokenStream {
             val queryStream = source.byteInputStream(StandardCharsets.UTF_8)
             val inputStream = try {
                 CharStreams.fromStream(queryStream)
@@ -289,7 +292,7 @@ internal class PartiQLParserDefault : PartiQLParser {
     /**
      * Catches Lexical errors (unidentified tokens) and throws a [PartiQLParserException]
      */
-    private class TokenizeErrorListener(private val listener: ErrorListener) : BaseErrorListener() {
+    private class TokenizeErrorListener(private val listener: PErrorListener) : BaseErrorListener() {
         @Throws(PartiQLParserException::class)
         override fun syntaxError(
             recognizer: Recognizer<*, *>?,
@@ -302,8 +305,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             if (offendingSymbol is Token) {
                 val token = offendingSymbol.text
                 val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
-                val error = Error.UNRECOGNIZED_TOKEN(location, token)
-                listener.error(error)
+                val error = UnrecognizedToken(location, token)
+                listener.report(error)
             } else {
                 throw IllegalArgumentException("Offending symbol is not a Token.")
             }
@@ -313,7 +316,7 @@ internal class PartiQLParserDefault : PartiQLParser {
     /**
      * Catches Parser errors (malformed syntax) and throws a [PartiQLParserException]
      */
-    private class ParseErrorListener(private val listener: ErrorListener) : BaseErrorListener() {
+    private class ParseErrorListener(private val listener: PErrorListener) : BaseErrorListener() {
 
         private val rules = GeneratedParser.ruleNames.asList()
 
@@ -331,8 +334,8 @@ internal class PartiQLParserDefault : PartiQLParser {
                 val token = offendingSymbol.text
                 val tokenType = GeneratedParser.VOCABULARY.getSymbolicName(offendingSymbol.type)
                 val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
-                val error = Error.UNEXPECTED_TOKEN(location, tokenType, null)
-                listener.error(error)
+                val error = UnexpectedToken(location, tokenType, null)
+                listener.report(error)
             } else {
                 throw IllegalArgumentException("Offending symbol is not a Token.")
             }

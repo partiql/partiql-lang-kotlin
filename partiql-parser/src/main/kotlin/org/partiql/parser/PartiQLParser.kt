@@ -17,7 +17,7 @@ package org.partiql.parser
 import org.partiql.ast.Expr
 import org.partiql.ast.Statement
 import org.partiql.parser.internal.PartiQLParserDefault
-import org.partiql.spi.errors.ErrorListenerException
+import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.nullValue
 import kotlin.jvm.Throws
@@ -28,10 +28,10 @@ public interface PartiQLParser {
      * Parses the [source] into an AST.
      * @param source the user's input
      * @param config a configuration object for the parser
-     * @throws ErrorListenerException when the [org.partiql.spi.errors.ErrorListener] defined in the [config] throws an
-     * [ErrorListenerException], this method halts execution and propagates the exception.
+     * @throws PErrorListenerException when the [org.partiql.spi.errors.PErrorListener] defined in the [config] throws an
+     * [PErrorListenerException], this method halts execution and propagates the exception.
      */
-    @Throws(ErrorListenerException::class)
+    @Throws(PErrorListenerException::class)
     public fun parse(source: String, config: ParserConfig = ParserConfigBuilder().build()): Result
 
     public data class Result(

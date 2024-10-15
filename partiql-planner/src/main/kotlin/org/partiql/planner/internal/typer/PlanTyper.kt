@@ -52,7 +52,7 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.Error
+import org.partiql.spi.errors.PError
 import org.partiql.types.Field
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
@@ -488,7 +488,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
                         val resolved = typeEnv.resolve(root.identifier)
                         if (resolved == null) {
                             val rex = when (root.identifier.hasQualifier()) {
-                                true -> ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_KEY_NEVER_SUCCEEDS)
+                                true -> ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_KEY_NEVER_SUCCEEDS)
                                 false -> ProblemGenerator.reportUndefinedVariable(_listener, root.identifier)
                             }
                             rex.op
@@ -610,7 +610,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Key Type (INT or coercible to INT). TODO: Allow coercions to INT
             if (key.type.kind !in setOf(Kind.TINYINT, Kind.SMALLINT, Kind.INTEGER, Kind.BIGINT, Kind.NUMERIC)) {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_INDEX_NEVER_SUCCEEDS)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_INDEX_NEVER_SUCCEEDS)
             }
 
             // Check if Root is DYNAMIC
@@ -620,12 +620,12 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Root Type (LIST/SEXP)
             if (root.type.kind != Kind.ARRAY && root.type.kind != Kind.SEXP) {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_INDEX_NEVER_SUCCEEDS)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_INDEX_NEVER_SUCCEEDS)
             }
 
             // Check that root is not literal missing
             if (root.isLiteralMissing()) {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_INDEX_NEVER_SUCCEEDS)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_INDEX_NEVER_SUCCEEDS)
             }
 
             return rex(root.type.typeParameter, rexOpPathIndex(root, key))
@@ -639,7 +639,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Key Type (STRING). TODO: Allow coercions to STRING
             if (key.type.kind != Kind.STRING) {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_KEY_NEVER_SUCCEEDS)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_KEY_NEVER_SUCCEEDS)
             }
 
             // Check if Root is DYNAMIC
@@ -649,7 +649,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Root Type (STRUCT)
             if (root.type.kind != Kind.STRUCT && root.type.kind != Kind.ROW) {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_KEY_NEVER_SUCCEEDS)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_KEY_NEVER_SUCCEEDS)
             }
 
             // Get Literal Key
@@ -661,7 +661,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Find Type
             val elementType = root.type.getField(keyLiteral, false) ?: run {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_KEY_NEVER_SUCCEEDS)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_KEY_NEVER_SUCCEEDS)
             }
 
             return rex(elementType, rexOpPathKey(root, key))
@@ -677,12 +677,12 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
 
             // Check Root Type (STRUCT)
             if (root.type.kind != Kind.STRUCT && root.type.kind != Kind.ROW) {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_SYMBOL_NEVER_SUCCEEDS)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_SYMBOL_NEVER_SUCCEEDS)
             }
 
             // Check that root is not literal missing
             if (root.isLiteralMissing()) {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.PATH_SYMBOL_NEVER_SUCCEEDS)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.PATH_SYMBOL_NEVER_SUCCEEDS)
             }
 
             // Find Type
@@ -769,7 +769,7 @@ internal class PlanTyper(private val env: Env, config: PlannerConfig) {
             val instance = node.fn.signature.getInstance(emptyArray())
 
             if (argIsAlwaysMissing && instance.isMissingCall) {
-                return ProblemGenerator.reportAlwaysMissing(_listener, Error.ALWAYS_MISSING)
+                return ProblemGenerator.reportAlwaysMissing(_listener, PError.ALWAYS_MISSING)
             }
 
             // Infer fn return type

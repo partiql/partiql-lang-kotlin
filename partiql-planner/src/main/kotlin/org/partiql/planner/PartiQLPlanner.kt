@@ -4,7 +4,7 @@ import org.partiql.ast.Statement
 import org.partiql.plan.Plan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.ErrorListenerException
+import org.partiql.spi.errors.PErrorListenerException
 import kotlin.jvm.Throws
 
 /**
@@ -20,7 +20,7 @@ public interface PartiQLPlanner {
      * @param config a configuration object
      * @return
      */
-    @Throws(ErrorListenerException::class)
+    @Throws(PErrorListenerException::class)
     public fun plan(statement: Statement, session: Session, config: PlannerConfig = PlannerConfigBuilder().build()): Result
 
     /**

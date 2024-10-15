@@ -1,7 +1,7 @@
 package org.partiql.eval;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.spi.errors.ErrorListener;
+import org.partiql.spi.errors.PErrorListener;
 
 /**
  * This class is the default mechanism used to build a {@link CompilerConfig} object.
@@ -10,16 +10,16 @@ public class CompilerConfigBuilder {
 
     private PartiQLEngine.Mode _mode = PartiQLEngine.Mode.STRICT;
 
-    private ErrorListener _listener = null;
+    private PErrorListener _listener = null;
 
     /**
      * If this is not invoked, the default, aborting error listener is used.
      * @param listener the listener that is invoked when the parser encounters errors/warnings.
      * @return the builder with the registered listener.
-     * @see ErrorListener#abortOnError()
+     * @see PErrorListener#abortOnError()
      */
     @NotNull
-    public CompilerConfigBuilder setErrorListener(@NotNull ErrorListener listener) {
+    public CompilerConfigBuilder setErrorListener(@NotNull PErrorListener listener) {
         _listener = listener;
         return this;
     }
@@ -40,11 +40,11 @@ public class CompilerConfigBuilder {
      */
     @NotNull
     public CompilerConfig build() {
-        ErrorListener listener = _listener == null ? ErrorListener.abortOnError() : _listener;
+        PErrorListener listener = _listener == null ? PErrorListener.abortOnError() : _listener;
         return new CompilerConfig() {
             @NotNull
             @Override
-            public ErrorListener getErrorListener() {
+            public PErrorListener getErrorListener() {
                 return listener;
             }
 

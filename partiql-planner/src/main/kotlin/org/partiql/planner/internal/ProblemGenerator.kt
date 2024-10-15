@@ -8,11 +8,19 @@ import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpErr
+import org.partiql.planner.internal.problems.AlwaysMissing
+import org.partiql.planner.internal.problems.CastUndefined
+import org.partiql.planner.internal.problems.FunctionNotFound
+import org.partiql.planner.internal.problems.FunctionTypeMismatch
+import org.partiql.planner.internal.problems.PathIndexNeverSucceeds
+import org.partiql.planner.internal.problems.PathKeyNeverSucceeds
+import org.partiql.planner.internal.problems.PathSymbolNeverSucceeds
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.Error
-import org.partiql.spi.errors.ErrorListener
+import org.partiql.spi.errors.Classification
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.function.Function
 import org.partiql.types.PType
 import org.partiql.types.StaticType
@@ -32,7 +40,7 @@ internal object ProblemGenerator {
     }
 
     fun reportUndefinedFunction(
-        listener: ErrorListener,
+        listener: PErrorListener,
         args: List<PType>,
         identifier: Identifier,
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
@@ -40,21 +48,21 @@ internal object ProblemGenerator {
     ): Rex {
         val loc = location(location)
         when (variants.isEmpty()) {
-            true -> listener.error(Error.FUNCTION_NOT_FOUND(loc, identifier, args))
-            false -> listener.warning(Error.FUNCTION_TYPE_MISMATCH(loc, identifier, args, variants))
+            true -> listener.report(FunctionNotFound(loc, identifier, args))
+            false -> listener.report(FunctionTypeMismatch(loc, identifier, args, variants))
         }
         return errorRex()
     }
 
     fun reportFunctionMistyped(
-        listener: ErrorListener,
+        listener: PErrorListener,
         args: List<PType>,
         identifier: Identifier,
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
         variants: List<Function> = emptyList()
     ): Rex {
         val loc = location(location)
-        listener.warning(Error.FUNCTION_TYPE_MISMATCH(loc, identifier, args, variants))
+        listener.report(FunctionTypeMismatch(loc, identifier, args, variants))
         return errorRex()
     }
 
@@ -67,13 +75,13 @@ internal object ProblemGenerator {
     }
 
     fun reportUndefinedCast(
-        listener: ErrorListener,
+        listener: PErrorListener,
         source: PType,
         target: PType,
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION
     ): Rex {
-        val problem = undefinedCast(source, target, location)
-        listener.warning(problem.toError()) // TODO: Should this really be a warning?
+        val problem = CastUndefined(location(location), source, target)
+        listener.report(problem) // TODO: Should this really be a warning?
         return errorRex()
     }
 
@@ -90,13 +98,13 @@ internal object ProblemGenerator {
      * Emits an error to the [listener].
      */
     fun reportUndefinedVariable(
-        listener: ErrorListener,
+        listener: PErrorListener,
         id: Identifier,
         inScopeVariables: Set<String> = emptySet(),
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
     ): Rex {
         val problem = undefinedVariable(id, inScopeVariables, location)
-        listener.warning(problem.toError())
+        listener.report(problem.toError())
         return errorRex()
     }
 
@@ -125,27 +133,27 @@ internal object ProblemGenerator {
         return problem(
             location,
             object : PlanningProblemDetails(ProblemSeverity.WARNING, { "" }) {
-                override fun toError(line: Int?, column: Int?, length: Int?): Error {
-                    return Error.PATH_INDEX_NEVER_SUCCEEDS(location(location))
+                override fun toError(line: Int?, column: Int?, length: Int?): PError {
+                    return PathIndexNeverSucceeds(location(location))
                 }
             }
         )
     }
 
     fun reportAlwaysMissing(
-        listener: ErrorListener,
+        listener: PErrorListener,
         code: Int,
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
     ): Rex {
         val loc = location(location)
         val error = when (code) {
-            Error.PATH_KEY_NEVER_SUCCEEDS -> Error.PATH_KEY_NEVER_SUCCEEDS(loc)
-            Error.PATH_SYMBOL_NEVER_SUCCEEDS -> Error.PATH_SYMBOL_NEVER_SUCCEEDS(loc)
-            Error.PATH_INDEX_NEVER_SUCCEEDS -> Error.PATH_INDEX_NEVER_SUCCEEDS(loc)
-            Error.ALWAYS_MISSING -> Error.ALWAYS_MISSING(loc)
+            PError.PATH_KEY_NEVER_SUCCEEDS -> PathKeyNeverSucceeds(loc)
+            PError.PATH_SYMBOL_NEVER_SUCCEEDS -> PathSymbolNeverSucceeds(loc)
+            PError.PATH_INDEX_NEVER_SUCCEEDS -> PathIndexNeverSucceeds(loc)
+            PError.ALWAYS_MISSING -> AlwaysMissing(loc)
             else -> error("This is an internal bug. This shouldn't have occurred.")
         }
-        listener.warning(error)
+        listener.report(error)
         return errorRex()
     }
 
@@ -171,24 +179,24 @@ internal object ProblemGenerator {
     }
 
     fun reportUnexpectedType(
-        listener: ErrorListener,
+        listener: PErrorListener,
         actualType: PType,
         expectedTypes: Set<PType>,
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
     ): Rex {
         val problem = unexpectedType(actualType, expectedTypes, location)
-        listener.warning(problem.toError()) // TODO: Is this really a warning?
+        listener.report(problem.toError()) // TODO: Is this really a warning?
         return errorRex()
     }
 
-    internal fun Problem.toError(): Error {
+    internal fun Problem.toError(): PError {
         val location = this.sourceLocation
         val line = if (location.lineNum < 0) null else location.lineNum
         val column = if (location.charOffset < 0) null else location.charOffset
         val length = if (location.length < 0) null else location.length
         return when (val details = this.details) {
             is PlanningProblemDetails -> details.toError(line?.toInt(), column?.toInt(), length?.toInt())
-            else -> Error.INTERNAL_ERROR(location(location), null)
+            else -> PError.INTERNAL_ERROR(Classification.SEMANTIC(), location(location), null)
         }
     }
 
