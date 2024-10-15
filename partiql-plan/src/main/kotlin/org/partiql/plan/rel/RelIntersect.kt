@@ -1,5 +1,7 @@
 package org.partiql.plan.rel
 
+import org.partiql.plan.Visitor
+
 /**
  * Logical `INTERSECT [ALL|DISTINCT]` operator for set (or multiset) intersection.
  */
@@ -15,7 +17,7 @@ public interface RelIntersect : Rel {
 
     override fun isOrdered(): Boolean = false
 
-    override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R =
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R =
         visitor.visitIntersect(this, ctx)
 }
 

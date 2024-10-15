@@ -1,15 +1,13 @@
 package org.partiql.plan.rel
 
+import org.partiql.plan.Operator
+
 /**
  * TODO DOCUMENTATION
  */
-public interface Rel {
+public interface Rel : Operator {
 
     public fun getType(): RelType
 
     public fun isOrdered(): Boolean
-
-    public fun getChildren(): Collection<Rel>
-
-    public fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R
 }

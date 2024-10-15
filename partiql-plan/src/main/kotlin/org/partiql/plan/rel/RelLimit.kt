@@ -1,5 +1,6 @@
 package org.partiql.plan.rel
 
+import org.partiql.plan.Visitor
 import org.partiql.plan.rex.Rex
 
 /**
@@ -17,7 +18,7 @@ public interface RelLimit : Rel {
 
     override fun isOrdered(): Boolean = getInput().isOrdered()
 
-    override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitLimit(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitLimit(this, ctx)
 }
 
 /**

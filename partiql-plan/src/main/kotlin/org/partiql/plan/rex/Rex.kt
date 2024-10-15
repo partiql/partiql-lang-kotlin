@@ -1,13 +1,11 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Operator
+
 /**
  * TODO DOCUMENTATION
  */
-public interface Rex {
+public interface Rex : Operator {
 
     public fun getType(): RexType
-
-    public fun getChildren(): Collection<Rex>
-
-    public fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R
 }

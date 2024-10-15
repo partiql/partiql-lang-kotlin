@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 /**
  * TODO DOCUMENTATION
  * TODO NAMING??
@@ -18,7 +20,7 @@ public interface RexVar : Rex {
 
     override fun getChildren(): Collection<Rex> = emptyList()
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitVar(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitVar(this, ctx)
 }
 
 /**
