@@ -1,0 +1,26 @@
+package org.partiql.cli
+
+import org.partiql.spi.errors.Error
+
+/**
+ * This is used by PicoCLI for de-serializing user-input for converting warnings to errors.
+ *
+ * @see MainCommand.warningsAsErrors
+ */
+enum class ErrorCodeString(val code: Int) {
+    ALL(-1),
+    UNKNOWN(Error.UNKNOWN),
+    INTERNAL_ERROR(Error.INTERNAL_ERROR),
+    UNRECOGNIZED_TOKEN(Error.UNRECOGNIZED_TOKEN),
+    UNEXPECTED_TOKEN(Error.UNEXPECTED_TOKEN),
+    PATH_KEY_NEVER_SUCCEEDS(Error.PATH_KEY_NEVER_SUCCEEDS),
+    PATH_SYMBOL_NEVER_SUCCEEDS(Error.PATH_SYMBOL_NEVER_SUCCEEDS),
+    PATH_INDEX_NEVER_SUCCEEDS(Error.PATH_INDEX_NEVER_SUCCEEDS),
+    FEATURE_NOT_SUPPORTED(Error.FEATURE_NOT_SUPPORTED),
+    FUNCTION_NOT_FOUND(Error.FUNCTION_NOT_FOUND),
+    FUNCTION_TYPE_MISMATCH(Error.FUNCTION_TYPE_MISMATCH),
+    UNDEFINED_CAST(Error.UNDEFINED_CAST),
+    VAR_REF_AMBIGUOUS(Error.VAR_REF_AMBIGUOUS),
+    VAR_REF_NOT_FOUND(Error.VAR_REF_NOT_FOUND),
+    ALWAYS_MISSING(Error.ALWAYS_MISSING),
+}

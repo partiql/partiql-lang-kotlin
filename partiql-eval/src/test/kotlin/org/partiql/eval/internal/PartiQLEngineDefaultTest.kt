@@ -1339,7 +1339,8 @@ class PartiQLEngineDefaultTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val stmt = engine.prepare(plan, mode, session)
+            val compilerConfig = org.partiql.eval.CompilerConfigBuilder().setMode(mode).build()
+            val stmt = engine.prepare(plan, session, compilerConfig)
             val result = when (val returned = stmt.execute(session)) {
                 is PartiQLResult.Value -> returned
                 is PartiQLResult.Error -> {
@@ -1421,7 +1422,8 @@ class PartiQLEngineDefaultTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val stmt = engine.prepare(plan, mode, session)
+            val compilerConfig = org.partiql.eval.CompilerConfigBuilder().setMode(mode).build()
+            val stmt = engine.prepare(plan, session, compilerConfig)
             when (val result = stmt.execute(session)) {
                 is PartiQLResult.Value -> return result.value to plan
                 is PartiQLResult.Error -> {

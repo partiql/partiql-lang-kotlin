@@ -285,6 +285,15 @@ public abstract interface class org/partiql/spi/Connector {
 public abstract interface class org/partiql/spi/Connector$Context {
 }
 
+public class org/partiql/spi/SourceLocation {
+	public field length J
+	public field line J
+	public field offset J
+	public fun <init> (JJJ)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
 public abstract interface class org/partiql/spi/catalog/Catalog {
 	public abstract fun getAggregations (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getFunctions (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
@@ -512,6 +521,67 @@ public final class org/partiql/spi/catalog/Table$Companion {
 public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getDatum (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/spi/value/Datum;
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
+}
+
+public class org/partiql/spi/errors/Error {
+	public static final field ALWAYS_MISSING I
+	public static final field FEATURE_NOT_SUPPORTED I
+	public static final field FUNCTION_NOT_FOUND I
+	public static final field FUNCTION_TYPE_MISMATCH I
+	public static final field INTERNAL_ERROR I
+	public static final field PATH_INDEX_NEVER_SUCCEEDS I
+	public static final field PATH_KEY_NEVER_SUCCEEDS I
+	public static final field PATH_SYMBOL_NEVER_SUCCEEDS I
+	public static final field TYPE_UNEXPECTED I
+	public static final field UNDEFINED_CAST I
+	public static final field UNEXPECTED_TOKEN I
+	public static final field UNKNOWN I
+	public static final field UNRECOGNIZED_TOKEN I
+	public static final field VAR_REF_AMBIGUOUS I
+	public static final field VAR_REF_NOT_FOUND I
+	public field classification I
+	public field code I
+	public field location Lorg/partiql/spi/SourceLocation;
+	public static fun ALWAYS_MISSING (Lorg/partiql/spi/SourceLocation;)Lorg/partiql/spi/errors/Error;
+	public static fun FEATURE_NOT_SUPPORTED (Lorg/partiql/spi/SourceLocation;Ljava/lang/String;)Lorg/partiql/spi/errors/Error;
+	public static fun FUNCTION_NOT_FOUND (Lorg/partiql/spi/SourceLocation;Lorg/partiql/spi/catalog/Identifier;Ljava/util/List;)Lorg/partiql/spi/errors/Error;
+	public static fun FUNCTION_TYPE_MISMATCH (Lorg/partiql/spi/SourceLocation;Lorg/partiql/spi/catalog/Identifier;Ljava/util/List;Ljava/util/List;)Lorg/partiql/spi/errors/Error;
+	public static fun INTERNAL_ERROR (Lorg/partiql/spi/SourceLocation;Ljava/lang/Throwable;)Lorg/partiql/spi/errors/Error;
+	public static fun PATH_INDEX_NEVER_SUCCEEDS (Lorg/partiql/spi/SourceLocation;)Lorg/partiql/spi/errors/Error;
+	public static fun PATH_KEY_NEVER_SUCCEEDS (Lorg/partiql/spi/SourceLocation;)Lorg/partiql/spi/errors/Error;
+	public static fun PATH_SYMBOL_NEVER_SUCCEEDS (Lorg/partiql/spi/SourceLocation;)Lorg/partiql/spi/errors/Error;
+	public static fun TYPE_UNEXPECTED (Lorg/partiql/spi/SourceLocation;Lorg/partiql/types/PType;Ljava/util/List;)Lorg/partiql/spi/errors/Error;
+	public static fun UNDEFINED_CAST (Lorg/partiql/spi/SourceLocation;Lorg/partiql/types/PType;Lorg/partiql/types/PType;)Lorg/partiql/spi/errors/Error;
+	public static fun UNEXPECTED_TOKEN (Lorg/partiql/spi/SourceLocation;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/spi/errors/Error;
+	public static fun UNRECOGNIZED_TOKEN (Lorg/partiql/spi/SourceLocation;Ljava/lang/String;)Lorg/partiql/spi/errors/Error;
+	public static fun VAR_REF_NOT_FOUND (Lorg/partiql/spi/SourceLocation;Lorg/partiql/spi/catalog/Identifier;Ljava/util/List;)Lorg/partiql/spi/errors/Error;
+	public fun get (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public fun getList (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
+	public fun getListOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
+	public fun getOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/spi/errors/ErrorException : org/partiql/spi/errors/ErrorListenerException {
+	public field error Lorg/partiql/spi/errors/Error;
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Lorg/partiql/spi/errors/Error;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/errors/Error;)V
+	public fun <init> (Ljava/lang/Throwable;Lorg/partiql/spi/errors/Error;)V
+	public fun <init> (Lorg/partiql/spi/errors/Error;)V
+}
+
+public abstract interface class org/partiql/spi/errors/ErrorListener {
+	public static fun abortOnError ()Lorg/partiql/spi/errors/ErrorListener;
+	public static fun chain ([Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/spi/errors/ErrorListener;
+	public abstract fun error (Lorg/partiql/spi/errors/Error;)V
+	public abstract fun warning (Lorg/partiql/spi/errors/Error;)V
+}
+
+public class org/partiql/spi/errors/ErrorListenerException : java/lang/Exception {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun <init> (Ljava/lang/Throwable;)V
 }
 
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {

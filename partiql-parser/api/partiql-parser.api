@@ -1,14 +1,17 @@
-public final class org/partiql/parser/PartiQLLexerException : org/partiql/parser/PartiQLSyntaxException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lorg/partiql/parser/SourceLocation;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lorg/partiql/parser/SourceLocation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getToken ()Ljava/lang/String;
-	public final fun getTokenType ()Ljava/lang/String;
+public abstract interface class org/partiql/parser/ParserConfig {
+	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/ErrorListener;
+}
+
+public class org/partiql/parser/ParserConfigBuilder {
+	public fun <init> ()V
+	public fun build ()Lorg/partiql/parser/ParserConfig;
+	public fun setErrorListener (Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/parser/ParserConfigBuilder;
 }
 
 public abstract interface class org/partiql/parser/PartiQLParser {
 	public static final field Companion Lorg/partiql/parser/PartiQLParser$Companion;
 	public static fun builder ()Lorg/partiql/parser/PartiQLParserBuilder;
-	public abstract fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParser$Result;
+	public abstract fun parse (Ljava/lang/String;Lorg/partiql/parser/ParserConfig;)Lorg/partiql/parser/PartiQLParser$Result;
 	public static fun standard ()Lorg/partiql/parser/PartiQLParser;
 }
 
@@ -17,7 +20,12 @@ public final class org/partiql/parser/PartiQLParser$Companion {
 	public final fun standard ()Lorg/partiql/parser/PartiQLParser;
 }
 
+public final class org/partiql/parser/PartiQLParser$DefaultImpls {
+	public static synthetic fun parse$default (Lorg/partiql/parser/PartiQLParser;Ljava/lang/String;Lorg/partiql/parser/ParserConfig;ILjava/lang/Object;)Lorg/partiql/parser/PartiQLParser$Result;
+}
+
 public final class org/partiql/parser/PartiQLParser$Result {
+	public static final field Companion Lorg/partiql/parser/PartiQLParser$Result$Companion;
 	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/Statement;Lorg/partiql/parser/SourceLocations;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lorg/partiql/ast/Statement;
@@ -32,25 +40,12 @@ public final class org/partiql/parser/PartiQLParser$Result {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class org/partiql/parser/PartiQLParser$Result$Companion {
+}
+
 public final class org/partiql/parser/PartiQLParserBuilder {
 	public fun <init> ()V
 	public final fun build ()Lorg/partiql/parser/PartiQLParser;
-}
-
-public final class org/partiql/parser/PartiQLParserException : org/partiql/parser/PartiQLSyntaxException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lorg/partiql/parser/SourceLocation;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lorg/partiql/parser/SourceLocation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getRule ()Ljava/lang/String;
-	public final fun getToken ()Ljava/lang/String;
-	public final fun getTokenType ()Ljava/lang/String;
-}
-
-public class org/partiql/parser/PartiQLSyntaxException : java/lang/Exception {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Lorg/partiql/parser/SourceLocation;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Lorg/partiql/parser/SourceLocation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun getCause ()Ljava/lang/Throwable;
-	public final fun getLocation ()Lorg/partiql/parser/SourceLocation;
-	public fun getMessage ()Ljava/lang/String;
 }
 
 public final class org/partiql/parser/SourceLocation {

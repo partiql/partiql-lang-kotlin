@@ -24,7 +24,7 @@ import org.partiql.spi.catalog.Session
  */
 public interface PartiQLEngine {
 
-    public fun prepare(plan: Plan, mode: Mode, session: Session): PartiQLStatement
+    public fun prepare(plan: Plan, session: Session, config: CompilerConfig): PartiQLStatement
 
     companion object {
 

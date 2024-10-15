@@ -15,7 +15,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.Problem
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PlannerConfigBuilder
 import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.internal.ProblemGenerator.toError
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
@@ -23,13 +25,14 @@ import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessT
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
+import org.partiql.planner.util.ErrorCollector
 import org.partiql.planner.util.PlanPrinter
-import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.ErrorListener
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
 import org.partiql.types.ListType
@@ -60,7 +63,7 @@ internal class PlanTyperTestsPorted {
             val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val expected: CompilerType,
-            val warnings: ProblemHandler? = null,
+            val warnings: ErrorListener? = null,
         ) : TestCase() {
 
             // legacy shim!
@@ -71,7 +74,7 @@ internal class PlanTyperTestsPorted {
                 catalog: String = "pql",
                 catalogPath: List<String> = emptyList(),
                 expected: StaticType,
-                warnings: ProblemHandler? = null,
+                warnings: ErrorListener? = null,
             ) : this(name, key, query, catalog, catalogPath, PType.fromStaticType(expected).toCType(), warnings)
 
             override fun toString(): String {
@@ -127,19 +130,18 @@ internal class PlanTyperTestsPorted {
         private val planner = PartiQLPlanner.builder().signal().build()
 
         private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
+            val expectedError = problem.toError()
             val message = buildString {
-                appendLine("Expected problems to include: $problem")
+                appendLine("Expected problems to include: $expectedError")
                 appendLine("Received: [")
-                problems.forEach {
+                problems.problems.forEach {
                     append("\t")
                     appendLine(it)
                 }
                 appendLine("]")
             }
-            when (ignoreSourceLocation) {
-                true -> assertTrue(message) { problems.any { it.details == problem.details } }
-                false -> assertTrue(message) { problems.any { it == problem } }
-            }
+            // TODO: This only asserts on the code, not the properties.
+            assertTrue(message) { problems.problems.any { it.code == expectedError.code } }
         }
 
         // private fun id(vararg parts: Identifier.Symbol): Identifier {
@@ -843,7 +845,7 @@ internal class PlanTyperTestsPorted {
                 query = "1 & MISSING",
                 expected = ANY, // TODO SHOULD BE UNKNOWN
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
+                    ProblemGenerator.alwaysMissing("Static function always receives MISSING arguments.")
                 )
             ),
             ErrorTestCase(
@@ -2120,7 +2122,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.unresolvedExcludedExprRoot("nonsense")
+                    ProblemGenerator.undefinedVariable(Identifier.regular("nonsense"))
                 )
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
@@ -3162,7 +3164,7 @@ internal class PlanTyperTestsPorted {
                 """,
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Collections must be indexed with integers, found STRING")
+                    ProblemGenerator.pathIndexNeverSucceeds()
                 )
             ),
             // The reason this is ANY is because we do not have support for constant-folding. We don't know what
@@ -3530,7 +3532,7 @@ internal class PlanTyperTestsPorted {
                 """.trimIndent(),
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
+                    ProblemGenerator.alwaysMissing("Static function always receives MISSING arguments.")
                 )
             ),
         )
@@ -3857,10 +3859,11 @@ internal class PlanTyperTestsPorted {
     private fun infer(
         query: String,
         session: Session,
-        problemCollector: ProblemCollector,
+        listener: ErrorListener,
     ): org.partiql.plan.Plan {
         val ast = parser.parse(query).root
-        return planner.plan(ast, session, problemCollector).plan
+        val plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build()
+        return planner.plan(ast, session, plannerConfig).plan
     }
 
     private fun runTest(tc: TestCase) = when (tc) {
@@ -3883,7 +3886,7 @@ internal class PlanTyperTestsPorted {
         }
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
 
-        val collector = ProblemCollector()
+        val collector = ErrorCollector()
         val plan = infer(input, session, collector)
         when (val statement = plan.getOperation()) {
             is org.partiql.plan.Operation.Query -> {
@@ -3914,8 +3917,7 @@ internal class PlanTyperTestsPorted {
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)
             .build()
-        val collector = ProblemCollector()
-
+        val collector = ErrorCollector()
         val hasQuery = tc.query != null
         val hasKey = tc.key != null
         if (hasQuery == hasKey) {
@@ -3948,7 +3950,7 @@ internal class PlanTyperTestsPorted {
                 assert(collector.problems.isNotEmpty()) {
                     "Expected to find problems, but none were found."
                 }
-                tc.problemHandler?.handle(collector.problems, true)
+                tc.problemHandler?.handle(collector, true)
             }
         }
     }
@@ -3959,7 +3961,7 @@ internal class PlanTyperTestsPorted {
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)
             .build()
-        val collector = ProblemCollector()
+        val collector = ErrorCollector()
         val exception = assertThrows<Throwable> {
             infer(tc.query, session, collector)
             Unit
@@ -4602,5 +4604,5 @@ internal class PlanTyperTestsPorted {
 }
 
 fun interface ProblemHandler {
-    fun handle(problems: List<Problem>, ignoreSourceLocation: Boolean)
+    fun handle(problems: ErrorCollector, ignoreSourceLocation: Boolean)
 }

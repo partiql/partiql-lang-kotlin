@@ -56,7 +56,6 @@ import org.partiql.plan.JoinType
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelDistinct
-import org.partiql.plan.rel.RelError
 import org.partiql.plan.rel.RelExcept
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelFilter
@@ -81,7 +80,6 @@ import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
-import org.partiql.plan.rex.RexMissing
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -130,10 +128,6 @@ internal class SqlCompiler(
 
         override fun defaultReturn(rel: Rel, ctx: Unit): Operator.Relation {
             TODO("Evaluation is not implemented for rel: ${rel::class.simpleName}")
-        }
-
-        override fun visitError(rel: RelError, ctx: Unit): Operator.Relation {
-            throw IllegalStateException(rel.message)
         }
 
         // OPERATORS
@@ -285,7 +279,7 @@ internal class SqlCompiler(
         }
 
         override fun visitError(rex: RexError, ctx: Unit): Operator.Expr {
-            throw IllegalStateException(rex.getMessage())
+            return ExprMissing(unknown)
         }
 
         // OPERATORS
@@ -364,10 +358,6 @@ internal class SqlCompiler(
 
         override fun visitLit(rex: RexLit, ctx: Unit): Operator.Expr {
             return ExprLit(rex.getValue())
-        }
-
-        override fun visitMissing(rex: RexMissing, ctx: Unit): Operator.Expr {
-            return ExprMissing(unknown)
         }
 
         override fun visitNullIf(rex: RexNullIf, ctx: Unit): Operator.Expr {
