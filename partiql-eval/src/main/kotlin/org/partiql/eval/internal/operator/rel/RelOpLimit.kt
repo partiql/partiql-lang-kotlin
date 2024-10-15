@@ -1,17 +1,16 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getBigIntCoerced
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Expression
 import org.partiql.eval.operator.Record
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.operator.Relation
 import java.math.BigInteger
 
-@OptIn(PartiQLValueExperimental::class)
 internal class RelOpLimit(
-    private val input: Operator.Relation,
-    private val limit: Operator.Expr,
-) : Operator.Relation {
+    private val input: Relation,
+    private val limit: Expression,
+) : Relation {
 
     private var _seen: BigInteger = BigInteger.ZERO
     private var _limit: BigInteger = BigInteger.ZERO

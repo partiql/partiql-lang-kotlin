@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator
 
+import org.partiql.eval.operator.Expression
 import org.partiql.spi.function.Aggregation
 
 /**
@@ -7,6 +8,6 @@ import org.partiql.spi.function.Aggregation
  */
 internal class Aggregate(
     val agg: Aggregation,
-    val args: List<Operator.Expr>,
+    val args: List<Expression>,
     val distinct: Boolean
 )

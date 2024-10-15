@@ -1,9 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Expression
 import org.partiql.eval.operator.Record
+import org.partiql.eval.operator.Relation
 import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
@@ -15,9 +16,9 @@ import org.partiql.spi.value.Datum
  * Full Outer Join cannot be lateral according to PartiQL Specification Section 5.5.
  */
 internal class RelOpJoinOuterFull(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
-    private val condition: Operator.Expr,
+    private val lhs: Relation,
+    private val rhs: Relation,
+    private val condition: Expression,
     lhsType: RelType,
     rhsType: RelType,
 ) : RelOpPeeking() {

@@ -1,9 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
+import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.operator.Record
+import org.partiql.eval.operator.Relation
 import java.util.TreeSet
 
 /**
@@ -13,8 +14,8 @@ import java.util.TreeSet
  * @property rhs
  */
 internal class RelOpExceptDistinct(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
+    private val lhs: Relation,
+    private val rhs: Relation,
 ) : RelOpPeeking() {
 
     private var seen = TreeSet(DatumArrayComparator)

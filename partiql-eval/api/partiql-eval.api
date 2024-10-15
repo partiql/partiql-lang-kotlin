@@ -1,3 +1,11 @@
+public class org/partiql/eval/Environment {
+	public final field scope Lorg/partiql/eval/internal/Scope;
+	protected fun <init> ()V
+	protected fun <init> (Lorg/partiql/eval/internal/Parameters;)V
+	public fun push (Lorg/partiql/eval/operator/Record;)Lorg/partiql/eval/Environment;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/eval/Mode {
 	public static final field PERMISSIVE I
 	public static final field STRICT I
@@ -34,11 +42,26 @@ public abstract interface class org/partiql/eval/Statement {
 	public abstract fun execute ()Lorg/partiql/spi/value/Datum;
 }
 
-public abstract interface class org/partiql/eval/operator/Expression : org/partiql/eval/operator/Operation {
-	public abstract fun eval ()Lorg/partiql/spi/value/Datum;
+public final class org/partiql/eval/internal/Scope {
+	public final fun get (I)Lorg/partiql/spi/value/Datum;
+	public final fun getOrNull (I)Lorg/partiql/spi/value/Datum;
+	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/eval/operator/Operation {
+public abstract interface class org/partiql/eval/operator/PhysicalExpr : org/partiql/eval/operator/PhysicalOperator {
+	public abstract fun eval (Lorg/partiql/eval/Environment;)Lorg/partiql/spi/value/Datum;
+}
+
+public abstract interface class org/partiql/eval/operator/PhysicalOperator {
+}
+
+public abstract interface class org/partiql/eval/operator/PhysicalRelation : java/lang/AutoCloseable, java/util/Iterator, org/partiql/eval/operator/PhysicalOperator {
+	public abstract fun close ()V
+	public abstract fun hasNext ()Z
+	public synthetic fun next ()Ljava/lang/Object;
+	public abstract fun next ()Lorg/partiql/eval/operator/Record;
+	public abstract fun open (Lorg/partiql/eval/Environment;)V
+	public fun remove ()V
 }
 
 public class org/partiql/eval/operator/Record {
@@ -53,15 +76,7 @@ public class org/partiql/eval/operator/Record {
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/eval/operator/Relation : java/lang/AutoCloseable, java/util/Iterator, org/partiql/eval/operator/Operation {
-	public abstract fun close ()V
-	public abstract fun hasNext ()Z
-	public synthetic fun next ()Ljava/lang/Object;
-	public abstract fun next ()Lorg/partiql/eval/operator/Record;
-	public abstract fun open ()V
-}
-
 public abstract interface class org/partiql/eval/operator/Strategy {
-	public abstract fun apply (Lorg/partiql/plan/Operator;)Lorg/partiql/eval/operator/Operation;
+	public abstract fun apply (Lorg/partiql/plan/Operator;)Lorg/partiql/eval/operator/PhysicalOperator;
 }
 

@@ -2,9 +2,10 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.CardinalityViolation
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Expression
+import org.partiql.eval.operator.Relation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -13,7 +14,8 @@ import org.partiql.types.PType
  *
  * TODO REMOVE CONSTRUCTOR – TEMPORARY UNTIL SUBQUERIES ARE FIXED IN THE PLANNER.
  */
-internal class ExprSubquery(input: Operator.Relation, constructor: Operator.Expr) : Operator.Expr {
+internal class ExprSubquery(input: Relation, constructor: Expression) :
+    Expression {
 
     // DO NOT USE FINAL
     private var _input = input

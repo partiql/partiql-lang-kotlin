@@ -1,13 +1,14 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.operator.Expression
 import org.partiql.eval.operator.Record
+import org.partiql.eval.operator.Relation
 
 internal class RelOpProject(
-    private val input: Operator.Relation,
-    private val projections: List<Operator.Expr>
-) : Operator.Relation {
+    private val input: Relation,
+    private val projections: List<Expression>
+) : Relation {
 
     private lateinit var env: Environment
 

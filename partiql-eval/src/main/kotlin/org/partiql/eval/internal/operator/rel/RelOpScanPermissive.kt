@@ -1,14 +1,15 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.RecordValueIterator
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Expression
 import org.partiql.eval.operator.Record
+import org.partiql.eval.operator.Relation
 import org.partiql.types.PType
 
 internal class RelOpScanPermissive(
-    private val expr: Operator.Expr
-) : Operator.Relation {
+    private val expr: Expression
+) : Relation {
 
     private lateinit var records: Iterator<Record>
 

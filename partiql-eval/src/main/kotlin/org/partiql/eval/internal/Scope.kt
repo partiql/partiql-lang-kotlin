@@ -5,18 +5,20 @@ import org.partiql.spi.value.Datum
 
 /**
  * This class represents a variable environment scope.
+ *
+ * TODO internalize in subsequent PR.
  */
-internal class Scope(
+public class Scope internal constructor(
     private val bindings: Record,
     private val parent: Scope? = null
 ) {
 
-    companion object {
-        @JvmStatic
-        val empty: Scope = Scope(Record(emptyArray()), null)
-    }
+    /**
+     * Internal constructor for Environment.java
+     */
+    internal constructor() : this(Record(emptyArray()), null)
 
-    operator fun get(index: Int): Datum {
+    public operator fun get(index: Int): Datum {
         try {
             return this.bindings[index]
         } catch (_: Throwable) {
@@ -24,7 +26,7 @@ internal class Scope(
         }
     }
 
-    fun getOrNull(index: Int): Datum? {
+    public fun getOrNull(index: Int): Datum? {
         return this.bindings.values.getOrNull(index)
     }
 
@@ -45,8 +47,6 @@ internal class Scope(
      * 3. When evaluating Expressions from within a Relation, there is no need to use [push].
      * 4. When evaluating Relations from within a Relation, one **might** want to use [push]. Consider the LATERAL JOIN, for instance.
      *
-     * @see [org.partiql.eval.internal.operator.Operator.Expr]
-     * @see [org.partiql.eval.internal.operator.Operator.Relation]
      * @see [org.partiql.eval.internal.operator.rex.ExprSubquery]
      */
     internal fun push(record: Record): Scope = Scope(record, this)

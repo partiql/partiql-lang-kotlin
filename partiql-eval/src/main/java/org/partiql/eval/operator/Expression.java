@@ -1,15 +1,17 @@
 package org.partiql.eval.operator;
 
+import org.partiql.eval.Environment;
 import org.partiql.spi.value.Datum;
 
 /**
- * Expression is the interface for an operator that returns a value.
+ * PhysicalExpr is the interface for an operator that returns a value.
  */
-public interface Expression extends Operation {
+public interface Expression extends PhysicalOperator {
 
     /**
-     * Evaluates the expression and returns the result.
-     * @return the result of the expression
+     * Evaluate the expression for the given environment.
+     * @param env   The current environment.
+     * @return      The expression result.
      */
-    public Datum eval();
+    public Datum eval(Environment env);
 }

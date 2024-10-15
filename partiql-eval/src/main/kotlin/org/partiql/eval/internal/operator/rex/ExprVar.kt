@@ -1,13 +1,13 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.operator.Expression
 import org.partiql.spi.value.Datum
 
 /**
  * Implementation for variable lookup; walks up environments if necessary, otherwise lookup using tuple offset.
  */
-internal class ExprVar(depth: Int, offset: Int) : Operator.Expr {
+internal class ExprVar(depth: Int, offset: Int) : Expression {
 
     // DO NOT USE FINAL
     private var _depth = depth

@@ -1,9 +1,11 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
+import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.operator.Aggregate
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Expression
 import org.partiql.eval.operator.Record
+import org.partiql.eval.operator.Relation
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -11,10 +13,10 @@ import java.util.TreeMap
 import java.util.TreeSet
 
 internal class RelOpAggregate(
-    private val input: Operator.Relation,
+    private val input: Relation,
     private val aggregates: List<Aggregate>,
-    private val groups: List<Operator.Expr>,
-) : Operator.Relation {
+    private val groups: List<Expression>,
+) : Relation {
 
     private lateinit var records: Iterator<Record>
 
@@ -27,7 +29,7 @@ internal class RelOpAggregate(
      */
     class AccumulatorWrapper(
         val delegate: Aggregation.Accumulator,
-        val args: List<Operator.Expr>,
+        val args: List<Expression>,
         val seen: TreeSet<Array<Datum>>?
     )
 

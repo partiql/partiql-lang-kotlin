@@ -1,15 +1,16 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.operator.Expression
 import org.partiql.eval.operator.Record
+import org.partiql.eval.operator.Relation
 import org.partiql.spi.value.Datum
 import java.util.Collections
 
 internal class RelOpSort(
-    private val input: Operator.Relation,
+    private val input: Relation,
     private val collations: List<Collation>,
-) : Operator.Relation {
+) : Relation {
     private var records: Iterator<Record> = Collections.emptyIterator()
     private var init: Boolean = false
 
@@ -79,7 +80,7 @@ internal class RelOpSort(
      * @property last   True iff NULLS LAST sort, otherwise NULLS FIRST.
      */
     class Collation(
-        @JvmField var expr: Operator.Expr,
+        @JvmField var expr: Expression,
         @JvmField var desc: Boolean,
         @JvmField var last: Boolean,
     )

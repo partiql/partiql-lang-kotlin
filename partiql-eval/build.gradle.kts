@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -36,8 +38,7 @@ dependencies {
 }
 
 kotlin {
-    // TODO enable strict
-    explicitApi = null
+    explicitApi = ExplicitApiMode.Strict
 }
 
 tasks.shadowJar {

@@ -1,12 +1,13 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.operator.Expression
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
 
-internal class ExprStructPermissive(private val fields: List<ExprStructField>) : Operator.Expr {
+internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
+    Expression {
     override fun eval(env: Environment): Datum {
         val fields = fields.mapNotNull {
             val key = it.key.eval(env)

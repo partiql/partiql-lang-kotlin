@@ -1,14 +1,14 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.operator.Record
+import org.partiql.eval.operator.Relation
 
 internal class RelOpUnionAll(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
-) : Operator.Relation {
+    private val lhs: Relation,
+    private val rhs: Relation,
+) : Relation {
 
     override fun open(env: Environment) {
         lhs.open(env)

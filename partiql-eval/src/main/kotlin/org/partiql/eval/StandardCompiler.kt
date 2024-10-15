@@ -1,8 +1,6 @@
 package org.partiql.eval
 
-import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Aggregate
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
 import org.partiql.eval.internal.operator.rel.RelOpExceptAll
@@ -52,6 +50,10 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.eval.operator.Expression
+import org.partiql.eval.operator.PhysicalOperator
+import org.partiql.eval.operator.Relation
+import org.partiql.eval.operator.Strategy
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operation
@@ -104,12 +106,16 @@ import org.partiql.types.PType
 
 /**
  * This class is responsible for producing an executable statement from logical operators.
- *
- * The compiler works by applying the first matching strategy.
  */
-internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
+internal class StandardCompiler(mode: Mode, strategies: List<Strategy>) : PartiQLCompiler {
+
+    /**
+     * No custom operator strategies.
+     */
+    internal constructor(mode: Mode) : this(mode, emptyList())
 
     private val mode = mode.code()
+    private val strategies = strategies
     private val unknown = PType.unknown()
     private val visitor = _Visitor()
 
@@ -137,27 +143,41 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
         override fun execute(): Datum = root.eval(Environment())
     }
 
-    private fun compile(rel: Rel, ctx: Unit): Operator.Relation = rel.accept(visitor, ctx) as Operator.Relation
+    private fun compile(rel: Rel, ctx: Unit): Relation = rel.accept(visitor, ctx) as Relation
 
-    private fun compile(rex: Rex, ctx: Unit): Operator.Expr = rex.accept(visitor, ctx) as Operator.Expr
+    private fun compile(rex: Rex, ctx: Unit): Expression = rex.accept(visitor, ctx) as Expression
 
     /**
      * Transforms plan relation operators into the internal physical operators.
      */
     @Suppress("ClassName")
-    private inner class _Visitor : Visitor<Operator, Unit> {
+    private inner class _Visitor : Visitor<PhysicalOperator, Unit> {
 
-        override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): Operator {
-            error("Evaluation is not implemented for operator: ${operator::class.simpleName}")
+        /**
+         * Apply custom strategies left-to-right, returning the first match.
+         *
+         * @param operator
+         * @param ctx
+         * @return
+         */
+        override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): PhysicalOperator {
+            for (strategy in strategies) {
+                val op = strategy.apply(operator)
+                if (op != null) {
+                    // first match
+                    return op
+                }
+            }
+            error("No compiler strategy matches the operator: ${operator::class.simpleName}")
         }
 
-        override fun visitError(rel: RelError, ctx: Unit): Operator.Relation {
+        override fun visitError(rel: RelError, ctx: Unit): Relation {
             throw IllegalStateException(rel.message)
         }
 
         // OPERATORS
 
-        override fun visitAggregate(rel: RelAggregate, ctx: Unit): Operator.Relation {
+        override fun visitAggregate(rel: RelAggregate, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             val aggs = rel.getCalls().map { call ->
                 val agg = call.getAgg()
@@ -169,12 +189,12 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             return RelOpAggregate(input, aggs, groups)
         }
 
-        override fun visitDistinct(rel: RelDistinct, ctx: Unit): Operator.Relation {
+        override fun visitDistinct(rel: RelDistinct, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             return RelOpDistinct(input)
         }
 
-        override fun visitExcept(rel: RelExcept, ctx: Unit): Operator.Relation {
+        override fun visitExcept(rel: RelExcept, ctx: Unit): Relation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
             return when (rel.isAll()) {
@@ -183,19 +203,19 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitExclude(rel: RelExclude, ctx: Unit): Operator.Relation {
+        override fun visitExclude(rel: RelExclude, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             val paths = rel.getExclusions()
             return RelOpExclude(input, paths)
         }
 
-        override fun visitFilter(rel: RelFilter, ctx: Unit): Operator.Relation {
+        override fun visitFilter(rel: RelFilter, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             val predicate = compile(rel.getPredicate(), ctx).catch()
             return RelOpFilter(input, predicate)
         }
 
-        override fun visitIntersect(rel: RelIntersect, ctx: Unit): Operator.Relation {
+        override fun visitIntersect(rel: RelIntersect, ctx: Unit): Relation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
             return when (rel.isAll()) {
@@ -204,7 +224,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitIterate(rel: RelIterate, ctx: Unit): Operator.Relation {
+        override fun visitIterate(rel: RelIterate, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
                 Mode.PERMISSIVE -> RelOpIteratePermissive(input)
@@ -213,7 +233,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitJoin(rel: RelJoin, ctx: Unit): Operator.Relation {
+        override fun visitJoin(rel: RelJoin, ctx: Unit): Relation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
             val condition = rel.getCondition()?.let { compile(it, ctx) } ?: ExprLit(Datum.bool(true))
@@ -230,25 +250,25 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitLimit(rel: RelLimit, ctx: Unit): Operator.Relation {
+        override fun visitLimit(rel: RelLimit, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             val limit = compile(rel.getLimit(), ctx)
             return RelOpLimit(input, limit)
         }
 
-        override fun visitOffset(rel: RelOffset, ctx: Unit): Operator.Relation {
+        override fun visitOffset(rel: RelOffset, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             val offset = compile(rel.getOffset(), ctx)
             return RelOpOffset(input, offset)
         }
 
-        override fun visitProject(rel: RelProject, ctx: Unit): Operator.Relation {
+        override fun visitProject(rel: RelProject, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             val projections = rel.getProjections().map { compile(it, ctx).catch() }
             return RelOpProject(input, projections)
         }
 
-        override fun visitScan(rel: RelScan, ctx: Unit): Operator.Relation {
+        override fun visitScan(rel: RelScan, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
                 Mode.PERMISSIVE -> RelOpScanPermissive(input)
@@ -257,7 +277,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitSort(rel: RelSort, ctx: Unit): Operator.Relation {
+        override fun visitSort(rel: RelSort, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             val collations = rel.getCollations().map {
                 val expr = compile(it.getRex(), ctx)
@@ -268,7 +288,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             return RelOpSort(input, collations)
         }
 
-        override fun visitUnion(rel: RelUnion, ctx: Unit): Operator.Relation {
+        override fun visitUnion(rel: RelUnion, ctx: Unit): Relation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
             return when (rel.isAll()) {
@@ -277,7 +297,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitUnpivot(rel: RelUnpivot, ctx: Unit): Operator.Relation {
+        override fun visitUnpivot(rel: RelUnpivot, ctx: Unit): Relation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
                 Mode.PERMISSIVE -> RelOpUnpivot.Permissive(input)
@@ -286,23 +306,23 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitError(rex: RexError, ctx: Unit): Operator.Expr {
+        override fun visitError(rex: RexError, ctx: Unit): Expression {
             throw IllegalStateException(rex.getMessage())
         }
 
         // OPERATORS
 
-        override fun visitArray(rex: RexArray, ctx: Unit): Operator.Expr {
+        override fun visitArray(rex: RexArray, ctx: Unit): Expression {
             val values = rex.getValues().map { compile(it, ctx).catch() }
             return ExprArray(values)
         }
 
-        override fun visitBag(rex: RexBag, ctx: Unit): Operator.Expr {
+        override fun visitBag(rex: RexBag, ctx: Unit): Expression {
             val values = rex.getValues().map { compile(it, ctx).catch() }
             return ExprBag(values)
         }
 
-        override fun visitCallDynamic(rex: RexCallDynamic, ctx: Unit): Operator.Expr {
+        override fun visitCallDynamic(rex: RexCallDynamic, ctx: Unit): Expression {
             // Check candidate arity for uniformity
             var arity: Int = -1
             val name = rex.getName()
@@ -330,7 +350,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             return ExprCallDynamic(name, candidates, args)
         }
 
-        override fun visitCall(rex: RexCall, ctx: Unit): Operator.Expr {
+        override fun visitCall(rex: RexCall, ctx: Unit): Expression {
             val func = rex.getFunction()
             val args = rex.getArgs()
             val catch = func.parameters.any { it.kind == PType.Kind.DYNAMIC }
@@ -340,7 +360,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitCase(rex: RexCase, ctx: Unit): Operator.Expr {
+        override fun visitCase(rex: RexCase, ctx: Unit): Expression {
             if (rex.getMatch() != null) {
                 TODO("<case> expression")
             }
@@ -353,50 +373,50 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             return ExprCaseSearched(branches, default)
         }
 
-        override fun visitCast(rex: RexCast, ctx: Unit): Operator.Expr {
+        override fun visitCast(rex: RexCast, ctx: Unit): Expression {
             val operand = compile(rex.getOperand(), ctx)
             val target = rex.getTarget()
             return ExprCast(operand, target)
         }
 
-        override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): Operator.Expr {
+        override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): Expression {
             val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
             return ExprCoalesce(args)
         }
 
-        override fun visitLit(rex: RexLit, ctx: Unit): Operator.Expr {
+        override fun visitLit(rex: RexLit, ctx: Unit): Expression {
             return ExprLit(rex.getValue())
         }
 
-        override fun visitMissing(rex: RexMissing, ctx: Unit): Operator.Expr {
+        override fun visitMissing(rex: RexMissing, ctx: Unit): Expression {
             return ExprMissing(unknown)
         }
 
-        override fun visitNullIf(rex: RexNullIf, ctx: Unit): Operator.Expr {
+        override fun visitNullIf(rex: RexNullIf, ctx: Unit): Expression {
             val value = compile(rex.getV1(), ctx)
             val nullifier = compile(rex.getV2(), ctx)
             return ExprNullIf(value, nullifier)
         }
 
-        override fun visitPathIndex(rex: RexPathIndex, ctx: Unit): Operator.Expr {
+        override fun visitPathIndex(rex: RexPathIndex, ctx: Unit): Expression {
             val operand = compile(rex.getOperand(), ctx)
             val index = compile(rex.getIndex(), ctx)
             return ExprPathIndex(operand, index)
         }
 
-        override fun visitPathKey(rex: RexPathKey, ctx: Unit): Operator.Expr {
+        override fun visitPathKey(rex: RexPathKey, ctx: Unit): Expression {
             val operand = compile(rex.getOperand(), ctx)
             val key = compile(rex.getKey(), ctx)
             return ExprPathKey(operand, key)
         }
 
-        override fun visitPathSymbol(rex: RexPathSymbol, ctx: Unit): Operator.Expr {
+        override fun visitPathSymbol(rex: RexPathSymbol, ctx: Unit): Expression {
             val operand = compile(rex.getOperand(), ctx)
             val symbol = rex.getSymbol()
             return ExprPathSymbol(operand, symbol)
         }
 
-        override fun visitPivot(rex: RexPivot, ctx: Unit): Operator.Expr {
+        override fun visitPivot(rex: RexPivot, ctx: Unit): Expression {
             val input = compile(rex.getInput(), ctx)
             val key = compile(rex.getKey(), ctx)
             val value = compile(rex.getValue(), ctx)
@@ -407,14 +427,14 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitSelect(rex: RexSelect, ctx: Unit): Operator.Expr {
+        override fun visitSelect(rex: RexSelect, ctx: Unit): Expression {
             val input = compile(rex.getInput(), ctx)
             val constructor = compile(rex.getConstructor(), ctx).catch()
             val ordered = rex.getInput().isOrdered()
             return ExprSelect(input, constructor, ordered)
         }
 
-        override fun visitStruct(rex: RexStruct, ctx: Unit): Operator.Expr {
+        override fun visitStruct(rex: RexStruct, ctx: Unit): Expression {
             val fields = rex.getFields().map {
                 val k = compile(it.getKey(), ctx)
                 val v = compile(it.getValue(), ctx).catch()
@@ -427,7 +447,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitSubquery(rex: RexSubquery, ctx: Unit): Operator.Expr {
+        override fun visitSubquery(rex: RexSubquery, ctx: Unit): Expression {
             val rel = compile(rex.getRel(), ctx)
             val constructor = compile(rex.getConstructor(), ctx)
             return when (rex.asScalar()) {
@@ -436,28 +456,28 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
             }
         }
 
-        override fun visitSubqueryComp(rex: RexSubqueryComp, ctx: Unit): Operator.Expr {
+        override fun visitSubqueryComp(rex: RexSubqueryComp, ctx: Unit): Expression {
             TODO("<exists predicate> and <unique predicate>")
         }
 
-        override fun visitSubqueryIn(rex: RexSubqueryIn, ctx: Unit): Operator.Expr {
+        override fun visitSubqueryIn(rex: RexSubqueryIn, ctx: Unit): Expression {
             TODO("<in predicate>")
         }
 
-        override fun visitSubqueryTest(rex: RexSubqueryTest, ctx: Unit): Operator.Expr {
+        override fun visitSubqueryTest(rex: RexSubqueryTest, ctx: Unit): Expression {
             TODO("<exists predicate> and <unique predicate>")
         }
 
-        override fun visitSpread(rex: RexSpread, ctx: Unit): Operator.Expr {
+        override fun visitSpread(rex: RexSpread, ctx: Unit): Expression {
             val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
             return ExprSpread(args)
         }
 
-        override fun visitTable(rex: RexTable, ctx: Unit): Operator.Expr {
+        override fun visitTable(rex: RexTable, ctx: Unit): Expression {
             return ExprTable(rex.getTable())
         }
 
-        override fun visitVar(rex: RexVar, ctx: Unit): Operator.Expr {
+        override fun visitVar(rex: RexVar, ctx: Unit): Expression {
             val depth = rex.getDepth()
             val offset = rex.getOffset()
             return ExprVar(depth, offset)
@@ -467,7 +487,7 @@ internal class StandardCompiler(mode: Mode) : PartiQLCompiler {
     /**
      * Some places "catch" an error and return the MISSING value.
      */
-    private fun Operator.Expr.catch(): Operator.Expr = when (mode) {
+    private fun Expression.catch(): Expression = when (mode) {
         Mode.PERMISSIVE -> ExprPermissive(this)
         Mode.STRICT -> this
         else -> throw IllegalStateException("Unsupported execution mode: $mode")

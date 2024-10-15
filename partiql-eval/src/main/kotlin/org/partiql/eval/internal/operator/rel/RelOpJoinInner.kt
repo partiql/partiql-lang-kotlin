@@ -1,9 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Expression
 import org.partiql.eval.operator.Record
+import org.partiql.eval.operator.Relation
 
 /**
  * Inner Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true.
@@ -12,9 +13,9 @@ import org.partiql.eval.operator.Record
  * (lateral vs non-lateral) may be separated for performance improvements.
  */
 internal class RelOpJoinInner(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
-    private val condition: Operator.Expr,
+    private val lhs: Relation,
+    private val rhs: Relation,
+    private val condition: Expression,
 ) : RelOpPeeking() {
 
     private lateinit var env: Environment

@@ -8,19 +8,15 @@ import org.partiql.spi.value.Datum
 internal class Parameters(private val values: Array<Datum>) {
 
     /**
+     * Internal constructor for Environment.java
+     */
+    internal constructor() : this(emptyArray())
+
+    /**
      * Get n-th parameter (0-indexed).
      *
      * @param idx
      * @return
      */
     fun get(idx: Int): Datum = values[idx]
-
-    internal companion object {
-
-        /**
-         * Empty parameters -> [].
-         */
-        @JvmStatic
-        internal val EMPTY = Parameters(emptyArray())
-    }
 }
