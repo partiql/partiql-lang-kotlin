@@ -695,7 +695,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 val def = it.definition
                 def is Constraint.Definition.Nullable || def is Constraint.Definition.NotNull
             }
-            if (!hasNullabilitySpecifier) throw error(ctx, "Except NULL Constraint Or NOT NULL Constraint when using the ALTER COLUMN ... TYPE opeartion")
+            if (!hasNullabilitySpecifier) throw error(ctx, "Expect NULL Constraint Or NOT NULL Constraint when using the ALTER COLUMN ... TYPE operation")
             val optional = when (ctx.OPTIONAL()) {
                 null -> false
                 else -> true

@@ -133,7 +133,7 @@ internal object DdlUtils {
                 val pkConstr = when (pkConstrs.size) {
                     0 -> null
                     1 -> pkConstrs.first()
-                    else -> throw IllegalArgumentException("Only one primary key constraint is allowed")
+                    else -> throw IllegalArgumentException("Multiple primary key constraints are not allowed. To specify a composite primary key, use PRIMARY KEY(key1, key2, ...)")
                 }
                 val pkAttr = pkConstr?.let {
                     it.attributes
