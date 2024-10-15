@@ -13,6 +13,7 @@ import org.partiql.eval.PartiQLStatement
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PlannerConfigBuilder
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.CompileType
@@ -21,6 +22,9 @@ import org.partiql.runner.test.TestExecutor
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.Error
+import org.partiql.spi.errors.ErrorException
+import org.partiql.spi.errors.ErrorListener
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
@@ -40,8 +44,34 @@ class EvalExecutor(
 
     override fun prepare(statement: String): PartiQLStatement {
         val stmt = parser.parse(statement).root
-        val plan = planner.plan(stmt, session).plan
-        return engine.prepare(plan, mode, session)
+        val listener = getErrorListener(mode)
+        val plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build()
+        val plan = planner.plan(stmt, session, plannerConfig).plan
+        val config = org.partiql.eval.CompilerConfigBuilder().setMode(mode).setErrorListener(listener).build()
+        return engine.prepare(plan, session, config)
+    }
+
+    private fun getErrorListener(mode: PartiQLEngine.Mode): ErrorListener {
+        return when (mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> ErrorListener.abortOnError()
+            PartiQLEngine.Mode.STRICT -> object : ErrorListener {
+                override fun error(error: Error) {
+                    throw ErrorException(error)
+                }
+
+                override fun warning(error: Error) {
+                    when (error.code) {
+                        Error.PATH_KEY_NEVER_SUCCEEDS,
+                        Error.PATH_INDEX_NEVER_SUCCEEDS,
+                        Error.VAR_REF_NOT_FOUND,
+                        Error.PATH_SYMBOL_NEVER_SUCCEEDS -> error(error)
+                        else -> {
+                            // Do nothing
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun execute(statement: PartiQLStatement): PartiQLResult {

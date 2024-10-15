@@ -16,36 +16,21 @@ package org.partiql.parser
 
 /**
  * PartiQLParser Syntax Exception
+ * TODO: Delete this in favor of the error listener.
  *
  * @property message
  * @property cause
  * @property location
  */
-public open class PartiQLSyntaxException(
+internal open class PartiQLSyntaxException(
     override val message: String,
     override val cause: Throwable? = null,
-    public val location: SourceLocation = SourceLocation.UNKNOWN,
-) : Exception() {
-
-    internal companion object {
-
-        internal fun wrap(cause: Throwable) = when (cause) {
-            is PartiQLSyntaxException -> cause
-            is StackOverflowError -> PartiQLSyntaxException(
-                message = """
-                    |Input query too large. This error typically occurs when there are several nested
-                    |expressions/predicates and can usually be fixed by simplifying expressions.
-                    """.trimMargin(),
-                cause = cause,
-            )
-            is InterruptedException -> cause
-            else -> PartiQLSyntaxException("Unhandled exception.", cause)
-        }
-    }
-}
+    val location: SourceLocation = SourceLocation.UNKNOWN,
+) : Exception()
 
 /**
  * PartiQLParser Exception upon lexing.
+ * TODO: Delete this in favor of the error listener.
  *
  * @property token — Debug token where the Exception occurred
  * @constructor
@@ -54,7 +39,7 @@ public open class PartiQLSyntaxException(
  * @param cause
  * @param location
  */
-public class PartiQLLexerException(
+internal class PartiQLLexerException(
     public val token: String,
     public val tokenType: String,
     message: String = "",
@@ -64,6 +49,7 @@ public class PartiQLLexerException(
 
 /**
  * PartiQLParser Exception upon parsing.
+ * TODO: Delete this in favor of the error listener.
  *
  * @property rule   Debug rule where the Exception occurred
  * @property token  Debug token where the Exception occurred
@@ -73,7 +59,7 @@ public class PartiQLLexerException(
  * @param cause
  * @param location
  */
-public class PartiQLParserException(
+internal class PartiQLParserException(
     public val rule: String,
     public val token: String,
     public val tokenType: String,

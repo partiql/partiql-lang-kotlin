@@ -1,7 +1,7 @@
 public abstract interface class org/partiql/planner/PartiQLPlanner {
 	public static final field Companion Lorg/partiql/planner/PartiQLPlanner$Companion;
 	public static fun builder ()Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
-	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lorg/partiql/planner/PlannerConfig;)Lorg/partiql/planner/PartiQLPlanner$Result;
 	public static fun standard ()Lorg/partiql/planner/PartiQLPlanner;
 }
 
@@ -11,17 +11,26 @@ public final class org/partiql/planner/PartiQLPlanner$Companion {
 }
 
 public final class org/partiql/planner/PartiQLPlanner$DefaultImpls {
-	public static synthetic fun plan$default (Lorg/partiql/planner/PartiQLPlanner;Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public static synthetic fun plan$default (Lorg/partiql/planner/PartiQLPlanner;Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lorg/partiql/planner/PlannerConfig;ILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Result;
 }
 
 public final class org/partiql/planner/PartiQLPlanner$Result {
-	public fun <init> (Lorg/partiql/plan/Plan;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/plan/Plan;)V
 	public final fun getPlan ()Lorg/partiql/plan/Plan;
-	public final fun getProblems ()Ljava/util/List;
 }
 
 public abstract interface class org/partiql/planner/PartiQLPlannerPass {
-	public abstract fun apply (Lorg/partiql/plan/Plan;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Plan;
+	public abstract fun apply (Lorg/partiql/plan/Plan;Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/plan/Plan;
+}
+
+public abstract interface class org/partiql/planner/PlannerConfig {
+	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/ErrorListener;
+}
+
+public class org/partiql/planner/PlannerConfigBuilder {
+	public fun <init> ()V
+	public fun build ()Lorg/partiql/planner/PlannerConfig;
+	public fun setErrorListener (Lorg/partiql/spi/errors/ErrorListener;)Lorg/partiql/planner/PlannerConfigBuilder;
 }
 
 public final class org/partiql/planner/builder/PartiQLPlannerBuilder {

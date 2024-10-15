@@ -23,8 +23,6 @@ public interface RelVisitor<R, C> {
 
     public fun visitDistinct(rel: RelDistinct, ctx: C): R = defaultVisit(rel, ctx)
 
-    public fun visitError(rel: RelError, ctx: C): R = defaultVisit(rel, ctx)
-
     public fun visitExcept(rel: RelExcept, ctx: C): R = defaultVisit(rel, ctx)
 
     public fun visitExclude(rel: RelExclude, ctx: C): R = defaultVisit(rel, ctx)

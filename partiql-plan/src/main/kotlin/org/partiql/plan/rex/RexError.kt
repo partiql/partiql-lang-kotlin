@@ -1,47 +1,16 @@
 package org.partiql.plan.rex
 
+/**
+ * This represents scenarios in which certain operations are statically known to fail in strict mode but return missing
+ * in permissive mode.
+ */
 public interface RexError : Rex {
 
-    public fun getMessage(): String
-
-    public fun getTrace(): List<Rex>
+    override fun getType(): RexType = RexType.dynamic()
 
     override fun getChildren(): Collection<Rex> = emptyList()
 
     override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitError(this, ctx)
 }
 
-internal class RexErrorImpl(message: String, trace: List<Rex>) : RexError {
-
-    // DO NOT USE FINAL
-    private var _message = message
-    private var _trace = trace
-    private var _type = RexType.dynamic()
-
-    override fun getMessage(): String = _message
-    override fun getType(): RexType = _type
-    override fun getTrace(): List<Rex> = _trace
-}
-
-public interface RexMissing : Rex {
-
-    public fun getMessage(): String
-
-    public fun getTrace(): List<Rex>
-
-    override fun getChildren(): Collection<Rex> = emptyList()
-
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitMissing(this, ctx)
-}
-
-internal class RexMissingImpl(message: String, trace: List<Rex>) : RexMissing {
-
-    // DO NOT USE FINAL
-    private var _message = message
-    private var _trace = trace
-    private var _type = RexType.dynamic()
-
-    override fun getMessage(): String = _message
-    override fun getType(): RexType = _type
-    override fun getTrace(): List<Rex> = _trace
-}
+internal class RexErrorImpl : RexError

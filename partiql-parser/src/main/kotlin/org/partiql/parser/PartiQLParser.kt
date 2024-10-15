@@ -14,19 +14,39 @@
 
 package org.partiql.parser
 
+import org.partiql.ast.Expr
 import org.partiql.ast.Statement
 import org.partiql.parser.internal.PartiQLParserDefault
+import org.partiql.spi.errors.ErrorListenerException
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.nullValue
+import kotlin.jvm.Throws
 
 public interface PartiQLParser {
 
-    @Throws(PartiQLSyntaxException::class, InterruptedException::class)
-    public fun parse(source: String): Result
+    /**
+     * Parses the [source] into an AST.
+     * @param source the user's input
+     * @param config a configuration object for the parser
+     * @throws ErrorListenerException when the [org.partiql.spi.errors.ErrorListener] defined in the [config] throws an
+     * [ErrorListenerException], this method halts execution and propagates the exception.
+     */
+    @Throws(ErrorListenerException::class)
+    public fun parse(source: String, config: ParserConfig = ParserConfigBuilder().build()): Result
 
     public data class Result(
         val source: String,
         val root: Statement,
         val locations: SourceLocations,
-    )
+    ) {
+        public companion object {
+            @OptIn(PartiQLValueExperimental::class)
+            internal fun empty(source: String): Result {
+                val locations = SourceLocations.Mutable().toMap()
+                return Result(source, Statement.Query(Expr.Lit(nullValue())), locations)
+            }
+        }
+    }
 
     public companion object {
 
