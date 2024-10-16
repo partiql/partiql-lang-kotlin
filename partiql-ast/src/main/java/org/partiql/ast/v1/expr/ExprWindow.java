@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprWindow extends Expr {
     @NotNull
     public final WindowFunction windowFunction;
@@ -62,7 +62,7 @@ public class ExprWindow extends Expr {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @lombok.Builder(builderClassName = "Builder")
     public static class Over extends AstNode {
         @Nullable
         public final List<Expr> partitions;

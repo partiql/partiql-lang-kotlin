@@ -9,7 +9,7 @@ import java.util.Collection;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class Identifier extends AstNode {
     @NotNull
     public final String symbol;

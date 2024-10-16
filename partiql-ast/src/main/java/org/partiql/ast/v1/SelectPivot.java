@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class SelectPivot extends Select {
     @NotNull
     public final Expr key;

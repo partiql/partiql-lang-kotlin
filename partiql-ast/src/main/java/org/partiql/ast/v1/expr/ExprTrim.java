@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprTrim extends Expr {
     @NotNull
     public final Expr value;

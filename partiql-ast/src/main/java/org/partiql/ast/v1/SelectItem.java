@@ -26,7 +26,7 @@ public abstract class SelectItem extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Star extends SelectItem {
         @NotNull
         public final org.partiql.ast.v1.expr.Expr expr;
@@ -52,7 +52,7 @@ public abstract class SelectItem extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Expr extends SelectItem {
         @NotNull
         public final org.partiql.ast.v1.expr.Expr expr;

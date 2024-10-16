@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprCase extends Expr {
     @Nullable
     public final Expr expr;
@@ -52,7 +52,7 @@ public class ExprCase extends Expr {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @lombok.Builder(builderClassName = "Builder")
     public static class Branch extends AstNode {
         @NotNull
         public final Expr condition;

@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExcludePath extends AstNode {
     @NotNull
     public final ExprVarRef root;

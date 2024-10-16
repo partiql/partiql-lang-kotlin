@@ -11,7 +11,7 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprSessionAttribute extends Expr {
     @NotNull
     public final SessionAttribute sessionAttribute;

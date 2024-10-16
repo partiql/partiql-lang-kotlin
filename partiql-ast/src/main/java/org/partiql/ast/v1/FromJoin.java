@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class FromJoin extends FromTableRef {
     @NotNull
     public final From lhs;

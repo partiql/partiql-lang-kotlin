@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class GroupBy extends AstNode {
     @NotNull
     public final GroupByStrategy strategy;
@@ -47,7 +47,7 @@ public class GroupBy extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @lombok.Builder(builderClassName = "Builder")
     public static class Key extends AstNode {
         @NotNull
         public final Expr expr;

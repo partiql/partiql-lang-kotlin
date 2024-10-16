@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprVarRef extends Expr {
     @NotNull
     public final IdentifierChain identifierChain;

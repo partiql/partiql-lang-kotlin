@@ -10,7 +10,7 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class SetOp extends AstNode {
     @NotNull
     public final SetOpType setOpType;

@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprStruct extends Expr {
     @NotNull
     public final List<Field> fields;
@@ -35,7 +35,7 @@ public class ExprStruct extends Expr {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @lombok.Builder(builderClassName = "Builder")
     public static class Field extends AstNode {
         @NotNull
         public final Expr name;

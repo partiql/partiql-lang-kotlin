@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprBag extends Expr {
     @NotNull
     public final List<Expr> values;

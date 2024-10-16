@@ -16,7 +16,6 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
-    id(Plugins.kotlinLombok) version Versions.kotlinLombok
 }
 
 dependencies {

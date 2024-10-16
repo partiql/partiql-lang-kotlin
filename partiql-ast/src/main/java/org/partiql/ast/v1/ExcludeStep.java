@@ -14,7 +14,7 @@ public abstract class ExcludeStep extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class StructField extends ExcludeStep {
         @NotNull
         public final Identifier symbol;
@@ -40,7 +40,7 @@ public abstract class ExcludeStep extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class CollIndex extends ExcludeStep {
         public final int index;
 
@@ -63,7 +63,7 @@ public abstract class ExcludeStep extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class StructWildcard extends ExcludeStep {
         @NotNull
         @Override
@@ -80,7 +80,7 @@ public abstract class ExcludeStep extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class CollWildcard extends ExcludeStep {
         @NotNull
         @Override

@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprValues extends Expr {
     @NotNull
     public final List<Row> rows;
@@ -35,7 +35,7 @@ public class ExprValues extends Expr {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @lombok.Builder(builderClassName = "Builder")
     public static class Row extends AstNode {
         @NotNull
         public final List<Expr> values;

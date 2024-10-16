@@ -31,7 +31,7 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Node extends GraphPart {
         @Nullable
         public final Expr prefilter;
@@ -70,7 +70,7 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Edge extends GraphPart {
         @NotNull
         public final GraphDirection direction;
@@ -121,7 +121,7 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Pattern extends GraphPart {
         @NotNull
         public final GraphPattern pattern;

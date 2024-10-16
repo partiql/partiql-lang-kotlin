@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 public abstract class QueryBody extends AstNode {
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class SFW extends QueryBody {
         @NotNull
         public final Select select;
@@ -64,7 +64,7 @@ public abstract class QueryBody extends AstNode {
         }
     }
 
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class SetOp extends QueryBody {
         @NotNull
         public final org.partiql.ast.v1.SetOp type;

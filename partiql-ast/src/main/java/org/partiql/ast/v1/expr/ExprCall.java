@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprCall extends Expr {
     @NotNull
     public final IdentifierChain function;

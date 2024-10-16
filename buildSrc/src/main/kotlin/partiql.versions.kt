@@ -39,7 +39,6 @@ object Versions {
     const val kotlinxCollections = "0.3.5"
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
-    const val kotlinLombok = "1.9.20"
     const val kotlinxCoroutines = "1.8.1"
     const val kotlinxCoroutinesJdk8 = "1.8.1"
     const val ktlint = "0.42.1" // we're on an old version of ktlint. TODO upgrade https://github.com/partiql/partiql-lang-kotlin/issues/1418
@@ -110,6 +109,5 @@ object Plugins {
     const val detekt = "io.gitlab.arturbosch.detekt"
     const val dokka = "org.jetbrains.dokka"
     const val library = "org.gradle.java-library"
-    const val kotlinLombok = "org.jetbrains.kotlin.plugin.lombok"
     const val testFixtures = "org.gradle.java-test-fixtures"
 }

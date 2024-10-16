@@ -34,7 +34,7 @@ public abstract class GraphSelector extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class AnyShortest extends GraphSelector {
         @Override
         @NotNull
@@ -51,7 +51,7 @@ public abstract class GraphSelector extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class AllShortest extends GraphSelector {
         @Override
         @NotNull
@@ -68,7 +68,7 @@ public abstract class GraphSelector extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Any extends GraphSelector {
         @Override
         @NotNull
@@ -85,7 +85,7 @@ public abstract class GraphSelector extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class AnyK extends GraphSelector {
         public final long k;
 
@@ -108,7 +108,7 @@ public abstract class GraphSelector extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class ShortestK extends GraphSelector {
         public final long k;
 
@@ -131,7 +131,7 @@ public abstract class GraphSelector extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class ShortestKGroup extends GraphSelector {
         public final long k;
 

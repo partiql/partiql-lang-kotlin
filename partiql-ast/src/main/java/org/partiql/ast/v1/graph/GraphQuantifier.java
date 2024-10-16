@@ -12,7 +12,7 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class GraphQuantifier extends AstNode {
     @NotNull
     public final Long lower;

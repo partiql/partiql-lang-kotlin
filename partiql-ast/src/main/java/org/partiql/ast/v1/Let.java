@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class Let extends AstNode {
     @NotNull
     public final List<Binding> bindings;
@@ -34,7 +34,7 @@ public class Let extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @lombok.Builder(builderClassName = "Builder")
     public static class Binding extends AstNode {
         @NotNull
         public final Expr expr;

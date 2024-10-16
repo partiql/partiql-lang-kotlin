@@ -12,7 +12,7 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprLit extends Expr {
     @NotNull
     public final PartiQLValue value; // This representation be changed in https://github.com/partiql/partiql-lang-kotlin/issues/1589

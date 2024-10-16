@@ -8,7 +8,7 @@ import org.partiql.ast.v1.AstVisitor;
 import java.util.Collections;
 import java.util.List;
 
-@Builder
+@Builder(builderClassName = "Builder")
 public class ExprVariant extends Expr {
     @NotNull
     public final String value;

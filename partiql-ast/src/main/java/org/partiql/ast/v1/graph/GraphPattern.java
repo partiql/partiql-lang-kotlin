@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class GraphPattern extends AstNode {
     @Nullable
     public final GraphRestrictor restrictor;

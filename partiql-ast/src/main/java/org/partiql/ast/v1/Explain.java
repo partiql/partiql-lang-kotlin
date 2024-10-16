@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class Explain extends Statement {
     // TODO get rid of PartiQLValue once https://github.com/partiql/partiql-lang-kotlin/issues/1589 is resolved
     @NotNull

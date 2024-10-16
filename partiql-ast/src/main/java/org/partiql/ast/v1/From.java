@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
-@Builder
+@Builder(builderClassName = "Builder")
 public class From extends AstNode {
     @NotNull
     public final List<FromTableRef> tableRefs;

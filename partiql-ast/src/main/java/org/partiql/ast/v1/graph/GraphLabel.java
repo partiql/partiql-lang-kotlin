@@ -33,7 +33,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Name extends GraphLabel {
         @NotNull
         public final String name;
@@ -57,7 +57,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Wildcard extends GraphLabel {
         @Override
         @NotNull
@@ -74,7 +74,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Negation extends GraphLabel {
         @NotNull
         public final GraphLabel arg;
@@ -100,7 +100,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Conj extends GraphLabel {
         @NotNull
         public final List<GraphLabel> args;
@@ -124,7 +124,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder
+    @Builder(builderClassName = "Builder")
     public static class Disj extends GraphLabel {
         @NotNull
         public final List<GraphLabel> args;
