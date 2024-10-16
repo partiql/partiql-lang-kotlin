@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -12,17 +13,18 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprLike extends Expr {
     @NotNull
-    public Expr value;
+    public final Expr value;
 
     @NotNull
-    public Expr pattern;
+    public final Expr pattern;
 
     @Nullable
-    public Expr escape;
+    public final Expr escape;
 
-    public boolean not;
+    public final boolean not;
 
     public ExprLike(@NotNull Expr value, @NotNull Expr pattern, @Nullable Expr escape, boolean not) {
         this.value = value;

@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -7,11 +8,12 @@ import org.partiql.ast.v1.AstVisitor;
 import java.util.Collections;
 import java.util.List;
 
+@Builder(builderClassName = "Builder")
 public class ExprVariant extends Expr {
     @NotNull
-    public String value;
+    public final String value;
     @NotNull
-    public String encoding;
+    public final String encoding;
 
     public ExprVariant(@NotNull String value, @NotNull String encoding) {
         this.value = value;

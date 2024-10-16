@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -12,12 +13,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprMatch extends Expr {
     @NotNull
-    public Expr expr;
+    public final Expr expr;
 
     @NotNull
-    public GraphMatch pattern;
+    public final GraphMatch pattern;
 
     public ExprMatch(@NotNull Expr expr, @NotNull GraphMatch pattern) {
         this.expr = expr;

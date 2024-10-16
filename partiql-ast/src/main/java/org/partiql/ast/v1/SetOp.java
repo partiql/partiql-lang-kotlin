@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,12 +10,13 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class SetOp extends AstNode {
     @NotNull
-    public SetOpType setOpType;
+    public final SetOpType setOpType;
 
     @Nullable
-    public SetQuantifier setq;
+    public final SetQuantifier setq;
 
     public SetOp(@NotNull SetOpType setOpType, @Nullable SetQuantifier setq) {
         this.setOpType = setOpType;

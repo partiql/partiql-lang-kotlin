@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.expr.Expr;
@@ -9,27 +10,28 @@ import java.util.Collection;
 import java.util.List;
 
 public abstract class QueryBody extends AstNode {
+    @Builder(builderClassName = "Builder")
     public static class SFW extends QueryBody {
         @NotNull
-        public Select select;
+        public final Select select;
 
         @Nullable
-        public Exclude exclude;
+        public final Exclude exclude;
 
         @NotNull
-        public From from;
+        public final From from;
 
         @Nullable
-        public Let let;
+        public final Let let;
 
         @Nullable
-        public Expr where;
+        public final Expr where;
 
         @Nullable
-        public GroupBy groupBy;
+        public final GroupBy groupBy;
 
         @Nullable
-        public Expr having;
+        public final Expr having;
 
         public SFW(@NotNull Select select, @Nullable Exclude exclude, @NotNull From from,
         @Nullable Let let, @Nullable Expr where, @Nullable GroupBy groupBy, @Nullable Expr having) {
@@ -62,11 +64,12 @@ public abstract class QueryBody extends AstNode {
         }
     }
 
+    @Builder(builderClassName = "Builder")
     public static class SetOp extends QueryBody {
         @NotNull
-        public org.partiql.ast.v1.SetOp type;
+        public final org.partiql.ast.v1.SetOp type;
 
-        public boolean isOuter;
+        public final boolean isOuter;
 
         @NotNull
         public Expr lhs;

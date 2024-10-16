@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -12,15 +13,16 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprTrim extends Expr {
     @NotNull
-    public Expr value;
+    public final Expr value;
 
     @Nullable
-    public Expr chars;
+    public final Expr chars;
 
     @Nullable
-    public TrimSpec trimSpec;
+    public final TrimSpec trimSpec;
 
     public ExprTrim(@NotNull Expr value, @Nullable Expr chars, @Nullable TrimSpec trimSpec) {
         this.value = value;

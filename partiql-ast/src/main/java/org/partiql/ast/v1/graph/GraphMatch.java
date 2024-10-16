@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.graph;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -12,12 +13,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class GraphMatch extends AstNode {
     @NotNull
-    public List<GraphPattern> patterns;
+    public final List<GraphPattern> patterns;
 
     @Nullable
-    public GraphSelector selector;
+    public final GraphSelector selector;
 
     public GraphMatch(@NotNull List<GraphPattern> patterns, @Nullable GraphSelector selector) {
         this.patterns = patterns;

@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.expr.Expr;
@@ -11,18 +12,19 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class FromJoin extends FromTableRef {
     @NotNull
-    public From lhs;
+    public final From lhs;
 
     @NotNull
-    public From rhs;
+    public final From rhs;
 
     @Nullable
-    public JoinType joinType;
+    public final JoinType joinType;
 
     @Nullable
-    public Expr condition;
+    public final Expr condition;
 
     public FromJoin(@NotNull From lhs, @NotNull From rhs, @Nullable JoinType joinType, @Nullable Expr condition) {
         this.lhs = lhs;

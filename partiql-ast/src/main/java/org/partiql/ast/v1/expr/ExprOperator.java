@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -12,15 +13,16 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprOperator extends Expr {
     @NotNull
-    public String symbol;
+    public final String symbol;
 
     @Nullable
-    public Expr lhs;
+    public final Expr lhs;
 
     @NotNull
-    public Expr rhs;
+    public final Expr rhs;
 
     public ExprOperator(@NotNull String symbol, @Nullable Expr lhs, @NotNull Expr rhs) {
         this.symbol = symbol;

@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -9,9 +10,10 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class OrderBy extends AstNode {
     @NotNull
-    public List<Sort> sorts;
+    public final List<Sort> sorts;
 
     public OrderBy(@NotNull List<Sort> sorts) {
         this.sorts = sorts;

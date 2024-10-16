@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -12,12 +13,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprExtract extends Expr {
     @NotNull
-    public DatetimeField field;
+    public final DatetimeField field;
 
     @NotNull
-    public Expr source;
+    public final Expr source;
 
     public ExprExtract(@NotNull DatetimeField field, @NotNull Expr source) {
         this.field = field;

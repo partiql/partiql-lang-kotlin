@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -12,18 +13,19 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprOverlay extends Expr {
     @NotNull
-    public Expr value;
+    public final Expr value;
 
     @NotNull
-    public Expr placing;
+    public final Expr placing;
 
     @NotNull
-    public Expr from;
+    public final Expr from;
 
     @Nullable
-    public Expr forLength;
+    public final Expr forLength;
 
     public ExprOverlay(@NotNull Expr value, @NotNull Expr placing, @NotNull Expr from, @Nullable Expr forLength) {
         this.value = value;

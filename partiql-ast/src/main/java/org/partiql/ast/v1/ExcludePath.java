@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.expr.ExprVarRef;
 
@@ -10,12 +11,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExcludePath extends AstNode {
     @NotNull
-    public ExprVarRef root;
+    public final ExprVarRef root;
 
     @NotNull
-    public List<ExcludeStep> excludeSteps;
+    public final List<ExcludeStep> excludeSteps;
 
     public ExcludePath(@NotNull ExprVarRef root, @NotNull List<ExcludeStep> excludeSteps) {
         this.root = root;

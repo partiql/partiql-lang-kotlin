@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -12,12 +13,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprPath extends Expr {
     @NotNull
-    public Expr root;
+    public final Expr root;
 
     @Nullable
-    public PathStep next;
+    public final PathStep next;
 
     public ExprPath(@NotNull Expr root, @Nullable PathStep next) {
         this.root = root;

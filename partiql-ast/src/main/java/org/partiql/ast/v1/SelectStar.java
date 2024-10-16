@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,9 +10,10 @@ import java.util.Collections;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class SelectStar extends Select {
     @Nullable
-    public SetQuantifier setq;
+    public final SetQuantifier setq;
 
     public SelectStar(@Nullable SetQuantifier setq) {
         this.setq = setq;

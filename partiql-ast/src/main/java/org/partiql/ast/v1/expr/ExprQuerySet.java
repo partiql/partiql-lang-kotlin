@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -14,18 +15,19 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprQuerySet extends Expr {
     @NotNull
-    public QueryBody body;
+    public final QueryBody body;
 
     @Nullable
-    public OrderBy orderBy;
+    public final OrderBy orderBy;
 
     @Nullable
-    public Expr limit;
+    public final Expr limit;
 
     @Nullable
-    public Expr offset;
+    public final Expr offset;
 
     public ExprQuerySet(@NotNull QueryBody body, @Nullable OrderBy orderBy, @Nullable Expr limit, @Nullable Expr offset) {
         this.body = body;

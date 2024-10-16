@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -12,12 +13,13 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder(builderClassName = "Builder")
 public class ExprVarRef extends Expr {
     @NotNull
-    public IdentifierChain identifierChain;
+    public final IdentifierChain identifierChain;
 
     @NotNull
-    public Scope scope;
+    public final Scope scope;
 
     public ExprVarRef(@NotNull IdentifierChain identifierChain, @NotNull Scope scope) {
         this.identifierChain = identifierChain;

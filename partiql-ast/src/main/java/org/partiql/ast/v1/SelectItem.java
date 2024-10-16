@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,9 +26,10 @@ public abstract class SelectItem extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder(builderClassName = "Builder")
     public static class Star extends SelectItem {
         @NotNull
-        public org.partiql.ast.v1.expr.Expr expr;
+        public final org.partiql.ast.v1.expr.Expr expr;
 
         public Star(@NotNull org.partiql.ast.v1.expr.Expr expr) {
             this.expr = expr;
@@ -50,12 +52,13 @@ public abstract class SelectItem extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder(builderClassName = "Builder")
     public static class Expr extends SelectItem {
         @NotNull
-        public org.partiql.ast.v1.expr.Expr expr;
+        public final org.partiql.ast.v1.expr.Expr expr;
 
         @Nullable
-        public Identifier asAlias;
+        public final Identifier asAlias;
 
         public Expr(@NotNull org.partiql.ast.v1.expr.Expr expr, @Nullable Identifier asAlias) {
             this.expr = expr;
