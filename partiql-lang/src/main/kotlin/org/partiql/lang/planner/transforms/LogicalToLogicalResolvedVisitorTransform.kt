@@ -8,6 +8,7 @@ import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform
 import org.partiql.lang.domains.toBindingCase
+import org.partiql.lang.eval.BindingId
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
@@ -117,6 +118,7 @@ private sealed class ResolvedVariable {
 private fun GlobalResolutionResult.toResolvedVariable() =
     when (this) {
         is GlobalResolutionResult.GlobalVariable -> ResolvedVariable.Global(this.uniqueId)
+        is GlobalResolutionResult.NamespacedVariable -> ResolvedVariable.Global(this.uniqueId)
         GlobalResolutionResult.Undefined -> ResolvedVariable.Undefined
     }
 
@@ -352,23 +354,46 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
 
     override fun transformDmlTarget(node: PartiqlLogical.DmlTarget): PartiqlLogicalResolved.DmlTarget {
         // We only support DML targets that are global variables.
-        val bindingName = BindingName(node.identifier.name.text, node.identifier.case.toBindingCase())
-        val tableUniqueId = when (val resolvedVariable = globals.resolveGlobal(bindingName)) {
+        val bindingId = bindingId(node.identifier)
+        val tableUniqueId = when (val resolvedVariable = globals.resolveGlobal(bindingId)) {
             is GlobalResolutionResult.GlobalVariable -> resolvedVariable.uniqueId
+            is GlobalResolutionResult.NamespacedVariable -> {
+                if (resolvedVariable.getRemainingSteps().isNotEmpty()) {
+                    problemHandler.handleProblem(
+                        Problem(
+                            node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
+                            PlanningProblemDetails.UndefinedDmlTarget(
+                                bindingId,
+                            )
+                        )
+                    )
+                    "DML Target could not be completely resolved - do not run"
+                } else {
+                    resolvedVariable.uniqueId
+                }
+            }
             GlobalResolutionResult.Undefined -> {
                 problemHandler.handleProblem(
                     Problem(
                         node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                         PlanningProblemDetails.UndefinedDmlTarget(
-                            node.identifier.name.text,
-                            node.identifier.case is PartiqlLogical.CaseSensitivity.CaseSensitive
+                            bindingId
                         )
                     )
                 )
-                "undefined DML target: ${node.identifier.name.text} - do not run"
+                "Undefined DML target: $bindingId - do not run"
             }
         }
         return PartiqlLogicalResolved.build { dmlTarget(uniqueId = tableUniqueId) }
+    }
+
+    private fun bindingId(tableName: PartiqlLogical.TableName): BindingId {
+        val id = tableName.id
+        val headName = BindingName(id.head.name.text, id.head.case.toBindingCase())
+        return BindingId(
+            id.qualifier.map { BindingName(it.name.text, it.case.toBindingCase()) },
+            headName
+        )
     }
 
     override fun transformStatementDmlInsert_onConflict(node: PartiqlLogical.Statement.DmlInsert): PartiqlLogicalResolved.OnConflict? {

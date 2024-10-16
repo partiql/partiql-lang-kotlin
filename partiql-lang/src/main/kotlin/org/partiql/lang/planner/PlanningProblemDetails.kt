@@ -2,6 +2,9 @@ package org.partiql.lang.planner
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingId
+import org.partiql.lang.eval.BindingName
 
 /**
  * Contains detailed information about errors that may occur during query planning.
@@ -32,15 +35,29 @@ sealed class PlanningProblemDetails(
             }
         )
 
-    data class UndefinedDmlTarget(val variableName: String, val caseSensitive: Boolean) :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            {
-                "Data manipulation target table '$variableName' is undefined. " +
-                    "Hint: this must be a name in the global scope. " +
-                    quotationHint(caseSensitive)
-            }
+    data class UndefinedDmlTarget(val id: BindingId) : PlanningProblemDetails(
+        ProblemSeverity.ERROR,
+        {
+            "Data manipulation target table '$id' is undefined. Hint: this must be a name in the global scope. " + quotationHint(id.getIdentifier().bindingCase == BindingCase.SENSITIVE)
+        }
+    ) {
+
+        val variableName = id.getIdentifier().name
+        val caseSensitive = id.getIdentifier().bindingCase == BindingCase.SENSITIVE
+
+        constructor(variableName: String, caseSensitive: Boolean) : this(
+            BindingId(
+                emptyList(),
+                BindingName(
+                    variableName,
+                    when (caseSensitive) {
+                        true -> BindingCase.SENSITIVE
+                        false -> BindingCase.INSENSITIVE
+                    }
+                )
+            )
         )
+    }
 
     data class VariablePreviouslyDefined(val variableName: String) :
         PlanningProblemDetails(
