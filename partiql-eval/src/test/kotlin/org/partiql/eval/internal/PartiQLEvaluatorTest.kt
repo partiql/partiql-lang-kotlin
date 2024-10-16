@@ -1439,27 +1439,11 @@ class PartiQLEvaluatorTest {
     }
 
     @Test
-    @Disabled
-    fun developmentTest() {
+    // @Disabled("Use this test for interactive debugging.")
+    fun debug() {
         val tc = SuccessTestCase(
-            input = """
-                SELECT VALUE
-                    CASE x + 1
-                        WHEN NULL THEN 'shouldnt be null'
-                        WHEN MISSING THEN 'shouldnt be missing'
-                        WHEN i THEN 'ONE'
-                        WHEN f THEN 'TWO'
-                        WHEN d THEN 'THREE'
-                        ELSE '?'
-                    END
-                FROM << i, f, d, null, missing >> AS x
-            """,
-            expected = boolValue(true),
-            globals = listOf(
-                SuccessTestCase.Global("i", "1"),
-                SuccessTestCase.Global("f", "2e0"),
-                SuccessTestCase.Global("d", "3.")
-            )
+            input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t, << { 'b': 2 } >> s;",
+            expected = bagValue(structValue("a" to int32Value(1), "b" to int32Value(2)))
         )
         tc.assert()
     }

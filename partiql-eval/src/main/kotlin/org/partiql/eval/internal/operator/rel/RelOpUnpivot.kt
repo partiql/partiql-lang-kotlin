@@ -1,8 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -21,8 +20,6 @@ internal sealed class RelOpUnpivot : Operator.Relation {
      */
     private lateinit var _iterator: Iterator<Field>
 
-    internal lateinit var env: Environment
-
     /**
      * Each mode overrides.
      */
@@ -31,8 +28,7 @@ internal sealed class RelOpUnpivot : Operator.Relation {
     /**
      * Initialize the _iterator from the concrete implementation's struct()
      */
-    override fun open(env: Environment) {
-        this.env = env
+    override fun open() {
         _iterator = struct().fields
     }
 
@@ -40,11 +36,11 @@ internal sealed class RelOpUnpivot : Operator.Relation {
         return _iterator.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         val f = _iterator.next()
         val k = Datum.string(f.name)
         val v = f.value
-        return Record.of(k, v)
+        return Row.of(k, v)
     }
 
     override fun close() {}
@@ -57,7 +53,7 @@ internal sealed class RelOpUnpivot : Operator.Relation {
     class Strict(private val expr: Operator.Expr) : RelOpUnpivot() {
 
         override fun struct(): Datum {
-            val v = expr.eval(env.push(Record.empty))
+            val v = expr.eval()
             if (v.type.kind != PType.Kind.STRUCT && v.type.kind != PType.Kind.ROW) {
                 throw TypeCheckException()
             }
@@ -77,7 +73,7 @@ internal sealed class RelOpUnpivot : Operator.Relation {
     class Permissive(private val expr: Operator.Expr) : RelOpUnpivot() {
 
         override fun struct(): Datum {
-            val v = expr.eval(env.push(Record.empty))
+            val v = expr.eval()
             if (v.isMissing) {
                 return Datum.struct(emptyList())
             }

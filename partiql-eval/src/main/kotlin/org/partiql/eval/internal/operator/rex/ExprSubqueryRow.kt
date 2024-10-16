@@ -11,19 +11,15 @@ import org.partiql.types.PType
 /**
  * TODO REMOVE ME AFTER FIXING SUBQUERIES.
  */
-internal class ExprSubqueryRow(input: Operator.Relation, constructor: Operator.Expr) : Operator.Expr {
+internal class ExprSubqueryRow(
+    private val env: Environment,
+    private val input: Operator.Relation,
+    private val constructor: Operator.Expr,
+) : Operator.Expr {
 
-    // DO NOT USE FINAL
-    private var _input = input
-    private var _constructor = constructor
+    private val struct = PType.struct()
 
-    private companion object {
-
-        @JvmStatic
-        private val STRUCT = PType.struct()
-    }
-
-    override fun eval(env: Environment): Datum {
+    override fun eval(): Datum {
         val tuple = getFirst(env) ?: return Datum.nullValue()
         val values = IteratorSupplier { tuple.fields }.map { it.value }
         return Datum.list(values)
@@ -33,18 +29,22 @@ internal class ExprSubqueryRow(input: Operator.Relation, constructor: Operator.E
      * @See [ExprSubquery.getFirst]
      */
     private fun getFirst(env: Environment): Datum? {
-        _input.open(env)
-        if (_input.hasNext().not()) {
-            _input.close()
+        input.open()
+        // no input, return null
+        if (input.hasNext().not()) {
+            input.close()
             return null
         }
-        val firstRecord = _input.next()
-        val tuple = _constructor.eval(env.push(firstRecord)).check(STRUCT)
-        if (_input.hasNext()) {
-            _input.close()
+        // get first value
+        val row = input.next()
+        val value = env.scope(row) { constructor.eval() }.check(struct)
+        // check if there are more rows
+        if (input.hasNext()) {
+            input.close()
             throw CardinalityViolation()
         }
-        _input.close()
-        return tuple
+        // done
+        input.close()
+        return value
     }
 }

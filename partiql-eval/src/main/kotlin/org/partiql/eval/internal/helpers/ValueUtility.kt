@@ -33,6 +33,7 @@ internal object ValueUtility {
      * @return a [Datum] corresponding to the expected type; this will either be the input value if the value is
      * already of the expected type, or it will be a null value of the expected type.
      */
+    @JvmStatic
     fun Datum.check(type: PType): Datum {
         if (this.type == type) {
             return this
@@ -49,10 +50,26 @@ internal object ValueUtility {
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if the value's type is not a text type (string, symbol, char)
      */
+    @JvmStatic
     fun Datum.getText(): String {
         return when (this.type.kind) {
             PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
             else -> throw TypeCheckException("Expected text, but received ${this.type}.")
+        }
+    }
+
+    /**
+     * @return the underlying string value of a textual value; null if the type is not a textual value or if the
+     * value itself is absent.
+     */
+    @JvmStatic
+    fun Datum.getTextOrNull(): String? {
+        if (this.isNull || this.isMissing) {
+            return null
+        }
+        return when (this.type.kind) {
+            PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
+            else -> null
         }
     }
 
@@ -66,6 +83,7 @@ internal object ValueUtility {
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if type is not an integer type
      */
+    @JvmStatic
     fun Datum.getBigIntCoerced(): BigInteger {
         return when (this.type.kind) {
             PType.Kind.TINYINT -> this.byte.toInt().toBigInteger()
@@ -88,6 +106,7 @@ internal object ValueUtility {
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if type is not an integer type
      */
+    @JvmStatic
     fun Datum.getInt32Coerced(): Int {
         return when (this.type.kind) {
             PType.Kind.TINYINT -> this.byte.toInt()

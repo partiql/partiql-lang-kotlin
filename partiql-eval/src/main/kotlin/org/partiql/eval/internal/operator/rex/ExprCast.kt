@@ -1,6 +1,5 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -20,7 +19,7 @@ internal class ExprCast(operand: Operator.Expr, target: PType) : Operator.Expr {
     private var _operand = operand
     private var _target = target
 
-    override fun eval(env: Environment): Datum {
-        return CastTable.cast(_operand.eval(env), _target)
+    override fun eval(): Datum {
+        return CastTable.cast(_operand.eval(), _target)
     }
 }

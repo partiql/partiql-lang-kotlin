@@ -1,9 +1,11 @@
 package org.partiql.eval.internal.operator
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.spi.value.Datum
 
+/**
+ * TODO make this Java public API in later PR.
+ */
 internal sealed interface Operator {
 
     /**
@@ -11,15 +13,15 @@ internal sealed interface Operator {
      */
     interface Expr : Operator {
 
-        fun eval(env: Environment): Datum
+        fun eval(): Datum
     }
 
     /**
      * Relation operator represents an evaluable collection of binding tuples.
      */
-    interface Relation : Operator, AutoCloseable, Iterator<Record> {
+    interface Relation : Operator, AutoCloseable, Iterator<Row> {
 
-        fun open(env: Environment)
+        fun open()
 
         override fun close()
     }

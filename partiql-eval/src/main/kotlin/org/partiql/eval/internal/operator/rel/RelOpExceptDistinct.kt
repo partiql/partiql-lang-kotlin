@@ -1,7 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
 import java.util.TreeSet
@@ -20,20 +19,20 @@ internal class RelOpExceptDistinct(
     private var seen = TreeSet(DatumArrayComparator)
     private var init: Boolean = false
 
-    override fun openPeeking(env: Environment) {
-        lhs.open(env)
-        rhs.open(env)
+    override fun openPeeking() {
+        lhs.open()
+        rhs.open()
         init = false
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         if (!init) {
             seed()
         }
         for (row in lhs) {
             row.values.coerceMissing()
             if (!seen.contains(row.values)) {
-                return Record(row.values)
+                return Row(row.values)
             }
         }
         return null

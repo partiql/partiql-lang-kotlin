@@ -1,6 +1,5 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 
@@ -13,15 +12,15 @@ internal class ExprCaseSearched(branches: List<ExprCaseBranch>, default: Operato
     private var _branches = branches
     private var _default = default
 
-    override fun eval(env: Environment): Datum {
+    override fun eval(): Datum {
         // search
         for (branch in _branches) {
-            val result = branch.eval(env)
+            val result = branch.eval()
             if (result != null) {
                 return result
             }
         }
         // default
-        return _default?.eval(env) ?: Datum.nullValue()
+        return _default?.eval() ?: Datum.nullValue()
     }
 }

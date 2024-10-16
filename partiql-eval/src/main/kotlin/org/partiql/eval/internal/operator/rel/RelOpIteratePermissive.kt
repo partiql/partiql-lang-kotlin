@@ -1,7 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -14,8 +13,8 @@ internal class RelOpIteratePermissive(
     private var index: Long = 0
     private var isIndexable: Boolean = true
 
-    override fun open(env: Environment) {
-        val r = expr.eval(env.push(Record.empty))
+    override fun open() {
+        val r = expr.eval()
         index = 0
         iterator = when (r.type.kind) {
             PType.Kind.BAG -> {
@@ -34,15 +33,15 @@ internal class RelOpIteratePermissive(
         return iterator.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         val v = iterator.next()
         return when (isIndexable) {
             true -> {
                 val i = index
                 index += 1
-                Record.of(v, Datum.bigint(i))
+                Row.of(v, Datum.bigint(i))
             }
-            false -> Record.of(v, Datum.missing())
+            false -> Row.of(v, Datum.missing())
         }
     }
 

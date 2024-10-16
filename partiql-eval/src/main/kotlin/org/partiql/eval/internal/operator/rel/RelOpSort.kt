@@ -1,36 +1,34 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import java.util.Collections
 
 internal class RelOpSort(
+    private val env: Environment,
     private val input: Operator.Relation,
     private val collations: List<Collation>,
 ) : Operator.Relation {
-    private var records: Iterator<Record> = Collections.emptyIterator()
+    private var records: Iterator<Row> = Collections.emptyIterator()
     private var init: Boolean = false
 
     private val nullsFirstComparator = Datum.comparator(true)
     private val nullsLastComparator = Datum.comparator(false)
 
-    private lateinit var env: Environment
-
-    override fun open(env: Environment) {
-        this.env = env
-        input.open(env)
+    override fun open() {
+        input.open()
         init = false
         records = Collections.emptyIterator()
     }
 
-    private val comparator = object : Comparator<Record> {
-        override fun compare(l: Record, r: Record): Int {
+    private val comparator = object : Comparator<Row> {
+        override fun compare(l: Row, r: Row): Int {
             collations.forEach { spec ->
                 // TODO: Write comparator for PQLValue
-                val lVal = spec.expr.eval(env.push(l))
-                val rVal = spec.expr.eval(env.push(r))
+                val lVal = env.scope(l) { spec.expr.eval() }
+                val rVal = env.scope(r) { spec.expr.eval() }
 
                 // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
                 // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)
@@ -51,7 +49,7 @@ internal class RelOpSort(
 
     override fun hasNext(): Boolean {
         if (!init) {
-            val sortedRecords = mutableListOf<Record>()
+            val sortedRecords = mutableListOf<Row>()
             for (row in input) {
                 sortedRecords.add(row)
             }
@@ -62,7 +60,7 @@ internal class RelOpSort(
         return records.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return records.next()
     }
 

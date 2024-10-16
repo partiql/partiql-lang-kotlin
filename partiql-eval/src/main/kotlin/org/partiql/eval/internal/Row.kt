@@ -1,18 +1,23 @@
 package org.partiql.eval.internal
 
 import org.partiql.spi.value.Datum
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.toIon
 
-internal class Record(val values: Array<Datum>) {
+/**
+ * Thin layer over
+ */
+internal class Row(val values: Array<Datum>) {
 
     companion object {
-        val empty = Record(emptyArray())
-        fun of(vararg values: Datum) = Record(arrayOf(*(values)))
+        val empty = Row(emptyArray())
+        fun of(vararg values: Datum) = Row(arrayOf(*(values)))
     }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        other as Record
+        other as Row
         return values.contentEquals(other.values)
     }
 
@@ -20,23 +25,24 @@ internal class Record(val values: Array<Datum>) {
         return values.contentHashCode()
     }
 
-    public operator fun plus(rhs: Record): Record {
-        return Record(this.values + rhs.values)
+    public operator fun plus(rhs: Row): Row {
+        return Row(this.values + rhs.values)
     }
 
-    public fun copy(): Record {
-        return Record(this.values.copyOf())
+    public fun copy(): Row {
+        return Row(this.values.copyOf())
     }
 
     public operator fun get(index: Int): Datum {
         return this.values[index]
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun toString(): String {
         return buildString {
             append("< ")
             values.forEachIndexed { index, value ->
-                append("$index: $value")
+                append("$index: ${value.toPartiQLValue().toIon()}")
                 if (index != values.lastIndex) {
                     append(", ")
                 }

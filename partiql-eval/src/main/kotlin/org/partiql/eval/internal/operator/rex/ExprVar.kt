@@ -5,24 +5,13 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 
 /**
- * Implementation for variable lookup; walks up environments if necessary, otherwise lookup using tuple offset.
+ * Variable expression necessarily holds a reference to the interpreter stack (environment).
  */
-internal class ExprVar(depth: Int, offset: Int) : Operator.Expr {
+internal class ExprVar(
+    private val env: Environment,
+    private val depth: Int,
+    private val offset: Int,
+) : Operator.Expr {
 
-    // DO NOT USE FINAL
-    private var _depth = depth
-    private var _offset = offset
-
-    override fun eval(env: Environment): Datum {
-        // shortcut for depth 0
-        if (_depth == 0) {
-            return env.scope[_offset]
-        }
-        // walk up scopes
-        var curr = env.scope
-        repeat(_depth) {
-            curr = curr.next() ?: error("We ran out of environments for depth ($_depth) and env: $env.")
-        }
-        return curr.getOrNull(_offset) ?: error("The env doesn't have a variable for depth/offset ($_depth/$_offset) and env: $env. Current is: $curr.")
-    }
+    override fun eval(): Datum = env.get(depth, offset)
 }

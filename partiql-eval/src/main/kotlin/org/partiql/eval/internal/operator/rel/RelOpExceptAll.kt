@@ -1,28 +1,29 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import java.util.TreeMap
 
 internal class RelOpExceptAll(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
+    lhs: Operator.Relation,
+    rhs: Operator.Relation,
 ) : RelOpPeeking() {
 
+    private val lhs: Operator.Relation = lhs
+    private val rhs: Operator.Relation = rhs
     private val seen = TreeMap<Array<Datum>, Int>(DatumArrayComparator)
     private var init: Boolean = false
 
-    override fun openPeeking(env: Environment) {
-        lhs.open(env)
-        rhs.open(env)
+    override fun openPeeking() {
+        lhs.open()
+        rhs.open()
         init = false
         seen.clear()
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         if (!init) {
             seed()
         }
@@ -33,7 +34,7 @@ internal class RelOpExceptAll(
                 seen[row.values] = remaining - 1
                 continue
             }
-            return Record(row.values)
+            return Row(row.values)
         }
         return null
     }

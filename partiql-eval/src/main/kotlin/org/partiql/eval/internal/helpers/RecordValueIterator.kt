@@ -1,18 +1,18 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.spi.value.Datum
 
 /**
- * An [Iterator] over an [Iterator] lazily producing [Record]s as you call [next].
+ * An [Iterator] over an [Iterator] lazily producing [Row]s as you call [next].
  */
 internal class RecordValueIterator(
     collectionValue: Iterator<Datum>
-) : Iterator<Record> {
+) : Iterator<Row> {
 
     private val collectionIter = collectionValue.iterator()
 
     override fun hasNext(): Boolean = collectionIter.hasNext()
 
-    override fun next(): Record = Record(Array(1) { collectionIter.next() })
+    override fun next(): Row = Row(Array(1) { collectionIter.next() })
 }

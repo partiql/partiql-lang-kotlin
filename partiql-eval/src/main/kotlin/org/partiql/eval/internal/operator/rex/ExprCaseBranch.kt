@@ -20,10 +20,10 @@ internal class ExprCaseBranch(value: Operator.Expr, result: Operator.Expr) {
     /**
      * Evaluate the branch and compare against the match; returning the _value if the match succeeds.
      */
-    fun eval(env: Environment): Datum? {
-        val v = _value.eval(env)
+    fun eval(): Datum? {
+        val v = _value.eval()
         if (v.type.kind == PType.Kind.BOOL && !v.isNull && !v.isMissing && v.boolean) {
-            return _result.eval(env)
+            return _result.eval()
         }
         return null
     }
@@ -32,7 +32,7 @@ internal class ExprCaseBranch(value: Operator.Expr, result: Operator.Expr) {
      * Evaluate the branch and compare against the match; returning the _value if the match succeeds.
      */
     fun eval(env: Environment, match: Datum): Datum? {
-        return if (equal(match, _value.eval(env))) _result.eval(env) else null
+        return if (equal(match, _value.eval())) _result.eval() else null
     }
 
     private companion object {

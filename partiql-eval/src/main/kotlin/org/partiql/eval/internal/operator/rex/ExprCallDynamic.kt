@@ -1,8 +1,10 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
+import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
+import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -28,7 +30,7 @@ import org.partiql.value.PartiQLValue
 internal class ExprCallDynamic(
     private val name: String,
     private val functions: Array<Function.Instance>,
-    private val args: Array<Operator.Expr>
+    private val args: Array<Operator.Expr>,
 ) : Operator.Expr {
 
     /**
@@ -54,19 +56,21 @@ internal class ExprCallDynamic(
      *
      * TODO actually make this an array instead of lists.
      */
-    private val paramFamilies: List<List<CoercionFamily>> = functions.map { c -> c.parameters.map { p -> family(p.kind) } }
+    private val paramFamilies: List<List<CoercionFamily>> =
+        functions.map { c -> c.parameters.map { p -> family(p.kind) } }
 
     /**
      * A memoization cache for the [match] function.
      */
     private val candidates: MutableMap<List<PType>, Candidate> = mutableMapOf()
 
-    override fun eval(env: Environment): Datum {
-        val actualArgs = args.map { it.eval(env) }.toTypedArray()
+    override fun eval(): Datum {
+        val actualArgs = args.map { it.eval() }.toTypedArray()
         val actualTypes = actualArgs.map { it.type }
         var candidate = candidates[actualTypes]
         if (candidate == null) {
-            candidate = match(actualTypes) ?: throw TypeCheckException("Could not find function $name with types: $actualTypes.")
+            candidate = match(actualTypes)
+                ?: throw TypeCheckException("Could not find function $name with types: $actualTypes.")
             candidates[actualTypes] = candidate
         }
         return candidate.eval(actualArgs)
@@ -88,10 +92,14 @@ internal class ExprCallDynamic(
             for (paramIndex in paramIndices) {
                 val argType = args[paramIndex]
                 val paramType = paramTypes[candidateIndex][paramIndex]
-                if (paramType == argType) { currentExactMatches++ }
+                if (paramType == argType) {
+                    currentExactMatches++
+                }
                 val argFamily = argFamilies[paramIndex]
                 val paramFamily = paramFamilies[candidateIndex][paramIndex]
-                if (paramFamily != argFamily && argFamily != CoercionFamily.UNKNOWN && paramFamily != CoercionFamily.DYNAMIC) { return@forEach }
+                if (paramFamily != argFamily && argFamily != CoercionFamily.UNKNOWN && paramFamily != CoercionFamily.DYNAMIC) {
+                    return@forEach
+                }
             }
             if (currentExactMatches > exactMatches) {
                 currentMatch = candidateIndex

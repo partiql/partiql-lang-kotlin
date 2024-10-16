@@ -9,26 +9,21 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * Implementation of scalar subquery coercion.
- *
- * TODO REMOVE CONSTRUCTOR – TEMPORARY UNTIL SUBQUERIES ARE FIXED IN THE PLANNER.
+ * TODO THIS IMPLEMENTATION IS TEMPORARY UNTIL SUBQUERIES ARE FIXED IN THE PLANNER.
  */
-internal class ExprSubquery(input: Operator.Relation, constructor: Operator.Expr) : Operator.Expr {
+internal class ExprSubquery(
+    private val env: Environment,
+    private val input: Operator.Relation,
+    private val constructor: Operator.Expr,
+) : Operator.Expr {
 
-    // DO NOT USE FINAL
-    private var _input = input
-    private var _constructor = constructor
-
-    private companion object {
-        @JvmStatic
-        private val STRUCT = PType.struct()
-    }
+    private val struct = PType.struct()
 
     /**
      * TODO simplify
      */
-    override fun eval(env: Environment): Datum {
-        val tuple = getFirst(env) ?: return Datum.nullValue()
+    override fun eval(): Datum {
+        val tuple = getFirst() ?: return Datum.nullValue()
         val values = tuple.fields.asSequence().map { it.value }.iterator()
         if (values.hasNext().not()) {
             throw TypeCheckException()
@@ -41,26 +36,29 @@ internal class ExprSubquery(input: Operator.Relation, constructor: Operator.Expr
     }
 
     /**
-     * This grabs the first row of the input, asserts that the constructor evaluates to a TUPLE, and returns the
-     * constructed value.
+     * This grabs the first row of the input, asserts it's a struct, and returns the constructed value.
      *
-     * @return the constructed constructor. Returns null when no rows are returned from the input.
+     * @return The single value or null when no rows are returned from the input.
      * @throws CardinalityViolation when more than one row is returned from the input.
      * @throws TypeCheckException when the constructor is not a struct.
      */
-    private fun getFirst(env: Environment): Datum? {
-        _input.open(env)
-        if (_input.hasNext().not()) {
-            _input.close()
+    private fun getFirst(): Datum? {
+        input.open()
+        // no input, return null
+        if (input.hasNext().not()) {
+            input.close()
             return null
         }
-        val firstRecord = _input.next()
-        val tuple = _constructor.eval(env.push(firstRecord)).check(STRUCT)
-        if (_input.hasNext()) {
-            _input.close()
+        // get first value
+        val row = input.next()
+        val value = env.scope(row) { constructor.eval() }.check(struct)
+        // check if there are more rows
+        if (input.hasNext()) {
+            input.close()
             throw CardinalityViolation()
         }
-        _input.close()
-        return tuple
+        // done
+        input.close()
+        return value
     }
 }

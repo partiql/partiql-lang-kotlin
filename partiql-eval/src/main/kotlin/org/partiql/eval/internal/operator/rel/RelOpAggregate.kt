@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
@@ -10,12 +10,13 @@ import java.util.TreeMap
 import java.util.TreeSet
 
 internal class RelOpAggregate(
-    val input: Operator.Relation,
+    private val env: Environment,
+    private val input: Operator.Relation,
     private val keys: List<Operator.Expr>,
     private val functions: List<Operator.Aggregation>
 ) : Operator.Relation {
 
-    private lateinit var records: Iterator<Record>
+    private lateinit var records: Iterator<Row>
 
     private val aggregationMap = TreeMap<Array<Datum>, List<AccumulatorWrapper>>(DatumArrayComparator)
 
@@ -30,17 +31,19 @@ internal class RelOpAggregate(
         val seen: TreeSet<Array<Datum>>?
     )
 
-    override fun open(env: Environment) {
-        input.open(env)
-        for (inputRecord in input) {
+    override fun open() {
+        input.open()
+        for (row in input) {
 
             // Initialize the AggregationMap
-            val evaluatedGroupByKeys = Array(keys.size) { keyIndex ->
-                val env = env.push(inputRecord)
-                val key = keys[keyIndex].eval(env)
-                when (key.isMissing) {
-                    true -> Datum.nullValue()
-                    false -> key
+            val evaluatedGroupByKeys = Array(keys.size) { i ->
+                // TODO it's not clear to me why we need to push/pop here rather than line 37, but that broke tests.
+                env.scope(row) {
+                    val key = keys[i].eval()
+                    when (key.isMissing) {
+                        true -> Datum.nullValue()
+                        false -> key
+                    }
                 }
             }
 
@@ -63,12 +66,14 @@ internal class RelOpAggregate(
             // Aggregate Values in Aggregation State
             accumulators.forEachIndexed { index, function ->
                 val arguments = Array(function.args.size) {
-                    val argument = function.args[it].eval(env.push(inputRecord))
-                    // Skip over aggregation if NULL/MISSING
-                    if (argument.isNull || argument.isMissing) {
-                        return@forEachIndexed
+                    env.scope(row) {
+                        val argument = function.args[it].eval()
+                        // Skip over aggregation if NULL/MISSING
+                        if (argument.isNull || argument.isMissing) {
+                            return@forEachIndexed
+                        }
+                        argument
                     }
-                    argument
                 }
                 // Skip over aggregation if DISTINCT and SEEN
                 if (function.seen != null && (function.seen.add(arguments).not())) {
@@ -87,14 +92,14 @@ internal class RelOpAggregate(
                 val accumulator = function.delegate.getAccumulator(args = emptyArray())
                 record.add(accumulator.value())
             }
-            records = iterator { yield(Record.of(*record.toTypedArray())) }
+            records = iterator { yield(Row.of(*record.toTypedArray())) }
             return
         }
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
                 val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated
-                yield(Record.of(*recordValues.toTypedArray()))
+                yield(Row.of(*recordValues.toTypedArray()))
             }
         }
     }
@@ -103,7 +108,7 @@ internal class RelOpAggregate(
         return records.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return records.next()
     }
 

@@ -1,6 +1,5 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
@@ -21,10 +20,10 @@ internal class ExprCall(
     private var nil = { Datum.nullValue(function.returns) }
     private var missing = { Datum.missing(function.returns) }
 
-    override fun eval(env: Environment): Datum {
+    override fun eval(): Datum {
         // Evaluate arguments
         val args = Array(args.size) { i ->
-            val arg = args[i].eval(env)
+            val arg = args[i].eval()
             if (isNullCall && arg.isNull) return nil()
             if (isMissingCall && arg.isMissing) return missing()
             arg

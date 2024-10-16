@@ -1,26 +1,34 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
 
+/**
+ * The filter operator needs a reference to the stack because it needs to push the current row before evaluating
+ * the predicate. That row is returned iff the predicate is true.
+ *
+ * @property env
+ * @property input
+ * @property expr
+ */
 internal class RelOpFilter(
-    val input: Operator.Relation,
-    val expr: Operator.Expr
+    private val env: Environment,
+    private val input: Operator.Relation,
+    private val expr: Operator.Expr,
 ) : RelOpPeeking() {
 
-    private lateinit var env: Environment
-
-    override fun openPeeking(env: Environment) {
-        this.env = env
-        input.open(env)
+    override fun openPeeking() {
+        input.open()
     }
 
-    override fun peek(): Record? {
-        for (inputRecord in input) {
-            if (conditionIsTrue(inputRecord, expr)) {
-                return inputRecord
+    override fun peek(): Row? {
+        for (row in input) {
+            env.scope(row) {
+                if (expr.eval().isTrue()) {
+                    return row
+                }
             }
         }
         return null
@@ -28,10 +36,5 @@ internal class RelOpFilter(
 
     override fun closePeeking() {
         input.close()
-    }
-
-    private fun conditionIsTrue(record: Record, expr: Operator.Expr): Boolean {
-        val condition = expr.eval(env.push(record))
-        return condition.isTrue()
     }
 }
