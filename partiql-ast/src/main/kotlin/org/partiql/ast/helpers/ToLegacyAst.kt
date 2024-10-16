@@ -992,12 +992,32 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         super.visitStatementDML(node, ctx) as PartiqlAst.Statement
 
     override fun visitStatementDMLInsert(node: Statement.DML.Insert, ctx: Ctx) = translate(node) { metas ->
-        val target = visitIdentifier(node.target, ctx)
+        val target = tableName(node.target)
         val asAlias = node.asAlias?.symbol
         val values = visitExpr(node.values, ctx)
         val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
         val op = insert(target, asAlias, values, conflictAction)
         dml(dmlOpList(op), null, null, null, metas)
+    }
+
+    private fun tableName(id: Identifier): PartiqlAst.TableName = translate(id) { metas ->
+        val identifierChain = when (id) {
+            is Identifier.Symbol -> identifierChain(identifier(id), emptyList())
+            is Identifier.Qualified -> {
+                val root = identifier(id.root)
+                val steps = id.steps.map { identifier(it) }
+                val (head, qualifier) = when (id.steps.isEmpty()) {
+                    true -> root to emptyList()
+                    false -> steps.last() to listOf(root) + steps.dropLast(1)
+                }
+                identifierChain(head, qualifier)
+            }
+        }
+        tableName(identifierChain)
+    }
+
+    private fun identifier(id: Identifier.Symbol): PartiqlAst.Identifier = translate(id) { metas ->
+        identifier(id.symbol, id.caseSensitivity.toLegacyCaseSensitivity())
     }
 
     override fun visitStatementDMLInsertLegacy(
@@ -1016,7 +1036,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitStatementDMLUpsert(node: Statement.DML.Upsert, ctx: Ctx) = translate(node) { metas ->
-        val target = visitIdentifier(node.target, ctx)
+        val target = tableName(node.target)
         val asAlias = node.asAlias?.symbol
         val values = visitExpr(node.values, ctx)
         val conflictAction = doUpdate(excluded())
@@ -1026,7 +1046,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitStatementDMLReplace(node: Statement.DML.Replace, ctx: Ctx) = translate(node) { metas ->
-        val target = visitIdentifier(node.target, ctx)
+        val target = tableName(node.target)
         val asAlias = node.asAlias?.symbol
         val values = visitExpr(node.values, ctx)
         val conflictAction = doReplace(excluded())
@@ -1122,7 +1142,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         node: Statement.DML.BatchLegacy.Op.Insert,
         ctx: Ctx,
     ) = translate(node) { metas ->
-        val target = visitIdentifier(node.target, ctx)
+        val target = tableName(node.target)
         val asAlias = node.asAlias?.symbol
         val values = visitExpr(node.values, ctx)
         val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }

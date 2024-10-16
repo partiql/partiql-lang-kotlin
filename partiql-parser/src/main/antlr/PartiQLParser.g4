@@ -39,6 +39,44 @@ atIdent
 byIdent
     : BY symbolPrimitive;
 
+/**
+ * This is used to refer to a potentially qualified table in the database environment, however, it deviates slightly
+ * from SQL's EBNF due to the lack of a strict catalog-schema hierarchy.
+ *
+ * SQL:1999 EBNF:
+ * <table name> ::= <local or schema qualified name>
+ *
+ * <local or schema qualified name> ::= [ <local or schema qualifier> <period> ] <qualified identifier>
+ *
+ * <local or schema qualifier> ::= <schema name> | MODULE
+ *
+ * <schema name> ::= [ <catalog name> <period> ] <unqualified schema name>
+ *
+ * <qualified identifier> ::= <identifier>
+ */
+tableName
+    : identifierChain;
+
+/**
+ * SQL:1999:
+ * <identifier chain> ::=
+ *     <identifier> [ { <period> <identifier> }... ]
+ */
+identifierChain
+    : idSteps+=symbolPrimitive ( PERIOD idSteps+=symbolPrimitive )*
+    ;
+
+/**
+ * This refers to a regular/delimited identifier.
+ * TODO: Rename this to `identifier`.
+ *
+ * SQL:1999:
+ * <identifier> ::=
+ *     <actual identifier>
+ * <actual identifier> ::=
+ *     <regular identifier>
+ *     | <delimited identifier>
+ */
 symbolPrimitive
     : ident=( IDENTIFIER | IDENTIFIER_QUOTED )
     ;
@@ -74,7 +112,6 @@ execCommand
 // <qualified name> ::= [ <schema name> <period> ] <qualified identifier>
 qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
 
-tableName : symbolPrimitive;
 tableConstraintName : symbolPrimitive;
 columnName : symbolPrimitive;
 columnConstraintName : symbolPrimitive;
@@ -146,12 +183,12 @@ pathSimpleSteps
 // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
 // TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
 replaceCommand
-    : REPLACE INTO symbolPrimitive asIdent? value=expr;
+    : REPLACE INTO tableName asIdent? value=expr;
 
 // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
 // TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
 upsertCommand
-    : UPSERT INTO symbolPrimitive asIdent? value=expr;
+    : UPSERT INTO tableName asIdent? value=expr;
 
 removeCommand
     : REMOVE pathSimple;
@@ -165,9 +202,26 @@ removeCommand
 insertCommandReturning
     : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictLegacy? returningClause?;
 
-// See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
+/**
+ * PartiQL RFC-0011 EBNF: https://github.com/partiql/partiql-lang/blob/74dd8d4d355e8c646dd76b72800450b0d245fa74/RFCs/0011-partiql-insert.md?plain=1#L45
+ * <insert statement> ::= INSERT INTO <table name> [ AS <alias> ] 
+ *     [  ( <attr name> [, <attr name> ]... ) ]
+ *         <values>
+ *     [ ON CONFLICT [ <conflict target> ] <conflict action> ]
+ *
+ * <values> ::= DEFAULT VALUES | <values clause>
+ *     | <bag value> | <sub-select>
+ *
+ * <values clause> ::= VALUES <value> [, <value>]...
+ *
+ * <value> ::= ( { <value expr> | DEFAULT } [, { <value expr> | DEFAULT } ]...)
+ *
+ * SQL:1999 EBNF:
+ * <insert statement> ::=
+ *     INSERT INTO <insertion target> <insert columns and source>
+ */
 insertStatement
-    : INSERT INTO symbolPrimitive asIdent? value=expr onConflict?
+    : INSERT INTO tableName asIdent? value=expr onConflict?
     ;
 
 onConflict

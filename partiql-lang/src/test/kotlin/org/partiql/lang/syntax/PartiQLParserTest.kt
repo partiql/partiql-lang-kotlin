@@ -1817,7 +1817,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
                         null
                         (bag
                             (list
@@ -1916,7 +1916,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
                         null
                         (select
                             (project
@@ -1996,7 +1996,11 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name
+                        (identifier_chain
+                            (identifier
+                                foo
+                                (case_insensitive))))
                         null
                         (bag
                             (list
@@ -2271,7 +2275,38 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        null
+                        (select
+                            (project
+                                (project_list
+                                    (project_expr
+                                        (id y (case_insensitive) (unqualified))
+                                        null)))
+                            (from
+                                (scan
+                                    (id bar (case_insensitive) (unqualified))
+                                    null
+                                    null
+                                    null)))
+                        null))))
+        """
+    )
+
+    @Test
+    fun insertQueryDmlQualified() = assertExpression(
+        "INSERT INTO \"FoO\".bar.\"baZ\".BAT SELECT y FROM bar",
+        """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (table_name (identifier_chain
+                          (identifier BAT (case_insensitive))
+                          (identifier FoO (case_sensitive))
+                          (identifier bar (case_insensitive))
+                          (identifier baZ (case_sensitive))
+                        ))
                         null
                         (select
                             (project
@@ -2297,7 +2332,36 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        null
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_replace
+                            (excluded)
+                            null
+                        )))))
+        """
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithLiteralValueQualified() = assertExpression(
+        source = "INSERT into \"FoO\".bar.\"baZ\".BAT VALUES (1, 2), (3, 4) ON CONFLICT DO REPLACE EXCLUDED",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (table_name (identifier_chain
+                          (identifier BAT (case_insensitive))
+                          (identifier FoO (case_sensitive))
+                          (identifier bar (case_insensitive))
+                          (identifier baZ (case_sensitive))
+                        ))
                         null
                         (bag
                             (list
@@ -2321,7 +2385,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
                         null
                         (bag
                             (list
@@ -2352,7 +2416,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
                         null
                         (bag
                             (list
@@ -2383,7 +2447,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2408,7 +2472,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2440,7 +2504,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2472,7 +2536,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             null
                             (select
                                 (project
@@ -2512,7 +2576,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
                         null
                         (bag
                             (list
@@ -2536,7 +2600,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
                         null
                         (bag
                             (list
@@ -2567,7 +2631,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
                         null
                         (bag
                             (list
@@ -2598,7 +2662,11 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name
+                        (identifier_chain
+                            (identifier
+                                foo
+                                (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2623,7 +2691,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2655,7 +2723,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2687,7 +2755,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             null
                             (select
                                 (project
@@ -2727,7 +2795,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             null
                             (bag
                                 (struct
@@ -2785,7 +2853,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2807,7 +2875,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             null
                             (select
                                 (project
@@ -2844,7 +2912,42 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name
+                        (identifier_chain
+                            (identifier
+                                foo
+                                (case_insensitive))))
+                            null
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded)
+                                null
+                            )))))
+        """
+    )
+
+    // TODO
+    @Test
+    fun replaceCommandQualified() = assertExpression(
+        source = "REPLACE INTO \"FoO\".bar.\"baZ\".BAT <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (table_name (identifier_chain
+                                (identifier BAT (case_insensitive))
+                                (identifier FoO (case_sensitive))
+                                (identifier bar (case_insensitive))
+                                (identifier baZ (case_sensitive))
+                            ))
                             null
                             (bag
                                 (struct
@@ -2869,7 +2972,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2894,7 +2997,41 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                           (table_name
+                        (identifier_chain
+                            (identifier
+                                foo
+                                (case_insensitive))))
+                            null
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded)
+                                null
+                            )))))
+        """
+    )
+
+    @Test
+    fun upsertCommandQualified() = assertExpression(
+        source = "UPSERT INTO \"FoO\".bar.\"baZ\".BAT <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                           (table_name (identifier_chain
+                                (identifier BAT (case_insensitive))
+                                (identifier FoO (case_sensitive))
+                                (identifier bar (case_insensitive))
+                                (identifier baZ (case_sensitive))
+                            ))
                             null
                             (bag
                                 (struct
@@ -2919,7 +3056,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             f
                             (bag
                                 (struct
@@ -2944,7 +3081,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id foo (case_insensitive) (unqualified))
+                            (table_name (identifier_chain (identifier foo (case_insensitive))))
                             null
                             (select
                                 (project
@@ -2984,7 +3121,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id foo (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier foo (case_insensitive))))
                         null
                         (select
                             (project
@@ -3026,7 +3163,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
               (dml_op_list
                 (insert
-                  (id foo (case_insensitive) (unqualified))
+                  (table_name (identifier_chain (identifier foo (case_insensitive))))
                   (select
                     (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
                     (from (scan (id bar (case_insensitive) (unqualified)) null null null))
@@ -3558,7 +3695,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id k (case_insensitive) (unqualified))
+                        (table_name (identifier_chain (identifier k (case_insensitive))))
                         null
                         (bag
                             (lit 1))
@@ -3584,7 +3721,11 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (id k (case_insensitive) (unqualified))
+                        (table_name
+                        (identifier_chain
+                            (identifier
+                                k
+                                (case_insensitive))))
                         null
                         (bag
                             (lit 1))

@@ -370,14 +370,14 @@ internal class AstToLogicalVisitorTransform(
                     }
                 }
 
-                val target = dmlOp.target.toDmlTarget()
+                val target = transformTableName(dmlOp.target)
                 val alias = dmlOp.asAlias?.let {
                     PartiqlLogical.VarDecl(it)
-                } ?: PartiqlLogical.VarDecl(target.identifier.name)
+                } ?: PartiqlLogical.VarDecl(name(target))
 
                 PartiqlLogical.build {
                     dmlInsert(
-                        target = target,
+                        target = dmlTarget(target),
                         targetAlias = alias,
                         rowsToInsert = transformExpr(dmlOp.values),
                         metas = node.metas,
@@ -458,7 +458,7 @@ internal class AstToLogicalVisitorTransform(
 
                 val target = scan.expr.toDmlTarget()
                 val alias = scan.asAlias?.let { PartiqlLogical.VarDecl(it) }
-                    ?: PartiqlLogical.VarDecl(target.identifier.name)
+                    ?: PartiqlLogical.VarDecl(name(target.identifier))
 
                 PartiqlLogical.build {
                     dmlUpdate(
@@ -476,6 +476,24 @@ internal class AstToLogicalVisitorTransform(
                 }
             }
         }
+    }
+
+    override fun transformTableName(node: PartiqlAst.TableName): PartiqlLogical.TableName {
+        return PartiqlLogical.TableName(
+            transformIdentifierChain(node.id)
+        )
+    }
+
+    override fun transformIdentifierChain(node: PartiqlAst.IdentifierChain): PartiqlLogical.IdentifierChain {
+        return PartiqlLogical.IdentifierChain(
+            head = transformIdentifier(node.head),
+            qualifier = node.qualifier.map { transformIdentifier(it) }
+        )
+    }
+
+    private fun name(tableName: PartiqlLogical.TableName): SymbolPrimitive {
+        val id = tableName.id
+        return id.head.name
     }
 
     private fun transformConflictAction(conflictAction: PartiqlAst.ConflictAction?) =
@@ -508,7 +526,14 @@ internal class AstToLogicalVisitorTransform(
     private fun PartiqlAst.Expr.toDmlTarget(): PartiqlLogical.DmlTarget {
         return when (this) {
             is PartiqlAst.Expr.Id -> PartiqlLogical.build {
-                dmlTarget(identifier_(name, transformCaseSensitivity(case), metas))
+                dmlTarget(
+                    tableName(
+                        identifierChain(
+                            head = identifier_(name, transformCaseSensitivity(case), metas),
+                            qualifier = emptyList()
+                        )
+                    )
+                )
             }
             else -> {
                 problemHandler.handleProblem(
@@ -839,5 +864,10 @@ private val INVALID_EXPR = PartiqlLogical.build {
 }
 
 private val INVALID_DML_TARGET_ID = PartiqlLogical.build {
-    identifier("this is a placeholder for an invalid DML target - do not run", caseInsensitive())
+    tableName(
+        identifierChain(
+            head = identifier("this is a placeholder for an invalid DML target - do not run", caseInsensitive()),
+            qualifier = emptyList()
+        )
+    )
 }

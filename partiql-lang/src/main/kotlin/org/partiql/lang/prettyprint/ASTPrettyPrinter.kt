@@ -134,6 +134,20 @@ class ASTPrettyPrinter {
             attrOfParent = attrOfParent
         )
 
+    private fun toRecursionTree(node: PartiqlAst.IdentifierChain, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "IdentifierChain",
+            children = node.qualifier.map { step -> toRecursionTree(step) } + listOf(toRecursionTree(node.head)),
+            attrOfParent = attrOfParent
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.TableName, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "TableName",
+            children = listOf(toRecursionTree(node.id, "id")),
+            attrOfParent = attrOfParent
+        )
+
     // *******
     // * DML *
     // *******

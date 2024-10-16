@@ -768,22 +768,32 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitInsertStatement(ctx: GeneratedParser.InsertStatementContext) = translate(ctx) {
-            val target = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val target = visitTableName(ctx.tableName())
             val values = visitExpr(ctx.value)
             val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
             val onConflict = ctx.onConflict()?.let { visitOnConflictClause(it) }
             statementDMLInsert(target, values, asAlias, onConflict)
         }
 
+        override fun visitTableName(ctx: org.partiql.parser.antlr.PartiQLParser.TableNameContext): Identifier {
+            return visitIdentifierChain(ctx.identifierChain())
+        }
+
+        override fun visitIdentifierChain(ctx: org.partiql.parser.antlr.PartiQLParser.IdentifierChainContext) = translate(ctx) {
+            val steps = visitOrEmpty<Identifier.Symbol>(ctx.idSteps)
+            val root = steps.first()
+            identifierQualified(root, steps.drop(1))
+        }
+
         override fun visitReplaceCommand(ctx: GeneratedParser.ReplaceCommandContext) = translate(ctx) {
-            val target = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val target = visitTableName(ctx.tableName())
             val values = visitExpr(ctx.value)
             val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
             statementDMLReplace(target, values, asAlias)
         }
 
         override fun visitUpsertCommand(ctx: GeneratedParser.UpsertCommandContext) = translate(ctx) {
-            val target = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val target = visitTableName(ctx.tableName())
             val values = visitExpr(ctx.value)
             val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())
             statementDMLUpsert(target, values, asAlias)

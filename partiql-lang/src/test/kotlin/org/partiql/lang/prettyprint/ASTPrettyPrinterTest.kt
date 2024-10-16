@@ -104,7 +104,34 @@ class ASTPrettyPrinterTest {
                 Dml
                     operations: DmlOpList
                         op1: Insert
-                            target: Id foo (case_insensitive) (unqualified)
+                            target: TableName
+                                id: IdentifierChain
+                                    Identifier foo (case_insensitive)
+                            values: Bag
+                                List
+                                    Lit 1
+                                    Lit 2
+                                List
+                                    Lit 3
+                                    Lit 4
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun insertQualified() {
+        checkPrettyPrintAst(
+            "INSERT INTO \"FoO\".bar.\"baZ\".BAT VALUES (1, 2), (3, 4)",
+            """
+                Dml
+                    operations: DmlOpList
+                        op1: Insert
+                            target: TableName
+                                id: IdentifierChain
+                                    Identifier FoO (case_sensitive)
+                                    Identifier bar (case_insensitive)
+                                    Identifier baZ (case_sensitive)
+                                    Identifier BAT (case_insensitive)
                             values: Bag
                                 List
                                     Lit 1

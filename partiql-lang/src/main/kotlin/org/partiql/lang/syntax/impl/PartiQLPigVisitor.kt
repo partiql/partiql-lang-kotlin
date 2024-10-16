@@ -359,7 +359,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitInsertStatement(ctx: PartiQLParser.InsertStatementContext) = PartiqlAst.build {
         insert(
-            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            target = visitTableName(ctx.tableName()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name.text },
             values = visitExpr(ctx.value),
             conflictAction = ctx.onConflict()?.let { visitOnConflict(it) },
@@ -367,9 +367,22 @@ internal class PartiQLPigVisitor(
         )
     }
 
+    override fun visitTableName(ctx: PartiQLParser.TableNameContext): PartiqlAst.TableName = PartiqlAst.build {
+        val id = visitIdentifierChain(ctx.identifierChain())
+        tableName(id, id.metas)
+    }
+
+    override fun visitIdentifierChain(ctx: PartiQLParser.IdentifierChainContext) = PartiqlAst.build {
+        val steps = ctx.idSteps.map { step ->
+            visitSymbolPrimitive(step).toIdentifier()
+        }
+        val head = steps.last()
+        identifierChain(head, steps.dropLast(1), steps.first().metas)
+    }
+
     override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {
         insert(
-            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            target = visitTableName(ctx.tableName()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name.text },
             values = visitExpr(ctx.value),
             conflictAction = doReplace(excluded()),
@@ -380,7 +393,7 @@ internal class PartiQLPigVisitor(
     // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
         insert(
-            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            target = visitTableName(ctx.tableName()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name.text },
             values = visitExpr(ctx.value),
             conflictAction = doUpdate(excluded()),
@@ -1835,11 +1848,7 @@ internal class PartiQLPigVisitor(
         this.name.copy(metas = this.metas)
 
     private fun PartiqlAst.Expr.Id.toIdentifier(): PartiqlAst.Identifier {
-        val name = this.name.text
-        val case = this.case
-        return PartiqlAst.build {
-            identifier(name, case)
-        }
+        return PartiqlAst.Identifier(name, case, metas)
     }
 
     /**

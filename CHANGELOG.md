@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
+## [0.14.10]
+
+### Experimental Changes
+- **BREAKING**: For the _experimental_ `org.partiql.lang.domains`, the DML targets now use the newly created `TableName`,
+and `IdentifierChain`. With this, we have added parsing support for qualified identifiers in certain DML operations,
+closing [#1595](https://github.com/partiql/partiql-lang-kotlin/issues/1595).
+
 ## [0.14.9]
 
 ### Changed
@@ -1127,7 +1134,8 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.9...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.10...HEAD
+[0.14.10]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.9...v0.14.10
 [0.14.9]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.8...v0.14.9
 [0.14.8]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.7...v0.14.8
 [0.14.7]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.6...v0.14.7
