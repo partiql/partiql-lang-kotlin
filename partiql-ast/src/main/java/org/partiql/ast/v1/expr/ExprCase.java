@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -12,15 +13,16 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprCase extends Expr {
     @Nullable
-    public Expr expr;
+    public final Expr expr;
 
     @NotNull
-    public List<Branch> branches;
+    public final List<Branch> branches;
 
     @Nullable
-    public Expr defaultExpr;
+    public final Expr defaultExpr;
 
     public ExprCase(@Nullable Expr expr, @NotNull List<Branch> branches, @Nullable Expr defaultExpr) {
         this.expr = expr;
@@ -50,12 +52,13 @@ public class ExprCase extends Expr {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Branch extends AstNode {
         @NotNull
-        public Expr condition;
+        public final Expr condition;
 
         @NotNull
-        public Expr expr;
+        public final Expr expr;
 
         public Branch(@NotNull Expr condition, @NotNull Expr expr) {
         this.condition = condition;

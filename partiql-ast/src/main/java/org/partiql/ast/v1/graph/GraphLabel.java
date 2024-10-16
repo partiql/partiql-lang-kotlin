@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.graph;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -32,9 +33,10 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Name extends GraphLabel {
         @NotNull
-        public String name;
+        public final String name;
 
         public Name(@NotNull String name) {
             this.name = name;
@@ -55,6 +57,7 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Wildcard extends GraphLabel {
         @Override
         @NotNull
@@ -71,9 +74,10 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Negation extends GraphLabel {
         @NotNull
-        public GraphLabel arg;
+        public final GraphLabel arg;
 
         public Negation(@NotNull GraphLabel arg) {
             this.arg = arg;
@@ -96,9 +100,10 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Conj extends GraphLabel {
         @NotNull
-        public List<GraphLabel> args;
+        public final List<GraphLabel> args;
 
         public Conj(@NotNull List<GraphLabel> args) {
             this.args = args;
@@ -119,9 +124,10 @@ public abstract class GraphLabel extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Disj extends GraphLabel {
         @NotNull
-        public List<GraphLabel> args;
+        public final List<GraphLabel> args;
 
         public Disj(@NotNull List<GraphLabel> args) {
             this.args = args;

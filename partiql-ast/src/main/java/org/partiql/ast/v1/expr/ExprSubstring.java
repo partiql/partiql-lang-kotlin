@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -12,15 +13,16 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprSubstring extends Expr {
     @NotNull
-    public Expr value;
+    public final Expr value;
 
     @Nullable
-    public Expr start;
+    public final Expr start;
 
     @Nullable
-    public Expr length;
+    public final Expr length;
 
     public ExprSubstring(@NotNull Expr value, @Nullable Expr start, @Nullable Expr length) {
         this.value = value;

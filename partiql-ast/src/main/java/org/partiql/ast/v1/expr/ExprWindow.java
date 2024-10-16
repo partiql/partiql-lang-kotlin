@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -13,21 +14,22 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprWindow extends Expr {
     @NotNull
-    public WindowFunction windowFunction;
+    public final WindowFunction windowFunction;
 
     @NotNull
-    public Expr expression;
+    public final Expr expression;
 
     @Nullable
-    public Expr offset;
+    public final Expr offset;
 
     @Nullable
-    public Expr defaultValue;
+    public final Expr defaultValue;
 
     @NotNull
-    public Over over;
+    public final Over over;
 
     public ExprWindow(@NotNull WindowFunction windowFunction, @NotNull Expr expression, @Nullable Expr offset, @Nullable Expr defaultValue, @NotNull Over over) {
         this.windowFunction = windowFunction;
@@ -60,12 +62,13 @@ public class ExprWindow extends Expr {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Over extends AstNode {
         @Nullable
-        public List<Expr> partitions;
+        public final List<Expr> partitions;
 
         @Nullable
-        public List<Sort> sorts;
+        public final List<Sort> sorts;
 
         public Over(@Nullable List<Expr> partitions, @Nullable List<Sort> sorts) {
         this.partitions = partitions;

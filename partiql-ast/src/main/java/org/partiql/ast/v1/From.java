@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -9,9 +10,10 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class From extends AstNode {
     @NotNull
-    public List<FromTableRef> tableRefs;
+    public final List<FromTableRef> tableRefs;
 
     public From(@NotNull List<FromTableRef> tableRefs) {
         this.tableRefs = tableRefs;

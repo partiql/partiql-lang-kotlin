@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -11,9 +12,10 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprStruct extends Expr {
     @NotNull
-    public List<Field> fields;
+    public final List<Field> fields;
 
     public ExprStruct(@NotNull List<Field> fields) {
         this.fields = fields;
@@ -33,12 +35,13 @@ public class ExprStruct extends Expr {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Field extends AstNode {
         @NotNull
-        public Expr name;
+        public final Expr name;
 
         @NotNull
-        public Expr value;
+        public final Expr value;
 
         public Field(@NotNull Expr name, @NotNull Expr value) {
             this.name = name;

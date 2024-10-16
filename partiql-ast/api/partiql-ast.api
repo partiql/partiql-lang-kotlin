@@ -5802,18 +5802,33 @@ public abstract interface class org/partiql/ast/v1/Enum {
 }
 
 public class org/partiql/ast/v1/Exclude : org/partiql/ast/v1/AstNode {
-	public field excludePaths Ljava/util/List;
+	public final field excludePaths Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/Exclude$ExcludeBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/Exclude$ExcludeBuilder {
+	public fun build ()Lorg/partiql/ast/v1/Exclude;
+	public fun excludePaths (Ljava/util/List;)Lorg/partiql/ast/v1/Exclude$ExcludeBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/ExcludePath : org/partiql/ast/v1/AstNode {
-	public field excludeSteps Ljava/util/List;
-	public field root Lorg/partiql/ast/v1/expr/ExprVarRef;
+	public final field excludeSteps Ljava/util/List;
+	public final field root Lorg/partiql/ast/v1/expr/ExprVarRef;
 	public fun <init> (Lorg/partiql/ast/v1/expr/ExprVarRef;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/ExcludePath$ExcludePathBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/ExcludePath$ExcludePathBuilder {
+	public fun build ()Lorg/partiql/ast/v1/ExcludePath;
+	public fun excludeSteps (Ljava/util/List;)Lorg/partiql/ast/v1/ExcludePath$ExcludePathBuilder;
+	public fun root (Lorg/partiql/ast/v1/expr/ExprVarRef;)Lorg/partiql/ast/v1/ExcludePath$ExcludePathBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/ast/v1/ExcludeStep : org/partiql/ast/v1/AstNode {
@@ -5821,64 +5836,123 @@ public abstract class org/partiql/ast/v1/ExcludeStep : org/partiql/ast/v1/AstNod
 }
 
 public class org/partiql/ast/v1/ExcludeStep$CollIndex : org/partiql/ast/v1/ExcludeStep {
-	public field index I
+	public final field index I
 	public fun <init> (I)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/ExcludeStep$CollIndex$CollIndexBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/ExcludeStep$CollIndex$CollIndexBuilder {
+	public fun build ()Lorg/partiql/ast/v1/ExcludeStep$CollIndex;
+	public fun index (I)Lorg/partiql/ast/v1/ExcludeStep$CollIndex$CollIndexBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/ExcludeStep$CollWildcard : org/partiql/ast/v1/ExcludeStep {
-	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/ExcludeStep$CollWildcard$CollWildcardBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/ExcludeStep$CollWildcard$CollWildcardBuilder {
+	public fun build ()Lorg/partiql/ast/v1/ExcludeStep$CollWildcard;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/ExcludeStep$StructField : org/partiql/ast/v1/ExcludeStep {
-	public field symbol Lorg/partiql/ast/v1/Identifier;
+	public final field symbol Lorg/partiql/ast/v1/Identifier;
 	public fun <init> (Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/ExcludeStep$StructField$StructFieldBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/ExcludeStep$StructField$StructFieldBuilder {
+	public fun build ()Lorg/partiql/ast/v1/ExcludeStep$StructField;
+	public fun symbol (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/ExcludeStep$StructField$StructFieldBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/ExcludeStep$StructWildcard : org/partiql/ast/v1/ExcludeStep {
-	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/ExcludeStep$StructWildcard$StructWildcardBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/ExcludeStep$StructWildcard$StructWildcardBuilder {
+	public fun build ()Lorg/partiql/ast/v1/ExcludeStep$StructWildcard;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/Explain : org/partiql/ast/v1/Statement {
-	public field options Ljava/util/Map;
-	public field statement Lorg/partiql/ast/v1/Statement;
+	public final field options Ljava/util/Map;
+	public final field statement Lorg/partiql/ast/v1/Statement;
 	public fun <init> (Ljava/util/Map;Lorg/partiql/ast/v1/Statement;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/Explain$ExplainBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/Explain$ExplainBuilder {
+	public fun build ()Lorg/partiql/ast/v1/Explain;
+	public fun options (Ljava/util/Map;)Lorg/partiql/ast/v1/Explain$ExplainBuilder;
+	public fun statement (Lorg/partiql/ast/v1/Statement;)Lorg/partiql/ast/v1/Explain$ExplainBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/From : org/partiql/ast/v1/AstNode {
-	public field tableRefs Ljava/util/List;
+	public final field tableRefs Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/From$FromBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/From$FromBuilder {
+	public fun build ()Lorg/partiql/ast/v1/From;
+	public fun tableRefs (Ljava/util/List;)Lorg/partiql/ast/v1/From$FromBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/FromExpr : org/partiql/ast/v1/FromTableRef {
-	public field asAlias Lorg/partiql/ast/v1/Identifier;
-	public field atAlias Lorg/partiql/ast/v1/Identifier;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public field fromType Lorg/partiql/ast/v1/FromType;
+	public final field asAlias Lorg/partiql/ast/v1/Identifier;
+	public final field atAlias Lorg/partiql/ast/v1/Identifier;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field fromType Lorg/partiql/ast/v1/FromType;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/FromExpr$FromExprBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/FromExpr$FromExprBuilder {
+	public fun asAlias (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/FromExpr$FromExprBuilder;
+	public fun atAlias (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/FromExpr$FromExprBuilder;
+	public fun build ()Lorg/partiql/ast/v1/FromExpr;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/FromExpr$FromExprBuilder;
+	public fun fromType (Lorg/partiql/ast/v1/FromType;)Lorg/partiql/ast/v1/FromExpr$FromExprBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/FromJoin : org/partiql/ast/v1/FromTableRef {
-	public field condition Lorg/partiql/ast/v1/expr/Expr;
-	public field joinType Lorg/partiql/ast/v1/JoinType;
-	public field lhs Lorg/partiql/ast/v1/From;
-	public field rhs Lorg/partiql/ast/v1/From;
+	public final field condition Lorg/partiql/ast/v1/expr/Expr;
+	public final field joinType Lorg/partiql/ast/v1/JoinType;
+	public final field lhs Lorg/partiql/ast/v1/From;
+	public final field rhs Lorg/partiql/ast/v1/From;
 	public fun <init> (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/FromJoin$FromJoinBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/FromJoin$FromJoinBuilder {
+	public fun build ()Lorg/partiql/ast/v1/FromJoin;
+	public fun condition (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/FromJoin$FromJoinBuilder;
+	public fun joinType (Lorg/partiql/ast/v1/JoinType;)Lorg/partiql/ast/v1/FromJoin$FromJoinBuilder;
+	public fun lhs (Lorg/partiql/ast/v1/From;)Lorg/partiql/ast/v1/FromJoin$FromJoinBuilder;
+	public fun rhs (Lorg/partiql/ast/v1/From;)Lorg/partiql/ast/v1/FromJoin$FromJoinBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/ast/v1/FromTableRef : org/partiql/ast/v1/AstNode {
@@ -5897,20 +5971,37 @@ public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/Enum {
 }
 
 public class org/partiql/ast/v1/GroupBy : org/partiql/ast/v1/AstNode {
-	public field asAlias Lorg/partiql/ast/v1/Identifier;
-	public field keys Ljava/util/List;
-	public field strategy Lorg/partiql/ast/v1/GroupByStrategy;
+	public final field asAlias Lorg/partiql/ast/v1/Identifier;
+	public final field keys Ljava/util/List;
+	public final field strategy Lorg/partiql/ast/v1/GroupByStrategy;
 	public fun <init> (Lorg/partiql/ast/v1/GroupByStrategy;Ljava/util/List;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/GroupBy$GroupByBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/GroupBy$GroupByBuilder {
+	public fun asAlias (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/GroupBy$GroupByBuilder;
+	public fun build ()Lorg/partiql/ast/v1/GroupBy;
+	public fun keys (Ljava/util/List;)Lorg/partiql/ast/v1/GroupBy$GroupByBuilder;
+	public fun strategy (Lorg/partiql/ast/v1/GroupByStrategy;)Lorg/partiql/ast/v1/GroupBy$GroupByBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/GroupBy$Key : org/partiql/ast/v1/AstNode {
-	public field asAlias Lorg/partiql/ast/v1/Identifier;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field asAlias Lorg/partiql/ast/v1/Identifier;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/GroupBy$Key$KeyBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/GroupBy$Key$KeyBuilder {
+	public fun asAlias (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/GroupBy$Key$KeyBuilder;
+	public fun build ()Lorg/partiql/ast/v1/GroupBy$Key;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/GroupBy$Key$KeyBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/GroupByStrategy : org/partiql/ast/v1/Enum {
@@ -5924,19 +6015,35 @@ public class org/partiql/ast/v1/GroupByStrategy : org/partiql/ast/v1/Enum {
 }
 
 public class org/partiql/ast/v1/Identifier : org/partiql/ast/v1/AstNode {
-	public field isDelimited Z
-	public field symbol Ljava/lang/String;
+	public final field isDelimited Z
+	public final field symbol Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/Identifier$IdentifierBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/Identifier$IdentifierBuilder {
+	public fun build ()Lorg/partiql/ast/v1/Identifier;
+	public fun isDelimited (Z)Lorg/partiql/ast/v1/Identifier$IdentifierBuilder;
+	public fun symbol (Ljava/lang/String;)Lorg/partiql/ast/v1/Identifier$IdentifierBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/IdentifierChain : org/partiql/ast/v1/AstNode {
-	public field next Lorg/partiql/ast/v1/IdentifierChain;
-	public field root Lorg/partiql/ast/v1/Identifier;
+	public final field next Lorg/partiql/ast/v1/IdentifierChain;
+	public final field root Lorg/partiql/ast/v1/Identifier;
 	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/IdentifierChain;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/IdentifierChain$IdentifierChainBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/IdentifierChain$IdentifierChainBuilder {
+	public fun build ()Lorg/partiql/ast/v1/IdentifierChain;
+	public fun next (Lorg/partiql/ast/v1/IdentifierChain;)Lorg/partiql/ast/v1/IdentifierChain$IdentifierChainBuilder;
+	public fun root (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/IdentifierChain$IdentifierChainBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
@@ -5962,18 +6069,33 @@ public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
 }
 
 public class org/partiql/ast/v1/Let : org/partiql/ast/v1/AstNode {
-	public field bindings Ljava/util/List;
+	public final field bindings Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/Let$LetBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/Let$Binding : org/partiql/ast/v1/AstNode {
-	public field asAlias Lorg/partiql/ast/v1/Identifier;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field asAlias Lorg/partiql/ast/v1/Identifier;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/Let$Binding$BindingBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/Let$Binding$BindingBuilder {
+	public fun asAlias (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/Let$Binding$BindingBuilder;
+	public fun build ()Lorg/partiql/ast/v1/Let$Binding;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/Let$Binding$BindingBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/ast/v1/Let$LetBuilder {
+	public fun bindings (Ljava/util/List;)Lorg/partiql/ast/v1/Let$LetBuilder;
+	public fun build ()Lorg/partiql/ast/v1/Let;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/Nulls : org/partiql/ast/v1/Enum {
@@ -5997,17 +6119,31 @@ public class org/partiql/ast/v1/Order : org/partiql/ast/v1/Enum {
 }
 
 public class org/partiql/ast/v1/OrderBy : org/partiql/ast/v1/AstNode {
-	public field sorts Ljava/util/List;
+	public final field sorts Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/OrderBy$OrderByBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/OrderBy$OrderByBuilder {
+	public fun build ()Lorg/partiql/ast/v1/OrderBy;
+	public fun sorts (Ljava/util/List;)Lorg/partiql/ast/v1/OrderBy$OrderByBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/Query : org/partiql/ast/v1/Statement {
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/Query$QueryBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/Query$QueryBuilder {
+	public fun build ()Lorg/partiql/ast/v1/Query;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/Query$QueryBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/ast/v1/QueryBody : org/partiql/ast/v1/AstNode {
@@ -6015,26 +6151,49 @@ public abstract class org/partiql/ast/v1/QueryBody : org/partiql/ast/v1/AstNode 
 }
 
 public class org/partiql/ast/v1/QueryBody$SFW : org/partiql/ast/v1/QueryBody {
-	public field exclude Lorg/partiql/ast/v1/Exclude;
-	public field from Lorg/partiql/ast/v1/From;
-	public field groupBy Lorg/partiql/ast/v1/GroupBy;
-	public field having Lorg/partiql/ast/v1/expr/Expr;
-	public field let Lorg/partiql/ast/v1/Let;
-	public field select Lorg/partiql/ast/v1/Select;
-	public field where Lorg/partiql/ast/v1/expr/Expr;
+	public final field exclude Lorg/partiql/ast/v1/Exclude;
+	public final field from Lorg/partiql/ast/v1/From;
+	public final field groupBy Lorg/partiql/ast/v1/GroupBy;
+	public final field having Lorg/partiql/ast/v1/expr/Expr;
+	public final field let Lorg/partiql/ast/v1/Let;
+	public final field select Lorg/partiql/ast/v1/Select;
+	public final field where Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/Select;Lorg/partiql/ast/v1/Exclude;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/Let;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/GroupBy;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/QueryBody$SFW$SFWBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/QueryBody$SFW$SFWBuilder {
+	public fun build ()Lorg/partiql/ast/v1/QueryBody$SFW;
+	public fun exclude (Lorg/partiql/ast/v1/Exclude;)Lorg/partiql/ast/v1/QueryBody$SFW$SFWBuilder;
+	public fun from (Lorg/partiql/ast/v1/From;)Lorg/partiql/ast/v1/QueryBody$SFW$SFWBuilder;
+	public fun groupBy (Lorg/partiql/ast/v1/GroupBy;)Lorg/partiql/ast/v1/QueryBody$SFW$SFWBuilder;
+	public fun having (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/QueryBody$SFW$SFWBuilder;
+	public fun let (Lorg/partiql/ast/v1/Let;)Lorg/partiql/ast/v1/QueryBody$SFW$SFWBuilder;
+	public fun select (Lorg/partiql/ast/v1/Select;)Lorg/partiql/ast/v1/QueryBody$SFW$SFWBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun where (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/QueryBody$SFW$SFWBuilder;
+}
+
 public class org/partiql/ast/v1/QueryBody$SetOp : org/partiql/ast/v1/QueryBody {
-	public field isOuter Z
+	public final field isOuter Z
 	public field lhs Lorg/partiql/ast/v1/expr/Expr;
 	public field rhs Lorg/partiql/ast/v1/expr/Expr;
-	public field type Lorg/partiql/ast/v1/SetOp;
+	public final field type Lorg/partiql/ast/v1/SetOp;
 	public fun <init> (Lorg/partiql/ast/v1/SetOp;ZLorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/QueryBody$SetOp$SetOpBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/QueryBody$SetOp$SetOpBuilder {
+	public fun build ()Lorg/partiql/ast/v1/QueryBody$SetOp;
+	public fun isOuter (Z)Lorg/partiql/ast/v1/QueryBody$SetOp$SetOpBuilder;
+	public fun lhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/QueryBody$SetOp$SetOpBuilder;
+	public fun rhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/QueryBody$SetOp$SetOpBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun type (Lorg/partiql/ast/v1/SetOp;)Lorg/partiql/ast/v1/QueryBody$SetOp$SetOpBuilder;
 }
 
 public abstract class org/partiql/ast/v1/Select : org/partiql/ast/v1/AstNode {
@@ -6048,57 +6207,111 @@ public abstract class org/partiql/ast/v1/SelectItem : org/partiql/ast/v1/AstNode
 }
 
 public class org/partiql/ast/v1/SelectItem$Expr : org/partiql/ast/v1/SelectItem {
-	public field asAlias Lorg/partiql/ast/v1/Identifier;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field asAlias Lorg/partiql/ast/v1/Identifier;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/SelectItem$Expr$ExprBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/SelectItem$Expr$ExprBuilder {
+	public fun asAlias (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/SelectItem$Expr$ExprBuilder;
+	public fun build ()Lorg/partiql/ast/v1/SelectItem$Expr;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/SelectItem$Expr$ExprBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/SelectItem$Star : org/partiql/ast/v1/SelectItem {
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/SelectItem$Star$StarBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/SelectItem$Star$StarBuilder {
+	public fun build ()Lorg/partiql/ast/v1/SelectItem$Star;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/SelectItem$Star$StarBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/SelectList : org/partiql/ast/v1/Select {
-	public field items Ljava/util/List;
-	public field setq Lorg/partiql/ast/v1/SetQuantifier;
+	public final field items Ljava/util/List;
+	public final field setq Lorg/partiql/ast/v1/SetQuantifier;
 	public fun <init> (Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/SelectList$SelectListBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/SelectList$SelectListBuilder {
+	public fun build ()Lorg/partiql/ast/v1/SelectList;
+	public fun items (Ljava/util/List;)Lorg/partiql/ast/v1/SelectList$SelectListBuilder;
+	public fun setq (Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/SelectList$SelectListBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/SelectPivot : org/partiql/ast/v1/Select {
-	public field key Lorg/partiql/ast/v1/expr/Expr;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field key Lorg/partiql/ast/v1/expr/Expr;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/SelectPivot$SelectPivotBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/SelectPivot$SelectPivotBuilder {
+	public fun build ()Lorg/partiql/ast/v1/SelectPivot;
+	public fun key (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/SelectPivot$SelectPivotBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/SelectPivot$SelectPivotBuilder;
 }
 
 public class org/partiql/ast/v1/SelectStar : org/partiql/ast/v1/Select {
-	public field setq Lorg/partiql/ast/v1/SetQuantifier;
+	public final field setq Lorg/partiql/ast/v1/SetQuantifier;
 	public fun <init> (Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/SelectStar$SelectStarBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/SelectStar$SelectStarBuilder {
+	public fun build ()Lorg/partiql/ast/v1/SelectStar;
+	public fun setq (Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/SelectStar$SelectStarBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/SelectValue : org/partiql/ast/v1/Select {
-	public field constructor Lorg/partiql/ast/v1/expr/Expr;
-	public field setq Lorg/partiql/ast/v1/SetQuantifier;
+	public final field constructor Lorg/partiql/ast/v1/expr/Expr;
+	public final field setq Lorg/partiql/ast/v1/SetQuantifier;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/SelectValue$SelectValueBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/SelectValue$SelectValueBuilder {
+	public fun build ()Lorg/partiql/ast/v1/SelectValue;
+	public fun constructor (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/SelectValue$SelectValueBuilder;
+	public fun setq (Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/SelectValue$SelectValueBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/SetOp : org/partiql/ast/v1/AstNode {
-	public field setOpType Lorg/partiql/ast/v1/SetOpType;
-	public field setq Lorg/partiql/ast/v1/SetQuantifier;
+	public final field setOpType Lorg/partiql/ast/v1/SetOpType;
+	public final field setq Lorg/partiql/ast/v1/SetQuantifier;
 	public fun <init> (Lorg/partiql/ast/v1/SetOpType;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/SetOp$SetOpBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/SetOp$SetOpBuilder {
+	public fun build ()Lorg/partiql/ast/v1/SetOp;
+	public fun setOpType (Lorg/partiql/ast/v1/SetOpType;)Lorg/partiql/ast/v1/SetOp$SetOpBuilder;
+	public fun setq (Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/SetOp$SetOpBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/SetOpType : org/partiql/ast/v1/Enum {
@@ -6120,12 +6333,21 @@ public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/Enum {
 }
 
 public class org/partiql/ast/v1/Sort : org/partiql/ast/v1/AstNode {
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public field nulls Lorg/partiql/ast/v1/Nulls;
-	public field order Lorg/partiql/ast/v1/Order;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field nulls Lorg/partiql/ast/v1/Nulls;
+	public final field order Lorg/partiql/ast/v1/Order;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Order;Lorg/partiql/ast/v1/Nulls;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/Sort$SortBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/Sort$SortBuilder {
+	public fun build ()Lorg/partiql/ast/v1/Sort;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/Sort$SortBuilder;
+	public fun nulls (Lorg/partiql/ast/v1/Nulls;)Lorg/partiql/ast/v1/Sort$SortBuilder;
+	public fun order (Lorg/partiql/ast/v1/Order;)Lorg/partiql/ast/v1/Sort$SortBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/ast/v1/Statement : org/partiql/ast/v1/AstNode {
@@ -6139,297 +6361,585 @@ public abstract class org/partiql/ast/v1/expr/Expr : org/partiql/ast/v1/AstNode 
 }
 
 public class org/partiql/ast/v1/expr/ExprAnd : org/partiql/ast/v1/expr/Expr {
-	public field lhs Lorg/partiql/ast/v1/expr/Expr;
-	public field rhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field lhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field rhs Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprAnd$ExprAndBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprAnd$ExprAndBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprAnd;
+	public fun lhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprAnd$ExprAndBuilder;
+	public fun rhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprAnd$ExprAndBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprArray : org/partiql/ast/v1/expr/Expr {
-	public field values Ljava/util/List;
+	public final field values Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprArray$ExprArrayBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprArray$ExprArrayBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprArray;
+	public fun toString ()Ljava/lang/String;
+	public fun values (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprArray$ExprArrayBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprBag : org/partiql/ast/v1/expr/Expr {
-	public field values Ljava/util/List;
+	public final field values Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprBag$ExprBagBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprBag$ExprBagBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprBag;
+	public fun toString ()Ljava/lang/String;
+	public fun values (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprBag$ExprBagBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprBetween : org/partiql/ast/v1/expr/Expr {
-	public field from Lorg/partiql/ast/v1/expr/Expr;
-	public field not Z
-	public field to Lorg/partiql/ast/v1/expr/Expr;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field from Lorg/partiql/ast/v1/expr/Expr;
+	public final field not Z
+	public final field to Lorg/partiql/ast/v1/expr/Expr;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprBetween$ExprBetweenBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprBetween$ExprBetweenBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprBetween;
+	public fun from (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprBetween$ExprBetweenBuilder;
+	public fun not (Z)Lorg/partiql/ast/v1/expr/ExprBetween$ExprBetweenBuilder;
+	public fun to (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprBetween$ExprBetweenBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprBetween$ExprBetweenBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprCall : org/partiql/ast/v1/expr/Expr {
-	public field args Ljava/util/List;
-	public field function Lorg/partiql/ast/v1/IdentifierChain;
-	public field setq Lorg/partiql/ast/v1/SetQuantifier;
+	public final field args Ljava/util/List;
+	public final field function Lorg/partiql/ast/v1/IdentifierChain;
+	public final field setq Lorg/partiql/ast/v1/SetQuantifier;
 	public fun <init> (Lorg/partiql/ast/v1/IdentifierChain;Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCall$ExprCallBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/expr/ExprCall$ExprCallBuilder {
+	public fun args (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprCall$ExprCallBuilder;
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprCall;
+	public fun function (Lorg/partiql/ast/v1/IdentifierChain;)Lorg/partiql/ast/v1/expr/ExprCall$ExprCallBuilder;
+	public fun setq (Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/expr/ExprCall$ExprCallBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/expr/ExprCase : org/partiql/ast/v1/expr/Expr {
-	public field branches Ljava/util/List;
-	public field defaultExpr Lorg/partiql/ast/v1/expr/Expr;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field branches Ljava/util/List;
+	public final field defaultExpr Lorg/partiql/ast/v1/expr/Expr;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Ljava/util/List;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCase$ExprCaseBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/expr/ExprCase$Branch : org/partiql/ast/v1/AstNode {
-	public field condition Lorg/partiql/ast/v1/expr/Expr;
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field condition Lorg/partiql/ast/v1/expr/Expr;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCase$Branch$BranchBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprCase$Branch$BranchBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprCase$Branch;
+	public fun condition (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprCase$Branch$BranchBuilder;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprCase$Branch$BranchBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/ast/v1/expr/ExprCase$ExprCaseBuilder {
+	public fun branches (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprCase$ExprCaseBuilder;
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprCase;
+	public fun defaultExpr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprCase$ExprCaseBuilder;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprCase$ExprCaseBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprCast : org/partiql/ast/v1/expr/Expr {
-	public field asType Lorg/partiql/ast/v1/DataType;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field asType Lorg/partiql/ast/v1/DataType;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCast$ExprCastBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprCast$ExprCastBuilder {
+	public fun asType (Lorg/partiql/ast/v1/DataType;)Lorg/partiql/ast/v1/expr/ExprCast$ExprCastBuilder;
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprCast;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprCast$ExprCastBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprCoalesce : org/partiql/ast/v1/expr/Expr {
-	public field args Ljava/util/List;
+	public final field args Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCoalesce$ExprCoalesceBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprCoalesce$ExprCoalesceBuilder {
+	public fun args (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprCoalesce$ExprCoalesceBuilder;
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprCoalesce;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprExtract : org/partiql/ast/v1/expr/Expr {
-	public field field Lorg/partiql/ast/v1/DatetimeField;
-	public field source Lorg/partiql/ast/v1/expr/Expr;
+	public final field field Lorg/partiql/ast/v1/DatetimeField;
+	public final field source Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/DatetimeField;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprExtract$ExprExtractBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprExtract$ExprExtractBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprExtract;
+	public fun field (Lorg/partiql/ast/v1/DatetimeField;)Lorg/partiql/ast/v1/expr/ExprExtract$ExprExtractBuilder;
+	public fun source (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprExtract$ExprExtractBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprInCollection : org/partiql/ast/v1/expr/Expr {
-	public field lhs Lorg/partiql/ast/v1/expr/Expr;
-	public field not Z
-	public field rhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field lhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field not Z
+	public final field rhs Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprInCollection$ExprInCollectionBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprInCollection$ExprInCollectionBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprInCollection;
+	public fun lhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprInCollection$ExprInCollectionBuilder;
+	public fun not (Z)Lorg/partiql/ast/v1/expr/ExprInCollection$ExprInCollectionBuilder;
+	public fun rhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprInCollection$ExprInCollectionBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprIsType : org/partiql/ast/v1/expr/Expr {
-	public field not Z
-	public field type Lorg/partiql/ast/v1/DataType;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field not Z
+	public final field type Lorg/partiql/ast/v1/DataType;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprIsType$ExprIsTypeBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprIsType$ExprIsTypeBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprIsType;
+	public fun not (Z)Lorg/partiql/ast/v1/expr/ExprIsType$ExprIsTypeBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun type (Lorg/partiql/ast/v1/DataType;)Lorg/partiql/ast/v1/expr/ExprIsType$ExprIsTypeBuilder;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprIsType$ExprIsTypeBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprLike : org/partiql/ast/v1/expr/Expr {
-	public field escape Lorg/partiql/ast/v1/expr/Expr;
-	public field not Z
-	public field pattern Lorg/partiql/ast/v1/expr/Expr;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field escape Lorg/partiql/ast/v1/expr/Expr;
+	public final field not Z
+	public final field pattern Lorg/partiql/ast/v1/expr/Expr;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprLike$ExprLikeBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprLike$ExprLikeBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprLike;
+	public fun escape (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprLike$ExprLikeBuilder;
+	public fun not (Z)Lorg/partiql/ast/v1/expr/ExprLike$ExprLikeBuilder;
+	public fun pattern (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprLike$ExprLikeBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprLike$ExprLikeBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprLit : org/partiql/ast/v1/expr/Expr {
-	public field value Lorg/partiql/value/PartiQLValue;
+	public final field value Lorg/partiql/value/PartiQLValue;
 	public fun <init> (Lorg/partiql/value/PartiQLValue;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprLit$ExprLitBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprLit$ExprLitBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprLit;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/v1/expr/ExprLit$ExprLitBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprMatch : org/partiql/ast/v1/expr/Expr {
-	public field expr Lorg/partiql/ast/v1/expr/Expr;
-	public field pattern Lorg/partiql/ast/v1/graph/GraphMatch;
+	public final field expr Lorg/partiql/ast/v1/expr/Expr;
+	public final field pattern Lorg/partiql/ast/v1/graph/GraphMatch;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/graph/GraphMatch;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprMatch$ExprMatchBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprMatch$ExprMatchBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprMatch;
+	public fun expr (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprMatch$ExprMatchBuilder;
+	public fun pattern (Lorg/partiql/ast/v1/graph/GraphMatch;)Lorg/partiql/ast/v1/expr/ExprMatch$ExprMatchBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprNot : org/partiql/ast/v1/expr/Expr {
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprNot$ExprNotBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprNot$ExprNotBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprNot;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprNot$ExprNotBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprNullIf : org/partiql/ast/v1/expr/Expr {
-	public field v1 Lorg/partiql/ast/v1/expr/Expr;
-	public field v2 Lorg/partiql/ast/v1/expr/Expr;
+	public final field v1 Lorg/partiql/ast/v1/expr/Expr;
+	public final field v2 Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprNullIf$ExprNullIfBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprNullIf$ExprNullIfBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprNullIf;
+	public fun toString ()Ljava/lang/String;
+	public fun v1 (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprNullIf$ExprNullIfBuilder;
+	public fun v2 (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprNullIf$ExprNullIfBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprOperator : org/partiql/ast/v1/expr/Expr {
-	public field lhs Lorg/partiql/ast/v1/expr/Expr;
-	public field rhs Lorg/partiql/ast/v1/expr/Expr;
-	public field symbol Ljava/lang/String;
+	public final field lhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field rhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field symbol Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprOperator$ExprOperatorBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprOperator$ExprOperatorBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprOperator;
+	public fun lhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOperator$ExprOperatorBuilder;
+	public fun rhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOperator$ExprOperatorBuilder;
+	public fun symbol (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprOperator$ExprOperatorBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprOr : org/partiql/ast/v1/expr/Expr {
-	public field lhs Lorg/partiql/ast/v1/expr/Expr;
-	public field rhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field lhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field rhs Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprOr$ExprOrBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprOr$ExprOrBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprOr;
+	public fun lhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOr$ExprOrBuilder;
+	public fun rhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOr$ExprOrBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprOverlay : org/partiql/ast/v1/expr/Expr {
-	public field forLength Lorg/partiql/ast/v1/expr/Expr;
-	public field from Lorg/partiql/ast/v1/expr/Expr;
-	public field placing Lorg/partiql/ast/v1/expr/Expr;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field forLength Lorg/partiql/ast/v1/expr/Expr;
+	public final field from Lorg/partiql/ast/v1/expr/Expr;
+	public final field placing Lorg/partiql/ast/v1/expr/Expr;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprOverlay$ExprOverlayBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprOverlay$ExprOverlayBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprOverlay;
+	public fun forLength (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOverlay$ExprOverlayBuilder;
+	public fun from (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOverlay$ExprOverlayBuilder;
+	public fun placing (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOverlay$ExprOverlayBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOverlay$ExprOverlayBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprParameter : org/partiql/ast/v1/expr/Expr {
-	public field index I
+	public final field index I
 	public fun <init> (I)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprParameter$ExprParameterBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprParameter$ExprParameterBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprParameter;
+	public fun index (I)Lorg/partiql/ast/v1/expr/ExprParameter$ExprParameterBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprPath : org/partiql/ast/v1/expr/Expr {
-	public field next Lorg/partiql/ast/v1/expr/PathStep;
-	public field root Lorg/partiql/ast/v1/expr/Expr;
+	public final field next Lorg/partiql/ast/v1/expr/PathStep;
+	public final field root Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprPath$ExprPathBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprPath$ExprPathBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprPath;
+	public fun next (Lorg/partiql/ast/v1/expr/PathStep;)Lorg/partiql/ast/v1/expr/ExprPath$ExprPathBuilder;
+	public fun root (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprPath$ExprPathBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprPosition : org/partiql/ast/v1/expr/Expr {
-	public field lhs Lorg/partiql/ast/v1/expr/Expr;
-	public field rhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field lhs Lorg/partiql/ast/v1/expr/Expr;
+	public final field rhs Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprPosition$ExprPositionBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprPosition$ExprPositionBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprPosition;
+	public fun lhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprPosition$ExprPositionBuilder;
+	public fun rhs (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprPosition$ExprPositionBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprQuerySet : org/partiql/ast/v1/expr/Expr {
-	public field body Lorg/partiql/ast/v1/QueryBody;
-	public field limit Lorg/partiql/ast/v1/expr/Expr;
-	public field offset Lorg/partiql/ast/v1/expr/Expr;
-	public field orderBy Lorg/partiql/ast/v1/OrderBy;
+	public final field body Lorg/partiql/ast/v1/QueryBody;
+	public final field limit Lorg/partiql/ast/v1/expr/Expr;
+	public final field offset Lorg/partiql/ast/v1/expr/Expr;
+	public final field orderBy Lorg/partiql/ast/v1/OrderBy;
 	public fun <init> (Lorg/partiql/ast/v1/QueryBody;Lorg/partiql/ast/v1/OrderBy;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprQuerySet$ExprQuerySetBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprQuerySet$ExprQuerySetBuilder {
+	public fun body (Lorg/partiql/ast/v1/QueryBody;)Lorg/partiql/ast/v1/expr/ExprQuerySet$ExprQuerySetBuilder;
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprQuerySet;
+	public fun limit (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprQuerySet$ExprQuerySetBuilder;
+	public fun offset (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprQuerySet$ExprQuerySetBuilder;
+	public fun orderBy (Lorg/partiql/ast/v1/OrderBy;)Lorg/partiql/ast/v1/expr/ExprQuerySet$ExprQuerySetBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprSessionAttribute : org/partiql/ast/v1/expr/Expr {
-	public field sessionAttribute Lorg/partiql/ast/v1/expr/SessionAttribute;
+	public final field sessionAttribute Lorg/partiql/ast/v1/expr/SessionAttribute;
 	public fun <init> (Lorg/partiql/ast/v1/expr/SessionAttribute;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprSessionAttribute$ExprSessionAttributeBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprSessionAttribute$ExprSessionAttributeBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprSessionAttribute;
+	public fun sessionAttribute (Lorg/partiql/ast/v1/expr/SessionAttribute;)Lorg/partiql/ast/v1/expr/ExprSessionAttribute$ExprSessionAttributeBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprStruct : org/partiql/ast/v1/expr/Expr {
-	public field fields Ljava/util/List;
+	public final field fields Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprStruct$ExprStructBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprStruct$ExprStructBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprStruct;
+	public fun fields (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprStruct$ExprStructBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprStruct$Field : org/partiql/ast/v1/AstNode {
-	public field name Lorg/partiql/ast/v1/expr/Expr;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field name Lorg/partiql/ast/v1/expr/Expr;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprStruct$Field$FieldBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprStruct$Field$FieldBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprStruct$Field;
+	public fun name (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprStruct$Field$FieldBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprStruct$Field$FieldBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprSubstring : org/partiql/ast/v1/expr/Expr {
-	public field length Lorg/partiql/ast/v1/expr/Expr;
-	public field start Lorg/partiql/ast/v1/expr/Expr;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field length Lorg/partiql/ast/v1/expr/Expr;
+	public final field start Lorg/partiql/ast/v1/expr/Expr;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprSubstring$ExprSubstringBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprSubstring$ExprSubstringBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprSubstring;
+	public fun length (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprSubstring$ExprSubstringBuilder;
+	public fun start (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprSubstring$ExprSubstringBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprSubstring$ExprSubstringBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprTrim : org/partiql/ast/v1/expr/Expr {
-	public field chars Lorg/partiql/ast/v1/expr/Expr;
-	public field trimSpec Lorg/partiql/ast/v1/expr/TrimSpec;
-	public field value Lorg/partiql/ast/v1/expr/Expr;
+	public final field chars Lorg/partiql/ast/v1/expr/Expr;
+	public final field trimSpec Lorg/partiql/ast/v1/expr/TrimSpec;
+	public final field value Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/TrimSpec;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprTrim$ExprTrimBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprTrim$ExprTrimBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprTrim;
+	public fun chars (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprTrim$ExprTrimBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun trimSpec (Lorg/partiql/ast/v1/expr/TrimSpec;)Lorg/partiql/ast/v1/expr/ExprTrim$ExprTrimBuilder;
+	public fun value (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprTrim$ExprTrimBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprValues : org/partiql/ast/v1/expr/Expr {
-	public field rows Ljava/util/List;
+	public final field rows Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprValues$ExprValuesBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprValues$ExprValuesBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprValues;
+	public fun rows (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprValues$ExprValuesBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/expr/ExprValues$Row : org/partiql/ast/v1/AstNode {
-	public field values Ljava/util/List;
+	public final field values Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprValues$Row$RowBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprValues$Row$RowBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprValues$Row;
+	public fun toString ()Ljava/lang/String;
+	public fun values (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprValues$Row$RowBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprVarRef : org/partiql/ast/v1/expr/Expr {
-	public field identifierChain Lorg/partiql/ast/v1/IdentifierChain;
-	public field scope Lorg/partiql/ast/v1/expr/Scope;
+	public final field identifierChain Lorg/partiql/ast/v1/IdentifierChain;
+	public final field scope Lorg/partiql/ast/v1/expr/Scope;
 	public fun <init> (Lorg/partiql/ast/v1/IdentifierChain;Lorg/partiql/ast/v1/expr/Scope;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprVarRef$ExprVarRefBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/expr/ExprVarRef$ExprVarRefBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprVarRef;
+	public fun identifierChain (Lorg/partiql/ast/v1/IdentifierChain;)Lorg/partiql/ast/v1/expr/ExprVarRef$ExprVarRefBuilder;
+	public fun scope (Lorg/partiql/ast/v1/expr/Scope;)Lorg/partiql/ast/v1/expr/ExprVarRef$ExprVarRefBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/expr/ExprVariant : org/partiql/ast/v1/expr/Expr {
-	public field encoding Ljava/lang/String;
-	public field value Ljava/lang/String;
+	public final field encoding Ljava/lang/String;
+	public final field value Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprVariant$ExprVariantBuilder;
 	public synthetic fun children ()Ljava/util/Collection;
 	public fun children ()Ljava/util/List;
 }
 
+public class org/partiql/ast/v1/expr/ExprVariant$ExprVariantBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprVariant;
+	public fun encoding (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprVariant$ExprVariantBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprVariant$ExprVariantBuilder;
+}
+
 public class org/partiql/ast/v1/expr/ExprWindow : org/partiql/ast/v1/expr/Expr {
-	public field defaultValue Lorg/partiql/ast/v1/expr/Expr;
-	public field expression Lorg/partiql/ast/v1/expr/Expr;
-	public field offset Lorg/partiql/ast/v1/expr/Expr;
-	public field over Lorg/partiql/ast/v1/expr/ExprWindow$Over;
-	public field windowFunction Lorg/partiql/ast/v1/expr/WindowFunction;
+	public final field defaultValue Lorg/partiql/ast/v1/expr/Expr;
+	public final field expression Lorg/partiql/ast/v1/expr/Expr;
+	public final field offset Lorg/partiql/ast/v1/expr/Expr;
+	public final field over Lorg/partiql/ast/v1/expr/ExprWindow$Over;
+	public final field windowFunction Lorg/partiql/ast/v1/expr/WindowFunction;
 	public fun <init> (Lorg/partiql/ast/v1/expr/WindowFunction;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/ExprWindow$Over;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprWindow$ExprWindowBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/expr/ExprWindow$ExprWindowBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprWindow;
+	public fun defaultValue (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprWindow$ExprWindowBuilder;
+	public fun expression (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprWindow$ExprWindowBuilder;
+	public fun offset (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprWindow$ExprWindowBuilder;
+	public fun over (Lorg/partiql/ast/v1/expr/ExprWindow$Over;)Lorg/partiql/ast/v1/expr/ExprWindow$ExprWindowBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun windowFunction (Lorg/partiql/ast/v1/expr/WindowFunction;)Lorg/partiql/ast/v1/expr/ExprWindow$ExprWindowBuilder;
 }
 
 public class org/partiql/ast/v1/expr/ExprWindow$Over : org/partiql/ast/v1/AstNode {
-	public field partitions Ljava/util/List;
-	public field sorts Ljava/util/List;
+	public final field partitions Ljava/util/List;
+	public final field sorts Ljava/util/List;
 	public fun <init> (Ljava/util/List;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprWindow$Over$OverBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/expr/ExprWindow$Over$OverBuilder {
+	public fun build ()Lorg/partiql/ast/v1/expr/ExprWindow$Over;
+	public fun partitions (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprWindow$Over$OverBuilder;
+	public fun sorts (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprWindow$Over$OverBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract class org/partiql/ast/v1/expr/PathStep : org/partiql/ast/v1/AstNode {
-	public field next Lorg/partiql/ast/v1/expr/PathStep;
-	public fun <init> ()V
+	public final field next Lorg/partiql/ast/v1/expr/PathStep;
+	protected fun <init> (Lorg/partiql/ast/v1/expr/PathStep;)V
 }
 
 public class org/partiql/ast/v1/expr/PathStep$AllElements : org/partiql/ast/v1/expr/PathStep {
@@ -6445,14 +6955,14 @@ public class org/partiql/ast/v1/expr/PathStep$AllFields : org/partiql/ast/v1/exp
 }
 
 public class org/partiql/ast/v1/expr/PathStep$Element : org/partiql/ast/v1/expr/PathStep {
-	public field element Lorg/partiql/ast/v1/expr/Expr;
+	public final field element Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/expr/PathStep$Field : org/partiql/ast/v1/expr/PathStep {
-	public field field Lorg/partiql/ast/v1/Identifier;
+	public final field field Lorg/partiql/ast/v1/Identifier;
 	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun children ()Ljava/util/Collection;
@@ -6528,45 +7038,86 @@ public abstract class org/partiql/ast/v1/graph/GraphLabel : org/partiql/ast/v1/A
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Conj : org/partiql/ast/v1/graph/GraphLabel {
-	public field args Ljava/util/List;
+	public final field args Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Conj$ConjBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphLabel$Conj$ConjBuilder {
+	public fun args (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj$ConjBuilder;
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Conj;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Disj : org/partiql/ast/v1/graph/GraphLabel {
-	public field args Ljava/util/List;
+	public final field args Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Disj$DisjBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphLabel$Disj$DisjBuilder {
+	public fun args (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj$DisjBuilder;
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Disj;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Name : org/partiql/ast/v1/graph/GraphLabel {
-	public field name Ljava/lang/String;
+	public final field name Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Name$NameBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphLabel$Name$NameBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Name;
+	public fun name (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphLabel$Name$NameBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Negation : org/partiql/ast/v1/graph/GraphLabel {
-	public field arg Lorg/partiql/ast/v1/graph/GraphLabel;
+	public final field arg Lorg/partiql/ast/v1/graph/GraphLabel;
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Negation$NegationBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphLabel$Negation$NegationBuilder {
+	public fun arg (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Negation$NegationBuilder;
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Negation;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Wildcard : org/partiql/ast/v1/graph/GraphLabel {
-	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Wildcard$WildcardBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/graph/GraphLabel$Wildcard$WildcardBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Wildcard;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/graph/GraphMatch : org/partiql/ast/v1/AstNode {
-	public field patterns Ljava/util/List;
-	public field selector Lorg/partiql/ast/v1/graph/GraphSelector;
+	public final field patterns Ljava/util/List;
+	public final field selector Lorg/partiql/ast/v1/graph/GraphSelector;
 	public fun <init> (Ljava/util/List;Lorg/partiql/ast/v1/graph/GraphSelector;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphMatch$GraphMatchBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphMatch$GraphMatchBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphMatch;
+	public fun patterns (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphMatch$GraphMatchBuilder;
+	public fun selector (Lorg/partiql/ast/v1/graph/GraphSelector;)Lorg/partiql/ast/v1/graph/GraphMatch$GraphMatchBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphPart : org/partiql/ast/v1/AstNode {
@@ -6575,49 +7126,95 @@ public abstract class org/partiql/ast/v1/graph/GraphPart : org/partiql/ast/v1/As
 }
 
 public class org/partiql/ast/v1/graph/GraphPart$Edge : org/partiql/ast/v1/graph/GraphPart {
-	public field direction Lorg/partiql/ast/v1/graph/GraphDirection;
-	public field label Lorg/partiql/ast/v1/graph/GraphLabel;
-	public field prefilter Lorg/partiql/ast/v1/expr/Expr;
-	public field quantifier Lorg/partiql/ast/v1/graph/GraphQuantifier;
-	public field variable Ljava/lang/String;
+	public final field direction Lorg/partiql/ast/v1/graph/GraphDirection;
+	public final field label Lorg/partiql/ast/v1/graph/GraphLabel;
+	public final field prefilter Lorg/partiql/ast/v1/expr/Expr;
+	public final field quantifier Lorg/partiql/ast/v1/graph/GraphQuantifier;
+	public final field variable Ljava/lang/String;
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphDirection;Lorg/partiql/ast/v1/graph/GraphQuantifier;Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphPart$Edge$EdgeBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphPart$Edge$EdgeBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphPart$Edge;
+	public fun direction (Lorg/partiql/ast/v1/graph/GraphDirection;)Lorg/partiql/ast/v1/graph/GraphPart$Edge$EdgeBuilder;
+	public fun label (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphPart$Edge$EdgeBuilder;
+	public fun prefilter (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/graph/GraphPart$Edge$EdgeBuilder;
+	public fun quantifier (Lorg/partiql/ast/v1/graph/GraphQuantifier;)Lorg/partiql/ast/v1/graph/GraphPart$Edge$EdgeBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun variable (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphPart$Edge$EdgeBuilder;
 }
 
 public class org/partiql/ast/v1/graph/GraphPart$Node : org/partiql/ast/v1/graph/GraphPart {
-	public field label Lorg/partiql/ast/v1/graph/GraphLabel;
-	public field prefilter Lorg/partiql/ast/v1/expr/Expr;
-	public field variable Ljava/lang/String;
+	public final field label Lorg/partiql/ast/v1/graph/GraphLabel;
+	public final field prefilter Lorg/partiql/ast/v1/expr/Expr;
+	public final field variable Ljava/lang/String;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphPart$Node$NodeBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphPart$Node$NodeBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphPart$Node;
+	public fun label (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphPart$Node$NodeBuilder;
+	public fun prefilter (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/graph/GraphPart$Node$NodeBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun variable (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphPart$Node$NodeBuilder;
 }
 
 public class org/partiql/ast/v1/graph/GraphPart$Pattern : org/partiql/ast/v1/graph/GraphPart {
-	public field pattern Lorg/partiql/ast/v1/graph/GraphPattern;
+	public final field pattern Lorg/partiql/ast/v1/graph/GraphPattern;
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphPattern;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphPart$Pattern$PatternBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphPart$Pattern$PatternBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphPart$Pattern;
+	public fun pattern (Lorg/partiql/ast/v1/graph/GraphPattern;)Lorg/partiql/ast/v1/graph/GraphPart$Pattern$PatternBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphPattern : org/partiql/ast/v1/AstNode {
-	public field parts Ljava/util/List;
-	public field prefilter Lorg/partiql/ast/v1/expr/Expr;
-	public field quantifier Lorg/partiql/ast/v1/graph/GraphQuantifier;
-	public field restrictor Lorg/partiql/ast/v1/graph/GraphRestrictor;
-	public field variable Ljava/lang/String;
+	public final field parts Ljava/util/List;
+	public final field prefilter Lorg/partiql/ast/v1/expr/Expr;
+	public final field quantifier Lorg/partiql/ast/v1/graph/GraphQuantifier;
+	public final field restrictor Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	public final field variable Ljava/lang/String;
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphRestrictor;Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphQuantifier;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphPattern$GraphPatternBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/graph/GraphPattern$GraphPatternBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphPattern;
+	public fun parts (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphPattern$GraphPatternBuilder;
+	public fun prefilter (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/graph/GraphPattern$GraphPatternBuilder;
+	public fun quantifier (Lorg/partiql/ast/v1/graph/GraphQuantifier;)Lorg/partiql/ast/v1/graph/GraphPattern$GraphPatternBuilder;
+	public fun restrictor (Lorg/partiql/ast/v1/graph/GraphRestrictor;)Lorg/partiql/ast/v1/graph/GraphPattern$GraphPatternBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun variable (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphPattern$GraphPatternBuilder;
+}
+
 public class org/partiql/ast/v1/graph/GraphQuantifier : org/partiql/ast/v1/AstNode {
-	public field lower Ljava/lang/Long;
-	public field upper Ljava/lang/Long;
+	public final field lower Ljava/lang/Long;
+	public final field upper Ljava/lang/Long;
 	public fun <init> (Ljava/lang/Long;Ljava/lang/Long;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphQuantifier$GraphQuantifierBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphQuantifier$GraphQuantifierBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphQuantifier;
+	public fun lower (Ljava/lang/Long;)Lorg/partiql/ast/v1/graph/GraphQuantifier$GraphQuantifierBuilder;
+	public fun toString ()Ljava/lang/String;
+	public fun upper (Ljava/lang/Long;)Lorg/partiql/ast/v1/graph/GraphQuantifier$GraphQuantifierBuilder;
 }
 
 public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/Enum {
@@ -6638,42 +7235,78 @@ public abstract class org/partiql/ast/v1/graph/GraphSelector : org/partiql/ast/v
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AllShortest : org/partiql/ast/v1/graph/GraphSelector {
-	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest$AllShortestBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphSelector$AllShortest$AllShortestBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$Any : org/partiql/ast/v1/graph/GraphSelector {
-	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$Any$AnyBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphSelector$Any$AnyBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphSelector$Any;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AnyK : org/partiql/ast/v1/graph/GraphSelector {
-	public field k J
+	public final field k J
 	public fun <init> (J)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$AnyK$AnyKBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphSelector$AnyK$AnyKBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphSelector$AnyK;
+	public fun k (J)Lorg/partiql/ast/v1/graph/GraphSelector$AnyK$AnyKBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AnyShortest : org/partiql/ast/v1/graph/GraphSelector {
-	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest$AnyShortestBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphSelector$AnyShortest$AnyShortestBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$ShortestK : org/partiql/ast/v1/graph/GraphSelector {
-	public field k J
+	public final field k J
 	public fun <init> (J)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK$ShortestKBuilder;
 	public fun children ()Ljava/util/Collection;
 }
 
+public class org/partiql/ast/v1/graph/GraphSelector$ShortestK$ShortestKBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK;
+	public fun k (J)Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK$ShortestKBuilder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/v1/graph/GraphSelector$ShortestKGroup : org/partiql/ast/v1/graph/GraphSelector {
-	public field k J
+	public final field k J
 	public fun <init> (J)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup$ShortestKGroupBuilder;
 	public fun children ()Ljava/util/Collection;
+}
+
+public class org/partiql/ast/v1/graph/GraphSelector$ShortestKGroup$ShortestKGroupBuilder {
+	public fun build ()Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup;
+	public fun k (J)Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup$ShortestKGroupBuilder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/visitor/AstVisitor {

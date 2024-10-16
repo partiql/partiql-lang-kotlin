@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.expr.Expr;
@@ -11,18 +12,19 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class FromExpr extends FromTableRef {
     @NotNull
-    public Expr expr;
+    public final Expr expr;
 
     @NotNull
-    public FromType fromType;
+    public final FromType fromType;
 
     @Nullable
-    public Identifier asAlias;
+    public final Identifier asAlias;
 
     @Nullable
-    public Identifier atAlias;
+    public final Identifier atAlias;
 
     public FromExpr(@NotNull Expr expr, @NotNull FromType fromType, @Nullable Identifier asAlias,
                     @Nullable Identifier atAlias) {

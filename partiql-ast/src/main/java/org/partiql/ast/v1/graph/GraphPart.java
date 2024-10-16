@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.graph;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -30,15 +31,16 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Node extends GraphPart {
         @Nullable
-        public Expr prefilter;
+        public final Expr prefilter;
 
         @Nullable
-        public String variable;
+        public final String variable;
 
         @Nullable
-        public GraphLabel label;
+        public final GraphLabel label;
 
         public Node(@Nullable Expr prefilter, @Nullable String variable, @Nullable GraphLabel label) {
         this.prefilter = prefilter;
@@ -68,21 +70,22 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Edge extends GraphPart {
         @NotNull
-        public GraphDirection direction;
+        public final GraphDirection direction;
 
         @Nullable
-        public GraphQuantifier quantifier;
+        public final GraphQuantifier quantifier;
 
         @Nullable
-        public Expr prefilter;
+        public final Expr prefilter;
 
         @Nullable
-        public String variable;
+        public final String variable;
 
         @Nullable
-        public GraphLabel label;
+        public final GraphLabel label;
 
         public Edge(@NotNull GraphDirection direction, @Nullable GraphQuantifier quantifier,
         @Nullable Expr prefilter, @Nullable String variable, @Nullable GraphLabel label) {
@@ -118,9 +121,10 @@ public abstract class GraphPart extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Pattern extends GraphPart {
         @NotNull
-        public GraphPattern pattern;
+        public final GraphPattern pattern;
 
         public Pattern(@NotNull GraphPattern pattern) {
             this.pattern = pattern;

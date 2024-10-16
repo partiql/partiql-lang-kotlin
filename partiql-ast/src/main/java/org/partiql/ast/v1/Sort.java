@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.expr.Expr;
@@ -11,15 +12,16 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class Sort extends AstNode {
     @NotNull
-    public Expr expr;
+    public final Expr expr;
 
     @Nullable
-    public Order order;
+    public final Order order;
 
     @Nullable
-    public Nulls nulls;
+    public final Nulls nulls;
 
     public Sort(@NotNull Expr expr, @Nullable Order order, @Nullable Nulls nulls) {
         this.expr = expr;

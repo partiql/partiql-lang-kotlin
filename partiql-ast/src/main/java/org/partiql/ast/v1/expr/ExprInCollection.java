@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -11,14 +12,15 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprInCollection extends Expr {
     @NotNull
-    public Expr lhs;
+    public final Expr lhs;
 
     @NotNull
-    public Expr rhs;
+    public final Expr rhs;
 
-    public boolean not;
+    public final boolean not;
 
     public ExprInCollection(@NotNull Expr lhs, @NotNull Expr rhs, boolean not) {
         this.lhs = lhs;

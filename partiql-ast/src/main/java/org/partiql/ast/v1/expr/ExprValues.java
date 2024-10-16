@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -11,9 +12,10 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class ExprValues extends Expr {
     @NotNull
-    public List<Row> rows;
+    public final List<Row> rows;
 
     public ExprValues(@NotNull List<Row> rows) {
         this.rows = rows;
@@ -33,9 +35,10 @@ public class ExprValues extends Expr {
     /**
      * TODO docs, equals, hashcode
      */
+    @Builder
     public static class Row extends AstNode {
         @NotNull
-        public List<Expr> values;
+        public final List<Expr> values;
 
         public Row(@NotNull List<Expr> values) {
             this.values = values;

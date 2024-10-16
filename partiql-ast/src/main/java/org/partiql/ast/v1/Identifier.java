@@ -1,5 +1,6 @@
 package org.partiql.ast.v1;
 
+import lombok.Builder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -8,11 +9,12 @@ import java.util.Collection;
 /**
  * TODO docs, equals, hashcode
  */
+@Builder
 public class Identifier extends AstNode {
     @NotNull
-    public String symbol;
+    public final String symbol;
 
-    public boolean isDelimited;
+    public final boolean isDelimited;
 
     public Identifier(@NotNull String symbol, boolean isDelimited) {
         this.symbol = symbol;

@@ -15,18 +15,22 @@ import java.util.List;
  */
 public abstract class PathStep extends AstNode {
     @Nullable
-    public PathStep next;
+    public final PathStep next;
+
+    protected PathStep(@Nullable PathStep _next) {
+        this.next = _next;
+    }
 
     /**
      * TODO docs, equals, hashcode
      */
     public static class Field extends PathStep {
         @NotNull
-        public Identifier field;
+        public final Identifier field;
 
         public Field(@NotNull Identifier field, @Nullable PathStep next) {
+            super(next);
             this.field = field;
-            this.next = next;
         }
 
         @Override
@@ -50,11 +54,11 @@ public abstract class PathStep extends AstNode {
      */
     public static class Element extends PathStep {
         @NotNull
-        public Expr element;
+        public final Expr element;
 
         public Element(@NotNull Expr element, @Nullable PathStep next) {
+            super(next);
             this.element = element;
-            this.next = next;
         }
 
         @Override
@@ -79,7 +83,7 @@ public abstract class PathStep extends AstNode {
      */
     public static class AllElements extends PathStep {
         public AllElements(@Nullable PathStep next) {
-            this.next = next;
+            super(next);
         }
 
         @Override
@@ -103,7 +107,7 @@ public abstract class PathStep extends AstNode {
      */
     public static class AllFields extends PathStep {
         public AllFields(@Nullable PathStep next) {
-            this.next = next;
+            super(next);
         }
 
         @Override
