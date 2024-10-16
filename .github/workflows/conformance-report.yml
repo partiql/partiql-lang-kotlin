@@ -161,7 +161,7 @@ jobs:
           L="$COMMENT_SIZE_LIMIT"
           ARGS="-t $T -bf $BF -bl $BL -bt $BT -tf $TF -tl $TL -tt $TT -o $O -l $L"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
-      # Find comment w/ conformance comparison if previous comment published
+      # Find comment w/ conformance comparison if previous comment  published
       - name: Find Comment
         uses: peter-evans/find-comment@v2
         continue-on-error: true
