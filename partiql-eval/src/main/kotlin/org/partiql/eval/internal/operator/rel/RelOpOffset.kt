@@ -1,9 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.getBigIntCoerced
 import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Record
 import org.partiql.eval.operator.Relation
 import java.math.BigInteger
 
@@ -21,7 +21,7 @@ internal class RelOpOffset(
         init = false
         _seen = BigInteger.ZERO
 
-        val o = offset.eval(env.push(Record()))
+        val o = offset.eval(env.push(Row()))
         _offset = o.getBigIntCoerced() // TODO: The planner should handle the coercion
     }
 
@@ -39,7 +39,7 @@ internal class RelOpOffset(
         return input.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return input.next()
     }
 

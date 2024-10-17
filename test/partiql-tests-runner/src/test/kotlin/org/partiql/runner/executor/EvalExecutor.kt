@@ -8,8 +8,8 @@ import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.eval.Mode
-import org.partiql.eval.PartiQLCompiler
 import org.partiql.eval.Statement
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
@@ -38,15 +38,10 @@ class EvalExecutor(
     private val mode: Mode,
 ) : TestExecutor<Statement, Datum> {
 
-    /**
-     * Evaluator for the given query mode.
-     */
-    private val compiler = PartiQLCompiler.standard(mode)
-
     override fun prepare(input: String): Statement {
         val ast = parser.parse(input).root
         val plan = planner.plan(ast, session).plan
-        return compiler.prepare(plan)
+        return compiler.prepare(plan, mode)
     }
 
     override fun execute(input: Statement): Datum {
@@ -106,6 +101,7 @@ class EvalExecutor(
     }
 
     companion object {
+        val compiler = PartiQLCompiler.standard()
         val parser = PartiQLParser.standard()
         val planner = PartiQLPlanner.standard()
         // TODO REPLACE WITH DATUM COMPARATOR

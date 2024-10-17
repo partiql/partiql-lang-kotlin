@@ -5,4 +5,4 @@ package org.partiql.eval.operator;
  * <br>
  * TODO NAMING
  */
-public interface PhysicalOperator {}
+public interface Operator {}

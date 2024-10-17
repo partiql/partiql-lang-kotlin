@@ -2,8 +2,8 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Record
 import org.partiql.eval.operator.Relation
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -41,11 +41,11 @@ internal sealed class RelOpUnpivot : Relation {
         return _iterator.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         val f = _iterator.next()
         val k = Datum.string(f.name)
         val v = f.value
-        return Record.of(k, v)
+        return Row.of(k, v)
     }
 
     override fun close() {}
@@ -58,7 +58,7 @@ internal sealed class RelOpUnpivot : Relation {
     class Strict(private val expr: Expression) : RelOpUnpivot() {
 
         override fun struct(): Datum {
-            val v = expr.eval(env.push(Record()))
+            val v = expr.eval(env.push(Row()))
             if (v.type.kind != PType.Kind.STRUCT && v.type.kind != PType.Kind.ROW) {
                 throw TypeCheckException()
             }
@@ -78,7 +78,7 @@ internal sealed class RelOpUnpivot : Relation {
     class Permissive(private val expr: Expression) : RelOpUnpivot() {
 
         override fun struct(): Datum {
-            val v = expr.eval(env.push(Record()))
+            val v = expr.eval(env.push(Row()))
             if (v.isMissing) {
                 return Datum.struct(emptyList())
             }

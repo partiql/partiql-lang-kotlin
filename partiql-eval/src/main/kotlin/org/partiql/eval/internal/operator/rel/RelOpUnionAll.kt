@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.eval.operator.Record
 import org.partiql.eval.operator.Relation
 
 internal class RelOpUnionAll(
@@ -19,7 +19,7 @@ internal class RelOpUnionAll(
         return lhs.hasNext() || rhs.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return when (lhs.hasNext()) {
             true -> {
                 val record = lhs.next()

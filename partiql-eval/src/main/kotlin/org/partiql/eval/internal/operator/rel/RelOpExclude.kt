@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
-import org.partiql.eval.operator.Record
+import org.partiql.eval.Row
 import org.partiql.eval.operator.Relation
 import org.partiql.plan.Exclusion
 import org.partiql.spi.value.Datum
@@ -28,7 +28,7 @@ internal class RelOpExclude(
         return input.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         val record = input.next()
         exclusions.forEach { exclusion ->
             // TODO memoize offsets and steps (i.e. don't call getVar(), getOffset(), and getItems() every time).

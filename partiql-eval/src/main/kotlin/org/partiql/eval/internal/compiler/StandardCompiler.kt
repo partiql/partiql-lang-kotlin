@@ -1,5 +1,9 @@
-package org.partiql.eval
+package org.partiql.eval.internal.compiler
 
+import org.partiql.eval.Environment
+import org.partiql.eval.Mode
+import org.partiql.eval.Statement
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
@@ -51,9 +55,8 @@ import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.PhysicalOperator
+import org.partiql.eval.operator.Operator
 import org.partiql.eval.operator.Relation
-import org.partiql.eval.operator.Strategy
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operation
@@ -107,22 +110,13 @@ import org.partiql.types.PType
 /**
  * This class is responsible for producing an executable statement from logical operators.
  */
-internal class StandardCompiler(mode: Mode, strategies: List<Strategy>) : PartiQLCompiler {
+internal class StandardCompiler : PartiQLCompiler {
 
-    /**
-     * No custom operator strategies.
-     */
-    internal constructor(mode: Mode) : this(mode, emptyList())
-
-    private val mode = mode.code()
-    private val strategies = strategies
-    private val unknown = PType.unknown()
-    private val visitor = _Visitor()
-
-    override fun prepare(plan: Plan): Statement = try {
+    override fun prepare(plan: Plan, mode: Mode): Statement = try {
+        val visitor = _Visitor(mode)
         val operation = plan.getOperation()
         val statement: Statement = when {
-            operation is Operation.Query -> compile(operation)
+            operation is Operation.Query -> visitor.compile(operation)
             else -> throw IllegalArgumentException("Only query statements are supported")
         }
         statement
@@ -132,42 +126,38 @@ internal class StandardCompiler(mode: Mode, strategies: List<Strategy>) : PartiQ
     }
 
     /**
-     * Compile a query operation to a query statement.
-     */
-    private fun compile(operation: Operation.Query) = object : Statement {
-
-        // compile the query root
-        private val root = compile(operation.getRex(), Unit).catch()
-
-        // execute with no parameters
-        override fun execute(): Datum = root.eval(Environment())
-    }
-
-    private fun compile(rel: Rel, ctx: Unit): Relation = rel.accept(visitor, ctx) as Relation
-
-    private fun compile(rex: Rex, ctx: Unit): Expression = rex.accept(visitor, ctx) as Expression
-
-    /**
      * Transforms plan relation operators into the internal physical operators.
      */
     @Suppress("ClassName")
-    private inner class _Visitor : Visitor<PhysicalOperator, Unit> {
+    private inner class _Visitor(mode: Mode) : Visitor<Operator, Unit> {
+
+        private val mode = mode.code()
+        private val unknown = PType.unknown()
 
         /**
-         * Apply custom strategies left-to-right, returning the first match.
+         * Compile a query operation to a query statement.
+         */
+        fun compile(operation: Operation.Query) = object : Statement {
+
+            // compile the query root
+            private val root = compile(operation.getRex(), Unit).catch()
+
+            // execute with no parameters
+            override fun execute(): Datum = root.eval(Environment())
+        }
+
+        private fun compile(rel: Rel, ctx: Unit): Relation = rel.accept(this, ctx) as Relation
+
+        private fun compile(rex: Rex, ctx: Unit): Expression = rex.accept(this, ctx) as Expression
+
+        /**
+         * TODO apply custom strategies left-to-right, returning the first match.
          *
          * @param operator
          * @param ctx
          * @return
          */
-        override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): PhysicalOperator {
-            for (strategy in strategies) {
-                val op = strategy.apply(operator)
-                if (op != null) {
-                    // first match
-                    return op
-                }
-            }
+        override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): Operator {
             error("No compiler strategy matches the operator: ${operator::class.simpleName}")
         }
 
@@ -482,14 +472,14 @@ internal class StandardCompiler(mode: Mode, strategies: List<Strategy>) : PartiQ
             val offset = rex.getOffset()
             return ExprVar(depth, offset)
         }
-    }
 
-    /**
-     * Some places "catch" an error and return the MISSING value.
-     */
-    private fun Expression.catch(): Expression = when (mode) {
-        Mode.PERMISSIVE -> ExprPermissive(this)
-        Mode.STRICT -> this
-        else -> throw IllegalStateException("Unsupported execution mode: $mode")
+        /**
+         * Some places "catch" an error and return the MISSING value.
+         */
+        private fun Expression.catch(): Expression = when (mode) {
+            Mode.PERMISSIVE -> ExprPermissive(this)
+            Mode.STRICT -> this
+            else -> throw IllegalStateException("Unsupported execution mode: $mode")
+        }
     }
 }

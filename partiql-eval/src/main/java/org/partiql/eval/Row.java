@@ -1,4 +1,4 @@
-package org.partiql.eval.operator;
+package org.partiql.eval;
 
 import org.partiql.spi.value.Datum;
 
@@ -8,10 +8,10 @@ import java.util.Objects;
 /**
  * A record is an ordered collection of values e.g. tuple.
  */
-public class Record {
+public class Row {
 
     /**
-     * TODO remove public ??
+     * TODO internalize values.
      */
     public final Datum[] values;
 
@@ -21,14 +21,14 @@ public class Record {
      * @param values the values
      * @return the record
      */
-    public static Record of(Datum... values) {
-        return new Record(values);
+    public static Row of(Datum... values) {
+        return new Row(values);
     }
 
     /**
      * Create an empty record.
      */
-    public Record() {
+    public Row() {
         this.values = new Datum[]{};
     }
 
@@ -37,7 +37,7 @@ public class Record {
      *
      * @param values the values
      */
-    public Record(Datum[] values) {
+    public Row(Datum[] values) {
         this.values = values;
     }
 
@@ -47,28 +47,18 @@ public class Record {
      * @param other the other record
      * @return the concatenated record
      */
-    public Record concat(Record other) {
+    public Row concat(Row other) {
         Datum[] result = Arrays.copyOf(this.values, this.values.length + other.values.length);
         System.arraycopy(other.values, 0, result, this.values.length, other.values.length);
-        return new Record(result);
-    }
-
-    /**
-     * Returns the value at the specified index.
-     *
-     * @param index the index
-     * @return the value at the specified index
-     */
-    public Datum get(int index) {
-        return values[index];
+        return new Row(result);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Record)) return false;
-        Record record = (Record) o;
-        return Objects.deepEquals(values, record.values);
+        if (!(o instanceof Row)) return false;
+        Row row = (Row) o;
+        return Objects.deepEquals(values, row.values);
     }
 
     @Override
@@ -89,5 +79,4 @@ public class Record {
         sb.append(">");
         return sb.toString();
     }
-
 }

@@ -1,9 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.eval.operator.Record
 import org.partiql.eval.operator.Relation
 import java.util.TreeSet
 
@@ -27,14 +27,14 @@ internal class RelOpExceptDistinct(
         init = false
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         if (!init) {
             seed()
         }
         for (row in lhs) {
             row.values.coerceMissing()
             if (!seen.contains(row.values)) {
-                return Record(row.values)
+                return Row(row.values)
             }
         }
         return null

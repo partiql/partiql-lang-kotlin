@@ -1,60 +1,82 @@
 package org.partiql.eval;
 
-import org.partiql.eval.internal.Parameters;
-import org.partiql.eval.internal.Scope;
-import org.partiql.eval.operator.Record;
+import org.partiql.spi.value.Datum;
 
 /**
  * This class holds the evaluation environment.
  * <br>
- * This class is necessarily PUBLIC, but every method (and field) SHOULD be internal.
+ * Developer Note: Attempts have been made at an interpreter stack, but has not worked well with nested lazy values.
+ * For example, an expression may return an inner lazy value (think subqueries), but the stack state may have changed
+ * BEFORE the inner lazy value is accessed. Here is my best attempt at illustrating this,
+ * <code>
+ * 0:       +-PUSH(row)
+ * 1:   +--|----bag.eval()    // lazy iterator (push/pop and eval variables)
+ * 2:   |   +-POP
+ * 3:   |
+ * 4:   +-- .next()           // woah! we called bag.next() from line:1, but we popped on line:2 so line:1 is invalid!
+ * </code>
+ * <br>
+ * The most basic solution we have is to pass a new environment into each nested scope.
  */
 public class Environment {
 
-    // !! IMPORTANT — INTERNAL ONLY !!
-    private final Parameters parameters;
+    private final Row[] stack;
 
     /**
-     * TODO INTERNALIZE IN SUBSEQUENT PR
+     * Default constructor with empty stack.
      */
-    public final Scope scope;
-
-    /**
-     * Default constructor with no parameters.
-     */
-    protected Environment() {
-        this.parameters = new Parameters();
-        this.scope = new Scope();
+    public Environment() {
+        this.stack = new Row[]{};
     }
 
     /**
-     * Default constructor with parameters.
+     * Private constructor with given stack.
+     * @param stack
      */
-    protected Environment(Parameters parameters) {
-        this.parameters = parameters;
-        this.scope = new Scope();
+    private Environment(Row[] stack) {
+        this.stack = stack;
     }
 
     /**
-     * Private constructor with scope; use next.
-     * @param parameters    Parameters
-     * @param scope         Top-level scope.
+     * Push a new row onto the stack.
      */
-    private Environment(Parameters parameters, Scope scope) {
-        this.parameters = parameters;
-        this.scope = scope;
+    public Environment push(Row row) {
+        int n = stack.length;
+        Row[] next = new Row[n + 1];
+        next[0] = row;
+        if (n > 0) {
+            System.arraycopy(stack, 0, next, 1, n);
+        }
+        return new Environment(next);
     }
 
     /**
-     * TODO make operators use push(scope) and use pop() to avoid extra instantiations.
+     * Returns the variable at the specified depth and offset.
+     *
+     * @param depth     Scope depth.
+     * @param offset    Variable offset.
+     * @return  Datum.
      */
-    public Environment push(Record record) {
-        Scope next = new Scope(record, this.scope);
-        return new Environment(parameters, next);
+    public Datum get(int depth, int offset) {
+        try {
+            return stack[depth].values[offset];
+        } catch (IndexOutOfBoundsException ex) {
+            throw new RuntimeException("Invalid variable reference [$depth:$offset]\n$this");
+        }
     }
 
     @Override
     public String toString() {
-        return scope.toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("[stack]--------------\n");
+        for (int i = 0; i < stack.length; i++) {
+            sb.append("$i: $row");
+            sb.append("---------------------");
+        }
+//        if (scope.isEmpty()) {
+//            appendLine("empty")
+//            appendLine("---------------------")
+//        }
+        return "stack";
     }
 }

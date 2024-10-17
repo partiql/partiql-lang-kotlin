@@ -4,8 +4,7 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.errors.ProblemSeverity
-import org.partiql.eval.Mode
-import org.partiql.eval.PartiQLEvaluator
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
@@ -15,7 +14,7 @@ import org.partiql.spi.value.Datum
 internal class Pipeline private constructor(
     private val parser: PartiQLParser,
     private val planner: PartiQLPlanner,
-    private val evaluator: PartiQLEvaluator,
+    private val compiler: PartiQLCompiler,
 ) {
 
     /**
@@ -62,14 +61,14 @@ internal class Pipeline private constructor(
         fun default(): Pipeline {
             val parser = PartiQLParser.standard()
             val planner = PartiQLPlanner.standard()
-            val evaluator = PartiQLEvaluator.standard(Mode.PERMISSIVE())
+            val evaluator = PartiQLCompiler.standard()
             return Pipeline(parser, planner, evaluator)
         }
 
         fun strict(): Pipeline {
             val parser = PartiQLParser.standard()
             val planner = PartiQLPlanner.builder().signal().build()
-            val evaluator = PartiQLEvaluator.standard()
+            val evaluator = PartiQLCompiler.standard()
             return Pipeline(parser, planner, evaluator)
         }
     }

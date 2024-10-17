@@ -1,10 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Record
 import org.partiql.eval.operator.Relation
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
@@ -18,7 +18,7 @@ internal class RelOpAggregate(
     private val groups: List<Expression>,
 ) : Relation {
 
-    private lateinit var records: Iterator<Record>
+    private lateinit var records: Iterator<Row>
 
     private val aggregationMap = TreeMap<Array<Datum>, List<AccumulatorWrapper>>(DatumArrayComparator)
 
@@ -87,14 +87,14 @@ internal class RelOpAggregate(
                 val accumulator = function.agg.getAccumulator(args = emptyArray())
                 record.add(accumulator.value())
             }
-            records = iterator { yield(Record(record.toTypedArray())) }
+            records = iterator { yield(Row(record.toTypedArray())) }
             return
         }
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
                 val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated
-                yield(Record(recordValues.toTypedArray()))
+                yield(Row(recordValues.toTypedArray()))
             }
         }
     }
@@ -103,7 +103,7 @@ internal class RelOpAggregate(
         return records.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return records.next()
     }
 

@@ -8,8 +8,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
-import org.partiql.eval.PartiQLCompiler
-import org.partiql.eval.PartiQLEvaluator
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
@@ -1307,7 +1306,7 @@ class PartiQLEvaluatorTest {
         val globals: List<Global> = emptyList(),
     ) {
 
-        private val evaluator = PartiQLEvaluator.standard(mode)
+        private val compiler = PartiQLCompiler.standard()
         private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.standard()
 
@@ -1340,7 +1339,7 @@ class PartiQLEvaluatorTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val result = evaluator.eval(plan)
+            val result = compiler.prepare(plan, mode).execute()
             val output = result.toPartiQLValue() // TODO: Assert directly on Datum
             assert(expected == output) {
                 comparisonString(expected, output, plan)
@@ -1373,6 +1372,7 @@ class PartiQLEvaluatorTest {
         val expectedPermissive: PartiQLValue,
     ) {
 
+        private val compiler = PartiQLCompiler.standard()
         private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.standard()
 
@@ -1412,9 +1412,8 @@ class PartiQLEvaluatorTest {
                 .catalog("memory")
                 .catalogs(catalog)
                 .build()
-            val evaluator = PartiQLEvaluator.standard(mode)
             val plan = planner.plan(statement, session).plan
-            val result = evaluator.eval(plan)
+            val result = compiler.prepare(plan, mode).execute()
             return result to plan
         }
 

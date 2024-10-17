@@ -1,9 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Record
 import org.partiql.eval.operator.Relation
 import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
@@ -23,10 +23,14 @@ internal class RelOpJoinOuterLeft(
 ) : RelOpPeeking() {
 
     // TODO BETTER MECHANISM FOR NULL PADDING
-    private val rhsPadded = Record(rhsType.getFields().map { Datum.nullValue(it.type) }.toTypedArray())
+    private val rhsPadded =
+        Row(
+            rhsType.getFields().map { Datum.nullValue(it.type) }
+                .toTypedArray()
+        )
 
     private lateinit var env: Environment
-    private lateinit var iterator: Iterator<Record>
+    private lateinit var iterator: Iterator<Row>
 
     override fun openPeeking(env: Environment) {
         this.env = env
@@ -34,7 +38,7 @@ internal class RelOpJoinOuterLeft(
         iterator = implementation()
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         return when (iterator.hasNext()) {
             true -> iterator.next()
             false -> null
@@ -44,7 +48,7 @@ internal class RelOpJoinOuterLeft(
     override fun closePeeking() {
         lhs.close()
         rhs.close()
-        iterator = emptyList<Record>().iterator()
+        iterator = emptyList<Row>().iterator()
     }
 
     /**
