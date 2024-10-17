@@ -13,6 +13,7 @@ import org.partiql.eval.PartiQLStatement
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PlannerConfigBuilder
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.CompileType
@@ -21,6 +22,10 @@ import org.partiql.runner.test.TestExecutor
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorException
+import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.errors.Severity
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
@@ -40,8 +45,41 @@ class EvalExecutor(
 
     override fun prepare(statement: String): PartiQLStatement {
         val stmt = parser.parse(statement).root
-        val plan = planner.plan(stmt, session).plan
-        return engine.prepare(plan, mode, session)
+        val listener = getErrorListener(mode)
+        val plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build()
+        val plan = planner.plan(stmt, session, plannerConfig).plan
+        val config = org.partiql.eval.CompilerConfigBuilder().setMode(mode).setErrorListener(listener).build()
+        return engine.prepare(plan, session, config)
+    }
+
+    private fun getErrorListener(mode: PartiQLEngine.Mode): PErrorListener {
+        return when (mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> PErrorListener.abortOnError()
+            PartiQLEngine.Mode.STRICT -> object : PErrorListener {
+                override fun report(error: PError) {
+                    when (error.severity.code()) {
+                        Severity.ERROR -> throw PErrorException(error)
+                        Severity.WARNING -> warning(error)
+                        else -> error("Unhandled severity.")
+                    }
+                }
+
+                private fun warning(error: PError) {
+                    when (error.code()) {
+                        PError.PATH_KEY_NEVER_SUCCEEDS,
+                        PError.PATH_INDEX_NEVER_SUCCEEDS,
+                        PError.VAR_REF_NOT_FOUND,
+                        PError.PATH_SYMBOL_NEVER_SUCCEEDS -> {
+                            error.severity = Severity.ERROR()
+                            report(error)
+                        }
+                        else -> {
+                            // Do nothing
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun execute(statement: PartiQLStatement): PartiQLResult {

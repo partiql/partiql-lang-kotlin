@@ -2,9 +2,16 @@ package org.partiql.planner.internal
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
+import org.partiql.planner.internal.problems.AlwaysMissing
+import org.partiql.planner.internal.problems.CastUndefined
+import org.partiql.planner.internal.problems.FunctionTypeMismatch
+import org.partiql.planner.internal.problems.TypeUnexpected
+import org.partiql.planner.internal.problems.VarRefNotFound
+import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.errors.Classification
+import org.partiql.spi.errors.PError
 import org.partiql.types.PType
-import org.partiql.types.StaticType
 
 /**
  * Contains detailed information about errors that may occur during query planning.
@@ -16,6 +23,15 @@ internal open class PlanningProblemDetails(
     override val severity: ProblemSeverity,
     val messageFormatter: () -> String,
 ) : ProblemDetails {
+
+    /**
+     * TODO: This is a temporary internal measure to convert the old PlanningProblemDetails to
+     *  the new error reporting mechanism.
+     */
+    open fun toError(line: Int?, column: Int?, length: Int?): PError {
+        val location = location(line, column, length)
+        return PError.INTERNAL_ERROR(Classification.SEMANTIC(), location, null)
+    }
 
     companion object {
         private fun quotationHint(caseSensitive: Boolean) =
@@ -32,12 +48,6 @@ internal open class PlanningProblemDetails(
     override fun toString(): String = message
     override val message: String get() = messageFormatter()
 
-    data class ParseError(val parseErrorMessage: String) :
-        PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
-
-    data class CompileError(val errorMessage: String) :
-        PlanningProblemDetails(ProblemSeverity.ERROR, { errorMessage })
-
     public data class UndefinedVariable(
         val name: Identifier,
         val inScopeVariables: Set<String>
@@ -48,6 +58,11 @@ internal open class PlanningProblemDetails(
                 quotationHint(isSymbolAndCaseSensitive(name))
         }
     ) {
+
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
+            val location = location(line, column, length)
+            return VarRefNotFound(location, name, inScopeVariables.toList())
+        }
 
         private companion object {
 
@@ -60,114 +75,57 @@ internal open class PlanningProblemDetails(
         }
     }
 
-    public data class UndefinedDmlTarget(val variableName: String, val caseSensitive: Boolean) :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            {
-                "Data manipulation target table '$variableName' is undefined. " +
-                    "Hint: this must be a name in the global scope. " +
-                    quotationHint(caseSensitive)
-            }
-        )
-
-    data class VariablePreviouslyDefined(val variableName: String) :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "The variable '$variableName' was previously defined." }
-        )
-
-    data class UnimplementedFeature(val featureName: String) :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "The syntax at this location is valid but utilizes unimplemented PartiQL feature '$featureName'" }
-        )
-
-    object InvalidDmlTarget :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "Expression is not a valid DML target.  Hint: only table names are allowed here." }
-        )
-
-    object InsertValueDisallowed :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            {
-                "Use of `INSERT INTO <table> VALUE <expr>` is not allowed. " +
-                    "Please use the `INSERT INTO <table> << <expr> >>` form instead."
-            }
-        )
-
-    object InsertValuesDisallowed :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            {
-                "Use of `VALUES (<expr>, ...)` with INSERT is not allowed. " +
-                    "Please use the `INSERT INTO <table> << <expr>, ... >>` form instead."
-            }
-        )
-
     data class UnexpectedType(
         val actualType: PType,
         val expectedTypes: Set<PType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         "Unexpected type $actualType, expected one of ${expectedTypes.joinToString { it.toString() }}"
-    })
-
-    data class UnknownFunction(
-        val identifier: String,
-        val args: List<PType>,
-    ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
-        val types = args.joinToString { "<${it.toString().lowercase()}>" }
-        "Unknown function `$identifier($types)"
-    })
+    }) {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
+            val location = location(line, column, length)
+            return TypeUnexpected(location, actualType, expectedTypes.toList())
+        }
+    }
 
     data class UnknownCast(
         val source: PType,
         val target: PType,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         "Cast does not exist for $source to $target."
-    })
-
-    public data class UnknownAggregateFunction(
-        val identifier: Identifier,
-        val args: List<StaticType>,
-    ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
-        val types = args.joinToString { "<${it.toString().lowercase()}>" }
-        "Unknown aggregate function `$identifier($types)"
-    })
-
-    public object ExpressionAlwaysReturnsNullOrMissing : PlanningProblemDetails(
-        severity = ProblemSeverity.ERROR,
-        messageFormatter = { "Expression always returns null or missing." }
-    )
+    }) {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
+            val location = location(line, column, length)
+            return CastUndefined(location, source, target)
+        }
+    }
 
     data class ExpressionAlwaysReturnsMissing(val reason: String? = null) : PlanningProblemDetails(
         severity = ProblemSeverity.ERROR,
         messageFormatter = { "Expression always returns missing: caused by $reason" }
-    )
-
-    data class InvalidArgumentTypeForFunction(
-        val functionName: String,
-        val expectedType: StaticType,
-        val actualType: StaticType,
-    ) :
-        PlanningProblemDetails(
-            severity = ProblemSeverity.ERROR,
-            messageFormatter = { "Invalid argument type for $functionName. Expected $expectedType but got $actualType" }
-        )
+    ) {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
+            val location = location(line, column, length)
+            return AlwaysMissing(location)
+        }
+    }
 
     data class IncompatibleTypesForOp(
         val actualTypes: List<PType>,
         val operator: String,
-    ) :
-        PlanningProblemDetails(
-            severity = ProblemSeverity.ERROR,
-            messageFormatter = { "${actualTypes.joinToString { it.toString() }} is/are incompatible data types for the '$operator' operator." }
-        )
+    ) : PlanningProblemDetails(
+        severity = ProblemSeverity.ERROR,
+        messageFormatter = { "${actualTypes.joinToString { it.toString() }} is/are incompatible data types for the '$operator' operator." }
+    ) {
+        override fun toError(line: Int?, column: Int?, length: Int?): PError {
+            val location = location(line, column, length)
+            return FunctionTypeMismatch(location, Identifier.delimited(operator), actualTypes, null)
+        }
+    }
 
-    data class UnresolvedExcludeExprRoot(val root: String) :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "Exclude expression given an unresolvable root '$root'" }
-        )
+    protected fun location(line: Int?, column: Int?, length: Int?): SourceLocation? {
+        return when (line != null && column != null && length != null) {
+            true -> SourceLocation(line.toLong(), column.toLong(), length.toLong())
+            false -> null
+        }
+    }
 }

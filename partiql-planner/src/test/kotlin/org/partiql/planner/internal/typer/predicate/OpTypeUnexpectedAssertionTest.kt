@@ -9,7 +9,7 @@ import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
-class OpTypeAssertionTest : PartiQLTyperTestBase() {
+class OpTypeUnexpectedAssertionTest : PartiQLTyperTestBase() {
     @TestFactory
     fun typeAssertion(): Stream<DynamicContainer> {
         val tests = buildList {

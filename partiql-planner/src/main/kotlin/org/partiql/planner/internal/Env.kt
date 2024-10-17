@@ -9,7 +9,6 @@ import org.partiql.planner.internal.ir.refAgg
 import org.partiql.planner.internal.ir.refFn
 import org.partiql.planner.internal.ir.relOpAggregateCallResolved
 import org.partiql.planner.internal.ir.rex
-import org.partiql.planner.internal.ir.rexOpCallDynamic
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
@@ -22,6 +21,7 @@ import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.function.Aggregation
+import org.partiql.spi.function.Function
 import org.partiql.types.PType
 
 /**
@@ -94,6 +94,23 @@ internal class Env(private val session: Session) {
     }
 
     /**
+     * @return a list of candidate functions that match the [identifier] and number of [args].
+     */
+    fun getCandidates(identifier: Identifier, args: List<Rex>): List<Function> {
+        // Reject qualified routine names.
+        if (identifier.hasQualifier()) {
+            error("Qualified functions are not supported.")
+        }
+
+        // 1. Search in the current catalog and namespace.
+        val catalog = default
+        val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
+        val variants = catalog.getFunctions(session, name).toList()
+        val candidates = variants.filter { it.getParameters().size == args.size }
+        return candidates
+    }
+
+    /**
      * TODO leverage session PATH.
      *
      * @param identifier
@@ -121,21 +138,7 @@ internal class Env(private val session: Session) {
         val match = FnResolver.resolve(variants, args.map { it.type })
         // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {
-            val candidates = variants.map { fnSignature ->
-                rexOpCallDynamicCandidate(
-                    fn = refFn(
-                        catalog = catalog.getName(),
-                        name = Name.of(name),
-                        signature = fnSignature
-                    ),
-                    coercions = emptyList()
-                )
-            }
-            // TODO consistency for error messages?
-            return ProblemGenerator.missingRex(
-                rexOpCallDynamic(args, candidates),
-                ProblemGenerator.incompatibleTypesForOp(name.uppercase(), args.map { it.type })
-            )
+            return null
         }
         return when (match) {
             is FnMatch.Dynamic -> {

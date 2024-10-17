@@ -1,7 +1,5 @@
 package org.partiql.planner.internal.transforms
 
-import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
 import org.partiql.plan.AggregateCall
 import org.partiql.plan.Collation
 import org.partiql.plan.Exclusion
@@ -14,9 +12,9 @@ import org.partiql.plan.rex.RexStruct
 import org.partiql.plan.rex.RexType
 import org.partiql.plan.rex.RexVar
 import org.partiql.planner.internal.PlannerFlag
-import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
@@ -38,13 +36,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
      * Transform the internal IR to the public plan interfaces.
      *
      * @param internal
-     * @param onProblem
+     * @param listener
      * @return
      */
-    fun transform(internal: IPlan, onProblem: ProblemCallback): Plan {
+    fun transform(internal: IPlan, listener: PErrorListener): Plan {
         val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
         val query = (internal.statement as IStatement.Query)
-        val visitor = Visitor(onProblem, signal)
+        val visitor = Visitor(listener, signal)
         val root = visitor.visitRex(query.root, query.root.type)
         // TODO replace with standard implementations (or just remove plan transform altogether when possible).
         return object : Plan {
@@ -55,7 +53,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
     }
 
     private class Visitor(
-        private val onProblem: ProblemCallback,
+        private val listener: PErrorListener,
         private val signal: Boolean,
     ) : PlanBaseVisitor<Any?, PType>() {
 
@@ -67,22 +65,26 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         // ERRORS
 
-        override fun visitRexOpMissing(node: IRex.Op.Missing, ctx: PType): Any {
-            val trace = node.causes.map { visitRexOp(it, ctx) }
-            return err(node.problem, trace)
-        }
-
+        /**
+         * TODO the following comment comes from the existing implementation, but how does it apply to CAST ??
+         *
+         * See PartiQL Specification [Section 4.1.1](https://partiql.org/partiql-lang/#sec:schema-in-tuple-path).
+         * While it talks about pathing into a tuple, it provides guidance on expressions that always return missing:
+         *
+         * > In a more important and common case, an PartiQL implementation can utilize the input data schema to prove
+         * > that a path expression always returns MISSING and thus throw a compile-time error.
+         *
+         * This is accomplished via the signaling mode below.
+         */
         override fun visitRexOpErr(node: IRex.Op.Err, ctx: PType): Any {
-            val message = node.problem.toString()
-            val trace = node.causes.map { visitRexOp(it, ctx) }
-            onProblem(ProblemGenerator.asError(node.problem))
-            return factory.rexError(message, trace)
+            // Listener should have already received the error/warning. The listener should have already failed compilation.
+            return factory.rexError(ctx)
         }
 
         override fun visitRelOpErr(node: org.partiql.planner.internal.ir.Rel.Op.Err, ctx: PType): Any {
-            val message = node.message
-            onProblem(ProblemGenerator.compilerError(message))
-            return org.partiql.plan.rel.RelError(message)
+            // Listener should have already received the error. This node is a dud. Registered error listeners should
+            // have failed compilation already.
+            return factory.relScan(factory.rexError(ctx))
         }
 
         // EXPRESSIONS
@@ -178,20 +180,8 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             error("The Internal Node Rex.Op.Call.Unresolved should be converted to an Err Node during type resolution if resolution failed")
         }
 
-        /**
-         * TODO the following comment comes from the existing implementation, but how does it apply to CAST ??
-         *
-         * See PartiQL Specification [Section 4.1.1](https://partiql.org/partiql-lang/#sec:schema-in-tuple-path).
-         * While it talks about pathing into a tuple, it provides guidance on expressions that always return missing:
-         *
-         * > In a more important and common case, an PartiQL implementation can utilize the input data schema to prove
-         * > that a path expression always returns MISSING and thus throw a compile-time error.
-         *
-         * This is accomplished via the signaling mode below.
-         */
         override fun visitRexOpCastUnresolved(node: IRex.Op.Cast.Unresolved, ctx: PType): Any {
-            val problem = ProblemGenerator.undefinedCast(node.arg.type, node.target)
-            return err(problem, emptyList())
+            error("This should have been converted to an error node.")
         }
 
         override fun visitRexOpCastResolved(node: IRex.Op.Cast.Resolved, ctx: PType): Any {
@@ -410,17 +400,6 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             return object : RexCase.Branch {
                 override fun getCondition(): Rex = condition
                 override fun getResult(): Rex = result
-            }
-        }
-
-        private fun err(problem: Problem, trace: List<Rex>): Rex = when (signal) {
-            true -> {
-                onProblem(ProblemGenerator.asError(problem))
-                factory.rexError(message = problem.toString(), trace)
-            }
-            false -> {
-                onProblem(ProblemGenerator.asWarning(problem))
-                factory.rexMissing(message = problem.toString(), trace)
             }
         }
 

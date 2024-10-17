@@ -32,7 +32,6 @@ import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
-import org.partiql.plan.rex.RexMissing
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -182,10 +181,6 @@ object PlanEquivalenceVisitor : RelVisitor<Boolean, Any>, RexVisitor<Boolean, An
 
     override fun visitLit(rex: RexLit, other: Any): Boolean {
         return super.visitLit(rex, other)
-    }
-
-    override fun visitMissing(rex: RexMissing, other: Any): Boolean {
-        return super.visitMissing(rex, other)
     }
 
     override fun visitNullIf(rex: RexNullIf, other: Any): Boolean {
