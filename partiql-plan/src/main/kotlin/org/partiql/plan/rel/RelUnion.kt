@@ -1,5 +1,7 @@
 package org.partiql.plan.rel
 
+import org.partiql.plan.Visitor
+
 /**
  * Logical `UNION [ALL|DISTINCT]` operator for set (or multiset) union.
  */
@@ -15,7 +17,7 @@ public interface RelUnion : Rel {
 
     override fun isOrdered(): Boolean = false
 
-    override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitUnion(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitUnion(this, ctx)
 }
 
 /**

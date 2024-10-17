@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
 import org.partiql.plan.rex.RexSubqueryTest.Test
 
 /**
@@ -14,7 +15,7 @@ public interface RexSubqueryTest : Rex {
 
     public fun getRel(): org.partiql.plan.rel.Rel
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubqueryTest(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSubqueryTest(this, ctx)
 
     /**
      * EXISTS and UNIQUE are defined by SQL.

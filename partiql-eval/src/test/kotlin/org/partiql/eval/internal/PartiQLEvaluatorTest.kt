@@ -7,8 +7,8 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.eval.PartiQLEngine
-import org.partiql.eval.PartiQLResult
+import org.partiql.eval.Mode
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
@@ -41,10 +41,10 @@ import java.math.BigInteger
 import kotlin.test.assertNotNull
 
 /**
- * This holds sanity tests during the development of the [PartiQLEngine.standard] implementation.
+ * This holds sanity tests during the development of the [PartiQLCompiler.standard] implementation.
  */
 @OptIn(PartiQLValueExperimental::class)
-class PartiQLEngineDefaultTest {
+class PartiQLEvaluatorTest {
 
     @ParameterizedTest
     @MethodSource("sanityTestsCases")
@@ -108,7 +108,7 @@ class PartiQLEngineDefaultTest {
                     CAST(20 AS DECIMAL(1, 0));
                 """.trimIndent(),
                 expected = missingValue(),
-                mode = PartiQLEngine.Mode.PERMISSIVE
+                mode = Mode.PERMISSIVE()
             ),
             SuccessTestCase(
                 input = """
@@ -635,17 +635,17 @@ class PartiQLEngineDefaultTest {
                     FROM [{'sensor':1, 'co':0.4}, {'sensor':1, 'co':0.2}, {'sensor':2, 'co':0.3}] AS l
                     GROUP BY l.sensor AS sensor GROUP AS g
                 """.trimIndent(),
-                expected = org.partiql.value.bagValue(
-                    org.partiql.value.structValue(
-                        "sensor" to org.partiql.value.int32Value(1),
-                        "readings" to org.partiql.value.bagValue(
+                expected = bagValue(
+                    structValue(
+                        "sensor" to int32Value(1),
+                        "readings" to bagValue(
                             org.partiql.value.decimalValue(0.4.toBigDecimal()),
                             org.partiql.value.decimalValue(0.2.toBigDecimal())
                         )
                     ),
-                    org.partiql.value.structValue(
-                        "sensor" to org.partiql.value.int32Value(2),
-                        "readings" to org.partiql.value.bagValue(
+                    structValue(
+                        "sensor" to int32Value(2),
+                        "readings" to bagValue(
                             org.partiql.value.decimalValue(0.3.toBigDecimal())
                         )
                     ),
@@ -731,7 +731,7 @@ class PartiQLEngineDefaultTest {
             SuccessTestCase(
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t LEFT JOIN << { 'b': 2 } >> s ON false;",
                 expected = bagValue(structValue("a" to int32Value(1), "b" to nullValue())),
-                mode = PartiQLEngine.Mode.STRICT
+                mode = Mode.STRICT()
             ),
             SuccessTestCase(
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;",
@@ -1055,7 +1055,7 @@ class PartiQLEngineDefaultTest {
             SuccessTestCase(
                 input = "MISSING IS MISSING;",
                 expected = boolValue(true), // TODO: Is this right?
-                mode = PartiQLEngine.Mode.STRICT
+                mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 input = "SELECT VALUE t.a IS MISSING FROM << { 'b': 1 }, { 'a': 2 } >> AS t;",
@@ -1070,7 +1070,7 @@ class PartiQLEngineDefaultTest {
             SuccessTestCase(
                 input = "5 = 'a';",
                 expected = boolValue(false), // TODO: Is this correct?
-                mode = PartiQLEngine.Mode.STRICT
+                mode = Mode.STRICT(),
             ),
             // PartiQL Specification Section 8
             SuccessTestCase(
@@ -1081,7 +1081,7 @@ class PartiQLEngineDefaultTest {
             SuccessTestCase(
                 input = "NULL IS MISSING;",
                 expected = boolValue(false),
-                mode = PartiQLEngine.Mode.STRICT
+                mode = Mode.STRICT(),
             ),
             SuccessTestCase(
                 input = "SELECT * FROM <<{'a': 10, 'b': 1}, {'a': 1, 'b': 2}>> AS t ORDER BY t.a;",
@@ -1149,7 +1149,7 @@ class PartiQLEngineDefaultTest {
             SuccessTestCase(
                 input = "SELECT VALUE 5 + v FROM <<1, MISSING>> AS v;",
                 expected = bagValue(int32Value(6), missingValue()),
-                mode = PartiQLEngine.Mode.STRICT
+                mode = Mode.STRICT(),
             ),
         )
 
@@ -1302,11 +1302,11 @@ class PartiQLEngineDefaultTest {
     public class SuccessTestCase @OptIn(PartiQLValueExperimental::class) constructor(
         val input: String,
         val expected: PartiQLValue,
-        val mode: PartiQLEngine.Mode = PartiQLEngine.Mode.PERMISSIVE,
+        val mode: Mode = Mode.PERMISSIVE(),
         val globals: List<Global> = emptyList(),
     ) {
 
-        private val engine = PartiQLEngine.builder().build()
+        private val compiler = PartiQLCompiler.standard()
         private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.standard()
 
@@ -1339,16 +1339,8 @@ class PartiQLEngineDefaultTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val stmt = engine.prepare(plan, mode, session)
-            val result = when (val returned = stmt.execute(session)) {
-                is PartiQLResult.Value -> returned
-                is PartiQLResult.Error -> {
-                    // TODO pretty-print V1 plans
-                    System.err.append(plan.toString())
-                    throw returned.cause
-                }
-            }
-            val output = result.value.toPartiQLValue() // TODO: Assert directly on Datum
+            val result = compiler.prepare(plan, mode).execute()
+            val output = result.toPartiQLValue() // TODO: Assert directly on Datum
             assert(expected == output) {
                 comparisonString(expected, output, plan)
             }
@@ -1380,12 +1372,12 @@ class PartiQLEngineDefaultTest {
         val expectedPermissive: PartiQLValue,
     ) {
 
-        private val engine = PartiQLEngine.builder().build()
+        private val compiler = PartiQLCompiler.standard()
         private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.standard()
 
         internal fun assert() {
-            val (permissiveResult, plan) = run(mode = PartiQLEngine.Mode.PERMISSIVE)
+            val (permissiveResult, plan) = run(mode = Mode.PERMISSIVE())
             val permissiveResultPValue = permissiveResult.toPartiQLValue()
             val assertionCondition = try {
                 expectedPermissive == permissiveResultPValue // TODO: Assert using Datum
@@ -1402,7 +1394,7 @@ class PartiQLEngineDefaultTest {
             }
             var error: Throwable? = null
             try {
-                val (strictResult, _) = run(mode = PartiQLEngine.Mode.STRICT)
+                val (strictResult, _) = run(mode = Mode.STRICT())
                 when (strictResult.type.kind) {
                     PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> strictResult.toList()
                     else -> strictResult
@@ -1413,7 +1405,7 @@ class PartiQLEngineDefaultTest {
             assertNotNull(error)
         }
 
-        private fun run(mode: PartiQLEngine.Mode): Pair<Datum, Plan> {
+        private fun run(mode: Mode): Pair<Datum, Plan> {
             val statement = parser.parse(input).root
             val catalog = MemoryCatalog.builder().name("memory").build()
             val session = Session.builder()
@@ -1421,18 +1413,8 @@ class PartiQLEngineDefaultTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val stmt = engine.prepare(plan, mode, session)
-            when (val result = stmt.execute(session)) {
-                is PartiQLResult.Value -> return result.value to plan
-                is PartiQLResult.Error -> {
-                    val str = buildString {
-                        appendLine("Execution resulted in an unexpected error. Plan:")
-                        // TODO pretty-print V1 plans!
-                        appendLine(plan)
-                    }
-                    throw RuntimeException(str, result.cause)
-                }
-            }
+            val result = compiler.prepare(plan, mode).execute()
+            return result to plan
         }
 
         @OptIn(PartiQLValueExperimental::class)
@@ -1607,29 +1589,29 @@ class PartiQLEngineDefaultTest {
                 { 'b': 4, 'c': NULL }
             >> AS t GROUP BY t.b AS gk_0;
         """.trimIndent(),
-        expected = org.partiql.value.bagValue(
-            org.partiql.value.structValue(
-                "gk_0" to org.partiql.value.int32Value(1),
-                "t_c_sum" to org.partiql.value.int32Value(3)
+        expected = bagValue(
+            structValue(
+                "gk_0" to int32Value(1),
+                "t_c_sum" to int32Value(3)
             ),
-            org.partiql.value.structValue(
-                "gk_0" to org.partiql.value.int32Value(2),
-                "t_c_sum" to org.partiql.value.int32Value(2)
+            structValue(
+                "gk_0" to int32Value(2),
+                "t_c_sum" to int32Value(2)
             ),
-            org.partiql.value.structValue(
-                "gk_0" to org.partiql.value.int32Value(3),
-                "t_c_sum" to org.partiql.value.int32Value(2)
+            structValue(
+                "gk_0" to int32Value(3),
+                "t_c_sum" to int32Value(2)
             ),
-            org.partiql.value.structValue(
-                "gk_0" to org.partiql.value.int32Value(4),
-                "t_c_sum" to org.partiql.value.int32Value(null)
+            structValue(
+                "gk_0" to int32Value(4),
+                "t_c_sum" to int32Value(null)
             ),
-            org.partiql.value.structValue(
-                "gk_0" to org.partiql.value.nullValue(),
-                "t_c_sum" to org.partiql.value.int32Value(3)
+            structValue(
+                "gk_0" to nullValue(),
+                "t_c_sum" to int32Value(3)
             ),
         ),
-        mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE
+        mode = Mode.PERMISSIVE()
     ).assert()
 
     // PartiQL Specification Section 8
@@ -1647,7 +1629,7 @@ class PartiQLEngineDefaultTest {
     fun missingAndTrueStrict() = SuccessTestCase(
         input = "MISSING AND TRUE;",
         expected = boolValue(null), // TODO: Is this right?
-        mode = PartiQLEngine.Mode.STRICT
+        mode = Mode.STRICT()
     ).assert()
 
     @Test

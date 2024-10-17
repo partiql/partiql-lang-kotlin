@@ -1,17 +1,16 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.getBigIntCoerced
-import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.operator.Expression
+import org.partiql.eval.operator.Relation
 import java.math.BigInteger
 
-@OptIn(PartiQLValueExperimental::class)
 internal class RelOpOffset(
-    private val input: Operator.Relation,
-    private val offset: Operator.Expr,
-) : Operator.Relation {
+    private val input: Relation,
+    private val offset: Expression,
+) : Relation {
 
     private var init = false
     private var _seen: BigInteger = BigInteger.ZERO
@@ -22,7 +21,7 @@ internal class RelOpOffset(
         init = false
         _seen = BigInteger.ZERO
 
-        val o = offset.eval(env.push(Record.empty))
+        val o = offset.eval(env.push(Row()))
         _offset = o.getBigIntCoerced() // TODO: The planner should handle the coercion
     }
 
@@ -40,7 +39,7 @@ internal class RelOpOffset(
         return input.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return input.next()
     }
 

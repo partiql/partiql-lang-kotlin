@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 public interface RexError : Rex {
 
     public fun getMessage(): String
@@ -8,7 +10,7 @@ public interface RexError : Rex {
 
     override fun getChildren(): Collection<Rex> = emptyList()
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitError(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitError(this, ctx)
 }
 
 internal class RexErrorImpl(message: String, trace: List<Rex>) : RexError {
@@ -31,7 +33,7 @@ public interface RexMissing : Rex {
 
     override fun getChildren(): Collection<Rex> = emptyList()
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitMissing(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitMissing(this, ctx)
 }
 
 internal class RexMissingImpl(message: String, trace: List<Rex>) : RexMissing {

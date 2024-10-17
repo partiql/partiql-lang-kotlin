@@ -30,7 +30,6 @@ import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
-import org.partiql.eval.PartiQLResult
 import org.partiql.spi.catalog.Session
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
@@ -264,16 +263,11 @@ internal class Shell(
                         }
                     } else {
                         val result = pipeline.execute(line, session)
-                        when (result) {
-                            is PartiQLResult.Error -> throw result.cause
-                            is PartiQLResult.Value -> {
-                                val writer = PartiQLValueTextWriter(out)
-                                writer.append(result.value.toPartiQLValue()) // TODO: Create a Datum writer
-                                out.appendLine()
-                                out.appendLine()
-                                out.info("OK!")
-                            }
-                        }
+                        val writer = PartiQLValueTextWriter(out)
+                        writer.append(result.toPartiQLValue()) // TODO: Create a Datum writer
+                        out.appendLine()
+                        out.appendLine()
+                        out.info("OK!")
                     }
                 }
             } catch (ex: Exception) {

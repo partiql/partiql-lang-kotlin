@@ -1,15 +1,16 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.Environment
+import org.partiql.eval.Row
+import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Relation
 import org.partiql.spi.value.Datum
 import java.util.TreeMap
 
 internal class RelOpIntersectAll(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
+    private val lhs: Relation,
+    private val rhs: Relation,
 ) : RelOpPeeking() {
 
     private val seen = TreeMap<Array<Datum>, Int>(DatumArrayComparator)
@@ -22,7 +23,7 @@ internal class RelOpIntersectAll(
         seen.clear()
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         if (!init) {
             seed()
         }
@@ -31,7 +32,7 @@ internal class RelOpIntersectAll(
             val remaining = seen[row.values] ?: 0
             if (remaining > 0) {
                 seen[row.values] = remaining - 1
-                return Record(row.values)
+                return Row(row.values)
             }
         }
         return null

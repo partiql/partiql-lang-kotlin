@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 /**
  * Representative of the simple CASE-WHEN.
  */
@@ -11,7 +13,7 @@ public interface RexCase : Rex {
 
     public fun getDefault(): Rex?
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCase(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitCase(this, ctx)
 
     override fun getChildren(): Collection<Rex> {
         val children = mutableListOf<Rex>()

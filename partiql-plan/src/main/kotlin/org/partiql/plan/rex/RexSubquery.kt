@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 /**
  * Scalar subquery coercion.
  */
@@ -13,7 +15,7 @@ public interface RexSubquery : Rex {
     // TODO REMOVE ME – TEMPORARY UNTIL PLANNER PROPERLY HANDLES SUBQUERIES
     public fun asScalar(): Boolean
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubquery(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSubquery(this, ctx)
 }
 
 /**

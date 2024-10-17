@@ -1,9 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Expression
+import org.partiql.eval.operator.Relation
 import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
@@ -15,9 +16,9 @@ import org.partiql.spi.value.Datum
  * Full Outer Join cannot be lateral according to PartiQL Specification Section 5.5.
  */
 internal class RelOpJoinOuterFull(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
-    private val condition: Operator.Expr,
+    private val lhs: Relation,
+    private val rhs: Relation,
+    private val condition: Expression,
     lhsType: RelType,
     rhsType: RelType,
 ) : RelOpPeeking() {
@@ -25,11 +26,13 @@ internal class RelOpJoinOuterFull(
     // TODO BETTER MECHANISM FOR NULL PADDING
     private val r = rhsType.getFields().toTypedArray()
     private val l = lhsType.getFields().toTypedArray()
-    private val lhsPadded: Record = Record(l.indices.map { Datum.nullValue(l[it].type) }.toTypedArray())
-    private val rhsPadded: Record = Record(r.indices.map { Datum.nullValue(r[it].type) }.toTypedArray())
+    private val lhsPadded: Row =
+        Row(l.indices.map { Datum.nullValue(l[it].type) }.toTypedArray())
+    private val rhsPadded: Row =
+        Row(r.indices.map { Datum.nullValue(r[it].type) }.toTypedArray())
 
     private lateinit var env: Environment
-    private lateinit var iterator: Iterator<Record>
+    private lateinit var iterator: Iterator<Row>
 
     override fun openPeeking(env: Environment) {
         this.env = env
@@ -37,7 +40,7 @@ internal class RelOpJoinOuterFull(
         iterator = implementation()
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         return when (iterator.hasNext()) {
             true -> iterator.next()
             false -> null
@@ -47,7 +50,7 @@ internal class RelOpJoinOuterFull(
     override fun closePeeking() {
         lhs.close()
         rhs.close()
-        iterator = emptyList<Record>().iterator()
+        iterator = emptyList<Row>().iterator()
     }
 
     /**
@@ -84,12 +87,12 @@ internal class RelOpJoinOuterFull(
         for ((lhsIndex, lhsRecord) in lhs.withIndex()) {
             rhs.open(env)
             for ((rhsIndex, rhsRecord) in rhs.withIndex()) {
-                val input = lhsRecord + rhsRecord
+                val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
                 if (result.isTrue()) {
                     lhsMatches.add(lhsIndex)
                     rhsMatches.add(rhsIndex)
-                    yield(lhsRecord + rhsRecord)
+                    yield(lhsRecord.concat(rhsRecord))
                 }
             }
             rhs.close()
@@ -98,14 +101,14 @@ internal class RelOpJoinOuterFull(
         lhs.open(env)
         for ((lhsIndex, lhsRecord) in lhs.withIndex()) {
             if (!lhsMatches.contains(lhsIndex)) {
-                yield(lhsRecord + rhsPadded)
+                yield(lhsRecord.concat(rhsPadded))
             }
         }
         lhs.close()
         rhs.open(env)
         for ((rhsIndex, rhsRecord) in rhs.withIndex()) {
             if (!rhsMatches.contains(rhsIndex)) {
-                yield(lhsPadded + rhsRecord)
+                yield(lhsPadded.concat(rhsRecord))
             }
         }
     }

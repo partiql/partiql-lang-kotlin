@@ -1,16 +1,17 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.Row
+import org.partiql.eval.operator.Expression
+import org.partiql.eval.operator.Relation
 import org.partiql.spi.value.Datum
 import java.util.Collections
 
 internal class RelOpSort(
-    private val input: Operator.Relation,
+    private val input: Relation,
     private val collations: List<Collation>,
-) : Operator.Relation {
-    private var records: Iterator<Record> = Collections.emptyIterator()
+) : Relation {
+    private var records: Iterator<Row> = Collections.emptyIterator()
     private var init: Boolean = false
 
     private val nullsFirstComparator = Datum.comparator(true)
@@ -25,8 +26,8 @@ internal class RelOpSort(
         records = Collections.emptyIterator()
     }
 
-    private val comparator = object : Comparator<Record> {
-        override fun compare(l: Record, r: Record): Int {
+    private val comparator = object : Comparator<Row> {
+        override fun compare(l: Row, r: Row): Int {
             collations.forEach { spec ->
                 // TODO: Write comparator for PQLValue
                 val lVal = spec.expr.eval(env.push(l))
@@ -51,18 +52,18 @@ internal class RelOpSort(
 
     override fun hasNext(): Boolean {
         if (!init) {
-            val sortedRecords = mutableListOf<Record>()
+            val sortedRows = mutableListOf<Row>()
             for (row in input) {
-                sortedRecords.add(row)
+                sortedRows.add(row)
             }
-            sortedRecords.sortWith(comparator)
-            records = sortedRecords.iterator()
+            sortedRows.sortWith(comparator)
+            records = sortedRows.iterator()
             init = true
         }
         return records.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return records.next()
     }
 
@@ -79,7 +80,7 @@ internal class RelOpSort(
      * @property last   True iff NULLS LAST sort, otherwise NULLS FIRST.
      */
     class Collation(
-        @JvmField var expr: Operator.Expr,
+        @JvmField var expr: Expression,
         @JvmField var desc: Boolean,
         @JvmField var last: Boolean,
     )

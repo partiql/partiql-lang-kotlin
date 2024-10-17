@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 /**
  * TODO DOCUMENTATION
  */
@@ -16,7 +18,7 @@ public interface RexStruct : Rex {
         return children
     }
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitStruct(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitStruct(this, ctx)
 
     /**
      * TODO DOCUMENTATION

@@ -1,5 +1,6 @@
 package org.partiql.plan.rel
 
+import org.partiql.plan.Visitor
 import org.partiql.plan.rex.Rex
 
 /**
@@ -13,7 +14,7 @@ public interface RelIterate : Rel {
 
     override fun isOrdered(): Boolean = false
 
-    override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R =
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R =
         visitor.visitIterate(this, ctx)
 }
 

@@ -1,13 +1,13 @@
 package org.partiql.runner
 
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.partiql.eval.PartiQLResult
-import org.partiql.eval.PartiQLStatement
+import org.partiql.eval.Statement
 import org.partiql.runner.executor.EvalExecutor
 import org.partiql.runner.report.ReportGenerator
 import org.partiql.runner.test.TestRunner
+import org.partiql.spi.value.Datum
 
-class ConformanceTestEval : ConformanceTestBase<PartiQLStatement, PartiQLResult>() {
+class ConformanceTestEval : ConformanceTestBase<Statement, Datum>() {
     companion object {
         @JvmStatic
         @RegisterExtension

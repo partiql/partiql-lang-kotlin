@@ -3,8 +3,9 @@
 package org.partiql.planner
 
 import org.partiql.plan.Operation
+import org.partiql.plan.Operator
 import org.partiql.plan.Plan
-import org.partiql.plan.rel.Rel
+import org.partiql.plan.Visitor
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelCorrelate
 import org.partiql.plan.rel.RelDistinct
@@ -21,8 +22,6 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnpivot
-import org.partiql.plan.rel.RelVisitor
-import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
@@ -47,14 +46,13 @@ import org.partiql.plan.rex.RexSubqueryIn
 import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
-import org.partiql.plan.rex.RexVisitor
 
 /**
  * This class asserts the equivalence of two query plans.
  *
  * Replacement for https://github.com/partiql/partiql-lang-kotlin/blob/main/partiql-planner/src/test/kotlin/org/partiql/planner/util/PlanNodeEquivalentVisitor.kt#L16
  */
-object PlanEquivalenceVisitor : RelVisitor<Boolean, Any>, RexVisitor<Boolean, Any> {
+object PlanEquivalenceVisitor : Visitor<Boolean, Any> {
 
     @JvmStatic
     public fun equals(p1: Plan, p2: Plan): Boolean = visitPlan(p1, p2)
@@ -80,9 +78,7 @@ object PlanEquivalenceVisitor : RelVisitor<Boolean, Any>, RexVisitor<Boolean, An
         return false
     }
 
-    override fun defaultReturn(rel: Rel, other: Any): Boolean = false
-
-    override fun defaultReturn(rex: Rex, other: Any): Boolean = false
+    override fun defaultReturn(operator: Operator, ctx: Any): Boolean = false
 
     override fun visitAggregate(rel: RelAggregate, other: Any): Boolean {
         return super.visitAggregate(rel, other)

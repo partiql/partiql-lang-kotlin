@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 /**
  * Logical operator for path lookup by symbol.
  */
@@ -9,7 +11,7 @@ public interface RexPathSymbol : Rex {
 
     public fun getSymbol(): String
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPathSymbol(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitPathSymbol(this, ctx)
 }
 
 /**

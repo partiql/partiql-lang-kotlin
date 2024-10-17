@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 /**
  * Logical path index operator.
  */
@@ -9,7 +11,7 @@ public interface RexPathIndex : Rex {
 
     public fun getIndex(): Rex
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPathIndex(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitPathIndex(this, ctx)
 }
 
 /**

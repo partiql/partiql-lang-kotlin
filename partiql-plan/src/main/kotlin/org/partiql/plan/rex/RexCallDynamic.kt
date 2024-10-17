@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
 import org.partiql.spi.function.Function
 
 /**
@@ -24,7 +25,7 @@ public interface RexCallDynamic : Rex {
 
     override fun getChildren(): Collection<Rex> = getArgs()
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCallDynamic(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitCallDynamic(this, ctx)
 }
 
 /**

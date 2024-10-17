@@ -4,23 +4,23 @@ import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.errors.ProblemSeverity
-import org.partiql.eval.PartiQLEngine
-import org.partiql.eval.PartiQLResult
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.value.Datum
 
 internal class Pipeline private constructor(
     private val parser: PartiQLParser,
     private val planner: PartiQLPlanner,
-    private val engine: PartiQLEngine,
+    private val compiler: PartiQLCompiler,
 ) {
 
     /**
      * TODO replace with the ResultSet equivalent?
      */
-    fun execute(statement: String, session: Session): PartiQLResult {
+    fun execute(statement: String, session: Session): Datum {
         val ast = parse(statement)
         val plan = plan(ast, session)
         return execute(plan, session)
@@ -41,7 +41,7 @@ internal class Pipeline private constructor(
         TODO("Add V1 planner to the CLI")
     }
 
-    private fun execute(plan: Plan, session: Session): PartiQLResult {
+    private fun execute(plan: Plan, session: Session): Datum {
         // val statement = engine.prepare(plan, session.mode, session.planner())
         // return engine.execute(statement)
         TODO("Add V1 planner to the CLI")
@@ -61,15 +61,15 @@ internal class Pipeline private constructor(
         fun default(): Pipeline {
             val parser = PartiQLParser.standard()
             val planner = PartiQLPlanner.standard()
-            val engine = PartiQLEngine.standard()
-            return Pipeline(parser, planner, engine)
+            val evaluator = PartiQLCompiler.standard()
+            return Pipeline(parser, planner, evaluator)
         }
 
         fun strict(): Pipeline {
             val parser = PartiQLParser.standard()
             val planner = PartiQLPlanner.builder().signal().build()
-            val engine = PartiQLEngine.standard()
-            return Pipeline(parser, planner, engine)
+            val evaluator = PartiQLCompiler.standard()
+            return Pipeline(parser, planner, evaluator)
         }
     }
 }

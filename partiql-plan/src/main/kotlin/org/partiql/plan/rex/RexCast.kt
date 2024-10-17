@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
 import org.partiql.types.PType
 
 /**
@@ -13,7 +14,7 @@ public interface RexCast : Rex {
 
     override fun getChildren(): Collection<Rex> = listOf(getOperand())
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitCast(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitCast(this, ctx)
 }
 
 /**

@@ -1,13 +1,14 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.Environment
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.operator.Expression
+import org.partiql.eval.operator.Relation
 
 internal class RelOpFilter(
-    val input: Operator.Relation,
-    val expr: Operator.Expr
+    val input: Relation,
+    val expr: Expression
 ) : RelOpPeeking() {
 
     private lateinit var env: Environment
@@ -17,7 +18,7 @@ internal class RelOpFilter(
         input.open(env)
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         for (inputRecord in input) {
             if (conditionIsTrue(inputRecord, expr)) {
                 return inputRecord
@@ -30,8 +31,8 @@ internal class RelOpFilter(
         input.close()
     }
 
-    private fun conditionIsTrue(record: Record, expr: Operator.Expr): Boolean {
-        val condition = expr.eval(env.push(record))
+    private fun conditionIsTrue(row: Row, expr: Expression): Boolean {
+        val condition = expr.eval(env.push(row))
         return condition.isTrue()
     }
 }

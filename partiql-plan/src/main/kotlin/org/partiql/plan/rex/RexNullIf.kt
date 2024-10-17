@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 /**
  * Logical operator for the SQL NULLIF special form.
  */
@@ -11,7 +13,7 @@ public interface RexNullIf : Rex {
 
     override fun getChildren(): Collection<Rex> = listOf(getV1(), getV2())
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitNullIf(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitNullIf(this, ctx)
 }
 
 /**

@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
 import org.partiql.plan.rel.Rel
 
 public interface RexSubqueryIn : Rex {
@@ -8,7 +9,7 @@ public interface RexSubqueryIn : Rex {
 
     public fun getRel(): Rel
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubqueryIn(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSubqueryIn(this, ctx)
 }
 
 /**

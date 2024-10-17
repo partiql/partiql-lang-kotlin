@@ -1,5 +1,7 @@
 package org.partiql.plan.rel
 
+import org.partiql.plan.Visitor
+
 /**
  * Logical `DISTINCT` operator.
  */
@@ -13,7 +15,7 @@ public interface RelDistinct : Rel {
 
     override fun isOrdered(): Boolean = getInput().isOrdered()
 
-    override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R =
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R =
         visitor.visitDistinct(this, ctx)
 }
 

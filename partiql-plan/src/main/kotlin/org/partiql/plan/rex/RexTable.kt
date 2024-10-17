@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
 import org.partiql.spi.catalog.Table
 
 /**
@@ -11,7 +12,7 @@ public interface RexTable : Rex {
 
     override fun getChildren(): Collection<Rex> = emptyList()
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitTable(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitTable(this, ctx)
 }
 
 /**

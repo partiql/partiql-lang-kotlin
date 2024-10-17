@@ -1,13 +1,13 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.operator.Expression
 import org.partiql.spi.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 
 internal class ExprCoalesce(
-    private val args: Array<Operator.Expr>
-) : Operator.Expr {
+    private val args: Array<Expression>
+) : Expression {
 
     @PartiQLValueExperimental
     override fun eval(env: Environment): Datum {

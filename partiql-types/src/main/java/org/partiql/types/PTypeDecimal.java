@@ -38,7 +38,7 @@ class PTypeDecimal implements PType {
 
     @Override
     public String toString() {
-        return Kind.DECIMAL.name() + "(" + _precision + ", " + "_" + _scale + ")";
+        return Kind.DECIMAL.name() + "(" + _precision + ", " + _scale + ")";
     }
 
     @Override
