@@ -1,8 +1,11 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.Row
+import org.partiql.eval.internal.helpers.DatumArrayComparator
+import org.partiql.eval.internal.operator.Aggregate
+import org.partiql.eval.operator.Expression
+import org.partiql.eval.operator.Relation
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -10,12 +13,12 @@ import java.util.TreeMap
 import java.util.TreeSet
 
 internal class RelOpAggregate(
-    val input: Operator.Relation,
-    private val keys: List<Operator.Expr>,
-    private val functions: List<Operator.Aggregation>
-) : Operator.Relation {
+    private val input: Relation,
+    private val aggregates: List<Aggregate>,
+    private val groups: List<Expression>,
+) : Relation {
 
-    private lateinit var records: Iterator<Record>
+    private lateinit var records: Iterator<Row>
 
     private val aggregationMap = TreeMap<Array<Datum>, List<AccumulatorWrapper>>(DatumArrayComparator)
 
@@ -26,7 +29,7 @@ internal class RelOpAggregate(
      */
     class AccumulatorWrapper(
         val delegate: Aggregation.Accumulator,
-        val args: List<Operator.Expr>,
+        val args: List<Expression>,
         val seen: TreeSet<Array<Datum>>?
     )
 
@@ -35,9 +38,9 @@ internal class RelOpAggregate(
         for (inputRecord in input) {
 
             // Initialize the AggregationMap
-            val evaluatedGroupByKeys = Array(keys.size) { keyIndex ->
+            val evaluatedGroupByKeys = Array(groups.size) { keyIndex ->
                 val env = env.push(inputRecord)
-                val key = keys[keyIndex].eval(env)
+                val key = groups[keyIndex].eval(env)
                 when (key.isMissing) {
                     true -> Datum.nullValue()
                     false -> key
@@ -48,14 +51,11 @@ internal class RelOpAggregate(
             val args: Array<PType> = emptyArray()
 
             val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
-                functions.map {
+                aggregates.map {
                     AccumulatorWrapper(
-                        delegate = it.delegate.getAccumulator(args),
+                        delegate = it.agg.getAccumulator(args),
                         args = it.args,
-                        seen = when (it.setQuantifier) {
-                            Operator.Aggregation.SetQuantifier.DISTINCT -> TreeSet(DatumArrayComparator)
-                            Operator.Aggregation.SetQuantifier.ALL -> null
-                        }
+                        seen = if (it.distinct) TreeSet(DatumArrayComparator) else null
                     )
                 }
             }
@@ -81,20 +81,20 @@ internal class RelOpAggregate(
         }
 
         // No Aggregations Created
-        if (keys.isEmpty() && aggregationMap.isEmpty()) {
+        if (groups.isEmpty() && aggregationMap.isEmpty()) {
             val record = mutableListOf<Datum>()
-            functions.forEach { function ->
-                val accumulator = function.delegate.getAccumulator(args = emptyArray())
+            aggregates.forEach { function ->
+                val accumulator = function.agg.getAccumulator(args = emptyArray())
                 record.add(accumulator.value())
             }
-            records = iterator { yield(Record.of(*record.toTypedArray())) }
+            records = iterator { yield(Row(record.toTypedArray())) }
             return
         }
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
                 val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated
-                yield(Record.of(*recordValues.toTypedArray()))
+                yield(Row(recordValues.toTypedArray()))
             }
         }
     }
@@ -103,7 +103,7 @@ internal class RelOpAggregate(
         return records.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return records.next()
     }
 

@@ -78,7 +78,7 @@ object PlanEquivalenceVisitor : Visitor<Boolean, Any> {
         return false
     }
 
-    override fun defaultReturn(operator: Operator, other: Any): Boolean = false
+    override fun defaultReturn(operator: Operator, ctx: Any): Boolean = false
 
     override fun visitAggregate(rel: RelAggregate, other: Any): Boolean {
         return super.visitAggregate(rel, other)

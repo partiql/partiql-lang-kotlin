@@ -3,7 +3,7 @@ package org.partiql.plan.rel
 import org.partiql.plan.Operator
 
 /**
- * TODO DOCUMENTATION
+ * A [Rel] is an [Operator] that produces a collection of tuples.
  */
 public interface Rel : Operator {
 

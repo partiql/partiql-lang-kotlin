@@ -1,13 +1,12 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.Row
+import org.partiql.eval.internal.helpers.DatumArrayComparator
+import org.partiql.eval.operator.Relation
 import java.util.TreeSet
 
-internal class RelOpDistinct(
-    val input: Operator.Relation
-) : RelOpPeeking() {
+internal class RelOpDistinct(private val input: Relation) : RelOpPeeking() {
 
     private val seen = TreeSet(DatumArrayComparator)
 
@@ -15,7 +14,7 @@ internal class RelOpDistinct(
         input.open(env)
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         for (next in input) {
             val transformed = Array(next.values.size) { next.values[it] }
             if (seen.contains(transformed).not()) {

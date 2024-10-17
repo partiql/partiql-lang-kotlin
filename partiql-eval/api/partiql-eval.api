@@ -1,3 +1,10 @@
+public class org/partiql/eval/Environment {
+	public fun <init> ()V
+	public fun get (II)Lorg/partiql/spi/value/Datum;
+	public fun push (Lorg/partiql/eval/Row;)Lorg/partiql/eval/Environment;
+	public fun toString ()Ljava/lang/String;
+}
+
 public class org/partiql/eval/Mode {
 	public static final field PERMISSIVE I
 	public static final field STRICT I
@@ -6,31 +13,44 @@ public class org/partiql/eval/Mode {
 	public fun code ()I
 }
 
-public abstract interface class org/partiql/eval/PartiQLCompiler {
-	public static fun builder ()Lorg/partiql/eval/PartiQLCompiler$Builder;
-	public abstract fun prepare (Lorg/partiql/plan/Plan;)Lorg/partiql/eval/Statement;
-	public static fun standard ()Lorg/partiql/eval/PartiQLCompiler;
-	public static fun standard (Lorg/partiql/eval/Mode;)Lorg/partiql/eval/PartiQLCompiler;
-}
-
-public class org/partiql/eval/PartiQLCompiler$Builder {
-	public fun build ()Lorg/partiql/eval/PartiQLCompiler;
-	public fun mode (Lorg/partiql/eval/Mode;)Lorg/partiql/eval/PartiQLCompiler$Builder;
-}
-
-public abstract interface class org/partiql/eval/PartiQLEvaluator {
-	public static fun builder ()Lorg/partiql/eval/PartiQLEvaluator$Builder;
-	public abstract fun eval (Lorg/partiql/plan/Plan;)Lorg/partiql/spi/value/Datum;
-	public static fun standard ()Lorg/partiql/eval/PartiQLEvaluator;
-	public static fun standard (Lorg/partiql/eval/Mode;)Lorg/partiql/eval/PartiQLEvaluator;
-}
-
-public class org/partiql/eval/PartiQLEvaluator$Builder {
-	public fun build ()Lorg/partiql/eval/PartiQLEvaluator;
-	public fun compiler (Lorg/partiql/eval/PartiQLCompiler;)Lorg/partiql/eval/PartiQLEvaluator$Builder;
+public class org/partiql/eval/Row {
+	public final field values [Lorg/partiql/spi/value/Datum;
+	public fun <init> ()V
+	public fun <init> ([Lorg/partiql/spi/value/Datum;)V
+	public fun concat (Lorg/partiql/eval/Row;)Lorg/partiql/eval/Row;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public static fun of ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/eval/Row;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/eval/Statement {
 	public abstract fun execute ()Lorg/partiql/spi/value/Datum;
+}
+
+public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
+	public static fun builder ()Lorg/partiql/eval/compiler/PartiQLCompiler$Builder;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/Statement;
+	public static fun standard ()Lorg/partiql/eval/compiler/PartiQLCompiler;
+}
+
+public class org/partiql/eval/compiler/PartiQLCompiler$Builder {
+	public fun build ()Lorg/partiql/eval/compiler/PartiQLCompiler;
+}
+
+public abstract interface class org/partiql/eval/operator/Expression : org/partiql/eval/operator/Operator {
+	public abstract fun eval (Lorg/partiql/eval/Environment;)Lorg/partiql/spi/value/Datum;
+}
+
+public abstract interface class org/partiql/eval/operator/Operator {
+}
+
+public abstract interface class org/partiql/eval/operator/Relation : java/lang/AutoCloseable, java/util/Iterator, org/partiql/eval/operator/Operator {
+	public abstract fun close ()V
+	public abstract fun hasNext ()Z
+	public synthetic fun next ()Ljava/lang/Object;
+	public abstract fun next ()Lorg/partiql/eval/Row;
+	public abstract fun open (Lorg/partiql/eval/Environment;)V
+	public fun remove ()V
 }
 

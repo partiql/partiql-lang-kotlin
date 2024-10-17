@@ -1,4 +1,4 @@
-package org.partiql.eval.internal.operator.rel
+package org.partiql.eval.internal.helpers
 
 import org.partiql.spi.value.Datum
 

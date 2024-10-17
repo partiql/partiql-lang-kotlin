@@ -3,7 +3,7 @@ package org.partiql.plan.rex
 import org.partiql.plan.Operator
 
 /**
- * TODO DOCUMENTATION
+ * A [Rex] is an [Operator] that produces a value.
  */
 public interface Rex : Operator {
 

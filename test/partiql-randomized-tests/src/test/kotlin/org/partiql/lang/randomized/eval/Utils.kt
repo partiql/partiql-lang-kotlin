@@ -1,6 +1,6 @@
 package org.partiql.lang.randomized.eval
 
-import org.partiql.eval.PartiQLCompiler
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -36,7 +38,7 @@ dependencies {
 }
 
 kotlin {
-    explicitApi = null
+    explicitApi = ExplicitApiMode.Strict
 }
 
 tasks.shadowJar {
@@ -53,7 +55,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
 publish {
     artifactId = "partiql-eval"
     name = "PartiQL Lang Kotlin Evaluator"
-    description = "Experimental PartiQL plan-based evaluator"
+    description = "The PartiQL reference implementation evaluator."
 }
 
 tasks.processTestResources {
