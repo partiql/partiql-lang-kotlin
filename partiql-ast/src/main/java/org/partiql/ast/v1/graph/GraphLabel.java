@@ -59,6 +59,8 @@ public abstract class GraphLabel extends AstNode {
      */
     @Builder(builderClassName = "Builder")
     public static class Wildcard extends GraphLabel {
+        public Wildcard() {}
+
         @Override
         @NotNull
         public Collection<AstNode> children() {

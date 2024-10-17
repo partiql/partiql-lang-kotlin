@@ -36,6 +36,8 @@ public abstract class GraphSelector extends AstNode {
      */
     @Builder(builderClassName = "Builder")
     public static class AnyShortest extends GraphSelector {
+        public AnyShortest() {}
+
         @Override
         @NotNull
         public Collection<AstNode> children() {
@@ -53,6 +55,8 @@ public abstract class GraphSelector extends AstNode {
      */
     @Builder(builderClassName = "Builder")
     public static class AllShortest extends GraphSelector {
+        public AllShortest() {}
+
         @Override
         @NotNull
         public Collection<AstNode> children() {
@@ -70,6 +74,8 @@ public abstract class GraphSelector extends AstNode {
      */
     @Builder(builderClassName = "Builder")
     public static class Any extends GraphSelector {
+        public Any() {}
+
         @Override
         @NotNull
         public Collection<AstNode> children() {

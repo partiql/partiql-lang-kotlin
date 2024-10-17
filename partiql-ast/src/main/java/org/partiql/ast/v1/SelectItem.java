@@ -15,7 +15,7 @@ public abstract class SelectItem extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         if (this instanceof Star) {
-            return visitor.visitSelectItemAll((Star) this, ctx);
+            return visitor.visitSelectItemStar((Star) this, ctx);
         } else if (this instanceof Expr) {
             return visitor.visitSelectItemExpr((Expr) this, ctx);
         } else {
@@ -45,7 +45,7 @@ public abstract class SelectItem extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitSelectItemAll(this, ctx);
+            return visitor.visitSelectItemStar(this, ctx);
         }
     }
 
