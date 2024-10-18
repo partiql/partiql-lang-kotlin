@@ -5,85 +5,21 @@ import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemLocation
 import org.partiql.errors.ProblemSeverity
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.rex
-import org.partiql.planner.internal.ir.rexOpErr
-import org.partiql.planner.internal.problems.AlwaysMissing
-import org.partiql.planner.internal.problems.CastUndefined
-import org.partiql.planner.internal.problems.FunctionNotFound
-import org.partiql.planner.internal.problems.FunctionTypeMismatch
-import org.partiql.planner.internal.problems.PathIndexNeverSucceeds
-import org.partiql.planner.internal.problems.PathKeyNeverSucceeds
-import org.partiql.planner.internal.problems.PathSymbolNeverSucceeds
-import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
-import org.partiql.spi.errors.PErrorListener
-import org.partiql.spi.function.Function
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 
 /**
  * Used to report problems during planning phase.
+ * TODO: Delete this. This is currently only used by the test source.
  */
 internal object ProblemGenerator {
-    fun problem(problemLocation: ProblemLocation, problemDetails: ProblemDetails): Problem = Problem(
+    private fun problem(problemLocation: ProblemLocation, problemDetails: ProblemDetails): Problem = Problem(
         problemLocation, problemDetails
     )
-
-    private fun errorRex(
-        type: CompilerType = CompilerType(PType.dynamic(), isMissingValue = true),
-    ): Rex {
-        return rex(CompilerType(PType.dynamic(), isMissingValue = true), rexOpErr())
-    }
-
-    fun reportUndefinedFunction(
-        listener: PErrorListener,
-        args: List<PType>,
-        identifier: Identifier,
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
-        variants: List<Function> = emptyList()
-    ): Rex {
-        val loc = location(location)
-        when (variants.isEmpty()) {
-            true -> listener.report(FunctionNotFound(loc, identifier, args))
-            false -> listener.report(FunctionTypeMismatch(loc, identifier, args, variants))
-        }
-        return errorRex()
-    }
-
-    fun reportFunctionMistyped(
-        listener: PErrorListener,
-        args: List<PType>,
-        identifier: Identifier,
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
-        variants: List<Function> = emptyList()
-    ): Rex {
-        val loc = location(location)
-        listener.report(FunctionTypeMismatch(loc, identifier, args, variants))
-        return errorRex()
-    }
-
-    private fun undefinedCast(
-        source: PType,
-        target: PType,
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION
-    ): Problem {
-        return problem(location, PlanningProblemDetails.UnknownCast(source, target))
-    }
-
-    fun reportUndefinedCast(
-        listener: PErrorListener,
-        source: PType,
-        target: PType,
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION
-    ): Rex {
-        val problem = CastUndefined(location(location), source, target)
-        listener.report(problem) // TODO: Should this really be a warning?
-        return errorRex()
-    }
 
     // TODO: Make this private
     fun undefinedVariable(
@@ -92,20 +28,6 @@ internal object ProblemGenerator {
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
     ): Problem {
         return problem(location, PlanningProblemDetails.UndefinedVariable(id, inScopeVariables))
-    }
-
-    /**
-     * Emits an error to the [listener].
-     */
-    fun reportUndefinedVariable(
-        listener: PErrorListener,
-        id: Identifier,
-        inScopeVariables: Set<String> = emptySet(),
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
-    ): Rex {
-        val problem = undefinedVariable(id, inScopeVariables, location)
-        listener.report(problem.toError())
-        return errorRex()
     }
 
     fun incompatibleTypesForOp(
@@ -134,27 +56,10 @@ internal object ProblemGenerator {
             location,
             object : PlanningProblemDetails(ProblemSeverity.WARNING, { "" }) {
                 override fun toError(line: Int?, column: Int?, length: Int?): PError {
-                    return PathIndexNeverSucceeds(location(location))
+                    return PErrors.pathIndexNeverSucceeds(location(location))
                 }
             }
         )
-    }
-
-    fun reportAlwaysMissing(
-        listener: PErrorListener,
-        code: Int,
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
-    ): Rex {
-        val loc = location(location)
-        val error = when (code) {
-            PError.PATH_KEY_NEVER_SUCCEEDS -> PathKeyNeverSucceeds(loc)
-            PError.PATH_SYMBOL_NEVER_SUCCEEDS -> PathSymbolNeverSucceeds(loc)
-            PError.PATH_INDEX_NEVER_SUCCEEDS -> PathIndexNeverSucceeds(loc)
-            PError.ALWAYS_MISSING -> AlwaysMissing(loc)
-            else -> error("This is an internal bug. This shouldn't have occurred.")
-        }
-        listener.report(error)
-        return errorRex()
     }
 
     // TODO: Make private
@@ -176,17 +81,6 @@ internal object ProblemGenerator {
         location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
     ): Problem {
         return problem(location, PlanningProblemDetails.UnexpectedType(actualType, expectedTypes))
-    }
-
-    fun reportUnexpectedType(
-        listener: PErrorListener,
-        actualType: PType,
-        expectedTypes: Set<PType>,
-        location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION,
-    ): Rex {
-        val problem = unexpectedType(actualType, expectedTypes, location)
-        listener.report(problem.toError()) // TODO: Is this really a warning?
-        return errorRex()
     }
 
     internal fun Problem.toError(): PError {

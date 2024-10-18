@@ -34,7 +34,7 @@ import static java.util.stream.Collectors.toList;
  * @see PErrorListener
  * @see PErrorListenerException
  */
-public class PError extends PEnum {
+public final class PError extends PEnum {
     // NOTE: This is named PError to not be confused with java.lang.Error
 
     /**
@@ -66,12 +66,14 @@ public class PError extends PEnum {
 
     /**
      * To be used by the public static methods.
-     * @param code this is the unique error code found in the static final fields of {@link PError}
-     * @param severity the severity of the problem
-     * @param location the (potentially absent) location of where the problem occurred
-     * @param properties the set of available properties
+     * @param code see {@link PError#code()}
+     * @param severity see {@link PError#severity}
+     * @param kind see {@link PError#kind}
+     * @param location see {@link PError#location}
+     * @param properties the set of available properties. These should match the properties identified in
+     * each {@link PError#code()}.
      */
-    protected PError(
+    public PError(
             int code,
             @NotNull Severity severity,
             @NotNull PErrorKind kind,
@@ -195,6 +197,7 @@ public class PError extends PEnum {
     //
 
     /**
+     * @param kind see {@link PError#kind}
      * @param location see {@link PError#location}
      * @param cause see {@link PError#INTERNAL_ERROR}
      * @return an error representing {@link PError#INTERNAL_ERROR}

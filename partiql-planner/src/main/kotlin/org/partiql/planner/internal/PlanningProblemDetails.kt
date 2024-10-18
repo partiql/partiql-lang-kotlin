@@ -2,11 +2,6 @@ package org.partiql.planner.internal
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
-import org.partiql.planner.internal.problems.AlwaysMissing
-import org.partiql.planner.internal.problems.CastUndefined
-import org.partiql.planner.internal.problems.FunctionTypeMismatch
-import org.partiql.planner.internal.problems.TypeUnexpected
-import org.partiql.planner.internal.problems.VarRefNotFound
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
@@ -61,7 +56,7 @@ internal open class PlanningProblemDetails(
 
         override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return VarRefNotFound(location, name, inScopeVariables.toList())
+            return PErrors.varRefNotFound(location, name, inScopeVariables.toList())
         }
 
         private companion object {
@@ -83,7 +78,7 @@ internal open class PlanningProblemDetails(
     }) {
         override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return TypeUnexpected(location, actualType, expectedTypes.toList())
+            return PErrors.typeUnexpected(location, actualType, expectedTypes.toList())
         }
     }
 
@@ -95,7 +90,7 @@ internal open class PlanningProblemDetails(
     }) {
         override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return CastUndefined(location, source, target)
+            return PErrors.castUndefined(location, source, target)
         }
     }
 
@@ -105,7 +100,7 @@ internal open class PlanningProblemDetails(
     ) {
         override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return AlwaysMissing(location)
+            return PErrors.alwaysMissing(location)
         }
     }
 
@@ -118,7 +113,7 @@ internal open class PlanningProblemDetails(
     ) {
         override fun toError(line: Int?, column: Int?, length: Int?): PError {
             val location = location(line, column, length)
-            return FunctionTypeMismatch(location, Identifier.delimited(operator), actualTypes, null)
+            return PErrors.functionTypeMismatch(location, Identifier.delimited(operator), actualTypes, null)
         }
     }
 

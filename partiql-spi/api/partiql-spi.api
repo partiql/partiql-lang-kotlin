@@ -528,7 +528,7 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
-public class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
+public final class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
 	public static final field ALWAYS_MISSING I
 	public static final field FEATURE_NOT_SUPPORTED I
 	public static final field FUNCTION_NOT_FOUND I
@@ -547,7 +547,7 @@ public class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
 	public field kind Lorg/partiql/spi/errors/PErrorKind;
 	public field location Lorg/partiql/spi/SourceLocation;
 	public field severity Lorg/partiql/spi/errors/Severity;
-	protected fun <init> (ILorg/partiql/spi/errors/Severity;Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/util/Map;)V
+	public fun <init> (ILorg/partiql/spi/errors/Severity;Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/util/Map;)V
 	public static fun INTERNAL_ERROR (Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/lang/Throwable;)Lorg/partiql/spi/errors/PError;
 	public fun get (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public fun getList (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;

@@ -178,8 +178,6 @@ import org.partiql.parser.PartiQLParserException
 import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
-import org.partiql.parser.internal.problems.UnexpectedToken
-import org.partiql.parser.internal.problems.UnrecognizedToken
 import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
@@ -305,7 +303,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             if (offendingSymbol is Token) {
                 val token = offendingSymbol.text
                 val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
-                val error = UnrecognizedToken(location, token)
+                val error = PErrors.unrecognizedToken(location, token)
                 listener.report(error)
             } else {
                 throw IllegalArgumentException("Offending symbol is not a Token.")
@@ -334,7 +332,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 val token = offendingSymbol.text
                 val tokenType = GeneratedParser.VOCABULARY.getSymbolicName(offendingSymbol.type)
                 val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
-                val error = UnexpectedToken(location, tokenType, null)
+                val error = PErrors.unexpectedToken(location, tokenType, null)
                 listener.report(error)
             } else {
                 throw IllegalArgumentException("Offending symbol is not a Token.")
