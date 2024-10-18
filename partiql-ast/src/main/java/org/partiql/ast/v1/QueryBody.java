@@ -78,11 +78,11 @@ public abstract class QueryBody extends AstNode {
         public Expr rhs;
 
         public SetOp(@NotNull org.partiql.ast.v1.SetOp type, boolean isOuter, @NotNull Expr lhs, @NotNull Expr rhs) {
-        this.type = type;
-        this.isOuter = isOuter;
-        this.lhs = lhs;
-        this.rhs = rhs;
-    }
+            this.type = type;
+            this.isOuter = isOuter;
+            this.lhs = lhs;
+            this.rhs = rhs;
+        }
 
         @NotNull
         @Override

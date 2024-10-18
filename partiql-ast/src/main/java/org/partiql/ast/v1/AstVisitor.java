@@ -149,7 +149,7 @@ public interface AstVisitor<R, C> {
 
     R visitSelectItem(SelectItem node, C ctx);
 
-    R visitSelectItemAll(SelectItem.Star node, C ctx);
+    R visitSelectItemStar(SelectItem.Star node, C ctx);
 
     R visitSelectItemExpr(SelectItem.Expr node, C ctx);
 

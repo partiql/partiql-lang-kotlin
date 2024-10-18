@@ -5543,6 +5543,94 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitTypeVarchar (Lorg/partiql/ast/Type$Varchar;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 }
 
+public class org/partiql/ast/v1/Ast {
+	public fun <init> ()V
+	public static fun exclude (Ljava/util/List;)Lorg/partiql/ast/v1/Exclude;
+	public static fun excludePath (Lorg/partiql/ast/v1/expr/ExprVarRef;Ljava/util/List;)Lorg/partiql/ast/v1/ExcludePath;
+	public static fun excludeStepCollIndex (I)Lorg/partiql/ast/v1/ExcludeStep$CollIndex;
+	public static fun excludeStepCollWildcard ()Lorg/partiql/ast/v1/ExcludeStep$CollWildcard;
+	public static fun excludeStepStructField (Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/ExcludeStep$StructField;
+	public static fun excludeStepStructWildcard ()Lorg/partiql/ast/v1/ExcludeStep$StructWildcard;
+	public static fun explain (Ljava/util/Map;Lorg/partiql/ast/v1/Statement;)Lorg/partiql/ast/v1/Explain;
+	public static fun exprAnd (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprAnd;
+	public static fun exprArray (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprArray;
+	public static fun exprBag (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprBag;
+	public static fun exprBetween (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)Lorg/partiql/ast/v1/expr/ExprBetween;
+	public static fun exprCall (Lorg/partiql/ast/v1/IdentifierChain;Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/expr/ExprCall;
+	public static fun exprCase (Lorg/partiql/ast/v1/expr/Expr;Ljava/util/List;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprCase;
+	public static fun exprCaseBranch (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprCase$Branch;
+	public static fun exprCast (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;)Lorg/partiql/ast/v1/expr/ExprCast;
+	public static fun exprCoalesce (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprCoalesce;
+	public static fun exprExtract (Lorg/partiql/ast/v1/DatetimeField;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprExtract;
+	public static fun exprInCollection (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)Lorg/partiql/ast/v1/expr/ExprInCollection;
+	public static fun exprIsType (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;Z)Lorg/partiql/ast/v1/expr/ExprIsType;
+	public static fun exprLike (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)Lorg/partiql/ast/v1/expr/ExprLike;
+	public static fun exprLit (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/v1/expr/ExprLit;
+	public static fun exprMatch (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/graph/GraphMatch;)Lorg/partiql/ast/v1/expr/ExprMatch;
+	public static fun exprNot (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprNot;
+	public static fun exprNullIf (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprNullIf;
+	public static fun exprOperator (Ljava/lang/String;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOperator;
+	public static fun exprOr (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOr;
+	public static fun exprOverlay (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprOverlay;
+	public static fun exprParameter (I)Lorg/partiql/ast/v1/expr/ExprParameter;
+	public static fun exprPath (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/PathStep;)Lorg/partiql/ast/v1/expr/ExprPath;
+	public static fun exprPathStepAllElements (Lorg/partiql/ast/v1/expr/PathStep;)Lorg/partiql/ast/v1/expr/PathStep$AllElements;
+	public static fun exprPathStepAllFields (Lorg/partiql/ast/v1/expr/PathStep;)Lorg/partiql/ast/v1/expr/PathStep$AllFields;
+	public static fun exprPathStepElement (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/PathStep;)Lorg/partiql/ast/v1/expr/PathStep$Element;
+	public static fun exprPathStepField (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/expr/PathStep;)Lorg/partiql/ast/v1/expr/PathStep$Field;
+	public static fun exprPosition (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprPosition;
+	public static fun exprQuerySet (Lorg/partiql/ast/v1/QueryBody;Lorg/partiql/ast/v1/OrderBy;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprQuerySet;
+	public static fun exprSessionAttribute (Lorg/partiql/ast/v1/expr/SessionAttribute;)Lorg/partiql/ast/v1/expr/ExprSessionAttribute;
+	public static fun exprStruct (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprStruct;
+	public static fun exprStructField (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprStruct$Field;
+	public static fun exprSubstring (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/expr/ExprSubstring;
+	public static fun exprTrim (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/TrimSpec;)Lorg/partiql/ast/v1/expr/ExprTrim;
+	public static fun exprValues (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprValues;
+	public static fun exprValuesRow (Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprValues$Row;
+	public static fun exprVarRef (Lorg/partiql/ast/v1/IdentifierChain;Lorg/partiql/ast/v1/expr/Scope;)Lorg/partiql/ast/v1/expr/ExprVarRef;
+	public static fun exprVariant (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/v1/expr/ExprVariant;
+	public static fun exprWindow (Lorg/partiql/ast/v1/expr/WindowFunction;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/ExprWindow$Over;)Lorg/partiql/ast/v1/expr/ExprWindow;
+	public static fun exprWindowOver (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprWindow$Over;
+	public static fun from (Ljava/util/List;)Lorg/partiql/ast/v1/From;
+	public static fun fromExpr (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/FromExpr;
+	public static fun fromJoin (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/FromJoin;
+	public static fun graphLabelConj (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj;
+	public static fun graphLabelDisj (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj;
+	public static fun graphLabelName (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphLabel$Name;
+	public static fun graphLabelNegation (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Negation;
+	public static fun graphLabelWildcard ()Lorg/partiql/ast/v1/graph/GraphLabel$Wildcard;
+	public static fun graphMatch (Ljava/util/List;Lorg/partiql/ast/v1/graph/GraphSelector;)Lorg/partiql/ast/v1/graph/GraphMatch;
+	public static fun graphMatchEdge (Lorg/partiql/ast/v1/graph/GraphDirection;Lorg/partiql/ast/v1/graph/GraphQuantifier;Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphPart$Edge;
+	public static fun graphMatchNode (Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphPart$Node;
+	public static fun graphMatchPattern (Lorg/partiql/ast/v1/graph/GraphPattern;)Lorg/partiql/ast/v1/graph/GraphPart$Pattern;
+	public static fun graphPattern (Lorg/partiql/ast/v1/graph/GraphRestrictor;Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphQuantifier;Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphPattern;
+	public static fun graphQuantifier (JLjava/lang/Long;)Lorg/partiql/ast/v1/graph/GraphQuantifier;
+	public static fun graphSelectorAllShortest ()Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest;
+	public static fun graphSelectorAny ()Lorg/partiql/ast/v1/graph/GraphSelector$Any;
+	public static fun graphSelectorAnyK (J)Lorg/partiql/ast/v1/graph/GraphSelector$AnyK;
+	public static fun graphSelectorAnyShortest ()Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest;
+	public static fun graphSelectorShortestK (J)Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK;
+	public static fun graphSelectorShortestKGroup (J)Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup;
+	public static fun groupBy (Lorg/partiql/ast/v1/GroupByStrategy;Ljava/util/List;Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/GroupBy;
+	public static fun groupByKey (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/GroupBy$Key;
+	public static fun identifier (Ljava/lang/String;Z)Lorg/partiql/ast/v1/Identifier;
+	public static fun identifierChain (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/IdentifierChain;)Lorg/partiql/ast/v1/IdentifierChain;
+	public static fun let (Ljava/util/List;)Lorg/partiql/ast/v1/Let;
+	public static fun letBinding (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/Let$Binding;
+	public static fun orderBy (Ljava/util/List;)Lorg/partiql/ast/v1/OrderBy;
+	public static fun query (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/Query;
+	public static fun queryBodySFW (Lorg/partiql/ast/v1/Select;Lorg/partiql/ast/v1/Exclude;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/Let;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/GroupBy;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/QueryBody$SFW;
+	public static fun queryBodySetOp (Lorg/partiql/ast/v1/SetOp;ZLorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/QueryBody$SetOp;
+	public static fun selectItemExpr (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/SelectItem$Expr;
+	public static fun selectItemStar (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/SelectItem$Star;
+	public static fun selectList (Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/SelectList;
+	public static fun selectPivot (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/SelectPivot;
+	public static fun selectStar (Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/SelectStar;
+	public static fun selectValue (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/SelectValue;
+	public static fun setOp (Lorg/partiql/ast/v1/SetOpType;Lorg/partiql/ast/v1/SetQuantifier;)Lorg/partiql/ast/v1/SetOp;
+	public static fun sort (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Order;Lorg/partiql/ast/v1/Nulls;)Lorg/partiql/ast/v1/Sort;
+}
+
 public abstract class org/partiql/ast/v1/AstNode {
 	public field tag Ljava/lang/String;
 	public fun <init> ()V
@@ -5637,8 +5725,8 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitQueryBodySetOp (Lorg/partiql/ast/v1/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelect (Lorg/partiql/ast/v1/Select;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelectItem (Lorg/partiql/ast/v1/SelectItem;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectItemAll (Lorg/partiql/ast/v1/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelectItemExpr (Lorg/partiql/ast/v1/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitSelectItemStar (Lorg/partiql/ast/v1/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelectList (Lorg/partiql/ast/v1/SelectList;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelectPivot (Lorg/partiql/ast/v1/SelectPivot;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitSelectStar (Lorg/partiql/ast/v1/SelectStar;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7038,30 +7126,34 @@ public abstract class org/partiql/ast/v1/graph/GraphLabel : org/partiql/ast/v1/A
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Conj : org/partiql/ast/v1/graph/GraphLabel {
-	public final field args Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
+	public final field lhs Lorg/partiql/ast/v1/graph/GraphLabel;
+	public final field rhs Lorg/partiql/ast/v1/graph/GraphLabel;
+	public fun <init> (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Conj$Builder {
-	public fun args (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
 	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Conj;
+	public fun lhs (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
+	public fun rhs (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Disj : org/partiql/ast/v1/graph/GraphLabel {
-	public final field args Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
+	public final field lhs Lorg/partiql/ast/v1/graph/GraphLabel;
+	public final field rhs Lorg/partiql/ast/v1/graph/GraphLabel;
+	public fun <init> (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Disj$Builder {
-	public fun args (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
 	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Disj;
+	public fun lhs (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
+	public fun rhs (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -7094,6 +7186,7 @@ public class org/partiql/ast/v1/graph/GraphLabel$Negation$Builder {
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Wildcard : org/partiql/ast/v1/graph/GraphLabel {
+	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Wildcard$Builder;
 	public fun children ()Ljava/util/Collection;
@@ -7202,9 +7295,9 @@ public class org/partiql/ast/v1/graph/GraphPattern$Builder {
 }
 
 public class org/partiql/ast/v1/graph/GraphQuantifier : org/partiql/ast/v1/AstNode {
-	public final field lower Ljava/lang/Long;
+	public final field lower J
 	public final field upper Ljava/lang/Long;
-	public fun <init> (Ljava/lang/Long;Ljava/lang/Long;)V
+	public fun <init> (JLjava/lang/Long;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphQuantifier$Builder;
 	public fun children ()Ljava/util/Collection;
@@ -7212,7 +7305,7 @@ public class org/partiql/ast/v1/graph/GraphQuantifier : org/partiql/ast/v1/AstNo
 
 public class org/partiql/ast/v1/graph/GraphQuantifier$Builder {
 	public fun build ()Lorg/partiql/ast/v1/graph/GraphQuantifier;
-	public fun lower (Ljava/lang/Long;)Lorg/partiql/ast/v1/graph/GraphQuantifier$Builder;
+	public fun lower (J)Lorg/partiql/ast/v1/graph/GraphQuantifier$Builder;
 	public fun toString ()Ljava/lang/String;
 	public fun upper (Ljava/lang/Long;)Lorg/partiql/ast/v1/graph/GraphQuantifier$Builder;
 }
@@ -7235,6 +7328,7 @@ public abstract class org/partiql/ast/v1/graph/GraphSelector : org/partiql/ast/v
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AllShortest : org/partiql/ast/v1/graph/GraphSelector {
+	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest$Builder;
 	public fun children ()Ljava/util/Collection;
@@ -7246,6 +7340,7 @@ public class org/partiql/ast/v1/graph/GraphSelector$AllShortest$Builder {
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$Any : org/partiql/ast/v1/graph/GraphSelector {
+	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$Any$Builder;
 	public fun children ()Ljava/util/Collection;
@@ -7271,6 +7366,7 @@ public class org/partiql/ast/v1/graph/GraphSelector$AnyK$Builder {
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AnyShortest : org/partiql/ast/v1/graph/GraphSelector {
+	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest$Builder;
 	public fun children ()Ljava/util/Collection;

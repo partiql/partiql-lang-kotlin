@@ -14,13 +14,12 @@ import java.util.Collections;
  */
 @Builder(builderClassName = "Builder")
 public class GraphQuantifier extends AstNode {
-    @NotNull
-    public final Long lower;
+    public final long lower;
 
     @Nullable
     public final Long upper;
 
-    public GraphQuantifier(@NotNull Long lower, @Nullable Long upper) {
+    public GraphQuantifier(long lower, @Nullable Long upper) {
         this.lower = lower;
         this.upper = upper;
     }
