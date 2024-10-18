@@ -268,13 +268,13 @@ public class Ast {
     }
 
     @NotNull
-    public static GraphLabel.Conj graphLabelConj(@NotNull List<GraphLabel> args) {
-        return new GraphLabel.Conj(args);
+    public static GraphLabel.Conj graphLabelConj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
+        return new GraphLabel.Conj(lhs, rhs);
     }
 
     @NotNull
-    public static GraphLabel.Disj graphLabelDisj(@NotNull List<GraphLabel> args) {
-        return new GraphLabel.Disj(args);
+    public static GraphLabel.Disj graphLabelDisj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
+        return new GraphLabel.Disj(lhs, rhs);
     }
 
     @NotNull

@@ -105,16 +105,23 @@ public abstract class GraphLabel extends AstNode {
     @Builder(builderClassName = "Builder")
     public static class Conj extends GraphLabel {
         @NotNull
-        public final List<GraphLabel> args;
+        public final GraphLabel lhs;
 
-        public Conj(@NotNull List<GraphLabel> args) {
-            this.args = args;
+        @NotNull
+        public final GraphLabel rhs;
+
+        public Conj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
+            this.lhs = lhs;
+            this.rhs = rhs;
         }
 
         @Override
         @NotNull
         public Collection<AstNode> children() {
-            return new ArrayList<>(args);
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(lhs);
+            kids.add(rhs);
+            return kids;
         }
 
         @Override
@@ -129,16 +136,23 @@ public abstract class GraphLabel extends AstNode {
     @Builder(builderClassName = "Builder")
     public static class Disj extends GraphLabel {
         @NotNull
-        public final List<GraphLabel> args;
+        public final GraphLabel lhs;
 
-        public Disj(@NotNull List<GraphLabel> args) {
-            this.args = args;
+        @NotNull
+        public final GraphLabel rhs;
+
+        public Disj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
+            this.lhs = lhs;
+            this.rhs = rhs;
         }
 
         @Override
         @NotNull
         public Collection<AstNode> children() {
-            return new ArrayList<>(args);
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(lhs);
+            kids.add(rhs);
+            return kids;
         }
 
         @Override

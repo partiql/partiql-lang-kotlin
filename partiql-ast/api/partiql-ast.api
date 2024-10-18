@@ -5594,8 +5594,8 @@ public class org/partiql/ast/v1/Ast {
 	public static fun from (Ljava/util/List;)Lorg/partiql/ast/v1/From;
 	public static fun fromExpr (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/FromExpr;
 	public static fun fromJoin (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/FromJoin;
-	public static fun graphLabelConj (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj;
-	public static fun graphLabelDisj (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj;
+	public static fun graphLabelConj (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj;
+	public static fun graphLabelDisj (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj;
 	public static fun graphLabelName (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphLabel$Name;
 	public static fun graphLabelNegation (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Negation;
 	public static fun graphLabelWildcard ()Lorg/partiql/ast/v1/graph/GraphLabel$Wildcard;
@@ -7126,30 +7126,34 @@ public abstract class org/partiql/ast/v1/graph/GraphLabel : org/partiql/ast/v1/A
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Conj : org/partiql/ast/v1/graph/GraphLabel {
-	public final field args Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
+	public final field lhs Lorg/partiql/ast/v1/graph/GraphLabel;
+	public final field rhs Lorg/partiql/ast/v1/graph/GraphLabel;
+	public fun <init> (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Conj$Builder {
-	public fun args (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
 	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Conj;
+	public fun lhs (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
+	public fun rhs (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Disj : org/partiql/ast/v1/graph/GraphLabel {
-	public final field args Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
+	public final field lhs Lorg/partiql/ast/v1/graph/GraphLabel;
+	public final field rhs Lorg/partiql/ast/v1/graph/GraphLabel;
+	public fun <init> (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
 	public fun children ()Ljava/util/Collection;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Disj$Builder {
-	public fun args (Ljava/util/List;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
 	public fun build ()Lorg/partiql/ast/v1/graph/GraphLabel$Disj;
+	public fun lhs (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
+	public fun rhs (Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
