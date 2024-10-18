@@ -3,8 +3,8 @@ package org.partiql.cli.pipeline
 import org.partiql.cli.ErrorCodeString
 import org.partiql.cli.shell.error
 import org.partiql.cli.shell.warn
-import org.partiql.spi.errors.Classification
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.Severity
 import java.io.PrintStream
@@ -35,7 +35,7 @@ class AppPErrorListener(
         if (maxErrors in 1.._errorCount) {
             throw Pipeline.PipelineException("Reached maximum number of errors, aborting execution.")
         }
-        if (error.classification.code() == Classification.SYNTAX) {
+        if (error.kind.code() == PErrorKind.SYNTAX) {
             throw Pipeline.PipelineException("Unexpected syntax error. Please see the above details.")
         }
     }

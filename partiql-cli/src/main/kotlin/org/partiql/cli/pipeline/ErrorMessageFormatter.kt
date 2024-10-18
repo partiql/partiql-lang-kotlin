@@ -2,8 +2,8 @@ package org.partiql.cli.pipeline
 
 import org.partiql.cli.ErrorCodeString
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.Classification
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.function.Function
 import org.partiql.types.PType
@@ -38,12 +38,12 @@ object ErrorMessageFormatter {
                 Severity.UNKNOWN -> "UNKNOWN"
                 else -> "UNKNOWN"
             }
-            val classification = when (error.classification.code()) {
-                Classification.SYNTAX -> "syntax"
-                Classification.SEMANTIC -> "semantic"
-                Classification.COMPILATION -> "compile"
-                Classification.EXECUTION -> "runtime"
-                Classification.UNKNOWN -> "unknown"
+            val classification = when (error.kind.code()) {
+                PErrorKind.SYNTAX -> "syntax"
+                PErrorKind.SEMANTIC -> "semantic"
+                PErrorKind.COMPILATION -> "compile"
+                PErrorKind.EXECUTION -> "runtime"
+                PErrorKind.UNKNOWN -> "unknown"
                 else -> "unknown"
             }
             val loc = error.location

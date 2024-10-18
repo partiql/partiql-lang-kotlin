@@ -5,6 +5,8 @@ package org.partiql.spi.errors;
  * <br>
  * Application developers are encouraged to write their own subclass to provide quality error reporting in their
  * applications.
+ * @see PError
+ * @see PErrorListener
  */
 public class PErrorListenerException extends Exception {
     /**

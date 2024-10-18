@@ -27,8 +27,12 @@ import static java.util.stream.Collectors.toList;
  * <b>WARNING</b>: The available properties are subject to change without prior notice. The property's values are also
  * subject to change without prior notice. Your application <b>MUST</b> be able to handle these scenarios.
  * @see PError#code()
+ * @see PError#kind
+ * @see PError#severity
  * @see PError#getOrNull(String, Class)
  * @see PError#getListOrNull(String, Class)
+ * @see PErrorListener
+ * @see PErrorListenerException
  */
 public class PError extends PEnum {
     // NOTE: This is named PError to not be confused with java.lang.Error
@@ -37,7 +41,7 @@ public class PError extends PEnum {
      * The classification associated with this error.
      */
     @NotNull
-    public Classification classification;
+    public PErrorKind kind;
 
     /**
      * The severity associated with this error.
@@ -70,12 +74,12 @@ public class PError extends PEnum {
     protected PError(
             int code,
             @NotNull Severity severity,
-            @NotNull Classification classification,
+            @NotNull PErrorKind kind,
             @Nullable SourceLocation location,
             @Nullable Map<String, Object> properties
     ) {
         super(code);
-        this.classification = classification;
+        this.kind = kind;
         this.severity = severity;
         this.location = location;
         if (properties != null) {
@@ -178,7 +182,7 @@ public class PError extends PEnum {
         return "PError{" +
                 "code=" + code() +
                 ", severity=" + severity +
-                ", classification=" + classification +
+                ", classification=" + kind +
                 ", location=" + location +
                 ", properties=" + properties +
                 '}';
@@ -195,12 +199,12 @@ public class PError extends PEnum {
      * @param cause see {@link PError#INTERNAL_ERROR}
      * @return an error representing {@link PError#INTERNAL_ERROR}
      */
-    public static PError INTERNAL_ERROR(@NotNull Classification classification, @Nullable SourceLocation location, @Nullable Throwable cause) {
+    public static PError INTERNAL_ERROR(@NotNull PErrorKind kind, @Nullable SourceLocation location, @Nullable Throwable cause) {
         // Since this is used across multiple components, this is exposed as a static method as an easy-to-use API.
         return new PError(
                 INTERNAL_ERROR,
                 Severity.ERROR(),
-                classification,
+                kind,
                 location,
                 new HashMap<String, Object>() {{
                     put("CAUSE", cause);

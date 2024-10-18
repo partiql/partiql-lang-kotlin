@@ -1,8 +1,8 @@
 package org.partiql.planner.internal.problems
 
 import org.partiql.spi.SourceLocation
-import org.partiql.spi.errors.Classification
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.Severity
 
 /**
@@ -14,7 +14,7 @@ internal class AlwaysMissing(
 ) : PError(
     ALWAYS_MISSING,
     Severity.WARNING(),
-    Classification.SEMANTIC(),
+    PErrorKind.SEMANTIC(),
     location,
     null
 )

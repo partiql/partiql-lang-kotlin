@@ -9,8 +9,8 @@ import org.partiql.planner.internal.problems.TypeUnexpected
 import org.partiql.planner.internal.problems.VarRefNotFound
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.Classification
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
 import org.partiql.types.PType
 
 /**
@@ -30,7 +30,7 @@ internal open class PlanningProblemDetails(
      */
     open fun toError(line: Int?, column: Int?, length: Int?): PError {
         val location = location(line, column, length)
-        return PError.INTERNAL_ERROR(Classification.SEMANTIC(), location, null)
+        return PError.INTERNAL_ERROR(PErrorKind.SEMANTIC(), location, null)
     }
 
     companion object {

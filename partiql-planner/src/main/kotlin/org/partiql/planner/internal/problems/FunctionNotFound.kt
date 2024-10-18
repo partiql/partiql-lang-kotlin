@@ -2,8 +2,8 @@ package org.partiql.planner.internal.problems
 
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.Classification
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.Severity
 import org.partiql.types.PType
 
@@ -20,7 +20,7 @@ internal class FunctionNotFound(
 ) : PError(
     FUNCTION_NOT_FOUND,
     Severity.ERROR(),
-    Classification.SEMANTIC(),
+    PErrorKind.SEMANTIC(),
     location,
     mapOf(
         "FN_ID" to fnId,

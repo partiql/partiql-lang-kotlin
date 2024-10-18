@@ -18,8 +18,8 @@ import org.partiql.planner.internal.problems.PathSymbolNeverSucceeds
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.Classification
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.function.Function
 import org.partiql.types.PType
@@ -196,7 +196,7 @@ internal object ProblemGenerator {
         val length = if (location.length < 0) null else location.length
         return when (val details = this.details) {
             is PlanningProblemDetails -> details.toError(line?.toInt(), column?.toInt(), length?.toInt())
-            else -> PError.INTERNAL_ERROR(Classification.SEMANTIC(), location(location), null)
+            else -> PError.INTERNAL_ERROR(PErrorKind.SEMANTIC(), location(location), null)
         }
     }
 

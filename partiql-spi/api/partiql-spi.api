@@ -528,20 +528,6 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
-public final class org/partiql/spi/errors/Classification : org/partiql/spi/PEnum {
-	public static final field COMPILATION I
-	public static final field EXECUTION I
-	public static final field SEMANTIC I
-	public static final field SYNTAX I
-	public static final field UNKNOWN I
-	public static fun COMPILATION ()Lorg/partiql/spi/errors/Classification;
-	public static fun EXECUTION ()Lorg/partiql/spi/errors/Classification;
-	public static fun SEMANTIC ()Lorg/partiql/spi/errors/Classification;
-	public static fun SYNTAX ()Lorg/partiql/spi/errors/Classification;
-	public static fun UNKNOWN ()Lorg/partiql/spi/errors/Classification;
-	public fun toString ()Ljava/lang/String;
-}
-
 public class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
 	public static final field ALWAYS_MISSING I
 	public static final field FEATURE_NOT_SUPPORTED I
@@ -558,11 +544,11 @@ public class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
 	public static final field UNRECOGNIZED_TOKEN I
 	public static final field VAR_REF_AMBIGUOUS I
 	public static final field VAR_REF_NOT_FOUND I
-	public field classification Lorg/partiql/spi/errors/Classification;
+	public field kind Lorg/partiql/spi/errors/PErrorKind;
 	public field location Lorg/partiql/spi/SourceLocation;
 	public field severity Lorg/partiql/spi/errors/Severity;
-	protected fun <init> (ILorg/partiql/spi/errors/Severity;Lorg/partiql/spi/errors/Classification;Lorg/partiql/spi/SourceLocation;Ljava/util/Map;)V
-	public static fun INTERNAL_ERROR (Lorg/partiql/spi/errors/Classification;Lorg/partiql/spi/SourceLocation;Ljava/lang/Throwable;)Lorg/partiql/spi/errors/PError;
+	protected fun <init> (ILorg/partiql/spi/errors/Severity;Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/util/Map;)V
+	public static fun INTERNAL_ERROR (Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/lang/Throwable;)Lorg/partiql/spi/errors/PError;
 	public fun get (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public fun getList (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
 	public fun getListOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
@@ -575,6 +561,20 @@ public class org/partiql/spi/errors/PErrorException : org/partiql/spi/errors/PEr
 	public fun <init> (Lorg/partiql/spi/errors/PError;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/PEnum {
+	public static final field COMPILATION I
+	public static final field EXECUTION I
+	public static final field SEMANTIC I
+	public static final field SYNTAX I
+	public static final field UNKNOWN I
+	public static fun COMPILATION ()Lorg/partiql/spi/errors/PErrorKind;
+	public static fun EXECUTION ()Lorg/partiql/spi/errors/PErrorKind;
+	public static fun SEMANTIC ()Lorg/partiql/spi/errors/PErrorKind;
+	public static fun SYNTAX ()Lorg/partiql/spi/errors/PErrorKind;
+	public static fun UNKNOWN ()Lorg/partiql/spi/errors/PErrorKind;
 	public fun toString ()Ljava/lang/String;
 }
 

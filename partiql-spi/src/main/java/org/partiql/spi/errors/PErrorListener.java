@@ -4,6 +4,8 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Interface for receiving errors from the PartiQL ecosystem.
+ * @see PError
+ * @see PErrorListenerException
  */
 public interface PErrorListener {
     /**

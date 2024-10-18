@@ -181,8 +181,8 @@ import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.problems.UnexpectedToken
 import org.partiql.parser.internal.problems.UnrecognizedToken
 import org.partiql.parser.internal.util.DateTimeUtils
-import org.partiql.spi.errors.Classification
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.value.NumericValue
@@ -238,7 +238,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         } catch (e: PErrorListenerException) {
             throw e
         } catch (throwable: Throwable) {
-            val error = PError.INTERNAL_ERROR(Classification.SYNTAX(), null, throwable)
+            val error = PError.INTERNAL_ERROR(PErrorKind.SYNTAX(), null, throwable)
             config.errorListener.report(error)
             return PartiQLParser.Result.empty(source)
         }
