@@ -43,13 +43,13 @@ public interface Session {
     public companion object {
 
         /**
-         * Returns an empty [Session] with the provided [catalog] and an empty provider.
+         * Returns a [Session] with only the "empty" catalog implementation.
          */
         @JvmStatic
-        public fun empty(catalog: String): Session = object : Session {
+        public fun empty(): Session = object : Session {
             override fun getIdentity(): String = "unknown"
-            override fun getCatalog(): String = catalog
-            override fun getCatalogs(): Catalogs = Catalogs.of()
+            override fun getCatalog(): String = "empty"
+            override fun getCatalogs(): Catalogs = Catalogs.empty()
             override fun getNamespace(): Namespace = Namespace.empty()
         }
 
