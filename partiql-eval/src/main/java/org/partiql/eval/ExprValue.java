@@ -1,12 +1,11 @@
-package org.partiql.eval.operator;
+package org.partiql.eval;
 
-import org.partiql.eval.Environment;
 import org.partiql.spi.value.Datum;
 
 /**
- * PhysicalExpr is the interface for an operator that returns a value.
+ * ExprValue is the interface for an expression (physical operator) that returns a value.
  */
-public interface Expression extends Operator {
+public interface ExprValue extends Expr {
 
     /**
      * Evaluate the expression for the given environment.

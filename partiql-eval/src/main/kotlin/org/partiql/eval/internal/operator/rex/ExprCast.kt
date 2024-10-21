@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
-import org.partiql.eval.operator.Expression
+import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -14,8 +14,8 @@ import org.partiql.types.PType
  * @param operand
  * @param target
  */
-internal class ExprCast(operand: Expression, target: PType) :
-    Expression {
+internal class ExprCast(operand: ExprValue, target: PType) :
+    ExprValue {
 
     // DO NOT USE FINAL
     private var _operand = operand

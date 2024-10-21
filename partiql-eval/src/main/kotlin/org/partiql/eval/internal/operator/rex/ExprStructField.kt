@@ -1,5 +1,5 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.operator.Expression
+import org.partiql.eval.ExprValue
 
-internal class ExprStructField(val key: Expression, val value: Expression)
+internal class ExprStructField(val key: ExprValue, val value: ExprValue)

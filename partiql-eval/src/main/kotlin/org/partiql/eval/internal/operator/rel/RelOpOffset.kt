@@ -1,16 +1,16 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.getBigIntCoerced
-import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Relation
 import java.math.BigInteger
 
 internal class RelOpOffset(
-    private val input: Relation,
-    private val offset: Expression,
-) : Relation {
+    private val input: ExprRelation,
+    private val offset: ExprValue,
+) : ExprRelation {
 
     private var init = false
     private var _seen: BigInteger = BigInteger.ZERO

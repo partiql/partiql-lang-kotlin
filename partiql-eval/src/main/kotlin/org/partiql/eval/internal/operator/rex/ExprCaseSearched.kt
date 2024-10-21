@@ -1,14 +1,14 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
-import org.partiql.eval.operator.Expression
+import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
 
 /**
  * Implementation of the <searched case> expression.
  */
-internal class ExprCaseSearched(branches: List<ExprCaseBranch>, default: Expression?) :
-    Expression {
+internal class ExprCaseSearched(branches: List<ExprCaseBranch>, default: ExprValue?) :
+    ExprValue {
 
     // DO NOT USE FINAL
     private var _branches = branches

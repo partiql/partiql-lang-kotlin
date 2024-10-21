@@ -2,15 +2,15 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.RecordValueIterator
-import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Relation
 import org.partiql.types.PType
 
 internal class RelOpScan(
-    private val expr: Expression
-) : Relation {
+    private val expr: ExprValue
+) : ExprRelation {
 
     private lateinit var records: Iterator<Row>
 

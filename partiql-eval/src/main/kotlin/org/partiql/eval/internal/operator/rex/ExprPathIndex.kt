@@ -2,15 +2,15 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getInt32Coerced
-import org.partiql.eval.operator.Expression
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal class ExprPathIndex(
-    @JvmField val root: Expression,
-    @JvmField val key: Expression,
-) : Expression {
+    @JvmField val root: ExprValue,
+    @JvmField val key: ExprValue,
+) : ExprValue {
 
     override fun eval(env: Environment): Datum {
         val input = root.eval(env)

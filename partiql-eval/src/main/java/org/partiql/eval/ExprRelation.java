@@ -1,15 +1,13 @@
-package org.partiql.eval.operator;
+package org.partiql.eval;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.eval.Environment;
-import org.partiql.eval.Row;
 
 import java.util.Iterator;
 
 /**
- * Relation is the interface for an operator that returns a relation.
+ * ExprRelation is the interface for a expression which returns a "collection of binding tuples" aka iterator of rows.
  */
-public interface Relation extends Operator, AutoCloseable, Iterator<Row> {
+public interface ExprRelation extends Expr, AutoCloseable, Iterator<Row> {
 
     public void open(@NotNull Environment env);
 

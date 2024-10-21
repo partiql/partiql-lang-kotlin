@@ -1,16 +1,16 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.IteratorChain
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.eval.operator.Relation
 import java.util.TreeSet
 
 internal class RelOpUnionDistinct(
-    private val lhs: Relation,
-    private val rhs: Relation,
+    private val lhs: ExprRelation,
+    private val rhs: ExprRelation,
 ) : RelOpPeeking() {
 
     private val seen = TreeSet(DatumArrayComparator)

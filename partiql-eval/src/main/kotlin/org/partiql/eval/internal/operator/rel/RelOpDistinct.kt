@@ -1,12 +1,12 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
-import org.partiql.eval.operator.Relation
 import java.util.TreeSet
 
-internal class RelOpDistinct(private val input: Relation) : RelOpPeeking() {
+internal class RelOpDistinct(private val input: ExprRelation) : RelOpPeeking() {
 
     private val seen = TreeSet(DatumArrayComparator)
 

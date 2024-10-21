@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
-import org.partiql.eval.operator.Relation
 import org.partiql.plan.Exclusion
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -16,9 +16,9 @@ import org.partiql.value.PartiQLValueType
  * Consider more memoization, use arrays, combine coll/struct exclusions in one method, ano others!
  */
 internal class RelOpExclude(
-    private val input: Relation,
+    private val input: ExprRelation,
     private val exclusions: List<Exclusion>,
-) : Relation {
+) : ExprRelation {
 
     override fun open(env: Environment) {
         input.open(env)

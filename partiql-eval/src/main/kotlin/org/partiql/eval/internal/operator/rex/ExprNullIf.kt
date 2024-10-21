@@ -1,13 +1,13 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
-import org.partiql.eval.operator.Expression
+import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
 
 internal class ExprNullIf(
-    private val valueExpr: Expression,
-    private val nullifierExpr: Expression
-) : Expression {
+    private val valueExpr: ExprValue,
+    private val nullifierExpr: ExprValue
+) : ExprValue {
 
     private val comparator = Datum.comparator()
 

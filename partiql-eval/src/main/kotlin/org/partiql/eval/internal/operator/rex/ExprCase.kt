@@ -1,14 +1,14 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
-import org.partiql.eval.operator.Expression
+import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal class ExprCase(
-    private val branches: List<Pair<Expression, Expression>>,
-    private val default: Expression
-) : Expression {
+    private val branches: List<Pair<ExprValue, ExprValue>>,
+    private val default: ExprValue
+) : ExprValue {
 
     override fun eval(env: Environment): Datum {
         branches.forEach { branch ->

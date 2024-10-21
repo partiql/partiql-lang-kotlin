@@ -2,11 +2,11 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
-import org.partiql.eval.operator.Expression
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -32,8 +32,8 @@ import org.partiql.value.PartiQLValue
 internal class ExprCallDynamic(
     private val name: String,
     private val functions: Array<Function.Instance>,
-    private val args: Array<Expression>
-) : Expression {
+    private val args: Array<ExprValue>
+) : ExprValue {
 
     /**
      * @property paramIndices the indices of the [args]

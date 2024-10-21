@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
-import org.partiql.eval.operator.Expression
+import org.partiql.eval.ExprValue
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 
@@ -13,8 +13,8 @@ import org.partiql.spi.value.Datum
  */
 internal class ExprCall(
     private var function: Function.Instance,
-    private var args: Array<Expression>,
-) : Expression {
+    private var args: Array<ExprValue>,
+) : ExprValue {
 
     private var isNullCall: Boolean = function.isNullCall
     private var isMissingCall: Boolean = function.isMissingCall

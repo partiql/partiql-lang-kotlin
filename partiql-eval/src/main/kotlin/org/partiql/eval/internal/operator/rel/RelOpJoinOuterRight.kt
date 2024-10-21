@@ -1,10 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Relation
 import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
@@ -15,9 +15,9 @@ import org.partiql.spi.value.Datum
  * Right Outer Join cannot be lateral according to PartiQL Specification Section 5.5.
  */
 internal class RelOpJoinOuterRight(
-    private val lhs: Relation,
-    private val rhs: Relation,
-    private val condition: Expression,
+    private val lhs: ExprRelation,
+    private val rhs: ExprRelation,
+    private val condition: ExprValue,
     lhsType: RelType
 ) : RelOpPeeking() {
 

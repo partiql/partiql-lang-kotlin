@@ -1,8 +1,6 @@
-package org.partiql.eval.operator;
+package org.partiql.eval;
 
 /**
  * Physical operators are implementations for one (or more) logical operators.
- * <br>
- * TODO NAMING
  */
-public interface Operator {}
+public interface Expr {}

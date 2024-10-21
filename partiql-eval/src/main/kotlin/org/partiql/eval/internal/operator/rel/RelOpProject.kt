@@ -1,14 +1,14 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
-import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Relation
 
 internal class RelOpProject(
-    private val input: Relation,
-    private val projections: List<Expression>
-) : Relation {
+    private val input: ExprRelation,
+    private val projections: List<ExprValue>
+) : ExprRelation {
 
     private lateinit var env: Environment
 

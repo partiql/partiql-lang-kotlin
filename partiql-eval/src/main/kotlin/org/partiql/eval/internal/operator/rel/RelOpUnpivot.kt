@@ -2,9 +2,9 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
-import org.partiql.eval.operator.Expression
-import org.partiql.eval.operator.Relation
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
@@ -15,7 +15,7 @@ import org.partiql.types.PType
  *  Input:   { k_0: v_0, ..., k_i: v_i }
  *  Output:  [ k_0, v_0 ] ... [ k_i, v_i ]
  */
-internal sealed class RelOpUnpivot : Relation {
+internal sealed class RelOpUnpivot : ExprRelation {
 
     /**
      * Iterator of the struct fields.
@@ -55,7 +55,7 @@ internal sealed class RelOpUnpivot : Relation {
      *
      * @property expr
      */
-    class Strict(private val expr: Expression) : RelOpUnpivot() {
+    class Strict(private val expr: ExprValue) : RelOpUnpivot() {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Row()))
@@ -75,7 +75,7 @@ internal sealed class RelOpUnpivot : Relation {
      *
      * @property expr
      */
-    class Permissive(private val expr: Expression) : RelOpUnpivot() {
+    class Permissive(private val expr: ExprValue) : RelOpUnpivot() {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Row()))

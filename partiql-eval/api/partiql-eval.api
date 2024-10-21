@@ -5,6 +5,22 @@ public class org/partiql/eval/Environment {
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class org/partiql/eval/Expr {
+}
+
+public abstract interface class org/partiql/eval/ExprRelation : java/lang/AutoCloseable, java/util/Iterator, org/partiql/eval/Expr {
+	public abstract fun close ()V
+	public abstract fun hasNext ()Z
+	public synthetic fun next ()Ljava/lang/Object;
+	public abstract fun next ()Lorg/partiql/eval/Row;
+	public abstract fun open (Lorg/partiql/eval/Environment;)V
+	public fun remove ()V
+}
+
+public abstract interface class org/partiql/eval/ExprValue : org/partiql/eval/Expr {
+	public abstract fun eval (Lorg/partiql/eval/Environment;)Lorg/partiql/spi/value/Datum;
+}
+
 public class org/partiql/eval/Mode {
 	public static final field PERMISSIVE I
 	public static final field STRICT I
@@ -36,21 +52,5 @@ public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
 
 public class org/partiql/eval/compiler/PartiQLCompiler$Builder {
 	public fun build ()Lorg/partiql/eval/compiler/PartiQLCompiler;
-}
-
-public abstract interface class org/partiql/eval/operator/Expression : org/partiql/eval/operator/Operator {
-	public abstract fun eval (Lorg/partiql/eval/Environment;)Lorg/partiql/spi/value/Datum;
-}
-
-public abstract interface class org/partiql/eval/operator/Operator {
-}
-
-public abstract interface class org/partiql/eval/operator/Relation : java/lang/AutoCloseable, java/util/Iterator, org/partiql/eval/operator/Operator {
-	public abstract fun close ()V
-	public abstract fun hasNext ()Z
-	public synthetic fun next ()Ljava/lang/Object;
-	public abstract fun next ()Lorg/partiql/eval/Row;
-	public abstract fun open (Lorg/partiql/eval/Environment;)V
-	public fun remove ()V
 }
 
