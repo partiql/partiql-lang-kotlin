@@ -1,5 +1,7 @@
 package org.partiql.spi;
 
+import java.util.Objects;
+
 /**
  * Represents an enum in the PartiQL Library. This is used for backward/forward compatibility purposes.
  */
@@ -19,5 +21,18 @@ public abstract class PEnum {
      */
     public final int code() {
         return code;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PEnum)) return false;
+        PEnum pEnum = (PEnum) o;
+        return code == pEnum.code;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(code);
     }
 }

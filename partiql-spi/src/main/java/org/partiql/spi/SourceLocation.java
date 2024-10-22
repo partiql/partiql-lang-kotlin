@@ -23,13 +23,6 @@ public class SourceLocation {
      */
     public long length;
 
-    // Private to not allow for the creation of this class outside the proper constructor.
-    private SourceLocation() {
-        line = 0;
-        offset = 0;
-        length = 0;
-    }
-
     public SourceLocation(long line, long offset, long length) {
         this.line = line;
         this.offset = offset;

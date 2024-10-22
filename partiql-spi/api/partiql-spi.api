@@ -288,6 +288,8 @@ public abstract interface class org/partiql/spi/Connector$Context {
 public abstract class org/partiql/spi/PEnum {
 	protected fun <init> (I)V
 	public final fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/spi/SourceLocation {
@@ -549,10 +551,12 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
 	public field severity Lorg/partiql/spi/errors/Severity;
 	public fun <init> (ILorg/partiql/spi/errors/Severity;Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/util/Map;)V
 	public static fun INTERNAL_ERROR (Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/lang/Throwable;)Lorg/partiql/spi/errors/PError;
+	public fun equals (Ljava/lang/Object;)Z
 	public fun get (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public fun getList (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
 	public fun getListOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
 	public fun getOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 

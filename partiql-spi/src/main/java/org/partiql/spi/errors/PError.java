@@ -11,6 +11,7 @@ import org.partiql.types.PType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 
@@ -184,10 +185,23 @@ public final class PError extends PEnum {
         return "PError{" +
                 "code=" + code() +
                 ", severity=" + severity +
-                ", classification=" + kind +
+                ", kind=" + kind +
                 ", location=" + location +
                 ", properties=" + properties +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PError)) return false;
+        PError pError = (PError) o;
+        return Objects.equals(kind, pError.kind) && Objects.equals(severity, pError.severity) && Objects.equals(location, pError.location) && Objects.equals(properties, pError.properties);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(kind, severity, location, properties);
     }
 
     //
