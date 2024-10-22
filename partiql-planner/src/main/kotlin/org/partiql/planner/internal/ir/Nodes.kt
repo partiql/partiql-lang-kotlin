@@ -2,7 +2,6 @@
 
 package org.partiql.planner.`internal`.ir
 
-import org.partiql.errors.Problem
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
 import org.partiql.planner.internal.ir.builder.RefAggBuilder
 import org.partiql.planner.internal.ir.builder.RefCastBuilder

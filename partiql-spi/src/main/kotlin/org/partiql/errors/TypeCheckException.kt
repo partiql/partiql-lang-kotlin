@@ -1,5 +1,7 @@
 package org.partiql.errors
 
+// TODO: Move these all to partiql-eval
+
 /**
  * A [TypeCheckException] represents an invalid operation due to argument types.
  */

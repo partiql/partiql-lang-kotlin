@@ -7,7 +7,6 @@ imports::{
     static_type::'org.partiql.planner.internal.typer.CompilerType',
     fn_signature::'org.partiql.spi.function.Function',
     agg_signature::'org.partiql.spi.function.Aggregation',
-    problem::'org.partiql.errors.Problem',
     table::'org.partiql.spi.catalog.Table',
   ],
 }
