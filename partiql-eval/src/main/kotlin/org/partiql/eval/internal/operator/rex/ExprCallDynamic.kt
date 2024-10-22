@@ -1,8 +1,12 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
+import org.partiql.eval.Row
+import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
+import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
+import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -18,7 +22,7 @@ import org.partiql.value.PartiQLValue
  *  2. Evaluate the input arguments.
  *  3. Lookup the candidate to dispatch to and invoke.
  *
- * This implementation can evaluate ([eval]) the input [Record], execute and gather the
+ * This implementation can evaluate ([eval]) the input [Row], execute and gather the
  * arguments, and pass the [PartiQLValue]s directly to the [Candidate.eval].
  *
  * This implementation also caches previously resolved candidates.
@@ -28,8 +32,8 @@ import org.partiql.value.PartiQLValue
 internal class ExprCallDynamic(
     private val name: String,
     private val functions: Array<Function.Instance>,
-    private val args: Array<Operator.Expr>
-) : Operator.Expr {
+    private val args: Array<ExprValue>
+) : ExprValue {
 
     /**
      * @property paramIndices the indices of the [args]

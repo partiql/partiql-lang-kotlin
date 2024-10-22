@@ -3,11 +3,12 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.errors.CardinalityViolation
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
 
-internal class ExprPermissive(private var expr: Operator.Expr) : Operator.Expr {
+internal class ExprPermissive(private var expr: ExprValue) :
+    ExprValue {
 
     override fun eval(env: Environment): Datum {
         return try {

@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rex.RexSubqueryComp.Comp
 import org.partiql.plan.rex.RexSubqueryComp.Quantifier
@@ -20,7 +21,7 @@ public interface RexSubqueryComp : Rex {
 
     public fun getRel(): Rel
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSubqueryComp(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSubqueryComp(this, ctx)
 
     /**
      * SQL <comp op> for use in the <quantified comparison predicate>.

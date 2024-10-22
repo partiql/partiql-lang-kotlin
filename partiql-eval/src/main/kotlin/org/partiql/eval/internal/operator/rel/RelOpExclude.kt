@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.Row
 import org.partiql.plan.Exclusion
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -16,9 +16,9 @@ import org.partiql.value.PartiQLValueType
  * Consider more memoization, use arrays, combine coll/struct exclusions in one method, ano others!
  */
 internal class RelOpExclude(
-    private val input: Operator.Relation,
+    private val input: ExprRelation,
     private val exclusions: List<Exclusion>,
-) : Operator.Relation {
+) : ExprRelation {
 
     override fun open(env: Environment) {
         input.open(env)
@@ -28,7 +28,7 @@ internal class RelOpExclude(
         return input.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         val record = input.next()
         exclusions.forEach { exclusion ->
             // TODO memoize offsets and steps (i.e. don't call getVar(), getOffset(), and getItems() every time).

@@ -1,5 +1,7 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
+
 /**
  * Logical operator for path lookup by key.
  */
@@ -9,7 +11,7 @@ public interface RexPathKey : Rex {
 
     public fun getKey(): Rex
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitPathKey(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitPathKey(this, ctx)
 }
 
 /**

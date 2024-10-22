@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 
@@ -12,7 +12,7 @@ import org.partiql.spi.value.Datum
  *
  * @param table
  */
-internal class ExprTable(table: Table) : Operator.Expr {
+internal class ExprTable(table: Table) : ExprValue {
 
     // DO NOT USE FINAL
     private var _table = table

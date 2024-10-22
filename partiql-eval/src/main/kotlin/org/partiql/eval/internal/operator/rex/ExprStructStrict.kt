@@ -1,13 +1,14 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getText
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 
-internal class ExprStructStrict(private val fields: List<ExprStructField>) : Operator.Expr {
+internal class ExprStructStrict(private val fields: List<ExprStructField>) :
+    ExprValue {
     override fun eval(env: Environment): Datum {
         val fields = fields.mapNotNull {
             val key = it.key.eval(env)

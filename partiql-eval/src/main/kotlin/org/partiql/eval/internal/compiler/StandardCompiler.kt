@@ -1,7 +1,13 @@
-package org.partiql.eval.internal
+package org.partiql.eval.internal.compiler
 
-import org.partiql.eval.PartiQLEngine
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.Expr
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
+import org.partiql.eval.Mode
+import org.partiql.eval.Statement
+import org.partiql.eval.compiler.PartiQLCompiler
+import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
 import org.partiql.eval.internal.operator.rel.RelOpExceptAll
@@ -53,6 +59,9 @@ import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
+import org.partiql.plan.Operation
+import org.partiql.plan.Plan
+import org.partiql.plan.Visitor
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelDistinct
@@ -70,7 +79,6 @@ import org.partiql.plan.rel.RelScan
 import org.partiql.plan.rel.RelSort
 import org.partiql.plan.rel.RelUnion
 import org.partiql.plan.rel.RelUnpivot
-import org.partiql.plan.rel.RelVisitor
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
@@ -96,73 +104,87 @@ import org.partiql.plan.rex.RexSubqueryIn
 import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
-import org.partiql.plan.rex.RexVisitor
-import org.partiql.spi.catalog.Session
-import org.partiql.spi.function.Aggregation
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * This class is responsible for producing a tree of evaluable operators from a tree of logical operators.
- *
- * @property mode
- * @property session
+ * This class is responsible for producing an executable statement from logical operators.
  */
-internal class SqlCompiler(
-    @JvmField var mode: PartiQLEngine.Mode,
-    @JvmField var session: Session,
-) {
+internal class StandardCompiler : PartiQLCompiler {
 
-    private val relCompiler = RelCompiler()
-
-    private val rexCompiler = RexCompiler()
-
-    fun compile(rex: Rex): Operator.Expr = compile(rex, Unit).catch()
-
-    private fun compile(rel: Rel, ctx: Unit): Operator.Relation = rel.accept(relCompiler, ctx)
-
-    private fun compile(rex: Rex, ctx: Unit): Operator.Expr = rex.accept(rexCompiler, ctx)
+    override fun prepare(plan: Plan, mode: Mode): Statement = try {
+        val visitor = _Visitor(mode)
+        val operation = plan.getOperation()
+        val statement: Statement = when {
+            operation is Operation.Query -> visitor.compile(operation)
+            else -> throw IllegalArgumentException("Only query statements are supported")
+        }
+        statement
+    } catch (ex: Exception) {
+        // TODO wrap in some PartiQL Exception
+        throw ex
+    }
 
     /**
      * Transforms plan relation operators into the internal physical operators.
      */
-    private inner class RelCompiler : RelVisitor<Operator.Relation, Unit> {
+    @Suppress("ClassName")
+    private inner class _Visitor(mode: Mode) : Visitor<Expr, Unit> {
 
-        override fun defaultReturn(rel: Rel, ctx: Unit): Operator.Relation {
-            TODO("Evaluation is not implemented for rel: ${rel::class.simpleName}")
+        private val mode = mode.code()
+        private val unknown = PType.unknown()
+
+        /**
+         * Compile a query operation to a query statement.
+         */
+        fun compile(operation: Operation.Query) = object : Statement {
+
+            // compile the query root
+            private val root = compile(operation.getRex(), Unit).catch()
+
+            // execute with no parameters
+            override fun execute(): Datum = root.eval(Environment())
         }
 
-        override fun visitError(rel: RelError, ctx: Unit): Operator.Relation {
+        private fun compile(rel: Rel, ctx: Unit): ExprRelation = rel.accept(this, ctx) as ExprRelation
+
+        private fun compile(rex: Rex, ctx: Unit): ExprValue = rex.accept(this, ctx) as ExprValue
+
+        /**
+         * TODO apply custom strategies left-to-right, returning the first match.
+         *
+         * @param operator
+         * @param ctx
+         * @return
+         */
+        override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): Expr {
+            error("No compiler strategy matches the operator: ${operator::class.simpleName}")
+        }
+
+        override fun visitError(rel: RelError, ctx: Unit): ExprRelation {
             throw IllegalStateException(rel.message)
         }
 
         // OPERATORS
 
-        override fun visitAggregate(rel: RelAggregate, ctx: Unit): Operator.Relation {
+        override fun visitAggregate(rel: RelAggregate, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
-            val keys = rel.getGroups().map { compile(it, ctx).catch() }
             val aggs = rel.getCalls().map { call ->
                 val agg = call.getAgg()
                 val args = call.getArgs().map { compile(it, ctx).catch() }
-                val setq = when (call.isDistinct()) {
-                    true -> Operator.Aggregation.SetQuantifier.DISTINCT
-                    else -> Operator.Aggregation.SetQuantifier.ALL
-                }
-                object : Operator.Aggregation {
-                    override val delegate: Aggregation = agg
-                    override val args: List<Operator.Expr> = args
-                    override val setQuantifier: Operator.Aggregation.SetQuantifier = setq
-                }
+                val distinct = call.isDistinct()
+                Aggregate(agg, args, distinct)
             }
-            return RelOpAggregate(input, keys, aggs)
+            val groups = rel.getGroups().map { compile(it, ctx).catch() }
+            return RelOpAggregate(input, aggs, groups)
         }
 
-        override fun visitDistinct(rel: RelDistinct, ctx: Unit): Operator.Relation {
+        override fun visitDistinct(rel: RelDistinct, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             return RelOpDistinct(input)
         }
 
-        override fun visitExcept(rel: RelExcept, ctx: Unit): Operator.Relation {
+        override fun visitExcept(rel: RelExcept, ctx: Unit): ExprRelation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
             return when (rel.isAll()) {
@@ -171,19 +193,19 @@ internal class SqlCompiler(
             }
         }
 
-        override fun visitExclude(rel: RelExclude, ctx: Unit): Operator.Relation {
+        override fun visitExclude(rel: RelExclude, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             val paths = rel.getExclusions()
             return RelOpExclude(input, paths)
         }
 
-        override fun visitFilter(rel: RelFilter, ctx: Unit): Operator.Relation {
+        override fun visitFilter(rel: RelFilter, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             val predicate = compile(rel.getPredicate(), ctx).catch()
             return RelOpFilter(input, predicate)
         }
 
-        override fun visitIntersect(rel: RelIntersect, ctx: Unit): Operator.Relation {
+        override fun visitIntersect(rel: RelIntersect, ctx: Unit): ExprRelation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
             return when (rel.isAll()) {
@@ -192,15 +214,16 @@ internal class SqlCompiler(
             }
         }
 
-        override fun visitIterate(rel: RelIterate, ctx: Unit): Operator.Relation {
+        override fun visitIterate(rel: RelIterate, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> RelOpIteratePermissive(input)
-                PartiQLEngine.Mode.STRICT -> RelOpIterate(input)
+                Mode.PERMISSIVE -> RelOpIteratePermissive(input)
+                Mode.STRICT -> RelOpIterate(input)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
 
-        override fun visitJoin(rel: RelJoin, ctx: Unit): Operator.Relation {
+        override fun visitJoin(rel: RelJoin, ctx: Unit): ExprRelation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
             val condition = rel.getCondition()?.let { compile(it, ctx) } ?: ExprLit(Datum.bool(true))
@@ -217,33 +240,34 @@ internal class SqlCompiler(
             }
         }
 
-        override fun visitLimit(rel: RelLimit, ctx: Unit): Operator.Relation {
+        override fun visitLimit(rel: RelLimit, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             val limit = compile(rel.getLimit(), ctx)
             return RelOpLimit(input, limit)
         }
 
-        override fun visitOffset(rel: RelOffset, ctx: Unit): Operator.Relation {
+        override fun visitOffset(rel: RelOffset, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             val offset = compile(rel.getOffset(), ctx)
             return RelOpOffset(input, offset)
         }
 
-        override fun visitProject(rel: RelProject, ctx: Unit): Operator.Relation {
+        override fun visitProject(rel: RelProject, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             val projections = rel.getProjections().map { compile(it, ctx).catch() }
             return RelOpProject(input, projections)
         }
 
-        override fun visitScan(rel: RelScan, ctx: Unit): Operator.Relation {
+        override fun visitScan(rel: RelScan, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> RelOpScanPermissive(input)
-                PartiQLEngine.Mode.STRICT -> RelOpScan(input)
+                Mode.PERMISSIVE -> RelOpScanPermissive(input)
+                Mode.STRICT -> RelOpScan(input)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
 
-        override fun visitSort(rel: RelSort, ctx: Unit): Operator.Relation {
+        override fun visitSort(rel: RelSort, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             val collations = rel.getCollations().map {
                 val expr = compile(it.getRex(), ctx)
@@ -254,7 +278,7 @@ internal class SqlCompiler(
             return RelOpSort(input, collations)
         }
 
-        override fun visitUnion(rel: RelUnion, ctx: Unit): Operator.Relation {
+        override fun visitUnion(rel: RelUnion, ctx: Unit): ExprRelation {
             val lhs = compile(rel.getLeft(), ctx)
             val rhs = compile(rel.getRight(), ctx)
             return when (rel.isAll()) {
@@ -263,44 +287,32 @@ internal class SqlCompiler(
             }
         }
 
-        override fun visitUnpivot(rel: RelUnpivot, ctx: Unit): Operator.Relation {
+        override fun visitUnpivot(rel: RelUnpivot, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> RelOpUnpivot.Permissive(input)
-                PartiQLEngine.Mode.STRICT -> RelOpUnpivot.Strict(input)
+                Mode.PERMISSIVE -> RelOpUnpivot.Permissive(input)
+                Mode.STRICT -> RelOpUnpivot.Strict(input)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
-    }
 
-    /**
-     * Transforms plan expression operators into the internal physical expressions.
-     */
-    private inner class RexCompiler : RexVisitor<Operator.Expr, Unit> {
-
-        //
-        private val unknown = PType.unknown()
-
-        override fun defaultReturn(rex: Rex, ctx: Unit): Operator.Expr {
-            TODO("Not yet implemented")
-        }
-
-        override fun visitError(rex: RexError, ctx: Unit): Operator.Expr {
+        override fun visitError(rex: RexError, ctx: Unit): ExprValue {
             throw IllegalStateException(rex.getMessage())
         }
 
         // OPERATORS
 
-        override fun visitArray(rex: RexArray, ctx: Unit): Operator.Expr {
+        override fun visitArray(rex: RexArray, ctx: Unit): ExprValue {
             val values = rex.getValues().map { compile(it, ctx).catch() }
             return ExprArray(values)
         }
 
-        override fun visitBag(rex: RexBag, ctx: Unit): Operator.Expr {
+        override fun visitBag(rex: RexBag, ctx: Unit): ExprValue {
             val values = rex.getValues().map { compile(it, ctx).catch() }
             return ExprBag(values)
         }
 
-        override fun visitCallDynamic(rex: RexCallDynamic, ctx: Unit): Operator.Expr {
+        override fun visitCallDynamic(rex: RexCallDynamic, ctx: Unit): ExprValue {
             // Check candidate arity for uniformity
             var arity: Int = -1
             val name = rex.getName()
@@ -328,17 +340,17 @@ internal class SqlCompiler(
             return ExprCallDynamic(name, candidates, args)
         }
 
-        override fun visitCall(rex: RexCall, ctx: Unit): Operator.Expr {
+        override fun visitCall(rex: RexCall, ctx: Unit): ExprValue {
             val func = rex.getFunction()
             val args = rex.getArgs()
             val catch = func.parameters.any { it.kind == PType.Kind.DYNAMIC }
             return when (catch) {
-                true -> ExprCall(func, Array(args.size) { i -> compile(args[i]).catch() })
-                else -> ExprCall(func, Array(args.size) { i -> compile(args[i]) })
+                true -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit).catch() })
+                else -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit) })
             }
         }
 
-        override fun visitCase(rex: RexCase, ctx: Unit): Operator.Expr {
+        override fun visitCase(rex: RexCase, ctx: Unit): ExprValue {
             if (rex.getMatch() != null) {
                 TODO("<case> expression")
             }
@@ -351,79 +363,81 @@ internal class SqlCompiler(
             return ExprCaseSearched(branches, default)
         }
 
-        override fun visitCast(rex: RexCast, ctx: Unit): Operator.Expr {
+        override fun visitCast(rex: RexCast, ctx: Unit): ExprValue {
             val operand = compile(rex.getOperand(), ctx)
             val target = rex.getTarget()
             return ExprCast(operand, target)
         }
 
-        override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): Operator.Expr {
+        override fun visitCoalesce(rex: RexCoalesce, ctx: Unit): ExprValue {
             val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
             return ExprCoalesce(args)
         }
 
-        override fun visitLit(rex: RexLit, ctx: Unit): Operator.Expr {
+        override fun visitLit(rex: RexLit, ctx: Unit): ExprValue {
             return ExprLit(rex.getValue())
         }
 
-        override fun visitMissing(rex: RexMissing, ctx: Unit): Operator.Expr {
+        override fun visitMissing(rex: RexMissing, ctx: Unit): ExprValue {
             return ExprMissing(unknown)
         }
 
-        override fun visitNullIf(rex: RexNullIf, ctx: Unit): Operator.Expr {
+        override fun visitNullIf(rex: RexNullIf, ctx: Unit): ExprValue {
             val value = compile(rex.getV1(), ctx)
             val nullifier = compile(rex.getV2(), ctx)
             return ExprNullIf(value, nullifier)
         }
 
-        override fun visitPathIndex(rex: RexPathIndex, ctx: Unit): Operator.Expr {
+        override fun visitPathIndex(rex: RexPathIndex, ctx: Unit): ExprValue {
             val operand = compile(rex.getOperand(), ctx)
             val index = compile(rex.getIndex(), ctx)
             return ExprPathIndex(operand, index)
         }
 
-        override fun visitPathKey(rex: RexPathKey, ctx: Unit): Operator.Expr {
+        override fun visitPathKey(rex: RexPathKey, ctx: Unit): ExprValue {
             val operand = compile(rex.getOperand(), ctx)
             val key = compile(rex.getKey(), ctx)
             return ExprPathKey(operand, key)
         }
 
-        override fun visitPathSymbol(rex: RexPathSymbol, ctx: Unit): Operator.Expr {
+        override fun visitPathSymbol(rex: RexPathSymbol, ctx: Unit): ExprValue {
             val operand = compile(rex.getOperand(), ctx)
             val symbol = rex.getSymbol()
             return ExprPathSymbol(operand, symbol)
         }
 
-        override fun visitPivot(rex: RexPivot, ctx: Unit): Operator.Expr {
+        override fun visitPivot(rex: RexPivot, ctx: Unit): ExprValue {
             val input = compile(rex.getInput(), ctx)
             val key = compile(rex.getKey(), ctx)
             val value = compile(rex.getValue(), ctx)
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> ExprPivotPermissive(input, key, value)
-                PartiQLEngine.Mode.STRICT -> ExprPivot(input, key, value)
+                Mode.PERMISSIVE -> ExprPivotPermissive(input, key, value)
+                Mode.STRICT -> ExprPivot(input, key, value)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
 
-        override fun visitSelect(rex: RexSelect, ctx: Unit): Operator.Expr {
+        override fun visitSelect(rex: RexSelect, ctx: Unit): ExprValue {
             val input = compile(rex.getInput(), ctx)
             val constructor = compile(rex.getConstructor(), ctx).catch()
             val ordered = rex.getInput().isOrdered()
             return ExprSelect(input, constructor, ordered)
         }
 
-        override fun visitStruct(rex: RexStruct, ctx: Unit): Operator.Expr {
+        override fun visitStruct(rex: RexStruct, ctx: Unit): ExprValue {
             val fields = rex.getFields().map {
                 val k = compile(it.getKey(), ctx)
                 val v = compile(it.getValue(), ctx).catch()
                 ExprStructField(k, v)
             }
             return when (mode) {
-                PartiQLEngine.Mode.PERMISSIVE -> ExprStructPermissive(fields)
-                PartiQLEngine.Mode.STRICT -> ExprStructStrict(fields)
+                Mode.PERMISSIVE -> ExprStructPermissive(fields)
+                Mode.STRICT -> ExprStructStrict(fields)
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
             }
         }
 
-        override fun visitSubquery(rex: RexSubquery, ctx: Unit): Operator.Expr {
+        override fun visitSubquery(rex: RexSubquery, ctx: Unit): ExprValue {
             val rel = compile(rex.getRel(), ctx)
             val constructor = compile(rex.getConstructor(), ctx)
             return when (rex.asScalar()) {
@@ -432,39 +446,40 @@ internal class SqlCompiler(
             }
         }
 
-        override fun visitSubqueryComp(rex: RexSubqueryComp, ctx: Unit): Operator.Expr {
+        override fun visitSubqueryComp(rex: RexSubqueryComp, ctx: Unit): ExprValue {
             TODO("<exists predicate> and <unique predicate>")
         }
 
-        override fun visitSubqueryIn(rex: RexSubqueryIn, ctx: Unit): Operator.Expr {
+        override fun visitSubqueryIn(rex: RexSubqueryIn, ctx: Unit): ExprValue {
             TODO("<in predicate>")
         }
 
-        override fun visitSubqueryTest(rex: RexSubqueryTest, ctx: Unit): Operator.Expr {
+        override fun visitSubqueryTest(rex: RexSubqueryTest, ctx: Unit): ExprValue {
             TODO("<exists predicate> and <unique predicate>")
         }
 
-        override fun visitSpread(rex: RexSpread, ctx: Unit): Operator.Expr {
+        override fun visitSpread(rex: RexSpread, ctx: Unit): ExprValue {
             val args = rex.getArgs().map { compile(it, ctx) }.toTypedArray()
             return ExprSpread(args)
         }
 
-        override fun visitTable(rex: RexTable, ctx: Unit): Operator.Expr {
+        override fun visitTable(rex: RexTable, ctx: Unit): ExprValue {
             return ExprTable(rex.getTable())
         }
 
-        override fun visitVar(rex: RexVar, ctx: Unit): Operator.Expr {
+        override fun visitVar(rex: RexVar, ctx: Unit): ExprValue {
             val depth = rex.getDepth()
             val offset = rex.getOffset()
             return ExprVar(depth, offset)
         }
-    }
 
-    /**
-     * Some places "catch" an error and return the MISSING value.
-     */
-    private fun Operator.Expr.catch(): Operator.Expr = when (mode) {
-        PartiQLEngine.Mode.PERMISSIVE -> ExprPermissive(this)
-        PartiQLEngine.Mode.STRICT -> this
+        /**
+         * Some places "catch" an error and return the MISSING value.
+         */
+        private fun ExprValue.catch(): ExprValue = when (mode) {
+            Mode.PERMISSIVE -> ExprPermissive(this)
+            Mode.STRICT -> this
+            else -> throw IllegalStateException("Unsupported execution mode: $mode")
+        }
     }
 }

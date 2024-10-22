@@ -1,9 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
+import org.partiql.eval.Row
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
@@ -14,7 +15,7 @@ import org.partiql.types.PType
  *  Input:   { k_0: v_0, ..., k_i: v_i }
  *  Output:  [ k_0, v_0 ] ... [ k_i, v_i ]
  */
-internal sealed class RelOpUnpivot : Operator.Relation {
+internal sealed class RelOpUnpivot : ExprRelation {
 
     /**
      * Iterator of the struct fields.
@@ -40,11 +41,11 @@ internal sealed class RelOpUnpivot : Operator.Relation {
         return _iterator.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         val f = _iterator.next()
         val k = Datum.string(f.name)
         val v = f.value
-        return Record.of(k, v)
+        return Row.of(k, v)
     }
 
     override fun close() {}
@@ -54,10 +55,10 @@ internal sealed class RelOpUnpivot : Operator.Relation {
      *
      * @property expr
      */
-    class Strict(private val expr: Operator.Expr) : RelOpUnpivot() {
+    class Strict(private val expr: ExprValue) : RelOpUnpivot() {
 
         override fun struct(): Datum {
-            val v = expr.eval(env.push(Record.empty))
+            val v = expr.eval(env.push(Row()))
             if (v.type.kind != PType.Kind.STRUCT && v.type.kind != PType.Kind.ROW) {
                 throw TypeCheckException()
             }
@@ -74,10 +75,10 @@ internal sealed class RelOpUnpivot : Operator.Relation {
      *
      * @property expr
      */
-    class Permissive(private val expr: Operator.Expr) : RelOpUnpivot() {
+    class Permissive(private val expr: ExprValue) : RelOpUnpivot() {
 
         override fun struct(): Datum {
-            val v = expr.eval(env.push(Record.empty))
+            val v = expr.eval(env.push(Row()))
             if (v.isMissing) {
                 return Datum.struct(emptyList())
             }

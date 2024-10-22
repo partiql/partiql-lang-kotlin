@@ -5,7 +5,7 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
@@ -38,7 +38,7 @@ class ExprCallDynamicTest {
                 functions = functions,
                 args = arrayOf(ExprLit(lhs), ExprLit(rhs)),
             )
-            val result = expr.eval(Environment.empty).check(PartiQLValueType.INT32)
+            val result = expr.eval(Environment()).check(PartiQLValueType.INT32)
             assertEquals(expectedIndex, result.int)
         }
 
