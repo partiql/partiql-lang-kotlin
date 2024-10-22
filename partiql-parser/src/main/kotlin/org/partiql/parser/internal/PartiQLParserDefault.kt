@@ -171,7 +171,7 @@ import org.partiql.ast.typeTimestamp
 import org.partiql.ast.typeTimestampWithTz
 import org.partiql.ast.typeTuple
 import org.partiql.ast.typeVarchar
-import org.partiql.parser.ParserConfig
+import org.partiql.parser.ParserContext
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
@@ -230,14 +230,14 @@ import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
 internal class PartiQLParserDefault : PartiQLParser {
 
     @Throws(PErrorListenerException::class)
-    override fun parse(source: String, config: ParserConfig): PartiQLParser.Result {
+    override fun parse(source: String, ctx: ParserContext): PartiQLParser.Result {
         try {
-            return parse(source, config.errorListener)
+            return parse(source, ctx.errorListener)
         } catch (e: PErrorListenerException) {
             throw e
         } catch (throwable: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.SYNTAX(), null, throwable)
-            config.errorListener.report(error)
+            ctx.errorListener.report(error)
             return PartiQLParser.Result.empty(source)
         }
     }

@@ -17,11 +17,24 @@ public interface PartiQLPlanner {
      *
      * @param statement
      * @param session
+     * @param ctx a configuration object
+     * @return
+     */
+    @Throws(PErrorListenerException::class)
+    public fun plan(statement: Statement, session: Session, ctx: PlannerContext): Result
+
+    /**
+     * Transform an AST to a [Plan].
+     *
+     * @param statement
+     * @param session
      * @param config a configuration object
      * @return
      */
     @Throws(PErrorListenerException::class)
-    public fun plan(statement: Statement, session: Session, config: PlannerConfig = PlannerConfigBuilder().build()): Result
+    public fun plan(statement: Statement, session: Session): Result {
+        return plan(statement, session, PlannerContext.builder().build())
+    }
 
     /**
      * Planner result.

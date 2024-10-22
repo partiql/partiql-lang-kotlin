@@ -7,13 +7,19 @@ import org.partiql.spi.errors.PErrorListener;
  * Represents the configuration for the {@link PartiQLPlanner}.
  *
  * @see PartiQLPlanner
- * @see PlannerConfigBuilder
  */
-public interface PlannerConfig {
+@lombok.Builder(builderClassName = "Builder")
+public final class PlannerContext {
+
+    @lombok.NonNull
+    @lombok.Builder.Default
+    private final PErrorListener listener = PErrorListener.abortOnError();
 
     /**
      * @return the {@link PErrorListener} that the {@link PartiQLPlanner} may use to emit errors/warnings.
      */
     @NotNull
-    PErrorListener getErrorListener();
+    public PErrorListener getErrorListener() {
+        return listener;
+    }
 }

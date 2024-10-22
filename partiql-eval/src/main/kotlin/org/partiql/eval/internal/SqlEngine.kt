@@ -1,6 +1,6 @@
 package org.partiql.eval.internal
 
-import org.partiql.eval.CompilerConfig
+import org.partiql.eval.CompilerContext
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLStatement
 import org.partiql.eval.internal.operator.rex.ExprMissing
@@ -15,20 +15,20 @@ import org.partiql.types.PType
 
 internal class SqlEngine : PartiQLEngine {
 
-    override fun prepare(plan: Plan, session: Session, config: CompilerConfig): PartiQLStatement {
+    override fun prepare(plan: Plan, session: Session, ctx: CompilerContext): PartiQLStatement {
         try {
             val operation = plan.getOperation()
             if (operation !is Query) {
                 throw IllegalArgumentException("Only query statements are supported")
             }
-            val compiler = SqlCompiler(config.mode, session)
+            val compiler = SqlCompiler(ctx.mode, session)
             val root = compiler.compile(operation.getRex())
             return QueryStatement(root)
         } catch (e: PErrorListenerException) {
             throw e
         } catch (t: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.COMPILATION(), null, t)
-            config.errorListener.report(error)
+            ctx.errorListener.report(error)
             return QueryStatement(ExprMissing(PType.unknown()))
         }
     }

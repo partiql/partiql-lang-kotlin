@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PlannerConfigBuilder
+import org.partiql.planner.PlannerContext
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
@@ -3851,7 +3851,7 @@ internal class PlanTyperTestsPorted {
         listener: PErrorListener,
     ): org.partiql.plan.Plan {
         val ast = parser.parse(query).root
-        val plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build()
+        val plannerConfig = PlannerContext.builder().listener(listener).build()
         return planner.plan(ast, session, plannerConfig).plan
     }
 

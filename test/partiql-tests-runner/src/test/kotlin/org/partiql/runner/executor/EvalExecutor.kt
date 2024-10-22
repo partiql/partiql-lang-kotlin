@@ -7,13 +7,14 @@ import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.eval.CompilerContext
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PlannerConfigBuilder
+import org.partiql.planner.PlannerContext
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.CompileType
@@ -46,9 +47,9 @@ class EvalExecutor(
     override fun prepare(statement: String): PartiQLStatement {
         val stmt = parser.parse(statement).root
         val listener = getErrorListener(mode)
-        val plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build()
+        val plannerConfig = PlannerContext.builder().listener(listener).build()
         val plan = planner.plan(stmt, session, plannerConfig).plan
-        val config = org.partiql.eval.CompilerConfigBuilder().setMode(mode).setErrorListener(listener).build()
+        val config = CompilerContext.builder().mode(mode).listener(listener).build()
         return engine.prepare(plan, session, config)
     }
 

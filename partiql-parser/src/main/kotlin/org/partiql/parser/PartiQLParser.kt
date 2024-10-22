@@ -27,12 +27,23 @@ public interface PartiQLParser {
     /**
      * Parses the [source] into an AST.
      * @param source the user's input
-     * @param config a configuration object for the parser
-     * @throws PErrorListenerException when the [org.partiql.spi.errors.PErrorListener] defined in the [config] throws an
+     * @param ctx a configuration object for the parser
+     * @throws PErrorListenerException when the [org.partiql.spi.errors.PErrorListener] defined in the [ctx] throws an
      * [PErrorListenerException], this method halts execution and propagates the exception.
      */
     @Throws(PErrorListenerException::class)
-    public fun parse(source: String, config: ParserConfig = ParserConfigBuilder().build()): Result
+    public fun parse(source: String, ctx: ParserContext): Result
+
+    /**
+     * Parses the [source] into an AST.
+     * @param source the user's input
+     * @throws PErrorListenerException when the [org.partiql.spi.errors.PErrorListener] defined in the context throws an
+     * [PErrorListenerException], this method halts execution and propagates the exception.
+     */
+    @Throws(PErrorListenerException::class)
+    public fun parse(source: String): Result {
+        return parse(source, ParserContext.builder().build())
+    }
 
     public data class Result(
         val source: String,

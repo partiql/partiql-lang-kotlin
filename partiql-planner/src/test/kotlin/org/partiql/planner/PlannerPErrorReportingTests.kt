@@ -393,7 +393,7 @@ internal class PlannerPErrorReportingTests {
             true -> PErrorAlwaysMissingCollector()
             false -> PErrorCollector()
         }
-        val pConfig = PlannerConfigBuilder().setErrorListener(pc).build()
+        val pConfig = PlannerContext.builder().listener(pc).build()
         val res = planner.plan(statement(tc.query), session, pConfig)
         val plan = res.plan
         assertProblem(

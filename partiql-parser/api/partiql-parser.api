@@ -1,17 +1,19 @@
-public abstract interface class org/partiql/parser/ParserConfig {
-	public abstract fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
+public final class org/partiql/parser/ParserContext {
+	public static fun builder ()Lorg/partiql/parser/ParserContext$Builder;
+	public fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
 }
 
-public class org/partiql/parser/ParserConfigBuilder {
-	public fun <init> ()V
-	public fun build ()Lorg/partiql/parser/ParserConfig;
-	public fun setErrorListener (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/parser/ParserConfigBuilder;
+public class org/partiql/parser/ParserContext$Builder {
+	public fun build ()Lorg/partiql/parser/ParserContext;
+	public fun listener (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/parser/ParserContext$Builder;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/parser/PartiQLParser {
 	public static final field Companion Lorg/partiql/parser/PartiQLParser$Companion;
 	public static fun builder ()Lorg/partiql/parser/PartiQLParserBuilder;
-	public abstract fun parse (Ljava/lang/String;Lorg/partiql/parser/ParserConfig;)Lorg/partiql/parser/PartiQLParser$Result;
+	public abstract fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParser$Result;
+	public abstract fun parse (Ljava/lang/String;Lorg/partiql/parser/ParserContext;)Lorg/partiql/parser/PartiQLParser$Result;
 	public static fun standard ()Lorg/partiql/parser/PartiQLParser;
 }
 
@@ -21,7 +23,7 @@ public final class org/partiql/parser/PartiQLParser$Companion {
 }
 
 public final class org/partiql/parser/PartiQLParser$DefaultImpls {
-	public static synthetic fun parse$default (Lorg/partiql/parser/PartiQLParser;Ljava/lang/String;Lorg/partiql/parser/ParserConfig;ILjava/lang/Object;)Lorg/partiql/parser/PartiQLParser$Result;
+	public static fun parse (Lorg/partiql/parser/PartiQLParser;Ljava/lang/String;)Lorg/partiql/parser/PartiQLParser$Result;
 }
 
 public final class org/partiql/parser/PartiQLParser$Result {

@@ -16,7 +16,7 @@
 
 package org.partiql.planner.internal.typer
 
-import org.partiql.planner.PlannerConfig
+import org.partiql.planner.PlannerContext
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.exclude.ExcludeRepr
@@ -71,7 +71,7 @@ import kotlin.math.max
  * @property env
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class PlanTyper(private val env: Env, config: PlannerConfig) {
+internal class PlanTyper(private val env: Env, config: PlannerContext) {
 
     private val _listener = config.errorListener
 

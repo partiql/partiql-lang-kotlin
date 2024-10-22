@@ -5,7 +5,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PlannerConfigBuilder
+import org.partiql.planner.PlannerContext
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PErrorCollector
@@ -54,7 +54,7 @@ abstract class PartiQLTyperTestBase {
     private val testingPipeline: ((String, String, Catalog, PErrorListener) -> PartiQLPlanner.Result) =
         { query, catalog, metadata, collector ->
             val ast = parser.parse(query).root
-            val config = PlannerConfigBuilder().setErrorListener(collector).build()
+            val config = PlannerContext.builder().listener(collector).build()
             planner.plan(ast, session(catalog, metadata), config)
         }
 
