@@ -1,6 +1,7 @@
 package org.partiql.ast.v1.expr;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -13,6 +14,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @Builder(builderClassName = "Builder")
+@EqualsAndHashCode(callSuper = false)
 public class ExprStruct extends Expr {
     @NotNull
     public final List<Field> fields;
@@ -36,6 +38,7 @@ public class ExprStruct extends Expr {
      * TODO docs, equals, hashcode
      */
     @lombok.Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Field extends AstNode {
         @NotNull
         public final Expr name;

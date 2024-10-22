@@ -1,8 +1,11 @@
 package org.partiql.ast.v1;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * TODO docs, equals, hashcode
  */
+@EqualsAndHashCode(callSuper = false)
 public class FromType implements Enum {
     public static final int UNKNOWN = 0;
     public static final int SCAN = 1;

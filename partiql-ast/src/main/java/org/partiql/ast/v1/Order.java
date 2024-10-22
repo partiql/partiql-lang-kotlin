@@ -1,5 +1,8 @@
 package org.partiql.ast.v1;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode(callSuper = false)
 public class Order implements Enum {
     public static final int UNKNOWN = 0;
     public static final int ASC = 1;

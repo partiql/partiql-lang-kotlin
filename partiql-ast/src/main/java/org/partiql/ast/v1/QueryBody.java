@@ -1,6 +1,7 @@
 package org.partiql.ast.v1;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.expr.Expr;
@@ -11,6 +12,7 @@ import java.util.List;
 
 public abstract class QueryBody extends AstNode {
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class SFW extends QueryBody {
         @NotNull
         public final Select select;
@@ -65,6 +67,7 @@ public abstract class QueryBody extends AstNode {
     }
 
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class SetOp extends QueryBody {
         @NotNull
         public final org.partiql.ast.v1.SetOp type;

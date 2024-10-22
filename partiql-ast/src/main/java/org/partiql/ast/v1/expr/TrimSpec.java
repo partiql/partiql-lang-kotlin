@@ -1,7 +1,9 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.EqualsAndHashCode;
 import org.partiql.ast.v1.Enum;
 
+@EqualsAndHashCode(callSuper = false)
 public class TrimSpec implements Enum {
     public static final int UNKNOWN = 0;
     public static final int LEADING = 1;

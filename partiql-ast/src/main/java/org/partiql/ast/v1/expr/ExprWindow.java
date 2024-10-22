@@ -1,6 +1,7 @@
 package org.partiql.ast.v1.expr;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -15,6 +16,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @Builder(builderClassName = "Builder")
+@EqualsAndHashCode(callSuper = false)
 public class ExprWindow extends Expr {
     @NotNull
     public final WindowFunction windowFunction;
@@ -63,6 +65,7 @@ public class ExprWindow extends Expr {
      * TODO docs, equals, hashcode
      */
     @lombok.Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Over extends AstNode {
         @Nullable
         public final List<Expr> partitions;

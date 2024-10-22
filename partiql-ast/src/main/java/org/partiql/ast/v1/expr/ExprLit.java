@@ -1,6 +1,7 @@
 package org.partiql.ast.v1.expr;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -13,6 +14,7 @@ import java.util.Collections;
  * TODO docs, equals, hashcode
  */
 @Builder(builderClassName = "Builder")
+@EqualsAndHashCode(callSuper = false)
 public class ExprLit extends Expr {
     @NotNull
     public final PartiQLValue value; // This representation be changed in https://github.com/partiql/partiql-lang-kotlin/issues/1589

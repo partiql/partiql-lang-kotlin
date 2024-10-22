@@ -1,5 +1,8 @@
 package org.partiql.ast.v1;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode(callSuper = false)
 public class DataType implements Enum {
     public static final int UNKNOWN = 0;
     // <absent types>
@@ -156,6 +159,14 @@ public class DataType implements Enum {
 
     public static DataType DEC() {
         return new DataType(DEC);
+    }
+
+    public static DataType DEC(int precision) {
+        return new DataType(DEC, precision, null, null);
+    }
+
+    public static DataType DEC(int precision, int scale) {
+        return new DataType(DEC, precision, scale, null);
     }
 
     public static DataType NUMERIC() {
