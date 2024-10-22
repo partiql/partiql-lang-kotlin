@@ -21,14 +21,14 @@ library allows developers to register their own error listeners to take control 
 
 Each major component (parser, planner, compiler) of the PartiQL Library allows for the registration of an `ErrorListener`
 that will receive every warning/error that the particular component emits. The default error listener aborts the
-component's execution, by throwing an `ErrorListenerException`, upon encountering the first error. This behavior aims to
+component's execution, by throwing an `PErrorListenerException`, upon encountering the first error. This behavior aims to
 protect developers who might have decided to avoid reading this documentation. However, as seen further below, this is
 easy to override.
 
 ## Halting a Component's Execution
 
 In the scenario where you want to halt one of the components when a particular warning/error is emitted, error listeners
-have the ability to throw an `ErrorListenerException`. This exception acts as a wrapper over any exception you'd like to
+have the ability to throw an `PErrorListenerException`. This exception acts as a wrapper over any exception you'd like to
 halt with. For example:
 
 ```java
@@ -37,32 +37,31 @@ import org.partiql.spi.errors.PErrorListener;
 
 import java.lang.annotation.Native;
 
-class AbortWhenAlwaysMissing extends ErrorListener {
+class AbortWhenAlwaysMissing extends PErrorListener {
     // This is to be used to halt my application after the component finishes execution
     boolean hasErrors = false;
 
     @Override
-    void error(@NotNull Error error) throws ErrorListenerException {
+    void error(@NotNull PError error) throws PErrorListenerException {
         System.out.println("e: " + getErrorMessage(error));
         hasErrors = true;
     }
 
     @Override
-    void warning(@NotNull Error error) throws ErrorListenerException {
+    void warning(@NotNull PError error) throws PErrorListenerException {
         if (error.getCode() == Error.ALWAYS_MISSING) {
-            Exception cause = new IllegalStateException("This system does not allow for expressions that always return missing!");
-            throw new ErrorListenerException(cause);
+            throw new PErrorListenerException("This system does not allow for expressions that always return missing!");
         }
         println("w: " + getErrorMessage(error));
     }
 
-    private fun getErrorMessage(@NotNull Error error) {
+    private fun getErrorMessage(@NotNull PError error) {
         // Internal implementation details
     }
 }
 ```
 
-**NOTE**: If you throw an exception that is not an `ErrorListenerException`, the component that contains your registered
+**NOTE**: If you throw an exception that is not an `PErrorListenerException`, the component that contains your registered
 `ErrorListener` will catch the exception and send an error to your `ErrorListener` with a code of
 `Error.INTERNAL_ERROR`. This will lead to a duplication of errors (which can be a bad experience for your
 customers).
@@ -76,7 +75,7 @@ intend on registering the `AbortWhenAlwaysMissing` error listener from above:
 public class Foo {
     public static void main(String[] args) {
         // Error Listener
-        ErrorListener listener = AbortWhenAlwaysMissing();
+        PErrorListener listener = AbortWhenAlwaysMissing();
 
         // User Input
         String query = args[0];
@@ -86,19 +85,19 @@ public class Foo {
         PartiQLPlanner planner = PartiQLPlanner.standard();
         PlannerConfig plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build(); // Registration here!!
 
-        // Planning and catching the ErrorListenerException
+        // Planning and catching the PErrorListenerException
         Plan plan;
         try {
             plan = planner.plan(ast, plannerConfig);
-        } catch (ErrorListenerException ex) {
-            throw ex.cause;
+        } catch (PErrorListenerException ex) {
+            throw ex;
         }
 
         // Do more ...
     }
 
     private Statement parse(String query) {
-        // Calling the PartiQL Parser, handling ErrorListenerExceptions, etc.
+        // Calling the PartiQL Parser, handling PErrorListenerExceptions, etc.
     }
 }
 ```
@@ -125,30 +124,29 @@ each error code's Javadocs before using them in your application.
 
 Now, here's an example of how you might write a quality error message:
 ```java
-public class ConsoleErrorListener extends ErrorListener {
+public class ConsolePErrorListener extends PErrorListener {
 
     boolean hasErrors = false;
 
     @Override
-    void error(@NotNull Error error) throws ErrorListenerException {
+    void error(@NotNull PError error) throws PErrorListenerException {
         String message = getMessage(error, "e: ");
         System.out.println(message);
         hasErrors = true;
     }
 
     @Override
-    void warning(@NotNull Error error) throws ErrorListenerException {
+    void warning(@NotNull PError error) throws PErrorListenerException {
         String message = getMessage(error, "w: ");
         System.out.println(message);
     }
 
-    static String getMessage(@NotNull Error error, @NotNull String prefix) {
+    static String getMessage(@NotNull PError error, @NotNull String prefix) {
         switch (error.getCode()) {
             case Error.ALWAYS_MISSING:
-                Integer line = (Integer) error.getProperty(Property.LINE_NO);
-                Integer column = (Integer) error.getProperty(Property.COL_NO);
-                String location = getNullSafeLocation(line, column);
-                return prefix + location + " Expression always evaluates to missing.";
+                SourceLocation location = error.location;
+                String locationStr = getNullSafeLocation(location);
+                return prefix + locationStr + " Expression always evaluates to missing.";
             case Error.FEATURE_NOT_SUPPORTED:
                 String name = (String) error.getProperty(Property.FEATURE_NAME);
                 if (name == null) {
@@ -160,7 +158,8 @@ public class ConsoleErrorListener extends ErrorListener {
         }
     }
 
-    String getNullSafeLocation(Integer line, Integer col) {
+    @NotNull
+    String getNullSafeLocation(@Nullable SourceLocation location) {
         // Internal implementation
     }
 }
@@ -190,7 +189,7 @@ class Example {
         Plan plan;
         try {
             plan = planner.plan(ast, plannerConfig);
-        } catch (ErrorListenerException ex) {
+        } catch (PErrorListenerException ex) {
             throw new PlanningFailure(ex);
         }
         // If an error has been reported to the listener, implementers
