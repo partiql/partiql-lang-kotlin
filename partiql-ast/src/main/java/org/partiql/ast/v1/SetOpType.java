@@ -38,4 +38,22 @@ public class SetOpType implements Enum {
     public int code() {
         return code;
     }
+
+    public static SetOpType valueOf(String value) {
+        switch (value) {
+            case "UNKNOWN": return UNKNOWN();
+            case "UNION": return UNION();
+            case "INTERSECT": return INTERSECT();
+            case "EXCEPT": return EXCEPT();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static SetOpType[] values() {
+        return new SetOpType[] {
+            UNION(),
+            INTERSECT(),
+            EXCEPT()
+        };
+    }
 }

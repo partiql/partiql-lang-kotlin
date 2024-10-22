@@ -5855,6 +5855,7 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static fun TINYINT ()Lorg/partiql/ast/v1/DataType;
 	public static fun TUPLE ()Lorg/partiql/ast/v1/DataType;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/DataType;
+	public static fun USER_DEFINED ()Lorg/partiql/ast/v1/DataType;
 	public static fun USER_DEFINED (Lorg/partiql/ast/v1/IdentifierChain;)Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR ()Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR (I)Lorg/partiql/ast/v1/DataType;
@@ -5866,6 +5867,8 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public fun getPrecision ()Ljava/lang/Integer;
 	public fun getScale ()Ljava/lang/Integer;
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/DataType;
+	public static fun values ()[Lorg/partiql/ast/v1/DataType;
 }
 
 public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/Enum {
@@ -5891,6 +5894,8 @@ public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/DatetimeField;
+	public static fun values ()[Lorg/partiql/ast/v1/DatetimeField;
 }
 
 public abstract interface class org/partiql/ast/v1/Enum {
@@ -6085,6 +6090,8 @@ public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/FromType;
+	public static fun values ()[Lorg/partiql/ast/v1/FromType;
 }
 
 public class org/partiql/ast/v1/GroupBy : org/partiql/ast/v1/AstNode {
@@ -6135,6 +6142,8 @@ public class org/partiql/ast/v1/GroupByStrategy : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/GroupByStrategy;
+	public static fun values ()[Lorg/partiql/ast/v1/GroupByStrategy;
 }
 
 public class org/partiql/ast/v1/Identifier : org/partiql/ast/v1/AstNode {
@@ -6198,6 +6207,8 @@ public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/JoinType;
+	public static fun values ()[Lorg/partiql/ast/v1/JoinType;
 }
 
 public class org/partiql/ast/v1/Let : org/partiql/ast/v1/AstNode {
@@ -6244,6 +6255,8 @@ public class org/partiql/ast/v1/Nulls : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/Nulls;
+	public static fun values ()[Lorg/partiql/ast/v1/Nulls;
 }
 
 public class org/partiql/ast/v1/Order : org/partiql/ast/v1/Enum {
@@ -6257,6 +6270,8 @@ public class org/partiql/ast/v1/Order : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/Order;
+	public static fun values ()[Lorg/partiql/ast/v1/Order;
 }
 
 public class org/partiql/ast/v1/OrderBy : org/partiql/ast/v1/AstNode {
@@ -6497,6 +6512,8 @@ public class org/partiql/ast/v1/SetOpType : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/SetOpType;
+	public static fun values ()[Lorg/partiql/ast/v1/SetOpType;
 }
 
 public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/Enum {
@@ -6510,6 +6527,8 @@ public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/SetQuantifier;
+	public static fun values ()[Lorg/partiql/ast/v1/SetQuantifier;
 }
 
 public class org/partiql/ast/v1/Sort : org/partiql/ast/v1/AstNode {
@@ -7279,6 +7298,8 @@ public class org/partiql/ast/v1/expr/Scope : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/Scope;
+	public static fun values ()[Lorg/partiql/ast/v1/expr/Scope;
 }
 
 public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/Enum {
@@ -7293,6 +7314,8 @@ public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/Enum 
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/SessionAttribute;
+	public static fun values ()[Lorg/partiql/ast/v1/expr/SessionAttribute;
 }
 
 public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/Enum {
@@ -7308,6 +7331,8 @@ public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/TrimSpec;
+	public static fun values ()[Lorg/partiql/ast/v1/expr/TrimSpec;
 }
 
 public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/Enum {
@@ -7322,6 +7347,8 @@ public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/WindowFunction;
+	public static fun values ()[Lorg/partiql/ast/v1/expr/WindowFunction;
 }
 
 public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/Enum {
@@ -7345,6 +7372,8 @@ public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/Enum {
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun values ()[Lorg/partiql/ast/v1/graph/GraphDirection;
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphLabel : org/partiql/ast/v1/AstNode {
@@ -7583,6 +7612,8 @@ public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/Enum 
 	public fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	public static fun values ()[Lorg/partiql/ast/v1/graph/GraphRestrictor;
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphSelector : org/partiql/ast/v1/AstNode {

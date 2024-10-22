@@ -59,4 +59,29 @@ public class GraphDirection implements Enum {
     public int code() {
         return code;
     }
+
+    public static GraphDirection valueOf(String value) {
+        switch (value) {
+            case "LEFT": return LEFT();
+            case "UNDIRECTED": return UNDIRECTED();
+            case "RIGHT": return RIGHT();
+            case "LEFT_OR_UNDIRECTED": return LEFT_OR_UNDIRECTED();
+            case "UNDIRECTED_OR_RIGHT": return UNDIRECTED_OR_RIGHT();
+            case "LEFT_OR_RIGHT": return LEFT_OR_RIGHT();
+            case "LEFT_UNDIRECTED_OR_RIGHT": return LEFT_UNDIRECTED_OR_RIGHT();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static GraphDirection[] values() {
+        return new GraphDirection[] {
+            LEFT(),
+            UNDIRECTED(),
+            RIGHT(),
+            LEFT_OR_UNDIRECTED(),
+            UNDIRECTED_OR_RIGHT(),
+            LEFT_OR_RIGHT(),
+            LEFT_UNDIRECTED_OR_RIGHT()
+        };
+    }
 }

@@ -33,4 +33,19 @@ public class GroupByStrategy implements Enum {
     public int code() {
         return code;
     }
+
+    public static GroupByStrategy valueOf(String value) {
+        switch (value) {
+            case "FULL": return FULL();
+            case "PARTIAL": return PARTIAL();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static GroupByStrategy[] values() {
+        return new GroupByStrategy[] {
+            FULL(),
+            PARTIAL()
+        };
+    }
 }

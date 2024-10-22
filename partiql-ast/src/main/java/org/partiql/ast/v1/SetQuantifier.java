@@ -33,4 +33,19 @@ public class SetQuantifier implements Enum {
     public int code() {
         return code;
     }
+
+    public static SetQuantifier valueOf(String value) {
+        switch (value) {
+            case "ALL": return ALL();
+            case "DISTINCT": return DISTINCT();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static SetQuantifier[] values() {
+        return new SetQuantifier[] {
+            ALL(),
+            DISTINCT()
+        };
+    }
 }

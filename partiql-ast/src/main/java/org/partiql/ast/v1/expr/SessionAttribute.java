@@ -34,4 +34,19 @@ public class SessionAttribute implements Enum {
     public int code() {
         return code;
     }
+
+    public static SessionAttribute valueOf(String value) {
+        switch (value) {
+            case "CURRENT_USER": return CURRENT_USER();
+            case "CURRENT_DATE": return CURRENT_DATE();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static SessionAttribute[] values() {
+        return new SessionAttribute[] {
+            CURRENT_USER(),
+            CURRENT_DATE()
+        };
+    }
 }

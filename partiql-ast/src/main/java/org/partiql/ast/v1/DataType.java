@@ -1,6 +1,7 @@
 package org.partiql.ast.v1;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
 
 @EqualsAndHashCode(callSuper = false)
 public class DataType implements Enum {
@@ -349,7 +350,11 @@ public class DataType implements Enum {
         return new DataType(INTERVAL);
     }
 
-    public static DataType USER_DEFINED(IdentifierChain name) {
+    public static DataType USER_DEFINED() {
+        return new DataType(USER_DEFINED);
+    }
+
+    public static DataType USER_DEFINED(@NotNull IdentifierChain name) {
         return new DataType(USER_DEFINED, name);
     }
 
@@ -389,6 +394,109 @@ public class DataType implements Enum {
     @Override
     public int code() {
         return code;
+    }
+
+    public static DataType valueOf(String value) {
+        switch (value) {
+            case "NULL": return NULL();
+            case "MISSING": return MISSING();
+            case "BOOL": return BOOL();
+            case "BOOLEAN": return BOOLEAN();
+            case "TINYINT": return TINYINT();
+            case "SMALLINT": return SMALLINT();
+            case "INTEGER2": return INTEGER2();
+            case "INT2": return INT2();
+            case "INTEGER": return INTEGER();
+            case "INT": return INT();
+            case "INTEGER4": return INTEGER4();
+            case "INT4": return INT4();
+            case "INTEGER8": return INTEGER8();
+            case "INT8": return INT8();
+            case "BIGINT": return BIGINT();
+            case "REAL": return REAL();
+            case "DOUBLE_PRECISION": return DOUBLE_PRECISION();
+            case "FLOAT": return FLOAT();
+            case "DECIMAL": return DECIMAL();
+            case "DEC": return DEC();
+            case "NUMERIC": return NUMERIC();
+            case "BIT": return BIT();
+            case "BIT_VARYING": return BIT_VARYING();
+            case "CHAR": return CHAR();
+            case "CHARACTER": return CHARACTER();
+            case "VARCHAR": return VARCHAR();
+            case "CHARACTER_LARGE_OBJECT": return CHARACTER_LARGE_OBJECT();
+            case "CHAR_LARGE_OBJECT": return CHAR_LARGE_OBJECT();
+            case "CHAR_VARYING": return CHAR_VARYING();
+            case "STRING": return STRING();
+            case "SYMBOL": return SYMBOL();
+            case "BLOB": return BLOB();
+            case "BINARY_LARGE_OBJECT": return BINARY_LARGE_OBJECT();
+            case "CLOB": return CLOB();
+            case "DATE": return DATE();
+            case "STRUCT": return STRUCT();
+            case "TUPLE": return TUPLE();
+            case "LIST": return LIST();
+            case "SEXP": return SEXP();
+            case "BAG": return BAG();
+            case "TIME": return TIME();
+            case "TIME_WITH_TIME_ZONE": return TIME_WITH_TIME_ZONE();
+            case "TIMESTAMP": return TIMESTAMP();
+            case "TIMESTAMP_WITH_TIME_ZONE": return TIMESTAMP_WITH_TIME_ZONE();
+            case "INTERVAL": return INTERVAL();
+            case "USER_DEFINED": return USER_DEFINED();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static DataType[] values() {
+        return new DataType[] {
+            NULL(),
+            MISSING(),
+            BOOL(),
+            BOOLEAN(),
+            TINYINT(),
+            SMALLINT(),
+            INTEGER2(),
+            INT2(),
+            INTEGER(),
+            INT(),
+            INTEGER4(),
+            INT4(),
+            INTEGER8(),
+            INT8(),
+            BIGINT(),
+            REAL(),
+            DOUBLE_PRECISION(),
+            FLOAT(),
+            DECIMAL(),
+            DEC(),
+            NUMERIC(),
+            BIT(),
+            BIT_VARYING(),
+            CHAR(),
+            CHARACTER(),
+            VARCHAR(),
+            CHARACTER_LARGE_OBJECT(),
+            CHAR_LARGE_OBJECT(),
+            CHAR_VARYING(),
+            STRING(),
+            SYMBOL(),
+            BLOB(),
+            BINARY_LARGE_OBJECT(),
+            CLOB(),
+            DATE(),
+            STRUCT(),
+            TUPLE(),
+            LIST(),
+            SEXP(),
+            BAG(),
+            TIME(),
+            TIME_WITH_TIME_ZONE(),
+            TIMESTAMP(),
+            TIMESTAMP_WITH_TIME_ZONE(),
+            INTERVAL(),
+            USER_DEFINED()
+        };
     }
 
     /**

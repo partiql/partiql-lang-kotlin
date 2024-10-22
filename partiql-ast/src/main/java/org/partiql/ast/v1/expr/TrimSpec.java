@@ -36,4 +36,21 @@ public class TrimSpec implements Enum {
     public int code() {
         return code;
     }
+
+    public static TrimSpec valueOf(String value) {
+        switch (value) {
+            case "LEADING": return LEADING();
+            case "TRAILING": return TRAILING();
+            case "BOTH": return BOTH();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static TrimSpec[] values() {
+        return new TrimSpec[] {
+            LEADING(),
+            TRAILING(),
+            BOTH()
+        };
+    }
 }

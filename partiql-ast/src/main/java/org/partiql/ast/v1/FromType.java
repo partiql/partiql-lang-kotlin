@@ -33,4 +33,19 @@ public class FromType implements Enum {
     public int code() {
         return code;
     }
+
+    public static FromType valueOf(String value) {
+        switch (value) {
+            case "SCAN": return SCAN();
+            case "UNPIVOT": return UNPIVOT();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static FromType[] values() {
+        return new FromType[] {
+            SCAN(),
+            UNPIVOT()
+        };
+    }
 }

@@ -33,4 +33,20 @@ public class Nulls implements Enum {
     public int code() {
         return code;
     }
+
+    public static Nulls valueOf(String value) {
+        switch (value) {
+            case "UNKNOWN": return UNKNOWN();
+            case "FIRST": return FIRST();
+            case "LAST": return LAST();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static Nulls[] values() {
+        return new Nulls[] {
+            FIRST(),
+            LAST()
+        };
+    }
 }

@@ -34,4 +34,20 @@ public class Scope implements Enum {
     public int code() {
         return code;
     }
+
+    public static Scope valueOf(String value) {
+        switch (value) {
+            case "UNKNOWN": return UNKNOWN();
+            case "DEFAULT": return DEFAULT();
+            case "LOCAL": return LOCAL();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static Scope[] values() {
+        return new Scope[] {
+            DEFAULT(),
+            LOCAL()
+        };
+    }
 }

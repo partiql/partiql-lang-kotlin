@@ -34,4 +34,19 @@ public class WindowFunction implements Enum {
     public int code() {
         return code;
     }
+
+    public static WindowFunction valueOf(String value) {
+        switch (value) {
+            case "LAG": return LAG();
+            case "LEAD": return LEAD();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static WindowFunction[] values() {
+        return new WindowFunction[] {
+            LAG(),
+            LEAD()
+        };
+    }
 }

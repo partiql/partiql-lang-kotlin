@@ -63,4 +63,31 @@ public class DatetimeField implements Enum {
     public int code() {
         return code;
     }
+
+    public static DatetimeField valueOf(String value) {
+        switch (value) {
+            case "YEAR": return YEAR();
+            case "MONTH": return MONTH();
+            case "DAY": return DAY();
+            case "HOUR": return HOUR();
+            case "MINUTE": return MINUTE();
+            case "SECOND": return SECOND();
+            case "TIMEZONE_HOUR": return TIMEZONE_HOUR();
+            case "TIMEZONE_MINUTE": return TIMEZONE_MINUTE();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static DatetimeField[] values() {
+        return new DatetimeField[] {
+            YEAR(),
+            MONTH(),
+            DAY(),
+            HOUR(),
+            MINUTE(),
+            SECOND(),
+            TIMEZONE_HOUR(),
+            TIMEZONE_MINUTE()
+        };
+    }
 }

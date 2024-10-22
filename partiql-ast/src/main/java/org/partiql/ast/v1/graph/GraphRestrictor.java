@@ -39,4 +39,21 @@ public class GraphRestrictor implements Enum {
     public int code() {
         return code;
     }
+
+    public static GraphRestrictor valueOf(String value) {
+        switch (value) {
+            case "TRAIL": return TRAIL();
+            case "ACYCLIC": return ACYCLIC();
+            case "SIMPLE": return SIMPLE();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static GraphRestrictor[] values() {
+        return new GraphRestrictor[] {
+            TRAIL(),
+            ACYCLIC(),
+            SIMPLE()
+        };
+    }
 }

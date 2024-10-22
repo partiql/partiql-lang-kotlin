@@ -63,4 +63,31 @@ public class JoinType implements Enum {
     public int code() {
         return code;
     }
+
+    public static JoinType valueOf(String value) {
+        switch (value) {
+            case "INNER": return INNER();
+            case "LEFT": return LEFT();
+            case "LEFT_OUTER": return LEFT_OUTER();
+            case "RIGHT": return RIGHT();
+            case "RIGHT_OUTER": return RIGHT_OUTER();
+            case "FULL": return FULL();
+            case "FULL_OUTER": return FULL_OUTER();
+            case "CROSS": return CROSS();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static JoinType[] values() {
+        return new JoinType[] {
+            INNER(),
+            LEFT(),
+            LEFT_OUTER(),
+            RIGHT(),
+            RIGHT_OUTER(),
+            FULL(),
+            FULL_OUTER(),
+            CROSS()
+        };
+    }
 }

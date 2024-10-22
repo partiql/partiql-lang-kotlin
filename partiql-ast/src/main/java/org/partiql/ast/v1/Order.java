@@ -30,4 +30,19 @@ public class Order implements Enum {
     public int code() {
         return code;
     }
+
+    public static Order valueOf(String value) {
+        switch (value) {
+            case "ASC": return ASC();
+            case "DESC": return DESC();
+            default: return UNKNOWN();
+        }
+    }
+
+    public static Order[] values() {
+        return new Order[] {
+            ASC(),
+            DESC()
+        };
+    }
 }
