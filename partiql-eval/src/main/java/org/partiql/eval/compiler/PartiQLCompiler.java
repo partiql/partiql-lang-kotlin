@@ -6,8 +6,11 @@ import org.partiql.eval.internal.compiler.StandardCompiler;
 import org.partiql.eval.Statement;
 import org.partiql.plan.Plan;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * TODO JAVADOC
+ * PartiQLCompiler is responsible for transforming PartiQL plans to an executable statement (think physical planner).
  */
 public interface PartiQLCompiler {
 
@@ -40,15 +43,29 @@ public interface PartiQLCompiler {
      */
     public static class Builder {
 
+        //
+        private final List<Strategy> strategies = new ArrayList<>();
+
         private Builder() {
             // empty
+        }
+
+        /**
+         * Adds a strategy to the compiler.
+         *
+         * @param strategy The strategy to add.
+         * @return This builder.
+         */
+        public Builder addStrategy(Strategy strategy) {
+            strategies.add(strategy);
+            return this;
         }
 
         /**
          * @return A new [PartiQLCompiler].
          */
         public PartiQLCompiler build() {
-            return new StandardCompiler();
+            return new StandardCompiler(strategies);
         }
     }
 }

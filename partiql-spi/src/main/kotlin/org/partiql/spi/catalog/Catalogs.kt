@@ -23,6 +23,20 @@ public interface Catalogs {
             return builder().apply { catalogs.forEach { add(it) } }.build()
         }
 
+        /**
+         * A catalog provider that always returns an empty catalog.
+         */
+        @JvmStatic
+        public fun empty(): Catalogs = object : Catalogs {
+            private val EMPTY = object : Catalog {
+                override fun getName(): String = "empty"
+                override fun getTable(session: Session, name: Name): Table? = null
+                override fun getTable(session: Session, identifier: Identifier): Table? = null
+            }
+
+            override fun getCatalog(name: String, ignoreCase: Boolean): Catalog = EMPTY
+        }
+
         @JvmStatic
         public fun builder(): Builder = Builder()
     }

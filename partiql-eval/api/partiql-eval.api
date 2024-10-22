@@ -44,6 +44,12 @@ public abstract interface class org/partiql/eval/Statement {
 	public abstract fun execute ()Lorg/partiql/spi/value/Datum;
 }
 
+public class org/partiql/eval/compiler/Match {
+	public fun <init> (Lorg/partiql/plan/Operator;)V
+	public fun <init> ([Lorg/partiql/plan/Operator;)V
+	public fun get (I)Lorg/partiql/plan/Operator;
+}
+
 public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
 	public static fun builder ()Lorg/partiql/eval/compiler/PartiQLCompiler$Builder;
 	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/Statement;
@@ -51,6 +57,21 @@ public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
 }
 
 public class org/partiql/eval/compiler/PartiQLCompiler$Builder {
+	public fun addStrategy (Lorg/partiql/eval/compiler/Strategy;)Lorg/partiql/eval/compiler/PartiQLCompiler$Builder;
 	public fun build ()Lorg/partiql/eval/compiler/PartiQLCompiler;
+}
+
+public class org/partiql/eval/compiler/Pattern {
+	protected fun <init> (Ljava/lang/Class;)V
+	protected fun <init> (Ljava/lang/Class;Ljava/util/function/Predicate;Ljava/util/List;)V
+	public fun matches (Lorg/partiql/plan/Operator;)Z
+}
+
+public abstract class org/partiql/eval/compiler/Strategy {
+	public final field pattern Lorg/partiql/eval/compiler/Pattern;
+	protected fun <init> (Lorg/partiql/eval/compiler/Pattern;)V
+	public abstract fun apply (Lorg/partiql/eval/compiler/Match;)Lorg/partiql/eval/Expr;
+	public static fun pattern (Ljava/lang/Class;)Lorg/partiql/eval/compiler/Pattern;
+	public static fun pattern (Ljava/lang/Class;Ljava/util/function/Predicate;)Lorg/partiql/eval/compiler/Pattern;
 }
 
