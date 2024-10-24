@@ -23,6 +23,7 @@ public interface Context {
      * The default utilizes {@link PErrorListener#abortOnError()} for the {@link Context#getErrorListener()}.
      * @return the default implementation of {@link Context}.
      */
+    // TODO: Should this be a static variable?
     static Context standard() {
         return new Context() {};
     }

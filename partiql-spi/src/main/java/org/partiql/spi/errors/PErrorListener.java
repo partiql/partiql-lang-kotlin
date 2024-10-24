@@ -21,14 +21,12 @@ public interface PErrorListener {
      * {@link PErrorException}.
      * @return an {@link PErrorListener} that throws an {@link PErrorException} upon encountering an error.
      */
+    // TODO: Should this be a static variable?
     @NotNull
     static PErrorListener abortOnError() {
-        return new PErrorListener() {
-            @Override
-            public void report(@NotNull PError error) throws PErrorException {
-                if (error.severity.code() == Severity.ERROR) {
-                    throw new PErrorException(error);
-                }
+        return error -> {
+            if (error.severity.code() == Severity.ERROR) {
+                throw new PErrorException(error);
             }
         };
     }
