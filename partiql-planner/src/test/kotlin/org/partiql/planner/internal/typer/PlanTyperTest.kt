@@ -16,8 +16,9 @@ import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.planner.util.ProblemCollector
+import org.partiql.planner.util.PErrorCollector
 import org.partiql.plugins.local.LocalCatalog
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -117,7 +118,7 @@ class PlanTyperTest {
         private val OPEN_DUPLICATES_STRUCT = PType.struct().toCType()
 
         private fun getTyper(): PlanTyperWrapper {
-            ProblemCollector()
+            val config = Context.of(PErrorCollector())
             val env = Env(
                 Session.builder()
                     .catalog("pql")
@@ -130,7 +131,7 @@ class PlanTyperTest {
                     )
                     .build()
             )
-            return PlanTyperWrapper(PlanTyper(env))
+            return PlanTyperWrapper(PlanTyper(env, config))
         }
     }
 

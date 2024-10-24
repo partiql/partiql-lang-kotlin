@@ -3,7 +3,6 @@ package org.partiql.plan
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelCorrelate
 import org.partiql.plan.rel.RelDistinct
-import org.partiql.plan.rel.RelError
 import org.partiql.plan.rel.RelExcept
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelFilter
@@ -26,7 +25,6 @@ import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
-import org.partiql.plan.rex.RexMissing
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -66,8 +64,6 @@ public interface Visitor<R, C> {
     public fun visitAggregate(rel: RelAggregate, ctx: C): R = defaultVisit(rel, ctx)
 
     public fun visitDistinct(rel: RelDistinct, ctx: C): R = defaultVisit(rel, ctx)
-
-    public fun visitError(rel: RelError, ctx: C): R = defaultVisit(rel, ctx)
 
     public fun visitExcept(rel: RelExcept, ctx: C): R = defaultVisit(rel, ctx)
 
@@ -116,8 +112,6 @@ public interface Visitor<R, C> {
     public fun visitError(rex: RexError, ctx: C): R = defaultVisit(rex, ctx)
 
     public fun visitLit(rex: RexLit, ctx: C): R = defaultVisit(rex, ctx)
-
-    public fun visitMissing(rex: RexMissing, ctx: C): R = defaultVisit(rex, ctx)
 
     public fun visitNullIf(rex: RexNullIf, ctx: C): R = defaultVisit(rex, ctx)
 

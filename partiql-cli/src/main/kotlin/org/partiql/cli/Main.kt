@@ -114,6 +114,34 @@ internal class MainCommand : Runnable {
     )
     var include: File? = null
 
+    @CommandLine.Option(
+        names = ["--max-errors"],
+        showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
+        defaultValue = "0",
+        description = ["The maximum number of errors to report before bailing out. If 0 (the default), there is no limit on the number of error messages produced."],
+        paramLabel = "<count>"
+    )
+    var maxErrors: Int? = null
+
+    @CommandLine.Option(
+        names = ["-w"],
+        description = ["Inhibits all warning messages."],
+    )
+    var inhibitWarnings: Boolean = false
+
+    @CommandLine.Option(
+        names = ["-Werror"],
+        arity = "0..1",
+        description = [
+            "Make the specified warning into an error. If no code is specified, all warnings are converted to errors.",
+            "Codes: \${COMPLETION-CANDIDATES}"
+        ],
+        paramLabel = "<code>",
+        help = true,
+        fallbackValue = "ALL",
+    )
+    lateinit var warningsAsErrors: Array<ErrorCodeString>
+
     @CommandLine.Parameters(
         index = "0",
         arity = "0..1",
@@ -140,6 +168,11 @@ internal class MainCommand : Runnable {
         }
     }
 
+    private fun getPipelineConfig(): Pipeline.Config {
+        warningsAsErrors = if (this::warningsAsErrors.isInitialized) warningsAsErrors else emptyArray()
+        return Pipeline.Config(maxErrors!!, inhibitWarnings, warningsAsErrors)
+    }
+
     /**
      * Returns the query text if present by parsing either the program string or the query file.
      */
@@ -151,22 +184,29 @@ internal class MainCommand : Runnable {
     }
 
     private fun shell() {
+        val config = getPipelineConfig()
         val pipeline = when (strict) {
-            true -> Pipeline.strict()
-            else -> Pipeline.default()
+            true -> Pipeline.strict(System.out, config)
+            else -> Pipeline.default(System.out, config)
         }
         Shell(pipeline, session(), debug).start()
     }
 
     @OptIn(PartiQLValueExperimental::class)
     private fun run(statement: String) {
+        val config = getPipelineConfig()
         val pipeline = when (strict) {
-            true -> Pipeline.strict()
-            else -> Pipeline.default()
+            true -> Pipeline.strict(System.out, config)
+            else -> Pipeline.default(System.out, config)
         }
         val program = statement.trimHashBang()
         val session = session()
-        val result = pipeline.execute(program, session)
+        val result = try {
+            pipeline.execute(program, session)
+        } catch (e: Pipeline.PipelineException) {
+            e.message?.let { error(it) }
+            return
+        }
 
         // TODO add format support
         checkFormat(format)

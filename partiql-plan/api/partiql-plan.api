@@ -165,7 +165,6 @@ public abstract interface class org/partiql/plan/Visitor {
 	public abstract fun visitCoalesce (Lorg/partiql/plan/rex/RexCoalesce;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitCorrelate (Lorg/partiql/plan/rel/RelCorrelate;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitDistinct (Lorg/partiql/plan/rel/RelDistinct;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitError (Lorg/partiql/plan/rel/RelError;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitError (Lorg/partiql/plan/rex/RexError;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExcept (Lorg/partiql/plan/rel/RelExcept;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExclude (Lorg/partiql/plan/rel/RelExclude;Ljava/lang/Object;)Ljava/lang/Object;
@@ -175,7 +174,6 @@ public abstract interface class org/partiql/plan/Visitor {
 	public abstract fun visitJoin (Lorg/partiql/plan/rel/RelJoin;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitLimit (Lorg/partiql/plan/rel/RelLimit;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitLit (Lorg/partiql/plan/rex/RexLit;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitMissing (Lorg/partiql/plan/rex/RexMissing;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitNullIf (Lorg/partiql/plan/rex/RexNullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitOffset (Lorg/partiql/plan/rel/RelOffset;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPathIndex (Lorg/partiql/plan/rex/RexPathIndex;Ljava/lang/Object;)Ljava/lang/Object;
@@ -211,7 +209,6 @@ public final class org/partiql/plan/Visitor$DefaultImpls {
 	public static fun visitCoalesce (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rex/RexCoalesce;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitCorrelate (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rel/RelCorrelate;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitDistinct (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rel/RelDistinct;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun visitError (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rel/RelError;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitError (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rex/RexError;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitExcept (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rel/RelExcept;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitExclude (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rel/RelExclude;Ljava/lang/Object;)Ljava/lang/Object;
@@ -221,7 +218,6 @@ public final class org/partiql/plan/Visitor$DefaultImpls {
 	public static fun visitJoin (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rel/RelJoin;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitLimit (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rel/RelLimit;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitLit (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rex/RexLit;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun visitMissing (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rex/RexMissing;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitNullIf (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rex/RexNullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitOffset (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rel/RelOffset;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun visitPathIndex (Lorg/partiql/plan/Visitor;Lorg/partiql/plan/rex/RexPathIndex;Ljava/lang/Object;)Ljava/lang/Object;
@@ -282,9 +278,8 @@ public abstract interface class org/partiql/plan/builder/PlanFactory {
 	public abstract fun rexCast (Lorg/partiql/plan/rex/Rex;Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexCast;
 	public abstract fun rexCoalesce (Ljava/util/List;)Lorg/partiql/plan/rex/RexCoalesce;
 	public abstract fun rexCoalesce (Ljava/util/List;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCoalesce;
-	public abstract fun rexError (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/rex/RexError;
+	public abstract fun rexError (Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexError;
 	public abstract fun rexLit (Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/rex/RexLit;
-	public abstract fun rexMissing (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/rex/RexMissing;
 	public abstract fun rexNullIf (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexNullIf;
 	public abstract fun rexPathIndex (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPathIndex;
 	public abstract fun rexPathIndex (Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexPathIndex;
@@ -351,9 +346,8 @@ public final class org/partiql/plan/builder/PlanFactory$DefaultImpls {
 	public static fun rexCast (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexCast;
 	public static fun rexCoalesce (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;)Lorg/partiql/plan/rex/RexCoalesce;
 	public static fun rexCoalesce (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCoalesce;
-	public static fun rexError (Lorg/partiql/plan/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/rex/RexError;
+	public static fun rexError (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexError;
 	public static fun rexLit (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/rex/RexLit;
-	public static fun rexMissing (Lorg/partiql/plan/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/rex/RexMissing;
 	public static fun rexNullIf (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexNullIf;
 	public static fun rexPathIndex (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexPathIndex;
 	public static fun rexPathIndex (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexPathIndex;
@@ -505,15 +499,6 @@ public final class org/partiql/plan/rel/RelDistinct$DefaultImpls {
 	public static fun getChildren (Lorg/partiql/plan/rel/RelDistinct;)Ljava/util/Collection;
 	public static fun getType (Lorg/partiql/plan/rel/RelDistinct;)Lorg/partiql/plan/rel/RelType;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelDistinct;)Z
-}
-
-public final class org/partiql/plan/rel/RelError : org/partiql/plan/rel/Rel {
-	public fun <init> (Ljava/lang/String;)V
-	public fun accept (Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun getChildren ()Ljava/util/Collection;
-	public final fun getMessage ()Ljava/lang/String;
-	public fun getType ()Lorg/partiql/plan/rel/RelType;
-	public fun isOrdered ()Z
 }
 
 public abstract interface class org/partiql/plan/rel/RelExcept : org/partiql/plan/rel/Rel {
@@ -827,13 +812,13 @@ public final class org/partiql/plan/rex/RexCoalesce$DefaultImpls {
 public abstract interface class org/partiql/plan/rex/RexError : org/partiql/plan/rex/Rex {
 	public abstract fun accept (Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getChildren ()Ljava/util/Collection;
-	public abstract fun getMessage ()Ljava/lang/String;
-	public abstract fun getTrace ()Ljava/util/List;
+	public abstract fun getType ()Lorg/partiql/plan/rex/RexType;
 }
 
 public final class org/partiql/plan/rex/RexError$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexError;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun getChildren (Lorg/partiql/plan/rex/RexError;)Ljava/util/Collection;
+	public static fun getType (Lorg/partiql/plan/rex/RexError;)Lorg/partiql/plan/rex/RexType;
 }
 
 public abstract interface class org/partiql/plan/rex/RexLit : org/partiql/plan/rex/Rex {
@@ -845,18 +830,6 @@ public abstract interface class org/partiql/plan/rex/RexLit : org/partiql/plan/r
 public final class org/partiql/plan/rex/RexLit$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexLit;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun getChildren (Lorg/partiql/plan/rex/RexLit;)Ljava/util/Collection;
-}
-
-public abstract interface class org/partiql/plan/rex/RexMissing : org/partiql/plan/rex/Rex {
-	public abstract fun accept (Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun getChildren ()Ljava/util/Collection;
-	public abstract fun getMessage ()Ljava/lang/String;
-	public abstract fun getTrace ()Ljava/util/List;
-}
-
-public final class org/partiql/plan/rex/RexMissing$DefaultImpls {
-	public static fun accept (Lorg/partiql/plan/rex/RexMissing;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun getChildren (Lorg/partiql/plan/rex/RexMissing;)Ljava/util/Collection;
 }
 
 public abstract interface class org/partiql/plan/rex/RexNullIf : org/partiql/plan/rex/Rex {

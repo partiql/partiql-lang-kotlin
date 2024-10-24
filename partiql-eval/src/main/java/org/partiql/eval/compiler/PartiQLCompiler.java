@@ -5,6 +5,7 @@ import org.partiql.eval.Mode;
 import org.partiql.eval.internal.compiler.StandardCompiler;
 import org.partiql.eval.Statement;
 import org.partiql.plan.Plan;
+import org.partiql.spi.Context;
 
 /**
  * TODO JAVADOC
@@ -18,7 +19,13 @@ public interface PartiQLCompiler {
      * @return The prepared statement.
      */
     @NotNull
-    public Statement prepare(@NotNull Plan plan, @NotNull Mode mode);
+    default Statement prepare(@NotNull Plan plan, @NotNull Mode mode) {
+        return prepare(plan, mode, Context.standard());
+    }
+
+    @NotNull
+    public Statement prepare(@NotNull Plan plan, @NotNull Mode mode, @NotNull Context ctx);
+
 
     /**
      * @return A new [PartiQLCompilerBuilder].

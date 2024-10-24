@@ -65,7 +65,6 @@ import org.partiql.plan.Visitor
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelDistinct
-import org.partiql.plan.rel.RelError
 import org.partiql.plan.rel.RelExcept
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelFilter
@@ -89,7 +88,6 @@ import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
-import org.partiql.plan.rex.RexMissing
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexPathIndex
 import org.partiql.plan.rex.RexPathKey
@@ -104,6 +102,10 @@ import org.partiql.plan.rex.RexSubqueryIn
 import org.partiql.plan.rex.RexSubqueryTest
 import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
+import org.partiql.spi.Context
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
+import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -112,17 +114,22 @@ import org.partiql.types.PType
  */
 internal class StandardCompiler : PartiQLCompiler {
 
-    override fun prepare(plan: Plan, mode: Mode): Statement = try {
-        val visitor = _Visitor(mode)
-        val operation = plan.getOperation()
-        val statement: Statement = when {
-            operation is Operation.Query -> visitor.compile(operation)
-            else -> throw IllegalArgumentException("Only query statements are supported")
+    override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {
+        try {
+            val visitor = _Visitor(mode)
+            val operation = plan.getOperation()
+            val statement: Statement = when {
+                operation is Operation.Query -> visitor.compile(operation)
+                else -> throw IllegalArgumentException("Only query statements are supported")
+            }
+            return statement
+        } catch (e: PErrorListenerException) {
+            throw e
+        } catch (t: Throwable) {
+            val error = PError.INTERNAL_ERROR(PErrorKind.COMPILATION(), null, t)
+            ctx.errorListener.report(error)
+            return Statement { Datum.missing() }
         }
-        statement
-    } catch (ex: Exception) {
-        // TODO wrap in some PartiQL Exception
-        throw ex
     }
 
     /**
@@ -159,10 +166,6 @@ internal class StandardCompiler : PartiQLCompiler {
          */
         override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): Expr {
             error("No compiler strategy matches the operator: ${operator::class.simpleName}")
-        }
-
-        override fun visitError(rel: RelError, ctx: Unit): ExprRelation {
-            throw IllegalStateException(rel.message)
         }
 
         // OPERATORS
@@ -297,7 +300,7 @@ internal class StandardCompiler : PartiQLCompiler {
         }
 
         override fun visitError(rex: RexError, ctx: Unit): ExprValue {
-            throw IllegalStateException(rex.getMessage())
+            return ExprMissing(PType.unknown())
         }
 
         // OPERATORS
@@ -376,10 +379,6 @@ internal class StandardCompiler : PartiQLCompiler {
 
         override fun visitLit(rex: RexLit, ctx: Unit): ExprValue {
             return ExprLit(rex.getValue())
-        }
-
-        override fun visitMissing(rex: RexMissing, ctx: Unit): ExprValue {
-            return ExprMissing(unknown)
         }
 
         override fun visitNullIf(rex: RexNullIf, ctx: Unit): ExprValue {

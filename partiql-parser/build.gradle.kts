@@ -16,6 +16,7 @@ plugins {
     id(Plugins.antlr)
     id(Plugins.conventions)
     id(Plugins.publish)
+    id(Plugins.kotlinLombok) version Versions.kotlinLombok
 }
 
 dependencies {
@@ -24,6 +25,8 @@ dependencies {
     api(project(":partiql-types"))
     implementation(Deps.ionElement)
     shadow(Deps.antlrRuntime)
+    compileOnly(Deps.lombok)
+    annotationProcessor(Deps.lombok)
 }
 
 val relocations = mapOf(

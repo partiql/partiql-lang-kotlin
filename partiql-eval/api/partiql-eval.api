@@ -46,7 +46,8 @@ public abstract interface class org/partiql/eval/Statement {
 
 public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
 	public static fun builder ()Lorg/partiql/eval/compiler/PartiQLCompiler$Builder;
-	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/Statement;
+	public fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/Statement;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;Lorg/partiql/spi/Context;)Lorg/partiql/eval/Statement;
 	public static fun standard ()Lorg/partiql/eval/compiler/PartiQLCompiler;
 }
 

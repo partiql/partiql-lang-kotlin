@@ -22,6 +22,7 @@ plugins {
     id(Plugins.library)
     id(Plugins.testFixtures)
     id(Plugins.publish)
+    id(Plugins.kotlinLombok) version Versions.kotlinLombok
 }
 
 dependencies {
@@ -31,6 +32,8 @@ dependencies {
     implementation(project(":partiql-spi"))
     implementation(Deps.dotlin)
     implementation(Deps.ionElement)
+    compileOnly(Deps.lombok)
+    annotationProcessor(Deps.lombok)
     // Test
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))

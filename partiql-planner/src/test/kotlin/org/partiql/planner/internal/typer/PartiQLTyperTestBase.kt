@@ -2,20 +2,21 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicTest
-import org.partiql.errors.ProblemCallback
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
+import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
-import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
@@ -50,10 +51,11 @@ abstract class PartiQLTyperTestBase {
 
     val inputs = PartiQLTestProvider().apply { load() }
 
-    val testingPipeline: ((String, String, Catalog, ProblemCallback) -> PartiQLPlanner.Result) =
+    private val testingPipeline: ((String, String, Catalog, PErrorListener) -> PartiQLPlanner.Result) =
         { query, catalog, metadata, collector ->
             val ast = parser.parse(query).root
-            planner.plan(ast, session(catalog, metadata), collector)
+            val config = Context.of(collector)
+            planner.plan(ast, session(catalog, metadata), config)
         }
 
     /**
@@ -87,7 +89,7 @@ abstract class PartiQLTyperTestBase {
                     val statement = test.statement
                     // Assert
                     DynamicTest.dynamicTest(displayName) {
-                        val pc = ProblemCollector()
+                        val pc = PErrorCollector()
                         if (key is TestResult.Success) {
                             val result = testingPipeline(statement, testName, metadata, pc)
                             val query = result.plan.getOperation() as Operation.Query
@@ -101,7 +103,12 @@ abstract class PartiQLTyperTestBase {
                             }
                             // We need to allow for the testing of null/missing
                             val problemsWithoutNullMissing = pc.problems.filterNot {
-                                it.details is PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                                it.code() in setOf(
+                                    PError.PATH_INDEX_NEVER_SUCCEEDS,
+                                    PError.PATH_SYMBOL_NEVER_SUCCEEDS,
+                                    PError.PATH_KEY_NEVER_SUCCEEDS,
+                                    PError.ALWAYS_MISSING
+                                )
                             }
                             assert(problemsWithoutNullMissing.isEmpty()) {
                                 buildString {

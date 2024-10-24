@@ -12,10 +12,9 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.errors.Problem
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
@@ -23,13 +22,16 @@ import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessT
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
+import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
-import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
 import org.partiql.types.ListType
@@ -60,7 +62,7 @@ internal class PlanTyperTestsPorted {
             val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val expected: CompilerType,
-            val warnings: ProblemHandler? = null,
+            val warnings: PErrorListener? = null,
         ) : TestCase() {
 
             // legacy shim!
@@ -71,7 +73,7 @@ internal class PlanTyperTestsPorted {
                 catalog: String = "pql",
                 catalogPath: List<String> = emptyList(),
                 expected: StaticType,
-                warnings: ProblemHandler? = null,
+                warnings: PErrorListener? = null,
             ) : this(name, key, query, catalog, catalogPath, PType.fromStaticType(expected).toCType(), warnings)
 
             override fun toString(): String {
@@ -126,20 +128,22 @@ internal class PlanTyperTestsPorted {
         private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.builder().signal().build()
 
-        private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
+        private fun assertProblemExists(problem: PError) = ProblemHandler { problems, _ ->
             val message = buildString {
                 appendLine("Expected problems to include: $problem")
                 appendLine("Received: [")
-                problems.forEach {
+                problems.problems.forEach {
                     append("\t")
                     appendLine(it)
                 }
                 appendLine("]")
             }
-            when (ignoreSourceLocation) {
-                true -> assertTrue(message) { problems.any { it.details == problem.details } }
-                false -> assertTrue(message) { problems.any { it == problem } }
-            }
+            assertTrue(message) { problems.problems.any { errorsEqual(it, problem) } }
+        }
+
+        // TODO: We don't assert on the properties right now.
+        private fun errorsEqual(lhs: PError, rhs: PError): Boolean {
+            return lhs.code() == rhs.code() && lhs.kind == rhs.kind && lhs.severity == rhs.severity && lhs.location == rhs.location
         }
 
         // private fun id(vararg parts: Identifier.Symbol): Identifier {
@@ -770,13 +774,7 @@ internal class PlanTyperTestsPorted {
                 query = "CURRENT_USER + 'hello'",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(
-                            StaticType.STRING,
-                            StaticType.STRING,
-                        ),
-                        "PLUS",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("PLUS"), listOf(PType.string(), PType.string()), emptyList())
                 )
             ),
         )
@@ -842,19 +840,14 @@ internal class PlanTyperTestsPorted {
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
                 expected = ANY, // TODO SHOULD BE UNKNOWN
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
-                )
+                problemHandler = assertProblemExists(PErrors.alwaysMissing(null))
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_NON_INT_OPERAND",
                 query = "1 & 'NOT AN INT'",
                 expected = StaticType.ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.STRING),
-                        "BITWISE_AND",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("BITWISE_AND"), listOf(PType.integer(), PType.string()), emptyList())
                 )
             ),
         )
@@ -1007,7 +1000,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitive("a"), setOf("t1", "t2"))
+                    PErrors.varRefNotFound(null, insensitive("a"), listOf("t1", "t2"))
                 )
             ),
             SuccessTestCase(
@@ -1039,7 +1032,7 @@ internal class PlanTyperTestsPorted {
                     ON lhs[2] = rhs
                 """.trimIndent(),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitive("lhs"), setOf())
+                    PErrors.varRefNotFound(null, insensitive("lhs"), listOf())
                 )
             ),
             ErrorTestCase(
@@ -1051,7 +1044,7 @@ internal class PlanTyperTestsPorted {
                     ON lhs[2] = rhs
                 """.trimIndent(),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitive("lhs"), setOf())
+                    PErrors.varRefNotFound(null, insensitive("lhs"), listOf())
                 )
             ),
         )
@@ -2120,7 +2113,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.unresolvedExcludedExprRoot("nonsense")
+                    PErrors.varRefNotFound(null, Identifier.regular("nonsense"), listOf("t"))
                 )
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
@@ -2207,7 +2200,7 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM pets ORDER BY unknown_col",
                 expected = TABLE_AWS_DDB_PETS_LIST,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitive("unknown_col"), setOf("pets"))
+                    PErrors.varRefNotFound(null, insensitive("unknown_col"), listOf("pets"))
                 )
             ),
         )
@@ -3132,8 +3125,10 @@ internal class PlanTyperTestsPorted {
                 """,
                 expected = BagType(StaticType.INT4),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(
-                        Identifier.delimited("pql", "main")
+                    PErrors.varRefNotFound(
+                        null,
+                        Identifier.delimited("pql", "main"),
+                        emptyList()
                     )
                 )
             ),
@@ -3144,7 +3139,7 @@ internal class PlanTyperTestsPorted {
                 """,
                 expected = BagType(StaticType.INT4),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(sensitive("pql"))
+                    PErrors.varRefNotFound(null, sensitive("pql"), emptyList())
                 )
             ),
             SuccessTestCase(
@@ -3162,7 +3157,7 @@ internal class PlanTyperTestsPorted {
                 """,
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Collections must be indexed with integers, found STRING")
+                    PErrors.pathIndexNeverSucceeds(null)
                 )
             ),
             // The reason this is ANY is because we do not have support for constant-folding. We don't know what
@@ -3482,10 +3477,7 @@ internal class PlanTyperTestsPorted {
                 """.trimIndent(),
                 expected = BagType(ANY),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.STRING),
-                        "POS",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("POS"), listOf(PType.string()), emptyList())
                 )
             ),
             SuccessTestCase(
@@ -3514,9 +3506,10 @@ internal class PlanTyperTestsPorted {
                 """.trimIndent(),
                 expected = BagType(ANY),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(
+                    PErrors.varRefNotFound(
+                        null,
                         Identifier.regular("a"),
-                        setOf("t"),
+                        listOf("t"),
                     )
                 )
             ),
@@ -3529,9 +3522,7 @@ internal class PlanTyperTestsPorted {
                     +MISSING
                 """.trimIndent(),
                 expected = ANY,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
-                )
+                problemHandler = assertProblemExists(PErrors.alwaysMissing(null))
             ),
         )
 
@@ -3857,10 +3848,11 @@ internal class PlanTyperTestsPorted {
     private fun infer(
         query: String,
         session: Session,
-        problemCollector: ProblemCollector,
+        listener: PErrorListener,
     ): org.partiql.plan.Plan {
         val ast = parser.parse(query).root
-        return planner.plan(ast, session, problemCollector).plan
+        val plannerConfig = Context.of(listener)
+        return planner.plan(ast, session, plannerConfig).plan
     }
 
     private fun runTest(tc: TestCase) = when (tc) {
@@ -3883,7 +3875,7 @@ internal class PlanTyperTestsPorted {
         }
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
 
-        val collector = ProblemCollector()
+        val collector = PErrorCollector()
         val plan = infer(input, session, collector)
         when (val statement = plan.getOperation()) {
             is org.partiql.plan.Operation.Query -> {
@@ -3914,8 +3906,7 @@ internal class PlanTyperTestsPorted {
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)
             .build()
-        val collector = ProblemCollector()
-
+        val collector = PErrorCollector()
         val hasQuery = tc.query != null
         val hasKey = tc.key != null
         if (hasQuery == hasKey) {
@@ -3948,7 +3939,7 @@ internal class PlanTyperTestsPorted {
                 assert(collector.problems.isNotEmpty()) {
                     "Expected to find problems, but none were found."
                 }
-                tc.problemHandler?.handle(collector.problems, true)
+                tc.problemHandler?.handle(collector, true)
             }
         }
     }
@@ -3959,7 +3950,7 @@ internal class PlanTyperTestsPorted {
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)
             .build()
-        val collector = ProblemCollector()
+        val collector = PErrorCollector()
         val exception = assertThrows<Throwable> {
             infer(tc.query, session, collector)
             Unit
@@ -4004,7 +3995,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitive("pets"))
+                    PErrors.varRefNotFound(null, insensitive("pets"), emptyList())
                 )
             ),
             TestCase.ErrorTestCase(
@@ -4034,7 +4025,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitive("pets"))
+                    PErrors.varRefNotFound(null, insensitive("pets"), emptyList())
                 )
             ),
             TestCase.SuccessTestCase(
@@ -4098,7 +4089,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(Identifier.regular("ddb", "pets"))
+                    PErrors.varRefNotFound(null, Identifier.regular("ddb", "pets"), emptyList())
                 )
             ),
             TestCase.SuccessTestCase(
@@ -4254,11 +4245,7 @@ internal class PlanTyperTestsPorted {
                 query = "order_info.customer_id IN 'hello'",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.STRING),
-                        "" +
-                            "IN_COLLECTION",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("IN_COLLECTION"), listOf(PType.integer(), PType.string()), emptyList())
                 )
             ),
             SuccessTestCase(
@@ -4275,14 +4262,7 @@ internal class PlanTyperTestsPorted {
                 query = "order_info.customer_id BETWEEN 1 AND 'a'",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(
-                            StaticType.INT4,
-                            StaticType.INT4,
-                            StaticType.STRING
-                        ),
-                        "BETWEEN",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("BETWEEN"), listOf(PType.integer(), PType.integer(), PType.string()), emptyList())
                 )
             ),
             SuccessTestCase(
@@ -4299,10 +4279,7 @@ internal class PlanTyperTestsPorted {
                 query = "order_info.ship_option LIKE 3",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.STRING, StaticType.INT4),
-                        "LIKE",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("LIKE"), listOf(PType.string(), PType.integer()), emptyList())
                 )
             ),
             SuccessTestCase(
@@ -4359,7 +4336,7 @@ internal class PlanTyperTestsPorted {
                 // Which can return BOOL Or NULL
                 expected = StaticType.BOOL,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitive("non_existing_column"), emptySet())
+                    PErrors.varRefNotFound(null, insensitive("non_existing_column"), emptyList())
                 )
             ),
             ErrorTestCase(
@@ -4369,10 +4346,7 @@ internal class PlanTyperTestsPorted {
                 query = "order_info.customer_id = 1 AND 1",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.BOOL, StaticType.INT4),
-                        "AND",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("AND"), listOf(PType.bool(), PType.integer()), emptyList())
                 )
             ),
             ErrorTestCase(
@@ -4382,10 +4356,7 @@ internal class PlanTyperTestsPorted {
                 query = "1 AND order_info.customer_id = 1",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.BOOL),
-                        "AND",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("AND"), listOf(PType.integer(), PType.bool()), emptyList())
                 )
             ),
             ErrorTestCase(
@@ -4407,7 +4378,7 @@ internal class PlanTyperTestsPorted {
                     )
                 ),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitive("unknown_col"), setOf("orders"))
+                    PErrors.varRefNotFound(null, insensitive("unknown_col"), listOf("orders"))
                 )
             ),
             SuccessTestCase(
@@ -4424,9 +4395,7 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM pets LIMIT '5'",
                 expected = TABLE_AWS_DDB_PETS,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.unexpectedType(
-                        StaticType.STRING, setOf(StaticType.INT)
-                    )
+                    PErrors.typeUnexpected(null, PType.string(), listOf(PType.numeric()))
                 )
             ),
             SuccessTestCase(
@@ -4443,7 +4412,7 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM pets LIMIT 1 OFFSET '5'",
                 expected = TABLE_AWS_DDB_PETS,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.unexpectedType(StaticType.STRING, setOf(StaticType.INT))
+                    PErrors.typeUnexpected(null, PType.string(), listOf(PType.numeric()))
                 )
             ),
             SuccessTestCase(
@@ -4591,10 +4560,7 @@ internal class PlanTyperTestsPorted {
                 query = "trim(2 FROM ' Hello, World! ')",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.STRING, StaticType.INT4),
-                        "TRIM_CHARS",
-                    )
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("trim_chars"), listOf(PType.string(), PType.integer()), emptyList())
                 )
             ),
         )
@@ -4602,5 +4568,5 @@ internal class PlanTyperTestsPorted {
 }
 
 fun interface ProblemHandler {
-    fun handle(problems: List<Problem>, ignoreSourceLocation: Boolean)
+    fun handle(problems: PErrorCollector, ignoreSourceLocation: Boolean)
 }

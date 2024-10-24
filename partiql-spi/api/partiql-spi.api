@@ -9,267 +9,6 @@ public final class org/partiql/errors/DataException : java/lang/RuntimeException
 	public fun getMessage ()Ljava/lang/String;
 }
 
-public final class org/partiql/errors/ErrorAndErrorContextsKt {
-	public static final field UNKNOWN Ljava/lang/String;
-}
-
-public final class org/partiql/errors/ErrorBehaviorInPermissiveMode : java/lang/Enum {
-	public static final field RETURN_MISSING Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
-	public static final field THROW_EXCEPTION Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
-	public static fun values ()[Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
-}
-
-public final class org/partiql/errors/ErrorCategory : java/lang/Enum {
-	public static final field EVALUATOR Lorg/partiql/errors/ErrorCategory;
-	public static final field LEXER Lorg/partiql/errors/ErrorCategory;
-	public static final field PARSER Lorg/partiql/errors/ErrorCategory;
-	public static final field SEMANTIC Lorg/partiql/errors/ErrorCategory;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getMessage ()Ljava/lang/String;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ErrorCategory;
-	public static fun values ()[Lorg/partiql/errors/ErrorCategory;
-}
-
-public class org/partiql/errors/ErrorCode : java/lang/Enum {
-	public static final field EVALUATOR_AMBIGUOUS_BINDING Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_ARITHMETIC_EXCEPTION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_BINDING_DOES_NOT_EXIST Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_CAST_FAILED Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_CAST_FAILED_NO_LOCATION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_COUNT_DISTINCT_STAR Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_COUNT_START_NOT_ALLOWED Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_DATE_FIELD_OUT_OF_RANGE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_DIVIDE_BY_ZERO Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_ENVIRONMENT_CANNOT_BE_RESOLVED Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_FEATURE_NOT_SUPPORTED_YET Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_GENERIC_EXCEPTION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INTEGER_OVERFLOW Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_BINDING Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_CAST Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_CAST_NO_LOCATION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_COMPARISION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_CONVERSION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_PRECISION_FOR_TIME Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_LIKE_INVALID_INPUTS Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_MODULO_BY_ZERO Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_NEGATIVE_LIMIT Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_NEGATIVE_OFFSET Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_NON_INT_LIMIT_VALUE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_NON_INT_OFFSET_VALUE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_NON_SINGLETON_COLLECTION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_NO_SUCH_FUNCTION Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_NO_SUCH_PROCEDURE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_ORDER_BY_NULL_COMPARATOR Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_PRECISION_LOSS_WHEN_PARSING_TIMESTAMP Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_TIME_FIELD_OUT_OF_RANGE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_UNBOUND_PARAMETER Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_UNEXPECTED_VALUE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_UNEXPECTED_VALUE_TYPE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_UNTERMINATED_TIMESTAMP_FORMAT_PATTERN_TOKEN Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_VALUE_NOT_INSTANCE_OF_EXPECTED_TYPE Lorg/partiql/errors/ErrorCode;
-	public static final field EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY Lorg/partiql/errors/ErrorCode;
-	public static final field INTERNAL_ERROR Lorg/partiql/errors/ErrorCode;
-	public static final field LEXER_INVALID_CHAR Lorg/partiql/errors/ErrorCode;
-	public static final field LEXER_INVALID_LITERAL Lorg/partiql/errors/ErrorCode;
-	public static final field LEXER_INVALID_TOKEN Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_EXPECTED_DATE_TIME_PART Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_EXPECTED_NUMBER Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_EXPECTED_WINDOW_ORDER_BY Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_FAILED_STACK_OVERFLOW Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_INVALID_DATETIME_STRING Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_INVALID_DATE_STRING Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_INVALID_PRECISION_FOR_TIME Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_INVALID_PRECISION_FOR_TIMESTAMP Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_INVALID_QUERY Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_INVALID_TIME_STRING Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_INVALID_TRIM_SPEC Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_MALFORMED_PARSE_TREE Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_UNEXPECTED_TOKEN Lorg/partiql/errors/ErrorCode;
-	public static final field PARSE_UNSUPPORTED_LITERALS_GROUPBY Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_AMBIGUOUS_BINDING Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_FLOAT_PRECISION_UNSUPPORTED Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_INVALID_DECIMAL_ARGUMENTS Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_LITERAL_INT_OVERFLOW Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_MISSING_AS_NAME Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_PROBLEM Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_UNBOUND_BINDING Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_UNBOUND_QUOTED_BINDING Lorg/partiql/errors/ErrorCode;
-	public static final field SEMANTIC_UNION_TYPE_INVALID Lorg/partiql/errors/ErrorCode;
-	public static final field UNIMPLEMENTED_FEATURE Lorg/partiql/errors/ErrorCode;
-	public synthetic fun <init> (Ljava/lang/String;ILorg/partiql/errors/ErrorCategory;Ljava/util/Set;Ljava/lang/String;Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	protected fun detailMessagePrefix ()Ljava/lang/String;
-	protected fun detailMessageSuffix (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
-	public final fun getCategory ()Lorg/partiql/errors/ErrorCategory;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getErrorBehaviorInPermissiveMode ()Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
-	public fun getErrorMessage (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
-	public final fun getProperties ()Ljava/util/Set;
-	protected final fun getTokenDescription (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
-	protected final fun getTokenDescriptionAndTokenValue (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
-	protected final fun getTokenString (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
-	protected final fun getTokenValue (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ErrorCode;
-	public static fun values ()[Lorg/partiql/errors/ErrorCode;
-}
-
-public final class org/partiql/errors/Problem {
-	public fun <init> (Lorg/partiql/errors/ProblemLocation;Lorg/partiql/errors/ProblemDetails;)V
-	public final fun component1 ()Lorg/partiql/errors/ProblemLocation;
-	public final fun component2 ()Lorg/partiql/errors/ProblemDetails;
-	public final fun copy (Lorg/partiql/errors/ProblemLocation;Lorg/partiql/errors/ProblemDetails;)Lorg/partiql/errors/Problem;
-	public static synthetic fun copy$default (Lorg/partiql/errors/Problem;Lorg/partiql/errors/ProblemLocation;Lorg/partiql/errors/ProblemDetails;ILjava/lang/Object;)Lorg/partiql/errors/Problem;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getDetails ()Lorg/partiql/errors/ProblemDetails;
-	public final fun getSourceLocation ()Lorg/partiql/errors/ProblemLocation;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class org/partiql/errors/ProblemDetails {
-	public abstract fun getMessage ()Ljava/lang/String;
-	public abstract fun getSeverity ()Lorg/partiql/errors/ProblemSeverity;
-}
-
-public abstract interface class org/partiql/errors/ProblemHandler {
-	public abstract fun handleProblem (Lorg/partiql/errors/Problem;)V
-}
-
-public final class org/partiql/errors/ProblemKt {
-	public static final fun getUNKNOWN_PROBLEM_LOCATION ()Lorg/partiql/errors/ProblemLocation;
-}
-
-public final class org/partiql/errors/ProblemLocation {
-	public fun <init> (JJJ)V
-	public synthetic fun <init> (JJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()J
-	public final fun component2 ()J
-	public final fun component3 ()J
-	public final fun copy (JJJ)Lorg/partiql/errors/ProblemLocation;
-	public static synthetic fun copy$default (Lorg/partiql/errors/ProblemLocation;JJJILjava/lang/Object;)Lorg/partiql/errors/ProblemLocation;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCharOffset ()J
-	public final fun getLength ()J
-	public final fun getLineNum ()J
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/errors/ProblemSeverity : java/lang/Enum {
-	public static final field ERROR Lorg/partiql/errors/ProblemSeverity;
-	public static final field WARNING Lorg/partiql/errors/ProblemSeverity;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ProblemSeverity;
-	public static fun values ()[Lorg/partiql/errors/ProblemSeverity;
-}
-
-public final class org/partiql/errors/Property : java/lang/Enum {
-	public static final field ACTUAL_ARGUMENT_TYPES Lorg/partiql/errors/Property;
-	public static final field ACTUAL_ARITY Lorg/partiql/errors/Property;
-	public static final field ACTUAL_TYPE Lorg/partiql/errors/Property;
-	public static final field ARGUMENT_POSITION Lorg/partiql/errors/Property;
-	public static final field BINDING_NAME Lorg/partiql/errors/Property;
-	public static final field BINDING_NAME_MATCHES Lorg/partiql/errors/Property;
-	public static final field BOUND_PARAMETER_COUNT Lorg/partiql/errors/Property;
-	public static final field CAST_FROM Lorg/partiql/errors/Property;
-	public static final field CAST_TO Lorg/partiql/errors/Property;
-	public static final field COLUMN_NUMBER Lorg/partiql/errors/Property;
-	public static final field CONSTANT Lorg/partiql/errors/Property;
-	public static final field EXPECTED_ARGUMENT_TYPES Lorg/partiql/errors/Property;
-	public static final field EXPECTED_ARITY_MAX Lorg/partiql/errors/Property;
-	public static final field EXPECTED_ARITY_MIN Lorg/partiql/errors/Property;
-	public static final field EXPECTED_PARAMETER_ORDINAL Lorg/partiql/errors/Property;
-	public static final field EXPECTED_STATIC_TYPE Lorg/partiql/errors/Property;
-	public static final field FEATURE_NAME Lorg/partiql/errors/Property;
-	public static final field FUNCTION_NAME Lorg/partiql/errors/Property;
-	public static final field INT_SIZE_IN_BYTES Lorg/partiql/errors/Property;
-	public static final field LIKE_ESCAPE Lorg/partiql/errors/Property;
-	public static final field LIKE_PATTERN Lorg/partiql/errors/Property;
-	public static final field LIKE_VALUE Lorg/partiql/errors/Property;
-	public static final field LINE_NUMBER Lorg/partiql/errors/Property;
-	public static final field MESSAGE Lorg/partiql/errors/Property;
-	public static final field PROCEDURE_NAME Lorg/partiql/errors/Property;
-	public static final field TIMESTAMP_FORMAT_PATTERN Lorg/partiql/errors/Property;
-	public static final field TIMESTAMP_FORMAT_PATTERN_FIELDS Lorg/partiql/errors/Property;
-	public static final field TOKEN_DESCRIPTION Lorg/partiql/errors/Property;
-	public static final field TOKEN_STRING Lorg/partiql/errors/Property;
-	public static final field TOKEN_VALUE Lorg/partiql/errors/Property;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getPropertyName ()Ljava/lang/String;
-	public final fun getPropertyType ()Lorg/partiql/errors/PropertyType;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/Property;
-	public static fun values ()[Lorg/partiql/errors/Property;
-}
-
-public final class org/partiql/errors/PropertyType : java/lang/Enum {
-	public static final field INTEGER_CLASS Lorg/partiql/errors/PropertyType;
-	public static final field ION_VALUE_CLASS Lorg/partiql/errors/PropertyType;
-	public static final field LONG_CLASS Lorg/partiql/errors/PropertyType;
-	public static final field STRING_CLASS Lorg/partiql/errors/PropertyType;
-	public static final field TOKEN_CLASS Lorg/partiql/errors/PropertyType;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getType ()Ljava/lang/Class;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/PropertyType;
-	public static fun values ()[Lorg/partiql/errors/PropertyType;
-}
-
-public abstract class org/partiql/errors/PropertyValue {
-	public fun <init> (Lorg/partiql/errors/PropertyType;)V
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getType ()Lorg/partiql/errors/PropertyType;
-	public final fun getValue ()Ljava/lang/Object;
-	public fun hashCode ()I
-	public fun integerValue ()I
-	public fun ionValue ()Lcom/amazon/ion/IonValue;
-	public fun longValue ()J
-	public fun stringValue ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
-	public fun tokenTypeValue ()Ljava/lang/String;
-}
-
-public final class org/partiql/errors/PropertyValueMap {
-	public fun <init> ()V
-	public fun <init> (Ljava/util/EnumMap;)V
-	public synthetic fun <init> (Ljava/util/EnumMap;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun get (Lorg/partiql/errors/Property;)Lorg/partiql/errors/PropertyValue;
-	public final fun getProperties ()Ljava/util/Set;
-	public final fun hasProperty (Lorg/partiql/errors/Property;)Z
-	public fun hashCode ()I
-	public final fun set (Lorg/partiql/errors/Property;I)V
-	public final fun set (Lorg/partiql/errors/Property;J)V
-	public final fun set (Lorg/partiql/errors/Property;Lcom/amazon/ion/IonValue;)V
-	public final fun set (Lorg/partiql/errors/Property;Ljava/lang/String;)V
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class org/partiql/errors/TypeCheckException : java/lang/RuntimeException {
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;)V
@@ -283,6 +22,28 @@ public abstract interface class org/partiql/spi/Connector {
 }
 
 public abstract interface class org/partiql/spi/Connector$Context {
+}
+
+public abstract interface class org/partiql/spi/Context {
+	public fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
+	public static fun of (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/spi/Context;
+	public static fun standard ()Lorg/partiql/spi/Context;
+}
+
+public abstract class org/partiql/spi/PEnum {
+	protected fun <init> (I)V
+	public final fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/spi/SourceLocation {
+	public field length J
+	public field line J
+	public field offset J
+	public fun <init> (JJJ)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public abstract interface class org/partiql/spi/catalog/Catalog {
@@ -514,6 +275,80 @@ public final class org/partiql/spi/catalog/Table$Companion {
 public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getDatum (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/spi/value/Datum;
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
+}
+
+public final class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
+	public static final field ALWAYS_MISSING I
+	public static final field FEATURE_NOT_SUPPORTED I
+	public static final field FUNCTION_NOT_FOUND I
+	public static final field FUNCTION_TYPE_MISMATCH I
+	public static final field INTERNAL_ERROR I
+	public static final field PATH_INDEX_NEVER_SUCCEEDS I
+	public static final field PATH_KEY_NEVER_SUCCEEDS I
+	public static final field PATH_SYMBOL_NEVER_SUCCEEDS I
+	public static final field TYPE_UNEXPECTED I
+	public static final field UNDEFINED_CAST I
+	public static final field UNEXPECTED_TOKEN I
+	public static final field UNKNOWN I
+	public static final field UNRECOGNIZED_TOKEN I
+	public static final field VAR_REF_AMBIGUOUS I
+	public static final field VAR_REF_NOT_FOUND I
+	public field kind Lorg/partiql/spi/errors/PErrorKind;
+	public field location Lorg/partiql/spi/SourceLocation;
+	public field severity Lorg/partiql/spi/errors/Severity;
+	public fun <init> (ILorg/partiql/spi/errors/Severity;Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/util/Map;)V
+	public static fun INTERNAL_ERROR (Lorg/partiql/spi/errors/PErrorKind;Lorg/partiql/spi/SourceLocation;Ljava/lang/Throwable;)Lorg/partiql/spi/errors/PError;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun get (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public fun getList (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
+	public fun getListOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
+	public fun getOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/spi/errors/PErrorException : org/partiql/spi/errors/PErrorListenerException {
+	public field error Lorg/partiql/spi/errors/PError;
+	public fun <init> (Lorg/partiql/spi/errors/PError;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/PEnum {
+	public static final field COMPILATION I
+	public static final field EXECUTION I
+	public static final field SEMANTIC I
+	public static final field SYNTAX I
+	public static final field UNKNOWN I
+	public static fun COMPILATION ()Lorg/partiql/spi/errors/PErrorKind;
+	public static fun EXECUTION ()Lorg/partiql/spi/errors/PErrorKind;
+	public static fun SEMANTIC ()Lorg/partiql/spi/errors/PErrorKind;
+	public static fun SYNTAX ()Lorg/partiql/spi/errors/PErrorKind;
+	public static fun UNKNOWN ()Lorg/partiql/spi/errors/PErrorKind;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/spi/errors/PErrorListener {
+	public static fun abortOnError ()Lorg/partiql/spi/errors/PErrorListener;
+	public static fun chain ([Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/spi/errors/PErrorListener;
+	public abstract fun report (Lorg/partiql/spi/errors/PError;)V
+}
+
+public class org/partiql/spi/errors/PErrorListenerException : java/lang/Exception {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class org/partiql/spi/errors/Severity : org/partiql/spi/PEnum {
+	public static final field ERROR I
+	public static final field UNKNOWN I
+	public static final field WARNING I
+	public static fun ERROR ()Lorg/partiql/spi/errors/Severity;
+	public static fun WARNING ()Lorg/partiql/spi/errors/Severity;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {

@@ -2,7 +2,6 @@
 
 package org.partiql.planner.`internal`.ir
 
-import org.partiql.errors.Problem
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
 import org.partiql.planner.internal.ir.builder.RefAggBuilder
 import org.partiql.planner.internal.ir.builder.RefCastBuilder
@@ -50,7 +49,6 @@ import org.partiql.planner.internal.ir.builder.RexOpCoalesceBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
-import org.partiql.planner.internal.ir.builder.RexOpMissingBuilder
 import org.partiql.planner.internal.ir.builder.RexOpNullifBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
@@ -230,7 +228,6 @@ internal data class Rex(
             is Select -> visitor.visitRexOpSelect(this, ctx)
             is TupleUnion -> visitor.visitRexOpTupleUnion(this, ctx)
             is Err -> visitor.visitRexOpErr(this, ctx)
-            is Missing -> visitor.visitRexOpMissing(this, ctx)
         }
 
         internal data class Lit(
@@ -715,13 +712,9 @@ internal data class Rex(
             }
         }
 
-        internal data class Err(
-            @JvmField internal val problem: Problem,
-            @JvmField internal val causes: List<Op>,
-        ) : Op() {
+        internal class Err : Op() {
             public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
-                kids.addAll(causes)
                 kids.filterNotNull()
             }
 
@@ -730,24 +723,6 @@ internal data class Rex(
             internal companion object {
                 @JvmStatic
                 internal fun builder(): RexOpErrBuilder = RexOpErrBuilder()
-            }
-        }
-
-        internal data class Missing(
-            @JvmField internal val problem: Problem,
-            @JvmField internal val causes: List<Op>,
-        ) : Op() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.addAll(causes)
-                kids.filterNotNull()
-            }
-
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpMissing(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RexOpMissingBuilder = RexOpMissingBuilder()
             }
         }
     }

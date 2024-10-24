@@ -102,6 +102,7 @@ private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(Attribute
 
 private fun ansi(string: String, style: AttributedStyle) = AttributedString(string, style).toAnsi()
 internal fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
+internal fun PrintStream.error() = this.println()
 internal fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
 internal fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
 internal fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
@@ -262,12 +263,23 @@ internal class Shell(
                             else -> out.error("Unrecognized command .$command")
                         }
                     } else {
-                        val result = pipeline.execute(line, session)
+                        val result = try {
+                            pipeline.execute(line, session)
+                        } catch (e: Pipeline.PipelineException) {
+                            e.message?.let {
+                                out.error()
+                                out.error(it)
+                                out.error()
+                            }
+                            continue
+                        }
+                        out.appendLine()
+                        out.info("=== RESULT ===")
                         val writer = PartiQLValueTextWriter(out)
                         writer.append(result.toPartiQLValue()) // TODO: Create a Datum writer
                         out.appendLine()
                         out.appendLine()
-                        out.info("OK!")
+                        out.success("OK!")
                     }
                 }
             } catch (ex: Exception) {

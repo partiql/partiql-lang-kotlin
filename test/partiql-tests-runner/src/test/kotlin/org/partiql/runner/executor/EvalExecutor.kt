@@ -18,9 +18,14 @@ import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.CompileType
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorException
+import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.errors.Severity
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
@@ -39,9 +44,43 @@ class EvalExecutor(
 ) : TestExecutor<Statement, Datum> {
 
     override fun prepare(input: String): Statement {
-        val ast = parser.parse(input).root
-        val plan = planner.plan(ast, session).plan
-        return compiler.prepare(plan, mode)
+        val listener = getErrorListener(mode)
+        val ctx = Context.of(listener)
+        val ast = parser.parse(input, ctx).root
+        val plan = planner.plan(ast, session, ctx).plan
+        return compiler.prepare(plan, mode, ctx)
+    }
+
+    private fun getErrorListener(mode: Mode): PErrorListener {
+        return when (mode.code()) {
+            Mode.PERMISSIVE -> PErrorListener.abortOnError()
+            Mode.STRICT -> object : PErrorListener {
+                override fun report(error: PError) {
+                    when (error.severity.code()) {
+                        Severity.ERROR -> throw PErrorException(error)
+                        Severity.WARNING -> warning(error)
+                        else -> error("Unhandled severity.")
+                    }
+                }
+
+                private fun warning(error: PError) {
+                    when (error.code()) {
+                        PError.PATH_KEY_NEVER_SUCCEEDS,
+                        PError.PATH_INDEX_NEVER_SUCCEEDS,
+                        PError.VAR_REF_NOT_FOUND,
+                        PError.PATH_SYMBOL_NEVER_SUCCEEDS -> {
+                            error.severity = Severity.ERROR()
+                            report(error)
+                        }
+
+                        else -> {
+                            // Do nothing
+                        }
+                    }
+                }
+            }
+            else -> error("This mode is not handled.")
+        }
     }
 
     override fun execute(input: Statement): Datum {

@@ -1,8 +1,9 @@
 package org.partiql.planner
 
-import org.partiql.errors.ProblemCallback
+import org.partiql.plan.Plan
+import org.partiql.spi.Context
 
 public interface PartiQLPlannerPass {
 
-    public fun apply(plan: org.partiql.plan.Plan, onProblem: ProblemCallback): org.partiql.plan.Plan
+    public fun apply(plan: Plan, ctx: Context): Plan
 }

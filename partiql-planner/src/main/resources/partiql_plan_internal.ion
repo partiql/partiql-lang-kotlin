@@ -7,7 +7,6 @@ imports::{
     static_type::'org.partiql.planner.internal.typer.CompilerType',
     fn_signature::'org.partiql.spi.function.Function',
     agg_signature::'org.partiql.spi.function.Aggregation',
-    problem::'org.partiql.errors.Problem',
     table::'org.partiql.spi.catalog.Table',
   ],
 }
@@ -213,30 +212,8 @@ rex::{
       args: list::[rex],
     },
 
-    // Internal Error Node:
-    // Upon encounter an error, i.e., unknown_function(1)
-    // The an error node will be popoluated in the plan to replace the top node
-    // i.e.,
-    // |_ Rex.Op.Call.Unresolved["unknown_function"]
-    //    |_ Lit[value=Int32ValueImpl(value = 1))]
-    // will be come
-    // |_ Rex.Op.Err[Problem(location = ...., message = "unknown function `unknown function...`)]
-    //    |_ Lit[value=Int32ValueImpl(value = 1))]
-    err::{
-      problem: problem,
-      causes: list::['.rex.op'],
-    },
-
-    // Internal MISSING Node:
-    // Upon encounter an operation that always returns missing,
-    // i.e., t.a where a does not exist in t
-    // The an mising node will be popoluated in the plan to replace the top node
-    // i.e.,
-    //
-    missing::{
-      problem: problem,
-      causes: list::['.rex.op'],
-    },
+    // Internal error node. This corresponds with [org.partiql.plan.rex.RexError]. See that documentation.
+    err::{},
   ],
 }
 

@@ -1,25 +1,33 @@
 package org.partiql.cli.pipeline
 
 import org.partiql.ast.Statement
-import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
-import org.partiql.errors.ProblemSeverity
+import org.partiql.cli.ErrorCodeString
+import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
+import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.spi.value.Datum
+import java.io.PrintStream
+import kotlin.jvm.Throws
 
 internal class Pipeline private constructor(
     private val parser: PartiQLParser,
     private val planner: PartiQLPlanner,
     private val compiler: PartiQLCompiler,
+    private val ctx: Context,
+    private val mode: Mode
 ) {
 
     /**
      * TODO replace with the ResultSet equivalent?
+     * @throws PipelineException when there are accumulated errors, or if the components have thrown an [PErrorListenerException].
      */
+    @Throws(PipelineException::class)
     fun execute(statement: String, session: Session): Datum {
         val ast = parse(statement)
         val plan = plan(ast, session)
@@ -27,49 +35,74 @@ internal class Pipeline private constructor(
     }
 
     private fun parse(source: String): Statement {
-        val result = parser.parse(source)
+        val result = listen(ctx.errorListener as AppPErrorListener) {
+            parser.parse(source, ctx)
+        }
         return result.root
     }
 
     private fun plan(statement: Statement, session: Session): Plan {
-        val callback = ProblemListener()
-        val result = planner.plan(statement, session, callback)
-        val errors = callback.problems.filter { it.details.severity == ProblemSeverity.ERROR }
-        if (errors.isNotEmpty()) {
-            throw RuntimeException(errors.joinToString())
+        val result = listen(ctx.errorListener as AppPErrorListener) {
+            planner.plan(statement, session, ctx)
         }
-        TODO("Add V1 planner to the CLI")
+        return result.plan
     }
 
     private fun execute(plan: Plan, session: Session): Datum {
-        // val statement = engine.prepare(plan, session.mode, session.planner())
-        // return engine.execute(statement)
-        TODO("Add V1 planner to the CLI")
+        val statement = listen(ctx.errorListener as AppPErrorListener) {
+            compiler.prepare(plan, mode, ctx)
+        }
+        return statement.execute()
     }
 
-    private class ProblemListener : ProblemCallback {
-
-        val problems = mutableListOf<Problem>()
-
-        override fun invoke(p1: Problem) {
-            problems.add(p1)
+    private fun <T> listen(listener: AppPErrorListener, action: () -> T): T {
+        listener.clear()
+        val result = try {
+            action.invoke()
+        } catch (e: PipelineException) {
+            throw e
         }
+        if (listener.hasErrors()) {
+            throw PipelineException("Failed with given input. Please see the above errors.")
+        }
+        return result
     }
 
     companion object {
 
-        fun default(): Pipeline {
-            val parser = PartiQLParser.standard()
-            val planner = PartiQLPlanner.standard()
-            val evaluator = PartiQLCompiler.standard()
-            return Pipeline(parser, planner, evaluator)
+        fun default(out: PrintStream, config: Config): Pipeline {
+            return create(Mode.PERMISSIVE(), out, config)
         }
 
-        fun strict(): Pipeline {
-            val parser = PartiQLParser.standard()
-            val planner = PartiQLPlanner.builder().signal().build()
-            val evaluator = PartiQLCompiler.standard()
-            return Pipeline(parser, planner, evaluator)
+        fun strict(out: PrintStream, config: Config): Pipeline {
+            return create(Mode.STRICT(), out, config)
+        }
+
+        private fun create(mode: Mode, out: PrintStream, config: Config): Pipeline {
+            val listener = config.getErrorListener(out)
+            val ctx = Context.of(listener)
+            val parser = PartiQLParserBuilder().build()
+            val planner = PartiQLPlanner.builder().build()
+            val compiler = PartiQLCompiler.builder().build()
+            return Pipeline(parser, planner, compiler, ctx, mode)
+        }
+    }
+
+    /**
+     * Halts execution.
+     */
+    class PipelineException(override val message: String?) : PErrorListenerException(message)
+
+    /**
+     * Configuration for passing through user-defined configurations to the underlying components.
+     */
+    class Config(
+        private val maxErrors: Int,
+        private val inhibitWarnings: Boolean,
+        private val warningsAsErrors: Array<ErrorCodeString>
+    ) {
+        fun getErrorListener(out: PrintStream): AppPErrorListener {
+            return AppPErrorListener(out, maxErrors, inhibitWarnings, warningsAsErrors)
         }
     }
 }

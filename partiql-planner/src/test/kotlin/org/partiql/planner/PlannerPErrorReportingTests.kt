@@ -3,15 +3,15 @@ package org.partiql.planner
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ast.Statement
-import org.partiql.errors.Problem
-import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Operation
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.planner.util.PErrorAlwaysMissingCollector
+import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
-import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
 import org.partiql.types.Field
@@ -22,7 +22,7 @@ import org.partiql.types.TupleConstraint
 import java.lang.AssertionError
 import kotlin.test.assertEquals
 
-internal class PlannerErrorReportingTests {
+internal class PlannerPErrorReportingTests {
 
     private val catalogName = "mode_test"
 
@@ -50,11 +50,11 @@ internal class PlannerErrorReportingTests {
 
     private fun assertProblem(
         plan: org.partiql.plan.Plan,
-        problems: List<Problem>,
-        block: (List<Problem>) -> Unit
+        collector: PErrorCollector,
+        block: (PErrorCollector) -> Unit
     ) {
         try {
-            block.invoke(problems)
+            block.invoke(collector)
         } catch (e: Throwable) {
             val str = buildString {
                 this.appendLine("Assertion failed")
@@ -63,7 +63,7 @@ internal class PlannerErrorReportingTests {
                 PlanPrinter.append(this, plan)
 
                 this.appendLine("----------Problems---------")
-                problems.forEach {
+                collector.problems.forEach {
                     this.appendLine(it.toString())
                 }
             }
@@ -74,13 +74,13 @@ internal class PlannerErrorReportingTests {
     data class TestCase(
         val query: String,
         val isSignal: Boolean,
-        val assertion: (List<Problem>) -> Unit,
+        val assertion: (PErrorCollector) -> Unit,
         val expectedType: CompilerType
     ) {
         constructor(
             query: String,
             isSignal: Boolean,
-            assertion: (List<Problem>) -> Unit,
+            assertion: (PErrorCollector) -> Unit,
             expectedType: StaticType = StaticType.ANY
         ) : this(query, isSignal, assertion, PType.fromStaticType(expectedType).toCType())
     }
@@ -98,9 +98,17 @@ internal class PlannerErrorReportingTests {
                 )
             )
 
-        private fun assertOnProblemCount(warningCount: Int, errorCount: Int): (List<Problem>) -> Unit = { problems ->
-            assertEquals(warningCount, problems.filter { it.details.severity == ProblemSeverity.WARNING }.size, "Number of warnings is wrong.")
-            assertEquals(errorCount, problems.filter { it.details.severity == ProblemSeverity.ERROR }.size, "Number of errors is wrong.")
+        private fun assertOnProblemCount(warningCount: Int, errorCount: Int): (PErrorCollector) -> Unit = { collector ->
+            val actualErrorCount = collector.errors.size
+            val actualWarningCount = collector.warnings.size
+            val message = buildString {
+                appendLine("Expected warnings : $warningCount")
+                appendLine("Actual warnings   : $actualWarningCount")
+                appendLine("Expected errors   : $errorCount")
+                appendLine("Actual errors     : $actualErrorCount")
+            }
+            assertEquals(warningCount, actualWarningCount, message)
+            assertEquals(errorCount, actualErrorCount, message)
         }
 
         /**
@@ -382,12 +390,15 @@ internal class PlannerErrorReportingTests {
 
     private fun runTestCase(tc: TestCase) {
         val planner = PartiQLPlanner.builder().signal(tc.isSignal).build()
-        val pc = ProblemCollector()
-        val res = planner.plan(statement(tc.query), session, pc)
-        val problems = pc.problems
+        val pc = when (tc.isSignal) {
+            true -> PErrorAlwaysMissingCollector()
+            false -> PErrorCollector()
+        }
+        val pConfig = Context.of(pc)
+        val res = planner.plan(statement(tc.query), session, pConfig)
         val plan = res.plan
         assertProblem(
-            plan, problems,
+            plan, pc,
             tc.assertion
         )
         val statement = plan.getOperation() as Operation.Query

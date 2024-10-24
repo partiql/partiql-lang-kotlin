@@ -58,8 +58,6 @@ import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexErrorImpl
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexLitImpl
-import org.partiql.plan.rex.RexMissing
-import org.partiql.plan.rex.RexMissingImpl
 import org.partiql.plan.rex.RexNullIf
 import org.partiql.plan.rex.RexNullIfImpl
 import org.partiql.plan.rex.RexPathIndex
@@ -489,23 +487,9 @@ public interface PlanFactory {
 
     /**
      * TODO AUDIT ME
-     *
      * Create a [RexError] instance.
-     *
-     * @param message
-     * @param trace
      */
-    public fun rexError(message: String, trace: List<Rex>): RexError = RexErrorImpl(message, trace)
-
-    /**
-     * TODO AUDIT ME
-     *
-     * Create a [RexError] instance.
-     *
-     * @param message
-     * @param trace
-     */
-    public fun rexMissing(message: String, trace: List<Rex>): RexMissing = RexMissingImpl(message, trace)
+    public fun rexError(type: PType): RexError = RexErrorImpl()
 
     /**
      * Create a [RexLit] instance.
