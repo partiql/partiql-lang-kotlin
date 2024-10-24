@@ -3,8 +3,12 @@ package org.partiql.ast.v1;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 @EqualsAndHashCode(callSuper = false)
-public class DataType implements Enum {
+public class DataType extends AstNode implements Enum {
     public static final int UNKNOWN = 0;
     // <absent types>
     public static final int NULL = 1;
@@ -529,5 +533,20 @@ public class DataType implements Enum {
      */
     public IdentifierChain getName() {
         return name;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        List<AstNode> kids = new ArrayList<>();
+        if (name != null) {
+            kids.add(name);
+        }
+        return kids;
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

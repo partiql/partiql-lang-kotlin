@@ -1,27 +1,26 @@
 package org.partiql.parser.internal
 
 import org.junit.jupiter.api.Test
-import org.partiql.ast.AstNode
-import org.partiql.ast.Expr
-import org.partiql.ast.Identifier
-import org.partiql.ast.exprCall
-import org.partiql.ast.identifierQualified
-import org.partiql.ast.identifierSymbol
-import org.partiql.ast.statementQuery
+import org.partiql.ast.v1.Ast.exprCall
+import org.partiql.ast.v1.Ast.identifier
+import org.partiql.ast.v1.Ast.identifierChain
+import org.partiql.ast.v1.Ast.query
+import org.partiql.ast.v1.AstNode
+import org.partiql.ast.v1.expr.Expr
 import kotlin.test.assertEquals
 
 class PartiQLParserFunctionCallTests {
 
-    private val parser = PartiQLParserDefault()
+    private val parser = V1PartiQLParserDefault()
 
-    private inline fun query(body: () -> Expr) = statementQuery(body())
+    private inline fun queryBody(body: () -> Expr) = query(body())
 
     @Test
     fun callUnqualifiedNonReservedInsensitive() = assertExpression(
         "foo()",
-        query {
+        queryBody {
             exprCall(
-                function = identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
+                function = identifierChain(identifier("foo", false), null),
                 args = emptyList(),
                 setq = null
             )
@@ -31,9 +30,9 @@ class PartiQLParserFunctionCallTests {
     @Test
     fun callUnqualifiedNonReservedSensitive() = assertExpression(
         "\"foo\"()",
-        query {
+        queryBody {
             exprCall(
-                function = identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
+                function = identifierChain(identifier("foo", true), null),
                 args = emptyList(),
                 setq = null
             )
@@ -43,9 +42,9 @@ class PartiQLParserFunctionCallTests {
     @Test
     fun callUnqualifiedReservedInsensitive() = assertExpression(
         "upper()",
-        query {
+        queryBody {
             exprCall(
-                function = identifierSymbol("upper", Identifier.CaseSensitivity.INSENSITIVE),
+                function = identifierChain(identifier("upper", false), null),
                 args = emptyList(),
                 setq = null
             )
@@ -55,9 +54,9 @@ class PartiQLParserFunctionCallTests {
     @Test
     fun callUnqualifiedReservedSensitive() = assertExpression(
         "\"upper\"()",
-        query {
+        queryBody {
             exprCall(
-                function = identifierSymbol("upper", Identifier.CaseSensitivity.SENSITIVE),
+                function = identifierChain(identifier("upper", true), null),
                 args = emptyList(),
                 setq = null
             )
@@ -67,13 +66,13 @@ class PartiQLParserFunctionCallTests {
     @Test
     fun callQualifiedNonReservedInsensitive() = assertExpression(
         "my_catalog.my_schema.foo()",
-        query {
+        queryBody {
             exprCall(
-                function = identifierQualified(
-                    root = identifierSymbol("my_catalog", Identifier.CaseSensitivity.INSENSITIVE),
-                    steps = listOf(
-                        identifierSymbol("my_schema", Identifier.CaseSensitivity.INSENSITIVE),
-                        identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
+                function = identifierChain(
+                    root = identifier("my_catalog", false),
+                    next = identifierChain(
+                        root = identifier("my_schema", false),
+                        next = identifierChain(identifier("foo", false), null),
                     )
                 ),
                 args = emptyList(),
@@ -85,13 +84,13 @@ class PartiQLParserFunctionCallTests {
     @Test
     fun callQualifiedNonReservedSensitive() = assertExpression(
         "my_catalog.my_schema.\"foo\"()",
-        query {
+        queryBody {
             exprCall(
-                function = identifierQualified(
-                    root = identifierSymbol("my_catalog", Identifier.CaseSensitivity.INSENSITIVE),
-                    steps = listOf(
-                        identifierSymbol("my_schema", Identifier.CaseSensitivity.INSENSITIVE),
-                        identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
+                function = identifierChain(
+                    root = identifier("my_catalog", false),
+                    next = identifierChain(
+                        identifier("my_schema", false),
+                        identifierChain(identifier("foo", true), null),
                     )
                 ),
                 args = emptyList(),
@@ -103,13 +102,13 @@ class PartiQLParserFunctionCallTests {
     @Test
     fun callQualifiedReservedInsensitive() = assertExpression(
         "my_catalog.my_schema.upper()",
-        query {
+        queryBody {
             exprCall(
-                function = identifierQualified(
-                    root = identifierSymbol("my_catalog", Identifier.CaseSensitivity.INSENSITIVE),
-                    steps = listOf(
-                        identifierSymbol("my_schema", Identifier.CaseSensitivity.INSENSITIVE),
-                        identifierSymbol("upper", Identifier.CaseSensitivity.INSENSITIVE),
+                function = identifierChain(
+                    root = identifier("my_catalog", false),
+                    next = identifierChain(
+                        identifier("my_schema", false),
+                        identifierChain(identifier("upper", false), null),
                     )
                 ),
                 args = emptyList(),
@@ -121,13 +120,13 @@ class PartiQLParserFunctionCallTests {
     @Test
     fun callQualifiedReservedSensitive() = assertExpression(
         "my_catalog.my_schema.\"upper\"()",
-        query {
+        queryBody {
             exprCall(
-                function = identifierQualified(
-                    root = identifierSymbol("my_catalog", Identifier.CaseSensitivity.INSENSITIVE),
-                    steps = listOf(
-                        identifierSymbol("my_schema", Identifier.CaseSensitivity.INSENSITIVE),
-                        identifierSymbol("upper", Identifier.CaseSensitivity.SENSITIVE),
+                function = identifierChain(
+                    root = identifier("my_catalog", false),
+                    next = identifierChain(
+                        identifier("my_schema", false),
+                        identifierChain(identifier("upper", true), null),
                     )
                 ),
                 args = emptyList(),

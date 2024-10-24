@@ -1,11 +1,11 @@
 package org.partiql.parser.internal
 
 import org.junit.jupiter.api.Test
-import org.partiql.ast.AstNode
-import org.partiql.ast.Expr
-import org.partiql.ast.exprLit
-import org.partiql.ast.exprOperator
-import org.partiql.ast.statementQuery
+import org.partiql.ast.v1.Ast.exprLit
+import org.partiql.ast.v1.Ast.exprOperator
+import org.partiql.ast.v1.Ast.query
+import org.partiql.ast.v1.AstNode
+import org.partiql.ast.v1.expr.Expr
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
 import kotlin.test.assertEquals
@@ -13,14 +13,14 @@ import kotlin.test.assertEquals
 @OptIn(PartiQLValueExperimental::class)
 class PartiQLParserOperatorTests {
 
-    private val parser = PartiQLParserDefault()
+    private val parser = V1PartiQLParserDefault()
 
-    private inline fun query(body: () -> Expr) = statementQuery(body())
+    private inline fun queryBody(body: () -> Expr) = query(body())
 
     @Test
     fun builtinUnaryOperator() = assertExpression(
         "-2",
-        query {
+        queryBody {
             exprOperator(
                 symbol = "-",
                 lhs = null,
@@ -32,7 +32,7 @@ class PartiQLParserOperatorTests {
     @Test
     fun builtinBinaryOperator() = assertExpression(
         "1 <= 2",
-        query {
+        queryBody {
             exprOperator(
                 symbol = "<=",
                 lhs = exprLit(int32Value(1)),
@@ -44,7 +44,7 @@ class PartiQLParserOperatorTests {
     @Test
     fun customUnaryOperator() = assertExpression(
         "==!2",
-        query {
+        queryBody {
             exprOperator(
                 symbol = "==!",
                 lhs = null,
@@ -56,7 +56,7 @@ class PartiQLParserOperatorTests {
     @Test
     fun customBinaryOperator() = assertExpression(
         "1 ==! 2",
-        query {
+        queryBody {
             exprOperator(
                 symbol = "==!",
                 lhs = exprLit(int32Value(1)),

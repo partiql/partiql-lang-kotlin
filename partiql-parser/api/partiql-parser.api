@@ -118,3 +118,35 @@ public final class org/partiql/parser/SourceLocations : java/util/Map, kotlin/jv
 	public final fun values ()Ljava/util/Collection;
 }
 
+public abstract interface class org/partiql/parser/V1PartiQLParser {
+	public static final field Companion Lorg/partiql/parser/V1PartiQLParser$Companion;
+	public static fun builder ()Lorg/partiql/parser/V1PartiQLParserBuilder;
+	public abstract fun parse (Ljava/lang/String;)Lorg/partiql/parser/V1PartiQLParser$Result;
+	public static fun standard ()Lorg/partiql/parser/V1PartiQLParser;
+}
+
+public final class org/partiql/parser/V1PartiQLParser$Companion {
+	public final fun builder ()Lorg/partiql/parser/V1PartiQLParserBuilder;
+	public final fun standard ()Lorg/partiql/parser/V1PartiQLParser;
+}
+
+public final class org/partiql/parser/V1PartiQLParser$Result {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/v1/Statement;Lorg/partiql/parser/SourceLocations;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/ast/v1/Statement;
+	public final fun component3 ()Lorg/partiql/parser/SourceLocations;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/ast/v1/Statement;Lorg/partiql/parser/SourceLocations;)Lorg/partiql/parser/V1PartiQLParser$Result;
+	public static synthetic fun copy$default (Lorg/partiql/parser/V1PartiQLParser$Result;Ljava/lang/String;Lorg/partiql/ast/v1/Statement;Lorg/partiql/parser/SourceLocations;ILjava/lang/Object;)Lorg/partiql/parser/V1PartiQLParser$Result;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLocations ()Lorg/partiql/parser/SourceLocations;
+	public final fun getRoot ()Lorg/partiql/ast/v1/Statement;
+	public final fun getSource ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/parser/V1PartiQLParserBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/parser/V1PartiQLParser;
+}
+

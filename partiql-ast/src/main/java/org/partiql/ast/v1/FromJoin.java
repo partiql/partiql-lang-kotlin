@@ -17,10 +17,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class FromJoin extends FromTableRef {
     @NotNull
-    public final From lhs;
+    public final FromTableRef lhs;
 
     @NotNull
-    public final From rhs;
+    public final FromTableRef rhs;
 
     @Nullable
     public final JoinType joinType;
@@ -28,7 +28,7 @@ public class FromJoin extends FromTableRef {
     @Nullable
     public final Expr condition;
 
-    public FromJoin(@NotNull From lhs, @NotNull From rhs, @Nullable JoinType joinType, @Nullable Expr condition) {
+    public FromJoin(@NotNull FromTableRef lhs, @NotNull FromTableRef rhs, @Nullable JoinType joinType, @Nullable Expr condition) {
         this.lhs = lhs;
         this.rhs = rhs;
         this.joinType = joinType;
