@@ -90,4 +90,18 @@ public class DatetimeField implements Enum {
             TIMEZONE_MINUTE()
         };
     }
+
+    public String name() {
+        switch (code) {
+            case YEAR: return "YEAR";
+            case MONTH: return "MONTH";
+            case DAY: return "DAY";
+            case HOUR: return "HOUR";
+            case MINUTE: return "MINUTE";
+            case SECOND: return "SECOND";
+            case TIMEZONE_HOUR: return "TIMEZONE_HOUR";
+            case TIMEZONE_MINUTE: return "TIMEZONE_MINUTE";
+            default: return "UNKNOWN";
+        }
+    }
 }

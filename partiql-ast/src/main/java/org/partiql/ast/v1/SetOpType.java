@@ -8,9 +8,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 public class SetOpType implements Enum {
     private static final int UNKNOWN = 0;
-    private static final int UNION = 1;
-    private static final int INTERSECT = 2;
-    private static final int EXCEPT = 3;
+    public static final int UNION = 1;
+    public static final int INTERSECT = 2;
+    public static final int EXCEPT = 3;
 
     public static SetOpType UNKNOWN() {
         return new SetOpType(UNKNOWN);
