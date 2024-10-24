@@ -83,7 +83,7 @@ public class Foo {
 
         // Planner Component
         PartiQLPlanner planner = PartiQLPlanner.standard();
-        PlannerConfig plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build(); // Registration here!!
+        Context plannerConfig = Context.of(listener); // Registration here!!
 
         // Planning and catching the PErrorListenerException
         Plan plan;
@@ -118,9 +118,8 @@ messages. Specifically, `Error` exposes a method, `int getCode()`, to return the
 possible error codes are represented as static final fields in
 the [Error Javadocs](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO).
 
-Each error code's documentation highlights the _potentially available_ properties that the `Error` may hold. These
-properties are NOT guaranteed to exist, and their values are subject to change between PartiQL versions. Please read
-each error code's Javadocs before using them in your application.
+An error code MAY have additional properties accessible via the `.get(...)` API – please consult the Javadocs for an
+error code's property usage.
 
 Now, here's an example of how you might write a quality error message:
 ```java
@@ -184,7 +183,7 @@ class Example {
     public Plan planInternal(Statement ast) throws PlanningFailure {
         AbortWhenAlwaysMissing listener = AbortWhenAlwaysMissing();
         PartiQLPlanner planner = PartiQLPlanner.standard();
-        PlannerConfig plannerConfig = PlannerConfigBuilder().setErrorListener(listener).build();
+        Context plannerConfig = Context.of(listener);
 
         Plan plan;
         try {

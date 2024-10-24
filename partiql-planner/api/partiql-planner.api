@@ -21,7 +21,7 @@ public final class org/partiql/planner/PartiQLPlanner$Result {
 }
 
 public abstract interface class org/partiql/planner/PartiQLPlannerPass {
-	public abstract fun apply (Lorg/partiql/plan/Plan;Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/plan/Plan;
+	public abstract fun apply (Lorg/partiql/plan/Plan;Lorg/partiql/spi/Context;)Lorg/partiql/plan/Plan;
 }
 
 public final class org/partiql/planner/builder/PartiQLPlannerBuilder {

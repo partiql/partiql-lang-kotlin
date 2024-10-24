@@ -51,7 +51,7 @@ internal class SqlPlanner(
 
             // 5. Apply all passes
             for (pass in passes) {
-                plan = pass.apply(plan, ctx.getErrorListener())
+                plan = pass.apply(plan, ctx)
             }
             return PartiQLPlanner.Result(plan)
         } catch (e: PErrorListenerException) {
