@@ -171,7 +171,6 @@ import org.partiql.ast.typeTimestamp
 import org.partiql.ast.typeTimestampWithTz
 import org.partiql.ast.typeTuple
 import org.partiql.ast.typeVarchar
-import org.partiql.parser.ParserContext
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
@@ -179,6 +178,7 @@ import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
+import org.partiql.spi.Context
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
@@ -230,7 +230,7 @@ import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
 internal class PartiQLParserDefault : PartiQLParser {
 
     @Throws(PErrorListenerException::class)
-    override fun parse(source: String, ctx: ParserContext): PartiQLParser.Result {
+    override fun parse(source: String, ctx: Context): PartiQLParser.Result {
         try {
             return parse(source, ctx.errorListener)
         } catch (e: PErrorListenerException) {

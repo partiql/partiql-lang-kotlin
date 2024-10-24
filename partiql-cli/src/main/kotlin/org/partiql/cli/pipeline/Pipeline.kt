@@ -2,16 +2,14 @@ package org.partiql.cli.pipeline
 
 import org.partiql.ast.Statement
 import org.partiql.cli.ErrorCodeString
-import org.partiql.eval.CompilerContext
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.builder.PartiQLEngineBuilder
-import org.partiql.parser.ParserContext
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PlannerContext
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PErrorListenerException
 import java.io.PrintStream
@@ -21,9 +19,8 @@ internal class Pipeline private constructor(
     private val parser: PartiQLParser,
     private val planner: PartiQLPlanner,
     private val engine: PartiQLEngine,
-    private val plannerConfig: PlannerContext,
-    private val compilerConfig: CompilerContext,
-    private val parserConfig: ParserContext
+    private val ctx: Context,
+    private val mode: PartiQLEngine.Mode
 ) {
 
     /**
@@ -38,22 +35,22 @@ internal class Pipeline private constructor(
     }
 
     private fun parse(source: String): Statement {
-        val result = listen(parserConfig.errorListener as AppPErrorListener) {
-            parser.parse(source, parserConfig)
+        val result = listen(ctx.errorListener as AppPErrorListener) {
+            parser.parse(source, ctx)
         }
         return result.root
     }
 
     private fun plan(statement: Statement, session: Session): Plan {
-        val result = listen(plannerConfig.errorListener as AppPErrorListener) {
-            planner.plan(statement, session, plannerConfig)
+        val result = listen(ctx.errorListener as AppPErrorListener) {
+            planner.plan(statement, session, ctx)
         }
         return result.plan
     }
 
     private fun execute(plan: Plan, session: Session): PartiQLResult {
-        val statement = listen(compilerConfig.errorListener as AppPErrorListener) {
-            engine.prepare(plan, session, compilerConfig)
+        val statement = listen(ctx.errorListener as AppPErrorListener) {
+            engine.prepare(plan, session, ctx, mode)
         }
         return statement.execute(session)
     }
@@ -83,13 +80,11 @@ internal class Pipeline private constructor(
 
         private fun create(mode: PartiQLEngine.Mode, out: PrintStream, config: Config): Pipeline {
             val listener = config.getErrorListener(out)
+            val ctx = Context.of(listener)
             val parser = PartiQLParserBuilder().build()
-            val parserConfig = ParserContext.builder().listener(listener).build()
             val planner = PartiQLPlanner.builder().build()
-            val plannerConfig = PlannerContext.builder().listener(listener).build()
-            val compilerConfig = CompilerContext.builder().mode(mode).listener(listener).build()
             val engine = PartiQLEngineBuilder().build()
-            return Pipeline(parser, planner, engine, plannerConfig, compilerConfig, parserConfig)
+            return Pipeline(parser, planner, engine, ctx, mode)
         }
     }
 

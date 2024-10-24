@@ -11,6 +11,7 @@ import org.partiql.planner.util.PErrorAlwaysMissingCollector
 import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
 import org.partiql.plugins.memory.MemoryCatalog
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
 import org.partiql.types.Field
@@ -393,7 +394,7 @@ internal class PlannerPErrorReportingTests {
             true -> PErrorAlwaysMissingCollector()
             false -> PErrorCollector()
         }
-        val pConfig = PlannerContext.builder().listener(pc).build()
+        val pConfig = Context.of(pc)
         val res = planner.plan(statement(tc.query), session, pConfig)
         val plan = res.plan
         assertProblem(

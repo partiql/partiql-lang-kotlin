@@ -24,6 +24,12 @@ public abstract interface class org/partiql/spi/Connector {
 public abstract interface class org/partiql/spi/Connector$Context {
 }
 
+public abstract interface class org/partiql/spi/Context {
+	public fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
+	public static fun of (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/spi/Context;
+	public static fun standard ()Lorg/partiql/spi/Context;
+}
+
 public abstract class org/partiql/spi/PEnum {
 	protected fun <init> (I)V
 	public final fun code ()I

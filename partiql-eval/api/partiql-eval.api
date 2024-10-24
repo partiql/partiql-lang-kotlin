@@ -1,21 +1,10 @@
-public final class org/partiql/eval/CompilerContext {
-	public static fun builder ()Lorg/partiql/eval/CompilerContext$Builder;
-	public fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
-	public fun getMode ()Lorg/partiql/eval/PartiQLEngine$Mode;
-}
-
-public class org/partiql/eval/CompilerContext$Builder {
-	public fun build ()Lorg/partiql/eval/CompilerContext;
-	public fun listener (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/eval/CompilerContext$Builder;
-	public fun mode (Lorg/partiql/eval/PartiQLEngine$Mode;)Lorg/partiql/eval/CompilerContext$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class org/partiql/eval/PartiQLEngine {
 	public static final field Companion Lorg/partiql/eval/PartiQLEngine$Companion;
 	public static fun builder ()Lorg/partiql/eval/builder/PartiQLEngineBuilder;
 	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLStatement;
-	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/eval/CompilerContext;)Lorg/partiql/eval/PartiQLStatement;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/eval/PartiQLEngine$Mode;)Lorg/partiql/eval/PartiQLStatement;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/Context;)Lorg/partiql/eval/PartiQLStatement;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/Context;Lorg/partiql/eval/PartiQLEngine$Mode;)Lorg/partiql/eval/PartiQLStatement;
 	public static fun standard ()Lorg/partiql/eval/PartiQLEngine;
 }
 
@@ -26,6 +15,8 @@ public final class org/partiql/eval/PartiQLEngine$Companion {
 
 public final class org/partiql/eval/PartiQLEngine$DefaultImpls {
 	public static fun prepare (Lorg/partiql/eval/PartiQLEngine;Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLStatement;
+	public static fun prepare (Lorg/partiql/eval/PartiQLEngine;Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/eval/PartiQLEngine$Mode;)Lorg/partiql/eval/PartiQLStatement;
+	public static fun prepare (Lorg/partiql/eval/PartiQLEngine;Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/Context;)Lorg/partiql/eval/PartiQLStatement;
 }
 
 public final class org/partiql/eval/PartiQLEngine$Mode : java/lang/Enum {

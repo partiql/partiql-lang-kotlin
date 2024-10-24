@@ -16,7 +16,6 @@
 
 package org.partiql.planner.internal.typer
 
-import org.partiql.planner.PlannerContext
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.exclude.ExcludeRepr
@@ -52,6 +51,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
@@ -71,7 +71,7 @@ import kotlin.math.max
  * @property env
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class PlanTyper(private val env: Env, config: PlannerContext) {
+internal class PlanTyper(private val env: Env, config: Context) {
 
     private val _listener = config.errorListener
 

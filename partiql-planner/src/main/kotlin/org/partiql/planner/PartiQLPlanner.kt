@@ -3,6 +3,7 @@ package org.partiql.planner
 import org.partiql.ast.Statement
 import org.partiql.plan.Plan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PErrorListenerException
 import kotlin.jvm.Throws
@@ -21,19 +22,18 @@ public interface PartiQLPlanner {
      * @return
      */
     @Throws(PErrorListenerException::class)
-    public fun plan(statement: Statement, session: Session, ctx: PlannerContext): Result
+    public fun plan(statement: Statement, session: Session, ctx: Context): Result
 
     /**
      * Transform an AST to a [Plan].
      *
      * @param statement
      * @param session
-     * @param config a configuration object
      * @return
      */
     @Throws(PErrorListenerException::class)
     public fun plan(statement: Statement, session: Session): Result {
-        return plan(statement, session, PlannerContext.builder().build())
+        return plan(statement, session, Context.standard())
     }
 
     /**

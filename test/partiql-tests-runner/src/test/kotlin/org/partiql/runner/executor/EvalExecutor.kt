@@ -7,19 +7,18 @@ import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.eval.CompilerContext
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PlannerContext
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.runner.CompileType
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -47,10 +46,9 @@ class EvalExecutor(
     override fun prepare(statement: String): PartiQLStatement {
         val stmt = parser.parse(statement).root
         val listener = getErrorListener(mode)
-        val plannerConfig = PlannerContext.builder().listener(listener).build()
-        val plan = planner.plan(stmt, session, plannerConfig).plan
-        val config = CompilerContext.builder().mode(mode).listener(listener).build()
-        return engine.prepare(plan, session, config)
+        val ctx = Context.of(listener)
+        val plan = planner.plan(stmt, session, ctx).plan
+        return engine.prepare(plan, session, ctx, mode)
     }
 
     private fun getErrorListener(mode: PartiQLEngine.Mode): PErrorListener {

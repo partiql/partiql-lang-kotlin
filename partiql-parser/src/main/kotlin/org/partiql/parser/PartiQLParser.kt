@@ -17,6 +17,7 @@ package org.partiql.parser
 import org.partiql.ast.Expr
 import org.partiql.ast.Statement
 import org.partiql.parser.internal.PartiQLParserDefault
+import org.partiql.spi.Context
 import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.nullValue
@@ -32,7 +33,7 @@ public interface PartiQLParser {
      * [PErrorListenerException], this method halts execution and propagates the exception.
      */
     @Throws(PErrorListenerException::class)
-    public fun parse(source: String, ctx: ParserContext): Result
+    public fun parse(source: String, ctx: Context): Result
 
     /**
      * Parses the [source] into an AST.
@@ -42,7 +43,7 @@ public interface PartiQLParser {
      */
     @Throws(PErrorListenerException::class)
     public fun parse(source: String): Result {
-        return parse(source, ParserContext.builder().build())
+        return parse(source, Context.standard())
     }
 
     public data class Result(

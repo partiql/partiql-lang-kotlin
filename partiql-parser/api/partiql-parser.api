@@ -1,19 +1,8 @@
-public final class org/partiql/parser/ParserContext {
-	public static fun builder ()Lorg/partiql/parser/ParserContext$Builder;
-	public fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
-}
-
-public class org/partiql/parser/ParserContext$Builder {
-	public fun build ()Lorg/partiql/parser/ParserContext;
-	public fun listener (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/parser/ParserContext$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class org/partiql/parser/PartiQLParser {
 	public static final field Companion Lorg/partiql/parser/PartiQLParser$Companion;
 	public static fun builder ()Lorg/partiql/parser/PartiQLParserBuilder;
 	public abstract fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParser$Result;
-	public abstract fun parse (Ljava/lang/String;Lorg/partiql/parser/ParserContext;)Lorg/partiql/parser/PartiQLParser$Result;
+	public abstract fun parse (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/PartiQLParser$Result;
 	public static fun standard ()Lorg/partiql/parser/PartiQLParser;
 }
 

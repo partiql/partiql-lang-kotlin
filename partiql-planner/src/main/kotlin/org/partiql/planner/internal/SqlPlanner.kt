@@ -8,10 +8,10 @@ import org.partiql.plan.builder.PlanFactory
 import org.partiql.plan.rex.Rex
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
-import org.partiql.planner.PlannerContext
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
@@ -29,7 +29,7 @@ internal class SqlPlanner(
     public override fun plan(
         statement: Statement,
         session: Session,
-        ctx: PlannerContext,
+        ctx: Context,
     ): PartiQLPlanner.Result {
         try {
             // 0. Initialize the planning environment

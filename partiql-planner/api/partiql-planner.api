@@ -2,7 +2,7 @@ public abstract interface class org/partiql/planner/PartiQLPlanner {
 	public static final field Companion Lorg/partiql/planner/PartiQLPlanner$Companion;
 	public static fun builder ()Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
 	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/planner/PartiQLPlanner$Result;
-	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lorg/partiql/planner/PlannerContext;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/Context;)Lorg/partiql/planner/PartiQLPlanner$Result;
 	public static fun standard ()Lorg/partiql/planner/PartiQLPlanner;
 }
 
@@ -22,17 +22,6 @@ public final class org/partiql/planner/PartiQLPlanner$Result {
 
 public abstract interface class org/partiql/planner/PartiQLPlannerPass {
 	public abstract fun apply (Lorg/partiql/plan/Plan;Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/plan/Plan;
-}
-
-public final class org/partiql/planner/PlannerContext {
-	public static fun builder ()Lorg/partiql/planner/PlannerContext$Builder;
-	public fun getErrorListener ()Lorg/partiql/spi/errors/PErrorListener;
-}
-
-public class org/partiql/planner/PlannerContext$Builder {
-	public fun build ()Lorg/partiql/planner/PlannerContext;
-	public fun listener (Lorg/partiql/spi/errors/PErrorListener;)Lorg/partiql/planner/PlannerContext$Builder;
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/planner/builder/PartiQLPlannerBuilder {

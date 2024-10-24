@@ -7,7 +7,6 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.eval.CompilerContext
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
@@ -1340,8 +1339,7 @@ class PartiQLEngineDefaultTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val compilerContext = CompilerContext.builder().mode(mode).build()
-            val stmt = engine.prepare(plan, session, compilerContext)
+            val stmt = engine.prepare(plan, session, mode)
             val result = when (val returned = stmt.execute(session)) {
                 is PartiQLResult.Value -> returned
                 is PartiQLResult.Error -> {
@@ -1423,8 +1421,7 @@ class PartiQLEngineDefaultTest {
                 .catalogs(catalog)
                 .build()
             val plan = planner.plan(statement, session).plan
-            val compilerContext = CompilerContext.builder().mode(mode).build()
-            val stmt = engine.prepare(plan, session, compilerContext)
+            val stmt = engine.prepare(plan, session, mode)
             when (val result = stmt.execute(session)) {
                 is PartiQLResult.Value -> return result.value to plan
                 is PartiQLResult.Error -> {

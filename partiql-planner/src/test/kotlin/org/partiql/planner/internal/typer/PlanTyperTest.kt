@@ -2,7 +2,6 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.partiql.planner.PlannerContext
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
@@ -19,6 +18,7 @@ import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.PErrorCollector
 import org.partiql.plugins.local.LocalCatalog
+import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
@@ -118,7 +118,7 @@ class PlanTyperTest {
         private val OPEN_DUPLICATES_STRUCT = PType.struct().toCType()
 
         private fun getTyper(): PlanTyperWrapper {
-            val config = PlannerContext.builder().listener(PErrorCollector()).build()
+            val config = Context.of(PErrorCollector())
             val env = Env(
                 Session.builder()
                     .catalog("pql")
