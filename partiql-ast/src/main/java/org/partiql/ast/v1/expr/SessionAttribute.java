@@ -49,4 +49,12 @@ public class SessionAttribute implements Enum {
             CURRENT_DATE()
         };
     }
+
+    public String name() {
+        switch (this.code) {
+            case CURRENT_USER: return "CURRENT_USER";
+            case CURRENT_DATE: return "CURRENT_DATE";
+            default: return "UNKNOWN";
+        }
+    }
 }

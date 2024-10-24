@@ -12,15 +12,13 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.normalize
 
-import org.partiql.ast.Statement
-
-// TODO DELETE FILE
+import org.partiql.ast.v1.Statement
 
 /**
  * Wraps a rewriter with a default entry point.
  */
 internal interface AstPass {
-    public fun apply(statement: Statement): Statement
+    fun apply(statement: Statement): Statement
 }
