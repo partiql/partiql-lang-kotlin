@@ -525,7 +525,7 @@ may then be further optimized by selecting better implementations of each operat
         )
 
         // This refers to the <table name> EBNF rule in SQL:1999.
-        (product table_name id::identifier_chain)
+        (record table_name (id identifier_chain))
 
         // `identifier` can be used for names that need to be looked up with a notion of case-sensitivity.
 
@@ -541,7 +541,7 @@ may then be further optimized by selecting better implementations of each operat
         // `expr`.
         // For how this maps to syntax, consider `INSERT INTO cat1.schema1.table1`. In this scenario, `table1` is the
         // head. The qualifier is `cat1.schema1`.
-        (product identifier_chain head::identifier qualifier::(* identifier 0))
+        (record identifier_chain (parts (* identifier 1)))
 
         // This refers to a regular/delimited identifier in the SQL EBNF.
         (product identifier name::symbol case::case_sensitivity)

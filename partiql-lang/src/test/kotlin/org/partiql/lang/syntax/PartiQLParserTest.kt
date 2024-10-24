@@ -1817,7 +1817,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (bag
                             (list
@@ -1916,7 +1916,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (select
                             (project
@@ -1997,10 +1997,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (table_name
-                        (identifier_chain
+                        (id (identifier_chain (parts
                             (identifier
                                 foo
-                                (case_insensitive))))
+                                (case_insensitive))))))
                         null
                         (bag
                             (list
@@ -2275,7 +2275,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (select
                             (project
@@ -2301,12 +2301,12 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain
-                          (identifier BAT (case_insensitive))
+                        (table_name (id (identifier_chain (parts
                           (identifier FoO (case_sensitive))
                           (identifier bar (case_insensitive))
                           (identifier baZ (case_sensitive))
-                        ))
+                          (identifier BAT (case_insensitive))
+                        ))))
                         null
                         (select
                             (project
@@ -2332,7 +2332,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (bag
                             (list
@@ -2356,12 +2356,12 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain
-                          (identifier BAT (case_insensitive))
+                        (table_name (id (identifier_chain (parts
                           (identifier FoO (case_sensitive))
                           (identifier bar (case_insensitive))
                           (identifier baZ (case_sensitive))
-                        ))
+                          (identifier BAT (case_insensitive))
+                        ))))
                         null
                         (bag
                             (list
@@ -2385,7 +2385,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (bag
                             (list
@@ -2416,7 +2416,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (bag
                             (list
@@ -2447,7 +2447,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             f
                             (bag
                                 (struct
@@ -2472,7 +2472,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             f
                             (bag
                                 (struct
@@ -2504,7 +2504,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             f
                             (bag
                                 (struct
@@ -2536,7 +2536,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             null
                             (select
                                 (project
@@ -2576,7 +2576,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (bag
                             (list
@@ -2600,7 +2600,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (bag
                             (list
@@ -2631,7 +2631,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (bag
                             (list
@@ -2663,10 +2663,11 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (table_name
-                        (identifier_chain
+                        (id (identifier_chain (parts
                             (identifier
                                 foo
                                 (case_insensitive))))
+                                ))
                             f
                             (bag
                                 (struct
@@ -2691,7 +2692,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             f
                             (bag
                                 (struct
@@ -2723,7 +2724,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             f
                             (bag
                                 (struct
@@ -2755,7 +2756,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             null
                             (select
                                 (project
@@ -2795,7 +2796,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             null
                             (bag
                                 (struct
@@ -2853,7 +2854,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             f
                             (bag
                                 (struct
@@ -2875,7 +2876,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             null
                             (select
                                 (project
@@ -2913,10 +2914,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (table_name
-                        (identifier_chain
+                        (id (identifier_chain (parts
                             (identifier
                                 foo
-                                (case_insensitive))))
+                                (case_insensitive))))))
                             null
                             (bag
                                 (struct
@@ -2942,12 +2943,12 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain
-                                (identifier BAT (case_insensitive))
+                            (table_name (id (identifier_chain (parts
                                 (identifier FoO (case_sensitive))
                                 (identifier bar (case_insensitive))
                                 (identifier baZ (case_sensitive))
-                            ))
+                                (identifier BAT (case_insensitive))
+                            ))))
                             null
                             (bag
                                 (struct
@@ -2972,7 +2973,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             f
                             (bag
                                 (struct
@@ -2998,10 +2999,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                            (table_name
-                        (identifier_chain
+                        (id (identifier_chain (parts
                             (identifier
                                 foo
-                                (case_insensitive))))
+                                (case_insensitive))))))
                             null
                             (bag
                                 (struct
@@ -3026,12 +3027,13 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                           (table_name (identifier_chain
-                                (identifier BAT (case_insensitive))
+                           (table_name (id (identifier_chain
+                                (parts
                                 (identifier FoO (case_sensitive))
                                 (identifier bar (case_insensitive))
                                 (identifier baZ (case_sensitive))
-                            ))
+                                (identifier BAT (case_insensitive))
+                            ))))
                             null
                             (bag
                                 (struct
@@ -3056,7 +3058,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             f
                             (bag
                                 (struct
@@ -3081,7 +3083,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (table_name (identifier_chain (identifier foo (case_insensitive))))
+                            (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                             null
                             (select
                                 (project
@@ -3121,7 +3123,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier foo (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier foo (case_insensitive))))))
                         null
                         (select
                             (project
@@ -3695,7 +3697,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (operations
                 (dml_op_list
                     (insert
-                        (table_name (identifier_chain (identifier k (case_insensitive))))
+                        (table_name (id (identifier_chain (parts (identifier k (case_insensitive))))))
                         null
                         (bag
                             (lit 1))
@@ -3722,10 +3724,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (table_name
-                        (identifier_chain
+                        (id (identifier_chain (parts
                             (identifier
                                 k
-                                (case_insensitive))))
+                                (case_insensitive))))))
                         null
                         (bag
                             (lit 1))

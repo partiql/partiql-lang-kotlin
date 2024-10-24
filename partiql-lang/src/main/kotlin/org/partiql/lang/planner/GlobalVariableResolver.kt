@@ -78,8 +78,9 @@ fun interface GlobalVariableResolver {
      * the unqualified identifier. If it is qualified, it will return a [GlobalResolutionResult.Undefined].
      */
     fun resolveGlobal(bindingId: BindingId): GlobalResolutionResult {
-        if (!bindingId.hasQualifier()) {
-            return resolveGlobal(bindingId.getIdentifier())
+        val parts = bindingId.parts
+        if (parts.size == 1) {
+            return resolveGlobal(parts.last())
         }
         return GlobalResolutionResult.Undefined
     }

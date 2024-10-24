@@ -137,7 +137,7 @@ class ASTPrettyPrinter {
     private fun toRecursionTree(node: PartiqlAst.IdentifierChain, attrOfParent: String? = null): RecursionTree =
         RecursionTree(
             astType = "IdentifierChain",
-            children = node.qualifier.map { step -> toRecursionTree(step) } + listOf(toRecursionTree(node.head)),
+            children = node.parts.map { step -> toRecursionTree(step) },
             attrOfParent = attrOfParent
         )
 

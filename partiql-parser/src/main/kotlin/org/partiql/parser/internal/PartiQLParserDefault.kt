@@ -781,8 +781,8 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitIdentifierChain(ctx: org.partiql.parser.antlr.PartiQLParser.IdentifierChainContext) = translate(ctx) {
             val steps = visitOrEmpty<Identifier.Symbol>(ctx.idSteps)
-            val root = steps.first()
-            identifierQualified(root, steps.drop(1))
+            val head = steps.first()
+            identifierQualified(head, steps.drop(1))
         }
 
         override fun visitReplaceCommand(ctx: GeneratedParser.ReplaceCommandContext) = translate(ctx) {

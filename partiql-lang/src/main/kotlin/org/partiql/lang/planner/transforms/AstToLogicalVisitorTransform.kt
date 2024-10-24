@@ -486,14 +486,13 @@ internal class AstToLogicalVisitorTransform(
 
     override fun transformIdentifierChain(node: PartiqlAst.IdentifierChain): PartiqlLogical.IdentifierChain {
         return PartiqlLogical.IdentifierChain(
-            head = transformIdentifier(node.head),
-            qualifier = node.qualifier.map { transformIdentifier(it) }
+            parts = node.parts.map { transformIdentifier(it) },
         )
     }
 
     private fun name(tableName: PartiqlLogical.TableName): SymbolPrimitive {
         val id = tableName.id
-        return id.head.name
+        return id.parts.last().name
     }
 
     private fun transformConflictAction(conflictAction: PartiqlAst.ConflictAction?) =
@@ -529,8 +528,7 @@ internal class AstToLogicalVisitorTransform(
                 dmlTarget(
                     tableName(
                         identifierChain(
-                            head = identifier_(name, transformCaseSensitivity(case), metas),
-                            qualifier = emptyList()
+                            listOf(identifier_(name, transformCaseSensitivity(case), metas)),
                         )
                     )
                 )
@@ -866,8 +864,7 @@ private val INVALID_EXPR = PartiqlLogical.build {
 private val INVALID_DML_TARGET_ID = PartiqlLogical.build {
     tableName(
         identifierChain(
-            head = identifier("this is a placeholder for an invalid DML target - do not run", caseInsensitive()),
-            qualifier = emptyList()
+            listOf(identifier("this is a placeholder for an invalid DML target - do not run", caseInsensitive())),
         )
     )
 }

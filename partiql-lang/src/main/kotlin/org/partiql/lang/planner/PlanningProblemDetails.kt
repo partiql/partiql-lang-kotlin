@@ -38,16 +38,16 @@ sealed class PlanningProblemDetails(
     data class UndefinedDmlTarget(val id: BindingId) : PlanningProblemDetails(
         ProblemSeverity.ERROR,
         {
-            "Data manipulation target table '$id' is undefined. Hint: this must be a name in the global scope. " + quotationHint(id.getIdentifier().bindingCase == BindingCase.SENSITIVE)
+            "Data manipulation target table '$id' is undefined. Hint: this must be a name in the global scope. " + quotationHint(id.parts.last().bindingCase == BindingCase.SENSITIVE)
         }
     ) {
 
-        val variableName = id.getIdentifier().name
-        val caseSensitive = id.getIdentifier().bindingCase == BindingCase.SENSITIVE
+        private val lastPart = id.parts.last()
+        val variableName = lastPart.name
+        val caseSensitive = lastPart.bindingCase == BindingCase.SENSITIVE
 
         constructor(variableName: String, caseSensitive: Boolean) : this(
             BindingId(
-                emptyList(),
                 BindingName(
                     variableName,
                     when (caseSensitive) {

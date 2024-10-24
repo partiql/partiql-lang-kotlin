@@ -358,16 +358,14 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         val tableUniqueId = when (val resolvedVariable = globals.resolveGlobal(bindingId)) {
             is GlobalResolutionResult.GlobalVariable -> resolvedVariable.uniqueId
             is GlobalResolutionResult.NamespacedVariable -> {
-                if (resolvedVariable.getRemainingSteps().isNotEmpty()) {
+                if (resolvedVariable.getRemainingSteps().any()) {
                     problemHandler.handleProblem(
                         Problem(
                             node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
-                            PlanningProblemDetails.UndefinedDmlTarget(
-                                bindingId,
-                            )
+                            PlanningProblemDetails.UnimplementedFeature("Qualified identifiers as a DML target")
                         )
                     )
-                    "DML Target could not be completely resolved - do not run"
+                    "Undefined DML target: $bindingId - do not run"
                 } else {
                     resolvedVariable.uniqueId
                 }
@@ -389,11 +387,8 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
 
     private fun bindingId(tableName: PartiqlLogical.TableName): BindingId {
         val id = tableName.id
-        val headName = BindingName(id.head.name.text, id.head.case.toBindingCase())
-        return BindingId(
-            id.qualifier.map { BindingName(it.name.text, it.case.toBindingCase()) },
-            headName
-        )
+        val parts = id.parts.map { BindingName(it.name.text, it.case.toBindingCase()) }
+        return BindingId(parts)
     }
 
     override fun transformStatementDmlInsert_onConflict(node: PartiqlLogical.Statement.DmlInsert): PartiqlLogicalResolved.OnConflict? {

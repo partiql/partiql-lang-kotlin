@@ -1353,8 +1353,7 @@ fun dmlTarget(node: PartiqlLogical.Identifier): PartiqlLogical.DmlTarget {
     return PartiqlLogical.DmlTarget(
         PartiqlLogical.TableName(
             PartiqlLogical.IdentifierChain(
-                head = node,
-                qualifier = emptyList()
+                listOf(node)
             )
         )
     )

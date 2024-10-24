@@ -113,11 +113,13 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.IdentifierChain, sb: StringBuilder) {
-        node.qualifier.forEach { step ->
+        val last = node.parts.last()
+        val preLast = node.parts.dropLast(1)
+        preLast.forEach { step ->
             writeAstNode(step, sb)
             sb.append('.')
         }
-        writeAstNode(node.head, sb)
+        writeAstNode(last, sb)
     }
 
     private fun writeAstNode(node: PartiqlAst.Identifier, sb: StringBuilder) {

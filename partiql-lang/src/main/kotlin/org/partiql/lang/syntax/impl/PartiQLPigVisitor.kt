@@ -373,11 +373,10 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitIdentifierChain(ctx: PartiQLParser.IdentifierChainContext) = PartiqlAst.build {
-        val steps = ctx.idSteps.map { step ->
+        val parts = ctx.idSteps.map { step ->
             visitSymbolPrimitive(step).toIdentifier()
         }
-        val head = steps.last()
-        identifierChain(head, steps.dropLast(1), steps.first().metas)
+        identifierChain(parts, parts.first().metas)
     }
 
     override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {

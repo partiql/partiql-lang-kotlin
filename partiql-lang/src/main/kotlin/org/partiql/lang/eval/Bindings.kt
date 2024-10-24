@@ -57,63 +57,6 @@ fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
 }
 
 /**
- * Represents a namespaced global binding.
- */
-class BindingId(
-    private val qualifier: List<BindingName>,
-    private val id: BindingName
-) : Iterable<BindingName> {
-    /**
-     * For input such as `SELECT a FROM catalog1."schema1".table1`, the identifier is `table1`.
-     */
-    fun getIdentifier(): BindingName = id
-
-    /**
-     * For input such as `SELECT a FROM catalog1."schema1".table1`, the qualifier is `catalog1."schema1"`
-     */
-    fun getQualifier(): List<BindingName> = qualifier
-
-    /**
-     * Returns whether the id is qualified.
-     */
-    fun hasQualifier(): Boolean = qualifier.isNotEmpty()
-
-    /**
-     * Returns a collection of the parts of the identifier.
-     */
-    fun getParts(): List<BindingName> {
-        return qualifier + id
-    }
-
-    override fun iterator(): Iterator<BindingName> {
-        return getParts().iterator()
-    }
-
-    override fun toString(): String {
-        return when (hasQualifier()) {
-            true -> "${qualifier.joinToString(".")}.$id"
-            false -> id.toString()
-        }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is BindingId) return false
-
-        if (qualifier != other.qualifier) return false
-        if (id != other.id) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = qualifier.hashCode()
-        result = 31 * result + id.hashCode()
-        return result
-    }
-}
-
-/**
  * Encapsulates the data necessary to perform a binding lookup.
  */
 data class BindingName(val name: String, val bindingCase: BindingCase) {

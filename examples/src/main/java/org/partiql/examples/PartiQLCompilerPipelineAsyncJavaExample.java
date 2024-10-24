@@ -3,6 +3,7 @@ package org.partiql.examples;
 import com.amazon.ion.IonSystem;
 import com.amazon.ion.system.IonSystemBuilder;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import kotlin.OptIn;
@@ -70,8 +71,9 @@ public class PartiQLCompilerPipelineAsyncJavaExample extends Example {
             @Override
             public GlobalResolutionResult resolveGlobal(@NotNull BindingId bindingId) {
                 // In this example, we don't allow for qualified identifiers.
-                if (!bindingId.hasQualifier()) {
-                    return resolveGlobal(bindingId.getIdentifier());
+                List<BindingName> parts = bindingId.getParts();
+                if (parts.size() == 1) {
+                    return resolveGlobal(parts.get(0));
                 }
                 return GlobalResolutionResult.Undefined.INSTANCE;
             }

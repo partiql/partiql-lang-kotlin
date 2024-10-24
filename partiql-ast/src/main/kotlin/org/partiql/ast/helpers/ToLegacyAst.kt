@@ -1002,15 +1002,12 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     private fun tableName(id: Identifier): PartiqlAst.TableName = translate(id) { metas ->
         val identifierChain = when (id) {
-            is Identifier.Symbol -> identifierChain(identifier(id), emptyList())
+            is Identifier.Symbol -> identifierChain(listOf(identifier(id)))
             is Identifier.Qualified -> {
                 val root = identifier(id.root)
                 val steps = id.steps.map { identifier(it) }
-                val (head, qualifier) = when (id.steps.isEmpty()) {
-                    true -> root to emptyList()
-                    false -> steps.last() to listOf(root) + steps.dropLast(1)
-                }
-                identifierChain(head, qualifier)
+                val parts = listOf(root) + steps
+                identifierChain(parts)
             }
         }
         tableName(identifierChain)
