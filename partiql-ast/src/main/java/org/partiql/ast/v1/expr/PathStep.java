@@ -1,5 +1,6 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -24,6 +25,7 @@ public abstract class PathStep extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @EqualsAndHashCode(callSuper = false)
     public static class Field extends PathStep {
         @NotNull
         public final Identifier field;
@@ -52,6 +54,7 @@ public abstract class PathStep extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @EqualsAndHashCode(callSuper = false)
     public static class Element extends PathStep {
         @NotNull
         public final Expr element;
@@ -81,6 +84,7 @@ public abstract class PathStep extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @EqualsAndHashCode(callSuper = false)
     public static class AllElements extends PathStep {
         public AllElements(@Nullable PathStep next) {
             super(next);
@@ -105,6 +109,7 @@ public abstract class PathStep extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
+    @EqualsAndHashCode(callSuper = false)
     public static class AllFields extends PathStep {
         public AllFields(@Nullable PathStep next) {
             super(next);

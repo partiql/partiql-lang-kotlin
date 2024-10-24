@@ -1,6 +1,7 @@
 package org.partiql.ast.v1.expr;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -14,6 +15,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @Builder(builderClassName = "Builder")
+@EqualsAndHashCode(callSuper = false)
 public class ExprIsType extends Expr {
     @NotNull
     public final Expr value;

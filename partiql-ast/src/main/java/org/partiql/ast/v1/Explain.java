@@ -1,6 +1,7 @@
 package org.partiql.ast.v1;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValue;
 
@@ -13,6 +14,7 @@ import java.util.Map;
  * TODO docs, equals, hashcode
  */
 @Builder(builderClassName = "Builder")
+@EqualsAndHashCode(callSuper = false)
 public class Explain extends Statement {
     // TODO get rid of PartiQLValue once https://github.com/partiql/partiql-lang-kotlin/issues/1589 is resolved
     @NotNull

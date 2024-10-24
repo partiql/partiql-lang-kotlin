@@ -1,6 +1,7 @@
 package org.partiql.ast.v1.graph;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.v1.AstNode;
@@ -32,6 +33,7 @@ public abstract class GraphPart extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Node extends GraphPart {
         @Nullable
         public final Expr prefilter;
@@ -43,10 +45,10 @@ public abstract class GraphPart extends AstNode {
         public final GraphLabel label;
 
         public Node(@Nullable Expr prefilter, @Nullable String variable, @Nullable GraphLabel label) {
-        this.prefilter = prefilter;
-        this.variable = variable;
-        this.label = label;
-    }
+            this.prefilter = prefilter;
+            this.variable = variable;
+            this.label = label;
+        }
 
         @Override
         @NotNull
@@ -71,6 +73,7 @@ public abstract class GraphPart extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Edge extends GraphPart {
         @NotNull
         public final GraphDirection direction;
@@ -122,6 +125,7 @@ public abstract class GraphPart extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Pattern extends GraphPart {
         @NotNull
         public final GraphPattern pattern;

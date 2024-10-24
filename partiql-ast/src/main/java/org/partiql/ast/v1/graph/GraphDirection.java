@@ -1,10 +1,12 @@
 package org.partiql.ast.v1.graph;
 
+import lombok.EqualsAndHashCode;
 import org.partiql.ast.v1.Enum;
 
 /**
  * TODO docs, equals, hashcode
  */
+@EqualsAndHashCode(callSuper = false)
 public class GraphDirection implements Enum {
     public static final int UNKNOWN = 0;
     public static final int LEFT = 1;

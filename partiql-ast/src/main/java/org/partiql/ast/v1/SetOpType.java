@@ -1,8 +1,11 @@
 package org.partiql.ast.v1;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * TODO docs, equals, hashcode
  */
+@EqualsAndHashCode(callSuper = false)
 public class SetOpType implements Enum {
     private static final int UNKNOWN = 0;
     private static final int UNION = 1;

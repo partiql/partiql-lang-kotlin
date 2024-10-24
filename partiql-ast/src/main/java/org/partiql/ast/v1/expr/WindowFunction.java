@@ -1,10 +1,12 @@
 package org.partiql.ast.v1.expr;
 
+import lombok.EqualsAndHashCode;
 import org.partiql.ast.v1.Enum;
 
 /**
  * TODO docs, equals, hashcode
  */
+@EqualsAndHashCode(callSuper = false)
 public class WindowFunction implements Enum {
     public static final int UNKNOWN = 0;
     public static final int LAG = 0;

@@ -1,6 +1,7 @@
 package org.partiql.ast.v1;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +28,7 @@ public abstract class SelectItem extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Star extends SelectItem {
         @NotNull
         public final org.partiql.ast.v1.expr.Expr expr;
@@ -53,6 +55,7 @@ public abstract class SelectItem extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Expr extends SelectItem {
         @NotNull
         public final org.partiql.ast.v1.expr.Expr expr;

@@ -5814,6 +5814,8 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static fun CLOB (I)Lorg/partiql/ast/v1/DataType;
 	public static fun DATE ()Lorg/partiql/ast/v1/DataType;
 	public static fun DEC ()Lorg/partiql/ast/v1/DataType;
+	public static fun DEC (I)Lorg/partiql/ast/v1/DataType;
+	public static fun DEC (II)Lorg/partiql/ast/v1/DataType;
 	public static fun DECIMAL ()Lorg/partiql/ast/v1/DataType;
 	public static fun DECIMAL (I)Lorg/partiql/ast/v1/DataType;
 	public static fun DECIMAL (II)Lorg/partiql/ast/v1/DataType;
@@ -5856,11 +5858,14 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static fun USER_DEFINED (Lorg/partiql/ast/v1/IdentifierChain;)Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR ()Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR (I)Lorg/partiql/ast/v1/DataType;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
 	public fun getLength ()Ljava/lang/Integer;
 	public fun getName ()Lorg/partiql/ast/v1/IdentifierChain;
 	public fun getPrecision ()Ljava/lang/Integer;
 	public fun getScale ()Ljava/lang/Integer;
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/Enum {
@@ -5882,7 +5887,10 @@ public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/Enum {
 	public static fun TIMEZONE_MINUTE ()Lorg/partiql/ast/v1/DatetimeField;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/DatetimeField;
 	public static fun YEAR ()Lorg/partiql/ast/v1/DatetimeField;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public abstract interface class org/partiql/ast/v1/Enum {
@@ -5894,7 +5902,10 @@ public class org/partiql/ast/v1/Exclude : org/partiql/ast/v1/AstNode {
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/Exclude$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Exclude$Builder {
@@ -5909,7 +5920,10 @@ public class org/partiql/ast/v1/ExcludePath : org/partiql/ast/v1/AstNode {
 	public fun <init> (Lorg/partiql/ast/v1/expr/ExprVarRef;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/ExcludePath$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/ExcludePath$Builder {
@@ -5979,7 +5993,10 @@ public class org/partiql/ast/v1/Explain : org/partiql/ast/v1/Statement {
 	public fun <init> (Ljava/util/Map;Lorg/partiql/ast/v1/Statement;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/Explain$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Explain$Builder {
@@ -5994,7 +6011,10 @@ public class org/partiql/ast/v1/From : org/partiql/ast/v1/AstNode {
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/From$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/From$Builder {
@@ -6011,7 +6031,10 @@ public class org/partiql/ast/v1/FromExpr : org/partiql/ast/v1/FromTableRef {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/FromExpr$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/FromExpr$Builder {
@@ -6031,7 +6054,10 @@ public class org/partiql/ast/v1/FromJoin : org/partiql/ast/v1/FromTableRef {
 	public fun <init> (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/FromJoin$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/FromJoin$Builder {
@@ -6055,7 +6081,10 @@ public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/Enum {
 	public static fun SCAN ()Lorg/partiql/ast/v1/FromType;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/FromType;
 	public static fun UNPIVOT ()Lorg/partiql/ast/v1/FromType;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/GroupBy : org/partiql/ast/v1/AstNode {
@@ -6065,7 +6094,10 @@ public class org/partiql/ast/v1/GroupBy : org/partiql/ast/v1/AstNode {
 	public fun <init> (Lorg/partiql/ast/v1/GroupByStrategy;Ljava/util/List;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/GroupBy$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/GroupBy$Builder {
@@ -6099,7 +6131,10 @@ public class org/partiql/ast/v1/GroupByStrategy : org/partiql/ast/v1/Enum {
 	public static fun FULL ()Lorg/partiql/ast/v1/GroupByStrategy;
 	public static fun PARTIAL ()Lorg/partiql/ast/v1/GroupByStrategy;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/GroupByStrategy;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Identifier : org/partiql/ast/v1/AstNode {
@@ -6108,7 +6143,10 @@ public class org/partiql/ast/v1/Identifier : org/partiql/ast/v1/AstNode {
 	public fun <init> (Ljava/lang/String;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/Identifier$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Identifier$Builder {
@@ -6124,7 +6162,10 @@ public class org/partiql/ast/v1/IdentifierChain : org/partiql/ast/v1/AstNode {
 	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/IdentifierChain;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/IdentifierChain$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/IdentifierChain$Builder {
@@ -6153,7 +6194,10 @@ public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
 	public static fun RIGHT ()Lorg/partiql/ast/v1/JoinType;
 	public static fun RIGHT_OUTER ()Lorg/partiql/ast/v1/JoinType;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/JoinType;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Let : org/partiql/ast/v1/AstNode {
@@ -6161,7 +6205,10 @@ public class org/partiql/ast/v1/Let : org/partiql/ast/v1/AstNode {
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/Let$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Let$Binding : org/partiql/ast/v1/AstNode {
@@ -6193,7 +6240,10 @@ public class org/partiql/ast/v1/Nulls : org/partiql/ast/v1/Enum {
 	public static fun FIRST ()Lorg/partiql/ast/v1/Nulls;
 	public static fun LAST ()Lorg/partiql/ast/v1/Nulls;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/Nulls;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Order : org/partiql/ast/v1/Enum {
@@ -6203,7 +6253,10 @@ public class org/partiql/ast/v1/Order : org/partiql/ast/v1/Enum {
 	public static fun ASC ()Lorg/partiql/ast/v1/Order;
 	public static fun DESC ()Lorg/partiql/ast/v1/Order;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/Order;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/OrderBy : org/partiql/ast/v1/AstNode {
@@ -6211,7 +6264,10 @@ public class org/partiql/ast/v1/OrderBy : org/partiql/ast/v1/AstNode {
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/OrderBy$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/OrderBy$Builder {
@@ -6225,7 +6281,10 @@ public class org/partiql/ast/v1/Query : org/partiql/ast/v1/Statement {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/Query$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Query$Builder {
@@ -6249,7 +6308,10 @@ public class org/partiql/ast/v1/QueryBody$SFW : org/partiql/ast/v1/QueryBody {
 	public fun <init> (Lorg/partiql/ast/v1/Select;Lorg/partiql/ast/v1/Exclude;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/Let;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/GroupBy;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/QueryBody$SFW$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/QueryBody$SFW$Builder {
@@ -6272,7 +6334,10 @@ public class org/partiql/ast/v1/QueryBody$SetOp : org/partiql/ast/v1/QueryBody {
 	public fun <init> (Lorg/partiql/ast/v1/SetOp;ZLorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/QueryBody$SetOp$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/QueryBody$SetOp$Builder {
@@ -6300,7 +6365,10 @@ public class org/partiql/ast/v1/SelectItem$Expr : org/partiql/ast/v1/SelectItem 
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/SelectItem$Expr$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/SelectItem$Expr$Builder {
@@ -6315,7 +6383,10 @@ public class org/partiql/ast/v1/SelectItem$Star : org/partiql/ast/v1/SelectItem 
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/SelectItem$Star$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/SelectItem$Star$Builder {
@@ -6330,7 +6401,10 @@ public class org/partiql/ast/v1/SelectList : org/partiql/ast/v1/Select {
 	public fun <init> (Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/SelectList$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/SelectList$Builder {
@@ -6346,7 +6420,10 @@ public class org/partiql/ast/v1/SelectPivot : org/partiql/ast/v1/Select {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/SelectPivot$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/SelectPivot$Builder {
@@ -6361,7 +6438,10 @@ public class org/partiql/ast/v1/SelectStar : org/partiql/ast/v1/Select {
 	public fun <init> (Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/SelectStar$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/SelectStar$Builder {
@@ -6376,7 +6456,10 @@ public class org/partiql/ast/v1/SelectValue : org/partiql/ast/v1/Select {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/SelectValue$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/SelectValue$Builder {
@@ -6392,7 +6475,10 @@ public class org/partiql/ast/v1/SetOp : org/partiql/ast/v1/AstNode {
 	public fun <init> (Lorg/partiql/ast/v1/SetOpType;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/SetOp$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/SetOp$Builder {
@@ -6407,7 +6493,10 @@ public class org/partiql/ast/v1/SetOpType : org/partiql/ast/v1/Enum {
 	public static fun INTERSECT ()Lorg/partiql/ast/v1/SetOpType;
 	public static fun UNION ()Lorg/partiql/ast/v1/SetOpType;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/SetOpType;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/Enum {
@@ -6417,7 +6506,10 @@ public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/Enum {
 	public static fun ALL ()Lorg/partiql/ast/v1/SetQuantifier;
 	public static fun DISTINCT ()Lorg/partiql/ast/v1/SetQuantifier;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/SetQuantifier;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Sort : org/partiql/ast/v1/AstNode {
@@ -6427,7 +6519,10 @@ public class org/partiql/ast/v1/Sort : org/partiql/ast/v1/AstNode {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Order;Lorg/partiql/ast/v1/Nulls;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/Sort$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/Sort$Builder {
@@ -6454,7 +6549,10 @@ public class org/partiql/ast/v1/expr/ExprAnd : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprAnd$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprAnd$Builder {
@@ -6469,7 +6567,10 @@ public class org/partiql/ast/v1/expr/ExprArray : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprArray$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprArray$Builder {
@@ -6483,7 +6584,10 @@ public class org/partiql/ast/v1/expr/ExprBag : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprBag$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprBag$Builder {
@@ -6500,7 +6604,10 @@ public class org/partiql/ast/v1/expr/ExprBetween : org/partiql/ast/v1/expr/Expr 
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprBetween$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprBetween$Builder {
@@ -6519,7 +6626,10 @@ public class org/partiql/ast/v1/expr/ExprCall : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/IdentifierChain;Ljava/util/List;Lorg/partiql/ast/v1/SetQuantifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCall$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprCall$Builder {
@@ -6537,7 +6647,10 @@ public class org/partiql/ast/v1/expr/ExprCase : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Ljava/util/List;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCase$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprCase$Branch : org/partiql/ast/v1/AstNode {
@@ -6546,7 +6659,10 @@ public class org/partiql/ast/v1/expr/ExprCase$Branch : org/partiql/ast/v1/AstNod
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCase$Branch$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprCase$Branch$Builder {
@@ -6570,7 +6686,10 @@ public class org/partiql/ast/v1/expr/ExprCast : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCast$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprCast$Builder {
@@ -6585,7 +6704,10 @@ public class org/partiql/ast/v1/expr/ExprCoalesce : org/partiql/ast/v1/expr/Expr
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprCoalesce$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprCoalesce$Builder {
@@ -6600,7 +6722,10 @@ public class org/partiql/ast/v1/expr/ExprExtract : org/partiql/ast/v1/expr/Expr 
 	public fun <init> (Lorg/partiql/ast/v1/DatetimeField;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprExtract$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprExtract$Builder {
@@ -6617,7 +6742,10 @@ public class org/partiql/ast/v1/expr/ExprInCollection : org/partiql/ast/v1/expr/
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprInCollection$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprInCollection$Builder {
@@ -6635,7 +6763,10 @@ public class org/partiql/ast/v1/expr/ExprIsType : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/DataType;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprIsType$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprIsType$Builder {
@@ -6654,7 +6785,10 @@ public class org/partiql/ast/v1/expr/ExprLike : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Z)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprLike$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprLike$Builder {
@@ -6671,7 +6805,10 @@ public class org/partiql/ast/v1/expr/ExprLit : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/value/PartiQLValue;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprLit$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprLit$Builder {
@@ -6686,7 +6823,10 @@ public class org/partiql/ast/v1/expr/ExprMatch : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/graph/GraphMatch;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprMatch$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprMatch$Builder {
@@ -6701,7 +6841,10 @@ public class org/partiql/ast/v1/expr/ExprNot : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprNot$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprNot$Builder {
@@ -6716,7 +6859,10 @@ public class org/partiql/ast/v1/expr/ExprNullIf : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprNullIf$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprNullIf$Builder {
@@ -6733,7 +6879,10 @@ public class org/partiql/ast/v1/expr/ExprOperator : org/partiql/ast/v1/expr/Expr
 	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprOperator$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprOperator$Builder {
@@ -6750,7 +6899,10 @@ public class org/partiql/ast/v1/expr/ExprOr : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprOr$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprOr$Builder {
@@ -6768,7 +6920,10 @@ public class org/partiql/ast/v1/expr/ExprOverlay : org/partiql/ast/v1/expr/Expr 
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprOverlay$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprOverlay$Builder {
@@ -6785,7 +6940,10 @@ public class org/partiql/ast/v1/expr/ExprParameter : org/partiql/ast/v1/expr/Exp
 	public fun <init> (I)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprParameter$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprParameter$Builder {
@@ -6800,7 +6958,10 @@ public class org/partiql/ast/v1/expr/ExprPath : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprPath$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprPath$Builder {
@@ -6816,7 +6977,10 @@ public class org/partiql/ast/v1/expr/ExprPosition : org/partiql/ast/v1/expr/Expr
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprPosition$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprPosition$Builder {
@@ -6834,7 +6998,10 @@ public class org/partiql/ast/v1/expr/ExprQuerySet : org/partiql/ast/v1/expr/Expr
 	public fun <init> (Lorg/partiql/ast/v1/QueryBody;Lorg/partiql/ast/v1/OrderBy;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprQuerySet$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprQuerySet$Builder {
@@ -6851,7 +7018,10 @@ public class org/partiql/ast/v1/expr/ExprSessionAttribute : org/partiql/ast/v1/e
 	public fun <init> (Lorg/partiql/ast/v1/expr/SessionAttribute;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprSessionAttribute$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprSessionAttribute$Builder {
@@ -6865,7 +7035,10 @@ public class org/partiql/ast/v1/expr/ExprStruct : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprStruct$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprStruct$Builder {
@@ -6880,7 +7053,10 @@ public class org/partiql/ast/v1/expr/ExprStruct$Field : org/partiql/ast/v1/AstNo
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprStruct$Field$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprStruct$Field$Builder {
@@ -6897,7 +7073,10 @@ public class org/partiql/ast/v1/expr/ExprSubstring : org/partiql/ast/v1/expr/Exp
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprSubstring$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprSubstring$Builder {
@@ -6915,7 +7094,10 @@ public class org/partiql/ast/v1/expr/ExprTrim : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/TrimSpec;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprTrim$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprTrim$Builder {
@@ -6931,7 +7113,10 @@ public class org/partiql/ast/v1/expr/ExprValues : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprValues$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprValues$Builder {
@@ -6945,7 +7130,10 @@ public class org/partiql/ast/v1/expr/ExprValues$Row : org/partiql/ast/v1/AstNode
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprValues$Row$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprValues$Row$Builder {
@@ -6960,7 +7148,10 @@ public class org/partiql/ast/v1/expr/ExprVarRef : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/IdentifierChain;Lorg/partiql/ast/v1/expr/Scope;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprVarRef$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprVarRef$Builder {
@@ -6976,8 +7167,11 @@ public class org/partiql/ast/v1/expr/ExprVariant : org/partiql/ast/v1/expr/Expr 
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprVariant$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public synthetic fun children ()Ljava/util/Collection;
 	public fun children ()Ljava/util/List;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprVariant$Builder {
@@ -6996,7 +7190,10 @@ public class org/partiql/ast/v1/expr/ExprWindow : org/partiql/ast/v1/expr/Expr {
 	public fun <init> (Lorg/partiql/ast/v1/expr/WindowFunction;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/ExprWindow$Over;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprWindow$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprWindow$Builder {
@@ -7015,7 +7212,10 @@ public class org/partiql/ast/v1/expr/ExprWindow$Over : org/partiql/ast/v1/AstNod
 	public fun <init> (Ljava/util/List;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/expr/ExprWindow$Over$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/ExprWindow$Over$Builder {
@@ -7033,27 +7233,39 @@ public abstract class org/partiql/ast/v1/expr/PathStep : org/partiql/ast/v1/AstN
 public class org/partiql/ast/v1/expr/PathStep$AllElements : org/partiql/ast/v1/expr/PathStep {
 	public fun <init> (Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/PathStep$AllFields : org/partiql/ast/v1/expr/PathStep {
 	public fun <init> (Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/PathStep$Element : org/partiql/ast/v1/expr/PathStep {
 	public final field element Lorg/partiql/ast/v1/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/PathStep$Field : org/partiql/ast/v1/expr/PathStep {
 	public final field field Lorg/partiql/ast/v1/Identifier;
 	public fun <init> (Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/expr/PathStep;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/Scope : org/partiql/ast/v1/Enum {
@@ -7063,7 +7275,10 @@ public class org/partiql/ast/v1/expr/Scope : org/partiql/ast/v1/Enum {
 	public static fun DEFAULT ()Lorg/partiql/ast/v1/expr/Scope;
 	public static fun LOCAL ()Lorg/partiql/ast/v1/expr/Scope;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/Scope;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/Enum {
@@ -7074,7 +7289,10 @@ public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/Enum 
 	public static fun CURRENT_DATE ()Lorg/partiql/ast/v1/expr/SessionAttribute;
 	public static fun CURRENT_USER ()Lorg/partiql/ast/v1/expr/SessionAttribute;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/SessionAttribute;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/Enum {
@@ -7086,7 +7304,10 @@ public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/Enum {
 	public static fun LEADING ()Lorg/partiql/ast/v1/expr/TrimSpec;
 	public static fun TRAILING ()Lorg/partiql/ast/v1/expr/TrimSpec;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/TrimSpec;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/Enum {
@@ -7097,7 +7318,10 @@ public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/Enum {
 	public static fun LAG ()Lorg/partiql/ast/v1/expr/WindowFunction;
 	public static fun LEAD ()Lorg/partiql/ast/v1/expr/WindowFunction;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/WindowFunction;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/Enum {
@@ -7117,7 +7341,10 @@ public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/Enum {
 	public static fun UNDIRECTED ()Lorg/partiql/ast/v1/graph/GraphDirection;
 	public static fun UNDIRECTED_OR_RIGHT ()Lorg/partiql/ast/v1/graph/GraphDirection;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphLabel : org/partiql/ast/v1/AstNode {
@@ -7131,7 +7358,10 @@ public class org/partiql/ast/v1/graph/GraphLabel$Conj : org/partiql/ast/v1/graph
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Conj$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Conj$Builder {
@@ -7147,7 +7377,10 @@ public class org/partiql/ast/v1/graph/GraphLabel$Disj : org/partiql/ast/v1/graph
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Disj$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Disj$Builder {
@@ -7162,7 +7395,10 @@ public class org/partiql/ast/v1/graph/GraphLabel$Name : org/partiql/ast/v1/graph
 	public fun <init> (Ljava/lang/String;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Name$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Name$Builder {
@@ -7176,7 +7412,10 @@ public class org/partiql/ast/v1/graph/GraphLabel$Negation : org/partiql/ast/v1/g
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Negation$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Negation$Builder {
@@ -7189,7 +7428,10 @@ public class org/partiql/ast/v1/graph/GraphLabel$Wildcard : org/partiql/ast/v1/g
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphLabel$Wildcard$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Wildcard$Builder {
@@ -7203,7 +7445,10 @@ public class org/partiql/ast/v1/graph/GraphMatch : org/partiql/ast/v1/AstNode {
 	public fun <init> (Ljava/util/List;Lorg/partiql/ast/v1/graph/GraphSelector;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphMatch$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphMatch$Builder {
@@ -7227,7 +7472,10 @@ public class org/partiql/ast/v1/graph/GraphPart$Edge : org/partiql/ast/v1/graph/
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphDirection;Lorg/partiql/ast/v1/graph/GraphQuantifier;Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphPart$Edge$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphPart$Edge$Builder {
@@ -7247,7 +7495,10 @@ public class org/partiql/ast/v1/graph/GraphPart$Node : org/partiql/ast/v1/graph/
 	public fun <init> (Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphPart$Node$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphPart$Node$Builder {
@@ -7263,7 +7514,10 @@ public class org/partiql/ast/v1/graph/GraphPart$Pattern : org/partiql/ast/v1/gra
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphPattern;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphPart$Pattern$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphPart$Pattern$Builder {
@@ -7281,7 +7535,10 @@ public class org/partiql/ast/v1/graph/GraphPattern : org/partiql/ast/v1/AstNode 
 	public fun <init> (Lorg/partiql/ast/v1/graph/GraphRestrictor;Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/v1/graph/GraphQuantifier;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphPattern$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphPattern$Builder {
@@ -7300,7 +7557,10 @@ public class org/partiql/ast/v1/graph/GraphQuantifier : org/partiql/ast/v1/AstNo
 	public fun <init> (JLjava/lang/Long;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphQuantifier$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphQuantifier$Builder {
@@ -7319,7 +7579,10 @@ public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/Enum 
 	public static fun SIMPLE ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
 	public static fun TRAIL ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphSelector : org/partiql/ast/v1/AstNode {
@@ -7331,7 +7594,10 @@ public class org/partiql/ast/v1/graph/GraphSelector$AllShortest : org/partiql/as
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AllShortest$Builder {
@@ -7343,7 +7609,10 @@ public class org/partiql/ast/v1/graph/GraphSelector$Any : org/partiql/ast/v1/gra
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$Any$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$Any$Builder {
@@ -7356,7 +7625,10 @@ public class org/partiql/ast/v1/graph/GraphSelector$AnyK : org/partiql/ast/v1/gr
 	public fun <init> (J)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$AnyK$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AnyK$Builder {
@@ -7369,7 +7641,10 @@ public class org/partiql/ast/v1/graph/GraphSelector$AnyShortest : org/partiql/as
 	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AnyShortest$Builder {
@@ -7382,7 +7657,10 @@ public class org/partiql/ast/v1/graph/GraphSelector$ShortestK : org/partiql/ast/
 	public fun <init> (J)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$ShortestK$Builder {
@@ -7396,7 +7674,10 @@ public class org/partiql/ast/v1/graph/GraphSelector$ShortestKGroup : org/partiql
 	public fun <init> (J)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$ShortestKGroup$Builder {

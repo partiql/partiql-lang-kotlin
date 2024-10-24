@@ -1,6 +1,7 @@
 package org.partiql.ast.v1;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Collection;
  * TODO docs, equals, hashcode
  */
 @Builder(builderClassName = "Builder")
+@EqualsAndHashCode(callSuper = false)
 public class Identifier extends AstNode {
     @NotNull
     public final String symbol;

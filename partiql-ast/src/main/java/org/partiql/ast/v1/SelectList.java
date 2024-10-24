@@ -1,6 +1,7 @@
 package org.partiql.ast.v1;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @Builder(builderClassName = "Builder")
+@EqualsAndHashCode(callSuper = false)
 public class SelectList extends Select {
     @NotNull
     public final List<SelectItem> items;

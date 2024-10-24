@@ -1,6 +1,7 @@
 package org.partiql.ast.v1.graph;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.AstNode;
 import org.partiql.ast.v1.AstVisitor;
@@ -35,6 +36,7 @@ public abstract class GraphSelector extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class AnyShortest extends GraphSelector {
         public AnyShortest() {}
 
@@ -54,6 +56,7 @@ public abstract class GraphSelector extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class AllShortest extends GraphSelector {
         public AllShortest() {}
 
@@ -73,6 +76,7 @@ public abstract class GraphSelector extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Any extends GraphSelector {
         public Any() {}
 
@@ -92,6 +96,7 @@ public abstract class GraphSelector extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class AnyK extends GraphSelector {
         public final long k;
 
@@ -115,6 +120,7 @@ public abstract class GraphSelector extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class ShortestK extends GraphSelector {
         public final long k;
 
@@ -138,6 +144,7 @@ public abstract class GraphSelector extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class ShortestKGroup extends GraphSelector {
         public final long k;
 
