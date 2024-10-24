@@ -1,16 +1,17 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getText
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 
 internal class ExprPivot(
-    private val input: Operator.Relation,
-    private val key: Operator.Expr,
-    private val value: Operator.Expr,
-) : Operator.Expr {
+    private val input: ExprRelation,
+    private val key: ExprValue,
+    private val value: ExprValue,
+) : ExprValue {
 
     override fun eval(env: Environment): Datum {
         input.open(env)

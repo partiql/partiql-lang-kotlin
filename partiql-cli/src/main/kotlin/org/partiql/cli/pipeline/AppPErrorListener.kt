@@ -42,7 +42,7 @@ class AppPErrorListener(
 
     private fun warning(error: PError) {
         if (allWarningsAsErrors || _warningsAsErrors.contains(error.code())) {
-            report(error)
+            error(error)
             return
         }
         if (!inhibitWarnings) {

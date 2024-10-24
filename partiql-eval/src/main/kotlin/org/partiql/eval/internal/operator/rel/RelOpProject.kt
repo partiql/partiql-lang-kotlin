@@ -1,13 +1,14 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
+import org.partiql.eval.Row
 
 internal class RelOpProject(
-    private val input: Operator.Relation,
-    private val projections: List<Operator.Expr>
-) : Operator.Relation {
+    private val input: ExprRelation,
+    private val projections: List<ExprValue>
+) : ExprRelation {
 
     private lateinit var env: Environment
 
@@ -20,10 +21,10 @@ internal class RelOpProject(
         return input.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         val r = input.next()
         val p = projections.map { it.eval(env.push(r)) }.toTypedArray()
-        return Record(p)
+        return Row(p)
     }
 
     override fun close() {

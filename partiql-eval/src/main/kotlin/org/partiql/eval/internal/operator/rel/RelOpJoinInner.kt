@@ -1,10 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Inner Join returns all joined records from the [lhs] and [rhs] when the [condition] evaluates to true.
@@ -13,13 +13,13 @@ import org.partiql.value.PartiQLValueExperimental
  * (lateral vs non-lateral) may be separated for performance improvements.
  */
 internal class RelOpJoinInner(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
-    private val condition: Operator.Expr,
+    private val lhs: ExprRelation,
+    private val rhs: ExprRelation,
+    private val condition: ExprValue,
 ) : RelOpPeeking() {
 
     private lateinit var env: Environment
-    private lateinit var iterator: Iterator<Record>
+    private lateinit var iterator: Iterator<Row>
 
     override fun openPeeking(env: Environment) {
         this.env = env
@@ -27,7 +27,7 @@ internal class RelOpJoinInner(
         iterator = implementation()
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         return when (iterator.hasNext()) {
             true -> iterator.next()
             false -> null
@@ -37,7 +37,7 @@ internal class RelOpJoinInner(
     override fun closePeeking() {
         lhs.close()
         rhs.close()
-        iterator = emptyList<Record>().iterator()
+        iterator = emptyList<Row>().iterator()
     }
 
     /**
@@ -54,15 +54,14 @@ internal class RelOpJoinInner(
      *
      * Development Note: The non-lateral version wouldn't need to push to the current environment.
      */
-    @OptIn(PartiQLValueExperimental::class)
     private fun implementation() = iterator {
         for (lhsRecord in lhs) {
             rhs.open(env.push(lhsRecord))
             for (rhsRecord in rhs) {
-                val input = lhsRecord + rhsRecord
+                val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
                 if (result.isTrue()) {
-                    yield(lhsRecord + rhsRecord)
+                    yield(lhsRecord.concat(rhsRecord))
                 }
             }
         }

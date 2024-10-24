@@ -1,63 +1,57 @@
-public abstract interface class org/partiql/eval/PartiQLEngine {
-	public static final field Companion Lorg/partiql/eval/PartiQLEngine$Companion;
-	public static fun builder ()Lorg/partiql/eval/builder/PartiQLEngineBuilder;
-	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLStatement;
-	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/eval/PartiQLEngine$Mode;)Lorg/partiql/eval/PartiQLStatement;
-	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/Context;)Lorg/partiql/eval/PartiQLStatement;
-	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/Context;Lorg/partiql/eval/PartiQLEngine$Mode;)Lorg/partiql/eval/PartiQLStatement;
-	public static fun standard ()Lorg/partiql/eval/PartiQLEngine;
-}
-
-public final class org/partiql/eval/PartiQLEngine$Companion {
-	public final fun builder ()Lorg/partiql/eval/builder/PartiQLEngineBuilder;
-	public final fun standard ()Lorg/partiql/eval/PartiQLEngine;
-}
-
-public final class org/partiql/eval/PartiQLEngine$DefaultImpls {
-	public static fun prepare (Lorg/partiql/eval/PartiQLEngine;Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLStatement;
-	public static fun prepare (Lorg/partiql/eval/PartiQLEngine;Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/eval/PartiQLEngine$Mode;)Lorg/partiql/eval/PartiQLStatement;
-	public static fun prepare (Lorg/partiql/eval/PartiQLEngine;Lorg/partiql/plan/Plan;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/Context;)Lorg/partiql/eval/PartiQLStatement;
-}
-
-public final class org/partiql/eval/PartiQLEngine$Mode : java/lang/Enum {
-	public static final field PERMISSIVE Lorg/partiql/eval/PartiQLEngine$Mode;
-	public static final field STRICT Lorg/partiql/eval/PartiQLEngine$Mode;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/eval/PartiQLEngine$Mode;
-	public static fun values ()[Lorg/partiql/eval/PartiQLEngine$Mode;
-}
-
-public abstract interface class org/partiql/eval/PartiQLResult {
-}
-
-public final class org/partiql/eval/PartiQLResult$Error : org/partiql/eval/PartiQLResult {
-	public fun <init> (Ljava/lang/Throwable;)V
-	public final fun component1 ()Ljava/lang/Throwable;
-	public final fun copy (Ljava/lang/Throwable;)Lorg/partiql/eval/PartiQLResult$Error;
-	public static synthetic fun copy$default (Lorg/partiql/eval/PartiQLResult$Error;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/partiql/eval/PartiQLResult$Error;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCause ()Ljava/lang/Throwable;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/eval/PartiQLResult$Value : org/partiql/eval/PartiQLResult {
-	public fun <init> (Lorg/partiql/spi/value/Datum;)V
-	public final fun component1 ()Lorg/partiql/spi/value/Datum;
-	public final fun copy (Lorg/partiql/spi/value/Datum;)Lorg/partiql/eval/PartiQLResult$Value;
-	public static synthetic fun copy$default (Lorg/partiql/eval/PartiQLResult$Value;Lorg/partiql/spi/value/Datum;ILjava/lang/Object;)Lorg/partiql/eval/PartiQLResult$Value;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getValue ()Lorg/partiql/spi/value/Datum;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class org/partiql/eval/PartiQLStatement {
-	public abstract fun execute (Lorg/partiql/spi/catalog/Session;)Lorg/partiql/eval/PartiQLResult;
-}
-
-public final class org/partiql/eval/builder/PartiQLEngineBuilder {
+public class org/partiql/eval/Environment {
 	public fun <init> ()V
-	public final fun build ()Lorg/partiql/eval/PartiQLEngine;
+	public fun get (II)Lorg/partiql/spi/value/Datum;
+	public fun push (Lorg/partiql/eval/Row;)Lorg/partiql/eval/Environment;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/eval/Expr {
+}
+
+public abstract interface class org/partiql/eval/ExprRelation : java/lang/AutoCloseable, java/util/Iterator, org/partiql/eval/Expr {
+	public abstract fun close ()V
+	public abstract fun hasNext ()Z
+	public synthetic fun next ()Ljava/lang/Object;
+	public abstract fun next ()Lorg/partiql/eval/Row;
+	public abstract fun open (Lorg/partiql/eval/Environment;)V
+	public fun remove ()V
+}
+
+public abstract interface class org/partiql/eval/ExprValue : org/partiql/eval/Expr {
+	public abstract fun eval (Lorg/partiql/eval/Environment;)Lorg/partiql/spi/value/Datum;
+}
+
+public class org/partiql/eval/Mode {
+	public static final field PERMISSIVE I
+	public static final field STRICT I
+	public static fun PERMISSIVE ()Lorg/partiql/eval/Mode;
+	public static fun STRICT ()Lorg/partiql/eval/Mode;
+	public fun code ()I
+}
+
+public class org/partiql/eval/Row {
+	public final field values [Lorg/partiql/spi/value/Datum;
+	public fun <init> ()V
+	public fun <init> ([Lorg/partiql/spi/value/Datum;)V
+	public fun concat (Lorg/partiql/eval/Row;)Lorg/partiql/eval/Row;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public static fun of ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/eval/Row;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/eval/Statement {
+	public abstract fun execute ()Lorg/partiql/spi/value/Datum;
+}
+
+public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
+	public static fun builder ()Lorg/partiql/eval/compiler/PartiQLCompiler$Builder;
+	public fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;)Lorg/partiql/eval/Statement;
+	public abstract fun prepare (Lorg/partiql/plan/Plan;Lorg/partiql/eval/Mode;Lorg/partiql/spi/Context;)Lorg/partiql/eval/Statement;
+	public static fun standard ()Lorg/partiql/eval/compiler/PartiQLCompiler;
+}
+
+public class org/partiql/eval/compiler/PartiQLCompiler$Builder {
+	public fun build ()Lorg/partiql/eval/compiler/PartiQLCompiler;
 }
 

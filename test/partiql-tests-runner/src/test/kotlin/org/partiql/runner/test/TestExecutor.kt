@@ -9,18 +9,18 @@ interface TestExecutor<T, V> {
     /**
      * Compile the given statement.
      *
-     * @param statement
+     * @param input
      * @return
      */
-    fun prepare(statement: String): T
+    fun prepare(input: String): T
 
     /**
      * Execute the statement, returning a value we can assert on.
      *
-     * @param statement
+     * @param input
      * @return
      */
-    fun execute(statement: T): V
+    fun execute(input: T): V
 
     /**
      * Compare the equality of two values.

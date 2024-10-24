@@ -1,13 +1,13 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
 
 /**
  * Literal expression.
  */
-internal class ExprLit(value: Datum) : Operator.Expr {
+internal class ExprLit(value: Datum) : ExprValue {
 
     // DO NOT USE FINAL
     private var _value = value

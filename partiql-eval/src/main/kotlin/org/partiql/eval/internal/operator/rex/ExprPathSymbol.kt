@@ -1,17 +1,17 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
 internal class ExprPathSymbol(
-    @JvmField val root: Operator.Expr,
+    @JvmField val root: ExprValue,
     @JvmField val symbol: String,
-) : Operator.Expr {
+) : ExprValue {
 
     @OptIn(PartiQLValueExperimental::class)
     override fun eval(env: Environment): Datum {

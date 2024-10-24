@@ -7,9 +7,9 @@ import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.eval.PartiQLEngine
-import org.partiql.eval.PartiQLResult
-import org.partiql.eval.PartiQLStatement
+import org.partiql.eval.Mode
+import org.partiql.eval.Statement
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
@@ -40,21 +40,21 @@ import org.partiql.value.toIon
 @OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(
     private val session: Session,
-    private val mode: PartiQLEngine.Mode,
-) : TestExecutor<PartiQLStatement, PartiQLResult> {
+    private val mode: Mode,
+) : TestExecutor<Statement, Datum> {
 
-    override fun prepare(statement: String): PartiQLStatement {
-        val stmt = parser.parse(statement).root
+    override fun prepare(input: String): Statement {
         val listener = getErrorListener(mode)
         val ctx = Context.of(listener)
-        val plan = planner.plan(stmt, session, ctx).plan
-        return engine.prepare(plan, session, ctx, mode)
+        val ast = parser.parse(input, ctx).root
+        val plan = planner.plan(ast, session, ctx).plan
+        return compiler.prepare(plan, mode, ctx)
     }
 
-    private fun getErrorListener(mode: PartiQLEngine.Mode): PErrorListener {
-        return when (mode) {
-            PartiQLEngine.Mode.PERMISSIVE -> PErrorListener.abortOnError()
-            PartiQLEngine.Mode.STRICT -> object : PErrorListener {
+    private fun getErrorListener(mode: Mode): PErrorListener {
+        return when (mode.code()) {
+            Mode.PERMISSIVE -> PErrorListener.abortOnError()
+            Mode.STRICT -> object : PErrorListener {
                 override fun report(error: PError) {
                     when (error.severity.code()) {
                         Severity.ERROR -> throw PErrorException(error)
@@ -72,47 +72,35 @@ class EvalExecutor(
                             error.severity = Severity.ERROR()
                             report(error)
                         }
+
                         else -> {
                             // Do nothing
                         }
                     }
                 }
             }
+            else -> error("This mode is not handled.")
         }
     }
 
-    override fun execute(statement: PartiQLStatement): PartiQLResult {
-        return statement.execute(session)
+    override fun execute(input: Statement): Datum {
+        return input.execute()
     }
 
-    override fun fromIon(value: IonValue): PartiQLResult {
+    override fun fromIon(value: IonValue): Datum {
         val partiql = PartiQLValueIonReaderBuilder.standard().build(value.toIonElement()).read()
         val datum = Datum.of(partiql)
-
-        return PartiQLResult.Value(datum)
+        return datum
     }
 
-    override fun toIon(value: PartiQLResult): IonValue {
-        if (value is PartiQLResult.Value) {
-            return value.value.toPartiQLValue().toIon().toIonValue(ION)
-        }
-        error("PartiQLResult cannot be converted to Ion")
+    override fun toIon(value: Datum): IonValue {
+        val partiql = value.toPartiQLValue()
+        return partiql.toIon().toIonValue(ION)
     }
 
     // TODO: Use DATUM
-    override fun compare(actual: PartiQLResult, expect: PartiQLResult): Boolean {
-        if (actual is PartiQLResult.Value && expect is PartiQLResult.Value) {
-            return valueComparison(actual.value.toPartiQLValue(), expect.value.toPartiQLValue())
-        }
-        if (actual is PartiQLResult.Error) {
-            throw actual.cause
-        }
-        val errorMessage = buildString {
-            appendLine("Cannot compare different types of PartiQLResult.")
-            appendLine(" - Expected : $expect")
-            appendLine(" - Actual   : $actual")
-        }
-        error(errorMessage)
+    override fun compare(actual: Datum, expect: Datum): Boolean {
+        return valueComparison(actual.toPartiQLValue(), expect.toPartiQLValue())
     }
 
     // Value comparison of PartiQL Value that utilized Ion Hashcode.
@@ -152,16 +140,16 @@ class EvalExecutor(
     }
 
     companion object {
+        val compiler = PartiQLCompiler.standard()
         val parser = PartiQLParser.standard()
         val planner = PartiQLPlanner.standard()
-        val engine = PartiQLEngine.standard()
         // TODO REPLACE WITH DATUM COMPARATOR
         val comparator = PartiQLValue.comparator()
     }
 
-    object Factory : TestExecutor.Factory<PartiQLStatement, PartiQLResult> {
+    object Factory : TestExecutor.Factory<Statement, Datum> {
 
-        override fun create(env: IonStruct, options: CompileType): TestExecutor<PartiQLStatement, PartiQLResult> {
+        override fun create(env: IonStruct, options: CompileType): TestExecutor<Statement, Datum> {
             // infer catalog from conformance test `env`
             val catalog = infer(env.toIonElement() as StructElement)
             val session = Session.builder()
@@ -169,8 +157,8 @@ class EvalExecutor(
                 .catalogs(catalog)
                 .build()
             val mode = when (options) {
-                CompileType.PERMISSIVE -> PartiQLEngine.Mode.PERMISSIVE
-                CompileType.STRICT -> PartiQLEngine.Mode.STRICT
+                CompileType.PERMISSIVE -> Mode.PERMISSIVE()
+                CompileType.STRICT -> Mode.STRICT()
             }
             return EvalExecutor(session, mode)
         }

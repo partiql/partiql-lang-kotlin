@@ -1,22 +1,23 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.RecordValueIterator
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.types.PType
 
 internal class RelOpScanPermissive(
-    private val expr: Operator.Expr
-) : Operator.Relation {
+    private val expr: ExprValue
+) : ExprRelation {
 
-    private lateinit var records: Iterator<Record>
+    private lateinit var records: Iterator<Row>
 
     override fun open(env: Environment) {
-        val r = expr.eval(env.push(Record.empty))
+        val r = expr.eval(env.push(Row()))
         records = when (r.type.kind) {
             PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
-            else -> iterator { yield(Record.of(r)) }
+            else -> iterator { yield(Row(arrayOf(r))) }
         }
     }
 
@@ -24,7 +25,7 @@ internal class RelOpScanPermissive(
         return records.hasNext()
     }
 
-    override fun next(): Record {
+    override fun next(): Row {
         return records.next()
     }
 

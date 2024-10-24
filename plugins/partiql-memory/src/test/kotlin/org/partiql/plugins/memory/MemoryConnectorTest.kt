@@ -8,7 +8,7 @@ class MemoryConnectorTest {
 
     @Test
     fun sanity() {
-        val session = Session.empty("")
+        val session = Session.empty()
         val catalog = MemoryCatalog.builder()
             .name("default")
             .define(MemoryTable.empty("a"))

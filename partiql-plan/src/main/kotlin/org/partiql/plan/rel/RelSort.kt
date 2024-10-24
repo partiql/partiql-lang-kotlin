@@ -1,6 +1,7 @@
 package org.partiql.plan.rel
 
 import org.partiql.plan.Collation
+import org.partiql.plan.Visitor
 
 /**
  * Logical sort operator.
@@ -17,7 +18,7 @@ public interface RelSort : Rel {
 
     override fun isOrdered(): Boolean = true
 
-    override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R = visitor.visitSort(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSort(this, ctx)
 }
 
 /**

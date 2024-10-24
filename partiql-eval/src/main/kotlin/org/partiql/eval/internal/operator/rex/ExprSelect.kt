@@ -1,7 +1,8 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 
@@ -12,15 +13,15 @@ import org.partiql.value.PartiQLValueExperimental
  * @property constructor
  */
 internal class ExprSelect(
-    private val input: Operator.Relation,
-    private val constructor: Operator.Expr,
+    private val input: ExprRelation,
+    private val constructor: ExprValue,
     private val ordered: Boolean,
-) : Operator.Expr {
+) : ExprValue {
 
     @OptIn(PartiQLValueExperimental::class)
     class Elements(
-        private val input: Operator.Relation,
-        private val constructor: Operator.Expr,
+        private val input: ExprRelation,
+        private val constructor: ExprValue,
         private val env: Environment,
     ) : Iterable<Datum> {
 

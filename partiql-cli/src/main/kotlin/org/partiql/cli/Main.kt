@@ -22,7 +22,6 @@ import com.amazon.ionelement.api.loadAllElements
 import org.partiql.cli.io.Format
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
-import org.partiql.eval.PartiQLResult
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Catalog
@@ -211,17 +210,9 @@ internal class MainCommand : Runnable {
 
         // TODO add format support
         checkFormat(format)
-
-        when (result) {
-            is PartiQLResult.Error -> {
-                error(result.cause.stackTrace)
-            }
-            is PartiQLResult.Value -> {
-                val writer = PartiQLValueTextWriter(System.out)
-                writer.append(result.value.toPartiQLValue()) // TODO: Create a Datum writer
-                println()
-            }
-        }
+        val writer = PartiQLValueTextWriter(System.out)
+        writer.append(result.toPartiQLValue()) // TODO: Create a Datum writer
+        println()
     }
 
     private fun session() = Session.builder()

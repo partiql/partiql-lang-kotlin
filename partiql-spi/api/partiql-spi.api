@@ -64,6 +64,7 @@ public final class org/partiql/spi/catalog/Catalog$DefaultImpls {
 public abstract interface class org/partiql/spi/catalog/Catalogs {
 	public static final field Companion Lorg/partiql/spi/catalog/Catalogs$Companion;
 	public static fun builder ()Lorg/partiql/spi/catalog/Catalogs$Builder;
+	public static fun empty ()Lorg/partiql/spi/catalog/Catalogs;
 	public abstract fun getCatalog (Ljava/lang/String;Z)Lorg/partiql/spi/catalog/Catalog;
 	public static fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Catalogs;
 	public static fun of ([Lorg/partiql/spi/catalog/Catalog;)Lorg/partiql/spi/catalog/Catalogs;
@@ -77,6 +78,7 @@ public final class org/partiql/spi/catalog/Catalogs$Builder {
 
 public final class org/partiql/spi/catalog/Catalogs$Companion {
 	public final fun builder ()Lorg/partiql/spi/catalog/Catalogs$Builder;
+	public final fun empty ()Lorg/partiql/spi/catalog/Catalogs;
 	public final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Catalogs;
 	public final fun of ([Lorg/partiql/spi/catalog/Catalog;)Lorg/partiql/spi/catalog/Catalogs;
 }
@@ -207,7 +209,7 @@ public final class org/partiql/spi/catalog/Path$Companion {
 public abstract interface class org/partiql/spi/catalog/Session {
 	public static final field Companion Lorg/partiql/spi/catalog/Session$Companion;
 	public static fun builder ()Lorg/partiql/spi/catalog/Session$Builder;
-	public static fun empty (Ljava/lang/String;)Lorg/partiql/spi/catalog/Session;
+	public static fun empty ()Lorg/partiql/spi/catalog/Session;
 	public abstract fun getCatalog ()Ljava/lang/String;
 	public abstract fun getCatalogs ()Lorg/partiql/spi/catalog/Catalogs;
 	public abstract fun getIdentity ()Ljava/lang/String;
@@ -230,7 +232,7 @@ public final class org/partiql/spi/catalog/Session$Builder {
 
 public final class org/partiql/spi/catalog/Session$Companion {
 	public final fun builder ()Lorg/partiql/spi/catalog/Session$Builder;
-	public final fun empty (Ljava/lang/String;)Lorg/partiql/spi/catalog/Session;
+	public final fun empty ()Lorg/partiql/spi/catalog/Session;
 }
 
 public final class org/partiql/spi/catalog/Session$DefaultImpls {

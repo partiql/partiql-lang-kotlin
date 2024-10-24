@@ -1,5 +1,6 @@
 package org.partiql.plan.rex
 
+import org.partiql.plan.Visitor
 import org.partiql.plan.rel.Rel
 import org.partiql.types.PType
 
@@ -14,7 +15,7 @@ public interface RexSelect : Rex {
 
     override fun getChildren(): Collection<Rex> = listOf(getConstructor())
 
-    override fun <R, C> accept(visitor: RexVisitor<R, C>, ctx: C): R = visitor.visitSelect(this, ctx)
+    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSelect(this, ctx)
 }
 
 internal class RexSelectImpl(input: Rel, constructor: Rex) : RexSelect {

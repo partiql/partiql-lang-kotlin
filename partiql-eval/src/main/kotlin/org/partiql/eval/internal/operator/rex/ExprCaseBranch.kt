@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -11,7 +11,7 @@ import org.partiql.types.PType
  * @param value
  * @param result
  */
-internal class ExprCaseBranch(value: Operator.Expr, result: Operator.Expr) {
+internal class ExprCaseBranch(value: ExprValue, result: ExprValue) {
 
     // DO NOT USE FINAL
     private var _value = value

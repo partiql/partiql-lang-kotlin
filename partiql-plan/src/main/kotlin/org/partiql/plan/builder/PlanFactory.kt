@@ -415,7 +415,8 @@ public interface PlanFactory {
      * @param type
      * @return
      */
-    public fun rexCase(branches: List<RexCase.Branch>, default: Rex?, type: RexType): RexCase = rexCase(null, branches, default, type)
+    public fun rexCase(branches: List<RexCase.Branch>, default: Rex?, type: RexType): RexCase =
+        rexCase(null, branches, default, type)
 
     /**
      * Create a [RexCase] instance for a case-when with dynamic type.

@@ -2,9 +2,8 @@ package org.partiql.cli.pipeline
 
 import org.partiql.ast.Statement
 import org.partiql.cli.ErrorCodeString
-import org.partiql.eval.PartiQLEngine
-import org.partiql.eval.PartiQLResult
-import org.partiql.eval.builder.PartiQLEngineBuilder
+import org.partiql.eval.Mode
+import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Plan
@@ -12,15 +11,16 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PErrorListenerException
+import org.partiql.spi.value.Datum
 import java.io.PrintStream
 import kotlin.jvm.Throws
 
 internal class Pipeline private constructor(
     private val parser: PartiQLParser,
     private val planner: PartiQLPlanner,
-    private val engine: PartiQLEngine,
+    private val compiler: PartiQLCompiler,
     private val ctx: Context,
-    private val mode: PartiQLEngine.Mode
+    private val mode: Mode
 ) {
 
     /**
@@ -28,7 +28,7 @@ internal class Pipeline private constructor(
      * @throws PipelineException when there are accumulated errors, or if the components have thrown an [PErrorListenerException].
      */
     @Throws(PipelineException::class)
-    fun execute(statement: String, session: Session): PartiQLResult {
+    fun execute(statement: String, session: Session): Datum {
         val ast = parse(statement)
         val plan = plan(ast, session)
         return execute(plan, session)
@@ -48,11 +48,11 @@ internal class Pipeline private constructor(
         return result.plan
     }
 
-    private fun execute(plan: Plan, session: Session): PartiQLResult {
+    private fun execute(plan: Plan, session: Session): Datum {
         val statement = listen(ctx.errorListener as AppPErrorListener) {
-            engine.prepare(plan, session, ctx, mode)
+            compiler.prepare(plan, mode, ctx)
         }
-        return statement.execute(session)
+        return statement.execute()
     }
 
     private fun <T> listen(listener: AppPErrorListener, action: () -> T): T {
@@ -71,20 +71,20 @@ internal class Pipeline private constructor(
     companion object {
 
         fun default(out: PrintStream, config: Config): Pipeline {
-            return create(PartiQLEngine.Mode.PERMISSIVE, out, config)
+            return create(Mode.PERMISSIVE(), out, config)
         }
 
         fun strict(out: PrintStream, config: Config): Pipeline {
-            return create(PartiQLEngine.Mode.STRICT, out, config)
+            return create(Mode.STRICT(), out, config)
         }
 
-        private fun create(mode: PartiQLEngine.Mode, out: PrintStream, config: Config): Pipeline {
+        private fun create(mode: Mode, out: PrintStream, config: Config): Pipeline {
             val listener = config.getErrorListener(out)
             val ctx = Context.of(listener)
             val parser = PartiQLParserBuilder().build()
             val planner = PartiQLPlanner.builder().build()
-            val engine = PartiQLEngineBuilder().build()
-            return Pipeline(parser, planner, engine, ctx, mode)
+            val compiler = PartiQLCompiler.builder().build()
+            return Pipeline(parser, planner, compiler, ctx, mode)
         }
     }
 

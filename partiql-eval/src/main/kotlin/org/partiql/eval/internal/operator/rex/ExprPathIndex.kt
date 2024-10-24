@@ -1,16 +1,16 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Environment
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getInt32Coerced
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal class ExprPathIndex(
-    @JvmField val root: Operator.Expr,
-    @JvmField val key: Operator.Expr,
-) : Operator.Expr {
+    @JvmField val root: ExprValue,
+    @JvmField val key: ExprValue,
+) : ExprValue {
 
     override fun eval(env: Environment): Datum {
         val input = root.eval(env)

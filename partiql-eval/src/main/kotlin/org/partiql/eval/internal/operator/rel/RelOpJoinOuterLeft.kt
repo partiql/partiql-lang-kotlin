@@ -1,9 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.Environment
+import org.partiql.eval.ExprRelation
+import org.partiql.eval.ExprValue
+import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.rel.RelType
 import org.partiql.spi.value.Datum
 
@@ -15,17 +16,21 @@ import org.partiql.spi.value.Datum
  * (lateral vs non-lateral) may be separated for performance improvements.
  */
 internal class RelOpJoinOuterLeft(
-    private val lhs: Operator.Relation,
-    private val rhs: Operator.Relation,
-    private val condition: Operator.Expr,
+    private val lhs: ExprRelation,
+    private val rhs: ExprRelation,
+    private val condition: ExprValue,
     rhsType: RelType,
 ) : RelOpPeeking() {
 
     // TODO BETTER MECHANISM FOR NULL PADDING
-    private val rhsPadded = Record(rhsType.getFields().map { Datum.nullValue(it.type) }.toTypedArray())
+    private val rhsPadded =
+        Row(
+            rhsType.getFields().map { Datum.nullValue(it.type) }
+                .toTypedArray()
+        )
 
     private lateinit var env: Environment
-    private lateinit var iterator: Iterator<Record>
+    private lateinit var iterator: Iterator<Row>
 
     override fun openPeeking(env: Environment) {
         this.env = env
@@ -33,7 +38,7 @@ internal class RelOpJoinOuterLeft(
         iterator = implementation()
     }
 
-    override fun peek(): Record? {
+    override fun peek(): Row? {
         return when (iterator.hasNext()) {
             true -> iterator.next()
             false -> null
@@ -43,7 +48,7 @@ internal class RelOpJoinOuterLeft(
     override fun closePeeking() {
         lhs.close()
         rhs.close()
-        iterator = emptyList<Record>().iterator()
+        iterator = emptyList<Row>().iterator()
     }
 
     /**
@@ -67,16 +72,16 @@ internal class RelOpJoinOuterLeft(
             var lhsMatched = false
             rhs.open(env.push(lhsRecord))
             for (rhsRecord in rhs) {
-                val input = lhsRecord + rhsRecord
+                val input = lhsRecord.concat(rhsRecord)
                 val result = condition.eval(env.push(input))
                 if (result.isTrue()) {
                     lhsMatched = true
-                    yield(lhsRecord + rhsRecord)
+                    yield(lhsRecord.concat(rhsRecord))
                 }
             }
             rhs.close()
             if (!lhsMatched) {
-                yield(lhsRecord + rhsPadded)
+                yield(lhsRecord.concat(rhsPadded))
             }
         }
     }
