@@ -6,6 +6,8 @@ import org.partiql.ast.builder.ast
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 
+// TODO DELETE FILE
+
 private val col = { index: () -> Int -> "_${index()}" }
 
 /**

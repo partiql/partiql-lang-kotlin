@@ -41,198 +41,396 @@ import org.partiql.ast.v1.graph.GraphQuantifier;
 import org.partiql.ast.v1.graph.GraphSelector;
 
 public interface AstVisitor<R, C> {
-    R visit(AstNode node, C ctx);
+    default R defaultVisit(AstNode node, C ctx) {
+        for (AstNode child : node.children()) {
+            child.accept(this, ctx);
+        }
+        return defaultReturn(node, ctx);
+    }
+
+    R defaultReturn(AstNode node, C ctx);
+
+    default R visit(AstNode node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    default R visitStatement(Statement node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitQuery(Query node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExplain(Explain node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitIdentifier(Identifier node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitIdentifierChain(IdentifierChain node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExpr(Expr node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprLit(ExprLit node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprVariant(ExprVariant node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprVarRef(ExprVarRef node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprSessionAttribute(ExprSessionAttribute node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprPath(ExprPath node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitPathStep(PathStep node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitPathStepField(PathStep.Field node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitPathStepElement(PathStep.Element node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitPathStepAllElements(PathStep.AllElements node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitPathStepAllFields(PathStep.AllFields node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprCall(ExprCall node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprParameter(ExprParameter node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprOperator(ExprOperator node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprNot(ExprNot node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprAnd(ExprAnd node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprOr(ExprOr node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    default R visitExprValues(ExprValues node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitStatement(Statement node, C ctx);
+    default R visitExprValuesRow(ExprValues.Row node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitQuery(Query node, C ctx);
+    default R visitExprArray(ExprArray node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExplain(Explain node, C ctx);
+    default R visitExprBag(ExprBag node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitIdentifier(Identifier node, C ctx);
+    default R visitExprStruct(ExprStruct node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitIdentifierChain(IdentifierChain node, C ctx);
+    default R visitExprStructField(ExprStruct.Field node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExpr(Expr node, C ctx);
+    default R visitExprLike(ExprLike node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprLit(ExprLit node, C ctx);
+    default R visitExprBetween(ExprBetween node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprVariant(ExprVariant node, C ctx);
+    default R visitExprInCollection(ExprInCollection node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprVarRef(ExprVarRef node, C ctx);
+    default R visitExprIsType(ExprIsType node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprSessionAttribute(ExprSessionAttribute node, C ctx);
+    default R visitExprCase(ExprCase node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprPath(ExprPath node, C ctx);
+    default R visitExprCaseBranch(ExprCase.Branch node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitPathStep(PathStep node, C ctx);
+    default R visitExprCoalesce(ExprCoalesce node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitPathStepField(PathStep.Field node, C ctx);
+    default R visitExprNullIf(ExprNullIf node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitPathStepElement(PathStep.Element node, C ctx);
+    default R visitExprSubstring(ExprSubstring node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitPathStepAllElements(PathStep.AllElements node, C ctx);
+    default R visitExprPosition(ExprPosition node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitPathStepAllFields(PathStep.AllFields node, C ctx);
+    default R visitExprTrim(ExprTrim node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprCall(ExprCall node, C ctx);
+    default R visitExprOverlay(ExprOverlay node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprParameter(ExprParameter node, C ctx);
+    default R visitExprExtract(ExprExtract node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprOperator(ExprOperator node, C ctx);
+    default R visitExprCast(ExprCast node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprNot(ExprNot node, C ctx);
+    default R visitExprQuerySet(ExprQuerySet node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprAnd(ExprAnd node, C ctx);
+    default R visitExprMatch(ExprMatch node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprOr(ExprOr node, C ctx);
+    default R visitExprWindow(ExprWindow node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprValues(ExprValues node, C ctx);
+    default R visitExprWindowOver(ExprWindow.Over node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprValuesRow(ExprValues.Row node, C ctx);
+    default R visitQueryBody(QueryBody node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprArray(ExprArray node, C ctx);
+    default R visitQueryBodySFW(QueryBody.SFW node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprBag(ExprBag node, C ctx);
+    default R visitQueryBodySetOp(QueryBody.SetOp node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprStruct(ExprStruct node, C ctx);
+    default R visitSelect(Select node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprStructField(ExprStruct.Field node, C ctx);
+    default R visitSelectStar(SelectStar node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprLike(ExprLike node, C ctx);
+    default R visitSelectList(SelectList node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprBetween(ExprBetween node, C ctx);
+    default R visitSelectItem(SelectItem node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprInCollection(ExprInCollection node, C ctx);
+    default R visitSelectItemStar(SelectItem.Star node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprIsType(ExprIsType node, C ctx);
+    default R visitSelectItemExpr(SelectItem.Expr node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprCase(ExprCase node, C ctx);
+    default R visitSelectPivot(SelectPivot node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprCaseBranch(ExprCase.Branch node, C ctx);
+    default R visitSelectValue(SelectValue node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprCoalesce(ExprCoalesce node, C ctx);
+    default R visitExclude(Exclude node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprNullIf(ExprNullIf node, C ctx);
+    default R visitExcludePath(ExcludePath node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprSubstring(ExprSubstring node, C ctx);
+    default R visitExcludeStep(ExcludeStep node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprPosition(ExprPosition node, C ctx);
+    default R visitExcludeStepStructField(ExcludeStep.StructField node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprTrim(ExprTrim node, C ctx);
+    default R visitExcludeStepCollIndex(ExcludeStep.CollIndex node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprOverlay(ExprOverlay node, C ctx);
+    default R visitExcludeStepStructWildcard(ExcludeStep.StructWildcard node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprExtract(ExprExtract node, C ctx);
+    default R visitExcludeStepCollWildcard(ExcludeStep.CollWildcard node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprCast(ExprCast node, C ctx);
+    default R visitFrom(From node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprQuerySet(ExprQuerySet node, C ctx);
+    default R visitTableRef(FromTableRef node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprMatch(ExprMatch node, C ctx);
+    default R visitFromExpr(FromExpr node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprWindow(ExprWindow node, C ctx);
+    default R visitFromJoin(FromJoin node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExprWindowOver(ExprWindow.Over node, C ctx);
+    default R visitLet(Let node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitQueryBody(QueryBody node, C ctx);
+    default R visitLetBinding(Let.Binding node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitQueryBodySFW(QueryBody.SFW node, C ctx);
+    default R visitGroupBy(GroupBy node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitQueryBodySetOp(QueryBody.SetOp node, C ctx);
+    default R visitGroupByKey(GroupBy.Key node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitSelect(Select node, C ctx);
+    default R visitOrderBy(OrderBy node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitSelectStar(SelectStar node, C ctx);
+    default R visitSort(Sort node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitSelectList(SelectList node, C ctx);
+    default R visitSetOp(SetOp node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitSelectItem(SelectItem node, C ctx);
+    default R visitGraphMatch(GraphMatch node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitSelectItemStar(SelectItem.Star node, C ctx);
+    default R visitGraphMatchPattern(GraphPattern node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitSelectItemExpr(SelectItem.Expr node, C ctx);
+    default R visitGraphPart(GraphPart node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitSelectPivot(SelectPivot node, C ctx);
+    default R visitGraphPartNode(GraphPart.Node node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitSelectValue(SelectValue node, C ctx);
+    default R visitGraphPartEdge(GraphPart.Edge node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExclude(Exclude node, C ctx);
+    default R visitGraphPartPattern(GraphPart.Pattern node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExcludePath(ExcludePath node, C ctx);
+    default R visitGraphQuantifier(GraphQuantifier node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExcludeStep(ExcludeStep node, C ctx);
+    default R visitGraphSelector(GraphSelector node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExcludeStepStructField(ExcludeStep.StructField node, C ctx);
+    default R visitGraphSelectorAnyShortest(GraphSelector.AnyShortest node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExcludeStepCollIndex(ExcludeStep.CollIndex node, C ctx);
+    default R visitGraphSelectorAllShortest(GraphSelector.AllShortest node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExcludeStepStructWildcard(ExcludeStep.StructWildcard node, C ctx);
+    default R visitGraphSelectorAny(GraphSelector.Any node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitExcludeStepCollWildcard(ExcludeStep.CollWildcard node, C ctx);
+    default R visitGraphSelectorAnyK(GraphSelector.AnyK node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitFrom(From node, C ctx);
+    default R visitGraphSelectorShortestK(GraphSelector.ShortestK node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitTableRef(FromTableRef node, C ctx);
+    default R visitGraphSelectorShortestKGroup(GraphSelector.ShortestKGroup node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitFromExpr(FromExpr node, C ctx);
+    default R visitGraphLabel(GraphLabel node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitFromJoin(FromJoin node, C ctx);
+    default R visitGraphLabelName(GraphLabel.Name node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitLet(Let node, C ctx);
+    default R visitGraphLabelWildcard(GraphLabel.Wildcard node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitLetBinding(Let.Binding node, C ctx);
+    default R visitGraphLabelNegation(GraphLabel.Negation node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitGroupBy(GroupBy node, C ctx);
+    default R visitGraphLabelConj(GraphLabel.Conj node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 
-    R visitGroupByKey(GroupBy.Key node, C ctx);
-
-    R visitOrderBy(OrderBy node, C ctx);
-
-    R visitSort(Sort node, C ctx);
-
-    R visitSetOp(SetOp node, C ctx);
-
-    R visitGraphMatch(GraphMatch node, C ctx);
-
-    R visitGraphMatchPattern(GraphPattern node, C ctx);
-
-    R visitGraphPart(GraphPart node, C ctx);
-
-    R visitGraphPartNode(GraphPart.Node node, C ctx);
-
-    R visitGraphPartEdge(GraphPart.Edge node, C ctx);
-
-    R visitGraphPartPattern(GraphPart.Pattern node, C ctx);
-
-    R visitGraphQuantifier(GraphQuantifier node, C ctx);
-
-    R visitGraphSelector(GraphSelector node, C ctx);
-
-    R visitGraphSelectorAnyShortest(GraphSelector.AnyShortest node, C ctx);
-
-    R visitGraphSelectorAllShortest(GraphSelector.AllShortest node, C ctx);
-
-    R visitGraphSelectorAny(GraphSelector.Any node, C ctx);
-
-    R visitGraphSelectorAnyK(GraphSelector.AnyK node, C ctx);
-
-    R visitGraphSelectorShortestK(GraphSelector.ShortestK node, C ctx);
-
-    R visitGraphSelectorShortestKGroup(
-            GraphSelector.ShortestKGroup node,
-            C ctx
-    );
-
-    R visitGraphLabel(GraphLabel node, C ctx);
-
-    R visitGraphLabelName(GraphLabel.Name node, C ctx);
-
-    R visitGraphLabelWildcard(GraphLabel.Wildcard node, C ctx);
-
-    R visitGraphLabelNegation(GraphLabel.Negation node, C ctx);
-
-    R visitGraphLabelConj(GraphLabel.Conj node, C ctx);
-
-    R visitGraphLabelDisj(GraphLabel.Disj node, C ctx);
+    default R visitGraphLabelDisj(GraphLabel.Disj node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
 }
