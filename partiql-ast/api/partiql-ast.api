@@ -5631,6 +5631,11 @@ public final class org/partiql/ast/v1/Ast {
 	public static final fun sort (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/Order;Lorg/partiql/ast/v1/Nulls;)Lorg/partiql/ast/v1/Sort;
 }
 
+public abstract class org/partiql/ast/v1/AstEnum : org/partiql/ast/v1/AstNode {
+	public fun <init> ()V
+	public abstract fun code ()I
+}
+
 public abstract class org/partiql/ast/v1/AstNode {
 	public field tag Ljava/lang/String;
 	public fun <init> ()V
@@ -5737,7 +5742,7 @@ public abstract interface class org/partiql/ast/v1/AstVisitor {
 	public abstract fun visitTableRef (Lorg/partiql/ast/v1/FromTableRef;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/AstEnum {
 	public static final field BAG I
 	public static final field BIGINT I
 	public static final field BINARY_LARGE_OBJECT I
@@ -5859,19 +5864,21 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/Enum {
 	public static fun USER_DEFINED (Lorg/partiql/ast/v1/IdentifierChain;)Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR ()Lorg/partiql/ast/v1/DataType;
 	public static fun VARCHAR (I)Lorg/partiql/ast/v1/DataType;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getLength ()Ljava/lang/Integer;
 	public fun getName ()Lorg/partiql/ast/v1/IdentifierChain;
 	public fun getPrecision ()Ljava/lang/Integer;
 	public fun getScale ()Ljava/lang/Integer;
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/DataType;
-	public static fun values ()[Lorg/partiql/ast/v1/DataType;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/DataType;
 }
 
-public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/AstEnum {
 	public static final field DAY I
 	public static final field HOUR I
 	public static final field MINUTE I
@@ -5890,16 +5897,14 @@ public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/Enum {
 	public static fun TIMEZONE_MINUTE ()Lorg/partiql/ast/v1/DatetimeField;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/DatetimeField;
 	public static fun YEAR ()Lorg/partiql/ast/v1/DatetimeField;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/DatetimeField;
-	public static fun values ()[Lorg/partiql/ast/v1/DatetimeField;
-}
-
-public abstract interface class org/partiql/ast/v1/Enum {
-	public abstract fun code ()I
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/DatetimeField;
 }
 
 public class org/partiql/ast/v1/Exclude : org/partiql/ast/v1/AstNode {
@@ -6079,19 +6084,21 @@ public abstract class org/partiql/ast/v1/FromTableRef : org/partiql/ast/v1/AstNo
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/AstEnum {
 	public static final field SCAN I
 	public static final field UNKNOWN I
 	public static final field UNPIVOT I
 	public static fun SCAN ()Lorg/partiql/ast/v1/FromType;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/FromType;
 	public static fun UNPIVOT ()Lorg/partiql/ast/v1/FromType;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/FromType;
-	public static fun values ()[Lorg/partiql/ast/v1/FromType;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/FromType;
 }
 
 public class org/partiql/ast/v1/GroupBy : org/partiql/ast/v1/AstNode {
@@ -6131,19 +6138,21 @@ public class org/partiql/ast/v1/GroupBy$Key$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public class org/partiql/ast/v1/GroupByStrategy : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/GroupByStrategy : org/partiql/ast/v1/AstEnum {
 	public static final field FULL I
 	public static final field PARTIAL I
 	public static final field UNKNOWN I
 	public static fun FULL ()Lorg/partiql/ast/v1/GroupByStrategy;
 	public static fun PARTIAL ()Lorg/partiql/ast/v1/GroupByStrategy;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/GroupByStrategy;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/GroupByStrategy;
-	public static fun values ()[Lorg/partiql/ast/v1/GroupByStrategy;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/GroupByStrategy;
 }
 
 public class org/partiql/ast/v1/Identifier : org/partiql/ast/v1/AstNode {
@@ -6184,7 +6193,7 @@ public class org/partiql/ast/v1/IdentifierChain$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/AstEnum {
 	public static final field CROSS I
 	public static final field FULL I
 	public static final field FULL_OUTER I
@@ -6203,12 +6212,14 @@ public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/Enum {
 	public static fun RIGHT ()Lorg/partiql/ast/v1/JoinType;
 	public static fun RIGHT_OUTER ()Lorg/partiql/ast/v1/JoinType;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/JoinType;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/JoinType;
-	public static fun values ()[Lorg/partiql/ast/v1/JoinType;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/JoinType;
 }
 
 public class org/partiql/ast/v1/Let : org/partiql/ast/v1/AstNode {
@@ -6244,34 +6255,38 @@ public class org/partiql/ast/v1/Let$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public class org/partiql/ast/v1/Nulls : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/Nulls : org/partiql/ast/v1/AstEnum {
 	public static final field FIRST I
 	public static final field LAST I
 	public static final field UNKNOWN I
 	public static fun FIRST ()Lorg/partiql/ast/v1/Nulls;
 	public static fun LAST ()Lorg/partiql/ast/v1/Nulls;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/Nulls;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/Nulls;
-	public static fun values ()[Lorg/partiql/ast/v1/Nulls;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/Nulls;
 }
 
-public class org/partiql/ast/v1/Order : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/Order : org/partiql/ast/v1/AstEnum {
 	public static final field ASC I
 	public static final field DESC I
 	public static final field UNKNOWN I
 	public static fun ASC ()Lorg/partiql/ast/v1/Order;
 	public static fun DESC ()Lorg/partiql/ast/v1/Order;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/Order;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/Order;
-	public static fun values ()[Lorg/partiql/ast/v1/Order;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/Order;
 }
 
 public class org/partiql/ast/v1/OrderBy : org/partiql/ast/v1/AstNode {
@@ -6503,32 +6518,36 @@ public class org/partiql/ast/v1/SetOp$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public class org/partiql/ast/v1/SetOpType : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/SetOpType : org/partiql/ast/v1/AstEnum {
 	public static fun EXCEPT ()Lorg/partiql/ast/v1/SetOpType;
 	public static fun INTERSECT ()Lorg/partiql/ast/v1/SetOpType;
 	public static fun UNION ()Lorg/partiql/ast/v1/SetOpType;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/SetOpType;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/SetOpType;
-	public static fun values ()[Lorg/partiql/ast/v1/SetOpType;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/SetOpType;
 }
 
-public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/AstEnum {
 	public static final field ALL I
 	public static final field DISTINCT I
 	public static final field UNKNOWN I
 	public static fun ALL ()Lorg/partiql/ast/v1/SetQuantifier;
 	public static fun DISTINCT ()Lorg/partiql/ast/v1/SetQuantifier;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/SetQuantifier;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/SetQuantifier;
-	public static fun values ()[Lorg/partiql/ast/v1/SetQuantifier;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/SetQuantifier;
 }
 
 public class org/partiql/ast/v1/Sort : org/partiql/ast/v1/AstNode {
@@ -7287,22 +7306,24 @@ public class org/partiql/ast/v1/expr/PathStep$Field : org/partiql/ast/v1/expr/Pa
 	public fun hashCode ()I
 }
 
-public class org/partiql/ast/v1/expr/Scope : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/expr/Scope : org/partiql/ast/v1/AstEnum {
 	public static final field DEFAULT I
 	public static final field LOCAL I
 	public static final field UNKNOWN I
 	public static fun DEFAULT ()Lorg/partiql/ast/v1/expr/Scope;
 	public static fun LOCAL ()Lorg/partiql/ast/v1/expr/Scope;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/Scope;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/Scope;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/Scope;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/Scope;
 }
 
-public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/AstEnum {
 	public static final field CURRENT_DATE I
 	public static final field CURRENT_USER I
 	public static final field UNKNOWN I
@@ -7310,15 +7331,17 @@ public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/Enum 
 	public static fun CURRENT_DATE ()Lorg/partiql/ast/v1/expr/SessionAttribute;
 	public static fun CURRENT_USER ()Lorg/partiql/ast/v1/expr/SessionAttribute;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/SessionAttribute;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/SessionAttribute;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/SessionAttribute;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/SessionAttribute;
 }
 
-public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/AstEnum {
 	public static final field BOTH I
 	public static final field LEADING I
 	public static final field TRAILING I
@@ -7327,15 +7350,17 @@ public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/Enum {
 	public static fun LEADING ()Lorg/partiql/ast/v1/expr/TrimSpec;
 	public static fun TRAILING ()Lorg/partiql/ast/v1/expr/TrimSpec;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/TrimSpec;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/TrimSpec;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/TrimSpec;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/TrimSpec;
 }
 
-public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/AstEnum {
 	public static final field LAG I
 	public static final field LEAD I
 	public static final field UNKNOWN I
@@ -7343,15 +7368,17 @@ public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/Enum {
 	public static fun LAG ()Lorg/partiql/ast/v1/expr/WindowFunction;
 	public static fun LEAD ()Lorg/partiql/ast/v1/expr/WindowFunction;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/expr/WindowFunction;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/WindowFunction;
-	public static fun values ()[Lorg/partiql/ast/v1/expr/WindowFunction;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/WindowFunction;
 }
 
-public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/AstEnum {
 	public static final field LEFT I
 	public static final field LEFT_OR_RIGHT I
 	public static final field LEFT_OR_UNDIRECTED I
@@ -7368,12 +7395,14 @@ public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/Enum {
 	public static fun UNDIRECTED ()Lorg/partiql/ast/v1/graph/GraphDirection;
 	public static fun UNDIRECTED_OR_RIGHT ()Lorg/partiql/ast/v1/graph/GraphDirection;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/graph/GraphDirection;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphDirection;
-	public static fun values ()[Lorg/partiql/ast/v1/graph/GraphDirection;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphDirection;
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphLabel : org/partiql/ast/v1/AstNode {
@@ -7599,7 +7628,7 @@ public class org/partiql/ast/v1/graph/GraphQuantifier$Builder {
 	public fun upper (Ljava/lang/Long;)Lorg/partiql/ast/v1/graph/GraphQuantifier$Builder;
 }
 
-public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/Enum {
+public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/AstEnum {
 	public static final field ACYCLIC I
 	public static final field SIMPLE I
 	public static final field TRAIL I
@@ -7608,12 +7637,14 @@ public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/Enum 
 	public static fun SIMPLE ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
 	public static fun TRAIL ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
 	public static fun UNKNOWN ()Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphRestrictor;
-	public static fun values ()[Lorg/partiql/ast/v1/graph/GraphRestrictor;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphRestrictor;
 }
 
 public abstract class org/partiql/ast/v1/graph/GraphSelector : org/partiql/ast/v1/AstNode {

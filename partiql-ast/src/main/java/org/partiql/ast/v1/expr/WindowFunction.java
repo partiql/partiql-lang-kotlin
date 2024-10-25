@@ -1,13 +1,19 @@
 package org.partiql.ast.v1.expr;
 
 import lombok.EqualsAndHashCode;
-import org.partiql.ast.v1.Enum;
+import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.v1.AstEnum;
+import org.partiql.ast.v1.AstNode;
+import org.partiql.ast.v1.AstVisitor;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class WindowFunction implements Enum {
+public class WindowFunction extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int LAG = 0;
     public static final int LEAD = 0;
@@ -35,7 +41,14 @@ public class WindowFunction implements Enum {
         return code;
     }
 
-    public static WindowFunction valueOf(String value) {
+    @NotNull
+    private static final int[] codes = {
+        LAG,
+        LEAD
+    };
+
+    @NotNull
+    public static WindowFunction parse(@NotNull String value) {
         switch (value) {
             case "LAG": return LAG();
             case "LEAD": return LEAD();
@@ -43,10 +56,19 @@ public class WindowFunction implements Enum {
         }
     }
 
-    public static WindowFunction[] values() {
-        return new WindowFunction[] {
-            LAG(),
-            LEAD()
-        };
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

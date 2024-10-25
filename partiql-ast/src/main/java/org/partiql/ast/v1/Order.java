@@ -1,9 +1,13 @@
 package org.partiql.ast.v1;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Collections;
 
 @EqualsAndHashCode(callSuper = false)
-public class Order implements Enum {
+public class Order extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int ASC = 1;
     public static final int DESC = 2;
@@ -31,7 +35,14 @@ public class Order implements Enum {
         return code;
     }
 
-    public static Order valueOf(String value) {
+    @NotNull
+    private static final int[] codes = {
+        ASC,
+        DESC
+    };
+
+    @NotNull
+    public static Order parse(@NotNull String value) {
         switch (value) {
             case "ASC": return ASC();
             case "DESC": return DESC();
@@ -39,10 +50,19 @@ public class Order implements Enum {
         }
     }
 
-    public static Order[] values() {
-        return new Order[] {
-            ASC(),
-            DESC()
-        };
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

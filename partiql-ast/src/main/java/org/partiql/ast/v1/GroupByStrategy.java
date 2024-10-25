@@ -1,12 +1,16 @@
 package org.partiql.ast.v1;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class GroupByStrategy implements Enum {
+public class GroupByStrategy extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int FULL = 1;
     public static final int PARTIAL = 2;
@@ -25,6 +29,12 @@ public class GroupByStrategy implements Enum {
 
     private final int code;
 
+    @NotNull
+    private static final int[] codes = {
+        FULL,
+        PARTIAL
+    };
+
     private GroupByStrategy(int code) {
         this.code = code;
     }
@@ -34,7 +44,8 @@ public class GroupByStrategy implements Enum {
         return code;
     }
 
-    public static GroupByStrategy valueOf(String value) {
+    @NotNull
+    public static GroupByStrategy parse(@NotNull String value) {
         switch (value) {
             case "FULL": return FULL();
             case "PARTIAL": return PARTIAL();
@@ -42,10 +53,19 @@ public class GroupByStrategy implements Enum {
         }
     }
 
-    public static GroupByStrategy[] values() {
-        return new GroupByStrategy[] {
-            FULL(),
-            PARTIAL()
-        };
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

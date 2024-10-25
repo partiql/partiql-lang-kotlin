@@ -1,10 +1,16 @@
 package org.partiql.ast.v1.expr;
 
 import lombok.EqualsAndHashCode;
-import org.partiql.ast.v1.Enum;
+import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.v1.AstEnum;
+import org.partiql.ast.v1.AstNode;
+import org.partiql.ast.v1.AstVisitor;
+
+import java.util.Collection;
+import java.util.Collections;
 
 @EqualsAndHashCode(callSuper = false)
-public class TrimSpec implements Enum {
+public class TrimSpec extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int LEADING = 1;
     public static final int TRAILING = 2;
@@ -37,7 +43,15 @@ public class TrimSpec implements Enum {
         return code;
     }
 
-    public static TrimSpec valueOf(String value) {
+    @NotNull
+    private static final int[] codes = {
+        LEADING,
+        TRAILING,
+        BOTH
+    };
+
+    @NotNull
+    public static TrimSpec parse(@NotNull String value) {
         switch (value) {
             case "LEADING": return LEADING();
             case "TRAILING": return TRAILING();
@@ -46,11 +60,19 @@ public class TrimSpec implements Enum {
         }
     }
 
-    public static TrimSpec[] values() {
-        return new TrimSpec[] {
-            LEADING(),
-            TRAILING(),
-            BOTH()
-        };
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

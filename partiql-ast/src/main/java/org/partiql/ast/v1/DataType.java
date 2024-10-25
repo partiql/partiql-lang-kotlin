@@ -3,8 +3,12 @@ package org.partiql.ast.v1;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 @EqualsAndHashCode(callSuper = false)
-public class DataType implements Enum {
+public class DataType extends AstEnum {
     public static final int UNKNOWN = 0;
     // <absent types>
     public static final int NULL = 1;
@@ -396,7 +400,58 @@ public class DataType implements Enum {
         return code;
     }
 
-    public static DataType valueOf(String value) {
+    @NotNull
+    private static final int[] codes = {
+        NULL,
+        MISSING,
+        BOOL,
+        BOOLEAN,
+        TINYINT,
+        SMALLINT,
+        INTEGER2,
+        INT2,
+        INTEGER,
+        INT,
+        INTEGER4,
+        INT4,
+        INTEGER8,
+        INT8,
+        BIGINT,
+        REAL,
+        DOUBLE_PRECISION,
+        FLOAT,
+        DECIMAL,
+        DEC,
+        NUMERIC,
+        BIT,
+        BIT_VARYING,
+        CHAR,
+        CHARACTER,
+        VARCHAR,
+        CHARACTER_LARGE_OBJECT,
+        CHAR_LARGE_OBJECT,
+        CHAR_VARYING,
+        STRING,
+        SYMBOL,
+        BLOB,
+        BINARY_LARGE_OBJECT,
+        CLOB,
+        DATE,
+        STRUCT,
+        TUPLE,
+        LIST,
+        SEXP,
+        BAG,
+        TIME,
+        TIME_WITH_TIME_ZONE,
+        TIMESTAMP,
+        TIMESTAMP_WITH_TIME_ZONE,
+        INTERVAL,
+        USER_DEFINED
+    };
+
+    @NotNull
+    public static DataType parse(@NotNull String value) {
         switch (value) {
             case "NULL": return NULL();
             case "MISSING": return MISSING();
@@ -448,55 +503,9 @@ public class DataType implements Enum {
         }
     }
 
-    public static DataType[] values() {
-        return new DataType[] {
-            NULL(),
-            MISSING(),
-            BOOL(),
-            BOOLEAN(),
-            TINYINT(),
-            SMALLINT(),
-            INTEGER2(),
-            INT2(),
-            INTEGER(),
-            INT(),
-            INTEGER4(),
-            INT4(),
-            INTEGER8(),
-            INT8(),
-            BIGINT(),
-            REAL(),
-            DOUBLE_PRECISION(),
-            FLOAT(),
-            DECIMAL(),
-            DEC(),
-            NUMERIC(),
-            BIT(),
-            BIT_VARYING(),
-            CHAR(),
-            CHARACTER(),
-            VARCHAR(),
-            CHARACTER_LARGE_OBJECT(),
-            CHAR_LARGE_OBJECT(),
-            CHAR_VARYING(),
-            STRING(),
-            SYMBOL(),
-            BLOB(),
-            BINARY_LARGE_OBJECT(),
-            CLOB(),
-            DATE(),
-            STRUCT(),
-            TUPLE(),
-            LIST(),
-            SEXP(),
-            BAG(),
-            TIME(),
-            TIME_WITH_TIME_ZONE(),
-            TIMESTAMP(),
-            TIMESTAMP_WITH_TIME_ZONE(),
-            INTERVAL(),
-            USER_DEFINED()
-        };
+    @NotNull
+    public static int[] codes() {
+        return codes;
     }
 
     /**
@@ -529,5 +538,20 @@ public class DataType implements Enum {
      */
     public IdentifierChain getName() {
         return name;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        List<AstNode> kids = new ArrayList<>();
+        if (name != null) {
+            kids.add(name);
+        }
+        return kids;
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

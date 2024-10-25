@@ -1,12 +1,16 @@
 package org.partiql.ast.v1;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class SetQuantifier implements Enum {
+public class SetQuantifier extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int ALL = 1;
     public static final int DISTINCT = 2;
@@ -34,7 +38,14 @@ public class SetQuantifier implements Enum {
         return code;
     }
 
-    public static SetQuantifier valueOf(String value) {
+    @NotNull
+    private static final int[] codes = {
+        ALL,
+        DISTINCT
+    };
+
+    @NotNull
+    public static SetQuantifier parse(@NotNull String value) {
         switch (value) {
             case "ALL": return ALL();
             case "DISTINCT": return DISTINCT();
@@ -42,10 +53,19 @@ public class SetQuantifier implements Enum {
         }
     }
 
-    public static SetQuantifier[] values() {
-        return new SetQuantifier[] {
-            ALL(),
-            DISTINCT()
-        };
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }
