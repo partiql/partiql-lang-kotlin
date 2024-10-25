@@ -1,13 +1,19 @@
 package org.partiql.ast.v1.graph;
 
 import lombok.EqualsAndHashCode;
-import org.partiql.ast.v1.Enum;
+import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.v1.AstEnum;
+import org.partiql.ast.v1.AstNode;
+import org.partiql.ast.v1.AstVisitor;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class GraphDirection implements Enum {
+public class GraphDirection extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int LEFT = 1;
     public static final int UNDIRECTED = 2;
@@ -51,6 +57,17 @@ public class GraphDirection implements Enum {
 
     private final int code;
 
+    @NotNull
+    private static final int[] codes = {
+        LEFT,
+        UNDIRECTED,
+        RIGHT,
+        LEFT_OR_UNDIRECTED,
+        UNDIRECTED_OR_RIGHT,
+        LEFT_OR_RIGHT,
+        LEFT_UNDIRECTED_OR_RIGHT
+    };
+
     private GraphDirection(int code) {
         this.code = code;
     }
@@ -58,5 +75,35 @@ public class GraphDirection implements Enum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    public static GraphDirection parse(@NotNull String value) {
+        switch (value) {
+            case "LEFT": return LEFT();
+            case "UNDIRECTED": return UNDIRECTED();
+            case "RIGHT": return RIGHT();
+            case "LEFT_OR_UNDIRECTED": return LEFT_OR_UNDIRECTED();
+            case "UNDIRECTED_OR_RIGHT": return UNDIRECTED_OR_RIGHT();
+            case "LEFT_OR_RIGHT": return LEFT_OR_RIGHT();
+            case "LEFT_UNDIRECTED_OR_RIGHT": return LEFT_UNDIRECTED_OR_RIGHT();
+            default: return UNKNOWN();
+        }
+    }
+
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }
