@@ -1,12 +1,16 @@
 package org.partiql.ast.v1;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class DatetimeField implements Enum {
+public class DatetimeField extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int YEAR = 1;
     public static final int MONTH = 2;
@@ -62,5 +66,48 @@ public class DatetimeField implements Enum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    private static final int[] codes = {
+        YEAR,
+        MONTH,
+        DAY,
+        HOUR,
+        MINUTE,
+        SECOND,
+        TIMEZONE_HOUR,
+        TIMEZONE_MINUTE
+    };
+
+    @NotNull
+    public static DatetimeField parse(@NotNull String value) {
+        switch (value) {
+            case "YEAR": return YEAR();
+            case "MONTH": return MONTH();
+            case "DAY": return DAY();
+            case "HOUR": return HOUR();
+            case "MINUTE": return MINUTE();
+            case "SECOND": return SECOND();
+            case "TIMEZONE_HOUR": return TIMEZONE_HOUR();
+            case "TIMEZONE_MINUTE": return TIMEZONE_MINUTE();
+            default: return UNKNOWN();
+        }
+    }
+
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

@@ -1,12 +1,16 @@
 package org.partiql.ast.v1;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class Nulls implements Enum {
+public class Nulls extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int FIRST = 1;
     public static final int LAST = 2;
@@ -32,5 +36,37 @@ public class Nulls implements Enum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    private static final int[] codes = {
+        FIRST,
+        LAST
+    };
+
+    @NotNull
+    public static Nulls parse(@NotNull String value) {
+        switch (value) {
+            case "UNKNOWN": return UNKNOWN();
+            case "FIRST": return FIRST();
+            case "LAST": return LAST();
+            default: return UNKNOWN();
+        }
+    }
+
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

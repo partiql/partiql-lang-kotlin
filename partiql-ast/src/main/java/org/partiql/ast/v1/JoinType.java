@@ -1,12 +1,16 @@
 package org.partiql.ast.v1;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class JoinType implements Enum {
+public class JoinType extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int INNER = 1;
     public static final int LEFT = 2;
@@ -62,5 +66,48 @@ public class JoinType implements Enum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    private static final int[] codes = {
+        INNER,
+        LEFT,
+        LEFT_OUTER,
+        RIGHT,
+        RIGHT_OUTER,
+        FULL,
+        FULL_OUTER,
+        CROSS
+    };
+
+    @NotNull
+    public static JoinType parse(@NotNull String value) {
+        switch (value) {
+            case "INNER": return INNER();
+            case "LEFT": return LEFT();
+            case "LEFT_OUTER": return LEFT_OUTER();
+            case "RIGHT": return RIGHT();
+            case "RIGHT_OUTER": return RIGHT_OUTER();
+            case "FULL": return FULL();
+            case "FULL_OUTER": return FULL_OUTER();
+            case "CROSS": return CROSS();
+            default: return UNKNOWN();
+        }
+    }
+
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

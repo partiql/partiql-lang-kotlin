@@ -1,13 +1,19 @@
 package org.partiql.ast.v1.expr;
 
 import lombok.EqualsAndHashCode;
-import org.partiql.ast.v1.Enum;
+import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.v1.AstEnum;
+import org.partiql.ast.v1.AstNode;
+import org.partiql.ast.v1.AstVisitor;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class SessionAttribute implements Enum {
+public class SessionAttribute extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int CURRENT_USER = 1;
     public static final int CURRENT_DATE = 2;
@@ -33,5 +39,36 @@ public class SessionAttribute implements Enum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    private static final int[] codes = {
+        CURRENT_USER,
+        CURRENT_DATE
+    };
+
+    @NotNull
+    public static SessionAttribute parse(@NotNull String value) {
+        switch (value) {
+            case "CURRENT_USER": return CURRENT_USER();
+            case "CURRENT_DATE": return CURRENT_DATE();
+            default: return UNKNOWN();
+        }
+    }
+
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

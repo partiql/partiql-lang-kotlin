@@ -1,13 +1,19 @@
 package org.partiql.ast.v1.graph;
 
 import lombok.EqualsAndHashCode;
-import org.partiql.ast.v1.Enum;
+import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.v1.AstEnum;
+import org.partiql.ast.v1.AstNode;
+import org.partiql.ast.v1.AstVisitor;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class GraphRestrictor implements Enum {
+public class GraphRestrictor extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int TRAIL = 1;
     public static final int ACYCLIC = 2;
@@ -38,5 +44,38 @@ public class GraphRestrictor implements Enum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    private static final int[] codes = {
+        TRAIL,
+        ACYCLIC,
+        SIMPLE
+    };
+
+    @NotNull
+    public static GraphRestrictor parse(@NotNull String value) {
+        switch (value) {
+            case "TRAIL": return TRAIL();
+            case "ACYCLIC": return ACYCLIC();
+            case "SIMPLE": return SIMPLE();
+            default: return UNKNOWN();
+        }
+    }
+
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }

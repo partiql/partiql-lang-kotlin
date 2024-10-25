@@ -1,12 +1,16 @@
 package org.partiql.ast.v1;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class SetOpType implements Enum {
+public class SetOpType extends AstEnum {
     private static final int UNKNOWN = 0;
     private static final int UNION = 1;
     private static final int INTERSECT = 2;
@@ -37,5 +41,38 @@ public class SetOpType implements Enum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    private static final int[] codes = {
+        UNION,
+        INTERSECT,
+        EXCEPT
+    };
+
+    @NotNull
+    public static SetOpType parse(@NotNull String value) {
+        switch (value) {
+            case "UNION": return UNION();
+            case "INTERSECT": return INTERSECT();
+            case "EXCEPT": return EXCEPT();
+            default: return UNKNOWN();
+        }
+    }
+
+    @NotNull
+    public static int[] codes() {
+        return codes;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+        return null;
     }
 }
