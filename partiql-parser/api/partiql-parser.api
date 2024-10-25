@@ -108,6 +108,7 @@ public abstract interface class org/partiql/parser/V1PartiQLParser {
 	public static final field Companion Lorg/partiql/parser/V1PartiQLParser$Companion;
 	public static fun builder ()Lorg/partiql/parser/V1PartiQLParserBuilder;
 	public abstract fun parse (Ljava/lang/String;)Lorg/partiql/parser/V1PartiQLParser$Result;
+	public abstract fun parse (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/V1PartiQLParser$Result;
 	public static fun standard ()Lorg/partiql/parser/V1PartiQLParser;
 }
 
@@ -116,7 +117,12 @@ public final class org/partiql/parser/V1PartiQLParser$Companion {
 	public final fun standard ()Lorg/partiql/parser/V1PartiQLParser;
 }
 
+public final class org/partiql/parser/V1PartiQLParser$DefaultImpls {
+	public static fun parse (Lorg/partiql/parser/V1PartiQLParser;Ljava/lang/String;)Lorg/partiql/parser/V1PartiQLParser$Result;
+}
+
 public final class org/partiql/parser/V1PartiQLParser$Result {
+	public static final field Companion Lorg/partiql/parser/V1PartiQLParser$Result$Companion;
 	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/v1/Statement;Lorg/partiql/parser/SourceLocations;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lorg/partiql/ast/v1/Statement;
@@ -129,6 +135,9 @@ public final class org/partiql/parser/V1PartiQLParser$Result {
 	public final fun getSource ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/parser/V1PartiQLParser$Result$Companion {
 }
 
 public final class org/partiql/parser/V1PartiQLParserBuilder {

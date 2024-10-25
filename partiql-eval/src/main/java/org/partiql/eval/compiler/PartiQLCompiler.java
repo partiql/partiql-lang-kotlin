@@ -2,8 +2,8 @@ package org.partiql.eval.compiler;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.eval.Mode;
-import org.partiql.eval.internal.compiler.StandardCompiler;
 import org.partiql.eval.Statement;
+import org.partiql.eval.internal.compiler.StandardCompiler;
 import org.partiql.plan.Plan;
 import org.partiql.spi.Context;
 
