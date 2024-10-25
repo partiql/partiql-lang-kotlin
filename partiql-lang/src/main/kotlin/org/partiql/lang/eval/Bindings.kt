@@ -65,6 +65,13 @@ data class BindingName(val name: String, val bindingCase: BindingCase) {
      * Compares [name] to [otherName] using the rules specified by [bindingCase].
      */
     fun isEquivalentTo(otherName: String?) = otherName != null && name.isBindingNameEquivalent(otherName, bindingCase)
+
+    override fun toString(): String {
+        return when (bindingCase) {
+            BindingCase.SENSITIVE -> "\"$name\""
+            BindingCase.INSENSITIVE -> "$name"
+        }
+    }
 }
 
 /**

@@ -3,6 +3,7 @@ package org.partiql.examples;
 import com.amazon.ion.IonSystem;
 import com.amazon.ion.system.IonSystemBuilder;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import kotlin.OptIn;
@@ -16,6 +17,8 @@ import org.partiql.examples.util.Example;
 import org.partiql.lang.compiler.PartiQLCompilerAsync;
 import org.partiql.lang.compiler.PartiQLCompilerAsyncBuilder;
 import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync;
+import org.partiql.lang.eval.BindingId;
+import org.partiql.lang.eval.BindingName;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
@@ -63,14 +66,29 @@ public class PartiQLCompilerPipelineAsyncJavaExample extends Example {
                 .globals(globalVariables)
                 .build();
 
-        final GlobalVariableResolver globalVariableResolver = bindingName -> {
-            ExprValue value = session.getGlobals().get(bindingName);
-
-            if (value != null) {
-                return new GlobalResolutionResult.GlobalVariable(bindingName.getName());
-            }
-            else {
+        final GlobalVariableResolver globalVariableResolver = new GlobalVariableResolver() {
+            @NotNull
+            @Override
+            public GlobalResolutionResult resolveGlobal(@NotNull BindingId bindingId) {
+                // In this example, we don't allow for qualified identifiers.
+                List<BindingName> parts = bindingId.getParts();
+                if (parts.size() == 1) {
+                    return resolveGlobal(parts.get(0));
+                }
                 return GlobalResolutionResult.Undefined.INSTANCE;
+            }
+
+            @NotNull
+            @Override
+            public GlobalResolutionResult resolveGlobal(@NotNull BindingName bindingName) {
+                ExprValue value = session.getGlobals().get(bindingName);
+
+                if (value != null) {
+                    return new GlobalResolutionResult.GlobalVariable(bindingName.getName());
+                }
+                else {
+                    return GlobalResolutionResult.Undefined.INSTANCE;
+                }
             }
         };
 

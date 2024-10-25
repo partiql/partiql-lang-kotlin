@@ -108,6 +108,20 @@ class QueryPrettyPrinter {
         }
     }
 
+    private fun writeAstNode(node: PartiqlAst.TableName, sb: StringBuilder) {
+        writeAstNode(node.id, sb)
+    }
+
+    private fun writeAstNode(node: PartiqlAst.IdentifierChain, sb: StringBuilder) {
+        val last = node.parts.last()
+        val preLast = node.parts.dropLast(1)
+        preLast.forEach { step ->
+            writeAstNode(step, sb)
+            sb.append('.')
+        }
+        writeAstNode(last, sb)
+    }
+
     private fun writeAstNode(node: PartiqlAst.Identifier, sb: StringBuilder) {
         when (node.case) {
             is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.name.text}\"")
@@ -184,7 +198,7 @@ class QueryPrettyPrinter {
         when (dmlOp) {
             is PartiqlAst.DmlOp.Insert -> {
                 sb.append("INSERT INTO ")
-                writeAstNodeCheckSubQuery(dmlOp.target, sb, 0)
+                writeAstNode(dmlOp.target, sb)
                 sb.append(" VALUES ")
                 val bag = dmlOp.values as PartiqlAst.Expr.Bag
                 bag.values.forEach {
