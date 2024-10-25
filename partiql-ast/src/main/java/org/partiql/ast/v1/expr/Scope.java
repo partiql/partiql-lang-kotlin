@@ -42,6 +42,16 @@ public class Scope extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case DEFAULT: return "DEFAULT";
+            case LOCAL: return "LOCAL";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         DEFAULT,
         LOCAL

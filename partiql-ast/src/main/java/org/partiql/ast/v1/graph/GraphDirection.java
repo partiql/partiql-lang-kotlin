@@ -78,6 +78,21 @@ public class GraphDirection extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case LEFT: return "LEFT";
+            case UNDIRECTED: return "UNDIRECTED";
+            case RIGHT: return "RIGHT";
+            case LEFT_OR_UNDIRECTED: return "LEFT_OR_UNDIRECTED";
+            case UNDIRECTED_OR_RIGHT: return "UNDIRECTED_OR_RIGHT";
+            case LEFT_OR_RIGHT: return "LEFT_OR_RIGHT";
+            case LEFT_UNDIRECTED_OR_RIGHT: return "LEFT_UNDIRECTED_OR_RIGHT";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     public static GraphDirection parse(@NotNull String value) {
         switch (value) {
             case "LEFT": return LEFT();

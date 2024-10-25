@@ -11,10 +11,10 @@ import java.util.Collections;
  */
 @EqualsAndHashCode(callSuper = false)
 public class SetOpType extends AstEnum {
-    private static final int UNKNOWN = 0;
-    private static final int UNION = 1;
-    private static final int INTERSECT = 2;
-    private static final int EXCEPT = 3;
+    public static final int UNKNOWN = 0;
+    public static final int UNION = 1;
+    public static final int INTERSECT = 2;
+    public static final int EXCEPT = 3;
 
     public static SetOpType UNKNOWN() {
         return new SetOpType(UNKNOWN);
@@ -41,6 +41,17 @@ public class SetOpType extends AstEnum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case UNION: return "UNION";
+            case INTERSECT: return "INTERSECT";
+            case EXCEPT: return "EXCEPT";
+            default: return "UNKNOWN";
+        }
     }
 
     @NotNull

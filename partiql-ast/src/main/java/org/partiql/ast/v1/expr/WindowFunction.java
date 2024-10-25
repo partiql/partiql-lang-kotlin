@@ -15,8 +15,8 @@ import java.util.Collections;
 @EqualsAndHashCode(callSuper = false)
 public class WindowFunction extends AstEnum {
     public static final int UNKNOWN = 0;
-    public static final int LAG = 0;
-    public static final int LEAD = 0;
+    public static final int LAG = 1;
+    public static final int LEAD = 2;
 
     public static WindowFunction UNKNOWN() {
         return new WindowFunction(UNKNOWN);
@@ -39,6 +39,16 @@ public class WindowFunction extends AstEnum {
     @Override
     public int code() {
         return code;
+    }
+
+    @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case LAG: return "LAG";
+            case LEAD: return "LEAD";
+            default: return "UNKNOWN";
+        }
     }
 
     @NotNull

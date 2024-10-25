@@ -42,6 +42,16 @@ public class SessionAttribute extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case CURRENT_USER: return "CURRENT_USER";
+            case CURRENT_DATE: return "CURRENT_DATE";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         CURRENT_USER,
         CURRENT_DATE

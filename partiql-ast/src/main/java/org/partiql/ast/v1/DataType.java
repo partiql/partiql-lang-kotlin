@@ -401,52 +401,108 @@ public class DataType extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case NULL: return "NULL";
+            case MISSING: return "MISSING";
+            case CHARACTER: return "CHARACTER";
+            case CHAR: return "CHAR";
+            case CHARACTER_VARYING: return "CHARACTER_VARYING";
+            case CHAR_VARYING: return "CHAR_VARYING";
+            case VARCHAR: return "VARCHAR";
+            case CHARACTER_LARGE_OBJECT: return "CHARACTER_LARGE_OBJECT";
+            case CHAR_LARGE_OBJECT: return "CHAR_LARGE_OBJECT";
+            case CLOB: return "CLOB";
+            case STRING: return "STRING";
+            case SYMBOL: return "SYMBOL";
+            case BLOB: return "BLOB";
+            case BINARY_LARGE_OBJECT: return "BINARY_LARGE_OBJECT";
+            case BIT: return "BIT";
+            case BIT_VARYING: return "BIT_VARYING";
+            case NUMERIC: return "NUMERIC";
+            case DECIMAL: return "DECIMAL";
+            case DEC: return "DEC";
+            case BIGINT: return "BIGINT";
+            case INT8: return "INT8";
+            case INTEGER8: return "INTEGER8";
+            case INT4: return "INT4";
+            case INTEGER4: return "INTEGER4";
+            case INTEGER: return "INTEGER";
+            case INT: return "INT";
+            case INT2: return "INT2";
+            case INTEGER2: return "INTEGER2";
+            case SMALLINT: return "SMALLINT";
+            case TINYINT: return "TINYINT";
+            case FLOAT: return "FLOAT";
+            case REAL: return "REAL";
+            case DOUBLE_PRECISION: return "DOUBLE_PRECISION";
+            case BOOLEAN: return "BOOLEAN";
+            case BOOL: return "BOOL";
+            case DATE: return "DATE";
+            case TIME: return "TIME";
+            case TIME_WITH_TIME_ZONE: return "TIME_WITH_TIME_ZONE";
+            case TIMESTAMP: return "TIMESTAMP";
+            case TIMESTAMP_WITH_TIME_ZONE: return "TIMESTAMP_WITH_TIME_ZONE";
+            case INTERVAL: return "INTERVAL";
+            case STRUCT: return "STRUCT";
+            case TUPLE: return "TUPLE";
+            case LIST: return "LIST";
+            case BAG: return "BAG";
+            case SEXP: return "SEXP";
+            case USER_DEFINED: return "USER_DEFINED";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         NULL,
         MISSING,
-        BOOL,
-        BOOLEAN,
-        TINYINT,
-        SMALLINT,
-        INTEGER2,
-        INT2,
-        INTEGER,
-        INT,
-        INTEGER4,
-        INT4,
-        INTEGER8,
-        INT8,
-        BIGINT,
-        REAL,
-        DOUBLE_PRECISION,
-        FLOAT,
-        DECIMAL,
-        DEC,
-        NUMERIC,
-        BIT,
-        BIT_VARYING,
-        CHAR,
         CHARACTER,
+        CHAR,
+        CHARACTER_VARYING,
+        CHAR_VARYING,
         VARCHAR,
         CHARACTER_LARGE_OBJECT,
         CHAR_LARGE_OBJECT,
-        CHAR_VARYING,
+        CLOB,
         STRING,
         SYMBOL,
         BLOB,
         BINARY_LARGE_OBJECT,
-        CLOB,
+        BIT,
+        BIT_VARYING,
+        NUMERIC,
+        DECIMAL,
+        DEC,
+        BIGINT,
+        INT8,
+        INTEGER8,
+        INT4,
+        INTEGER4,
+        INTEGER,
+        INT,
+        INT2,
+        INTEGER2,
+        SMALLINT,
+        TINYINT,
+        FLOAT,
+        REAL,
+        DOUBLE_PRECISION,
+        BOOLEAN,
+        BOOL,
         DATE,
-        STRUCT,
-        TUPLE,
-        LIST,
-        SEXP,
-        BAG,
         TIME,
         TIME_WITH_TIME_ZONE,
         TIMESTAMP,
         TIMESTAMP_WITH_TIME_ZONE,
         INTERVAL,
+        STRUCT,
+        TUPLE,
+        LIST,
+        BAG,
+        SEXP,
         USER_DEFINED
     };
 

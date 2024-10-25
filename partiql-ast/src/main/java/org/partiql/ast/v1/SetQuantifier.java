@@ -39,6 +39,16 @@ public class SetQuantifier extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case ALL: return "ALL";
+            case DISTINCT: return "DISTINCT";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         ALL,
         DISTINCT

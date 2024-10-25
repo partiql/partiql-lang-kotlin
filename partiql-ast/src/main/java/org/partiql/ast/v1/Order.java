@@ -36,6 +36,16 @@ public class Order extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case ASC: return "ASC";
+            case DESC: return "DESC";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         ASC,
         DESC
