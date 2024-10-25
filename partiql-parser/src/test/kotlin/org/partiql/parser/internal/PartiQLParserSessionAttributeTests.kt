@@ -1,12 +1,13 @@
 package org.partiql.parser.internal
 
 import org.junit.jupiter.api.Test
-import org.partiql.ast.AstNode
-import org.partiql.ast.Expr
-import org.partiql.ast.exprLit
-import org.partiql.ast.exprOperator
-import org.partiql.ast.exprSessionAttribute
-import org.partiql.ast.statementQuery
+import org.partiql.ast.v1.Ast.exprLit
+import org.partiql.ast.v1.Ast.exprOperator
+import org.partiql.ast.v1.Ast.exprSessionAttribute
+import org.partiql.ast.v1.Ast.query
+import org.partiql.ast.v1.AstNode
+import org.partiql.ast.v1.expr.Expr
+import org.partiql.ast.v1.expr.SessionAttribute
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
 import kotlin.test.assertEquals
@@ -14,42 +15,42 @@ import kotlin.test.assertEquals
 @OptIn(PartiQLValueExperimental::class)
 class PartiQLParserSessionAttributeTests {
 
-    private val parser = PartiQLParserDefault()
+    private val parser = V1PartiQLParserDefault()
 
-    private inline fun query(body: () -> Expr) = statementQuery(body())
+    private inline fun queryBody(body: () -> Expr) = query(body())
 
     @Test
     fun currentUserUpperCase() = assertExpression(
         "CURRENT_USER",
-        query {
-            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
+        queryBody {
+            exprSessionAttribute(SessionAttribute.CURRENT_USER())
         }
     )
 
     @Test
     fun currentUserMixedCase() = assertExpression(
         "CURRENT_user",
-        query {
-            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
+        queryBody {
+            exprSessionAttribute(SessionAttribute.CURRENT_USER())
         }
     )
 
     @Test
     fun currentUserLowerCase() = assertExpression(
         "current_user",
-        query {
-            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
+        queryBody {
+            exprSessionAttribute(SessionAttribute.CURRENT_USER())
         }
     )
 
     @Test
     fun currentUserEquals() = assertExpression(
         "1 = current_user",
-        query {
+        queryBody {
             exprOperator(
                 symbol = "=",
                 lhs = exprLit(int32Value(1)),
-                rhs = exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
+                rhs = exprSessionAttribute(SessionAttribute.CURRENT_USER())
             )
         }
     )
@@ -57,24 +58,24 @@ class PartiQLParserSessionAttributeTests {
     @Test
     fun currentDateUpperCase() = assertExpression(
         "CURRENT_DATE",
-        query {
-            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
+        queryBody {
+            exprSessionAttribute(SessionAttribute.CURRENT_DATE())
         }
     )
 
     @Test
     fun currentDateMixedCase() = assertExpression(
         "CURRENT_date",
-        query {
-            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
+        queryBody {
+            exprSessionAttribute(SessionAttribute.CURRENT_DATE())
         }
     )
 
     @Test
     fun currentDateLowerCase() = assertExpression(
         "current_date",
-        query {
-            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
+        queryBody {
+            exprSessionAttribute(SessionAttribute.CURRENT_DATE())
         }
     )
 
