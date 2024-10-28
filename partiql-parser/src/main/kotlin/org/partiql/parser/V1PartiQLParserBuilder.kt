@@ -17,7 +17,9 @@ package org.partiql.parser
 import org.partiql.parser.internal.V1PartiQLParserDefault
 
 /**
- * A builder class to instantiate a [V1PartiQLParser].
+ * A builder class to instantiate a [V1PartiQLParser]. https://github.com/partiql/partiql-lang-kotlin/issues/1632
+ *
+ * TODO replace with Lombok builder once [V1PartiQLParser] is migrated to Java.
  */
 public class V1PartiQLParserBuilder {
 

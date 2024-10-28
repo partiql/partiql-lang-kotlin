@@ -222,49 +222,46 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
         }
     }
 
-    companion object {
+    /**
+     * To reduce latency costs, the [V1PartiQLParserDefault] attempts to use [PredictionMode.SLL] and falls back to
+     * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy].
+     */
+    private fun parse(source: String, listener: PErrorListener): V1PartiQLParser.Result = try {
+        parse(source, PredictionMode.SLL, listener)
+    } catch (ex: ParseCancellationException) {
+        parse(source, PredictionMode.LL, listener)
+    }
 
-        /**
-         * To reduce latency costs, the [V1PartiQLParserDefault] attempts to use [PredictionMode.SLL] and falls back to
-         * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy].
-         */
-        private fun parse(source: String, listener: PErrorListener): V1PartiQLParser.Result = try {
-            parse(source, PredictionMode.SLL, listener)
-        } catch (ex: ParseCancellationException) {
-            parse(source, PredictionMode.LL, listener)
+    /**
+     * Parses an input string [source] using the given prediction mode.
+     */
+    private fun parse(source: String, mode: PredictionMode, listener: PErrorListener): V1PartiQLParser.Result {
+        val tokens = createTokenStream(source, listener)
+        val parser = InterruptibleParser(tokens)
+        parser.reset()
+        parser.removeErrorListeners()
+        parser.interpreter.predictionMode = mode
+        when (mode) {
+            PredictionMode.SLL -> parser.errorHandler = BailErrorStrategy()
+            PredictionMode.LL -> parser.addErrorListener(ParseErrorListener(listener))
+            else -> throw IllegalArgumentException("Unsupported parser mode: $mode")
         }
+        val tree = parser.root()
+        return Visitor.translate(source, tokens, tree)
+    }
 
-        /**
-         * Parses an input string [source] using the given prediction mode.
-         */
-        private fun parse(source: String, mode: PredictionMode, listener: PErrorListener): V1PartiQLParser.Result {
-            val tokens = createTokenStream(source, listener)
-            val parser = InterruptibleParser(tokens)
-            parser.reset()
-            parser.removeErrorListeners()
-            parser.interpreter.predictionMode = mode
-            when (mode) {
-                PredictionMode.SLL -> parser.errorHandler = BailErrorStrategy()
-                PredictionMode.LL -> parser.addErrorListener(ParseErrorListener(listener))
-                else -> throw IllegalArgumentException("Unsupported parser mode: $mode")
-            }
-            val tree = parser.root()
-            return Visitor.translate(source, tokens, tree)
+    private fun createTokenStream(source: String, listener: PErrorListener): CountingTokenStream {
+        val queryStream = source.byteInputStream(StandardCharsets.UTF_8)
+        val inputStream = try {
+            CharStreams.fromStream(queryStream)
+        } catch (ex: ClosedByInterruptException) {
+            throw InterruptedException()
         }
-
-        private fun createTokenStream(source: String, listener: PErrorListener): CountingTokenStream {
-            val queryStream = source.byteInputStream(StandardCharsets.UTF_8)
-            val inputStream = try {
-                CharStreams.fromStream(queryStream)
-            } catch (ex: ClosedByInterruptException) {
-                throw InterruptedException()
-            }
-            val handler = TokenizeErrorListener(listener)
-            val lexer = GeneratedLexer(inputStream)
-            lexer.removeErrorListeners()
-            lexer.addErrorListener(handler)
-            return CountingTokenStream(lexer)
-        }
+        val handler = TokenizeErrorListener(listener)
+        val lexer = GeneratedLexer(inputStream)
+        lexer.removeErrorListeners()
+        lexer.addErrorListener(handler)
+        return CountingTokenStream(lexer)
     }
 
     /**
@@ -280,14 +277,11 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
             msg: String,
             e: RecognitionException?,
         ) {
-            if (offendingSymbol is Token) {
-                val token = offendingSymbol.text
-                val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
-                val error = PErrors.unrecognizedToken(location, token)
-                listener.report(error)
-            } else {
-                throw IllegalArgumentException("Offending symbol is not a Token.")
-            }
+            offendingSymbol as Token
+            val token = offendingSymbol.text
+            val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
+            val error = PErrors.unrecognizedToken(location, token)
+            listener.report(error)
         }
     }
 
@@ -307,16 +301,13 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
             msg: String,
             e: RecognitionException?,
         ) {
-            if (offendingSymbol is Token) {
-                val rule = e?.ctx?.toString(rules) ?: "UNKNOWN" // TODO: Do we want to display the offending rule?
-                val token = offendingSymbol.text
-                val tokenType = GeneratedParser.VOCABULARY.getSymbolicName(offendingSymbol.type)
-                val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
-                val error = PErrors.unexpectedToken(location, tokenType, null)
-                listener.report(error)
-            } else {
-                throw IllegalArgumentException("Offending symbol is not a Token.")
-            }
+            offendingSymbol as Token
+            val rule = e?.ctx?.toString(rules) ?: "UNKNOWN" // TODO: Do we want to display the offending rule?
+            val token = offendingSymbol.text
+            val tokenType = GeneratedParser.VOCABULARY.getSymbolicName(offendingSymbol.type)
+            val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
+            val error = PErrors.unexpectedToken(location, tokenType, null)
+            listener.report(error)
         }
     }
 
@@ -353,7 +344,7 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
     }
 
     /**
-     * Translate an ANTLR ParseTree to a PartiQL
+     * Translate an ANTLR ParseTree to a PartiQL AST
      */
     @OptIn(PartiQLValueExperimental::class)
     private class Visitor(

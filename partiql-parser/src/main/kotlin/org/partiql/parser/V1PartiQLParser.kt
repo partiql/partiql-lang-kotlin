@@ -23,6 +23,7 @@ import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.nullValue
 
+// TODO migrate public interfaces and classes to Java https://github.com/partiql/partiql-lang-kotlin/issues/1632
 public interface V1PartiQLParser {
 
     /**
