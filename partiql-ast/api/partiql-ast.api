@@ -5634,6 +5634,7 @@ public final class org/partiql/ast/v1/Ast {
 public abstract class org/partiql/ast/v1/AstEnum : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
 	public abstract fun code ()I
+	public abstract fun name ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/ast/v1/AstNode {
@@ -5875,6 +5876,7 @@ public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/AstEnum {
 	public fun getPrecision ()Ljava/lang/Integer;
 	public fun getScale ()Ljava/lang/Integer;
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/DataType;
 }
 
@@ -5904,6 +5906,7 @@ public class org/partiql/ast/v1/DatetimeField : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/DatetimeField;
 }
 
@@ -6098,6 +6101,7 @@ public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/FromType;
 }
 
@@ -6152,6 +6156,7 @@ public class org/partiql/ast/v1/GroupByStrategy : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/GroupByStrategy;
 }
 
@@ -6219,6 +6224,7 @@ public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/JoinType;
 }
 
@@ -6269,6 +6275,7 @@ public class org/partiql/ast/v1/Nulls : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/Nulls;
 }
 
@@ -6286,6 +6293,7 @@ public class org/partiql/ast/v1/Order : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/Order;
 }
 
@@ -6519,6 +6527,10 @@ public class org/partiql/ast/v1/SetOp$Builder {
 }
 
 public class org/partiql/ast/v1/SetOpType : org/partiql/ast/v1/AstEnum {
+	public static final field EXCEPT I
+	public static final field INTERSECT I
+	public static final field UNION I
+	public static final field UNKNOWN I
 	public static fun EXCEPT ()Lorg/partiql/ast/v1/SetOpType;
 	public static fun INTERSECT ()Lorg/partiql/ast/v1/SetOpType;
 	public static fun UNION ()Lorg/partiql/ast/v1/SetOpType;
@@ -6530,6 +6542,7 @@ public class org/partiql/ast/v1/SetOpType : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/SetOpType;
 }
 
@@ -6547,6 +6560,7 @@ public class org/partiql/ast/v1/SetQuantifier : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/SetQuantifier;
 }
 
@@ -7320,6 +7334,7 @@ public class org/partiql/ast/v1/expr/Scope : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/Scope;
 }
 
@@ -7338,6 +7353,7 @@ public class org/partiql/ast/v1/expr/SessionAttribute : org/partiql/ast/v1/AstEn
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/SessionAttribute;
 }
 
@@ -7357,6 +7373,7 @@ public class org/partiql/ast/v1/expr/TrimSpec : org/partiql/ast/v1/AstEnum {
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/TrimSpec;
 }
 
@@ -7375,6 +7392,7 @@ public class org/partiql/ast/v1/expr/WindowFunction : org/partiql/ast/v1/AstEnum
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/expr/WindowFunction;
 }
 
@@ -7402,6 +7420,7 @@ public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/AstEnu
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphDirection;
 }
 
@@ -7644,6 +7663,7 @@ public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/AstEn
 	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphRestrictor;
 }
 

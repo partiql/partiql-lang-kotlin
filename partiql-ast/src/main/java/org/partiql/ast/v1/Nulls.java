@@ -39,6 +39,16 @@ public class Nulls extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case FIRST: return "FIRST";
+            case LAST: return "LAST";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         FIRST,
         LAST

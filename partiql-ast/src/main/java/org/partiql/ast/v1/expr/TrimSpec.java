@@ -44,6 +44,17 @@ public class TrimSpec extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case LEADING: return "LEADING";
+            case TRAILING: return "TRAILING";
+            case BOTH: return "BOTH";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         LEADING,
         TRAILING,

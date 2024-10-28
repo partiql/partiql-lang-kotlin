@@ -45,6 +45,16 @@ public class GroupByStrategy extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case FULL: return "FULL";
+            case PARTIAL: return "PARTIAL";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     public static GroupByStrategy parse(@NotNull String value) {
         switch (value) {
             case "FULL": return FULL();

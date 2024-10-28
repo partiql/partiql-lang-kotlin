@@ -69,6 +69,22 @@ public class JoinType extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case INNER: return "INNER";
+            case LEFT: return "LEFT";
+            case LEFT_OUTER: return "LEFT_OUTER";
+            case RIGHT: return "RIGHT";
+            case RIGHT_OUTER: return "RIGHT_OUTER";
+            case FULL: return "FULL";
+            case FULL_OUTER: return "FULL_OUTER";
+            case CROSS: return "CROSS";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         INNER,
         LEFT,

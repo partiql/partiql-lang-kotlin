@@ -47,6 +47,17 @@ public class GraphRestrictor extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case TRAIL: return "TRAIL";
+            case ACYCLIC: return "ACYCLIC";
+            case SIMPLE: return "SIMPLE";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         TRAIL,
         ACYCLIC,

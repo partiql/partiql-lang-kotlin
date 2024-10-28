@@ -39,6 +39,16 @@ public class FromType extends AstEnum {
     }
 
     @NotNull
+    @Override
+    public String name() {
+        switch (code) {
+            case SCAN: return "SCAN";
+            case UNPIVOT: return "UNPIVOT";
+            default: return "UNKNOWN";
+        }
+    }
+
+    @NotNull
     private static final int[] codes = {
         SCAN,
         UNPIVOT
