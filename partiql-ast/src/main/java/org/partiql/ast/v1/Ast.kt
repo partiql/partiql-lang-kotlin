@@ -402,7 +402,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun fromJoin(lhs: From, rhs: From, joinType: JoinType?, condition: Expr?): FromJoin {
+    public fun fromJoin(lhs: FromTableRef, rhs: FromTableRef, joinType: JoinType?, condition: Expr?): FromJoin {
         return FromJoin(lhs, rhs, joinType, condition)
     }
 

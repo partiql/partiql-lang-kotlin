@@ -5593,7 +5593,7 @@ public final class org/partiql/ast/v1/Ast {
 	public static final fun exprWindowOver (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/v1/expr/ExprWindow$Over;
 	public static final fun from (Ljava/util/List;)Lorg/partiql/ast/v1/From;
 	public static final fun fromExpr (Lorg/partiql/ast/v1/expr/Expr;Lorg/partiql/ast/v1/FromType;Lorg/partiql/ast/v1/Identifier;Lorg/partiql/ast/v1/Identifier;)Lorg/partiql/ast/v1/FromExpr;
-	public static final fun fromJoin (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/FromJoin;
+	public static final fun fromJoin (Lorg/partiql/ast/v1/FromTableRef;Lorg/partiql/ast/v1/FromTableRef;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/FromJoin;
 	public static final fun graphLabelConj (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Conj;
 	public static final fun graphLabelDisj (Lorg/partiql/ast/v1/graph/GraphLabel;Lorg/partiql/ast/v1/graph/GraphLabel;)Lorg/partiql/ast/v1/graph/GraphLabel$Disj;
 	public static final fun graphLabelName (Ljava/lang/String;)Lorg/partiql/ast/v1/graph/GraphLabel$Name;
@@ -6062,9 +6062,9 @@ public class org/partiql/ast/v1/FromExpr$Builder {
 public class org/partiql/ast/v1/FromJoin : org/partiql/ast/v1/FromTableRef {
 	public final field condition Lorg/partiql/ast/v1/expr/Expr;
 	public final field joinType Lorg/partiql/ast/v1/JoinType;
-	public final field lhs Lorg/partiql/ast/v1/From;
-	public final field rhs Lorg/partiql/ast/v1/From;
-	public fun <init> (Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/From;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)V
+	public final field lhs Lorg/partiql/ast/v1/FromTableRef;
+	public final field rhs Lorg/partiql/ast/v1/FromTableRef;
+	public fun <init> (Lorg/partiql/ast/v1/FromTableRef;Lorg/partiql/ast/v1/FromTableRef;Lorg/partiql/ast/v1/JoinType;Lorg/partiql/ast/v1/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/FromJoin$Builder;
 	protected fun canEqual (Ljava/lang/Object;)Z
@@ -6077,8 +6077,8 @@ public class org/partiql/ast/v1/FromJoin$Builder {
 	public fun build ()Lorg/partiql/ast/v1/FromJoin;
 	public fun condition (Lorg/partiql/ast/v1/expr/Expr;)Lorg/partiql/ast/v1/FromJoin$Builder;
 	public fun joinType (Lorg/partiql/ast/v1/JoinType;)Lorg/partiql/ast/v1/FromJoin$Builder;
-	public fun lhs (Lorg/partiql/ast/v1/From;)Lorg/partiql/ast/v1/FromJoin$Builder;
-	public fun rhs (Lorg/partiql/ast/v1/From;)Lorg/partiql/ast/v1/FromJoin$Builder;
+	public fun lhs (Lorg/partiql/ast/v1/FromTableRef;)Lorg/partiql/ast/v1/FromJoin$Builder;
+	public fun rhs (Lorg/partiql/ast/v1/FromTableRef;)Lorg/partiql/ast/v1/FromJoin$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -6204,6 +6204,7 @@ public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/AstEnum {
 	public static final field FULL_OUTER I
 	public static final field INNER I
 	public static final field LEFT I
+	public static final field LEFT_CROSS I
 	public static final field LEFT_OUTER I
 	public static final field RIGHT I
 	public static final field RIGHT_OUTER I
@@ -6213,6 +6214,7 @@ public class org/partiql/ast/v1/JoinType : org/partiql/ast/v1/AstEnum {
 	public static fun FULL_OUTER ()Lorg/partiql/ast/v1/JoinType;
 	public static fun INNER ()Lorg/partiql/ast/v1/JoinType;
 	public static fun LEFT ()Lorg/partiql/ast/v1/JoinType;
+	public static fun LEFT_CROSS ()Lorg/partiql/ast/v1/JoinType;
 	public static fun LEFT_OUTER ()Lorg/partiql/ast/v1/JoinType;
 	public static fun RIGHT ()Lorg/partiql/ast/v1/JoinType;
 	public static fun RIGHT_OUTER ()Lorg/partiql/ast/v1/JoinType;
