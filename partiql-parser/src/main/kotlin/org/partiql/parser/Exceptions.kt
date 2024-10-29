@@ -14,6 +14,8 @@
 
 package org.partiql.parser
 
+import org.partiql.spi.SourceLocation
+
 /**
  * PartiQLParser Syntax Exception
  * TODO: Delete this in favor of the error listener.
@@ -25,7 +27,7 @@ package org.partiql.parser
 internal open class PartiQLSyntaxException(
     override val message: String,
     override val cause: Throwable? = null,
-    val location: SourceLocation = SourceLocation.UNKNOWN,
+    private val location: SourceLocation? = null,
 ) : Exception()
 
 /**
@@ -44,7 +46,7 @@ internal class PartiQLLexerException(
     public val tokenType: String,
     message: String = "",
     cause: Throwable? = null,
-    location: SourceLocation = SourceLocation.UNKNOWN,
+    location: SourceLocation? = null,
 ) : PartiQLSyntaxException(message, cause, location)
 
 /**
@@ -65,5 +67,5 @@ internal class PartiQLParserException(
     public val tokenType: String,
     message: String = "",
     cause: Throwable? = null,
-    location: SourceLocation = SourceLocation.UNKNOWN,
+    location: SourceLocation? = null,
 ) : PartiQLSyntaxException(message, cause, location)

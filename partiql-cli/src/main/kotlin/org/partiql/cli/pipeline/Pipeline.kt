@@ -37,7 +37,10 @@ internal class Pipeline private constructor(
         val result = listen(ctx.errorListener as AppPErrorListener) {
             parser.parse(source, ctx)
         }
-        return result.root
+        if (result.statements.size != 1) {
+            throw PipelineException("Expected exactly one statement, got: ${result.statements.size}")
+        }
+        return result.statements[0]
     }
 
     private fun plan(statement: Statement, session: Session): Plan {

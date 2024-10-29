@@ -75,7 +75,9 @@ class PlanTest {
             )
             .namespace("SCHEMA")
             .build()
-        val ast = V1PartiQLParser.standard().parse(test.statement).root
+        val parseResult = V1PartiQLParser.standard().parse(test.statement)
+        if (parseResult.statements.size != 1) error("expected single statement")
+        val ast = parseResult.statements[0]
         val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
         planner.plan(ast, session)
     }

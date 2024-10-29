@@ -52,7 +52,11 @@ abstract class PartiQLTyperTestBase {
 
     private val testingPipeline: ((String, String, Catalog, PErrorListener) -> PartiQLPlanner.Result) =
         { query, catalog, metadata, collector ->
-            val ast = parser.parse(query).root
+            val parseResult = parser.parse(query)
+            if (parseResult.statements.size != 1) {
+                throw IllegalArgumentException("Only single statement is supported for testing")
+            }
+            val ast = parseResult.statements[0]
             val config = Context.of(collector)
             planner.plan(ast, session(catalog, metadata), config)
         }

@@ -174,11 +174,11 @@ import org.partiql.ast.typeVarchar
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
-import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.spi.Context
+import org.partiql.spi.SourceLocation
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
@@ -229,6 +229,7 @@ import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
  */
 internal class PartiQLParserDefault : PartiQLParser {
 
+    @OptIn(PartiQLValueExperimental::class)
     @Throws(PErrorListenerException::class)
     override fun parse(source: String, ctx: Context): PartiQLParser.Result {
         try {
@@ -238,7 +239,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         } catch (throwable: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.SYNTAX(), null, throwable)
             ctx.errorListener.report(error)
-            return PartiQLParser.Result.empty(source)
+            val locations = SourceLocations.Mutable().toMap()
+            return PartiQLParser.Result(listOf(Statement.Query(Expr.Lit(nullValue()))), locations)
         }
     }
 
@@ -397,11 +399,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 val locations = SourceLocations.Mutable()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
                 val root = visitor.visitAs<AstNode>(tree) as Statement
-                return PartiQLParser.Result(
-                    source = source,
-                    root = root,
-                    locations = locations.toMap(),
-                )
+                return PartiQLParser.Result(listOf(root), locations.toMap()) // TODO: Parse multiple statements
             }
 
             fun error(
@@ -415,10 +413,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 message = message,
                 cause = cause,
                 location = SourceLocation(
-                    line = ctx.start.line,
-                    offset = ctx.start.charPositionInLine + 1,
-                    length = ctx.stop.stopIndex - ctx.start.startIndex,
-                    lengthLegacy = ctx.start.text.length,
+                    ctx.start.line,
+                    ctx.start.charPositionInLine + 1,
+                    ctx.stop.stopIndex - ctx.start.startIndex,
                 ),
             )
 
@@ -432,10 +429,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 message = message,
                 cause = cause,
                 location = SourceLocation(
-                    line = token.line,
-                    offset = token.charPositionInLine + 1,
-                    length = token.stopIndex - token.startIndex,
-                    lengthLegacy = token.text.length,
+                    token.line,
+                    token.charPositionInLine + 1,
+                    token.stopIndex - token.startIndex,
                 ),
             )
 
@@ -451,10 +447,9 @@ internal class PartiQLParserDefault : PartiQLParser {
             val node = block()
             if (ctx.start != null) {
                 locations[node.tag] = SourceLocation(
-                    line = ctx.start.line,
-                    offset = ctx.start.charPositionInLine + 1,
-                    length = (ctx.stop?.stopIndex ?: ctx.start.stopIndex) - ctx.start.startIndex + 1,
-                    lengthLegacy = ctx.start.text.length, // LEGACY LENGTH
+                    ctx.start.line,
+                    ctx.start.charPositionInLine + 1,
+                    (ctx.stop?.stopIndex ?: ctx.start.stopIndex) - ctx.start.startIndex + 1,
                 )
             }
             return node

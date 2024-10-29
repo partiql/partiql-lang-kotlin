@@ -45,7 +45,11 @@ class EvalExecutor(
     override fun prepare(input: String): Statement {
         val listener = getErrorListener(mode)
         val ctx = Context.of(listener)
-        val ast = parser.parse(input, ctx).root
+        val parseResult = parser.parse(input, ctx)
+        if (parseResult.statements.size != 1) {
+            error("Expected exactly one statement")
+        }
+        val ast = parseResult.statements[0]
         val plan = planner.plan(ast, session, ctx).plan
         return compiler.prepare(plan, mode, ctx)
     }
@@ -188,7 +192,11 @@ class EvalExecutor(
                 .catalog("default")
                 .catalogs(catalog)
                 .build()
-            val stmt = parser.parse("`$env`").root
+            val parseResult = parser.parse("`$env`")
+            if (parseResult.statements.size != 1) {
+                error("Expected exactly one statement")
+            }
+            val stmt = parseResult.statements[0]
             val plan = planner.plan(stmt, session).plan
             return (plan.getOperation() as Query).getRex().getType().getPType()
         }

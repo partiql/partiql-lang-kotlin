@@ -41,6 +41,7 @@ public class org/partiql/spi/SourceLocation {
 	public field length J
 	public field line J
 	public field offset J
+	public fun <init> (III)V
 	public fun <init> (JJJ)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I

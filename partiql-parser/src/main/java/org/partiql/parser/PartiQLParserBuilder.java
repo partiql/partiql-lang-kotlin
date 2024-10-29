@@ -12,16 +12,22 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.parser
+package org.partiql.parser;
 
-import org.partiql.parser.internal.PartiQLParserDefault
+import org.jetbrains.annotations.NotNull;
+import org.partiql.parser.internal.PartiQLParserDefault;
 
 /**
  * A builder class to instantiate a [PartiQLParser].
  */
 public class PartiQLParserBuilder {
 
-    public fun build(): PartiQLParser {
-        return PartiQLParserDefault()
+    /**
+     * TODO
+     * @return TODO
+     */
+    @NotNull
+    public PartiQLParser build() {
+        return new PartiQLParserDefault();
     }
 }

@@ -29,6 +29,12 @@ public class SourceLocation {
         this.length = length;
     }
 
+    public SourceLocation(int line, int offset, int length) {
+        this.line = line;
+        this.offset = offset;
+        this.length = length;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

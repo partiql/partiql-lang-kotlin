@@ -1320,7 +1320,11 @@ class PartiQLEvaluatorTest {
         )
 
         internal fun assert() {
-            val statement = parser.parse(input).root
+            val parseResult = parser.parse(input)
+            if (parseResult.statements.size != 1) {
+                throw RuntimeException("Expected exactly one statement: $input")
+            }
+            val statement = parseResult.statements[0]
             val catalog = Catalog.builder()
                 .name("memory")
                 .apply {
@@ -1406,8 +1410,17 @@ class PartiQLEvaluatorTest {
         }
 
         private fun run(mode: Mode): Pair<Datum, Plan> {
+<<<<<<< HEAD
             val statement = parser.parse(input).root
             val catalog = Catalog.builder().name("memory").build()
+=======
+            val parseResult = parser.parse(input)
+            if (parseResult.statements.size != 1) {
+                throw RuntimeException("Expected exactly one statement: $input")
+            }
+            val statement = parseResult.statements[0]
+            val catalog = MemoryCatalog.builder().name("memory").build()
+>>>>>>> 1c662c3be (Migrates parser APIs to Java)
             val session = Session.builder()
                 .catalog("memory")
                 .catalogs(catalog)

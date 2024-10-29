@@ -154,13 +154,13 @@ import org.partiql.ast.v1.graph.GraphRestrictor
 import org.partiql.ast.v1.graph.GraphSelector
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParserException
-import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.V1PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.spi.Context
+import org.partiql.spi.SourceLocation
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
@@ -386,10 +386,9 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
                 message = message,
                 cause = cause,
                 location = SourceLocation(
-                    line = ctx.start.line,
-                    offset = ctx.start.charPositionInLine + 1,
-                    length = ctx.stop.stopIndex - ctx.start.startIndex,
-                    lengthLegacy = ctx.start.text.length,
+                    ctx.start.line,
+                    ctx.start.charPositionInLine + 1,
+                    ctx.stop.stopIndex - ctx.start.startIndex,
                 ),
             )
 
@@ -403,10 +402,9 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
                 message = message,
                 cause = cause,
                 location = SourceLocation(
-                    line = token.line,
-                    offset = token.charPositionInLine + 1,
-                    length = token.stopIndex - token.startIndex,
-                    lengthLegacy = token.text.length,
+                    token.line,
+                    token.charPositionInLine + 1,
+                    token.stopIndex - token.startIndex,
                 ),
             )
 
@@ -422,10 +420,9 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
             val node = block()
             if (ctx.start != null) {
                 locations[node.tag] = SourceLocation(
-                    line = ctx.start.line,
-                    offset = ctx.start.charPositionInLine + 1,
-                    length = (ctx.stop?.stopIndex ?: ctx.start.stopIndex) - ctx.start.startIndex + 1,
-                    lengthLegacy = ctx.start.text.length, // LEGACY LENGTH
+                    ctx.start.line,
+                    ctx.start.charPositionInLine + 1,
+                    (ctx.stop?.stopIndex ?: ctx.start.stopIndex) - ctx.start.startIndex + 1,
                 )
             }
             return node

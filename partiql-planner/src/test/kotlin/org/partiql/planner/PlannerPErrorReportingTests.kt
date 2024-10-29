@@ -45,7 +45,11 @@ internal class PlannerPErrorReportingTests {
     private val parser = V1PartiQLParserBuilder().build()
 
     private val statement: ((String) -> Statement) = { query ->
-        parser.parse(query).root
+        val parseResult = parser.parse(query)
+        if (parseResult.statements.size != 1) {
+            error("Expected single statement.")
+        }
+        parseResult.statements[0]
     }
 
     private fun assertProblem(
