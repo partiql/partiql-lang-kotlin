@@ -38,6 +38,7 @@ import org.partiql.value.symbolValue
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 /**
@@ -1321,9 +1322,7 @@ class PartiQLEvaluatorTest {
 
         internal fun assert() {
             val parseResult = parser.parse(input)
-            if (parseResult.statements.size != 1) {
-                throw RuntimeException("Expected exactly one statement: $input")
-            }
+            assertEquals(1, parseResult.statements.size)
             val statement = parseResult.statements[0]
             val catalog = Catalog.builder()
                 .name("memory")
@@ -1415,9 +1414,7 @@ class PartiQLEvaluatorTest {
             val catalog = Catalog.builder().name("memory").build()
 =======
             val parseResult = parser.parse(input)
-            if (parseResult.statements.size != 1) {
-                throw RuntimeException("Expected exactly one statement: $input")
-            }
+            assertEquals(1, parseResult.statements.size)
             val statement = parseResult.statements[0]
             val catalog = MemoryCatalog.builder().name("memory").build()
 >>>>>>> 1c662c3be (Migrates parser APIs to Java)

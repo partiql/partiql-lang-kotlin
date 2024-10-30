@@ -270,7 +270,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 PredictionMode.LL -> parser.addErrorListener(ParseErrorListener(listener))
                 else -> throw IllegalArgumentException("Unsupported parser mode: $mode")
             }
-            val tree = parser.root()
+            val tree = parser.file()
             return Visitor.translate(source, tokens, tree)
         }
 
@@ -394,12 +394,12 @@ internal class PartiQLParserDefault : PartiQLParser {
             fun translate(
                 source: String,
                 tokens: CountingTokenStream,
-                tree: GeneratedParser.RootContext,
+                tree: GeneratedParser.FileContext,
             ): PartiQLParser.Result {
                 val locations = SourceLocations.Mutable()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
-                val root = visitor.visitAs<AstNode>(tree) as Statement
-                return PartiQLParser.Result(listOf(root), locations.toMap()) // TODO: Parse multiple statements
+                val root = visitor.visitAs<AstNode>(tree) as PFile
+                return PartiQLParser.Result(root.statements, locations.toMap())
             }
 
             fun error(
@@ -467,36 +467,40 @@ internal class PartiQLParserDefault : PartiQLParser {
             throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
-        override fun visitRoot(ctx: GeneratedParser.RootContext) = translate(ctx) {
-            when (ctx.EXPLAIN()) {
-                null -> visit(ctx.statement()) as Statement
-                else -> {
-                    var type: String? = null
-                    var format: String? = null
-                    ctx.explainOption().forEach { option ->
-                        val parameter = try {
-                            ExplainParameters.valueOf(option.param.text.uppercase())
-                        } catch (ex: java.lang.IllegalArgumentException) {
-                            throw error(option.param, "Unknown EXPLAIN parameter.", ex)
-                        }
-                        when (parameter) {
-                            ExplainParameters.TYPE -> {
-                                type = parameter.getCompliantString(type, option.value)
-                            }
-                            ExplainParameters.FORMAT -> {
-                                format = parameter.getCompliantString(format, option.value)
-                            }
-                        }
-                    }
-                    statementExplain(
-                        target = statementExplainTargetDomain(
-                            statement = visit(ctx.statement()) as Statement,
-                            type = type,
-                            format = format,
-                        ),
+        override fun visitExplain(ctx: GeneratedParser.ExplainContext) = translate(ctx) {
+            var type: String? = null
+            var format: String? = null
+            ctx.explainOption().forEach { option ->
+                val parameter = try {
+                    ExplainParameters.valueOf(option.param.text.uppercase())
+                } catch (ex: java.lang.IllegalArgumentException) {
+                    throw error(
+                        option.param,
+                        "Unknown EXPLAIN parameter.",
+                        ex
                     )
                 }
+                when (parameter) {
+                    ExplainParameters.TYPE -> {
+                        type = parameter.getCompliantString(type, option.value)
+                    }
+                    ExplainParameters.FORMAT -> {
+                        format = parameter.getCompliantString(format, option.value)
+                    }
+                }
             }
+            statementExplain(
+                target = statementExplainTargetDomain(
+                    statement = visit(ctx.statement()) as Statement,
+                    type = type,
+                    format = format
+                )
+            )
+        }
+
+        override fun visitFile(ctx: GeneratedParser.FileContext) = translate(ctx) {
+            val stmts = visitOrEmpty<Statement>(ctx.statement())
+            PFile(stmts)
         }
 
         /**

@@ -11,14 +11,16 @@ options {
  *
  */
 
-root
-    : (EXPLAIN (PAREN_LEFT explainOption (COMMA explainOption)* PAREN_RIGHT)? )? statement;
+file
+    : statement (COLON_SEMI statement)* COLON_SEMI? EOF
+    ;
 
 statement
-    : dql COLON_SEMI? EOF          # QueryDql
-    | dml COLON_SEMI? EOF          # QueryDml
-    | ddl COLON_SEMI? EOF          # QueryDdl
-    | execCommand COLON_SEMI? EOF  # QueryExec  // TODO delete in `v1` release
+    : dql           # QueryDql
+    | dml           # QueryDml
+    | ddl           # QueryDdl
+    | execCommand   # QueryExec  // TODO delete in `v1` release
+    | EXPLAIN (PAREN_LEFT explainOption (COMMA explainOption)* PAREN_RIGHT)? statement # Explain
     ;
 
 /**

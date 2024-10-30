@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 
 class PartiQLParserBagOpTests {
 
-    private val parser = V1PartiQLParserDefault()
+    private val parser = PartiQLParserDefaultV1()
 
     private fun queryBody(body: () -> Expr) = query(body())
 
@@ -676,8 +676,9 @@ class PartiQLParserBagOpTests {
     )
 
     private fun assertExpression(input: String, expected: AstNode) {
-        val result = parser.parse(input)
-        val actual = result.root
+        val parseResult = parser.parse(input)
+        assertEquals(1, parseResult.statements.size)
+        val actual = parseResult.statements[0]
         assertEquals(expected, actual)
     }
 }

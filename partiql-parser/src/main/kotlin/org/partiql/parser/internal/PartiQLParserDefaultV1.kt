@@ -154,8 +154,8 @@ import org.partiql.ast.v1.graph.GraphRestrictor
 import org.partiql.ast.v1.graph.GraphSelector
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParserException
+import org.partiql.parser.PartiQLParserV1
 import org.partiql.parser.SourceLocations
-import org.partiql.parser.V1PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
@@ -207,10 +207,11 @@ import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
  * The [PredictionMode.LL] mode is capable of parsing all valid inputs for a grammar,
  * but is slower than [PredictionMode.SLL]. Upon seeing a syntax error, this parser throws a [PartiQLParserException].
  */
-internal class V1PartiQLParserDefault : V1PartiQLParser {
+internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
 
+    @OptIn(PartiQLValueExperimental::class)
     @Throws(PErrorListenerException::class)
-    override fun parse(source: String, ctx: Context): V1PartiQLParser.Result {
+    override fun parse(source: String, ctx: Context): PartiQLParserV1.Result {
         try {
             return parse(source, ctx.errorListener)
         } catch (e: PErrorListenerException) {
@@ -218,15 +219,19 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
         } catch (throwable: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.SYNTAX(), null, throwable)
             ctx.errorListener.report(error)
-            return V1PartiQLParser.Result.empty(source)
+            val locations = SourceLocations.Mutable().toMap()
+            return PartiQLParserV1.Result(
+                mutableListOf(org.partiql.ast.v1.Query(org.partiql.ast.v1.expr.ExprLit(nullValue()))) as List<Statement>,
+                locations
+            )
         }
     }
 
     /**
-     * To reduce latency costs, the [V1PartiQLParserDefault] attempts to use [PredictionMode.SLL] and falls back to
+     * To reduce latency costs, the [PartiQLParserDefaultV1] attempts to use [PredictionMode.SLL] and falls back to
      * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy].
      */
-    private fun parse(source: String, listener: PErrorListener): V1PartiQLParser.Result = try {
+    private fun parse(source: String, listener: PErrorListener): PartiQLParserV1.Result = try {
         parse(source, PredictionMode.SLL, listener)
     } catch (ex: ParseCancellationException) {
         parse(source, PredictionMode.LL, listener)
@@ -235,7 +240,7 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
     /**
      * Parses an input string [source] using the given prediction mode.
      */
-    private fun parse(source: String, mode: PredictionMode, listener: PErrorListener): V1PartiQLParser.Result {
+    private fun parse(source: String, mode: PredictionMode, listener: PErrorListener): PartiQLParserV1.Result {
         val tokens = createTokenStream(source, listener)
         val parser = InterruptibleParser(tokens)
         parser.reset()
@@ -246,7 +251,7 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
             PredictionMode.LL -> parser.addErrorListener(ParseErrorListener(listener))
             else -> throw IllegalArgumentException("Unsupported parser mode: $mode")
         }
-        val tree = parser.root()
+        val tree = parser.file()
         return Visitor.translate(source, tokens, tree)
     }
 
@@ -363,15 +368,14 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
             fun translate(
                 source: String,
                 tokens: CountingTokenStream,
-                tree: GeneratedParser.RootContext,
-            ): V1PartiQLParser.Result {
+                tree: GeneratedParser.FileContext,
+            ): PartiQLParserV1.Result {
                 val locations = SourceLocations.Mutable()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
-                val root = visitor.visitAs<AstNode>(tree) as Statement
-                return V1PartiQLParser.Result(
-                    source = source,
-                    root = root,
-                    locations = locations.toMap(),
+                val root = visitor.visitAs<AstNode>(tree) as PFileV1
+                return PartiQLParserV1.Result(
+                    root.statements.toMutableList(),
+                    locations.toMap(),
                 )
             }
 
@@ -440,37 +444,37 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
             throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
-        override fun visitRoot(ctx: GeneratedParser.RootContext) = translate(ctx) {
-            when (ctx.EXPLAIN()) {
-                null -> visit(ctx.statement()) as Statement
-                else -> {
-                    var type: String? = null
-                    var format: String? = null
-                    ctx.explainOption().forEach { option ->
-                        val parameter = try {
-                            ExplainParameters.valueOf(option.param.text.uppercase())
-                        } catch (ex: java.lang.IllegalArgumentException) {
-                            throw error(option.param, "Unknown EXPLAIN parameter.", ex)
-                        }
-                        when (parameter) {
-                            ExplainParameters.TYPE -> {
-                                type = parameter.getCompliantString(type, option.value)
-                            }
-                            ExplainParameters.FORMAT -> {
-                                format = parameter.getCompliantString(format, option.value)
-                            }
-                        }
+        override fun visitExplain(ctx: PartiQLParser.ExplainContext) = translate(ctx) {
+            var type: String? = null
+            var format: String? = null
+            ctx.explainOption().forEach { option ->
+                val parameter = try {
+                    ExplainParameters.valueOf(option.param.text.uppercase())
+                } catch (ex: java.lang.IllegalArgumentException) {
+                    throw error(option.param, "Unknown EXPLAIN parameter.", ex)
+                }
+                when (parameter) {
+                    ExplainParameters.TYPE -> {
+                        type = parameter.getCompliantString(type, option.value)
                     }
-                    explain(
-                        // TODO get rid of usage of PartiQLValue https://github.com/partiql/partiql-lang-kotlin/issues/1589
-                        options = mapOf(
-                            "type" to stringValue(type),
-                            "format" to stringValue(format)
-                        ),
-                        statement = visit(ctx.statement()) as Statement,
-                    )
+                    ExplainParameters.FORMAT -> {
+                        format = parameter.getCompliantString(format, option.value)
+                    }
                 }
             }
+            explain(
+                // TODO get rid of usage of PartiQLValue https://github.com/partiql/partiql-lang-kotlin/issues/1589
+                options = mapOf(
+                    "type" to stringValue(type),
+                    "format" to stringValue(format)
+                ),
+                statement = visit(ctx.statement()) as Statement,
+            )
+        }
+
+        override fun visitFile(ctx: GeneratedParser.FileContext): PFileV1 = translate(ctx) {
+            val stmts = visitOrEmpty<Statement>(ctx.statement())
+            PFileV1(stmts)
         }
 
         /**

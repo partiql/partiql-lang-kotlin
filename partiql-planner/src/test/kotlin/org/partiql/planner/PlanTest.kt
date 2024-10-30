@@ -5,7 +5,7 @@ import org.junit.jupiter.api.DynamicContainer.dynamicContainer
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import org.partiql.parser.V1PartiQLParser
+import org.partiql.parser.PartiQLParserV1
 import org.partiql.plan.Plan
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
@@ -21,6 +21,7 @@ import java.io.File
 import java.nio.file.Path
 import java.util.stream.Stream
 import kotlin.io.path.toPath
+import kotlin.test.assertEquals
 
 /**
  * This class test asserts a normalized query produces the same plans as the original input query.
@@ -75,8 +76,8 @@ class PlanTest {
             )
             .namespace("SCHEMA")
             .build()
-        val parseResult = V1PartiQLParser.standard().parse(test.statement)
-        if (parseResult.statements.size != 1) error("expected single statement")
+        val parseResult = PartiQLParserV1.standard().parse(test.statement)
+        assertEquals(1, parseResult.statements.size)
         val ast = parseResult.statements[0]
         val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
         planner.plan(ast, session)

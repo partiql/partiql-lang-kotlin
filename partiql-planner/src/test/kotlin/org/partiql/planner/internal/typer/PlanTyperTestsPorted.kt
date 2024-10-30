@@ -3851,9 +3851,7 @@ internal class PlanTyperTestsPorted {
         listener: PErrorListener,
     ): org.partiql.plan.Plan {
         val parseResult = parser.parse(query)
-        if (parseResult.statements.size != 1) {
-            error("Expected exactly one statement in query: $query")
-        }
+        assertEquals(1, parseResult.statements.size)
         val ast = parseResult.statements[0]
         val plannerConfig = Context.of(listener)
         return planner.plan(ast, session, plannerConfig).plan

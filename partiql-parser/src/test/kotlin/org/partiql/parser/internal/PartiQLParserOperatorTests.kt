@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 @OptIn(PartiQLValueExperimental::class)
 class PartiQLParserOperatorTests {
 
-    private val parser = V1PartiQLParserDefault()
+    private val parser = PartiQLParserDefaultV1()
 
     private inline fun queryBody(body: () -> Expr) = query(body())
 
@@ -67,7 +67,8 @@ class PartiQLParserOperatorTests {
 
     private fun assertExpression(input: String, expected: AstNode) {
         val result = parser.parse(input)
-        val actual = result.root
+        assertEquals(1, result.statements.size)
+        val actual = result.statements[0]
         assertEquals(expected, actual)
     }
 }

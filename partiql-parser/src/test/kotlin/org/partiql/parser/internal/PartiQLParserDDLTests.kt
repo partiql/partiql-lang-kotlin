@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class PartiQLParserDDLTests {
 
-    private val parser = V1PartiQLParserDefault()
+    private val parser = PartiQLParserDefaultV1()
 
     data class SuccessTestCase(
         val description: String? = null,
@@ -118,7 +118,8 @@ class PartiQLParserDDLTests {
 
     private fun assertExpression(input: String, expected: AstNode) {
         val result = parser.parse(input)
-        val actual = result.root
+        assertEquals(1, result.statements.size)
+        val actual = result.statements[0]
         assertEquals(expected, actual)
     }
 }

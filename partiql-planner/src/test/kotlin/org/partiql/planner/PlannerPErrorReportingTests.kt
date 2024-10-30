@@ -46,9 +46,7 @@ internal class PlannerPErrorReportingTests {
 
     private val statement: ((String) -> Statement) = { query ->
         val parseResult = parser.parse(query)
-        if (parseResult.statements.size != 1) {
-            error("Expected single statement.")
-        }
+        assertEquals(1, parseResult.statements.size)
         parseResult.statements[0]
     }
 

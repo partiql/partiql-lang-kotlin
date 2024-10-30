@@ -16,6 +16,24 @@ public class org/partiql/parser/PartiQLParserBuilder {
 	public fun build ()Lorg/partiql/parser/PartiQLParser;
 }
 
+public class org/partiql/parser/PartiQLParserBuilderV1 {
+	public fun <init> ()V
+	public fun build ()Lorg/partiql/parser/PartiQLParserV1;
+}
+
+public abstract interface class org/partiql/parser/PartiQLParserV1 {
+	public static fun builder ()Lorg/partiql/parser/PartiQLParserBuilderV1;
+	public fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParserV1$Result;
+	public abstract fun parse (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/PartiQLParserV1$Result;
+	public static fun standard ()Lorg/partiql/parser/PartiQLParserV1;
+}
+
+public final class org/partiql/parser/PartiQLParserV1$Result {
+	public field locations Lorg/partiql/parser/SourceLocations;
+	public field statements Ljava/util/List;
+	public fun <init> (Ljava/util/List;Lorg/partiql/parser/SourceLocations;)V
+}
+
 public class org/partiql/parser/SourceLocations : java/util/Map {
 	public fun clear ()V
 	public fun containsKey (Ljava/lang/Object;)Z
@@ -38,46 +56,5 @@ public class org/partiql/parser/SourceLocations$Mutable {
 	public fun <init> ()V
 	public fun set (Ljava/lang/String;Lorg/partiql/spi/SourceLocation;)V
 	public fun toMap ()Lorg/partiql/parser/SourceLocations;
-}
-
-public abstract interface class org/partiql/parser/V1PartiQLParser {
-	public static final field Companion Lorg/partiql/parser/V1PartiQLParser$Companion;
-	public static fun builder ()Lorg/partiql/parser/V1PartiQLParserBuilder;
-	public abstract fun parse (Ljava/lang/String;)Lorg/partiql/parser/V1PartiQLParser$Result;
-	public abstract fun parse (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/V1PartiQLParser$Result;
-	public static fun standard ()Lorg/partiql/parser/V1PartiQLParser;
-}
-
-public final class org/partiql/parser/V1PartiQLParser$Companion {
-	public final fun builder ()Lorg/partiql/parser/V1PartiQLParserBuilder;
-	public final fun standard ()Lorg/partiql/parser/V1PartiQLParser;
-}
-
-public final class org/partiql/parser/V1PartiQLParser$DefaultImpls {
-	public static fun parse (Lorg/partiql/parser/V1PartiQLParser;Ljava/lang/String;)Lorg/partiql/parser/V1PartiQLParser$Result;
-}
-
-public final class org/partiql/parser/V1PartiQLParser$Result {
-	public static final field Companion Lorg/partiql/parser/V1PartiQLParser$Result$Companion;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/v1/Statement;Lorg/partiql/parser/SourceLocations;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Lorg/partiql/ast/v1/Statement;
-	public final fun component3 ()Lorg/partiql/parser/SourceLocations;
-	public final fun copy (Ljava/lang/String;Lorg/partiql/ast/v1/Statement;Lorg/partiql/parser/SourceLocations;)Lorg/partiql/parser/V1PartiQLParser$Result;
-	public static synthetic fun copy$default (Lorg/partiql/parser/V1PartiQLParser$Result;Ljava/lang/String;Lorg/partiql/ast/v1/Statement;Lorg/partiql/parser/SourceLocations;ILjava/lang/Object;)Lorg/partiql/parser/V1PartiQLParser$Result;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getLocations ()Lorg/partiql/parser/SourceLocations;
-	public final fun getRoot ()Lorg/partiql/ast/v1/Statement;
-	public final fun getSource ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/parser/V1PartiQLParser$Result$Companion {
-}
-
-public final class org/partiql/parser/V1PartiQLParserBuilder {
-	public fun <init> ()V
-	public final fun build ()Lorg/partiql/parser/V1PartiQLParser;
 }
 
