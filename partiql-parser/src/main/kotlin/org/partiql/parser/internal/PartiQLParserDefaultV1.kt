@@ -252,7 +252,7 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
             else -> throw IllegalArgumentException("Unsupported parser mode: $mode")
         }
         val tree = parser.file()
-        return Visitor.translate(source, tokens, tree)
+        return Visitor.translate(tokens, tree)
     }
 
     private fun createTokenStream(source: String, listener: PErrorListener): CountingTokenStream {
@@ -366,13 +366,12 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
              * Expose an (internal) friendly entry point into the traversal; mostly for keeping mutable state contained.
              */
             fun translate(
-                source: String,
                 tokens: CountingTokenStream,
-                tree: GeneratedParser.FileContext,
+                tree: PartiQLParser.FileContext,
             ): PartiQLParserV1.Result {
                 val locations = SourceLocations.Mutable()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
-                val root = visitor.visitAs<AstNode>(tree) as PFileV1
+                val root = visitor.visitFile(tree)
                 return PartiQLParserV1.Result(
                     root.statements.toMutableList(),
                     locations.toMap(),
