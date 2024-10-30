@@ -47,6 +47,26 @@ public class org/partiql/spi/SourceLocation {
 	public fun hashCode ()I
 }
 
+public class org/partiql/spi/SourceLocations : java/util/Map {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public fun clear ()V
+	public fun containsKey (Ljava/lang/Object;)Z
+	public fun containsValue (Ljava/lang/Object;)Z
+	public fun entrySet ()Ljava/util/Set;
+	public synthetic fun get (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun get (Ljava/lang/Object;)Lorg/partiql/spi/SourceLocation;
+	public fun isEmpty ()Z
+	public fun keySet ()Ljava/util/Set;
+	public synthetic fun put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun put (Ljava/lang/String;Lorg/partiql/spi/SourceLocation;)Lorg/partiql/spi/SourceLocation;
+	public fun putAll (Ljava/util/Map;)V
+	public synthetic fun remove (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun remove (Ljava/lang/Object;)Lorg/partiql/spi/SourceLocation;
+	public fun size ()I
+	public fun values ()Ljava/util/Collection;
+}
+
 public abstract interface class org/partiql/spi/catalog/Catalog {
 	public static final field Companion Lorg/partiql/spi/catalog/Catalog$Companion;
 	public static fun builder ()Lorg/partiql/spi/catalog/Catalog$Builder;

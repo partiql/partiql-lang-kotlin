@@ -155,12 +155,12 @@ import org.partiql.ast.v1.graph.GraphSelector
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParserException
 import org.partiql.parser.PartiQLParserV1
-import org.partiql.parser.SourceLocations
 import org.partiql.parser.internal.antlr.PartiQLParser
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.spi.Context
 import org.partiql.spi.SourceLocation
+import org.partiql.spi.SourceLocations
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
@@ -219,7 +219,7 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
         } catch (throwable: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.SYNTAX(), null, throwable)
             ctx.errorListener.report(error)
-            val locations = SourceLocations.Mutable().toMap()
+            val locations = SourceLocations()
             return PartiQLParserV1.Result(
                 mutableListOf(org.partiql.ast.v1.Query(org.partiql.ast.v1.expr.ExprLit(nullValue()))) as List<Statement>,
                 locations
@@ -354,7 +354,7 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
     @OptIn(PartiQLValueExperimental::class)
     private class Visitor(
         private val tokens: CommonTokenStream,
-        private val locations: SourceLocations.Mutable,
+        private val locations: MutableMap<String, SourceLocation>,
         private val parameters: Map<Int, Int> = mapOf(),
     ) : PartiQLParserBaseVisitor<AstNode>() {
 
@@ -369,12 +369,12 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
                 tokens: CountingTokenStream,
                 tree: PartiQLParser.FileContext,
             ): PartiQLParserV1.Result {
-                val locations = SourceLocations.Mutable()
+                val locations = mutableMapOf<String, SourceLocation>()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
                 val root: PFileV1 = visitor.visitFile(tree)
                 return PartiQLParserV1.Result(
                     root.statements.toMutableList(),
-                    locations.toMap(),
+                    SourceLocations(locations),
                 )
             }
 

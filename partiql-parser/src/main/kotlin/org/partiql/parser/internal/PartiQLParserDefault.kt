@@ -174,11 +174,11 @@ import org.partiql.ast.typeVarchar
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
-import org.partiql.parser.SourceLocations
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.spi.Context
 import org.partiql.spi.SourceLocation
+import org.partiql.spi.SourceLocations
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
@@ -239,7 +239,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         } catch (throwable: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.SYNTAX(), null, throwable)
             ctx.errorListener.report(error)
-            val locations = SourceLocations.Mutable().toMap()
+            val locations = SourceLocations()
             return PartiQLParser.Result(listOf(Statement.Query(Expr.Lit(nullValue()))), locations)
         }
     }
@@ -380,7 +380,7 @@ internal class PartiQLParserDefault : PartiQLParser {
     @OptIn(PartiQLValueExperimental::class)
     private class Visitor(
         private val tokens: CommonTokenStream,
-        private val locations: SourceLocations.Mutable,
+        private val locations: MutableMap<String, SourceLocation>,
         private val parameters: Map<Int, Int> = mapOf(),
     ) : PartiQLParserBaseVisitor<AstNode>() {
 
@@ -395,10 +395,10 @@ internal class PartiQLParserDefault : PartiQLParser {
                 tokens: CountingTokenStream,
                 tree: GeneratedParser.FileContext,
             ): PartiQLParser.Result {
-                val locations = SourceLocations.Mutable()
+                val locations = mutableMapOf<String, SourceLocation>()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
                 val root: PFile = visitor.visitFile(tree)
-                return PartiQLParser.Result(root.statements, locations.toMap())
+                return PartiQLParser.Result(root.statements, SourceLocations(locations))
             }
 
             fun error(

@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.Statement;
 import org.partiql.parser.internal.PartiQLParserDefault;
 import org.partiql.spi.Context;
+import org.partiql.spi.SourceLocations;
 import org.partiql.spi.errors.PErrorListenerException;
 
 import java.util.List;

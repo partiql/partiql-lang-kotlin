@@ -6,9 +6,9 @@ public abstract interface class org/partiql/parser/PartiQLParser {
 }
 
 public final class org/partiql/parser/PartiQLParser$Result {
-	public field locations Lorg/partiql/parser/SourceLocations;
+	public field locations Lorg/partiql/spi/SourceLocations;
 	public field statements Ljava/util/List;
-	public fun <init> (Ljava/util/List;Lorg/partiql/parser/SourceLocations;)V
+	public fun <init> (Ljava/util/List;Lorg/partiql/spi/SourceLocations;)V
 }
 
 public class org/partiql/parser/PartiQLParserBuilder {
@@ -29,32 +29,8 @@ public abstract interface class org/partiql/parser/PartiQLParserV1 {
 }
 
 public final class org/partiql/parser/PartiQLParserV1$Result {
-	public field locations Lorg/partiql/parser/SourceLocations;
+	public field locations Lorg/partiql/spi/SourceLocations;
 	public field statements Ljava/util/List;
-	public fun <init> (Ljava/util/List;Lorg/partiql/parser/SourceLocations;)V
-}
-
-public class org/partiql/parser/SourceLocations : java/util/Map {
-	public fun clear ()V
-	public fun containsKey (Ljava/lang/Object;)Z
-	public fun containsValue (Ljava/lang/Object;)Z
-	public fun entrySet ()Ljava/util/Set;
-	public synthetic fun get (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun get (Ljava/lang/Object;)Lorg/partiql/spi/SourceLocation;
-	public fun isEmpty ()Z
-	public fun keySet ()Ljava/util/Set;
-	public synthetic fun put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun put (Ljava/lang/String;Lorg/partiql/spi/SourceLocation;)Lorg/partiql/spi/SourceLocation;
-	public fun putAll (Ljava/util/Map;)V
-	public synthetic fun remove (Ljava/lang/Object;)Ljava/lang/Object;
-	public fun remove (Ljava/lang/Object;)Lorg/partiql/spi/SourceLocation;
-	public fun size ()I
-	public fun values ()Ljava/util/Collection;
-}
-
-public class org/partiql/parser/SourceLocations$Mutable {
-	public fun <init> ()V
-	public fun set (Ljava/lang/String;Lorg/partiql/spi/SourceLocation;)V
-	public fun toMap ()Lorg/partiql/parser/SourceLocations;
+	public fun <init> (Ljava/util/List;Lorg/partiql/spi/SourceLocations;)V
 }
 

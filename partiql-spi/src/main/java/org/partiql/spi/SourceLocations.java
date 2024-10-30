@@ -1,22 +1,37 @@
-package org.partiql.parser;
+package org.partiql.spi;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.spi.SourceLocation;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * TODO
+ * This class maps a set of identifiers to their corresponding source locations.
+ * <br>
+ * <b>Note!</b>: This class is immutable and does not support {@link Map#put(Object, Object)}, amongst others. Please
+ * handle the runtime exceptions indicated by {@link Map}'s Javadocs.
  */
 public class SourceLocations implements Map<String, SourceLocation> {
 
     private final Map<String, SourceLocation> delegate;
 
-    private SourceLocations(Map<String, SourceLocation> delegate) {
-        this.delegate = delegate;
+    /**
+     * Creates an empty instance.
+     */
+    public SourceLocations() {
+        this.delegate = new java.util.HashMap<>();
+    }
+
+    /**
+     * Creates an instance holding the contents of {@code delegate}. To enforce immutability, these contents are copied
+     * to an internal structure.
+     * @param delegate the delegate holding the locations.
+     */
+    public SourceLocations(Map<String, SourceLocation> delegate) {
+        this.delegate = new java.util.HashMap<>();
+        this.delegate.putAll(delegate);
     }
 
     @NotNull
@@ -60,54 +75,27 @@ public class SourceLocations implements Map<String, SourceLocation> {
     @Nullable
     @Override
     public SourceLocation put(String key, SourceLocation value) {
-        // TODO: This isn't allowed (yet?)
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public SourceLocation remove(Object key) {
-        // TODO: This isn't allowed (yet?)
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void putAll(@NotNull Map<? extends String, ? extends SourceLocation> m) {
-        // TODO: This isn't allowed (yet?)
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void clear() {
-        // TODO: This isn't allowed (yet?)
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean isEmpty() {
         return delegate.isEmpty();
-    }
-
-    /**
-     * TODO
-     */
-    public static class Mutable {
-
-        private final Map<String, SourceLocation> delegate = new java.util.HashMap<>();
-
-        /**
-         * TODO
-         * @param id TODO
-         * @param value TODO
-         */
-        public void set(String id, SourceLocation value) {
-            delegate.put(id, value);
-        }
-
-        /**
-         * TODO
-         * @return TODO
-         */
-        public SourceLocations toMap() {
-            return new SourceLocations(delegate);
-        }
     }
 }
 
