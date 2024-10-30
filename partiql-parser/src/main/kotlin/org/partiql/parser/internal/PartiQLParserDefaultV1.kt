@@ -371,7 +371,7 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
             ): PartiQLParserV1.Result {
                 val locations = SourceLocations.Mutable()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
-                val root = visitor.visitFile(tree)
+                val root: PFileV1 = visitor.visitFile(tree)
                 return PartiQLParserV1.Result(
                     root.statements.toMutableList(),
                     locations.toMap(),

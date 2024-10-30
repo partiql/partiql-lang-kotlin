@@ -393,11 +393,11 @@ internal class PartiQLParserDefault : PartiQLParser {
              */
             fun translate(
                 tokens: CountingTokenStream,
-                tree: org.partiql.parser.internal.antlr.PartiQLParser.FileContext,
+                tree: GeneratedParser.FileContext,
             ): PartiQLParser.Result {
                 val locations = SourceLocations.Mutable()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
-                val root = visitor.visitFile(tree)
+                val root: PFile = visitor.visitFile(tree)
                 return PartiQLParser.Result(root.statements, locations.toMap())
             }
 
@@ -497,7 +497,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             )
         }
 
-        override fun visitFile(ctx: GeneratedParser.FileContext) = translate(ctx) {
+        override fun visitFile(ctx: GeneratedParser.FileContext): PFile = translate(ctx) {
             val stmts = visitOrEmpty<Statement>(ctx.statement())
             PFile(stmts)
         }

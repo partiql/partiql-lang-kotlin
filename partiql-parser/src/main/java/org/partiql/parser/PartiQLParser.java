@@ -43,6 +43,7 @@ public interface PartiQLParser {
      * @throws PErrorListenerException when the [org.partiql.spi.errors.PErrorListener] defined in the context throws an
      * [PErrorListenerException], this method halts execution and propagates the exception.
      */
+    @NotNull
     default Result parse(@NotNull String source) throws PErrorListenerException {
         return parse(source, Context.standard());
     }
@@ -79,6 +80,7 @@ public interface PartiQLParser {
      * TODO
      * @return TODO
      */
+    @NotNull
     public static PartiQLParserBuilder builder() {
         return new PartiQLParserBuilder();
     }
@@ -87,6 +89,7 @@ public interface PartiQLParser {
      * TODO
      * @return TODO
      */
+    @NotNull
     public static PartiQLParser standard() {
         return new PartiQLParserDefault();
     }

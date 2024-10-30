@@ -14,6 +14,7 @@
 
 package org.partiql.parser;
 
+import org.jetbrains.annotations.NotNull;
 import org.partiql.parser.internal.PartiQLParserDefaultV1;
 
 /**
@@ -22,6 +23,7 @@ import org.partiql.parser.internal.PartiQLParserDefaultV1;
  */
 public class PartiQLParserBuilderV1 {
 
+    @NotNull
     public PartiQLParserV1 build() {
         return new PartiQLParserDefaultV1();
     }
