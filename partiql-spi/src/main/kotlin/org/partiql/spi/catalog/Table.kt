@@ -1,5 +1,6 @@
 package org.partiql.spi.catalog
 
+import org.partiql.spi.catalog.impl.StandardTable
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -29,7 +30,7 @@ public interface Table {
     public companion object {
 
         @JvmStatic
-        public fun empty(name: String): Table = _Table(
+        public fun empty(name: String): Table = StandardTable(
             name = Name.of(name),
             schema = PType.dynamic(),
             datum = Datum.nullValue(),
@@ -39,14 +40,14 @@ public interface Table {
          * Create an empty table with dynamic schema.
          */
         @JvmStatic
-        public fun empty(name: Name): Table = _Table(
+        public fun empty(name: Name): Table = StandardTable(
             name = name,
             schema = PType.dynamic(),
             datum = Datum.nullValue(),
         )
 
         @JvmStatic
-        public fun empty(name: String, schema: PType): Table = _Table(
+        public fun empty(name: String, schema: PType): Table = StandardTable(
             name = Name.of(name),
             schema = schema,
             datum = Datum.nullValue(),
@@ -56,7 +57,7 @@ public interface Table {
          * Create an empty table with known schema.
          */
         @JvmStatic
-        public fun empty(name: Name, schema: PType): Table = _Table(
+        public fun empty(name: Name, schema: PType): Table = StandardTable(
             name = name,
             schema = schema,
             datum = Datum.nullValue(),
@@ -66,7 +67,7 @@ public interface Table {
          * Create a table from a Datum with dynamic schema.
          */
         @JvmStatic
-        public fun of(name: Name, datum: Datum): Table = _Table(
+        public fun standard(name: Name, datum: Datum): Table = StandardTable(
             name = name,
             schema = PType.dynamic(),
             datum = datum,
@@ -76,7 +77,7 @@ public interface Table {
          * Create a table from a Datum with known schema.
          */
         @JvmStatic
-        public fun of(name: Name, datum: Datum, schema: PType): Table = _Table(
+        public fun standard(name: Name, datum: Datum, schema: PType): Table = StandardTable(
             name = name,
             schema = schema,
             datum = datum,
@@ -90,7 +91,7 @@ public interface Table {
     }
 
     /**
-     * Java-style builder for a default Table implementation.
+     * Lombok java-style builder for a default Table implementation.
      */
     public class Builder {
 
@@ -116,40 +117,7 @@ public interface Table {
         public fun build(): Table {
             // Validate builder parameters
             val name = this.name ?: throw IllegalStateException("Table name cannot be null")
-            return _Table(Name.of(name), schema, datum)
+            return StandardTable(Name.of(name), schema, datum)
         }
-    }
-
-    /**
-     * An internal, standard table implementation backed by simple fields.
-     *
-     * @constructor
-     * All arguments default constructor.
-     *
-     * @param name
-     * @param schema
-     * @param datum
-     */
-    @Suppress("ClassName")
-    private class _Table(name: Name, schema: PType, datum: Datum) : Table {
-
-        // DO NOT USE FINAL
-        private var _name = name
-        private var _schema = schema
-        private var _datum = datum
-
-        override fun getName(): Name = _name
-        override fun getSchema(): PType = _schema
-        override fun getDatum(): Datum = _datum
-
-        // TODO REMOVE ME, THIS IS REQUIRED FOR EQUALITY IN UNIT TESTS
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Table) return false
-            return _name == other.getName()
-        }
-
-        // TODO REMOVE ME, THIS IS REQUIRED FOR EQUALITY IN UNIT TESTS
-        override fun hashCode(): Int = _name.hashCode()
     }
 }

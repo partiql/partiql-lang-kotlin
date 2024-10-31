@@ -12,8 +12,8 @@ import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryTable
+import org.partiql.plugins.memory.StandardCatalog
+import org.partiql.plugins.memory.StandardTable
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.Datum
@@ -1321,11 +1321,11 @@ class PartiQLEvaluatorTest {
 
         internal fun assert() {
             val statement = parser.parse(input).root
-            val catalog = MemoryCatalog.builder()
+            val catalog = StandardCatalog.builder()
                 .name("memory")
                 .apply {
                     globals.forEach {
-                        val table = MemoryTable.of(
+                        val table = StandardTable.of(
                             name = Name.of(it.name),
                             schema = PType.fromStaticType(it.type),
                             datum = IonDatum.of(loadSingleElement(it.value))
@@ -1407,7 +1407,7 @@ class PartiQLEvaluatorTest {
 
         private fun run(mode: Mode): Pair<Datum, Plan> {
             val statement = parser.parse(input).root
-            val catalog = MemoryCatalog.builder().name("memory").build()
+            val catalog = StandardCatalog.builder().name("memory").build()
             val session = Session.builder()
                 .catalog("memory")
                 .catalogs(catalog)

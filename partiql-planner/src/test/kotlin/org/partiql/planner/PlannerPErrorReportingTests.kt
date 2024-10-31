@@ -10,7 +10,7 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.PErrorAlwaysMissingCollector
 import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
-import org.partiql.plugins.memory.MemoryCatalog
+import org.partiql.plugins.memory.StandardCatalog
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
@@ -26,7 +26,7 @@ internal class PlannerPErrorReportingTests {
 
     private val catalogName = "mode_test"
 
-    private val catalog = MemoryCatalog
+    private val catalog = StandardCatalog
         .builder()
         .name(catalogName)
         .define("missing_binding", PType.dynamic())

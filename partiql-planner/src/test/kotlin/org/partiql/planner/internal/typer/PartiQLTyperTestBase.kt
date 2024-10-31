@@ -9,8 +9,8 @@ import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryTable
+import org.partiql.plugins.memory.StandardCatalog
+import org.partiql.plugins.memory.StandardTable
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
@@ -62,12 +62,12 @@ abstract class PartiQLTyperTestBase {
      * Build a ConnectorMetadata instance from the list of types.
      */
     private fun buildCatalog(name: String, types: List<StaticType>): Catalog {
-        val catalog = MemoryCatalog.builder().name(name)
+        val catalog = StandardCatalog.builder().name(name)
         // define all bindings
         types.forEachIndexed { i, t ->
             val tableName = Name.of("t${i + 1}")
             val tableSchema = PType.fromStaticType(t)
-            val table = MemoryTable.empty(tableName, tableSchema)
+            val table = StandardTable.empty(tableName, tableSchema)
             catalog.define(table)
         }
         return catalog.build()

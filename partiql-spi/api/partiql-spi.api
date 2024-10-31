@@ -47,11 +47,23 @@ public class org/partiql/spi/SourceLocation {
 }
 
 public abstract interface class org/partiql/spi/catalog/Catalog {
+	public static final field Companion Lorg/partiql/spi/catalog/Catalog$Companion;
+	public static fun builder ()Lorg/partiql/spi/catalog/Catalog$Builder;
 	public abstract fun getAggregations (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getFunctions (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getTable (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Table;
 	public abstract fun getTable (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
+}
+
+public final class org/partiql/spi/catalog/Catalog$Builder {
+	public final fun build ()Lorg/partiql/spi/catalog/Catalog;
+	public final fun define (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/spi/catalog/Catalog$Builder;
+	public final fun name (Ljava/lang/String;)Lorg/partiql/spi/catalog/Catalog$Builder;
+}
+
+public final class org/partiql/spi/catalog/Catalog$Companion {
+	public final fun builder ()Lorg/partiql/spi/catalog/Catalog$Builder;
 }
 
 public final class org/partiql/spi/catalog/Catalog$DefaultImpls {
@@ -250,8 +262,8 @@ public abstract interface class org/partiql/spi/catalog/Table {
 	public abstract fun getDatum ()Lorg/partiql/spi/value/Datum;
 	public abstract fun getName ()Lorg/partiql/spi/catalog/Name;
 	public abstract fun getSchema ()Lorg/partiql/types/PType;
-	public static fun of (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
-	public static fun of (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public static fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
+	public static fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
 }
 
 public final class org/partiql/spi/catalog/Table$Builder {
@@ -268,8 +280,8 @@ public final class org/partiql/spi/catalog/Table$Companion {
 	public final fun empty (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
 	public final fun empty (Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
 	public final fun empty (Lorg/partiql/spi/catalog/Name;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
-	public final fun of (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
-	public final fun of (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public final fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
+	public final fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
 }
 
 public final class org/partiql/spi/catalog/Table$DefaultImpls {

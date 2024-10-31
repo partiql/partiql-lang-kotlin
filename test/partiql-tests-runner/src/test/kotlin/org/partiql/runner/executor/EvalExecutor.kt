@@ -13,8 +13,8 @@ import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryTable
+import org.partiql.plugins.memory.StandardCatalog
+import org.partiql.plugins.memory.StandardTable
 import org.partiql.runner.CompileType
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
@@ -174,7 +174,7 @@ class EvalExecutor(
             env.fields.forEach {
                 map[it.name] = inferEnv(it.value)
             }
-            return MemoryCatalog.builder()
+            return StandardCatalog.builder()
                 .name("default")
                 .apply { load(env) }
                 .build()
@@ -184,7 +184,7 @@ class EvalExecutor(
          * Uses the planner to infer the type of the environment.
          */
         private fun inferEnv(env: AnyElement): PType {
-            val catalog = MemoryCatalog.builder().name("default").build()
+            val catalog = StandardCatalog.builder().name("default").build()
             val session = Session.builder()
                 .catalog("default")
                 .catalogs(catalog)
@@ -202,12 +202,12 @@ class EvalExecutor(
          *
          * Test data is "PartiQL encoded as Ion" hence we need the PartiQLValueIonReader.
          */
-        private fun MemoryCatalog.Builder.load(env: StructElement) {
+        private fun StandardCatalog.Builder.load(env: StructElement) {
             for (f in env.fields) {
                 val name = Name.of(f.name)
                 val value = PartiQLValueIonReaderBuilder.standard().build(f.value).read()
                 val datum = Datum.of(value)
-                val table = MemoryTable.of(
+                val table = StandardTable.of(
                     name = name,
                     schema = PType.dynamic(),
                     datum = datum,
