@@ -13,6 +13,7 @@ import java.util.List;
 
 /**
  * TODO docs, equals, hashcode
+ * TODO also support IS NULL, IS MISSING, IS UNKNOWN, IS TRUE, IS FALSE
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

@@ -1,11 +1,11 @@
 package org.partiql.cli.pipeline
 
-import org.partiql.ast.Statement
+import org.partiql.ast.v1.Statement
 import org.partiql.cli.ErrorCodeString
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.PartiQLParser
-import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.parser.V1PartiQLParser
+import org.partiql.parser.V1PartiQLParserBuilder
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Context
@@ -13,10 +13,9 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.spi.value.Datum
 import java.io.PrintStream
-import kotlin.jvm.Throws
 
 internal class Pipeline private constructor(
-    private val parser: PartiQLParser,
+    private val parser: V1PartiQLParser,
     private val planner: PartiQLPlanner,
     private val compiler: PartiQLCompiler,
     private val ctx: Context,
@@ -81,7 +80,7 @@ internal class Pipeline private constructor(
         private fun create(mode: Mode, out: PrintStream, config: Config): Pipeline {
             val listener = config.getErrorListener(out)
             val ctx = Context.of(listener)
-            val parser = PartiQLParserBuilder().build()
+            val parser = V1PartiQLParserBuilder().build()
             val planner = PartiQLPlanner.builder().build()
             val compiler = PartiQLCompiler.builder().build()
             return Pipeline(parser, planner, compiler, ctx, mode)

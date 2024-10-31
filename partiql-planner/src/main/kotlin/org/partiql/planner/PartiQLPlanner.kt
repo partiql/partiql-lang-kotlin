@@ -1,6 +1,6 @@
 package org.partiql.planner
 
-import org.partiql.ast.Statement
+import org.partiql.ast.v1.Statement
 import org.partiql.plan.Plan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.spi.Context

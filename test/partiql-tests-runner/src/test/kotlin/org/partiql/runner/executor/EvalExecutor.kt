@@ -10,7 +10,7 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.eval.Mode
 import org.partiql.eval.Statement
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.PartiQLParser
+import org.partiql.parser.V1PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
@@ -141,7 +141,7 @@ class EvalExecutor(
 
     companion object {
         val compiler = PartiQLCompiler.standard()
-        val parser = PartiQLParser.standard()
+        val parser = V1PartiQLParser.standard()
         val planner = PartiQLPlanner.standard()
         // TODO REPLACE WITH DATUM COMPARATOR
         val comparator = PartiQLValue.comparator()
