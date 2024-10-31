@@ -556,11 +556,13 @@ public interface PType {
      */
     @NotNull
     static PType varchar(int length) {
-        return new PTypeWithMaxLength(Kind.CHAR, length);
+        return new PTypeWithMaxLength(Kind.VARCHAR, length);
     }
 
     /**
      * @return a PartiQL string type
+     *
+     * TODO remove in favor of non-parameterized VARCHAR
      */
     @NotNull
     static PType string() {

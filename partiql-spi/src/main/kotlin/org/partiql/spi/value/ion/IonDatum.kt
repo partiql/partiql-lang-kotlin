@@ -1,161 +1,100 @@
 package org.partiql.spi.value.ion
 
+import com.amazon.ion.system.IonBinaryWriterBuilder
+import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.AnyElement
-import com.amazon.ionelement.api.ElementType.BLOB
 import com.amazon.ionelement.api.ElementType.BOOL
-import com.amazon.ionelement.api.ElementType.CLOB
 import com.amazon.ionelement.api.ElementType.DECIMAL
 import com.amazon.ionelement.api.ElementType.FLOAT
 import com.amazon.ionelement.api.ElementType.INT
 import com.amazon.ionelement.api.ElementType.LIST
-import com.amazon.ionelement.api.ElementType.NULL
 import com.amazon.ionelement.api.ElementType.SEXP
 import com.amazon.ionelement.api.ElementType.STRING
 import com.amazon.ionelement.api.ElementType.STRUCT
 import com.amazon.ionelement.api.ElementType.SYMBOL
 import com.amazon.ionelement.api.ElementType.TIMESTAMP
+import com.amazon.ionelement.api.IonElement
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
+import org.partiql.spi.value.Variant
 import org.partiql.types.PType
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
+import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 /**
  * A [Datum] implemented over Ion's [AnyElement].
  */
-public class IonDatum private constructor(value: AnyElement, type: PType) :
-    Datum {
-
-    // DO NOT USE FINAL
-    private var _value = value
-    private var _type = type
-    private var _kind = value.type
+public class IonDatum(private var value: AnyElement) : Variant<IonElement> {
 
     /**
-     * Some encoding of PartiQL values as Ion.
+     * TODO replace with PType.variant("ion")
      */
-    private enum class Annotation(val symbol: String) {
-        MISSING("\$missing"),
-        BAG("\$bag"),
-        DATE("\$date"),
-        TIME("\$time"),
-        TIMESTAMP("\$timestamp"),
-        GRAPH("\$graph");
+    private var type = PType.unknown()
 
-        override fun toString(): String = symbol
+    /**
+     * Unpack the inner Ion value.
+     *
+     * @return IonElement
+     */
+    override fun unpack(): IonElement = value
 
-        companion object {
-
-            @JvmStatic
-            fun of(value: AnyElement): Annotation? = value.annotations.lastOrNull()?.let {
-                Annotation.values().find { a -> a.symbol == it }
-            }
-        }
+    /**
+     * Pack an IonDatum into byte[] using the binary Ion encoding.
+     *
+     * @return byte[]
+     */
+    override fun pack(): ByteArray {
+        val buffer = ByteArrayOutputStream()
+        val writer = IonBinaryWriterBuilder.standard().build(buffer)
+        value.writeTo(writer)
+        return buffer.toByteArray()
     }
 
-    public companion object {
-
-        /**
-         * TODO reader/writer ?? or check annotations
-         *
-         * @param value
-         * @return
-         */
-        @JvmStatic
-        public fun of(value: AnyElement): Datum {
-            val tag = Annotation.of(value)
-            val type = when (value.type) {
-                NULL -> return when (tag) {
-                    Annotation.MISSING -> Datum.missing()
-                    Annotation.BAG -> Datum.nullValue(PType.bag())
-                    Annotation.DATE -> Datum.nullValue(PType.date())
-                    Annotation.TIME -> Datum.nullValue(PType.time(6))
-                    Annotation.TIMESTAMP -> Datum.nullValue(PType.time(6))
-                    Annotation.GRAPH -> error("Datum does not support GRAPH type.")
-                    null -> Datum.nullValue()
-                }
-                BOOL -> when (tag) {
-                    null -> PType.bool()
-                    else -> error("Unexpected type annotation for Ion BOOL: $tag")
-                }
-                INT -> when (tag) {
-                    null -> PType.numeric()
-                    else -> error("Unexpected type annotation for Ion INT: $tag")
-                }
-                FLOAT -> when (tag) {
-                    null -> PType.doublePrecision()
-                    else -> error("Unexpected type annotation for Ion FLOAT: $tag")
-                }
-                DECIMAL -> when (tag) {
-                    null -> PType.decimal()
-                    else -> error("Unexpected type annotation for Ion DECIMAL: $tag")
-                }
-                STRING -> when (tag) {
-                    null -> PType.string()
-                    else -> error("Unexpected type annotation for Ion STRING: $tag")
-                }
-                CLOB -> when (tag) {
-                    null -> PType.clob(Int.MAX_VALUE)
-                    else -> error("Unexpected type annotation for Ion CLOB: $tag")
-                }
-                BLOB -> when (tag) {
-                    null -> PType.blob(Int.MAX_VALUE)
-                    else -> error("Unexpected type annotation for Ion BLOB: $tag")
-                }
-                LIST -> when (tag) {
-                    Annotation.BAG -> PType.bag()
-                    null -> PType.array()
-                    else -> error("Unexpected type annotation for Ion LIST: $tag")
-                }
-                STRUCT -> when (tag) {
-                    null -> PType.struct()
-                    Annotation.DATE -> TODO("IonDatum for DATE not supported")
-                    Annotation.TIME -> TODO("IonDatum for TIME not supported")
-                    Annotation.TIMESTAMP -> TODO("IonDatum for TIMESTAMP not supported")
-                    else -> error("Unexpected type annotation for Ion STRUCT: $tag")
-                }
-                SEXP -> when (tag) {
-                    null -> PType.sexp()
-                    else -> error("Unexpected type annotation for Ion SEXP: $tag")
-                }
-                SYMBOL -> when (tag) {
-                    null -> PType.symbol()
-                    else -> error("Unexpected type annotation for Ion SYMBOL: $tag")
-                }
-                TIMESTAMP -> when (tag) {
-                    null -> PType.timestamp(6)
-                    else -> error("Unexpected type annotation for Ion TIMESTAMP: $tag")
-                }
-            }
-            return IonDatum(value, type)
+    /**
+     * Pack an IonDatum into a UTF-8 string byte[] using the textual Ion encoding.
+     *
+     * @param charset
+     * @return
+     */
+    override fun pack(charset: Charset): ByteArray {
+        if (charset != StandardCharsets.UTF_8 || charset != StandardCharsets.US_ASCII) {
+            // unsupported
+            return super.pack(charset)
         }
+        val buffer = ByteArrayOutputStream()
+        val writer = IonTextWriterBuilder.standard().build(buffer)
+        value.writeTo(writer)
+        return buffer.toByteArray()
     }
 
-    override fun getType(): PType = _type
+    override fun getType(): PType = type
 
-    override fun isNull(): Boolean = _value.isNull
+    override fun isNull(): Boolean = value.isNull
 
     override fun isMissing(): Boolean = false
 
-    override fun getString(): String = when (_kind) {
-        SYMBOL -> _value.stringValue
-        STRING -> _value.stringValue
+    override fun getString(): String = when (value.type) {
+        SYMBOL -> value.stringValue
+        STRING -> value.stringValue
         else -> super.getString()
     }
 
-    override fun getBoolean(): Boolean = when (_kind) {
-        BOOL -> _value.booleanValue
+    override fun getBoolean(): Boolean = when (value.type) {
+        BOOL -> value.booleanValue
         else -> super.getBoolean()
     }
 
-    // override fun getBytes(): ByteArray =  when (_kind) {
-    //     CLOB -> _value.clobValue.copyOfBytes()
-    //     BLOB -> _value.blobValue.copyOfBytes()
+    // override fun getBytes(): ByteArray =  when (value.type) {
+    //     CLOB -> value.clobValue.copyOfBytes()
+    //     BLOB -> value.blobValue.copyOfBytes()
     //     else -> super.getBytes()
     // }
     //
@@ -164,9 +103,9 @@ public class IonDatum private constructor(value: AnyElement, type: PType) :
     // }
 
     override fun getDate(): Date {
-        return when (_kind) {
+        return when (value.type) {
             TIMESTAMP -> {
-                val ts = _value.timestampValue
+                val ts = value.timestampValue
                 DateTimeValue.date(ts.year, ts.month, ts.day)
             }
             else -> super.getDate()
@@ -174,9 +113,9 @@ public class IonDatum private constructor(value: AnyElement, type: PType) :
     }
 
     override fun getTime(): Time {
-        return when (_kind) {
+        return when (value.type) {
             TIMESTAMP -> {
-                val ts = _value.timestampValue
+                val ts = value.timestampValue
                 val tz = when (ts.localOffset) {
                     null -> TimeZone.UnknownTimeZone
                     else -> TimeZone.UtcOffset.of(ts.zHour, ts.zMinute)
@@ -189,65 +128,65 @@ public class IonDatum private constructor(value: AnyElement, type: PType) :
 
     // TODO: Handle struct notation
     override fun getTimestamp(): Timestamp {
-        return when (_kind) {
-            TIMESTAMP -> DateTimeValue.timestamp(_value.timestampValue)
+        return when (value.type) {
+            TIMESTAMP -> DateTimeValue.timestamp(value.timestampValue)
             else -> super.getTimestamp()
         }
     }
 
-    override fun getBigInteger(): BigInteger = when (_kind) {
-        INT -> _value.bigIntegerValue
+    override fun getBigInteger(): BigInteger = when (value.type) {
+        INT -> value.bigIntegerValue
         else -> super.getBigInteger()
     }
 
-    override fun getDouble(): Double = when (_kind) {
-        FLOAT -> _value.doubleValue
+    override fun getDouble(): Double = when (value.type) {
+        FLOAT -> value.doubleValue
         else -> super.getDouble()
     }
 
-    override fun getBigDecimal(): BigDecimal = when (_kind) {
-        DECIMAL -> _value.decimalValue.bigDecimalValue()
+    override fun getBigDecimal(): BigDecimal = when (value.type) {
+        DECIMAL -> value.decimalValue.bigDecimalValue()
         else -> super.getBigDecimal()
     }
 
-    override fun iterator(): MutableIterator<Datum> = when (_kind) {
-        LIST -> _value.listValues.map { of(it) }.toMutableList().iterator()
-        SEXP -> _value.sexpValues.map { of(it) }.toMutableList().iterator()
+    override fun iterator(): MutableIterator<Datum> = when (value.type) {
+        LIST -> value.listValues.map { IonDatum(it) }.toMutableList().iterator()
+        SEXP -> value.sexpValues.map { IonDatum(it) }.toMutableList().iterator()
         else -> super.iterator()
     }
 
     override fun getFields(): MutableIterator<Field> {
-        if (_kind != STRUCT) {
+        if (value.type != STRUCT) {
             return super.getFields()
         }
-        return _value.structFields
-            .map { Field.of(it.name, of(it.value)) }
+        return value.structFields
+            .map { Field.of(it.name, IonDatum(it.value)) }
             .toMutableList()
             .iterator()
     }
 
     override fun get(name: String): Datum {
-        if (_kind != STRUCT) {
+        if (value.type != STRUCT) {
             return super.get(name)
         }
         // TODO handle multiple/ambiguous field names?
-        val v = _value.asStruct().getOptional(name)
+        val v = value.asStruct().getOptional(name)
         return if (v == null) {
             Datum.missing()
         } else {
-            of(v)
+            IonDatum(v)
         }
     }
 
     override fun getInsensitive(name: String): Datum {
-        if (_kind != STRUCT) {
+        if (value.type != STRUCT) {
             return super.get(name)
         }
         // TODO handle multiple/ambiguous field names?
-        val struct = _value.asStruct()
+        val struct = value.asStruct()
         for (field in struct.fields) {
             if (field.name.equals(name, ignoreCase = true)) {
-                return of(field.value)
+                return IonDatum(field.value)
             }
         }
         return Datum.missing()
