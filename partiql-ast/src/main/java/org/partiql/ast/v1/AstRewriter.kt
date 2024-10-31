@@ -43,6 +43,7 @@ import org.partiql.ast.v1.graph.GraphQuantifier
 import org.partiql.ast.v1.graph.GraphSelector
 import org.partiql.value.PartiQLValueExperimental
 
+// TODO docs and move to Kotlin sources
 public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     override fun defaultReturn(node: AstNode, context: C): AstNode = node
 
