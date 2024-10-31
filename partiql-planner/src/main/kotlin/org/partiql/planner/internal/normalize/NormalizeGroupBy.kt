@@ -12,17 +12,16 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.normalize
 
-import org.partiql.ast.AstNode
-import org.partiql.ast.Expr
-import org.partiql.ast.GroupBy
-import org.partiql.ast.Statement
-import org.partiql.ast.groupByKey
-import org.partiql.ast.helpers.toBinder
-import org.partiql.ast.util.AstRewriter
-
-// TODO DELETE FILE
+import org.partiql.ast.v1.Ast.groupBy
+import org.partiql.ast.v1.Ast.groupByKey
+import org.partiql.ast.v1.AstNode
+import org.partiql.ast.v1.AstRewriter
+import org.partiql.ast.v1.GroupBy
+import org.partiql.ast.v1.Statement
+import org.partiql.ast.v1.expr.Expr
+import org.partiql.planner.internal.helpers.toBinder
 
 /**
  * Adds a unique binder to each group key.
@@ -37,7 +36,7 @@ internal object NormalizeGroupBy : AstPass {
             val keys = node.keys.mapIndexed { index, key ->
                 visitGroupByKey(key, index + 1)
             }
-            return node.copy(keys = keys)
+            return groupBy(strategy = node.strategy, keys = keys, asAlias = node.asAlias)
         }
 
         override fun visitGroupByKey(node: GroupBy.Key, ctx: Int): GroupBy.Key {

@@ -5644,103 +5644,260 @@ public abstract class org/partiql/ast/v1/AstNode {
 	public abstract fun children ()Ljava/util/Collection;
 }
 
-public abstract interface class org/partiql/ast/v1/AstVisitor {
-	public abstract fun visit (Lorg/partiql/ast/v1/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExclude (Lorg/partiql/ast/v1/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExcludePath (Lorg/partiql/ast/v1/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExcludeStep (Lorg/partiql/ast/v1/ExcludeStep;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExcludeStepCollIndex (Lorg/partiql/ast/v1/ExcludeStep$CollIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExcludeStepCollWildcard (Lorg/partiql/ast/v1/ExcludeStep$CollWildcard;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExcludeStepStructField (Lorg/partiql/ast/v1/ExcludeStep$StructField;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExcludeStepStructWildcard (Lorg/partiql/ast/v1/ExcludeStep$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExplain (Lorg/partiql/ast/v1/Explain;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExpr (Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprAnd (Lorg/partiql/ast/v1/expr/ExprAnd;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprArray (Lorg/partiql/ast/v1/expr/ExprArray;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprBag (Lorg/partiql/ast/v1/expr/ExprBag;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprBetween (Lorg/partiql/ast/v1/expr/ExprBetween;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprCall (Lorg/partiql/ast/v1/expr/ExprCall;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprCase (Lorg/partiql/ast/v1/expr/ExprCase;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprCaseBranch (Lorg/partiql/ast/v1/expr/ExprCase$Branch;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprCast (Lorg/partiql/ast/v1/expr/ExprCast;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprCoalesce (Lorg/partiql/ast/v1/expr/ExprCoalesce;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprExtract (Lorg/partiql/ast/v1/expr/ExprExtract;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprInCollection (Lorg/partiql/ast/v1/expr/ExprInCollection;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprIsType (Lorg/partiql/ast/v1/expr/ExprIsType;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprLike (Lorg/partiql/ast/v1/expr/ExprLike;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprLit (Lorg/partiql/ast/v1/expr/ExprLit;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprMatch (Lorg/partiql/ast/v1/expr/ExprMatch;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprNot (Lorg/partiql/ast/v1/expr/ExprNot;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprNullIf (Lorg/partiql/ast/v1/expr/ExprNullIf;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprOperator (Lorg/partiql/ast/v1/expr/ExprOperator;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprOr (Lorg/partiql/ast/v1/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprOverlay (Lorg/partiql/ast/v1/expr/ExprOverlay;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprParameter (Lorg/partiql/ast/v1/expr/ExprParameter;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprPath (Lorg/partiql/ast/v1/expr/ExprPath;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprPosition (Lorg/partiql/ast/v1/expr/ExprPosition;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprQuerySet (Lorg/partiql/ast/v1/expr/ExprQuerySet;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprSessionAttribute (Lorg/partiql/ast/v1/expr/ExprSessionAttribute;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprStruct (Lorg/partiql/ast/v1/expr/ExprStruct;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprStructField (Lorg/partiql/ast/v1/expr/ExprStruct$Field;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprSubstring (Lorg/partiql/ast/v1/expr/ExprSubstring;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprTrim (Lorg/partiql/ast/v1/expr/ExprTrim;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprValues (Lorg/partiql/ast/v1/expr/ExprValues;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprValuesRow (Lorg/partiql/ast/v1/expr/ExprValues$Row;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprVarRef (Lorg/partiql/ast/v1/expr/ExprVarRef;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprVariant (Lorg/partiql/ast/v1/expr/ExprVariant;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprWindow (Lorg/partiql/ast/v1/expr/ExprWindow;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitExprWindowOver (Lorg/partiql/ast/v1/expr/ExprWindow$Over;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitFrom (Lorg/partiql/ast/v1/From;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitFromExpr (Lorg/partiql/ast/v1/FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitFromJoin (Lorg/partiql/ast/v1/FromJoin;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphLabel (Lorg/partiql/ast/v1/graph/GraphLabel;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphLabelConj (Lorg/partiql/ast/v1/graph/GraphLabel$Conj;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphLabelDisj (Lorg/partiql/ast/v1/graph/GraphLabel$Disj;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphLabelName (Lorg/partiql/ast/v1/graph/GraphLabel$Name;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphLabelNegation (Lorg/partiql/ast/v1/graph/GraphLabel$Negation;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphLabelWildcard (Lorg/partiql/ast/v1/graph/GraphLabel$Wildcard;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphMatch (Lorg/partiql/ast/v1/graph/GraphMatch;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphMatchPattern (Lorg/partiql/ast/v1/graph/GraphPattern;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphPart (Lorg/partiql/ast/v1/graph/GraphPart;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphPartEdge (Lorg/partiql/ast/v1/graph/GraphPart$Edge;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphPartNode (Lorg/partiql/ast/v1/graph/GraphPart$Node;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphPartPattern (Lorg/partiql/ast/v1/graph/GraphPart$Pattern;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphQuantifier (Lorg/partiql/ast/v1/graph/GraphQuantifier;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphSelector (Lorg/partiql/ast/v1/graph/GraphSelector;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphSelectorAllShortest (Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphSelectorAny (Lorg/partiql/ast/v1/graph/GraphSelector$Any;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphSelectorAnyK (Lorg/partiql/ast/v1/graph/GraphSelector$AnyK;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphSelectorAnyShortest (Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphSelectorShortestK (Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGraphSelectorShortestKGroup (Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGroupBy (Lorg/partiql/ast/v1/GroupBy;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitGroupByKey (Lorg/partiql/ast/v1/GroupBy$Key;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitIdentifier (Lorg/partiql/ast/v1/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitIdentifierChain (Lorg/partiql/ast/v1/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitLet (Lorg/partiql/ast/v1/Let;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitLetBinding (Lorg/partiql/ast/v1/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitOrderBy (Lorg/partiql/ast/v1/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathStep (Lorg/partiql/ast/v1/expr/PathStep;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathStepAllElements (Lorg/partiql/ast/v1/expr/PathStep$AllElements;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathStepAllFields (Lorg/partiql/ast/v1/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathStepElement (Lorg/partiql/ast/v1/expr/PathStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPathStepField (Lorg/partiql/ast/v1/expr/PathStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitQuery (Lorg/partiql/ast/v1/Query;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitQueryBody (Lorg/partiql/ast/v1/QueryBody;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitQueryBodySFW (Lorg/partiql/ast/v1/QueryBody$SFW;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitQueryBodySetOp (Lorg/partiql/ast/v1/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelect (Lorg/partiql/ast/v1/Select;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectItem (Lorg/partiql/ast/v1/SelectItem;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectItemExpr (Lorg/partiql/ast/v1/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectItemStar (Lorg/partiql/ast/v1/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectList (Lorg/partiql/ast/v1/SelectList;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectPivot (Lorg/partiql/ast/v1/SelectPivot;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectStar (Lorg/partiql/ast/v1/SelectStar;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSelectValue (Lorg/partiql/ast/v1/SelectValue;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSetOp (Lorg/partiql/ast/v1/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitSort (Lorg/partiql/ast/v1/Sort;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitStatement (Lorg/partiql/ast/v1/Statement;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTableRef (Lorg/partiql/ast/v1/FromTableRef;Ljava/lang/Object;)Ljava/lang/Object;
+public abstract class org/partiql/ast/v1/AstRewriter : org/partiql/ast/v1/AstVisitor {
+	public fun <init> ()V
+	public synthetic fun defaultReturn (Lorg/partiql/ast/v1/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun defaultReturn (Lorg/partiql/ast/v1/AstNode;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExclude (Lorg/partiql/ast/v1/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExclude (Lorg/partiql/ast/v1/Exclude;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExcludePath (Lorg/partiql/ast/v1/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludePath (Lorg/partiql/ast/v1/ExcludePath;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExcludeStepCollIndex (Lorg/partiql/ast/v1/ExcludeStep$CollIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStepCollIndex (Lorg/partiql/ast/v1/ExcludeStep$CollIndex;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExcludeStepCollWildcard (Lorg/partiql/ast/v1/ExcludeStep$CollWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStepCollWildcard (Lorg/partiql/ast/v1/ExcludeStep$CollWildcard;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExcludeStepStructField (Lorg/partiql/ast/v1/ExcludeStep$StructField;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStepStructField (Lorg/partiql/ast/v1/ExcludeStep$StructField;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExcludeStepStructWildcard (Lorg/partiql/ast/v1/ExcludeStep$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStepStructWildcard (Lorg/partiql/ast/v1/ExcludeStep$StructWildcard;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExplain (Lorg/partiql/ast/v1/Explain;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExplain (Lorg/partiql/ast/v1/Explain;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprAnd (Lorg/partiql/ast/v1/expr/ExprAnd;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprAnd (Lorg/partiql/ast/v1/expr/ExprAnd;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprArray (Lorg/partiql/ast/v1/expr/ExprArray;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprArray (Lorg/partiql/ast/v1/expr/ExprArray;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprBag (Lorg/partiql/ast/v1/expr/ExprBag;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprBag (Lorg/partiql/ast/v1/expr/ExprBag;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprBetween (Lorg/partiql/ast/v1/expr/ExprBetween;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprBetween (Lorg/partiql/ast/v1/expr/ExprBetween;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprCall (Lorg/partiql/ast/v1/expr/ExprCall;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCall (Lorg/partiql/ast/v1/expr/ExprCall;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprCase (Lorg/partiql/ast/v1/expr/ExprCase;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCase (Lorg/partiql/ast/v1/expr/ExprCase;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprCaseBranch (Lorg/partiql/ast/v1/expr/ExprCase$Branch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCaseBranch (Lorg/partiql/ast/v1/expr/ExprCase$Branch;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprCast (Lorg/partiql/ast/v1/expr/ExprCast;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCast (Lorg/partiql/ast/v1/expr/ExprCast;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprCoalesce (Lorg/partiql/ast/v1/expr/ExprCoalesce;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCoalesce (Lorg/partiql/ast/v1/expr/ExprCoalesce;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprExtract (Lorg/partiql/ast/v1/expr/ExprExtract;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprExtract (Lorg/partiql/ast/v1/expr/ExprExtract;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprInCollection (Lorg/partiql/ast/v1/expr/ExprInCollection;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprInCollection (Lorg/partiql/ast/v1/expr/ExprInCollection;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprIsType (Lorg/partiql/ast/v1/expr/ExprIsType;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsType (Lorg/partiql/ast/v1/expr/ExprIsType;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprLike (Lorg/partiql/ast/v1/expr/ExprLike;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprLike (Lorg/partiql/ast/v1/expr/ExprLike;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprLit (Lorg/partiql/ast/v1/expr/ExprLit;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprLit (Lorg/partiql/ast/v1/expr/ExprLit;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprMatch (Lorg/partiql/ast/v1/expr/ExprMatch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMatch (Lorg/partiql/ast/v1/expr/ExprMatch;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprNot (Lorg/partiql/ast/v1/expr/ExprNot;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNot (Lorg/partiql/ast/v1/expr/ExprNot;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprNullIf (Lorg/partiql/ast/v1/expr/ExprNullIf;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNullIf (Lorg/partiql/ast/v1/expr/ExprNullIf;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprOperator (Lorg/partiql/ast/v1/expr/ExprOperator;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOperator (Lorg/partiql/ast/v1/expr/ExprOperator;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprOr (Lorg/partiql/ast/v1/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOr (Lorg/partiql/ast/v1/expr/ExprOr;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprOverlay (Lorg/partiql/ast/v1/expr/ExprOverlay;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOverlay (Lorg/partiql/ast/v1/expr/ExprOverlay;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprParameter (Lorg/partiql/ast/v1/expr/ExprParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprParameter (Lorg/partiql/ast/v1/expr/ExprParameter;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprPath (Lorg/partiql/ast/v1/expr/ExprPath;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprPath (Lorg/partiql/ast/v1/expr/ExprPath;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprPosition (Lorg/partiql/ast/v1/expr/ExprPosition;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprPosition (Lorg/partiql/ast/v1/expr/ExprPosition;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprQuerySet (Lorg/partiql/ast/v1/expr/ExprQuerySet;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprQuerySet (Lorg/partiql/ast/v1/expr/ExprQuerySet;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprSessionAttribute (Lorg/partiql/ast/v1/expr/ExprSessionAttribute;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprSessionAttribute (Lorg/partiql/ast/v1/expr/ExprSessionAttribute;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprStruct (Lorg/partiql/ast/v1/expr/ExprStruct;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprStruct (Lorg/partiql/ast/v1/expr/ExprStruct;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprStructField (Lorg/partiql/ast/v1/expr/ExprStruct$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprStructField (Lorg/partiql/ast/v1/expr/ExprStruct$Field;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprSubstring (Lorg/partiql/ast/v1/expr/ExprSubstring;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprSubstring (Lorg/partiql/ast/v1/expr/ExprSubstring;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprTrim (Lorg/partiql/ast/v1/expr/ExprTrim;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprTrim (Lorg/partiql/ast/v1/expr/ExprTrim;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprValues (Lorg/partiql/ast/v1/expr/ExprValues;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprValues (Lorg/partiql/ast/v1/expr/ExprValues;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprValuesRow (Lorg/partiql/ast/v1/expr/ExprValues$Row;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprValuesRow (Lorg/partiql/ast/v1/expr/ExprValues$Row;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprVarRef (Lorg/partiql/ast/v1/expr/ExprVarRef;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprVarRef (Lorg/partiql/ast/v1/expr/ExprVarRef;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprVariant (Lorg/partiql/ast/v1/expr/ExprVariant;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprVariant (Lorg/partiql/ast/v1/expr/ExprVariant;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprWindow (Lorg/partiql/ast/v1/expr/ExprWindow;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprWindow (Lorg/partiql/ast/v1/expr/ExprWindow;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitExprWindowOver (Lorg/partiql/ast/v1/expr/ExprWindow$Over;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprWindowOver (Lorg/partiql/ast/v1/expr/ExprWindow$Over;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitFrom (Lorg/partiql/ast/v1/From;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFrom (Lorg/partiql/ast/v1/From;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitFromExpr (Lorg/partiql/ast/v1/FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFromExpr (Lorg/partiql/ast/v1/FromExpr;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitFromJoin (Lorg/partiql/ast/v1/FromJoin;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFromJoin (Lorg/partiql/ast/v1/FromJoin;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphMatch (Lorg/partiql/ast/v1/graph/GraphMatch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphMatch (Lorg/partiql/ast/v1/graph/GraphMatch;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphPattern (Lorg/partiql/ast/v1/graph/GraphPattern;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphPattern (Lorg/partiql/ast/v1/graph/GraphPattern;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphQuantifier (Lorg/partiql/ast/v1/graph/GraphQuantifier;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphQuantifier (Lorg/partiql/ast/v1/graph/GraphQuantifier;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphSelectorAllShortest (Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorAllShortest (Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphSelectorAny (Lorg/partiql/ast/v1/graph/GraphSelector$Any;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorAny (Lorg/partiql/ast/v1/graph/GraphSelector$Any;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphSelectorAnyK (Lorg/partiql/ast/v1/graph/GraphSelector$AnyK;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorAnyK (Lorg/partiql/ast/v1/graph/GraphSelector$AnyK;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphSelectorAnyShortest (Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorAnyShortest (Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphSelectorShortestK (Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorShortestK (Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGraphSelectorShortestKGroup (Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorShortestKGroup (Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGroupBy (Lorg/partiql/ast/v1/GroupBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGroupBy (Lorg/partiql/ast/v1/GroupBy;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitGroupByKey (Lorg/partiql/ast/v1/GroupBy$Key;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGroupByKey (Lorg/partiql/ast/v1/GroupBy$Key;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitIdentifier (Lorg/partiql/ast/v1/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifier (Lorg/partiql/ast/v1/Identifier;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitIdentifierChain (Lorg/partiql/ast/v1/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierChain (Lorg/partiql/ast/v1/IdentifierChain;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitLet (Lorg/partiql/ast/v1/Let;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitLet (Lorg/partiql/ast/v1/Let;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitLetBinding (Lorg/partiql/ast/v1/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitLetBinding (Lorg/partiql/ast/v1/Let$Binding;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitPathStepAllElements (Lorg/partiql/ast/v1/expr/PathStep$AllElements;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStepAllElements (Lorg/partiql/ast/v1/expr/PathStep$AllElements;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitPathStepAllFields (Lorg/partiql/ast/v1/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStepAllFields (Lorg/partiql/ast/v1/expr/PathStep$AllFields;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitPathStepElement (Lorg/partiql/ast/v1/expr/PathStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStepElement (Lorg/partiql/ast/v1/expr/PathStep$Element;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitPathStepField (Lorg/partiql/ast/v1/expr/PathStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStepField (Lorg/partiql/ast/v1/expr/PathStep$Field;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitQuery (Lorg/partiql/ast/v1/Query;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitQuery (Lorg/partiql/ast/v1/Query;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitQueryBodySFW (Lorg/partiql/ast/v1/QueryBody$SFW;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitQueryBodySFW (Lorg/partiql/ast/v1/QueryBody$SFW;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitQueryBodySetOp (Lorg/partiql/ast/v1/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitQueryBodySetOp (Lorg/partiql/ast/v1/QueryBody$SetOp;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitSelectItemExpr (Lorg/partiql/ast/v1/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectItemExpr (Lorg/partiql/ast/v1/SelectItem$Expr;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitSelectItemStar (Lorg/partiql/ast/v1/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectItemStar (Lorg/partiql/ast/v1/SelectItem$Star;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitSelectList (Lorg/partiql/ast/v1/SelectList;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectList (Lorg/partiql/ast/v1/SelectList;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitSelectPivot (Lorg/partiql/ast/v1/SelectPivot;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectPivot (Lorg/partiql/ast/v1/SelectPivot;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitSelectStar (Lorg/partiql/ast/v1/SelectStar;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectStar (Lorg/partiql/ast/v1/SelectStar;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitSelectValue (Lorg/partiql/ast/v1/SelectValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectValue (Lorg/partiql/ast/v1/SelectValue;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+	public synthetic fun visitSetOp (Lorg/partiql/ast/v1/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSetOp (Lorg/partiql/ast/v1/SetOp;Ljava/lang/Object;)Lorg/partiql/ast/v1/AstNode;
+}
+
+public abstract class org/partiql/ast/v1/AstVisitor {
+	public fun <init> ()V
+	public abstract fun defaultReturn (Lorg/partiql/ast/v1/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun defaultVisit (Lorg/partiql/ast/v1/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visit (Lorg/partiql/ast/v1/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExclude (Lorg/partiql/ast/v1/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludePath (Lorg/partiql/ast/v1/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStep (Lorg/partiql/ast/v1/ExcludeStep;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStepCollIndex (Lorg/partiql/ast/v1/ExcludeStep$CollIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStepCollWildcard (Lorg/partiql/ast/v1/ExcludeStep$CollWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStepStructField (Lorg/partiql/ast/v1/ExcludeStep$StructField;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExcludeStepStructWildcard (Lorg/partiql/ast/v1/ExcludeStep$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExplain (Lorg/partiql/ast/v1/Explain;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExpr (Lorg/partiql/ast/v1/expr/Expr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprAnd (Lorg/partiql/ast/v1/expr/ExprAnd;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprArray (Lorg/partiql/ast/v1/expr/ExprArray;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprBag (Lorg/partiql/ast/v1/expr/ExprBag;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprBetween (Lorg/partiql/ast/v1/expr/ExprBetween;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCall (Lorg/partiql/ast/v1/expr/ExprCall;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCase (Lorg/partiql/ast/v1/expr/ExprCase;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCaseBranch (Lorg/partiql/ast/v1/expr/ExprCase$Branch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCast (Lorg/partiql/ast/v1/expr/ExprCast;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprCoalesce (Lorg/partiql/ast/v1/expr/ExprCoalesce;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprExtract (Lorg/partiql/ast/v1/expr/ExprExtract;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprInCollection (Lorg/partiql/ast/v1/expr/ExprInCollection;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprIsType (Lorg/partiql/ast/v1/expr/ExprIsType;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprLike (Lorg/partiql/ast/v1/expr/ExprLike;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprLit (Lorg/partiql/ast/v1/expr/ExprLit;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMatch (Lorg/partiql/ast/v1/expr/ExprMatch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNot (Lorg/partiql/ast/v1/expr/ExprNot;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNullIf (Lorg/partiql/ast/v1/expr/ExprNullIf;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOperator (Lorg/partiql/ast/v1/expr/ExprOperator;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOr (Lorg/partiql/ast/v1/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprOverlay (Lorg/partiql/ast/v1/expr/ExprOverlay;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprParameter (Lorg/partiql/ast/v1/expr/ExprParameter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprPath (Lorg/partiql/ast/v1/expr/ExprPath;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprPosition (Lorg/partiql/ast/v1/expr/ExprPosition;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprQuerySet (Lorg/partiql/ast/v1/expr/ExprQuerySet;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprSessionAttribute (Lorg/partiql/ast/v1/expr/ExprSessionAttribute;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprStruct (Lorg/partiql/ast/v1/expr/ExprStruct;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprStructField (Lorg/partiql/ast/v1/expr/ExprStruct$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprSubstring (Lorg/partiql/ast/v1/expr/ExprSubstring;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprTrim (Lorg/partiql/ast/v1/expr/ExprTrim;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprValues (Lorg/partiql/ast/v1/expr/ExprValues;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprValuesRow (Lorg/partiql/ast/v1/expr/ExprValues$Row;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprVarRef (Lorg/partiql/ast/v1/expr/ExprVarRef;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprVariant (Lorg/partiql/ast/v1/expr/ExprVariant;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprWindow (Lorg/partiql/ast/v1/expr/ExprWindow;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprWindowOver (Lorg/partiql/ast/v1/expr/ExprWindow$Over;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFrom (Lorg/partiql/ast/v1/From;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFromExpr (Lorg/partiql/ast/v1/FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFromJoin (Lorg/partiql/ast/v1/FromJoin;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFromTableRef (Lorg/partiql/ast/v1/FromTableRef;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphLabel (Lorg/partiql/ast/v1/graph/GraphLabel;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphLabelConj (Lorg/partiql/ast/v1/graph/GraphLabel$Conj;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphLabelDisj (Lorg/partiql/ast/v1/graph/GraphLabel$Disj;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphLabelName (Lorg/partiql/ast/v1/graph/GraphLabel$Name;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphLabelNegation (Lorg/partiql/ast/v1/graph/GraphLabel$Negation;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphLabelWildcard (Lorg/partiql/ast/v1/graph/GraphLabel$Wildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphMatch (Lorg/partiql/ast/v1/graph/GraphMatch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphPart (Lorg/partiql/ast/v1/graph/GraphPart;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphPartEdge (Lorg/partiql/ast/v1/graph/GraphPart$Edge;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphPartNode (Lorg/partiql/ast/v1/graph/GraphPart$Node;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphPartPattern (Lorg/partiql/ast/v1/graph/GraphPart$Pattern;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphPattern (Lorg/partiql/ast/v1/graph/GraphPattern;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphQuantifier (Lorg/partiql/ast/v1/graph/GraphQuantifier;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelector (Lorg/partiql/ast/v1/graph/GraphSelector;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorAllShortest (Lorg/partiql/ast/v1/graph/GraphSelector$AllShortest;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorAny (Lorg/partiql/ast/v1/graph/GraphSelector$Any;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorAnyK (Lorg/partiql/ast/v1/graph/GraphSelector$AnyK;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorAnyShortest (Lorg/partiql/ast/v1/graph/GraphSelector$AnyShortest;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorShortestK (Lorg/partiql/ast/v1/graph/GraphSelector$ShortestK;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGraphSelectorShortestKGroup (Lorg/partiql/ast/v1/graph/GraphSelector$ShortestKGroup;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGroupBy (Lorg/partiql/ast/v1/GroupBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitGroupByKey (Lorg/partiql/ast/v1/GroupBy$Key;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifier (Lorg/partiql/ast/v1/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierChain (Lorg/partiql/ast/v1/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitLet (Lorg/partiql/ast/v1/Let;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitLetBinding (Lorg/partiql/ast/v1/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitOrderBy (Lorg/partiql/ast/v1/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStep (Lorg/partiql/ast/v1/expr/PathStep;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStepAllElements (Lorg/partiql/ast/v1/expr/PathStep$AllElements;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStepAllFields (Lorg/partiql/ast/v1/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStepElement (Lorg/partiql/ast/v1/expr/PathStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPathStepField (Lorg/partiql/ast/v1/expr/PathStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitQuery (Lorg/partiql/ast/v1/Query;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitQueryBody (Lorg/partiql/ast/v1/QueryBody;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitQueryBodySFW (Lorg/partiql/ast/v1/QueryBody$SFW;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitQueryBodySetOp (Lorg/partiql/ast/v1/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelect (Lorg/partiql/ast/v1/Select;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectItem (Lorg/partiql/ast/v1/SelectItem;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectItemExpr (Lorg/partiql/ast/v1/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectItemStar (Lorg/partiql/ast/v1/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectList (Lorg/partiql/ast/v1/SelectList;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectPivot (Lorg/partiql/ast/v1/SelectPivot;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectStar (Lorg/partiql/ast/v1/SelectStar;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSelectValue (Lorg/partiql/ast/v1/SelectValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSetOp (Lorg/partiql/ast/v1/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSort (Lorg/partiql/ast/v1/Sort;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitStatement (Lorg/partiql/ast/v1/Statement;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/DataType : org/partiql/ast/v1/AstEnum {
@@ -5955,7 +6112,10 @@ public class org/partiql/ast/v1/ExcludeStep$CollIndex : org/partiql/ast/v1/Exclu
 	public fun <init> (I)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/ExcludeStep$CollIndex$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/ExcludeStep$CollIndex$Builder {
@@ -5967,7 +6127,10 @@ public class org/partiql/ast/v1/ExcludeStep$CollIndex$Builder {
 public class org/partiql/ast/v1/ExcludeStep$CollWildcard : org/partiql/ast/v1/ExcludeStep {
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/ExcludeStep$CollWildcard$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/ExcludeStep$CollWildcard$Builder {
@@ -5980,7 +6143,10 @@ public class org/partiql/ast/v1/ExcludeStep$StructField : org/partiql/ast/v1/Exc
 	public fun <init> (Lorg/partiql/ast/v1/Identifier;)V
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/ExcludeStep$StructField$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/ExcludeStep$StructField$Builder {
@@ -5992,7 +6158,10 @@ public class org/partiql/ast/v1/ExcludeStep$StructField$Builder {
 public class org/partiql/ast/v1/ExcludeStep$StructWildcard : org/partiql/ast/v1/ExcludeStep {
 	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/v1/ExcludeStep$StructWildcard$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/v1/ExcludeStep$StructWildcard$Builder {
@@ -6084,7 +6253,6 @@ public class org/partiql/ast/v1/FromJoin$Builder {
 
 public abstract class org/partiql/ast/v1/FromTableRef : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/FromType : org/partiql/ast/v1/AstEnum {
@@ -6391,12 +6559,10 @@ public class org/partiql/ast/v1/QueryBody$SetOp$Builder {
 
 public abstract class org/partiql/ast/v1/Select : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract class org/partiql/ast/v1/SelectItem : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/SelectItem$Expr : org/partiql/ast/v1/SelectItem {
@@ -6589,12 +6755,10 @@ public class org/partiql/ast/v1/Sort$Builder {
 
 public abstract class org/partiql/ast/v1/Statement : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract class org/partiql/ast/v1/expr/Expr : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/expr/ExprAnd : org/partiql/ast/v1/expr/Expr {
@@ -7428,7 +7592,6 @@ public class org/partiql/ast/v1/graph/GraphDirection : org/partiql/ast/v1/AstEnu
 
 public abstract class org/partiql/ast/v1/graph/GraphLabel : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/graph/GraphLabel$Conj : org/partiql/ast/v1/graph/GraphLabel {
@@ -7539,7 +7702,6 @@ public class org/partiql/ast/v1/graph/GraphMatch$Builder {
 
 public abstract class org/partiql/ast/v1/graph/GraphPart : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/graph/GraphPart$Edge : org/partiql/ast/v1/graph/GraphPart {
@@ -7671,7 +7833,6 @@ public class org/partiql/ast/v1/graph/GraphRestrictor : org/partiql/ast/v1/AstEn
 
 public abstract class org/partiql/ast/v1/graph/GraphSelector : org/partiql/ast/v1/AstNode {
 	public fun <init> ()V
-	public fun accept (Lorg/partiql/ast/v1/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/v1/graph/GraphSelector$AllShortest : org/partiql/ast/v1/graph/GraphSelector {

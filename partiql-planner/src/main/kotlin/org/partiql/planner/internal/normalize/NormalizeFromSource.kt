@@ -12,25 +12,28 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.normalize
 
-import org.partiql.ast.AstNode
-import org.partiql.ast.Expr
-import org.partiql.ast.From
-import org.partiql.ast.QueryBody
-import org.partiql.ast.Statement
-import org.partiql.ast.fromJoin
-import org.partiql.ast.helpers.toBinder
-import org.partiql.ast.util.AstRewriter
-
-// TODO DELETE FILE
+import org.partiql.ast.v1.Ast.fromExpr
+import org.partiql.ast.v1.Ast.fromJoin
+import org.partiql.ast.v1.AstNode
+import org.partiql.ast.v1.AstRewriter
+import org.partiql.ast.v1.From
+import org.partiql.ast.v1.FromExpr
+import org.partiql.ast.v1.FromJoin
+import org.partiql.ast.v1.FromTableRef
+import org.partiql.ast.v1.FromType
+import org.partiql.ast.v1.QueryBody
+import org.partiql.ast.v1.Statement
+import org.partiql.ast.v1.expr.Expr
+import org.partiql.planner.internal.helpers.toBinder
 
 /**
  * Assign aliases to any FROM source which does not have one.
  */
 internal object NormalizeFromSource : AstPass {
 
-    override fun apply(statement: Statement): Statement = Visitor.visitStatement(statement, 0) as Statement
+    override fun apply(statement: Statement): Statement = statement.accept(Visitor, 0) as Statement
 
     private object Visitor : AstRewriter<Int>() {
 
@@ -39,19 +42,19 @@ internal object NormalizeFromSource : AstPass {
 
         override fun visitFrom(node: From, ctx: Int) = super.visitFrom(node, ctx) as From
 
-        override fun visitFromJoin(node: From.Join, ctx: Int): From {
-            val lhs = visitFrom(node.lhs, ctx)
-            val rhs = visitFrom(node.rhs, ctx + 1)
-            val condition = node.condition?.let { visitExpr(it, ctx) as Expr }
+        override fun visitFromJoin(node: FromJoin, ctx: Int): FromJoin {
+            val lhs = node.lhs.accept(this, ctx) as FromTableRef
+            val rhs = node.rhs.accept(this, ctx + 1) as FromTableRef
+            val condition = node.condition?.accept(this, ctx) as Expr?
             return if (lhs !== node.lhs || rhs !== node.rhs || condition !== node.condition) {
-                fromJoin(lhs, rhs, node.type, condition)
+                fromJoin(lhs, rhs, node.joinType, condition)
             } else {
                 node
             }
         }
 
-        override fun visitFromValue(node: From.Value, ctx: Int): From {
-            val expr = visitExpr(node.expr, ctx) as Expr
+        override fun visitFromExpr(node: FromExpr, ctx: Int): FromExpr {
+            val expr = node.expr.accept(this, ctx) as Expr
             var i = ctx
             var asAlias = node.asAlias
             var atAlias = node.atAlias
@@ -60,11 +63,11 @@ internal object NormalizeFromSource : AstPass {
                 asAlias = expr.toBinder(i++)
             }
             // derive AT binder
-            if (atAlias == null && node.type == From.Value.Type.UNPIVOT) {
+            if (atAlias == null && node.fromType == FromType.UNPIVOT()) {
                 atAlias = expr.toBinder(i++)
             }
             return if (expr !== node.expr || asAlias !== node.asAlias || atAlias !== node.atAlias) {
-                node.copy(expr = expr, asAlias = asAlias, atAlias = atAlias)
+                fromExpr(expr = expr, fromType = node.fromType, asAlias = asAlias, atAlias = atAlias)
             } else {
                 node
             }
