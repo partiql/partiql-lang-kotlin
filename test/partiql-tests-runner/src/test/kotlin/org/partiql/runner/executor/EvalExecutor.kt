@@ -13,8 +13,6 @@ import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.memory.StandardCatalog
-import org.partiql.plugins.memory.StandardTable
 import org.partiql.runner.CompileType
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
@@ -22,6 +20,7 @@ import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorListener
@@ -174,7 +173,7 @@ class EvalExecutor(
             env.fields.forEach {
                 map[it.name] = inferEnv(it.value)
             }
-            return StandardCatalog.builder()
+            return Catalog.builder()
                 .name("default")
                 .apply { load(env) }
                 .build()
@@ -184,7 +183,7 @@ class EvalExecutor(
          * Uses the planner to infer the type of the environment.
          */
         private fun inferEnv(env: AnyElement): PType {
-            val catalog = StandardCatalog.builder().name("default").build()
+            val catalog = Catalog.builder().name("default").build()
             val session = Session.builder()
                 .catalog("default")
                 .catalogs(catalog)
@@ -202,12 +201,12 @@ class EvalExecutor(
          *
          * Test data is "PartiQL encoded as Ion" hence we need the PartiQLValueIonReader.
          */
-        private fun StandardCatalog.Builder.load(env: StructElement) {
+        private fun Catalog.Builder.load(env: StructElement) {
             for (f in env.fields) {
                 val name = Name.of(f.name)
                 val value = PartiQLValueIonReaderBuilder.standard().build(f.value).read()
                 val datum = Datum.of(value)
-                val table = StandardTable.of(
+                val table = Table.standard(
                     name = name,
                     schema = PType.dynamic(),
                     datum = datum,

@@ -10,9 +10,10 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.PErrorAlwaysMissingCollector
 import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
-import org.partiql.plugins.memory.StandardCatalog
 import org.partiql.spi.Context
+import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.catalog.Table
 import org.partiql.types.BagType
 import org.partiql.types.Field
 import org.partiql.types.PType
@@ -26,15 +27,15 @@ internal class PlannerPErrorReportingTests {
 
     private val catalogName = "mode_test"
 
-    private val catalog = StandardCatalog
+    private val catalog = Catalog
         .builder()
         .name(catalogName)
-        .define("missing_binding", PType.dynamic())
-        .define("atomic", PType.smallint())
-        .define("collection_no_missing_atomic", PType.bag(PType.smallint()))
-        .define("collection_contain_missing_atomic", PType.bag(PType.smallint()))
-        .define("struct_no_missing", PType.row(listOf(Field.of("f1", PType.smallint()))))
-        .define("struct_with_missing", PType.row(listOf(Field.of("f1", PType.smallint()))))
+        .define(Table.empty("missing_binding", PType.dynamic()))
+        .define(Table.empty("atomic", PType.smallint()))
+        .define(Table.empty("collection_no_missing_atomic", PType.bag(PType.smallint())))
+        .define(Table.empty("collection_contain_missing_atomic", PType.bag(PType.smallint())))
+        .define(Table.empty("struct_no_missing", PType.row(listOf(Field.of("f1", PType.smallint())))))
+        .define(Table.empty("struct_with_missing", PType.row(listOf(Field.of("f1", PType.smallint())))))
         .build()
 
     private val session = Session.builder()

@@ -16,7 +16,7 @@ import org.partiql.plan.rel.RelProject
 import org.partiql.plan.rex.RexSelect
 import org.partiql.plan.rex.RexVar
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.memory.StandardCatalog
+import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
 import java.util.stream.Stream
 import kotlin.test.assertEquals
@@ -27,7 +27,7 @@ class SubsumptionTest {
 
         private val planner = PartiQLPlanner.standard()
         private val parser = PartiQLParser.standard()
-        private val catalog = StandardCatalog.builder().name("default").build()
+        private val catalog = Catalog.builder().name("default").build()
     }
 
     private fun getExcludeClause(statement: Operation): RelExclude {

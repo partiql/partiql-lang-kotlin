@@ -1,11 +1,9 @@
 package org.partiql.spi.catalog
 
 import org.partiql.spi.catalog.impl.StandardCatalog
-import org.partiql.spi.catalog.impl.StandardTable
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.function.Builtins
 import org.partiql.spi.function.Function
-import org.partiql.types.PType
 
 /**
  * Catalog interface for access to tables and routines.
