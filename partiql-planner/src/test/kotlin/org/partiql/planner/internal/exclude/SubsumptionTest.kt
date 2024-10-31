@@ -7,7 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.parser.PartiQLParser
+import org.partiql.parser.V1PartiQLParser
 import org.partiql.plan.Exclusion
 import org.partiql.plan.Operation
 import org.partiql.plan.builder.PlanFactory
@@ -26,7 +26,7 @@ class SubsumptionTest {
     companion object {
 
         private val planner = PartiQLPlanner.standard()
-        private val parser = PartiQLParser.standard()
+        private val parser = V1PartiQLParser.standard()
         private val catalog = MemoryCatalog.builder().name("default").build()
     }
 

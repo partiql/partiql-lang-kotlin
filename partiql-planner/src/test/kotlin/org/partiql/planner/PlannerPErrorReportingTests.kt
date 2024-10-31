@@ -2,8 +2,8 @@ package org.partiql.planner
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.ast.Statement
-import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.ast.v1.Statement
+import org.partiql.parser.V1PartiQLParserBuilder
 import org.partiql.plan.Operation
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
@@ -19,7 +19,6 @@ import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import java.lang.AssertionError
 import kotlin.test.assertEquals
 
 internal class PlannerPErrorReportingTests {
@@ -42,7 +41,7 @@ internal class PlannerPErrorReportingTests {
         .catalogs(catalog)
         .build()
 
-    private val parser = PartiQLParserBuilder().build()
+    private val parser = V1PartiQLParserBuilder().build()
 
     private val statement: ((String) -> Statement) = { query ->
         parser.parse(query).root

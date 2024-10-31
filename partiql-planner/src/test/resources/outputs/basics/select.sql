@@ -41,10 +41,10 @@ SELECT CURRENT_DATE AS "CURRENT_DATE" FROM "default"."SCHEMA"."T" AS "T";
 SELECT DATE_DIFF(DAY, CURRENT_DATE, CURRENT_DATE) AS "_1" FROM "default"."SCHEMA"."T" AS "T";
 
 --#[select-14]
-SELECT DATE_ADD(DAY, 5, CURRENT_DATE) AS "_1" FROM "default"."SCHEMA"."T" AS "T"
+SELECT DATE_ADD(DAY, 5, CURRENT_DATE) AS "_1" FROM "default"."SCHEMA"."T" AS "T";
 
 --#[select-15]
-SELECT DATE_ADD(DAY, -5, CURRENT_DATE) AS "_1" FROM "default"."SCHEMA"."T" AS "T"
+SELECT DATE_ADD(DAY, -5, CURRENT_DATE) AS "_1" FROM "default"."SCHEMA"."T" AS "T";
 
 --#[select-16]
 SELECT "t"['a'] AS "a" FROM "default"."SCHEMA"."T" AS "t";
