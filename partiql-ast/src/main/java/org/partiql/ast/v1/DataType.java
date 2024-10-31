@@ -10,6 +10,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class DataType extends AstEnum {
     public static final int UNKNOWN = 0;
+    // TODO remove `NULL` and `MISSING` variants from DataType
     // <absent types>
     public static final int NULL = 1;
     public static final int MISSING = 2;
