@@ -16,19 +16,6 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 public abstract class GraphPart extends AstNode {
-    @Override
-    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        if (this instanceof Node) {
-            return visitor.visitGraphPartNode((Node) this, ctx);
-        } else if (this instanceof Edge) {
-            return visitor.visitGraphPartEdge((Edge) this, ctx);
-        } else if (this instanceof Pattern) {
-            return visitor.visitGraphPartPattern((Pattern) this, ctx);
-        } else {
-            throw new IllegalStateException("Unexpected value: " + this);
-        }
-    }
-
     /**
      * TODO docs, equals, hashcode
      */

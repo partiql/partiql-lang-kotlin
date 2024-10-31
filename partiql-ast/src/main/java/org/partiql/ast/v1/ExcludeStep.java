@@ -1,6 +1,7 @@
 package org.partiql.ast.v1;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ public abstract class ExcludeStep extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class StructField extends ExcludeStep {
         @NotNull
         public final Identifier symbol;
@@ -41,6 +43,7 @@ public abstract class ExcludeStep extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class CollIndex extends ExcludeStep {
         public final int index;
 
@@ -64,6 +67,7 @@ public abstract class ExcludeStep extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class StructWildcard extends ExcludeStep {
         @NotNull
         @Override
@@ -81,6 +85,7 @@ public abstract class ExcludeStep extends AstNode {
      * TODO docs, equals, hashcode
      */
     @Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class CollWildcard extends ExcludeStep {
         @NotNull
         @Override

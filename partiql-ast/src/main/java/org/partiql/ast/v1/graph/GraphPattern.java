@@ -59,6 +59,6 @@ public class GraphPattern extends AstNode {
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitGraphMatchPattern(this, ctx);
+        return visitor.visitGraphPattern(this, ctx);
     }
 }

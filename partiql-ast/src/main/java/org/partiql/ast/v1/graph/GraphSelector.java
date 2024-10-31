@@ -13,25 +13,6 @@ import java.util.Collections;
  * TODO docs, equals, hashcode
  */
 public abstract class GraphSelector extends AstNode {
-    @Override
-    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        if (this instanceof AnyShortest) {
-            return visitor.visitGraphSelectorAnyShortest((AnyShortest) this, ctx);
-        } else if (this instanceof AllShortest) {
-            return visitor.visitGraphSelectorAllShortest((AllShortest) this, ctx);
-        } else if (this instanceof Any) {
-            return visitor.visitGraphSelectorAny((Any) this, ctx);
-        } else if (this instanceof AnyK) {
-            return visitor.visitGraphSelectorAnyK((AnyK) this, ctx);
-        } else if (this instanceof ShortestK) {
-            return visitor.visitGraphSelectorShortestK((ShortestK) this, ctx);
-        } else if (this instanceof ShortestKGroup) {
-            return visitor.visitGraphSelectorShortestKGroup((ShortestKGroup) this, ctx);
-        } else {
-            throw new IllegalStateException("Unexpected value: " + this);
-        }
-    }
-
     /**
      * TODO docs, equals, hashcode
      */

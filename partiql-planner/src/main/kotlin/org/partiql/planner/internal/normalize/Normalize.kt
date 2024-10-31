@@ -1,3 +1,4 @@
+@file:JvmName("Normalize")
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
@@ -12,15 +13,17 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.normalize
 
-import org.partiql.ast.Statement
-
-// TODO DELETE FILE
+import org.partiql.ast.v1.Statement
 
 /**
- * Wraps a rewriter with a default entry point.
+ * AST normalization
  */
-internal interface AstPass {
-    public fun apply(statement: Statement): Statement
+internal fun Statement.normalize(): Statement {
+    // could be a fold, but this is nice for setting breakpoints
+    var ast = this
+    ast = NormalizeFromSource.apply(ast)
+    ast = NormalizeGroupBy.apply(ast)
+    return ast
 }
