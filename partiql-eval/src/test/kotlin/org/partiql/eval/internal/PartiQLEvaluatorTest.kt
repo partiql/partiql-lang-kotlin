@@ -1,6 +1,5 @@
 package org.partiql.eval.internal
 
-import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -17,7 +16,7 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
-import org.partiql.spi.value.ion.IonDatum
+import org.partiql.spi.value.ion.IonDatumReader
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
@@ -27,7 +26,6 @@ import org.partiql.value.boolValue
 import org.partiql.value.decimalValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
-import org.partiql.value.intValue
 import org.partiql.value.io.PartiQLValueIonWriterBuilder
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
@@ -37,8 +35,11 @@ import org.partiql.value.structValue
 import org.partiql.value.symbolValue
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
+<<<<<<< HEAD
 import java.math.BigInteger
 import kotlin.test.assertEquals
+=======
+>>>>>>> 92d2693e (Adds IonReader implementation)
 import kotlin.test.assertNotNull
 
 /**
@@ -149,8 +150,8 @@ class PartiQLEvaluatorTest {
                     FROM t;
                 """.trimIndent(),
                 expected = bagValue(
-                    intValue(BigInteger.valueOf(1)),
-                    intValue(BigInteger.valueOf(2)),
+                    int64Value(1),
+                    int64Value(2),
                 ),
                 globals = listOf(
                     SuccessTestCase.Global(
@@ -170,10 +171,10 @@ class PartiQLEvaluatorTest {
                     FROM t AS t1, t AS t2;
                 """.trimIndent(),
                 expected = bagValue(
-                    intValue(BigInteger.valueOf(1)),
-                    intValue(BigInteger.valueOf(1)),
-                    intValue(BigInteger.valueOf(2)),
-                    intValue(BigInteger.valueOf(2)),
+                    int64Value(1),
+                    int64Value(1),
+                    int64Value(2),
+                    int64Value(2),
                 ),
                 globals = listOf(
                     SuccessTestCase.Global(
@@ -1331,7 +1332,7 @@ class PartiQLEvaluatorTest {
                         val table = Table.standard(
                             name = Name.of(it.name),
                             schema = PType.fromStaticType(it.type),
-                            datum = IonDatum.of(loadSingleElement(it.value))
+                            datum = IonDatumReader.read(it.value)
                         )
                         define(table)
                     }

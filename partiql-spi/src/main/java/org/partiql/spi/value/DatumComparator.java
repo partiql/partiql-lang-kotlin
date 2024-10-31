@@ -179,6 +179,7 @@ abstract class DatumComparator implements Comparator<Datum> {
         // OTHER
         precedence.put(PType.Kind.DYNAMIC, 100);
         precedence.put(PType.Kind.UNKNOWN, 100);
+        precedence.put(PType.Kind.VARIANT, 100);
         return precedence;
     }
 

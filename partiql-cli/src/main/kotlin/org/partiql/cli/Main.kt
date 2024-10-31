@@ -26,7 +26,7 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.value.ion.IonDatum
+import org.partiql.spi.value.ion.IonVariant
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
@@ -253,7 +253,7 @@ internal class MainCommand : Runnable {
                 Table.standard(
                     name = Name.of("stdin"),
                     schema = PType.dynamic(),
-                    datum = IonDatum.of(value.asAnyElement())
+                    datum = IonVariant(value.asAnyElement())
                 )
             )
             .build()

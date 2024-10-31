@@ -460,9 +460,11 @@ public final class org/partiql/spi/function/Routine$DefaultImpls {
 }
 
 public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable {
+	public static fun array (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun bag (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun bigint (J)Lorg/partiql/spi/value/Datum;
 	public static fun blob ([B)Lorg/partiql/spi/value/Datum;
+	public static fun blob ([BI)Lorg/partiql/spi/value/Datum;
 	public static fun bool (Z)Lorg/partiql/spi/value/Datum;
 	public static fun character (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public static fun character (Ljava/lang/String;I)Lorg/partiql/spi/value/Datum;
@@ -497,7 +499,6 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun isMissing ()Z
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
-	public static fun list (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun missing ()Lorg/partiql/spi/value/Datum;
 	public static fun missing (Lorg/partiql/types/PType;)Lorg/partiql/spi/value/Datum;
 	public static fun nullValue ()Lorg/partiql/spi/value/Datum;
@@ -519,15 +520,66 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun varchar (Ljava/lang/String;I)Lorg/partiql/spi/value/Datum;
 }
 
+public abstract interface class org/partiql/spi/value/DatumReader : java/lang/AutoCloseable {
+	public abstract fun next ()Lorg/partiql/spi/value/Datum;
+}
+
+public abstract interface class org/partiql/spi/value/DatumWriter : java/lang/AutoCloseable {
+	public abstract fun write (Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/DatumWriter;
+}
+
 public abstract interface class org/partiql/spi/value/Field {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getValue ()Lorg/partiql/spi/value/Datum;
 	public static fun of (Ljava/lang/String;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Field;
 }
 
-public final class org/partiql/spi/value/ion/IonDatum : org/partiql/spi/value/Datum {
-	public static final field Companion Lorg/partiql/spi/value/ion/IonDatum$Companion;
-	public synthetic fun <init> (Lcom/amazon/ionelement/api/AnyElement;Lorg/partiql/types/PType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+public abstract interface class org/partiql/spi/value/Variant : org/partiql/spi/value/Datum {
+	public fun pack ()[B
+	public fun pack (Ljava/nio/charset/Charset;)[B
+	public abstract fun unpack ()Ljava/lang/Object;
+}
+
+public final class org/partiql/spi/value/ion/IonDatumException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getLocalizedMessage ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+	public final fun getSpan ()Lcom/amazon/ion/Span;
+}
+
+public final class org/partiql/spi/value/ion/IonDatumReader : org/partiql/spi/value/DatumReader {
+	public static final field Companion Lorg/partiql/spi/value/ion/IonDatumReader$Companion;
+	public fun <init> (Lcom/amazon/ion/IonReader;)V
+	public synthetic fun <init> (Lcom/amazon/ion/IonReader;Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/io/InputStream;)V
+	public fun <init> (Ljava/lang/String;)V
+	public static final fun builder ()Lorg/partiql/spi/value/ion/IonDatumReader$Builder;
+	public fun close ()V
+	public fun next ()Lorg/partiql/spi/value/Datum;
+	public static final fun read (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
+}
+
+public final class org/partiql/spi/value/ion/IonDatumReader$Builder {
+	public fun <init> ()V
+	public final fun build (Lcom/amazon/ion/IonReader;)Lorg/partiql/spi/value/ion/IonDatumReader;
+	public final fun build (Ljava/io/InputStream;)Lorg/partiql/spi/value/ion/IonDatumReader;
+	public final fun register (Ljava/lang/String;Lorg/partiql/spi/value/DatumReader;)Lorg/partiql/spi/value/ion/IonDatumReader$Builder;
+}
+
+public final class org/partiql/spi/value/ion/IonDatumReader$Companion {
+	public final fun builder ()Lorg/partiql/spi/value/ion/IonDatumReader$Builder;
+	public final fun read (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
+}
+
+public final class org/partiql/spi/value/ion/IonDatumWriter : org/partiql/spi/value/DatumWriter {
+	public fun <init> ()V
+	public fun close ()V
+	public fun write (Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/DatumWriter;
+}
+
+public final class org/partiql/spi/value/ion/IonVariant : org/partiql/spi/value/Variant {
+	public fun <init> (Lcom/amazon/ionelement/api/AnyElement;)V
 	public fun get (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public fun getBigDecimal ()Ljava/math/BigDecimal;
 	public fun getBigInteger ()Ljava/math/BigInteger;
@@ -543,11 +595,10 @@ public final class org/partiql/spi/value/ion/IonDatum : org/partiql/spi/value/Da
 	public fun isMissing ()Z
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
-	public static final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/spi/value/Datum;
-}
-
-public final class org/partiql/spi/value/ion/IonDatum$Companion {
-	public final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/spi/value/Datum;
+	public fun pack ()[B
+	public fun pack (Ljava/nio/charset/Charset;)[B
+	public fun unpack ()Lcom/amazon/ionelement/api/IonElement;
+	public synthetic fun unpack ()Ljava/lang/Object;
 }
 
 public abstract class org/partiql/value/BagValue : org/partiql/value/CollectionValue {

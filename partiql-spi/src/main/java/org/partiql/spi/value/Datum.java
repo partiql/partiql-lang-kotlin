@@ -689,6 +689,11 @@ public interface Datum extends Iterable<Datum> {
         return new DatumBytes(value, PType.blob(Integer.MAX_VALUE));
     }
 
+    @NotNull
+    static Datum blob(@NotNull byte[] value, int length) {
+        return new DatumBytes(value, PType.blob(length));
+    }
+
     // DATE/TIME
 
     @NotNull
@@ -714,7 +719,7 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum list(@NotNull Iterable<Datum> values) {
+    static Datum array(@NotNull Iterable<Datum> values) {
         return new DatumCollection(values, PType.array());
     }
 

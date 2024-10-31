@@ -548,7 +548,7 @@ internal object CastTable {
 
     private fun registerBag() {
         register(BAG, BAG) { x, _ -> x }
-        register(BAG, ARRAY) { x, _ -> Datum.list(x) }
+        register(BAG, ARRAY) { x, _ -> Datum.array(x) }
         register(BAG, SEXP) { x, _ -> Datum.sexp(x) }
     }
 
@@ -560,7 +560,7 @@ internal object CastTable {
 
     private fun registerSexp() {
         register(SEXP, BAG) { x, _ -> Datum.bag(x) }
-        register(SEXP, ARRAY) { x, _ -> Datum.list(x) }
+        register(SEXP, ARRAY) { x, _ -> Datum.array(x) }
         register(SEXP, SEXP) { x, _ -> x }
     }
 

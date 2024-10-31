@@ -17,5 +17,5 @@ public interface DatumReader extends AutoCloseable {
      * @return next Datum or null.
      */
     @Nullable
-    public Datum read();
+    public Datum next();
 }

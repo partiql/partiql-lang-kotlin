@@ -13,5 +13,5 @@ internal class ExprArray(values: List<ExprValue>) :
     // DO NOT USE FINAL
     private var _values = values
 
-    override fun eval(env: Environment): Datum = Datum.list(_values.map { it.eval(env) })
+    override fun eval(env: Environment): Datum = Datum.array(_values.map { it.eval(env) })
 }

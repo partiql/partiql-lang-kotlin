@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets
 /**
  * A [Datum] implemented over Ion's [AnyElement].
  */
-public class IonDatum(private var value: AnyElement) : Variant<IonElement> {
+public class IonVariant(private var value: AnyElement) : Variant<IonElement> {
 
     /**
      * TODO replace with PType.variant("ion")
@@ -150,8 +150,8 @@ public class IonDatum(private var value: AnyElement) : Variant<IonElement> {
     }
 
     override fun iterator(): MutableIterator<Datum> = when (value.type) {
-        LIST -> value.listValues.map { IonDatum(it) }.toMutableList().iterator()
-        SEXP -> value.sexpValues.map { IonDatum(it) }.toMutableList().iterator()
+        LIST -> value.listValues.map { IonVariant(it) }.toMutableList().iterator()
+        SEXP -> value.sexpValues.map { IonVariant(it) }.toMutableList().iterator()
         else -> super.iterator()
     }
 
@@ -160,7 +160,7 @@ public class IonDatum(private var value: AnyElement) : Variant<IonElement> {
             return super.getFields()
         }
         return value.structFields
-            .map { Field.of(it.name, IonDatum(it.value)) }
+            .map { Field.of(it.name, IonVariant(it.value)) }
             .toMutableList()
             .iterator()
     }
@@ -174,7 +174,7 @@ public class IonDatum(private var value: AnyElement) : Variant<IonElement> {
         return if (v == null) {
             Datum.missing()
         } else {
-            IonDatum(v)
+            IonVariant(v)
         }
     }
 
@@ -186,7 +186,7 @@ public class IonDatum(private var value: AnyElement) : Variant<IonElement> {
         val struct = value.asStruct()
         for (field in struct.fields) {
             if (field.name.equals(name, ignoreCase = true)) {
-                return IonDatum(field.value)
+                return IonVariant(field.value)
             }
         }
         return Datum.missing()

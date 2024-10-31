@@ -441,7 +441,16 @@ public interface PType {
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated
-        UNKNOWN
+        UNKNOWN,
+
+        /**
+         * The variant type.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>: T VARIANT or VARIANT[T]
+         * <br>
+         */
+        VARIANT,
     }
 
     /**

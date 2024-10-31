@@ -9,10 +9,10 @@ import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.Datum.array
 import org.partiql.spi.value.Datum.bag
 import org.partiql.spi.value.Datum.bool
 import org.partiql.spi.value.Datum.integer
-import org.partiql.spi.value.Datum.list
 import org.partiql.spi.value.Datum.string
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
@@ -83,8 +83,8 @@ class ExprCallDynamicTest {
                 expectedIndex = 4
             ),
             DynamicTestCase(
-                lhs = list(emptyList()),
-                rhs = list(emptyList()),
+                lhs = array(emptyList()),
+                rhs = array(emptyList()),
                 expectedIndex = 0
             ),
             DynamicTestCase(
@@ -99,7 +99,7 @@ class ExprCallDynamicTest {
             ),
             DynamicTestCase(
                 lhs = string("hello"),
-                rhs = list(emptyList()),
+                rhs = array(emptyList()),
                 expectedIndex = 7
             ),
             DynamicTestCase(
@@ -113,7 +113,7 @@ class ExprCallDynamicTest {
                 expectedIndex = 9
             ),
             DynamicTestCase(
-                lhs = list(emptyList()),
+                lhs = array(emptyList()),
                 rhs = string("hello"),
                 expectedIndex = 11
             ),

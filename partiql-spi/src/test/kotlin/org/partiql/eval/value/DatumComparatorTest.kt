@@ -24,7 +24,7 @@ class DatumComparatorTest {
     // RNG for fuzz testing the sort orders, the seed is arbitrary but static for determinism
     private val SEED = 0x59CF3400BEF36A67
 
-    private val emptyList: Datum = Datum.list(emptyList())
+    private val emptyList: Datum = Datum.array(emptyList())
     private val emptyBag: Datum = Datum.bag(emptyList())
     private fun emptyStruct(): Datum = Datum.struct(emptyList())
 
@@ -249,21 +249,21 @@ class DatumComparatorTest {
             // TODO: Datum.list(emptyList(), annotations = listOf("z", "x", "y")) // `z::x::y::[]`
         ),
         EquivValues(
-            Datum.list(listOf(Datum.bool(false), emptyStruct())) // [false, {}]
+            Datum.array(listOf(Datum.bool(false), emptyStruct())) // [false, {}]
         ),
         EquivValues(
-            Datum.list(listOf(Datum.bool(true))) // [true]
+            Datum.array(listOf(Datum.bool(true))) // [true]
         ),
         EquivValues(
-            Datum.list(listOf(Datum.bool(true), Datum.bool(true))) // [true, true]
+            Datum.array(listOf(Datum.bool(true), Datum.bool(true))) // [true, true]
         ),
         EquivValues(
-            Datum.list(listOf(Datum.bool(true), Datum.integer(100))) // [true, 100]
+            Datum.array(listOf(Datum.bool(true), Datum.integer(100))) // [true, 100]
         ),
         EquivValues(
-            Datum.list(
+            Datum.array(
                 listOf(
-                    Datum.list(
+                    Datum.array(
                         listOf(
                             Datum.integer(1)
                         )
@@ -272,9 +272,9 @@ class DatumComparatorTest {
             ) // [[1]]
         ),
         EquivValues(
-            Datum.list(
+            Datum.array(
                 listOf(
-                    Datum.list(
+                    Datum.array(
                         listOf(
                             Datum.integer(1), Datum.integer(1)
                         )
@@ -283,9 +283,9 @@ class DatumComparatorTest {
             ) // [[1, 1]]
         ),
         EquivValues(
-            Datum.list(
+            Datum.array(
                 listOf(
-                    Datum.list(
+                    Datum.array(
                         listOf(
                             Datum.integer(1), Datum.integer(2)
                         )
@@ -294,9 +294,9 @@ class DatumComparatorTest {
             ) // [[1, 2]]
         ),
         EquivValues(
-            Datum.list(
+            Datum.array(
                 listOf(
-                    Datum.list(
+                    Datum.array(
                         listOf(
                             Datum.integer(2), Datum.integer(1)
                         )
@@ -305,11 +305,11 @@ class DatumComparatorTest {
             ) // [[2, 1]]
         ),
         EquivValues(
-            Datum.list(
+            Datum.array(
                 listOf(
-                    Datum.list(
+                    Datum.array(
                         listOf(
-                            Datum.list(listOf(Datum.integer(1)))
+                            Datum.array(listOf(Datum.integer(1)))
                         )
                     )
                 )
@@ -332,7 +332,7 @@ class DatumComparatorTest {
             Datum.sexp(listOf(Datum.timestamp(timestamp(year = 2012)), Datum.integer(1), Datum.integer(2), Datum.integer(3))) // `(2012T 1 2 3)`
         ),
         EquivValues(
-            Datum.sexp(listOf(Datum.list(emptyList()))) // `([])`
+            Datum.sexp(listOf(Datum.array(emptyList()))) // `([])`
         ),
         EquivValues(
             Datum.sexp(listOf(emptyList, emptyList)) // `([] [])`
@@ -382,32 +382,32 @@ class DatumComparatorTest {
         ),
         EquivValues(
             struct( // { 'm': [1, 1], 'n': [1, 1]}
-                "m" to Datum.list(listOf(Datum.integer(1), Datum.integer(1))),
-                "n" to Datum.list(listOf(Datum.integer(1), Datum.integer(1)))
+                "m" to Datum.array(listOf(Datum.integer(1), Datum.integer(1))),
+                "n" to Datum.array(listOf(Datum.integer(1), Datum.integer(1)))
             )
         ),
         EquivValues(
             struct( // { 'm': [1, 1], 'n': [1, 2]}
-                "m" to Datum.list(listOf(Datum.integer(1), Datum.integer(1))),
-                "n" to Datum.list(listOf(Datum.integer(1), Datum.integer(2)))
+                "m" to Datum.array(listOf(Datum.integer(1), Datum.integer(1))),
+                "n" to Datum.array(listOf(Datum.integer(1), Datum.integer(2)))
             )
         ),
         EquivValues(
             struct( // { 'm': [1, 1], 'n': [2, 2]}
-                "m" to Datum.list(listOf(Datum.integer(1), Datum.integer(1))),
-                "n" to Datum.list(listOf(Datum.integer(2), Datum.integer(2)))
+                "m" to Datum.array(listOf(Datum.integer(1), Datum.integer(1))),
+                "n" to Datum.array(listOf(Datum.integer(2), Datum.integer(2)))
             )
         ),
         EquivValues(
             struct( // { 'm': [1, 2], 'n': [2, 2]}
-                "m" to Datum.list(listOf(Datum.integer(1), Datum.integer(2))),
-                "n" to Datum.list(listOf(Datum.integer(2), Datum.integer(2)))
+                "m" to Datum.array(listOf(Datum.integer(1), Datum.integer(2))),
+                "n" to Datum.array(listOf(Datum.integer(2), Datum.integer(2)))
             )
         ),
         EquivValues(
             struct( // { 'm': [2, 2], 'n': [2, 2]}
-                "m" to Datum.list(listOf(Datum.integer(2), Datum.integer(2))),
-                "n" to Datum.list(listOf(Datum.integer(2), Datum.integer(2)))
+                "m" to Datum.array(listOf(Datum.integer(2), Datum.integer(2))),
+                "n" to Datum.array(listOf(Datum.integer(2), Datum.integer(2)))
             )
         ),
         EquivValues(
