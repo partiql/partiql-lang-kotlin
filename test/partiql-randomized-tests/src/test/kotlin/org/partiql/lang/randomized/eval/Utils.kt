@@ -1,7 +1,7 @@
 package org.partiql.lang.randomized.eval
 
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.V1PartiQLParser
+import org.partiql.parser.PartiQLParserV1
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
@@ -22,7 +22,7 @@ fun runEvaluatorTestCase(
 
 @OptIn(PartiQLValueExperimental::class)
 private fun execute(query: String): PartiQLValue {
-    val parser = V1PartiQLParser.builder().build()
+    val parser = PartiQLParserV1.builder().build()
     val planner = PartiQLPlanner.builder().build()
     val catalog = object : Catalog {
         override fun getName(): String = "default"
@@ -32,7 +32,8 @@ private fun execute(query: String): PartiQLValue {
 
     // Execute
     val stmt = parser.parse(query)
-    val plan = planner.plan(stmt.root, session)
+    if (stmt.statements.size != 1) error("Expected exactly one statement, got ${stmt.statements.size}")
+    val plan = planner.plan(stmt.statements[0], session)
     TODO("Plan returns the sprout-generated plan, but this needs the v1 plan.")
     // val compiled = engine.prepare(plan.plan, PartiQLEngine.Mode.STRICT, session)
     // return (compiled.execute(session) as PartiQLResult.Value).value

@@ -10,7 +10,7 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.eval.Mode
 import org.partiql.eval.Statement
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.V1PartiQLParser
+import org.partiql.parser.PartiQLParserV1
 import org.partiql.plan.Operation.Query
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.runner.CompileType
@@ -31,6 +31,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
+import kotlin.test.assertEquals
 
 /**
  * @property session
@@ -45,7 +46,9 @@ class EvalExecutor(
     override fun prepare(input: String): Statement {
         val listener = getErrorListener(mode)
         val ctx = Context.of(listener)
-        val ast = parser.parse(input, ctx).root
+        val parseResult = parser.parse(input, ctx)
+        assertEquals(1, parseResult.statements.size)
+        val ast = parseResult.statements[0]
         val plan = planner.plan(ast, session, ctx).plan
         return compiler.prepare(plan, mode, ctx)
     }
@@ -140,7 +143,7 @@ class EvalExecutor(
 
     companion object {
         val compiler = PartiQLCompiler.standard()
-        val parser = V1PartiQLParser.standard()
+        val parser = PartiQLParserV1.standard()
         val planner = PartiQLPlanner.standard()
         // TODO REPLACE WITH DATUM COMPARATOR
         val comparator = PartiQLValue.comparator()
@@ -188,7 +191,9 @@ class EvalExecutor(
                 .catalog("default")
                 .catalogs(catalog)
                 .build()
-            val stmt = parser.parse("`$env`").root
+            val parseResult = parser.parse("`$env`")
+            assertEquals(1, parseResult.statements.size)
+            val stmt = parseResult.statements[0]
             val plan = planner.plan(stmt, session).plan
             return (plan.getOperation() as Query).getRex().getType().getPType()
         }

@@ -4,8 +4,8 @@ import org.partiql.ast.v1.Statement
 import org.partiql.cli.ErrorCodeString
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.V1PartiQLParser
-import org.partiql.parser.V1PartiQLParserBuilder
+import org.partiql.parser.PartiQLParserBuilderV1
+import org.partiql.parser.PartiQLParserV1
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Context
@@ -15,7 +15,7 @@ import org.partiql.spi.value.Datum
 import java.io.PrintStream
 
 internal class Pipeline private constructor(
-    private val parser: V1PartiQLParser,
+    private val parser: PartiQLParserV1,
     private val planner: PartiQLPlanner,
     private val compiler: PartiQLCompiler,
     private val ctx: Context,
@@ -37,7 +37,10 @@ internal class Pipeline private constructor(
         val result = listen(ctx.errorListener as AppPErrorListener) {
             parser.parse(source, ctx)
         }
-        return result.root
+        if (result.statements.size != 1) {
+            throw PipelineException("Expected exactly one statement, got: ${result.statements.size}")
+        }
+        return result.statements[0]
     }
 
     private fun plan(statement: Statement, session: Session): Plan {
@@ -80,7 +83,7 @@ internal class Pipeline private constructor(
         private fun create(mode: Mode, out: PrintStream, config: Config): Pipeline {
             val listener = config.getErrorListener(out)
             val ctx = Context.of(listener)
-            val parser = V1PartiQLParserBuilder().build()
+            val parser = PartiQLParserBuilderV1().build()
             val planner = PartiQLPlanner.builder().build()
             val compiler = PartiQLCompiler.builder().build()
             return Pipeline(parser, planner, compiler, ctx, mode)

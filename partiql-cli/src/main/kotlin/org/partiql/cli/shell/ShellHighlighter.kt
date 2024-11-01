@@ -89,7 +89,7 @@ internal object ShellHighlighter : Highlighter {
 
         // Parse and Replace Token Style if Failures
         try {
-            parser.root()
+            parser.statements()
         } catch (e: RethrowErrorListener.OffendingSymbolException) {
             val offending = e.offendingSymbol
             val prefix = builder.substring(0, offending.startIndex)

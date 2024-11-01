@@ -174,11 +174,11 @@ import org.partiql.ast.typeVarchar
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
-import org.partiql.parser.SourceLocation
-import org.partiql.parser.SourceLocations
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.spi.Context
+import org.partiql.spi.SourceLocation
+import org.partiql.spi.SourceLocations
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
@@ -229,6 +229,7 @@ import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
  */
 internal class PartiQLParserDefault : PartiQLParser {
 
+    @OptIn(PartiQLValueExperimental::class)
     @Throws(PErrorListenerException::class)
     override fun parse(source: String, ctx: Context): PartiQLParser.Result {
         try {
@@ -238,7 +239,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         } catch (throwable: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.SYNTAX(), null, throwable)
             ctx.errorListener.report(error)
-            return PartiQLParser.Result.empty(source)
+            val locations = SourceLocations()
+            return PartiQLParser.Result(listOf(Statement.Query(Expr.Lit(nullValue()))), locations)
         }
     }
 
@@ -268,8 +270,8 @@ internal class PartiQLParserDefault : PartiQLParser {
                 PredictionMode.LL -> parser.addErrorListener(ParseErrorListener(listener))
                 else -> throw IllegalArgumentException("Unsupported parser mode: $mode")
             }
-            val tree = parser.root()
-            return Visitor.translate(source, tokens, tree)
+            val tree = parser.statements()
+            return Visitor.translate(tokens, tree)
         }
 
         private fun createTokenStream(source: String, listener: PErrorListener): CountingTokenStream {
@@ -378,7 +380,7 @@ internal class PartiQLParserDefault : PartiQLParser {
     @OptIn(PartiQLValueExperimental::class)
     private class Visitor(
         private val tokens: CommonTokenStream,
-        private val locations: SourceLocations.Mutable,
+        private val locations: MutableMap<String, SourceLocation>,
         private val parameters: Map<Int, Int> = mapOf(),
     ) : PartiQLParserBaseVisitor<AstNode>() {
 
@@ -390,18 +392,15 @@ internal class PartiQLParserDefault : PartiQLParser {
              * Expose an (internal) friendly entry point into the traversal; mostly for keeping mutable state contained.
              */
             fun translate(
-                source: String,
                 tokens: CountingTokenStream,
-                tree: GeneratedParser.RootContext,
+                tree: GeneratedParser.StatementsContext,
             ): PartiQLParser.Result {
-                val locations = SourceLocations.Mutable()
+                val locations = mutableMapOf<String, SourceLocation>()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
-                val root = visitor.visitAs<AstNode>(tree) as Statement
-                return PartiQLParser.Result(
-                    source = source,
-                    root = root,
-                    locations = locations.toMap(),
-                )
+                val statements = tree.statement().map { statementCtx ->
+                    visitor.visit(statementCtx) as Statement
+                }
+                return PartiQLParser.Result(statements, SourceLocations(locations))
             }
 
             fun error(
@@ -415,10 +414,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 message = message,
                 cause = cause,
                 location = SourceLocation(
-                    line = ctx.start.line,
-                    offset = ctx.start.charPositionInLine + 1,
-                    length = ctx.stop.stopIndex - ctx.start.startIndex,
-                    lengthLegacy = ctx.start.text.length,
+                    ctx.start.line,
+                    ctx.start.charPositionInLine + 1,
+                    ctx.stop.stopIndex - ctx.start.startIndex,
                 ),
             )
 
@@ -432,10 +430,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 message = message,
                 cause = cause,
                 location = SourceLocation(
-                    line = token.line,
-                    offset = token.charPositionInLine + 1,
-                    length = token.stopIndex - token.startIndex,
-                    lengthLegacy = token.text.length,
+                    token.line,
+                    token.charPositionInLine + 1,
+                    token.stopIndex - token.startIndex,
                 ),
             )
 
@@ -451,10 +448,9 @@ internal class PartiQLParserDefault : PartiQLParser {
             val node = block()
             if (ctx.start != null) {
                 locations[node.tag] = SourceLocation(
-                    line = ctx.start.line,
-                    offset = ctx.start.charPositionInLine + 1,
-                    length = (ctx.stop?.stopIndex ?: ctx.start.stopIndex) - ctx.start.startIndex + 1,
-                    lengthLegacy = ctx.start.text.length, // LEGACY LENGTH
+                    ctx.start.line,
+                    ctx.start.charPositionInLine + 1,
+                    (ctx.stop?.stopIndex ?: ctx.start.stopIndex) - ctx.start.startIndex + 1,
                 )
             }
             return node
@@ -472,36 +468,35 @@ internal class PartiQLParserDefault : PartiQLParser {
             throw error(ctx, "DML no longer supported in the default PartiQLParser.")
         }
 
-        override fun visitRoot(ctx: GeneratedParser.RootContext) = translate(ctx) {
-            when (ctx.EXPLAIN()) {
-                null -> visit(ctx.statement()) as Statement
-                else -> {
-                    var type: String? = null
-                    var format: String? = null
-                    ctx.explainOption().forEach { option ->
-                        val parameter = try {
-                            ExplainParameters.valueOf(option.param.text.uppercase())
-                        } catch (ex: java.lang.IllegalArgumentException) {
-                            throw error(option.param, "Unknown EXPLAIN parameter.", ex)
-                        }
-                        when (parameter) {
-                            ExplainParameters.TYPE -> {
-                                type = parameter.getCompliantString(type, option.value)
-                            }
-                            ExplainParameters.FORMAT -> {
-                                format = parameter.getCompliantString(format, option.value)
-                            }
-                        }
-                    }
-                    statementExplain(
-                        target = statementExplainTargetDomain(
-                            statement = visit(ctx.statement()) as Statement,
-                            type = type,
-                            format = format,
-                        ),
+        override fun visitExplain(ctx: GeneratedParser.ExplainContext) = translate(ctx) {
+            var type: String? = null
+            var format: String? = null
+            ctx.explainOption().forEach { option ->
+                val parameter = try {
+                    ExplainParameters.valueOf(option.param.text.uppercase())
+                } catch (ex: java.lang.IllegalArgumentException) {
+                    throw error(
+                        option.param,
+                        "Unknown EXPLAIN parameter.",
+                        ex
                     )
                 }
+                when (parameter) {
+                    ExplainParameters.TYPE -> {
+                        type = parameter.getCompliantString(type, option.value)
+                    }
+                    ExplainParameters.FORMAT -> {
+                        format = parameter.getCompliantString(format, option.value)
+                    }
+                }
             }
+            statementExplain(
+                target = statementExplainTargetDomain(
+                    statement = visit(ctx.statement()) as Statement,
+                    type = type,
+                    format = format
+                )
+            )
         }
 
         /**

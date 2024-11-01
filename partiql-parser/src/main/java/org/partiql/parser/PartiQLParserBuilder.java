@@ -12,18 +12,22 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.parser
+package org.partiql.parser;
 
-import org.partiql.parser.internal.V1PartiQLParserDefault
+import org.jetbrains.annotations.NotNull;
+import org.partiql.parser.internal.PartiQLParserDefault;
 
 /**
- * A builder class to instantiate a [V1PartiQLParser]. https://github.com/partiql/partiql-lang-kotlin/issues/1632
- *
- * TODO replace with Lombok builder once [V1PartiQLParser] is migrated to Java.
+ * A builder class to instantiate a [PartiQLParser].
  */
-public class V1PartiQLParserBuilder {
+public class PartiQLParserBuilder {
 
-    public fun build(): V1PartiQLParser {
-        return V1PartiQLParserDefault()
+    /**
+     * TODO
+     * @return TODO
+     */
+    @NotNull
+    public PartiQLParser build() {
+        return new PartiQLParserDefault();
     }
 }

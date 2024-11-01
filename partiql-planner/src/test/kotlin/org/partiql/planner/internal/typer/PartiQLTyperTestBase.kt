@@ -2,7 +2,7 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicTest
-import org.partiql.parser.V1PartiQLParser
+import org.partiql.parser.PartiQLParserV1
 import org.partiql.plan.Operation
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.test.PartiQLTest
@@ -20,6 +20,7 @@ import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
 import java.util.stream.Stream
+import kotlin.test.assertEquals
 
 abstract class PartiQLTyperTestBase {
     sealed class TestResult {
@@ -37,7 +38,7 @@ abstract class PartiQLTyperTestBase {
 
     companion object {
 
-        public val parser = V1PartiQLParser.standard()
+        public val parser = PartiQLParserV1.standard()
         public val planner = PartiQLPlanner.standard()
 
         internal val session: ((String, Catalog) -> Session) = { catalog, metadata ->
@@ -52,7 +53,9 @@ abstract class PartiQLTyperTestBase {
 
     private val testingPipeline: ((String, String, Catalog, PErrorListener) -> PartiQLPlanner.Result) =
         { query, catalog, metadata, collector ->
-            val ast = parser.parse(query).root
+            val parseResult = parser.parse(query)
+            assertEquals(1, parseResult.statements.size)
+            val ast = parseResult.statements[0]
             val config = Context.of(collector)
             planner.plan(ast, session(catalog, metadata), config)
         }

@@ -3,7 +3,7 @@ package org.partiql.planner
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ast.v1.Statement
-import org.partiql.parser.V1PartiQLParserBuilder
+import org.partiql.parser.PartiQLParserBuilderV1
 import org.partiql.plan.Operation
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
@@ -42,10 +42,12 @@ internal class PlannerPErrorReportingTests {
         .catalogs(catalog)
         .build()
 
-    private val parser = V1PartiQLParserBuilder().build()
+    private val parser = PartiQLParserBuilderV1().build()
 
     private val statement: ((String) -> Statement) = { query ->
-        parser.parse(query).root
+        val parseResult = parser.parse(query)
+        assertEquals(1, parseResult.statements.size)
+        parseResult.statements[0]
     }
 
     private fun assertProblem(

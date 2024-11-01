@@ -9,7 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.V1PartiQLParser
+import org.partiql.parser.PartiQLParserV1
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
@@ -38,6 +38,7 @@ import org.partiql.value.symbolValue
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 /**
@@ -1307,7 +1308,7 @@ class PartiQLEvaluatorTest {
     ) {
 
         private val compiler = PartiQLCompiler.standard()
-        private val parser = V1PartiQLParser.standard()
+        private val parser = PartiQLParserV1.standard()
         private val planner = PartiQLPlanner.standard()
 
         /**
@@ -1320,7 +1321,9 @@ class PartiQLEvaluatorTest {
         )
 
         internal fun assert() {
-            val statement = parser.parse(input).root
+            val parseResult = parser.parse(input)
+            assertEquals(1, parseResult.statements.size)
+            val statement = parseResult.statements[0]
             val catalog = Catalog.builder()
                 .name("memory")
                 .apply {
@@ -1373,7 +1376,7 @@ class PartiQLEvaluatorTest {
     ) {
 
         private val compiler = PartiQLCompiler.standard()
-        private val parser = V1PartiQLParser.standard()
+        private val parser = PartiQLParserV1.standard()
         private val planner = PartiQLPlanner.standard()
 
         internal fun assert() {
@@ -1406,7 +1409,9 @@ class PartiQLEvaluatorTest {
         }
 
         private fun run(mode: Mode): Pair<Datum, Plan> {
-            val statement = parser.parse(input).root
+            val parseResult = parser.parse(input)
+            assertEquals(1, parseResult.statements.size)
+            val statement = parseResult.statements[0]
             val catalog = Catalog.builder().name("memory").build()
             val session = Session.builder()
                 .catalog("memory")
