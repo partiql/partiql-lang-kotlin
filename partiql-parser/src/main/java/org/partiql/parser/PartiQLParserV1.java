@@ -18,10 +18,17 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.v1.Statement;
 import org.partiql.parser.internal.PartiQLParserDefaultV1;
 import org.partiql.spi.Context;
+import org.partiql.spi.SourceLocation;
 import org.partiql.spi.SourceLocations;
+import org.partiql.spi.errors.PError;
+import org.partiql.spi.errors.PErrorKind;
 import org.partiql.spi.errors.PErrorListenerException;
+import org.partiql.spi.errors.Severity;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * TODO: Rename to PartiQLParser
@@ -34,9 +41,39 @@ public interface PartiQLParserV1 {
      * @param ctx a configuration object for the parser
      * @throws PErrorListenerException when the [org.partiql.spi.errors.PErrorListener] defined in the [ctx] throws an
      * [PErrorListenerException], this method halts execution and propagates the exception.
+     * @see PartiQLParserV1#parseSingle(String, Context)
      */
     @NotNull
     Result parse(@NotNull String source, @NotNull Context ctx) throws PErrorListenerException;
+
+    /**
+     * TODO
+     * @param source TODO
+     * @param ctx TODO
+     * @return TODO
+     * @throws PErrorListenerException TODO
+     * @see PartiQLParserV1#parse(String, Context)
+     */
+    @NotNull
+    default Result parseSingle(@NotNull String source, @NotNull Context ctx) throws PErrorListenerException {
+        Result result = parse(source, ctx);
+        if (result.statements.size() != 1) {
+            SourceLocation location;
+            if (result.statements.size() > 1) {
+                location = result.locations.get(result.statements.get(1).tag);
+            } else {
+                location = null;
+            }
+            Map<String, Object> properties = new HashMap<String, Object>() {{
+                put("EXPECTED_TOKENS", new ArrayList<String>() {{
+                    add("EOF");
+                }});
+            }};
+            PError pError = new PError(PError.UNEXPECTED_TOKEN, Severity.ERROR(), PErrorKind.SYNTAX(), location, properties);
+            ctx.getErrorListener().report(pError);
+        }
+        return result;
+    }
 
     /**
      * Parses the [source] into an AST.
@@ -82,8 +119,8 @@ public interface PartiQLParserV1 {
      * @return TODO
      */
     @NotNull
-    public static PartiQLParserBuilderV1 builder() {
-        return new PartiQLParserBuilderV1();
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -93,5 +130,22 @@ public interface PartiQLParserV1 {
     @NotNull
     public static PartiQLParserV1 standard() {
         return new PartiQLParserDefaultV1();
+    }
+
+    /**
+     * A builder class to instantiate a {@link PartiQLParserV1}.
+     */
+    public class Builder {
+        // TODO: Can this be replaced with Lombok?
+        // TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1632
+
+        /**
+         * TODO
+         * @return TODO
+         */
+        @NotNull
+        public PartiQLParserV1 build() {
+            return new PartiQLParserDefaultV1();
+        }
     }
 }
