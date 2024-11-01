@@ -16,17 +16,16 @@ public class org/partiql/parser/PartiQLParserBuilder {
 	public fun build ()Lorg/partiql/parser/PartiQLParser;
 }
 
-public abstract interface class org/partiql/parser/PartiQLParserV1 {
-	public static fun builder ()Lorg/partiql/parser/PartiQLParserV1$Builder;
-	public fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParserV1$Result;
-	public abstract fun parse (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/PartiQLParserV1$Result;
-	public fun parseSingle (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/PartiQLParserV1$Result;
-	public static fun standard ()Lorg/partiql/parser/PartiQLParserV1;
-}
-
-public class org/partiql/parser/PartiQLParserV1$Builder {
+public class org/partiql/parser/PartiQLParserBuilderV1 {
 	public fun <init> ()V
 	public fun build ()Lorg/partiql/parser/PartiQLParserV1;
+}
+
+public abstract interface class org/partiql/parser/PartiQLParserV1 {
+	public static fun builder ()Lorg/partiql/parser/PartiQLParserBuilderV1;
+	public fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParserV1$Result;
+	public abstract fun parse (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/PartiQLParserV1$Result;
+	public static fun standard ()Lorg/partiql/parser/PartiQLParserV1;
 }
 
 public final class org/partiql/parser/PartiQLParserV1$Result {

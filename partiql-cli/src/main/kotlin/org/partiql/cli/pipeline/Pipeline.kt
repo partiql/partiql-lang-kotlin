@@ -4,6 +4,7 @@ import org.partiql.ast.v1.Statement
 import org.partiql.cli.ErrorCodeString
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
+import org.partiql.parser.PartiQLParserBuilderV1
 import org.partiql.parser.PartiQLParserV1
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
@@ -34,7 +35,10 @@ internal class Pipeline private constructor(
 
     private fun parse(source: String): Statement {
         val result = listen(ctx.errorListener as AppPErrorListener) {
-            parser.parseSingle(source, ctx)
+            parser.parse(source, ctx)
+        }
+        if (result.statements.size != 1) {
+            throw PipelineException("Expected exactly one statement, got: ${result.statements.size}")
         }
         return result.statements[0]
     }
@@ -79,7 +83,7 @@ internal class Pipeline private constructor(
         private fun create(mode: Mode, out: PrintStream, config: Config): Pipeline {
             val listener = config.getErrorListener(out)
             val ctx = Context.of(listener)
-            val parser = PartiQLParserV1.Builder().build()
+            val parser = PartiQLParserBuilderV1().build()
             val planner = PartiQLPlanner.builder().build()
             val compiler = PartiQLCompiler.builder().build()
             return Pipeline(parser, planner, compiler, ctx, mode)
