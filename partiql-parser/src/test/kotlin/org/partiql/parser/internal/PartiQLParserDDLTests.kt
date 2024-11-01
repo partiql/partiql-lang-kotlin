@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 class PartiQLParserDDLTests {
 
-    private val parser = PartiQLParserDefaultV1()
+    private val parser = PartiQLParserDefault()
 
     data class SuccessTestCase(
         val description: String? = null,

@@ -8,8 +8,8 @@ import org.partiql.plan.rex.Rex
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
 import org.partiql.planner.internal.normalize.normalize
+import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
-import org.partiql.planner.internal.transforms.V1AstToPlan
 import org.partiql.planner.internal.typer.PlanTyper
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
@@ -39,7 +39,7 @@ internal class SqlPlanner(
             val ast = statement.normalize()
 
             // 2. AST to Rel/Rex
-            val root = V1AstToPlan.apply(ast, env)
+            val root = AstToPlan.apply(ast, env)
 
             // 3. Resolve variables
             val typer = PlanTyper(env, ctx)

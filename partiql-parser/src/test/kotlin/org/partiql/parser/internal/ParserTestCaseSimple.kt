@@ -1,6 +1,6 @@
 package org.partiql.parser.internal
 
-import org.partiql.parser.PartiQLParserV1
+import org.partiql.parser.PartiQLParser
 
 /**
  * This test case simply cares about whether the [input] can be parsed or not.
@@ -13,7 +13,7 @@ class ParserTestCaseSimple(
 
     override fun name(): String = name
 
-    private val parser: PartiQLParserV1 = PartiQLParserV1.standard()
+    private val parser: PartiQLParser = PartiQLParser.standard()
 
     override fun assert() {
         when (isValid) {

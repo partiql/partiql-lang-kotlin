@@ -1,7 +1,7 @@
 package org.partiql.lang.randomized.eval
 
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.PartiQLParserV1
+import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
@@ -22,7 +22,7 @@ fun runEvaluatorTestCase(
 
 @OptIn(PartiQLValueExperimental::class)
 private fun execute(query: String): PartiQLValue {
-    val parser = PartiQLParserV1.builder().build()
+    val parser = PartiQLParser.builder().build()
     val planner = PartiQLPlanner.builder().build()
     val catalog = object : Catalog {
         override fun getName(): String = "default"

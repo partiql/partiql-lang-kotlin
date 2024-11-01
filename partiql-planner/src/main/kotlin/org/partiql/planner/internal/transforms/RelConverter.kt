@@ -16,26 +16,40 @@
 
 package org.partiql.planner.internal.transforms
 
-import org.partiql.ast.AstNode
-import org.partiql.ast.Exclude
-import org.partiql.ast.Expr
-import org.partiql.ast.From
-import org.partiql.ast.GroupBy
-import org.partiql.ast.Identifier
-import org.partiql.ast.OrderBy
-import org.partiql.ast.QueryBody
-import org.partiql.ast.Select
-import org.partiql.ast.SetOp
-import org.partiql.ast.SetQuantifier
-import org.partiql.ast.Sort
-import org.partiql.ast.builder.ast
-import org.partiql.ast.exprLit
-import org.partiql.ast.exprVar
-import org.partiql.ast.helpers.toBinder
-import org.partiql.ast.identifierSymbol
-import org.partiql.ast.util.AstRewriter
-import org.partiql.ast.visitor.AstBaseVisitor
+import org.partiql.ast.v1.Ast.exprLit
+import org.partiql.ast.v1.Ast.exprVarRef
+import org.partiql.ast.v1.Ast.identifier
+import org.partiql.ast.v1.Ast.identifierChain
+import org.partiql.ast.v1.AstNode
+import org.partiql.ast.v1.AstRewriter
+import org.partiql.ast.v1.AstVisitor
+import org.partiql.ast.v1.Exclude
+import org.partiql.ast.v1.ExcludeStep
+import org.partiql.ast.v1.From
+import org.partiql.ast.v1.FromExpr
+import org.partiql.ast.v1.FromJoin
+import org.partiql.ast.v1.FromType
+import org.partiql.ast.v1.GroupBy
+import org.partiql.ast.v1.GroupByStrategy
+import org.partiql.ast.v1.IdentifierChain
+import org.partiql.ast.v1.JoinType
+import org.partiql.ast.v1.Nulls
+import org.partiql.ast.v1.Order
+import org.partiql.ast.v1.OrderBy
+import org.partiql.ast.v1.QueryBody
+import org.partiql.ast.v1.SelectItem
+import org.partiql.ast.v1.SelectList
+import org.partiql.ast.v1.SelectPivot
+import org.partiql.ast.v1.SelectStar
+import org.partiql.ast.v1.SelectValue
+import org.partiql.ast.v1.SetOpType
+import org.partiql.ast.v1.SetQuantifier
+import org.partiql.ast.v1.expr.Expr
+import org.partiql.ast.v1.expr.ExprCall
+import org.partiql.ast.v1.expr.ExprQuerySet
+import org.partiql.ast.v1.expr.Scope
 import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.helpers.toBinder
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rel
@@ -88,14 +102,14 @@ internal object RelConverter {
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
-    internal fun apply(qSet: Expr.QuerySet, env: Env): Rex {
+    internal fun apply(qSet: ExprQuerySet, env: Env): Rex {
         val newQSet = NormalizeSelect.normalize(qSet)
         val rex = when (val body = newQSet.body) {
             is QueryBody.SFW -> {
                 val rel = newQSet.accept(ToRel(env), nil)
                 when (val projection = body.select) {
                     // PIVOT ... FROM
-                    is Select.Pivot -> {
+                    is SelectPivot -> {
                         val key = projection.key.toRex(env)
                         val value = projection.value.toRex(env)
                         val type = (STRUCT)
@@ -103,7 +117,7 @@ internal object RelConverter {
                         rex(type, op)
                     }
                     // SELECT VALUE ... FROM
-                    is Select.Value -> {
+                    is SelectValue -> {
                         assert(rel.type.schema.size == 1) {
                             "Expected SELECT VALUE's input to have a single binding. " +
                                 "However, it contained: ${rel.type.schema.map { it.name }}."
@@ -117,13 +131,14 @@ internal object RelConverter {
                         rex(type, op)
                     }
                     // SELECT * FROM
-                    is Select.Star -> {
+                    is SelectStar -> {
                         throw IllegalArgumentException("AST not normalized")
                     }
                     // SELECT ... FROM
-                    is Select.Project -> {
+                    is SelectList -> {
                         throw IllegalArgumentException("AST not normalized")
                     }
+                    else -> error("Unexpected Select type: $projection")
                 }
             }
             is QueryBody.SetOp -> {
@@ -136,6 +151,7 @@ internal object RelConverter {
                 }
                 rex(type, op)
             }
+            else -> error("Unexpected QueryBody type: ${newQSet.body}")
         }
         return rex
     }
@@ -146,7 +162,7 @@ internal object RelConverter {
     private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
-    internal class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
+    internal class ToRel(private val env: Env) : AstVisitor<Rel, Rel>() {
 
         override fun defaultReturn(node: AstNode, input: Rel): Rel =
             throw IllegalArgumentException("unsupported rel $node")
@@ -155,7 +171,7 @@ internal object RelConverter {
          * Translate SFW AST node to a pipeline of [Rel] operators; skip any SELECT VALUE or PIVOT projection.
          */
 
-        override fun visitExprQuerySet(node: Expr.QuerySet, ctx: Rel): Rel {
+        override fun visitExprQuerySet(node: ExprQuerySet, ctx: Rel): Rel {
             val body = node.body
             val orderBy = node.orderBy
             val limit = node.limit
@@ -178,14 +194,15 @@ internal object RelConverter {
                     rel = convertExclude(rel, sel.exclude)
                     // append SQL projection if present
                     rel = when (val projection = sel.select) {
-                        is Select.Value -> {
+                        is SelectValue -> {
                             val project = visitSelectValue(projection, rel)
                             visitSetQuantifier(projection.setq, project)
                         }
-                        is Select.Star, is Select.Project -> {
+                        is SelectStar, is SelectList -> {
                             error("AST not normalized, found ${projection.javaClass.simpleName}")
                         }
-                        is Select.Pivot -> rel // Skip PIVOT
+                        is SelectPivot -> rel // Skip PIVOT
+                        else -> error("Unexpected Select type: $projection")
                     }
                     return rel
                 }
@@ -197,27 +214,29 @@ internal object RelConverter {
                     rel = convertLimit(rel, limit)
                     return rel
                 }
+                else -> error("Unexpected QueryBody type: $body")
             }
         }
 
         /**
-         * Given a non-null [setQuantifier], this will return a [Rel] of [Rel.Op.Distinct] wrapping the [input].
+         * Given a [setQuantifier], this will return a [Rel] of [Rel.Op.Distinct] wrapping the [input].
          * If [setQuantifier] is null or ALL, this will return the [input].
          */
         private fun visitSetQuantifier(setQuantifier: SetQuantifier?, input: Rel): Rel {
-            return when (setQuantifier) {
+            return when (setQuantifier?.code()) {
                 SetQuantifier.DISTINCT -> rel(input.type, relOpDistinct(input))
                 SetQuantifier.ALL, null -> input
+                else -> error("Unexpected SetQuantifier type: $setQuantifier")
             }
         }
 
-        override fun visitSelectProject(node: Select.Project, input: Rel): Rel {
+        override fun visitSelectList(node: SelectList, input: Rel): Rel {
             // this ignores aggregations
             val schema = mutableListOf<Rel.Binding>()
             val props = input.type.props
             val projections = mutableListOf<Rex>()
             node.items.forEach {
-                val (binding, projection) = convertProjectionItem(it)
+                val (binding, projection) = convertSelectItem(it)
                 schema.add(binding)
                 projections.add(projection)
             }
@@ -226,7 +245,7 @@ internal object RelConverter {
             return rel(type, op)
         }
 
-        override fun visitSelectValue(node: Select.Value, input: Rel): Rel {
+        override fun visitSelectValue(node: SelectValue, input: Rel): Rel {
             val name = node.constructor.toBinder(1).symbol
             val rex = RexConverter.apply(node.constructor, env)
             val schema = listOf(relBinding(name, rex.type))
@@ -236,7 +255,21 @@ internal object RelConverter {
             return rel(type, op)
         }
 
-        override fun visitFromValue(node: From.Value, nil: Rel): Rel {
+        @OptIn(PartiQLValueExperimental::class)
+        override fun visitFrom(node: From, ctx: Rel): Rel {
+            val tableRefs = node.tableRefs.map { visitFromTableRef(it, ctx) }
+            return tableRefs.drop(1).fold(tableRefs.first()) { acc, tRef ->
+                val joinType = Rel.Op.Join.Type.INNER
+                val condition = rex(BOOL, rexOpLit(boolValue(true)))
+                val schema = acc.type.schema + tRef.type.schema
+                val props = emptySet<Rel.Prop>()
+                val type = relType(schema, props)
+                val op = relOpJoin(acc, tRef, condition, joinType)
+                rel(type, op)
+            }
+        }
+
+        override fun visitFromExpr(node: FromExpr, nil: Rel): Rel {
             val rex = RexConverter.applyRel(node.expr, env)
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
@@ -245,8 +278,8 @@ internal object RelConverter {
                     type = rex.type
                 )
             }
-            return when (node.type) {
-                From.Value.Type.SCAN -> {
+            return when (node.fromType.code()) {
+                FromType.SCAN -> {
                     when (val i = node.atAlias) {
                         null -> convertScan(rex, binding)
                         else -> {
@@ -258,7 +291,7 @@ internal object RelConverter {
                         }
                     }
                 }
-                From.Value.Type.UNPIVOT -> {
+                FromType.UNPIVOT -> {
                     val atAlias = when (val at = node.atAlias) {
                         null -> error("AST not normalized, missing AT alias on UNPIVOT $node")
                         else -> relBinding(
@@ -268,6 +301,7 @@ internal object RelConverter {
                     }
                     convertUnpivot(rex, k = atAlias, v = binding)
                 }
+                else -> error("Unexpected FromType type: ${node.fromType}")
             }
         }
 
@@ -277,20 +311,20 @@ internal object RelConverter {
          * TODO compute basic schema
          */
         @OptIn(PartiQLValueExperimental::class)
-        override fun visitFromJoin(node: From.Join, nil: Rel): Rel {
-            val lhs = visitFrom(node.lhs, nil)
-            val rhs = visitFrom(node.rhs, nil)
+        override fun visitFromJoin(node: FromJoin, nil: Rel): Rel {
+            val lhs = visitFromTableRef(node.lhs, nil)
+            val rhs = visitFromTableRef(node.rhs, nil)
             val schema = lhs.type.schema + rhs.type.schema // Note: This gets more specific in PlanTyper. It is only used to find binding names here.
             val props = emptySet<Rel.Prop>()
             val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(BOOL, rexOpLit(boolValue(true)))
-            val joinType = when (node.type) {
-                From.Join.Type.LEFT_OUTER, From.Join.Type.LEFT -> Rel.Op.Join.Type.LEFT
-                From.Join.Type.RIGHT_OUTER, From.Join.Type.RIGHT -> Rel.Op.Join.Type.RIGHT
-                From.Join.Type.FULL_OUTER, From.Join.Type.FULL -> Rel.Op.Join.Type.FULL
-                From.Join.Type.COMMA,
-                From.Join.Type.INNER,
-                From.Join.Type.CROSS -> Rel.Op.Join.Type.INNER // Cross Joins are just INNER JOIN ON TRUE
+            val joinType = when (node.joinType?.code()) {
+                JoinType.LEFT_OUTER, JoinType.LEFT, JoinType.LEFT_CROSS -> Rel.Op.Join.Type.LEFT
+                JoinType.RIGHT_OUTER, JoinType.RIGHT -> Rel.Op.Join.Type.RIGHT
+                JoinType.FULL_OUTER, JoinType.FULL -> Rel.Op.Join.Type.FULL
+                JoinType.INNER,
+                JoinType.CROSS -> Rel.Op.Join.Type.INNER // Cross Joins are just INNER JOIN ON TRUE
                 null -> Rel.Op.Join.Type.INNER // a JOIN b ON a.id = b.id <--> a INNER JOIN b ON a.id = b.id
+                else -> error("Unexpected JoinType type: ${node.joinType}")
             }
             val type = relType(schema, props)
             val op = relOpJoin(lhs, rhs, condition, joinType)
@@ -329,18 +363,19 @@ internal object RelConverter {
             return rel(type, op)
         }
 
-        private fun convertProjectionItem(item: Select.Project.Item) = when (item) {
-            is Select.Project.Item.All -> convertProjectItemAll(item)
-            is Select.Project.Item.Expression -> convertProjectItemRex(item)
+        private fun convertSelectItem(item: SelectItem) = when (item) {
+            is SelectItem.Star -> convertSelectItemStar(item)
+            is SelectItem.Expr -> convertSelectItemExpr(item)
+            else -> error("Unexpected SelectItem type: $item")
         }
 
-        private fun convertProjectItemAll(item: Select.Project.Item.All): Pair<Rel.Binding, Rex> {
+        private fun convertSelectItemStar(item: SelectItem.Star): Pair<Rel.Binding, Rex> {
             throw IllegalArgumentException("AST not normalized")
         }
 
-        private fun convertProjectItemRex(item: Select.Project.Item.Expression): Pair<Rel.Binding, Rex> {
+        private fun convertSelectItemExpr(item: SelectItem.Expr): Pair<Rel.Binding, Rex> {
             val name = when (val a = item.asAlias) {
-                null -> error("AST not normalized, missing AS alias on projection item $item")
+                null -> error("AST not normalized, missing AS alias on select item $item")
                 else -> a.symbol
             }
             val rex = RexConverter.apply(item.expr, env)
@@ -407,10 +442,11 @@ internal object RelConverter {
                         args = listOf(exprLit(int32Value(1)).toRex(env))
                     )
                 } else {
-                    val setq = when (expr.setq) {
+                    val setq = when (expr.setq?.code()) {
                         null -> org.partiql.planner.internal.ir.SetQuantifier.ALL
                         SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
                         SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+                        else -> error("Unexpected SetQuantifier type: ${expr.setq}")
                     }
                     relOpAggregateCallUnresolved(name, setq, args)
                 }
@@ -444,9 +480,10 @@ internal object RelConverter {
                     schema.add(binding)
                     it.expr.toRex(env)
                 }
-                strategy = when (groupBy.strategy) {
-                    GroupBy.Strategy.FULL -> Rel.Op.Aggregate.Strategy.FULL
-                    GroupBy.Strategy.PARTIAL -> Rel.Op.Aggregate.Strategy.PARTIAL
+                strategy = when (groupBy.strategy.code()) {
+                    GroupByStrategy.FULL -> Rel.Op.Aggregate.Strategy.FULL
+                    GroupByStrategy.PARTIAL -> Rel.Op.Aggregate.Strategy.PARTIAL
+                    else -> error("Unexpected GroupByStrategy type: ${groupBy.strategy}")
                 }
             }
             val type = relType(schema, props)
@@ -473,7 +510,7 @@ internal object RelConverter {
 
         private fun visitIfQuerySet(expr: Expr): Rel {
             return when (expr) {
-                is Expr.QuerySet -> visit(expr, nil)
+                is ExprQuerySet -> visit(expr, nil)
                 else -> {
                     val rex = RexConverter.applyRel(expr, env)
                     val op = relOpScan(rex)
@@ -490,15 +527,17 @@ internal object RelConverter {
             val lhs = visitIfQuerySet(setExpr.lhs)
             val rhs = visitIfQuerySet(setExpr.rhs)
             val type = Rel.Type(listOf(Rel.Binding("_0", ANY)), props = emptySet())
-            val quantifier = when (setExpr.type.setq) {
+            val quantifier = when (setExpr.type.setq?.code()) {
                 SetQuantifier.ALL -> org.partiql.planner.internal.ir.SetQuantifier.ALL
                 null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
+                else -> error("Unexpected SetQuantifier type: ${setExpr.type.setq}")
             }
             val outer = setExpr.isOuter
-            val op = when (setExpr.type.type) {
-                SetOp.Type.UNION -> Rel.Op.Union(quantifier, outer, lhs, rhs)
-                SetOp.Type.EXCEPT -> Rel.Op.Except(quantifier, outer, lhs, rhs)
-                SetOp.Type.INTERSECT -> Rel.Op.Intersect(quantifier, outer, lhs, rhs)
+            val op = when (setExpr.type.setOpType.code()) {
+                SetOpType.UNION -> Rel.Op.Union(quantifier, outer, lhs, rhs)
+                SetOpType.EXCEPT -> Rel.Op.Except(quantifier, outer, lhs, rhs)
+                SetOpType.INTERSECT -> Rel.Op.Intersect(quantifier, outer, lhs, rhs)
+                else -> error("Unexpected SetOpType type: ${setExpr.type.setOpType}")
             }
             return rel(type, op)
         }
@@ -513,14 +552,16 @@ internal object RelConverter {
             val type = input.type.copy(props = setOf(Rel.Prop.ORDERED))
             val specs = orderBy.sorts.map {
                 val rex = it.expr.toRex(env)
-                val order = when (it.dir) {
-                    Sort.Dir.DESC -> when (it.nulls) {
-                        Sort.Nulls.LAST -> Rel.Op.Sort.Order.DESC_NULLS_LAST
-                        else -> Rel.Op.Sort.Order.DESC_NULLS_FIRST
+                val order = when (it.order?.code()) {
+                    Order.DESC -> when (it.nulls?.code()) {
+                        Nulls.LAST -> Rel.Op.Sort.Order.DESC_NULLS_LAST
+                        Nulls.FIRST, null -> Rel.Op.Sort.Order.DESC_NULLS_FIRST
+                        else -> error("Unexpected Nulls type: ${it.nulls}")
                     }
-                    else -> when (it.nulls) {
-                        Sort.Nulls.FIRST -> Rel.Op.Sort.Order.ASC_NULLS_FIRST
-                        else -> Rel.Op.Sort.Order.ASC_NULLS_LAST
+                    else -> when (it.nulls?.code()) {
+                        Nulls.FIRST -> Rel.Op.Sort.Order.ASC_NULLS_FIRST
+                        Nulls.LAST, null -> Rel.Op.Sort.Order.ASC_NULLS_LAST
+                        else -> error("Unexpected Nulls type: ${it.nulls}")
                     }
                 }
                 relOpSortSpec(rex, order)
@@ -560,8 +601,8 @@ internal object RelConverter {
                 return input
             }
             val type = input.type // PlanTyper handles typing the exclusion and removing redundant exclude paths
-            val paths = exclude.items
-                .groupBy(keySelector = { it.root }, valueTransform = { it.steps })
+            val paths = exclude.excludePaths
+                .groupBy(keySelector = { it.root }, valueTransform = { it.excludeSteps })
                 .map { (root, exclusions) ->
                     val rootVar = (root.toRex(env)).op as Rex.Op.Var
                     val steps = exclusionsToSteps(exclusions)
@@ -571,7 +612,7 @@ internal object RelConverter {
             return rel(type, op)
         }
 
-        private fun exclusionsToSteps(exclusions: List<List<Exclude.Step>>): List<Rel.Op.Exclude.Step> {
+        private fun exclusionsToSteps(exclusions: List<List<ExcludeStep>>): List<Rel.Op.Exclude.Step> {
             if (exclusions.any { it.isEmpty() }) {
                 // if there exists a path with no further steps, can remove the longer paths
                 // e.g. t.a.b, t.a.b.c, t.a.b.d[*].*.e -> can keep just t.a.b
@@ -586,17 +627,18 @@ internal object RelConverter {
                 }
         }
 
-        private fun stepToExcludeType(step: Exclude.Step): Rel.Op.Exclude.Type {
+        private fun stepToExcludeType(step: ExcludeStep): Rel.Op.Exclude.Type {
             return when (step) {
-                is Exclude.Step.StructField -> {
-                    when (step.symbol.caseSensitivity) {
-                        Identifier.CaseSensitivity.INSENSITIVE -> relOpExcludeTypeStructSymbol(step.symbol.symbol)
-                        Identifier.CaseSensitivity.SENSITIVE -> relOpExcludeTypeStructKey(step.symbol.symbol)
+                is ExcludeStep.StructField -> {
+                    when (step.symbol.isDelimited) {
+                        false -> relOpExcludeTypeStructSymbol(step.symbol.symbol)
+                        true -> relOpExcludeTypeStructKey(step.symbol.symbol)
                     }
                 }
-                is Exclude.Step.CollIndex -> relOpExcludeTypeCollIndex(step.index)
-                is Exclude.Step.StructWildcard -> relOpExcludeTypeStructWildcard()
-                is Exclude.Step.CollWildcard -> relOpExcludeTypeCollWildcard()
+                is ExcludeStep.CollIndex -> relOpExcludeTypeCollIndex(step.index)
+                is ExcludeStep.StructWildcard -> relOpExcludeTypeStructWildcard()
+                is ExcludeStep.CollWildcard -> relOpExcludeTypeCollWildcard()
+                else -> error("Unexpected ExcludeStep type: $step")
             }
         }
 
@@ -638,22 +680,22 @@ internal object RelConverter {
         private val aggregates = setOf("count", "avg", "sum", "min", "max", "any", "some", "every")
 
         private data class Context(
-            val aggregations: MutableList<Expr.Call>,
+            val aggregations: MutableList<ExprCall>,
             val keys: List<GroupBy.Key>
         )
 
-        fun apply(node: QueryBody.SFW): Pair<QueryBody.SFW, List<Expr.Call>> {
-            val aggs = mutableListOf<Expr.Call>()
+        fun apply(node: QueryBody.SFW): Pair<QueryBody.SFW, List<ExprCall>> {
+            val aggs = mutableListOf<ExprCall>()
             val keys = node.groupBy?.keys ?: emptyList()
             val context = Context(aggs, keys)
             val select = super.visitQueryBodySFW(node, context) as QueryBody.SFW
             return Pair(select, aggs)
         }
 
-        override fun visitSelectValue(node: Select.Value, ctx: Context): AstNode {
+        override fun visitSelectValue(node: SelectValue, ctx: Context): AstNode {
             val visited = super.visitSelectValue(node, ctx)
             val substitutions = ctx.keys.associate {
-                it.expr to exprVar(identifierSymbol(it.asAlias!!.symbol, Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
+                it.expr to exprVarRef(identifierChain(identifier(it.asAlias!!.symbol, isDelimited = true), next = null), Scope.DEFAULT())
             }
             return SubstitutionVisitor.visit(visited, substitutions)
         }
@@ -661,32 +703,44 @@ internal object RelConverter {
         // only rewrite top-level SFW
         override fun visitQueryBodySFW(node: QueryBody.SFW, ctx: Context): AstNode = node
 
-        override fun visitExprCall(node: Expr.Call, ctx: Context) = ast {
+        override fun visitExprCall(node: ExprCall, ctx: Context) =
             // TODO replace w/ proper function resolution to determine whether a function call is a scalar or aggregate.
             //  may require further modification of SPI interfaces to support
             when (node.function.isAggregateCall()) {
                 true -> {
-                    val id = identifierSymbol {
-                        symbol = syntheticAgg(ctx.aggregations.size)
-                        caseSensitivity = org.partiql.ast.Identifier.CaseSensitivity.INSENSITIVE
-                    }
+                    val id = identifierChain(
+                        identifier(
+                            symbol = syntheticAgg(ctx.aggregations.size),
+                            isDelimited = false
+                        ),
+                        next = null
+                    )
                     ctx.aggregations += node
-                    exprVar(id, Expr.Var.Scope.DEFAULT)
+                    exprVarRef(id, Scope.DEFAULT())
                 }
                 else -> node
             }
-        }
 
         private fun String.isAggregateCall(): Boolean {
             return aggregates.contains(this)
         }
 
-        private fun Identifier.isAggregateCall(): Boolean {
-            return when (this) {
-                is Identifier.Symbol -> this.symbol.lowercase().isAggregateCall()
-                is Identifier.Qualified -> this.steps.last().symbol.lowercase().isAggregateCall()
+        private fun IdentifierChain.isAggregateCall(): Boolean {
+            return when (next) {
+                null -> root.symbol.lowercase().isAggregateCall()
+                else -> {
+                    var curId = next
+                    var last = curId
+                    while (curId != null) {
+                        last = curId
+                        curId = curId.next
+                    }
+                    last!!.root.symbol.lowercase().isAggregateCall()
+                }
             }
         }
+
+        override fun defaultReturn(node: AstNode, ctx: Context) = node
     }
 
     private fun syntheticAgg(i: Int) = "\$agg_$i"

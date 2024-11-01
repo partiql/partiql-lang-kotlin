@@ -5,7 +5,7 @@ import org.junit.jupiter.api.DynamicContainer.dynamicContainer
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import org.partiql.parser.PartiQLParserV1
+import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Plan
 import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
@@ -76,7 +76,7 @@ class PlanTest {
             )
             .namespace("SCHEMA")
             .build()
-        val parseResult = PartiQLParserV1.standard().parse(test.statement)
+        val parseResult = PartiQLParser.standard().parse(test.statement)
         assertEquals(1, parseResult.statements.size)
         val ast = parseResult.statements[0]
         val planner = PartiQLPlanner.builder().signal(isSignalMode).build()

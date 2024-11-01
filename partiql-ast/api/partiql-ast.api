@@ -4983,15 +4983,6 @@ public final class org/partiql/ast/builder/TypeVarcharBuilder {
 	public final fun setLength (Ljava/lang/Integer;)V
 }
 
-public final class org/partiql/ast/helpers/ToBinderKt {
-	public static final fun toBinder (Lorg/partiql/ast/Expr;I)Lorg/partiql/ast/Identifier$Symbol;
-	public static final fun toBinder (Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function0;)Lorg/partiql/ast/Identifier$Symbol;
-}
-
-public final class org/partiql/ast/normalize/Normalize {
-	public static final fun normalize (Lorg/partiql/ast/Statement;)Lorg/partiql/ast/Statement;
-}
-
 public abstract class org/partiql/ast/sql/SqlBlock {
 	public static final field Companion Lorg/partiql/ast/sql/SqlBlock$Companion;
 	public field next Lorg/partiql/ast/sql/SqlBlock;

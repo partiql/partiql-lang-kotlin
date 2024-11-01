@@ -14,27 +14,42 @@
 
 package org.partiql.planner.internal.transforms
 
-import org.partiql.ast.Expr
-import org.partiql.ast.From
-import org.partiql.ast.GroupBy
-import org.partiql.ast.Identifier
-import org.partiql.ast.QueryBody
-import org.partiql.ast.Select
-import org.partiql.ast.exprCall
-import org.partiql.ast.exprCase
-import org.partiql.ast.exprCaseBranch
-import org.partiql.ast.exprIsType
-import org.partiql.ast.exprLit
-import org.partiql.ast.exprStruct
-import org.partiql.ast.exprStructField
-import org.partiql.ast.exprVar
-import org.partiql.ast.helpers.toBinder
-import org.partiql.ast.identifierSymbol
-import org.partiql.ast.selectProject
-import org.partiql.ast.selectProjectItemExpression
-import org.partiql.ast.selectValue
-import org.partiql.ast.typeStruct
-import org.partiql.ast.util.AstRewriter
+import org.partiql.ast.v1.Ast.exprCall
+import org.partiql.ast.v1.Ast.exprCase
+import org.partiql.ast.v1.Ast.exprCaseBranch
+import org.partiql.ast.v1.Ast.exprIsType
+import org.partiql.ast.v1.Ast.exprLit
+import org.partiql.ast.v1.Ast.exprQuerySet
+import org.partiql.ast.v1.Ast.exprStruct
+import org.partiql.ast.v1.Ast.exprStructField
+import org.partiql.ast.v1.Ast.exprVarRef
+import org.partiql.ast.v1.Ast.identifier
+import org.partiql.ast.v1.Ast.identifierChain
+import org.partiql.ast.v1.Ast.queryBodySFW
+import org.partiql.ast.v1.Ast.queryBodySetOp
+import org.partiql.ast.v1.Ast.selectItemExpr
+import org.partiql.ast.v1.Ast.selectList
+import org.partiql.ast.v1.Ast.selectValue
+import org.partiql.ast.v1.AstRewriter
+import org.partiql.ast.v1.DataType
+import org.partiql.ast.v1.From
+import org.partiql.ast.v1.FromExpr
+import org.partiql.ast.v1.FromJoin
+import org.partiql.ast.v1.FromTableRef
+import org.partiql.ast.v1.GroupBy
+import org.partiql.ast.v1.QueryBody
+import org.partiql.ast.v1.SelectItem
+import org.partiql.ast.v1.SelectList
+import org.partiql.ast.v1.SelectStar
+import org.partiql.ast.v1.SelectValue
+import org.partiql.ast.v1.expr.Expr
+import org.partiql.ast.v1.expr.ExprCase
+import org.partiql.ast.v1.expr.ExprLit
+import org.partiql.ast.v1.expr.ExprQuerySet
+import org.partiql.ast.v1.expr.ExprStruct
+import org.partiql.ast.v1.expr.ExprVarRef
+import org.partiql.ast.v1.expr.Scope
+import org.partiql.planner.internal.helpers.toBinder
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.stringValue
 
@@ -98,30 +113,39 @@ import org.partiql.value.stringValue
  */
 internal object NormalizeSelect {
 
-    internal fun normalize(node: Expr.QuerySet): Expr.QuerySet {
+    internal fun normalize(node: ExprQuerySet): ExprQuerySet {
         return when (val body = node.body) {
             is QueryBody.SFW -> {
                 val sfw = Visitor.visitSFW(body, newCtx())
-                node.copy(
-                    body = sfw
+                exprQuerySet(
+                    body = sfw,
+                    orderBy = node.orderBy,
+                    limit = node.limit,
+                    offset = node.offset
                 )
             }
             is QueryBody.SetOp -> {
                 val lhs = body.lhs.normalizeOrIdentity()
                 val rhs = body.rhs.normalizeOrIdentity()
-                node.copy(
-                    body = body.copy(
+                exprQuerySet(
+                    body = queryBodySetOp(
+                        type = body.type,
+                        isOuter = body.isOuter,
                         lhs = lhs,
                         rhs = rhs
-                    )
+                    ),
+                    orderBy = node.orderBy,
+                    limit = node.limit,
+                    offset = node.offset
                 )
             }
+            else -> error("Unexpected QueryBody type: $body")
         }
     }
 
     private fun Expr.normalizeOrIdentity(): Expr {
         return when (this) {
-            is Expr.QuerySet -> normalize(this)
+            is ExprQuerySet -> normalize(this)
             else -> this
         }
     }
@@ -164,12 +188,20 @@ internal object NormalizeSelect {
         internal fun visitSFW(node: QueryBody.SFW, ctx: () -> Int): QueryBody.SFW {
             val sfw = super.visitQueryBodySFW(node, ctx) as QueryBody.SFW
             return when (val select = sfw.select) {
-                is Select.Star -> {
+                is SelectStar -> {
                     val selectValue = when (val group = sfw.groupBy) {
                         null -> visitSelectAll(select, sfw.from)
                         else -> visitSelectAll(select, group)
                     }
-                    sfw.copy(select = selectValue)
+                    queryBodySFW(
+                        select = selectValue,
+                        exclude = sfw.exclude,
+                        from = sfw.from,
+                        let = sfw.let,
+                        where = sfw.where,
+                        groupBy = sfw.groupBy,
+                        having = sfw.having,
+                    )
                 }
                 else -> sfw
             }
@@ -179,33 +211,33 @@ internal object NormalizeSelect {
             return node
         }
 
-        override fun visitSelectProject(node: Select.Project, ctx: () -> Int): Select.Value {
+        override fun visitSelectList(node: SelectList, ctx: () -> Int): SelectValue {
 
             // Visit items, adding a binder if necessary
             var diff = false
-            val visitedItems = ArrayList<Select.Project.Item>(node.items.size)
+            val visitedItems = ArrayList<SelectItem>(node.items.size)
             node.items.forEach { n ->
-                val item = visitSelectProjectItem(n, ctx) as Select.Project.Item
+                val item = n.accept(this, ctx) as SelectItem
                 if (item !== n) diff = true
                 visitedItems.add(item)
             }
-            val visitedNode = if (diff) selectProject(visitedItems, node.setq) else node
+            val visitedNode = if (diff) selectList(visitedItems, node.setq) else node
 
             // Rewrite selection
-            return when (node.items.any { it is Select.Project.Item.All }) {
+            return when (node.items.any { it is SelectItem.Star }) {
                 false -> visitSelectProjectWithoutProjectAll(visitedNode)
                 true -> visitSelectProjectWithProjectAll(visitedNode)
             }
         }
 
-        override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, ctx: () -> Int): Select.Project.Item.Expression {
+        override fun visitSelectItemExpr(node: SelectItem.Expr, ctx: () -> Int): SelectItem.Expr {
             val expr = visitExpr(node.expr, newCtx()) as Expr
             val alias = when (node.asAlias) {
                 null -> expr.toBinder(ctx)
                 else -> node.asAlias
             }
             return if (expr != node.expr || alias != node.asAlias) {
-                selectProjectItemExpression(expr, alias)
+                selectItemExpr(expr, alias)
             } else {
                 node
             }
@@ -219,28 +251,22 @@ internal object NormalizeSelect {
          *
          * Note: We assume that [select] and [from] have already been visited.
          */
-        private fun visitSelectAll(select: Select.Star, from: From): Select.Value {
-            val tupleUnionArgs = from.aliases().flatMapIndexed { i, binding ->
+        private fun visitSelectAll(select: SelectStar, from: From): SelectValue {
+            val tupleUnionArgs = from.tableRefs.flatMap { it.aliases() }.flatMapIndexed { i, binding ->
                 val asAlias = binding.first
                 val atAlias = binding.second
-                val byAlias = binding.third
                 val atAliasItem = atAlias?.simple()?.let {
                     val alias = it.asAlias ?: error("The AT alias should be present. This wasn't normalized.")
-                    buildSimpleStruct(it.expr, alias.symbol)
-                }
-                val byAliasItem = byAlias?.simple()?.let {
-                    val alias = it.asAlias ?: error("The BY alias should be present. This wasn't normalized.")
                     buildSimpleStruct(it.expr, alias.symbol)
                 }
                 listOfNotNull(
                     buildCaseWhenStruct(asAlias.star(i).expr, i),
                     atAliasItem,
-                    byAliasItem
                 )
             }
             return selectValue(
                 constructor = exprCall(
-                    function = identifierSymbol("TUPLEUNION", Identifier.CaseSensitivity.SENSITIVE),
+                    function = identifierChain(identifier("TUPLEUNION", isDelimited = true), next = null),
                     args = tupleUnionArgs,
                     setq = null // setq = null for scalar fn
                 ),
@@ -254,7 +280,7 @@ internal object NormalizeSelect {
          *
          * Note: We assume that [select] and [group] have already been visited.
          */
-        private fun visitSelectAll(select: Select.Star, group: GroupBy): Select.Value {
+        private fun visitSelectAll(select: SelectStar, group: GroupBy): SelectValue {
             val groupAs = group.asAlias?.let { structField(it.symbol, varLocal(it.symbol)) }
             val fields = group.keys.map { key ->
                 val alias = key.asAlias ?: error("Expected a GROUP BY alias.")
@@ -267,21 +293,22 @@ internal object NormalizeSelect {
             )
         }
 
-        private fun visitSelectProjectWithProjectAll(node: Select.Project): Select.Value {
+        private fun visitSelectProjectWithProjectAll(node: SelectList): SelectValue {
             val tupleUnionArgs = node.items.mapIndexed { index, item ->
                 when (item) {
-                    is Select.Project.Item.All -> buildCaseWhenStruct(item.expr, index)
-                    is Select.Project.Item.Expression -> buildSimpleStruct(
+                    is SelectItem.Star -> buildCaseWhenStruct(item.expr, index)
+                    is SelectItem.Expr -> buildSimpleStruct(
                         item.expr,
                         item.asAlias?.symbol
                             ?: error("The alias should've been here. This AST is not normalized.")
                     )
+                    else -> error("Unexpected SelectItem type: $item")
                 }
             }
             return selectValue(
                 setq = node.setq,
                 constructor = exprCall(
-                    function = identifierSymbol("TUPLEUNION", Identifier.CaseSensitivity.SENSITIVE),
+                    function = identifierChain(identifier("TUPLEUNION", isDelimited = true), next = null),
                     args = tupleUnionArgs,
                     setq = null // setq = null for scalar fn
                 )
@@ -289,9 +316,9 @@ internal object NormalizeSelect {
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun visitSelectProjectWithoutProjectAll(node: Select.Project): Select.Value {
+        private fun visitSelectProjectWithoutProjectAll(node: SelectList): SelectValue {
             val structFields = node.items.map { item ->
-                val itemExpr = item as? Select.Project.Item.Expression ?: error("Expected the projection to be an expression.")
+                val itemExpr = item as? SelectItem.Expr ?: error("Expected the projection to be an expression.")
                 exprStructField(
                     name = exprLit(stringValue(itemExpr.asAlias?.symbol!!)),
                     value = item.expr
@@ -305,20 +332,19 @@ internal object NormalizeSelect {
             )
         }
 
-        @OptIn(PartiQLValueExperimental::class)
-        private fun buildCaseWhenStruct(expr: Expr, index: Int): Expr.Case = exprCase(
+        private fun buildCaseWhenStruct(expr: Expr, index: Int): ExprCase = exprCase(
             expr = null,
             branches = listOf(
                 exprCaseBranch(
-                    condition = exprIsType(expr, typeStruct(), null),
+                    condition = exprIsType(expr, DataType.STRUCT(), not = false),
                     expr = expr
                 )
             ),
-            default = buildSimpleStruct(expr, col(index))
+            defaultExpr = buildSimpleStruct(expr, col(index))
         )
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun buildSimpleStruct(expr: Expr, name: String): Expr.Struct = exprStruct(
+        private fun buildSimpleStruct(expr: Expr, name: String): ExprStruct = exprStruct(
             fields = listOf(
                 exprStructField(
                     name = exprLit(stringValue(name)),
@@ -328,40 +354,40 @@ internal object NormalizeSelect {
         )
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun structField(name: String, expr: Expr): Expr.Struct.Field = Expr.Struct.Field(
-            name = Expr.Lit(stringValue(name)),
+        private fun structField(name: String, expr: Expr): ExprStruct.Field = exprStructField(
+            name = ExprLit(stringValue(name)),
             value = expr
         )
 
-        private fun varLocal(name: String): Expr.Var = Expr.Var(
-            identifier = Identifier.Symbol(name, Identifier.CaseSensitivity.SENSITIVE),
-            scope = Expr.Var.Scope.LOCAL
+        private fun varLocal(name: String): ExprVarRef = exprVarRef(
+            identifierChain = identifierChain(identifier(name, isDelimited = true), next = null),
+            scope = Scope.LOCAL()
         )
 
-        private fun From.aliases(): List<Triple<String, String?, String?>> = when (this) {
-            is From.Join -> lhs.aliases() + rhs.aliases()
-            is From.Value -> {
+        private fun FromTableRef.aliases(): List<Pair<String, String?>> = when (this) {
+            is FromJoin -> lhs.aliases() + rhs.aliases()
+            is FromExpr -> {
                 val asAlias = asAlias?.symbol ?: error("AST not normalized, missing asAlias on FROM source.")
                 val atAlias = atAlias?.symbol
-                val byAlias = byAlias?.symbol
-                listOf(Triple(asAlias, atAlias, byAlias))
+                listOf(Pair(asAlias, atAlias))
             }
+            else -> error("Unexpected FromTableRef type: $this")
         }
 
         // t -> t.* AS _i
-        private fun String.star(i: Int): Select.Project.Item.Expression {
-            val expr = exprVar(id(this), Expr.Var.Scope.DEFAULT)
+        private fun String.star(i: Int): SelectItem.Expr {
+            val expr = exprVarRef(identifierChain(id(this), next = null), Scope.DEFAULT())
             val alias = expr.toBinder(i)
-            return selectProjectItemExpression(expr, alias)
+            return selectItemExpr(expr, alias)
         }
 
         // t -> t AS t
-        private fun String.simple(): Select.Project.Item.Expression {
-            val expr = exprVar(id(this), Expr.Var.Scope.DEFAULT)
+        private fun String.simple(): SelectItem.Expr {
+            val expr = exprVarRef(identifierChain(id(this), next = null), Scope.DEFAULT())
             val alias = id(this)
-            return selectProjectItemExpression(expr, alias)
+            return selectItemExpr(expr, alias)
         }
 
-        private fun id(symbol: String) = identifierSymbol(symbol, Identifier.CaseSensitivity.INSENSITIVE)
+        private fun id(symbol: String) = identifier(symbol, isDelimited = false)
     }
 }

@@ -9,7 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.PartiQLParserV1
+import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
@@ -1308,7 +1308,7 @@ class PartiQLEvaluatorTest {
     ) {
 
         private val compiler = PartiQLCompiler.standard()
-        private val parser = PartiQLParserV1.standard()
+        private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.standard()
 
         /**
@@ -1376,7 +1376,7 @@ class PartiQLEvaluatorTest {
     ) {
 
         private val compiler = PartiQLCompiler.standard()
-        private val parser = PartiQLParserV1.standard()
+        private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.standard()
 
         internal fun assert() {
