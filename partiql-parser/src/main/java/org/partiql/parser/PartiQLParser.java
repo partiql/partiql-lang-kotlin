@@ -15,7 +15,7 @@
 package org.partiql.parser;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.ast.Statement;
+import org.partiql.ast.v1.Statement;
 import org.partiql.parser.internal.PartiQLParserDefault;
 import org.partiql.spi.Context;
 import org.partiql.spi.SourceLocations;
@@ -24,7 +24,7 @@ import org.partiql.spi.errors.PErrorListenerException;
 import java.util.List;
 
 /**
- * TODO
+ * TODO docs
  */
 public interface PartiQLParser {
 
@@ -82,8 +82,8 @@ public interface PartiQLParser {
      * @return TODO
      */
     @NotNull
-    public static PartiQLParserBuilder builder() {
-        return new PartiQLParserBuilder();
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -93,5 +93,15 @@ public interface PartiQLParser {
     @NotNull
     public static PartiQLParser standard() {
         return new PartiQLParserDefault();
+    }
+
+    /**
+     * A builder class to instantiate a [PartiQLParser].
+     */
+    public class Builder {
+        @NotNull
+        public PartiQLParser build() {
+            return new PartiQLParserDefault();
+        }
     }
 }

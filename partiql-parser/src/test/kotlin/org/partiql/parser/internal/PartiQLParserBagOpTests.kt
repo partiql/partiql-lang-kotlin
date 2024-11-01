@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 
 class PartiQLParserBagOpTests {
 
-    private val parser = PartiQLParserDefaultV1()
+    private val parser = PartiQLParserDefault()
 
     private fun queryBody(body: () -> Expr) = query(body())
 

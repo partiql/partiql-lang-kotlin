@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 @OptIn(PartiQLValueExperimental::class)
 class PartiQLParserOperatorTests {
 
-    private val parser = PartiQLParserDefaultV1()
+    private val parser = PartiQLParserDefault()
 
     private inline fun queryBody(body: () -> Expr) = query(body())
 

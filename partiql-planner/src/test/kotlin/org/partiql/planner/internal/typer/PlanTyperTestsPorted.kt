@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.parser.PartiQLParserV1
+import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.TestCatalog
@@ -125,7 +125,7 @@ internal class PlanTyperTestsPorted {
 
     companion object {
 
-        private val parser = PartiQLParserV1.standard()
+        private val parser = PartiQLParser.standard()
         private val planner = PartiQLPlanner.builder().signal().build()
 
         private fun assertProblemExists(problem: PError) = ProblemHandler { problems, _ ->

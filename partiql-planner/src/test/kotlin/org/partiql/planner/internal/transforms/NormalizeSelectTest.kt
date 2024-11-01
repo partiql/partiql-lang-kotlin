@@ -46,7 +46,7 @@ class NormalizeSelectTest {
             "b" to variable("b"),
             "c" to variable("c"),
         )
-        val actual = V1NormalizeSelect.normalize(input)
+        val actual = NormalizeSelect.normalize(input)
         assertEquals(expected, actual)
     }
 
@@ -71,7 +71,7 @@ class NormalizeSelectTest {
             "_2" to lit(2),
             "_3" to lit(3),
         )
-        val actual = V1NormalizeSelect.normalize(input)
+        val actual = NormalizeSelect.normalize(input)
         assertEquals(expected, actual)
     }
 
@@ -96,7 +96,7 @@ class NormalizeSelectTest {
             "_1" to lit(2),
             "_2" to lit(3),
         )
-        val actual = V1NormalizeSelect.normalize(input)
+        val actual = NormalizeSelect.normalize(input)
         assertEquals(expected, actual)
     }
 
@@ -121,7 +121,7 @@ class NormalizeSelectTest {
             "b" to lit(2),
             "c" to lit(3),
         )
-        val actual = V1NormalizeSelect.normalize(input)
+        val actual = NormalizeSelect.normalize(input)
         assertEquals(expected, actual)
     }
 
