@@ -1,5 +1,7 @@
 package org.partiql.spi.catalog
 
+import org.partiql.spi.catalog.impl.StandardCatalogs
+
 /**
  * Catalogs is used to provide the default catalog and possibly others by name.
  */
@@ -42,7 +44,7 @@ public interface Catalogs {
     }
 
     /**
-     * Java-style builder for a default [Catalogs] implementation.
+     * Lombok java-style builder for a default [Catalogs] implementation.
      */
     public class Builder {
 
@@ -55,30 +57,6 @@ public interface Catalogs {
             catalogs[catalog.getName()] = catalog
         }
 
-        public fun build(): Catalogs {
-
-            return object : Catalogs {
-
-                override fun getCatalog(name: String, ignoreCase: Boolean): Catalog? {
-                    // search
-                    if (ignoreCase) {
-                        var match: Catalog? = null
-                        for (catalog in catalogs.values) {
-                            if (catalog.getName().equals(name, ignoreCase = true)) {
-                                if (match != null) {
-                                    // TODO exceptions for ambiguous catalog name lookup
-                                    error("Catalog name is ambiguous, found more than one match.")
-                                } else {
-                                    match = catalog
-                                }
-                            }
-                        }
-                        return match
-                    }
-                    // lookup
-                    return catalogs[name]
-                }
-            }
-        }
+        public fun build(): Catalogs = StandardCatalogs(catalogs)
     }
 }

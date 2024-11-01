@@ -27,7 +27,6 @@ dependencies {
     implementation(project(":partiql-types"))
     implementation(project(":partiql-spi"))
     implementation(project(":plugins:partiql-local"))
-    implementation(project(":plugins:partiql-memory"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)

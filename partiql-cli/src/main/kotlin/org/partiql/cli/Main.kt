@@ -22,11 +22,10 @@ import com.amazon.ionelement.api.loadAllElements
 import org.partiql.cli.io.Format
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryTable
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.ion.IonDatum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
@@ -248,10 +247,10 @@ internal class MainCommand : Runnable {
         } else {
             ionNull()
         }
-        val catalog = MemoryCatalog.builder()
+        val catalog = Catalog.builder()
             .name("default")
             .define(
-                MemoryTable.of(
+                Table.standard(
                     name = Name.of("stdin"),
                     schema = PType.dynamic(),
                     datum = IonDatum.of(value.asAnyElement())

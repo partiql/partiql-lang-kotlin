@@ -34,7 +34,6 @@ dependencies {
     // Test
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
-    testImplementation(project(":plugins:partiql-memory"))
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4

@@ -1,5 +1,6 @@
 package org.partiql.spi.catalog
 
+import org.partiql.spi.catalog.impl.StandardCatalog
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.function.Builtins
 import org.partiql.spi.function.Function
@@ -51,4 +52,35 @@ public interface Catalog {
      * Returns a collection of aggregation functions in this catalog with the given name, or an empty list if none.
      */
     public fun getAggregations(session: Session, name: String): Collection<Aggregation> = Builtins.getAggregations(name)
+
+    public companion object {
+
+        @JvmStatic
+        public fun builder(): Builder = Builder()
+    }
+
+    /**
+     * Lombok java-style builder
+     */
+    public class Builder internal constructor() {
+
+        private var name: String? = null
+        private var tables: MutableMap<Name, Table> = mutableMapOf()
+
+        public fun name(name: String): Builder {
+            this.name = name
+            return this
+        }
+
+        public fun define(table: Table): Builder {
+            tables[table.getName()] = table
+            return this
+        }
+
+        public fun build(): Catalog {
+            // Validate builder parameters
+            val name = this.name ?: throw IllegalStateException("Catalog name cannot be null")
+            return StandardCatalog(name, tables)
+        }
+    }
 }
