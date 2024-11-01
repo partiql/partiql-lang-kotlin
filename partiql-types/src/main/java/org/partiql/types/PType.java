@@ -726,6 +726,15 @@ public interface PType {
     }
 
     /**
+     * @param encoding variant encoding type.
+     * @return a PartiQL variant type.
+     */
+    @NotNull
+    static PType variant(String encoding) {
+        return new PTypeVariant(encoding);
+    }
+
+    /**
      * @return a corresponding PType from a {@link StaticType}
      * @deprecated this API is experimental and is subject to modification/deletion without prior notice. This is
      * meant for use internally by the PartiQL library. Public consumers should not use this API.

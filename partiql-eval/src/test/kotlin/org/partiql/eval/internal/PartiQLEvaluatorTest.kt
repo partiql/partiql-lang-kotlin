@@ -16,7 +16,7 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
-import org.partiql.spi.value.ion.IonDatumReader
+import org.partiql.spi.value.DatumReader
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
@@ -1332,7 +1332,7 @@ class PartiQLEvaluatorTest {
                         val table = Table.standard(
                             name = Name.of(it.name),
                             schema = PType.fromStaticType(it.type),
-                            datum = IonDatumReader.read(it.value)
+                            datum = DatumReader.ion(it.value.byteInputStream()).next()!!
                         )
                         define(table)
                     }

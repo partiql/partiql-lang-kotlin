@@ -1,7 +1,6 @@
 package org.partiql.spi.value.ion
 
 import com.amazon.ion.IonException
-import com.amazon.ion.IonReader
 import com.amazon.ion.IonType
 import com.amazon.ion.Span
 import com.amazon.ion.SpanProvider
@@ -9,6 +8,7 @@ import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
+import org.partiql.spi.value.Encoding
 import org.partiql.spi.value.Field
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import java.io.IOException
@@ -21,25 +21,15 @@ import java.io.InputStream
  *  - Closures are used for parsing of typed collections, structs, rows, and eventually maps.
  *  - Overloads are named with their argument count to avoid ambiguity.
  */
-public class IonDatumReader private constructor(
-    private val reader: IonReader,
-    private val others: Map<String, DatumReader>,
+internal class IonDatumReader internal constructor(
+    private val input: InputStream,
+    private val others: Map<Encoding, DatumReader>,
 ) : DatumReader {
 
     /**
-     * Create a reader from the [IonReader].
+     * Cursor to the Ion stream.
      */
-    public constructor(reader: IonReader) : this(reader, emptyMap())
-
-    /**
-     * Create a reader from the String.
-     */
-    public constructor(input: String) : this(IonReaderBuilder.standard().build(input))
-
-    /**
-     * Create a reader from the [InputStream] using the standard [IonReader].
-     */
-    public constructor(input: InputStream) : this(IonReaderBuilder.standard().build(input))
+    private val reader = IonReaderBuilder.standard().build(input)
 
     /**
      * Helper for current span on errors.
@@ -152,7 +142,7 @@ public class IonDatumReader private constructor(
     private fun missing(): Datum {
         val v = reader.symbolValue().text
         if (v != "missing") {
-            throw IonDatumException("expected symbol `missing`", null, span())
+            throw IonDatumException("expected symbol `missing`, found $v", null, span())
         }
         return Datum.missing()
     }
@@ -352,43 +342,5 @@ public class IonDatumReader private constructor(
     private fun ion(): Datum {
         val v = loadSingleElement(reader)
         return IonVariant(v)
-    }
-
-    public companion object {
-
-        /**
-         * Helper function to read one; consider more helpers.
-         *
-         * @param input
-         * @return
-         */
-        @JvmStatic
-        public fun read(input: String): Datum {
-            val reader = IonDatumReader(input)
-            return reader.next() ?: throw IonDatumException("expected one, found none")
-        }
-
-        @JvmStatic
-        public fun builder(): Builder = Builder()
-    }
-
-    /**
-     * IonDatumReader.Builder can be re-used
-     */
-    public class Builder {
-
-        private val others = mutableMapOf<String, DatumReader>()
-
-        public fun register(encoding: String, reader: DatumReader): Builder {
-            others[encoding] = reader
-            return this
-        }
-
-        public fun build(reader: IonReader): IonDatumReader = IonDatumReader(reader, others)
-
-        public fun build(input: InputStream): IonDatumReader = IonDatumReader(
-            reader = IonReaderBuilder.standard().build(input),
-            others = others,
-        )
     }
 }

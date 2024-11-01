@@ -9,7 +9,7 @@ import com.amazon.ion.TextSpan
  *
  * TODO add DATA to PError kind.
  */
-public class IonDatumException internal constructor(
+internal class IonDatumException internal constructor(
     public override val message: String,
     public override val cause: Throwable?,
     public val span: Span?,

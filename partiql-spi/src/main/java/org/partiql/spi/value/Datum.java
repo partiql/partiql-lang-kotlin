@@ -3,6 +3,7 @@ package org.partiql.spi.value;
 import kotlin.NotImplementedError;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.partiql.errors.DataException;
 import org.partiql.types.PType;
 import org.partiql.value.PartiQL;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -338,6 +340,31 @@ public interface Datum extends Iterable<Datum> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     default Datum getInsensitive(@NotNull String name) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Pack a VARIANT into a byte array with the given charset.
+     *
+     * @param charset optional charset.
+     * @return the variant as an encoded byte[].
+     * @throws UnsupportedOperationException if the datum is not a VARIANT.
+     */
+    default byte[] pack(@Nullable Charset charset) {
+        if (charset != null) {
+            throw new UnsupportedOperationException("variant does not support encoding to charset: " + charset.name());
+        } else {
+            throw new UnsupportedOperationException("variant does not support encoding to byte[]");
+        }
+    }
+
+    /**
+     * Lower a VARIANT into a non-VARIANT datum.
+     *
+     * @return a non-VARIANT datum.
+     * @throws UnsupportedOperationException if the datum is not a VARIANT.
+     */
+    default Datum lower() {
         throw new UnsupportedOperationException();
     }
 

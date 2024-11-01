@@ -13,10 +13,8 @@ import com.amazon.ionelement.api.ElementType.STRING
 import com.amazon.ionelement.api.ElementType.STRUCT
 import com.amazon.ionelement.api.ElementType.SYMBOL
 import com.amazon.ionelement.api.ElementType.TIMESTAMP
-import com.amazon.ionelement.api.IonElement
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
-import org.partiql.spi.value.Variant
 import org.partiql.types.PType
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeValue
@@ -32,31 +30,12 @@ import java.nio.charset.StandardCharsets
 /**
  * A [Datum] implemented over Ion's [AnyElement].
  */
-public class IonVariant(private var value: AnyElement) : Variant<IonElement> {
+internal class IonVariant(private var value: AnyElement) : Datum {
 
     /**
-     * TODO replace with PType.variant("ion")
+     * VARIANT<ION>
      */
-    private var type = PType.unknown()
-
-    /**
-     * Unpack the inner Ion value.
-     *
-     * @return IonElement
-     */
-    override fun unpack(): IonElement = value
-
-    /**
-     * Pack an IonDatum into byte[] using the binary Ion encoding.
-     *
-     * @return byte[]
-     */
-    override fun pack(): ByteArray {
-        val buffer = ByteArrayOutputStream()
-        val writer = IonBinaryWriterBuilder.standard().build(buffer)
-        value.writeTo(writer)
-        return buffer.toByteArray()
-    }
+    private var type = PType.variant("ion")
 
     /**
      * Pack an IonDatum into a UTF-8 string byte[] using the textual Ion encoding.
@@ -64,15 +43,22 @@ public class IonVariant(private var value: AnyElement) : Variant<IonElement> {
      * @param charset
      * @return
      */
-    override fun pack(charset: Charset): ByteArray {
-        if (charset != StandardCharsets.UTF_8 || charset != StandardCharsets.US_ASCII) {
-            // unsupported
-            return super.pack(charset)
-        }
+    override fun pack(charset: Charset?): ByteArray {
         val buffer = ByteArrayOutputStream()
-        val writer = IonTextWriterBuilder.standard().build(buffer)
+        val writer = when (charset) {
+            null -> IonBinaryWriterBuilder.standard().build(buffer)
+            StandardCharsets.UTF_8, StandardCharsets.US_ASCII -> IonTextWriterBuilder.standard().build(buffer)
+            else -> return super.pack(charset) // unsupported
+        }
         value.writeTo(writer)
         return buffer.toByteArray()
+    }
+
+    /**
+     * TODO!
+     */
+    override fun lower(): Datum {
+        throw UnsupportedOperationException("VARIANT<ION> lower")
     }
 
     override fun getType(): PType = type

@@ -346,6 +346,7 @@ public abstract interface class org/partiql/types/PType {
 	public static fun tinyint ()Lorg/partiql/types/PType;
 	public static fun unknown ()Lorg/partiql/types/PType;
 	public static fun varchar (I)Lorg/partiql/types/PType;
+	public static fun variant (Ljava/lang/String;)Lorg/partiql/types/PType;
 }
 
 public final class org/partiql/types/PType$Kind : java/lang/Enum {
@@ -380,6 +381,11 @@ public final class org/partiql/types/PType$Kind : java/lang/Enum {
 	public static final field VARIANT Lorg/partiql/types/PType$Kind;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/types/PType$Kind;
 	public static fun values ()[Lorg/partiql/types/PType$Kind;
+}
+
+public class org/partiql/types/PTypeVariant : org/partiql/types/PType {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getKind ()Lorg/partiql/types/PType$Kind;
 }
 
 public final class org/partiql/types/SexpType : org/partiql/types/CollectionType {
