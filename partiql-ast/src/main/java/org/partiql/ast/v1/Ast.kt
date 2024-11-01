@@ -49,7 +49,7 @@ import org.partiql.ast.v1.graph.GraphSelector
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
-// TODO docs for all factory methods
+// TODO docs for all factory methods and move to Kotlin sources
 public object Ast {
     // Expr
     @JvmStatic

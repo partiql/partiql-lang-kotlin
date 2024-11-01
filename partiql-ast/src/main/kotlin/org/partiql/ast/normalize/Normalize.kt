@@ -17,6 +17,8 @@ package org.partiql.ast.normalize
 
 import org.partiql.ast.Statement
 
+// TODO DELETE FILE
+
 /**
  * AST normalization
  */

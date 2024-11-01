@@ -13,17 +13,6 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 public abstract class SelectItem extends AstNode {
-    @Override
-    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        if (this instanceof Star) {
-            return visitor.visitSelectItemStar((Star) this, ctx);
-        } else if (this instanceof Expr) {
-            return visitor.visitSelectItemExpr((Expr) this, ctx);
-        } else {
-            throw new IllegalStateException("Unexpected value: " + this);
-        }
-    }
-
     /**
      * TODO docs, equals, hashcode
      */

@@ -1509,6 +1509,21 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
             exprPathStepAllFields(null)
         }
 
+        override fun visitValues(ctx: GeneratedParser.ValuesContext) = translate(ctx) {
+            val rows = visitOrEmpty<ExprArray>(ctx.valueRow())
+            exprBag(rows)
+        }
+
+        override fun visitValueRow(ctx: GeneratedParser.ValueRowContext) = translate(ctx) {
+            val expressions = visitOrEmpty<Expr>(ctx.expr())
+            exprArray(expressions)
+        }
+
+        override fun visitValueList(ctx: GeneratedParser.ValueListContext) = translate(ctx) {
+            val expressions = visitOrEmpty<Expr>(ctx.expr())
+            exprArray(expressions)
+        }
+
         override fun visitExprGraphMatchMany(ctx: GeneratedParser.ExprGraphMatchManyContext) = translate(ctx) {
             val graph = visit(ctx.exprPrimary()) as Expr
             val pattern = visitGpmlPatternList(ctx.gpmlPatternList())
@@ -1617,10 +1632,11 @@ internal class V1PartiQLParserDefault : V1PartiQLParser {
             val lhs = visitExpr(ctx.expr(0))
             val rhs = visitExpr(ctx.expr(1))
             // TODO change to not use PartiQLValue -- https://github.com/partiql/partiql-lang-kotlin/issues/1589
-            val fieldLit = exprLit(stringValue(ctx.dt.text.uppercase()))
+            val fieldLit = ctx.dt.text.lowercase()
+            // TODO error on invalid datetime fields like TIMEZONE_HOUR and TIMEZONE_MINUTE
             when {
-                ctx.DATE_ADD() != null -> exprCall(identifierChain(identifier("DATE_ADD", false), null), listOf(fieldLit, lhs, rhs), null)
-                ctx.DATE_DIFF() != null -> exprCall(identifierChain(identifier("DATE_DIFF", false), null), listOf(fieldLit, lhs, rhs), null)
+                ctx.DATE_ADD() != null -> exprCall(identifierChain(identifier("date_add_$fieldLit", false), null), listOf(lhs, rhs), null)
+                ctx.DATE_DIFF() != null -> exprCall(identifierChain(identifier("date_diff_$fieldLit", false), null), listOf(lhs, rhs), null)
                 else -> throw error(ctx, "Expected DATE_ADD or DATE_DIFF")
             }
         }

@@ -14,23 +14,6 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 public abstract class GraphLabel extends AstNode {
-    @Override
-    public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        if (this instanceof Name) {
-            return visitor.visitGraphLabelName((Name) this, ctx);
-        } else if (this instanceof Wildcard) {
-            return visitor.visitGraphLabelWildcard((Wildcard) this, ctx);
-        } else if (this instanceof Negation) {
-            return visitor.visitGraphLabelNegation((Negation) this, ctx);
-        } else if (this instanceof Conj) {
-            return visitor.visitGraphLabelConj((Conj) this, ctx);
-        } else if (this instanceof Disj) {
-            return visitor.visitGraphLabelDisj((Disj) this, ctx);
-        } else {
-            throw new IllegalStateException("Unexpected value: " + this);
-        }
-    }
-
     /**
      * TODO docs, equals, hashcode
      */
