@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 
 /**
  * Strategy converts a logical operator into a physical operator. The compiler uses the list of operands
- * to determine a subtree match, then invokes `apply` to
+ * to determine a subtree match, then invokes `apply` to produce an {@link Expr}.
  */
 public abstract class Strategy {
 
@@ -36,7 +36,7 @@ public abstract class Strategy {
      */
     @NotNull
     public static Pattern pattern(@NotNull Class<? extends Operator> clazz) {
-        return new Pattern(clazz);
+        return new Pattern(clazz, (Operator o) -> true, Collections.emptyList());
     }
 
     /**

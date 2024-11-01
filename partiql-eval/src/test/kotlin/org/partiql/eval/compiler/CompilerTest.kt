@@ -6,6 +6,7 @@ import org.partiql.eval.Mode
 import org.partiql.eval.Statement
 import org.partiql.eval.internal.operator.rex.ExprLit
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.rel.RelFilter
 import org.partiql.plan.rex.RexLit
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Session
@@ -48,6 +49,13 @@ public class CompilerTest {
         compile("'replace_me'", listOf(strategy))
         // assert the strategy was triggered
         assertTrue(trigged, "the compiler did not apply the custom strategy")
+    }
+
+    @Test
+    fun combineFilters() {
+
+        val pattern = Strategy.pattern(RelFilter::class.java)
+
     }
 
     @Test
