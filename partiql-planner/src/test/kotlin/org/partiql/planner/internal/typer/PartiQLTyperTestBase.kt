@@ -2,7 +2,7 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicTest
-import org.partiql.parser.V1PartiQLParser
+import org.partiql.parser.PartiQLParserV1
 import org.partiql.plan.Operation
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.test.PartiQLTest
@@ -38,7 +38,7 @@ abstract class PartiQLTyperTestBase {
 
     companion object {
 
-        public val parser = V1PartiQLParser.standard()
+        public val parser = PartiQLParserV1.standard()
         public val planner = PartiQLPlanner.standard()
 
         internal val session: ((String, Catalog) -> Session) = { catalog, metadata ->
