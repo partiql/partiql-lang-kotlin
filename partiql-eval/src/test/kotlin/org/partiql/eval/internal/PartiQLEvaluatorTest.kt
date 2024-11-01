@@ -38,6 +38,7 @@ import org.partiql.value.symbolValue
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 /**
@@ -1320,7 +1321,8 @@ class PartiQLEvaluatorTest {
         )
 
         internal fun assert() {
-            val parseResult = parser.parseSingle(input)
+            val parseResult = parser.parse(input)
+            assertEquals(1, parseResult.statements.size)
             val statement = parseResult.statements[0]
             val catalog = Catalog.builder()
                 .name("memory")
@@ -1407,7 +1409,8 @@ class PartiQLEvaluatorTest {
         }
 
         private fun run(mode: Mode): Pair<Datum, Plan> {
-            val parseResult = parser.parseSingle(input)
+            val parseResult = parser.parse(input)
+            assertEquals(1, parseResult.statements.size)
             val statement = parseResult.statements[0]
             val catalog = Catalog.builder().name("memory").build()
             val session = Session.builder()

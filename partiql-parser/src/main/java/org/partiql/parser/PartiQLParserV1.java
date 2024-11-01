@@ -87,19 +87,6 @@ public interface PartiQLParserV1 {
     }
 
     /**
-     * Parses the {@code source} into an AST while requiring that the {@code source} only contains a single statement.
-     * @param source the user's input
-     * @throws PErrorListenerException when the {@link org.partiql.spi.errors.PErrorListener} defined in the context throws an
-     * {@link PErrorListenerException}, this method halts execution and propagates the exception. This is also thrown
-     * when the {@code source} does not contain exactly one statement.
-     * @see PartiQLParserV1#parse(String, Context)
-     */
-    @NotNull
-    default Result parseSingle(@NotNull String source) throws PErrorListenerException {
-        return parseSingle(source, Context.standard());
-    }
-
-    /**
      * TODO
      */
     final class Result {

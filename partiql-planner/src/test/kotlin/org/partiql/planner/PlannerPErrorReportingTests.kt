@@ -45,7 +45,8 @@ internal class PlannerPErrorReportingTests {
     private val parser = PartiQLParserV1.Builder().build()
 
     private val statement: ((String) -> Statement) = { query ->
-        val parseResult = parser.parseSingle(query)
+        val parseResult = parser.parse(query)
+        assertEquals(1, parseResult.statements.size)
         parseResult.statements[0]
     }
 

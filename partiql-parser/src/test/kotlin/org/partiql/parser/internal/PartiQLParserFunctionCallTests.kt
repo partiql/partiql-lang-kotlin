@@ -136,7 +136,8 @@ class PartiQLParserFunctionCallTests {
     )
 
     private fun assertExpression(input: String, expected: AstNode) {
-        val result = parser.parseSingle(input)
+        val result = parser.parse(input)
+        assertEquals(1, result.statements.size)
         val actual = result.statements[0]
         assertEquals(expected, actual)
     }

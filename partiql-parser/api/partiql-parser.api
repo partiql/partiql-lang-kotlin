@@ -20,7 +20,6 @@ public abstract interface class org/partiql/parser/PartiQLParserV1 {
 	public static fun builder ()Lorg/partiql/parser/PartiQLParserV1$Builder;
 	public fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParserV1$Result;
 	public abstract fun parse (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/PartiQLParserV1$Result;
-	public fun parseSingle (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParserV1$Result;
 	public fun parseSingle (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/PartiQLParserV1$Result;
 	public static fun standard ()Lorg/partiql/parser/PartiQLParserV1;
 }

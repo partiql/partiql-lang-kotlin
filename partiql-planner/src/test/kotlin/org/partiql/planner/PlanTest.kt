@@ -21,6 +21,7 @@ import java.io.File
 import java.nio.file.Path
 import java.util.stream.Stream
 import kotlin.io.path.toPath
+import kotlin.test.assertEquals
 
 /**
  * This class test asserts a normalized query produces the same plans as the original input query.
@@ -75,7 +76,8 @@ class PlanTest {
             )
             .namespace("SCHEMA")
             .build()
-        val parseResult = PartiQLParserV1.standard().parseSingle(test.statement)
+        val parseResult = PartiQLParserV1.standard().parse(test.statement)
+        assertEquals(1, parseResult.statements.size)
         val ast = parseResult.statements[0]
         val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
         planner.plan(ast, session)
