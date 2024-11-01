@@ -12,7 +12,8 @@ options {
  */
 
 statements
-    : statement (COLON_SEMI statement)* COLON_SEMI? EOF
+    : statement EOF
+    | statement COLON_SEMI (statement COLON_SEMI)* EOF
     ;
 
 statement

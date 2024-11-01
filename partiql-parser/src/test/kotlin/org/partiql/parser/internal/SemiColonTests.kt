@@ -12,11 +12,13 @@ class SemiColonTests {
         tc.assert()
     }
 
+    // TODO: This is not completely settled, however, we can always allow for this in the future.
     @Test
     fun t2() {
         val tc = ParserTestCaseSimple(
-            "Valid multi-statement where last statement doesn't have a semi-colon",
-            "1 + 1; 1 + 2; SELECT * FROM t; SELECT * FROM t2 AS t2"
+            "Invalid multi-statement where last statement doesn't have a semi-colon",
+            "1 + 1; 1 + 2; SELECT * FROM t; SELECT * FROM t2 AS t2",
+            false
         )
         tc.assert()
     }
