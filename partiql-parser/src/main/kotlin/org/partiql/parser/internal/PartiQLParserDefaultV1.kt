@@ -251,7 +251,7 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
             PredictionMode.LL -> parser.addErrorListener(ParseErrorListener(listener))
             else -> throw IllegalArgumentException("Unsupported parser mode: $mode")
         }
-        val tree = parser.file()
+        val tree = parser.statements()
         return Visitor.translate(tokens, tree)
     }
 
@@ -367,13 +367,15 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
              */
             fun translate(
                 tokens: CountingTokenStream,
-                tree: PartiQLParser.FileContext,
+                tree: PartiQLParser.StatementsContext,
             ): PartiQLParserV1.Result {
                 val locations = mutableMapOf<String, SourceLocation>()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
-                val root: PFileV1 = visitor.visitFile(tree)
+                val statements = tree.statement().map { statementCtx ->
+                    visitor.visit(statementCtx) as Statement
+                }
                 return PartiQLParserV1.Result(
-                    root.statements.toMutableList(),
+                    statements,
                     SourceLocations(locations),
                 )
             }
@@ -469,11 +471,6 @@ internal class PartiQLParserDefaultV1 : PartiQLParserV1 {
                 ),
                 statement = visit(ctx.statement()) as Statement,
             )
-        }
-
-        override fun visitFile(ctx: GeneratedParser.FileContext): PFileV1 = translate(ctx) {
-            val stmts = visitOrEmpty<Statement>(ctx.statement())
-            PFileV1(stmts)
         }
 
         /**

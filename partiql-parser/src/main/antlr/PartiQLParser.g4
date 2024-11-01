@@ -11,7 +11,7 @@ options {
  *
  */
 
-file
+statements
     : statement (COLON_SEMI statement)* COLON_SEMI? EOF
     ;
 
