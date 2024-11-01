@@ -31,7 +31,6 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
-import kotlin.test.assertEquals
 
 /**
  * @property session
@@ -46,8 +45,7 @@ class EvalExecutor(
     override fun prepare(input: String): Statement {
         val listener = getErrorListener(mode)
         val ctx = Context.of(listener)
-        val parseResult = parser.parse(input, ctx)
-        assertEquals(1, parseResult.statements.size)
+        val parseResult = parser.parseSingle(input, ctx)
         val ast = parseResult.statements[0]
         val plan = planner.plan(ast, session, ctx).plan
         return compiler.prepare(plan, mode, ctx)
@@ -191,8 +189,7 @@ class EvalExecutor(
                 .catalog("default")
                 .catalogs(catalog)
                 .build()
-            val parseResult = parser.parse("`$env`")
-            assertEquals(1, parseResult.statements.size)
+            val parseResult = parser.parseSingle("`$env`")
             val stmt = parseResult.statements[0]
             val plan = planner.plan(stmt, session).plan
             return (plan.getOperation() as Query).getRex().getType().getPType()

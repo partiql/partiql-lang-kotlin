@@ -676,8 +676,7 @@ class PartiQLParserBagOpTests {
     )
 
     private fun assertExpression(input: String, expected: AstNode) {
-        val parseResult = parser.parse(input)
-        assertEquals(1, parseResult.statements.size)
+        val parseResult = parser.parseSingle(input)
         val actual = parseResult.statements[0]
         assertEquals(expected, actual)
     }

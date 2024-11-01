@@ -80,8 +80,7 @@ class PartiQLParserSessionAttributeTests {
     )
 
     private fun assertExpression(input: String, expected: AstNode) {
-        val result = parser.parse(input)
-        assertEquals(1, result.statements.size)
+        val result = parser.parseSingle(input)
         val actual = result.statements[0]
         assertEquals(expected, actual)
     }

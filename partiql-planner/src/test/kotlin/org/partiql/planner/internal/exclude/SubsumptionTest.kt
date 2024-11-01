@@ -38,8 +38,7 @@ class SubsumptionTest {
 
     private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
         val text = "SELECT * EXCLUDE ${tc.excludeExprStr} FROM <<>> AS s, <<>> AS t;"
-        val parseResult = parser.parse(text)
-        assertEquals(1, parseResult.statements.size)
+        val parseResult = parser.parseSingle(text)
         val statement = parseResult.statements[0]
         val session = Session.builder().catalog("default").catalogs(catalog).build()
         val plan = planner.plan(statement, session).plan

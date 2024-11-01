@@ -3850,8 +3850,7 @@ internal class PlanTyperTestsPorted {
         session: Session,
         listener: PErrorListener,
     ): org.partiql.plan.Plan {
-        val parseResult = parser.parse(query)
-        assertEquals(1, parseResult.statements.size)
+        val parseResult = parser.parseSingle(query)
         val ast = parseResult.statements[0]
         val plannerConfig = Context.of(listener)
         return planner.plan(ast, session, plannerConfig).plan
