@@ -1,14 +1,14 @@
 package org.partiql.spi.errors;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.spi.PEnum;
+import org.partiql.spi.Enum;
 
 /**
  * Identifies the "severity" of the associated {@link PError}. All variants are represented as static final integers
  * in this class.
  * @see PError#severity
  */
-public final class Severity extends PEnum {
+public final class Severity extends Enum {
 
     private Severity(int code) {
         super(code);

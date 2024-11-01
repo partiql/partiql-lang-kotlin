@@ -30,7 +30,7 @@ public abstract interface class org/partiql/spi/Context {
 	public static fun standard ()Lorg/partiql/spi/Context;
 }
 
-public abstract class org/partiql/spi/PEnum {
+public abstract class org/partiql/spi/Enum {
 	protected fun <init> (I)V
 	public final fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
@@ -310,7 +310,7 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
-public final class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
+public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field ALWAYS_MISSING I
 	public static final field FEATURE_NOT_SUPPORTED I
 	public static final field FUNCTION_NOT_FOUND I
@@ -348,7 +348,7 @@ public class org/partiql/spi/errors/PErrorException : org/partiql/spi/errors/PEr
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/PEnum {
+public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/Enum {
 	public static final field COMPILATION I
 	public static final field EXECUTION I
 	public static final field SEMANTIC I
@@ -375,7 +375,7 @@ public class org/partiql/spi/errors/PErrorListenerException : java/lang/Exceptio
 	public fun <init> (Ljava/lang/Throwable;)V
 }
 
-public final class org/partiql/spi/errors/Severity : org/partiql/spi/PEnum {
+public final class org/partiql/spi/errors/Severity : org/partiql/spi/Enum {
 	public static final field ERROR I
 	public static final field UNKNOWN I
 	public static final field WARNING I

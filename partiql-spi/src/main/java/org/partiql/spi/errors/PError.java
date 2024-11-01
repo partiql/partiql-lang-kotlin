@@ -2,7 +2,7 @@ package org.partiql.spi.errors;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.spi.PEnum;
+import org.partiql.spi.Enum;
 import org.partiql.spi.SourceLocation;
 import org.partiql.spi.catalog.Identifier;
 import org.partiql.spi.function.Function;
@@ -35,7 +35,7 @@ import static java.util.stream.Collectors.toList;
  * @see PErrorListener
  * @see PErrorListenerException
  */
-public final class PError extends PEnum {
+public final class PError extends Enum {
     // NOTE: This is named PError to not be confused with java.lang.Error
 
     /**

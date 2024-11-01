@@ -1,14 +1,14 @@
 package org.partiql.spi.errors;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.spi.PEnum;
+import org.partiql.spi.Enum;
 
 /**
  * Identifies the "type" of a {@link PError}, which can help consumers distinguish where the {@link PError} is coming
  * from. All variants are represented as static final integers in this class.
  * @see PError#kind
  */
-public final class PErrorKind extends PEnum {
+public final class PErrorKind extends Enum {
 
     private PErrorKind(int code) {
         super(code);

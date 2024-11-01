@@ -3,16 +3,20 @@ package org.partiql.spi;
 import java.util.Objects;
 
 /**
- * Represents an enum in the PartiQL Library. This is used for backward/forward compatibility purposes.
+ * All enumerated types should extend this class for backward/forward compatibility.
  */
-public abstract class PEnum {
+public abstract class Enum {
+
+    /**
+     * Enum variants are represented with integers.
+     */
     private final int code;
 
     /**
-     * Creates a {@link PEnum} with the specified {@code code}.
+     * Creates an {@link Enum} with the specified {@code code}.
      * @param code the unique code of this enum.
      */
-    protected PEnum(int code) {
+    protected Enum(int code) {
         this.code = code;
     }
 
@@ -26,9 +30,9 @@ public abstract class PEnum {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PEnum)) return false;
-        PEnum pEnum = (PEnum) o;
-        return code == pEnum.code;
+        if (!(o instanceof Enum)) return false;
+        Enum other = (Enum) o;
+        return code == other.code;
     }
 
     @Override
