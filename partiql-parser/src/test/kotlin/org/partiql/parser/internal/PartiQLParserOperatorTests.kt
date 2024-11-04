@@ -1,11 +1,11 @@
 package org.partiql.parser.internal
 
 import org.junit.jupiter.api.Test
-import org.partiql.ast.v1.Ast.exprLit
-import org.partiql.ast.v1.Ast.exprOperator
-import org.partiql.ast.v1.Ast.query
-import org.partiql.ast.v1.AstNode
-import org.partiql.ast.v1.expr.Expr
+import org.partiql.ast.Ast.exprLit
+import org.partiql.ast.Ast.exprOperator
+import org.partiql.ast.Ast.query
+import org.partiql.ast.AstNode
+import org.partiql.ast.expr.Expr
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
 import kotlin.test.assertEquals

@@ -1,8 +1,8 @@
 package org.partiql.planner.internal.transforms
 
-import org.partiql.ast.v1.AstNode
-import org.partiql.ast.v1.AstRewriter
-import org.partiql.ast.v1.expr.Expr
+import org.partiql.ast.AstNode
+import org.partiql.ast.AstRewriter
+import org.partiql.ast.expr.Expr
 
 internal object SubstitutionVisitor : AstRewriter<Map<*, AstNode>>() {
     override fun visitExpr(node: Expr, ctx: Map<*, AstNode>): AstNode {

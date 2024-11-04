@@ -1,6 +1,6 @@
 package org.partiql.parser.internal
 
-import org.partiql.ast.v1.AstNode
+import org.partiql.ast.AstNode
 import kotlin.test.assertEquals
 
 class PartiQLParserDDLTests {

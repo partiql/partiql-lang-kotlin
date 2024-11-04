@@ -16,16 +16,16 @@
 
 package org.partiql.planner.internal.transforms
 
-import org.partiql.ast.v1.AstNode
-import org.partiql.ast.v1.AstVisitor
-import org.partiql.ast.v1.Query
-import org.partiql.ast.v1.expr.ExprQuerySet
+import org.partiql.ast.AstNode
+import org.partiql.ast.AstVisitor
+import org.partiql.ast.Query
+import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.spi.catalog.Identifier
-import org.partiql.ast.v1.Identifier as AstIdentifier
-import org.partiql.ast.v1.IdentifierChain as AstIdentifierChain
-import org.partiql.ast.v1.Statement as AstStatement
+import org.partiql.ast.Identifier as AstIdentifier
+import org.partiql.ast.IdentifierChain as AstIdentifierChain
+import org.partiql.ast.Statement as AstStatement
 import org.partiql.planner.internal.ir.Statement as PlanStatement
 
 /**

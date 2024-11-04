@@ -1,6 +1,6 @@
 package org.partiql.cli.pipeline
 
-import org.partiql.ast.v1.Statement
+import org.partiql.ast.Statement
 import org.partiql.cli.ErrorCodeString
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler

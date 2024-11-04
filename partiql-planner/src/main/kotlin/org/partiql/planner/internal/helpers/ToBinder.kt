@@ -1,15 +1,15 @@
 package org.partiql.planner.internal.helpers
 
-import org.partiql.ast.v1.Ast.identifier
-import org.partiql.ast.v1.Identifier
-import org.partiql.ast.v1.IdentifierChain
-import org.partiql.ast.v1.expr.Expr
-import org.partiql.ast.v1.expr.ExprCast
-import org.partiql.ast.v1.expr.ExprLit
-import org.partiql.ast.v1.expr.ExprPath
-import org.partiql.ast.v1.expr.ExprSessionAttribute
-import org.partiql.ast.v1.expr.ExprVarRef
-import org.partiql.ast.v1.expr.PathStep
+import org.partiql.ast.Ast.identifier
+import org.partiql.ast.Identifier
+import org.partiql.ast.IdentifierChain
+import org.partiql.ast.expr.Expr
+import org.partiql.ast.expr.ExprCast
+import org.partiql.ast.expr.ExprLit
+import org.partiql.ast.expr.ExprPath
+import org.partiql.ast.expr.ExprSessionAttribute
+import org.partiql.ast.expr.ExprVarRef
+import org.partiql.ast.expr.PathStep
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 

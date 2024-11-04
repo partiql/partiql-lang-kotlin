@@ -55,24 +55,3 @@ publish {
     name = "PartiQL AST"
     description = "PartiQL's Abstract Syntax Tree"
 }
-
-val generate = tasks.register<Exec>("generate") {
-    dependsOn(":lib:sprout:install")
-    workingDir(projectDir)
-    commandLine(
-        "../lib/sprout/build/install/sprout/bin/sprout", "generate", "kotlin",
-        "-o", "$buildDir/generated-src",
-        "-p", "org.partiql.ast",
-        "-u", "Ast",
-        "--poems", "factory",
-        "--poems", "visitor",
-        "--poems", "builder",
-        "--poems", "util",
-        "--opt-in", "org.partiql.value.PartiQLValueExperimental",
-        "./src/main/resources/partiql_ast.ion"
-    )
-}
-
-tasks.compileKotlin {
-    dependsOn(generate)
-}

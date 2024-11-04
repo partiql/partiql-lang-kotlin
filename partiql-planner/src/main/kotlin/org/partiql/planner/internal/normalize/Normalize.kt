@@ -15,7 +15,7 @@
 
 package org.partiql.planner.internal.normalize
 
-import org.partiql.ast.v1.Statement
+import org.partiql.ast.Statement
 
 /**
  * AST normalization

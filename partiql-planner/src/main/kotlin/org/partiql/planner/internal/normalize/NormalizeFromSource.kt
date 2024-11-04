@@ -14,18 +14,18 @@
 
 package org.partiql.planner.internal.normalize
 
-import org.partiql.ast.v1.Ast.fromExpr
-import org.partiql.ast.v1.Ast.fromJoin
-import org.partiql.ast.v1.AstNode
-import org.partiql.ast.v1.AstRewriter
-import org.partiql.ast.v1.From
-import org.partiql.ast.v1.FromExpr
-import org.partiql.ast.v1.FromJoin
-import org.partiql.ast.v1.FromTableRef
-import org.partiql.ast.v1.FromType
-import org.partiql.ast.v1.QueryBody
-import org.partiql.ast.v1.Statement
-import org.partiql.ast.v1.expr.Expr
+import org.partiql.ast.Ast.fromExpr
+import org.partiql.ast.Ast.fromJoin
+import org.partiql.ast.AstNode
+import org.partiql.ast.AstRewriter
+import org.partiql.ast.From
+import org.partiql.ast.FromExpr
+import org.partiql.ast.FromJoin
+import org.partiql.ast.FromTableRef
+import org.partiql.ast.FromType
+import org.partiql.ast.QueryBody
+import org.partiql.ast.Statement
+import org.partiql.ast.expr.Expr
 import org.partiql.planner.internal.helpers.toBinder
 
 /**
