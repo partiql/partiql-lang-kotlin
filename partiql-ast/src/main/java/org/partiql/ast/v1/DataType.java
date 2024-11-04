@@ -609,6 +609,6 @@ public class DataType extends AstEnum {
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return null;
+        return visitor.visitDataType(this, ctx);
     }
 }

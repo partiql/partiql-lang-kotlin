@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.sql
+package org.partiql.ast.v1.sql
 
 /**
  * Representation of some textual elements as a token (singly-linked) list.
