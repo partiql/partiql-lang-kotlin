@@ -33,6 +33,7 @@ public class ExprCast extends Expr {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(value);
+        kids.add(asType);
         return kids;
     }
 

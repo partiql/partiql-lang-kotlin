@@ -28,6 +28,7 @@ import org.partiql.ast.v1.expr.ExprParameter
 import org.partiql.ast.v1.expr.ExprPath
 import org.partiql.ast.v1.expr.ExprPosition
 import org.partiql.ast.v1.expr.ExprQuerySet
+import org.partiql.ast.v1.expr.ExprRowValue
 import org.partiql.ast.v1.expr.ExprSessionAttribute
 import org.partiql.ast.v1.expr.ExprStruct
 import org.partiql.ast.v1.expr.ExprSubstring
@@ -353,7 +354,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitExprValues(node: ExprValues, ctx: C): AstNode {
-        val values = _visitList(node.rows, ctx, ::visitExprValuesRow)
+        val values = _visitList(node.rows, ctx, ::visitExprRowValue)
         return if (values !== node.rows) {
             ExprValues(values)
         } else {
@@ -361,10 +362,10 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
-    override fun visitExprValuesRow(node: ExprValues.Row, ctx: C): AstNode {
+    override fun visitExprRowValue(node: ExprRowValue, ctx: C): AstNode {
         val values = _visitList(node.values, ctx, ::visitExpr)
         return if (values !== node.values) {
-            ExprValues.Row(values)
+            ExprRowValue(values)
         } else {
             node
         }

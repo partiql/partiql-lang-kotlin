@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.sql
+package org.partiql.ast.v1.sql
 
 /**
  * [SqlLayout] determines how an [SqlBlock] tree is transformed in SQL text.

@@ -37,6 +37,7 @@ public class ExprIsType extends Expr {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(value);
+        kids.add(type);
         return kids;
     }
 

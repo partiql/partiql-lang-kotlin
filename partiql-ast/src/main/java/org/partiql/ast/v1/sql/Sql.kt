@@ -1,6 +1,6 @@
-package org.partiql.ast.sql
+package org.partiql.ast.v1.sql
 
-import org.partiql.ast.AstNode
+import org.partiql.ast.v1.AstNode
 
 /**
  * Pretty-print this [AstNode] as SQL text with the given (or standard) [SqlLayout] and [SqlDialect].

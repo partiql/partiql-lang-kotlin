@@ -24,6 +24,7 @@ import org.partiql.ast.v1.expr.ExprParameter;
 import org.partiql.ast.v1.expr.ExprPath;
 import org.partiql.ast.v1.expr.ExprPosition;
 import org.partiql.ast.v1.expr.ExprQuerySet;
+import org.partiql.ast.v1.expr.ExprRowValue;
 import org.partiql.ast.v1.expr.ExprSessionAttribute;
 import org.partiql.ast.v1.expr.ExprStruct;
 import org.partiql.ast.v1.expr.ExprSubstring;
@@ -148,7 +149,7 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitExprValuesRow(ExprValues.Row node, C ctx) {
+    public R visitExprRowValue(ExprRowValue node, C ctx) {
         return defaultVisit(node, ctx);
     }
 
@@ -433,6 +434,10 @@ public abstract class AstVisitor<R, C> {
     }
 
     public R visitGraphLabelDisj(GraphLabel.Disj node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitDataType(DataType node, C ctx) {
         return defaultVisit(node, ctx);
     }
 }

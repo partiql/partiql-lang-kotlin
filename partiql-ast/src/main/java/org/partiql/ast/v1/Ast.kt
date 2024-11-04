@@ -24,6 +24,7 @@ import org.partiql.ast.v1.expr.ExprParameter
 import org.partiql.ast.v1.expr.ExprPath
 import org.partiql.ast.v1.expr.ExprPosition
 import org.partiql.ast.v1.expr.ExprQuerySet
+import org.partiql.ast.v1.expr.ExprRowValue
 import org.partiql.ast.v1.expr.ExprSessionAttribute
 import org.partiql.ast.v1.expr.ExprStruct
 import org.partiql.ast.v1.expr.ExprSubstring
@@ -50,6 +51,8 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
 // TODO docs for all factory methods and move to Kotlin sources
+//  Also consider defaults for nullable. Need to look more into backwards compatibility.
+//  Tracking issue for defaults -- https://github.com/partiql/partiql-lang-kotlin/issues/1640.
 public object Ast {
     // Expr
     @JvmStatic
@@ -113,8 +116,8 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun exprLike(value: Expr, Pattern: Expr, escape: Expr?, not: Boolean): ExprLike {
-        return ExprLike(value, Pattern, escape, not)
+    public fun exprLike(value: Expr, pattern: Expr, escape: Expr?, not: Boolean): ExprLike {
+        return ExprLike(value, pattern, escape, not)
     }
 
     // This representation will be changed in https://github.com/partiql/partiql-lang-kotlin/issues/1589
@@ -195,18 +198,18 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun exprTrim(Value: Expr, chars: Expr?, trimSpec: TrimSpec?): ExprTrim {
-        return ExprTrim(Value, chars, trimSpec)
+    public fun exprTrim(value: Expr, chars: Expr?, trimSpec: TrimSpec?): ExprTrim {
+        return ExprTrim(value, chars, trimSpec)
     }
 
     @JvmStatic
-    public fun exprValues(rows: List<ExprValues.Row>): ExprValues {
+    public fun exprValues(rows: List<ExprRowValue>): ExprValues {
         return ExprValues(rows)
     }
 
     @JvmStatic
-    public fun exprValuesRow(values: List<Expr>): ExprValues.Row {
-        return ExprValues.Row(values)
+    public fun exprRowValue(values: List<Expr>): ExprRowValue {
+        return ExprRowValue(values)
     }
 
     @JvmStatic
