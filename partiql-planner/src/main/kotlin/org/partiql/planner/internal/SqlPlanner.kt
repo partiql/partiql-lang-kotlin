@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.ast.v1.Statement
+import org.partiql.ast.Statement
 import org.partiql.plan.Operation
 import org.partiql.plan.Plan
 import org.partiql.plan.builder.PlanFactory

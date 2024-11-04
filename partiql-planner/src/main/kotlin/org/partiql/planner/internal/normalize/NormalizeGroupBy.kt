@@ -14,13 +14,13 @@
 
 package org.partiql.planner.internal.normalize
 
-import org.partiql.ast.v1.Ast.groupBy
-import org.partiql.ast.v1.Ast.groupByKey
-import org.partiql.ast.v1.AstNode
-import org.partiql.ast.v1.AstRewriter
-import org.partiql.ast.v1.GroupBy
-import org.partiql.ast.v1.Statement
-import org.partiql.ast.v1.expr.Expr
+import org.partiql.ast.Ast.groupBy
+import org.partiql.ast.Ast.groupByKey
+import org.partiql.ast.AstNode
+import org.partiql.ast.AstRewriter
+import org.partiql.ast.GroupBy
+import org.partiql.ast.Statement
+import org.partiql.ast.expr.Expr
 import org.partiql.planner.internal.helpers.toBinder
 
 /**

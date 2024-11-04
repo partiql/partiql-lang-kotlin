@@ -2,7 +2,7 @@ package org.partiql.planner
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.ast.v1.Statement
+import org.partiql.ast.Statement
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Operation
 import org.partiql.planner.internal.typer.CompilerType

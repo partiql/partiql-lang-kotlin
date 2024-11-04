@@ -1,12 +1,12 @@
 package org.partiql.parser.internal
 
 import org.junit.jupiter.api.Test
-import org.partiql.ast.v1.Ast.exprCall
-import org.partiql.ast.v1.Ast.identifier
-import org.partiql.ast.v1.Ast.identifierChain
-import org.partiql.ast.v1.Ast.query
-import org.partiql.ast.v1.AstNode
-import org.partiql.ast.v1.expr.Expr
+import org.partiql.ast.Ast.exprCall
+import org.partiql.ast.Ast.identifier
+import org.partiql.ast.Ast.identifierChain
+import org.partiql.ast.Ast.query
+import org.partiql.ast.AstNode
+import org.partiql.ast.expr.Expr
 import kotlin.test.assertEquals
 
 class PartiQLParserFunctionCallTests {

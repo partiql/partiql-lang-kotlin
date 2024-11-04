@@ -14,7 +14,7 @@
 
 package org.partiql.planner.internal.normalize
 
-import org.partiql.ast.v1.Statement
+import org.partiql.ast.Statement
 
 /**
  * Wraps a rewriter with a default entry point.
