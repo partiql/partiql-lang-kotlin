@@ -28,22 +28,4 @@ public abstract class Strategy {
      */
     @NotNull
     public abstract Expr apply(@NotNull Match match);
-
-    // -- PATTERN CONSTRUCTORS
-
-    /**
-     * Create an operand that matches the given class.
-     */
-    @NotNull
-    public static Pattern pattern(@NotNull Class<? extends Operator> clazz) {
-        return new Pattern(clazz, (Operator o) -> true, Collections.emptyList());
-    }
-
-    /**
-     * Create an operand that matches the given class and predicate.
-     */
-    @NotNull
-    public static Pattern pattern(@NotNull Class<? extends Operator> clazz, @NotNull Predicate<Operator> predicate) {
-        return new Pattern(clazz, predicate, Collections.emptyList());
-    }
 }
