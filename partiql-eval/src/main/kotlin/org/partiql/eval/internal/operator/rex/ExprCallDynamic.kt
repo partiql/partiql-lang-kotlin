@@ -160,11 +160,12 @@ internal class ExprCallDynamic(
                 PType.Kind.ROW -> CoercionFamily.STRUCTURE
                 PType.Kind.CHAR -> CoercionFamily.STRING
                 PType.Kind.VARCHAR -> CoercionFamily.STRING
-                PType.Kind.DYNAMIC -> CoercionFamily.DYNAMIC // TODO: REMOVE
+                PType.Kind.DYNAMIC -> DYNAMIC // TODO: REMOVE
                 PType.Kind.SYMBOL -> CoercionFamily.STRING
                 PType.Kind.BLOB -> CoercionFamily.BINARY
                 PType.Kind.CLOB -> CoercionFamily.STRING
-                PType.Kind.UNKNOWN -> CoercionFamily.UNKNOWN // TODO: REMOVE
+                PType.Kind.UNKNOWN -> UNKNOWN // TODO: REMOVE
+                PType.Kind.VARIANT -> UNKNOWN // TODO: HANDLE VARIANT
             }
         }
     }

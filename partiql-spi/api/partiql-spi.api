@@ -30,7 +30,7 @@ public abstract interface class org/partiql/spi/Context {
 	public static fun standard ()Lorg/partiql/spi/Context;
 }
 
-public abstract class org/partiql/spi/PEnum {
+public abstract class org/partiql/spi/Enum {
 	protected fun <init> (I)V
 	public final fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
@@ -284,7 +284,7 @@ public abstract interface class org/partiql/spi/catalog/Table {
 	public abstract fun getName ()Lorg/partiql/spi/catalog/Name;
 	public abstract fun getSchema ()Lorg/partiql/types/PType;
 	public static fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
-	public static fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public static fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/types/PType;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
 }
 
 public final class org/partiql/spi/catalog/Table$Builder {
@@ -302,7 +302,7 @@ public final class org/partiql/spi/catalog/Table$Companion {
 	public final fun empty (Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
 	public final fun empty (Lorg/partiql/spi/catalog/Name;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
 	public final fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
-	public final fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public final fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/types/PType;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
 }
 
 public final class org/partiql/spi/catalog/Table$DefaultImpls {
@@ -310,7 +310,7 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
-public final class org/partiql/spi/errors/PError : org/partiql/spi/PEnum {
+public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field ALWAYS_MISSING I
 	public static final field FEATURE_NOT_SUPPORTED I
 	public static final field FUNCTION_NOT_FOUND I
@@ -348,7 +348,7 @@ public class org/partiql/spi/errors/PErrorException : org/partiql/spi/errors/PEr
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/PEnum {
+public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/Enum {
 	public static final field COMPILATION I
 	public static final field EXECUTION I
 	public static final field SEMANTIC I
@@ -375,7 +375,7 @@ public class org/partiql/spi/errors/PErrorListenerException : java/lang/Exceptio
 	public fun <init> (Ljava/lang/Throwable;)V
 }
 
-public final class org/partiql/spi/errors/Severity : org/partiql/spi/PEnum {
+public final class org/partiql/spi/errors/Severity : org/partiql/spi/Enum {
 	public static final field ERROR I
 	public static final field UNKNOWN I
 	public static final field WARNING I
@@ -460,9 +460,11 @@ public final class org/partiql/spi/function/Routine$DefaultImpls {
 }
 
 public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable {
+	public static fun array (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun bag (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun bigint (J)Lorg/partiql/spi/value/Datum;
 	public static fun blob ([B)Lorg/partiql/spi/value/Datum;
+	public static fun blob ([BI)Lorg/partiql/spi/value/Datum;
 	public static fun bool (Z)Lorg/partiql/spi/value/Datum;
 	public static fun character (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public static fun character (Ljava/lang/String;I)Lorg/partiql/spi/value/Datum;
@@ -497,13 +499,14 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun isMissing ()Z
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;
-	public static fun list (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
+	public fun lower ()Lorg/partiql/spi/value/Datum;
 	public static fun missing ()Lorg/partiql/spi/value/Datum;
 	public static fun missing (Lorg/partiql/types/PType;)Lorg/partiql/spi/value/Datum;
 	public static fun nullValue ()Lorg/partiql/spi/value/Datum;
 	public static fun nullValue (Lorg/partiql/types/PType;)Lorg/partiql/spi/value/Datum;
 	public static fun numeric (Ljava/math/BigInteger;)Lorg/partiql/spi/value/Datum;
 	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/spi/value/Datum;
+	public fun pack (Ljava/nio/charset/Charset;)[B
 	public static fun real (F)Lorg/partiql/spi/value/Datum;
 	public static fun sexp (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun smallint (S)Lorg/partiql/spi/value/Datum;
@@ -519,35 +522,34 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun varchar (Ljava/lang/String;I)Lorg/partiql/spi/value/Datum;
 }
 
+public abstract interface class org/partiql/spi/value/DatumReader : java/lang/AutoCloseable {
+	public static fun builder ()Lorg/partiql/spi/value/DatumReader$Builder;
+	public static fun ion (Ljava/io/InputStream;)Lorg/partiql/spi/value/DatumReader;
+	public abstract fun next ()Lorg/partiql/spi/value/Datum;
+}
+
+public class org/partiql/spi/value/DatumReader$Builder {
+	public fun <init> ()V
+	public fun build (Ljava/io/InputStream;)Lorg/partiql/spi/value/DatumReader;
+	public fun encoding (Lorg/partiql/spi/value/Encoding;)Lorg/partiql/spi/value/DatumReader$Builder;
+	public fun register (Lorg/partiql/spi/value/Encoding;Lorg/partiql/spi/value/DatumReader;)Lorg/partiql/spi/value/DatumReader$Builder;
+}
+
+public abstract interface class org/partiql/spi/value/DatumWriter : java/lang/AutoCloseable {
+	public abstract fun write (Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/DatumWriter;
+}
+
+public class org/partiql/spi/value/Encoding : org/partiql/spi/Enum {
+	public static final field ION I
+	public static final field UNKNOWN I
+	public static fun ION ()Lorg/partiql/spi/value/Encoding;
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract interface class org/partiql/spi/value/Field {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getValue ()Lorg/partiql/spi/value/Datum;
 	public static fun of (Ljava/lang/String;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Field;
-}
-
-public final class org/partiql/spi/value/ion/IonDatum : org/partiql/spi/value/Datum {
-	public static final field Companion Lorg/partiql/spi/value/ion/IonDatum$Companion;
-	public synthetic fun <init> (Lcom/amazon/ionelement/api/AnyElement;Lorg/partiql/types/PType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun get (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
-	public fun getBigDecimal ()Ljava/math/BigDecimal;
-	public fun getBigInteger ()Ljava/math/BigInteger;
-	public fun getBoolean ()Z
-	public fun getDate ()Lorg/partiql/value/datetime/Date;
-	public fun getDouble ()D
-	public fun getFields ()Ljava/util/Iterator;
-	public fun getInsensitive (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
-	public fun getString ()Ljava/lang/String;
-	public fun getTime ()Lorg/partiql/value/datetime/Time;
-	public fun getTimestamp ()Lorg/partiql/value/datetime/Timestamp;
-	public fun getType ()Lorg/partiql/types/PType;
-	public fun isMissing ()Z
-	public fun isNull ()Z
-	public fun iterator ()Ljava/util/Iterator;
-	public static final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/spi/value/Datum;
-}
-
-public final class org/partiql/spi/value/ion/IonDatum$Companion {
-	public final fun of (Lcom/amazon/ionelement/api/AnyElement;)Lorg/partiql/spi/value/Datum;
 }
 
 public abstract class org/partiql/value/BagValue : org/partiql/value/CollectionValue {

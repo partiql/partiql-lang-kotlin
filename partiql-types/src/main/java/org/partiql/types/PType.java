@@ -441,7 +441,16 @@ public interface PType {
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated
-        UNKNOWN
+        UNKNOWN,
+
+        /**
+         * The variant type.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>: T VARIANT or VARIANT[T]
+         * <br>
+         */
+        VARIANT,
     }
 
     /**
@@ -556,11 +565,13 @@ public interface PType {
      */
     @NotNull
     static PType varchar(int length) {
-        return new PTypeWithMaxLength(Kind.CHAR, length);
+        return new PTypeWithMaxLength(Kind.VARCHAR, length);
     }
 
     /**
      * @return a PartiQL string type
+     *
+     * TODO remove in favor of non-parameterized VARCHAR
      */
     @NotNull
     static PType string() {
@@ -712,6 +723,15 @@ public interface PType {
     @NotNull
     static PType unknown() {
         return new PTypePrimitive(Kind.UNKNOWN);
+    }
+
+    /**
+     * @param encoding variant encoding type.
+     * @return a PartiQL variant type.
+     */
+    @NotNull
+    static PType variant(String encoding) {
+        return new PTypeVariant(encoding);
     }
 
     /**

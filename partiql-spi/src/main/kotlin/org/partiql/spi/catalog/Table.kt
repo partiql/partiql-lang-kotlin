@@ -77,7 +77,7 @@ public interface Table {
          * Create a table from a Datum with known schema.
          */
         @JvmStatic
-        public fun standard(name: Name, datum: Datum, schema: PType): Table = StandardTable(
+        public fun standard(name: Name, schema: PType, datum: Datum): Table = StandardTable(
             name = name,
             schema = schema,
             datum = datum,

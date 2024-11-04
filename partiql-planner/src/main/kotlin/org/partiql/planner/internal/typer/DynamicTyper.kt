@@ -456,6 +456,7 @@ internal class DynamicTyper {
             Kind.SEXP -> PType.sexp() // TODO: To be updated
             Kind.STRUCT -> PType.struct() // TODO: To be updated
             Kind.UNKNOWN -> PType.unknown() // TODO: To be updated
+            Kind.VARIANT -> TODO("variant in dynamic typer")
         }.toCType()
 
         @OptIn(PartiQLValueExperimental::class)
@@ -489,6 +490,7 @@ internal class DynamicTyper {
                 Kind.SEXP -> sexpValue<PartiQLValue>(null)
                 Kind.STRUCT -> structValue<PartiQLValue>()
                 Kind.UNKNOWN -> nullValue()
+                Kind.VARIANT -> TODO("variant in dynamic typer")
             }
         }
     }

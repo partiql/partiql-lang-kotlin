@@ -28,7 +28,7 @@ internal class ExprSubqueryRow(input: ExprRelation, constructor: ExprValue) :
     override fun eval(env: Environment): Datum {
         val tuple = getFirst(env) ?: return Datum.nullValue()
         val values = IteratorSupplier { tuple.fields }.map { it.value }
-        return Datum.list(values)
+        return Datum.array(values)
     }
 
     /**

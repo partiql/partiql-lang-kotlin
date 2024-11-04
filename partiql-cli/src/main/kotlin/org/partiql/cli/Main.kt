@@ -15,10 +15,6 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.system.IonReaderBuilder
-import com.amazon.ionelement.api.ionListOf
-import com.amazon.ionelement.api.ionNull
-import com.amazon.ionelement.api.loadAllElements
 import org.partiql.cli.io.Format
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
@@ -26,8 +22,8 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.value.ion.IonDatum
-import org.partiql.types.PType
+import org.partiql.spi.value.Datum
+import org.partiql.spi.value.DatumReader
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
 import picocli.CommandLine
@@ -236,28 +232,41 @@ internal class MainCommand : Runnable {
         }
         // Derive a `default catalog from stdin (or file streams)
         val stream = stream()
-        val value = if (stream != null) {
-            val reader = IonReaderBuilder.standard().build(stream)
-            val values = loadAllElements(reader).toList()
+        val datum = if (stream != null) {
+            val reader = DatumReader.ion(stream)
+            val values = reader.readAll()
             when (values.size) {
-                0 -> ionNull()
+                0 -> Datum.nullValue()
                 1 -> values.first()
-                else -> ionListOf(values)
+                else -> Datum.bag(values)
             }
         } else {
-            ionNull()
+            Datum.nullValue()
         }
         val catalog = Catalog.builder()
             .name("default")
             .define(
                 Table.standard(
                     name = Name.of("stdin"),
-                    schema = PType.dynamic(),
-                    datum = IonDatum.of(value.asAnyElement())
+                    schema = datum.type,
+                    datum = datum,
                 )
             )
             .build()
         return listOf(catalog)
+    }
+
+    /**
+     * Consider making "readAll" a static method of DatumReader.
+     *
+     */
+    private fun DatumReader.readAll(): List<Datum> {
+        val values = mutableListOf<Datum>()
+        val next = next()
+        while (next != null) {
+            values.add(next)
+        }
+        return values
     }
 
     /**

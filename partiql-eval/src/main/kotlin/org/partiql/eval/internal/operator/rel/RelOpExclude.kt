@@ -138,7 +138,7 @@ internal class RelOpExclude(
      */
     private fun newCollValue(type: PType, coll: Iterable<Datum>): Datum {
         return when (type.kind) {
-            PType.Kind.ARRAY -> Datum.list(coll)
+            PType.Kind.ARRAY -> Datum.array(coll)
             PType.Kind.BAG -> Datum.bag(coll)
             PType.Kind.SEXP -> Datum.sexp(coll)
             else -> error("Collection type required")

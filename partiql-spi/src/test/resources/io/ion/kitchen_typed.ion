@@ -1,0 +1,104 @@
+//----------------------------
+// Absent values
+//----------------------------
+
+null
+missing
+
+//----------------------------
+// Short-form typed
+//----------------------------
+
+bool::true
+bool::false
+
+tinyint::1
+smallint::1
+int::1
+bigint::1
+
+real::1e23
+double::1e23
+
+char::"a"
+varchar::"abc"
+
+array::[ "a", "b", "c" ]
+bag::[ "a", "b", "c" ]
+
+struct::{ x: 1, y: 2, z: 3 }
+
+//----------------------------
+// Long-form Typed
+//----------------------------
+
+(bool true)
+(bool false)
+
+(tinyint 1)
+(smallint 1)
+(int 1)
+(bigint 1)
+
+((decimal 3 0) 123.)
+((decimal 3 1) 12.3)
+((decimal 3 2) 1.23)
+((decimal 3 3) .123)
+
+((char 3) "abc")
+((varchar 3) "abc")
+((varchar 6) "abc")
+(varchar "abc")
+
+((clob 24) {{ "This is a CLOB of text." }})
+((blob 26) {{ VG8gaW5maW5pdHkuLi4gYW5kIGJleW9uZCE= }})
+
+//----------------------------
+// Heterogenous Collections
+//----------------------------
+
+array::[1, "b", true]
+(array [1, "b", true])
+(array [int::1, char::"b", bool::true])
+((array _ 3) [int::1, char::"b", bool::true])
+
+bag::[1, "b", true]
+(bag [1, "b", true])
+(bag [int::1, char::"b", bool::true])
+((bag _ 3) [int::1, char::"b", bool::true])
+
+//----------------------------
+// Homogenous Collections
+//----------------------------
+
+// equivalent
+((array char 3) [char::"a", char::"b", char::"c"])
+((array char 3) ["a", "b", "c"])
+
+// equivalent
+((bag char 3) [char::"a", char::"b", char::"c"])
+((bag char 3) ["a", "b", "c"])
+
+// nulls ok
+((array char 3) ["a", "b", null])
+((bag char 3) ["a", "b", null])
+
+//----------------------------
+// Structs and Rows
+//----------------------------
+
+// TODO
+
+//----------------------------
+// Ion variant
+//----------------------------
+
+(ion null)
+(ion null.string)
+(ion 1)
+(ion 1e0)
+(ion 1.0)
+(ion 2007-02-23T12:14Z)
+(ion [1, b::2, c::true])
+(ion [1, b::2, c::null])
+(ion a::(1 b::2 null.string missing))
