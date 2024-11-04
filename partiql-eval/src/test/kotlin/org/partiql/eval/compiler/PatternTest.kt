@@ -1,45 +1,92 @@
 package org.partiql.eval.compiler
 
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Operation
 import org.partiql.plan.Operator
-import org.partiql.plan.rex.RexCall
-import org.partiql.planner.PartiQLPlanner
-import org.partiql.spi.catalog.Session
+import org.partiql.plan.builder.RelBuilder
+import org.partiql.plan.builder.RexBuilder
+import org.partiql.plan.rel.RelFilter
+import org.partiql.plan.rel.RelScan
+import org.partiql.spi.catalog.Table
+import org.partiql.types.Field
+import org.partiql.types.PType
+import java.util.Stack
 
 public class PatternTest {
 
-    private val parser = PartiQLParser.standard()
-    private val planner = PartiQLPlanner.standard()
-    private val session = Session.empty()
+    /**
+     * CREATE TABLE jobs (id INT, complete BOOL);
+     */
+    private val table = Table.builder()
+        .name("T")
+        .schema(
+            PType.row(
+                Field.of("id", PType.integer()),
+                Field.of("complete", PType.bool()),
+            )
+        )
+        .build()
+
+    /**
+     * Some simple tree to test patterns against.
+     *
+     * RelProject(id)           -> var(0).id
+     *  \
+     *   RelFilter(complete)    -> var(0).complete
+     *    \
+     *     RelScan(T)           -> < 0: T >
+     */
+    private val tree: Operator = RelBuilder
+        .scan(RexBuilder.table(table))
+        .filter(RexBuilder.variable(0).path("complete"))
+        .project(RexBuilder.variable(0).path("id"))
+        .build()
 
     @Test
-    fun acceptance() {
-        // placeholder
-    }
-
-    @Test
-    fun negative() {
-        // placeholder
-    }
-
-    @Test
-    // @Disabled("Modify and enable for debugging.")
-    fun debug() {
-        val op = parse("1 + 1")
-        val pattern = Strategy.pattern(RexCall::class.java)
-        assertTrue(pattern.matches(op))
-    }
-
-    private fun parse(query: String): Operator {
-        val ast = parser.parse(query).root
-        val plan = planner.plan(ast, session).plan
-        val operation = plan.getOperation()
-        if (operation is Operation.Query) {
-            return operation.getRex()
+    fun matchSingle() {
+        // curr should be what we want to match
+        val pattern = Pattern.match(RelFilter::class.java).build()
+        // traverse the tree until we hit what we want to match.
+        var curr = tree
+        val stack = Stack<Operator>()
+        stack.push(curr)
+        while (stack.isNotEmpty()) {
+            curr = stack.pop()
+            if (curr is RelFilter) {
+                break
+            }
+            for (next in curr.getChildren()) {
+                stack.push(next)
+            }
         }
-        throw IllegalStateException("Expected a query operation, got: $operation")
+        pattern.matches(curr)
+    }
+
+    @Test
+    fun predicatePushDown() {
+        // filter(scan(T))
+        val pattern = Pattern
+            .match(RelFilter::class.java)
+            .child(RelScan::class.java)
+            .build()
+        assert(match(tree, pattern) != null)
+    }
+
+    @Test
+    fun projectionPushDown() {
+        // project(any(scan(T)))
+        val pattern = Pattern
+            .match(RelFilter::class.java)
+            .child(Pattern.any().child(RelScan::class.java).build())
+            .build()
+        assert(match(tree, pattern) != null)
+    }
+
+    @Test
+    fun predicateAndProjectionPushDown() {
+    }
+
+    // working on the match algorithm
+    private fun match(tree: Operator, pattern: Pattern): Match? {
+
     }
 }
