@@ -35,11 +35,7 @@ import org.partiql.value.structValue
 import org.partiql.value.symbolValue
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
-<<<<<<< HEAD
-import java.math.BigInteger
 import kotlin.test.assertEquals
-=======
->>>>>>> 92d2693e (Adds IonReader implementation)
 import kotlin.test.assertNotNull
 
 /**
