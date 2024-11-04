@@ -52,6 +52,7 @@ import org.partiql.value.PartiQLValueExperimental
 
 // TODO docs for all factory methods and move to Kotlin sources
 //  Also consider defaults for nullable. Need to look more into backwards compatibility.
+//  Tracking issue for defaults -- https://github.com/partiql/partiql-lang-kotlin/issues/1640.
 public object Ast {
     // Expr
     @JvmStatic

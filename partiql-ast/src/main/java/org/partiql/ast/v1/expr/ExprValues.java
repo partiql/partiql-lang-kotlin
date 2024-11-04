@@ -13,6 +13,7 @@ import java.util.List;
 /**
  * TODO docs, equals, hashcode
  *  Also may not be an [Expr]?
+ *  Tracking issue for VALUES and subqueries -- https://github.com/partiql/partiql-lang-kotlin/issues/1641.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
