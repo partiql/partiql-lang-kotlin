@@ -47,6 +47,11 @@ tasks.shadowJar {
     configurations = listOf(project.configurations.shadow.get())
 }
 
+// TODO: Figure out why this is needed.
+tasks.withType<Jar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 // Workaround for https://github.com/johnrengelman/shadow/issues/651
 components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
