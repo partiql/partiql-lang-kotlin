@@ -135,7 +135,12 @@ public final class org/partiql/plan/Operation$Query$DefaultImpls {
 
 public abstract interface class org/partiql/plan/Operator {
 	public abstract fun accept (Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getChild (I)V
 	public abstract fun getChildren ()Ljava/util/Collection;
+}
+
+public final class org/partiql/plan/Operator$DefaultImpls {
+	public static fun getChild (Lorg/partiql/plan/Operator;I)V
 }
 
 public abstract interface class org/partiql/plan/Plan {
@@ -392,6 +397,7 @@ public final class org/partiql/plan/builder/RelBuilder {
 	public final fun offset (Lorg/partiql/plan/builder/RexBuilder;)Lorg/partiql/plan/builder/RelBuilder;
 	public final fun pivot (Lorg/partiql/plan/builder/RexBuilder;Lorg/partiql/plan/builder/RexBuilder;)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun project (Ljava/util/List;)Lorg/partiql/plan/builder/RelBuilder;
+	public final fun project ([Lorg/partiql/plan/builder/RexBuilder;)Lorg/partiql/plan/builder/RelBuilder;
 	public static final fun scan (Lorg/partiql/plan/builder/RexBuilder;)Lorg/partiql/plan/builder/RelBuilder;
 	public final fun select (Lorg/partiql/plan/builder/RexBuilder;)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun sort (Ljava/util/List;)Lorg/partiql/plan/builder/RelBuilder;
@@ -421,14 +427,19 @@ public final class org/partiql/plan/builder/RexBuilder {
 	public static final fun lit (Ljava/lang/String;)Lorg/partiql/plan/builder/RexBuilder;
 	public static final fun lit (Lorg/partiql/spi/value/Datum;)Lorg/partiql/plan/builder/RexBuilder;
 	public static final fun lit (Z)Lorg/partiql/plan/builder/RexBuilder;
+	public final fun path (I)Lorg/partiql/plan/builder/RexBuilder;
+	public final fun path (Ljava/lang/String;Z)Lorg/partiql/plan/builder/RexBuilder;
+	public static synthetic fun path$default (Lorg/partiql/plan/builder/RexBuilder;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/plan/builder/RexBuilder;
 	public static final fun pivot (Lorg/partiql/plan/builder/RelBuilder;Lorg/partiql/plan/builder/RexBuilder;Lorg/partiql/plan/builder/RexBuilder;)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun scan ()Lorg/partiql/plan/builder/RelBuilder;
 	public static final fun select (Lorg/partiql/plan/builder/RelBuilder;Lorg/partiql/plan/builder/RexBuilder;)Lorg/partiql/plan/builder/RexBuilder;
 	public static final fun spread (Ljava/util/List;)Lorg/partiql/plan/builder/RexBuilder;
 	public static final fun struct (Ljava/util/List;)Lorg/partiql/plan/builder/RexBuilder;
 	public static final fun subquery (Lorg/partiql/plan/builder/RelBuilder;)Lorg/partiql/plan/builder/RexBuilder;
+	public static final fun table (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/builder/RexBuilder;
 	public static final fun unique (Lorg/partiql/plan/builder/RelBuilder;)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun unpivot ()Lorg/partiql/plan/builder/RelBuilder;
+	public static final fun variable (I)Lorg/partiql/plan/builder/RexBuilder;
 	public static final fun variable (II)Lorg/partiql/plan/builder/RexBuilder;
 }
 
@@ -447,13 +458,19 @@ public final class org/partiql/plan/builder/RexBuilder$Companion {
 	public final fun spread (Ljava/util/List;)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun struct (Ljava/util/List;)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun subquery (Lorg/partiql/plan/builder/RelBuilder;)Lorg/partiql/plan/builder/RexBuilder;
+	public final fun table (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun unique (Lorg/partiql/plan/builder/RelBuilder;)Lorg/partiql/plan/builder/RexBuilder;
+	public final fun variable (I)Lorg/partiql/plan/builder/RexBuilder;
 	public final fun variable (II)Lorg/partiql/plan/builder/RexBuilder;
 }
 
 public abstract interface class org/partiql/plan/rel/Rel : org/partiql/plan/Operator {
 	public abstract fun getType ()Lorg/partiql/plan/rel/RelType;
 	public abstract fun isOrdered ()Z
+}
+
+public final class org/partiql/plan/rel/Rel$DefaultImpls {
+	public static fun getChild (Lorg/partiql/plan/rel/Rel;I)V
 }
 
 public abstract interface class org/partiql/plan/rel/RelAggregate : org/partiql/plan/rel/Rel {
@@ -467,6 +484,7 @@ public abstract interface class org/partiql/plan/rel/RelAggregate : org/partiql/
 
 public final class org/partiql/plan/rel/RelAggregate$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelAggregate;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelAggregate;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelAggregate;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelAggregate;)Z
 }
@@ -482,6 +500,7 @@ public abstract interface class org/partiql/plan/rel/RelCorrelate : org/partiql/
 
 public final class org/partiql/plan/rel/RelCorrelate$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelCorrelate;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelCorrelate;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelCorrelate;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelCorrelate;)Z
 }
@@ -496,6 +515,7 @@ public abstract interface class org/partiql/plan/rel/RelDistinct : org/partiql/p
 
 public final class org/partiql/plan/rel/RelDistinct$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelDistinct;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelDistinct;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelDistinct;)Ljava/util/Collection;
 	public static fun getType (Lorg/partiql/plan/rel/RelDistinct;)Lorg/partiql/plan/rel/RelType;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelDistinct;)Z
@@ -512,6 +532,7 @@ public abstract interface class org/partiql/plan/rel/RelExcept : org/partiql/pla
 
 public final class org/partiql/plan/rel/RelExcept$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelExcept;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelExcept;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelExcept;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelExcept;)Z
 }
@@ -526,6 +547,7 @@ public abstract interface class org/partiql/plan/rel/RelExclude : org/partiql/pl
 
 public final class org/partiql/plan/rel/RelExclude$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelExclude;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelExclude;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelExclude;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelExclude;)Z
 }
@@ -541,6 +563,7 @@ public abstract interface class org/partiql/plan/rel/RelFilter : org/partiql/pla
 
 public final class org/partiql/plan/rel/RelFilter$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelFilter;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelFilter;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelFilter;)Ljava/util/Collection;
 	public static fun getType (Lorg/partiql/plan/rel/RelFilter;)Lorg/partiql/plan/rel/RelType;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelFilter;)Z
@@ -557,6 +580,7 @@ public abstract interface class org/partiql/plan/rel/RelIntersect : org/partiql/
 
 public final class org/partiql/plan/rel/RelIntersect$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelIntersect;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelIntersect;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelIntersect;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelIntersect;)Z
 }
@@ -570,6 +594,7 @@ public abstract interface class org/partiql/plan/rel/RelIterate : org/partiql/pl
 
 public final class org/partiql/plan/rel/RelIterate$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelIterate;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelIterate;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelIterate;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelIterate;)Z
 }
@@ -588,6 +613,7 @@ public abstract interface class org/partiql/plan/rel/RelJoin : org/partiql/plan/
 
 public final class org/partiql/plan/rel/RelJoin$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelJoin;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelJoin;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelJoin;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelJoin;)Z
 }
@@ -603,6 +629,7 @@ public abstract interface class org/partiql/plan/rel/RelLimit : org/partiql/plan
 
 public final class org/partiql/plan/rel/RelLimit$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelLimit;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelLimit;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelLimit;)Ljava/util/Collection;
 	public static fun getType (Lorg/partiql/plan/rel/RelLimit;)Lorg/partiql/plan/rel/RelType;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelLimit;)Z
@@ -619,6 +646,7 @@ public abstract interface class org/partiql/plan/rel/RelOffset : org/partiql/pla
 
 public final class org/partiql/plan/rel/RelOffset$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelOffset;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelOffset;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelOffset;)Ljava/util/Collection;
 	public static fun getType (Lorg/partiql/plan/rel/RelOffset;)Lorg/partiql/plan/rel/RelType;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelOffset;)Z
@@ -634,6 +662,7 @@ public abstract interface class org/partiql/plan/rel/RelProject : org/partiql/pl
 
 public final class org/partiql/plan/rel/RelProject$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelProject;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelProject;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelProject;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelProject;)Z
 }
@@ -642,6 +671,7 @@ public final class org/partiql/plan/rel/RelProjectImpl : org/partiql/plan/rel/Re
 	public fun <init> (Lorg/partiql/plan/rel/Rel;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getChild (I)V
 	public fun getChildren ()Ljava/util/Collection;
 	public fun getInput ()Lorg/partiql/plan/rel/Rel;
 	public fun getProjections ()Ljava/util/List;
@@ -659,6 +689,7 @@ public abstract interface class org/partiql/plan/rel/RelScan : org/partiql/plan/
 
 public final class org/partiql/plan/rel/RelScan$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelScan;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelScan;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelScan;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelScan;)Z
 }
@@ -674,6 +705,7 @@ public abstract interface class org/partiql/plan/rel/RelSort : org/partiql/plan/
 
 public final class org/partiql/plan/rel/RelSort$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelSort;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelSort;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelSort;)Ljava/util/Collection;
 	public static fun getType (Lorg/partiql/plan/rel/RelSort;)Lorg/partiql/plan/rel/RelType;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelSort;)Z
@@ -700,6 +732,7 @@ public abstract interface class org/partiql/plan/rel/RelUnion : org/partiql/plan
 
 public final class org/partiql/plan/rel/RelUnion$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelUnion;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelUnion;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelUnion;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelUnion;)Z
 }
@@ -713,12 +746,17 @@ public abstract interface class org/partiql/plan/rel/RelUnpivot : org/partiql/pl
 
 public final class org/partiql/plan/rel/RelUnpivot$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rel/RelUnpivot;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rel/RelUnpivot;I)V
 	public static fun getChildren (Lorg/partiql/plan/rel/RelUnpivot;)Ljava/util/Collection;
 	public static fun isOrdered (Lorg/partiql/plan/rel/RelUnpivot;)Z
 }
 
 public abstract interface class org/partiql/plan/rex/Rex : org/partiql/plan/Operator {
 	public abstract fun getType ()Lorg/partiql/plan/rex/RexType;
+}
+
+public final class org/partiql/plan/rex/Rex$DefaultImpls {
+	public static fun getChild (Lorg/partiql/plan/rex/Rex;I)V
 }
 
 public abstract interface class org/partiql/plan/rex/RexArray : org/partiql/plan/rex/Rex {
@@ -729,6 +767,7 @@ public abstract interface class org/partiql/plan/rex/RexArray : org/partiql/plan
 
 public final class org/partiql/plan/rex/RexArray$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexArray;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexArray;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexArray;)Ljava/util/Collection;
 }
 
@@ -740,6 +779,7 @@ public abstract interface class org/partiql/plan/rex/RexBag : org/partiql/plan/r
 
 public final class org/partiql/plan/rex/RexBag$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexBag;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexBag;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexBag;)Ljava/util/Collection;
 }
 
@@ -752,6 +792,7 @@ public abstract interface class org/partiql/plan/rex/RexCall : org/partiql/plan/
 
 public final class org/partiql/plan/rex/RexCall$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexCall;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexCall;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexCall;)Ljava/util/Collection;
 }
 
@@ -765,6 +806,7 @@ public abstract interface class org/partiql/plan/rex/RexCallDynamic : org/partiq
 
 public final class org/partiql/plan/rex/RexCallDynamic$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexCallDynamic;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexCallDynamic;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexCallDynamic;)Ljava/util/Collection;
 }
 
@@ -783,6 +825,7 @@ public abstract interface class org/partiql/plan/rex/RexCase$Branch {
 
 public final class org/partiql/plan/rex/RexCase$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexCase;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexCase;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexCase;)Ljava/util/Collection;
 }
 
@@ -795,6 +838,7 @@ public abstract interface class org/partiql/plan/rex/RexCast : org/partiql/plan/
 
 public final class org/partiql/plan/rex/RexCast$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexCast;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexCast;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexCast;)Ljava/util/Collection;
 }
 
@@ -806,6 +850,7 @@ public abstract interface class org/partiql/plan/rex/RexCoalesce : org/partiql/p
 
 public final class org/partiql/plan/rex/RexCoalesce$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexCoalesce;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexCoalesce;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexCoalesce;)Ljava/util/Collection;
 }
 
@@ -817,6 +862,7 @@ public abstract interface class org/partiql/plan/rex/RexError : org/partiql/plan
 
 public final class org/partiql/plan/rex/RexError$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexError;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexError;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexError;)Ljava/util/Collection;
 	public static fun getType (Lorg/partiql/plan/rex/RexError;)Lorg/partiql/plan/rex/RexType;
 }
@@ -829,6 +875,7 @@ public abstract interface class org/partiql/plan/rex/RexLit : org/partiql/plan/r
 
 public final class org/partiql/plan/rex/RexLit$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexLit;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexLit;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexLit;)Ljava/util/Collection;
 }
 
@@ -841,6 +888,7 @@ public abstract interface class org/partiql/plan/rex/RexNullIf : org/partiql/pla
 
 public final class org/partiql/plan/rex/RexNullIf$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexNullIf;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexNullIf;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexNullIf;)Ljava/util/Collection;
 }
 
@@ -852,6 +900,7 @@ public abstract interface class org/partiql/plan/rex/RexPathIndex : org/partiql/
 
 public final class org/partiql/plan/rex/RexPathIndex$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexPathIndex;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexPathIndex;I)V
 }
 
 public abstract interface class org/partiql/plan/rex/RexPathKey : org/partiql/plan/rex/Rex {
@@ -862,6 +911,7 @@ public abstract interface class org/partiql/plan/rex/RexPathKey : org/partiql/pl
 
 public final class org/partiql/plan/rex/RexPathKey$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexPathKey;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexPathKey;I)V
 }
 
 public abstract interface class org/partiql/plan/rex/RexPathSymbol : org/partiql/plan/rex/Rex {
@@ -872,6 +922,7 @@ public abstract interface class org/partiql/plan/rex/RexPathSymbol : org/partiql
 
 public final class org/partiql/plan/rex/RexPathSymbol$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexPathSymbol;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexPathSymbol;I)V
 }
 
 public abstract interface class org/partiql/plan/rex/RexPivot : org/partiql/plan/rex/Rex {
@@ -884,6 +935,7 @@ public abstract interface class org/partiql/plan/rex/RexPivot : org/partiql/plan
 
 public final class org/partiql/plan/rex/RexPivot$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexPivot;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexPivot;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexPivot;)Ljava/util/Collection;
 }
 
@@ -896,6 +948,7 @@ public abstract interface class org/partiql/plan/rex/RexSelect : org/partiql/pla
 
 public final class org/partiql/plan/rex/RexSelect$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexSelect;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexSelect;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexSelect;)Ljava/util/Collection;
 }
 
@@ -907,6 +960,7 @@ public abstract interface class org/partiql/plan/rex/RexSpread : org/partiql/pla
 
 public final class org/partiql/plan/rex/RexSpread$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexSpread;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexSpread;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexSpread;)Ljava/util/Collection;
 }
 
@@ -918,6 +972,7 @@ public abstract interface class org/partiql/plan/rex/RexStruct : org/partiql/pla
 
 public final class org/partiql/plan/rex/RexStruct$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexStruct;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexStruct;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexStruct;)Ljava/util/Collection;
 }
 
@@ -936,6 +991,7 @@ public abstract interface class org/partiql/plan/rex/RexSubquery : org/partiql/p
 
 public final class org/partiql/plan/rex/RexSubquery$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexSubquery;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexSubquery;I)V
 }
 
 public abstract interface class org/partiql/plan/rex/RexSubqueryComp : org/partiql/plan/rex/Rex {
@@ -961,6 +1017,7 @@ public final class org/partiql/plan/rex/RexSubqueryComp$Comp : java/lang/Enum {
 
 public final class org/partiql/plan/rex/RexSubqueryComp$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexSubqueryComp;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexSubqueryComp;I)V
 }
 
 public final class org/partiql/plan/rex/RexSubqueryComp$Quantifier : java/lang/Enum {
@@ -981,6 +1038,7 @@ public abstract interface class org/partiql/plan/rex/RexSubqueryIn : org/partiql
 
 public final class org/partiql/plan/rex/RexSubqueryIn$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexSubqueryIn;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexSubqueryIn;I)V
 }
 
 public abstract interface class org/partiql/plan/rex/RexSubqueryTest : org/partiql/plan/rex/Rex {
@@ -991,6 +1049,7 @@ public abstract interface class org/partiql/plan/rex/RexSubqueryTest : org/parti
 
 public final class org/partiql/plan/rex/RexSubqueryTest$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexSubqueryTest;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexSubqueryTest;I)V
 }
 
 public final class org/partiql/plan/rex/RexSubqueryTest$Test : java/lang/Enum {
@@ -1010,6 +1069,7 @@ public abstract interface class org/partiql/plan/rex/RexTable : org/partiql/plan
 
 public final class org/partiql/plan/rex/RexTable$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexTable;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexTable;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexTable;)Ljava/util/Collection;
 }
 
@@ -1036,6 +1096,7 @@ public abstract interface class org/partiql/plan/rex/RexVar : org/partiql/plan/r
 
 public final class org/partiql/plan/rex/RexVar$DefaultImpls {
 	public static fun accept (Lorg/partiql/plan/rex/RexVar;Lorg/partiql/plan/Visitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun getChild (Lorg/partiql/plan/rex/RexVar;I)V
 	public static fun getChildren (Lorg/partiql/plan/rex/RexVar;)Ljava/util/Collection;
 }
 
