@@ -11,9 +11,14 @@ import org.partiql.plan.Operator;
 public abstract class Strategy {
 
     @NotNull
-    public final Pattern pattern;
+    private final Pattern pattern;
 
-    protected Strategy(@NotNull Pattern pattern) {
+    /**
+     * Create a strategy for a given pattern.
+     *
+     * @param pattern strategy pattern.
+     */
+    public Strategy(@NotNull Pattern pattern) {
         this.pattern = pattern;
     }
 
