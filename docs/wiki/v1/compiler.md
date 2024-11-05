@@ -29,13 +29,11 @@ Let's combine a limit and offset into a single relational expression; the logica
 
 ```
 RelLimit         Pattern.match(..)
-   \
-    RelOffset       Pattern.match(..)
-       \
-        *              match any offset child
+  \
+   RelOffset       Pattern.match(..)
 ```
 
-We use the builders to create a pattern, intentionally omitting `RelOffset` children.
+We use the builders to create a pattern.
 
 ```
 Pattern.match(RelLimit::class)
@@ -43,13 +41,46 @@ Pattern.match(RelLimit::class)
        .build()
 ```
 
+In practice, the compiler will be walking the tree so we must deal with the inputs which have been recursively compiled.
+Because these nodes have been compiled, they are part of the "physical" or "Expr" domain. To illustrate, I've enclosed
+the compiled children nodes with `< >` so `ExprValue -> <Value>` and `ExprRelation -> <Rel>`.
+
+Recall the definition of a `RelLimit` and a `RelOffset`
+
+```
+* RelLimit(input: Rel, limit: Rex)
+* RelOffset(input: Rel, offset: Rex)
+```
+
+I have labelled these children in the illustration so that you can see where the end up in the match.
+
+```
+...
+  \
+  RelLimit
+  /       \
+x:<Value>  RelOffset
+        /      \
+   y:<Value>   z:<Rel>
+``` 
+
 The compiler will look for this pattern in the operator tree, and produce a match like so,
 
 ```
 Match {
-   matched: [ RelLimit, RelOffset ],
-   children: [ Expr ],
+   matched: [
+      RelLimit,
+      RelOffset,
+   ],
+   children: [
+        [x:<Value>],
+        [y:<Value>, z:<Rel> ]
+   ],
 }
 ```
 
-Where `Expr` is the compiled child to `RelOffset`.
+The matched items are the flattened (in-order traversal) matched nodes from the pattern, while the children
+is a nested list of corresponding compiled children.
+
+This match structure is sent to the Strategy which gives the implementor all the information they need to know
+to continue folding the tree.

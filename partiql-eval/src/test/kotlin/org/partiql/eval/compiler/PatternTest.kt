@@ -1,5 +1,6 @@
 package org.partiql.eval.compiler
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.plan.Operator
 import org.partiql.plan.builder.RelBuilder
@@ -11,6 +12,9 @@ import org.partiql.types.Field
 import org.partiql.types.PType
 import java.util.Stack
 
+/**
+ * The PatternTest tests the pattern matching algorithm against a hand-constructed tree.
+ */
 public class PatternTest {
 
     /**
@@ -62,6 +66,7 @@ public class PatternTest {
     }
 
     @Test
+    @Disabled("Matching search not implemented")
     fun predicatePushDown() {
         // filter(scan(T))
         val pattern = Pattern
@@ -72,6 +77,7 @@ public class PatternTest {
     }
 
     @Test
+    @Disabled("Matching search not implemented")
     fun projectionPushDown() {
         // project(any(scan(T)))
         val pattern = Pattern
@@ -81,12 +87,8 @@ public class PatternTest {
         assert(match(tree, pattern) != null)
     }
 
-    @Test
-    fun predicateAndProjectionPushDown() {
-    }
-
     // working on the match algorithm
     private fun match(tree: Operator, pattern: Pattern): Match? {
-
+        TODO("adapt DFS tracking child position")
     }
 }
