@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.eval.Expr;
 import org.partiql.plan.Operator;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -12,26 +12,18 @@ import java.util.List;
  */
 public class Match {
 
-    private final Operator[] matched;
+    private final Operator[] operators;
     private final List<List<Expr>> children;
 
     /**
-     * Single operator match, no inputs.
-     */
-    public Match(Operator operator) {
-        this.matched = new Operator[]{operator};
-        this.children = new ArrayList[]{};
-    }
-
-    /**
-     * Operator tree match with zero-or-more inputs.
+     * Single operator match with zero-or-more inputs.
      *
-     * @param matched  matched logical operands.
-     * @param children    compile physical inputs.
+     * @param operator  matched logical operator.
+     * @param children  compiled child operators.
      */
-    public Match(@NotNull Operator[] matched, @NotNull Expr[] children) {
-        this.matched = matched;
-        this.children = children;
+    public Match(@NotNull Operator operator, @NotNull List<Expr> children) {
+        this.operators = new Operator[]{operator};
+        this.children = Collections.singletonList(children);
     }
 
     /**
@@ -41,8 +33,8 @@ public class Match {
      * @return Operator
      */
     @NotNull
-    public Operator get(int i) {
-        return matched[i];
+    public Operator operator(int i) {
+        return operators[i];
     }
 
     /**
@@ -52,7 +44,7 @@ public class Match {
      * @return Expr
      */
     @NotNull
-    public Expr input(int i) {
-        return children[i];
+    public List<Expr> children(int i) {
+        return children.get(i);
     }
 }

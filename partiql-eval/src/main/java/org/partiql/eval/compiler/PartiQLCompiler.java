@@ -60,10 +60,21 @@ public interface PartiQLCompiler {
          * Adds a strategy to the compiler.
          *
          * @param strategy The strategy to add.
-         * @return This builder.
+         * @return this.
          */
         public Builder addStrategy(Strategy strategy) {
             strategies.add(strategy);
+            return this;
+        }
+
+        /**
+         * Adds a list of strategies to the compiler.
+         *
+         * @param strategies The strategies to add.
+         * @return this.
+         */
+        public Builder addAllStrategies(@NotNull List<Strategy> strategies) {
+            this.strategies.addAll(strategies);
             return this;
         }
 

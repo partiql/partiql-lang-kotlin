@@ -168,10 +168,13 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
          * @return
          */
         private fun compileWithStrategies(operator: Operator, ctx: Unit): Expr {
+            // if strategy matches root, compile children to form a match.
             for (strategy in strategies) {
                 // first match
-                if (strategy.pattern.matches(operator)) {
-                    val match = Match(operator)
+                if (strategy.getPattern().matches(operator)) {
+                    // compile children
+                    val children = operator.getChildren().map { compileWithStrategies(it, ctx) }
+                    val match = Match(operator, children)
                     return strategy.apply(match)
                 }
             }

@@ -5,12 +5,10 @@ import org.partiql.eval.Mode
 import org.partiql.eval.Statement
 import org.partiql.eval.internal.operator.rex.ExprLit
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.rel.RelFilter
-import org.partiql.plan.rex.RexLit
+import org.partiql.plan.rel.RelLimit
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -26,19 +24,8 @@ public class StrategyTest {
 
     @Test
     fun strategy() {
-        // the pattern matches a string literal that says "replace_me"
-        val pattern = Pattern.match(RexLit::class.java).predicate {
-            val rex = it as RexLit // matched, so mostly safe
-            val datum = rex.getValue()
-            if (datum.type.kind == PType.Kind.STRING) {
-                datum.string == "replace_me"
-            } else {
-                false
-            }
-        }
-            .build()
-        // the strategy sets a flag to indicate it was applied, then stubs out the expression.
         var trigged = false
+        val pattern = Pattern(RelLimit::class.java)
         val strategy = object : Strategy(pattern) {
             override fun apply(match: Match): Expr {
                 trigged = true
@@ -46,25 +33,10 @@ public class StrategyTest {
             }
         }
         // ignore output
-        compile("'replace_me'", listOf(strategy))
+        val input = "select * from [1,2] limit 100"
+        compile(input, listOf(strategy))
         // assert the strategy was triggered
         assertTrue(trigged, "the compiler did not apply the custom strategy")
-    }
-
-    /**
-     * Pattern:
-     *
-     *   RelFilter(A)
-     *      \
-     *      RelFilter(B)
-     *
-     * Strategy:
-     *
-     *    (RelFilter(A), RelFilter(B)) -> RelOpFilter(Expr(A) AND Expr(B))
-     */
-    @Test
-    fun combineFilters() {
-        TODO("need pattern matching algorithm")
     }
 
     // Helper to "compile with strategies".
@@ -72,11 +44,9 @@ public class StrategyTest {
         val mode = Mode.STRICT()
         val ast = parser.parse(input).statements[0]
         val plan = planner.plan(ast, session).plan
-        val compiler = PartiQLCompiler.builder().apply {
-            for (s in strategies) {
-                addStrategy(s)
-            }
-        }.build()
+        val compiler = PartiQLCompiler.builder()
+            .addAllStrategies(strategies)
+            .build()
         return compiler.prepare(plan, mode)
     }
 }
