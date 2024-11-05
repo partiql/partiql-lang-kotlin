@@ -1,11 +1,11 @@
 package org.partiql.eval.compiler
 
-import org.junit.jupiter.api.Disabled
 import org.partiql.eval.Expr
 import org.partiql.eval.Mode
 import org.partiql.eval.Statement
 import org.partiql.eval.internal.operator.rex.ExprLit
-import org.partiql.parser.V1PartiQLParser
+import org.partiql.parser.PartiQLParser
+import org.partiql.plan.rel.RelFilter
 import org.partiql.plan.rex.RexLit
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Session
@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
  */
 public class StrategyTest {
 
-    private val parser = V1PartiQLParser.standard()
+    private val parser = PartiQLParser.standard()
     private val planner = PartiQLPlanner.standard()
     private val session = Session.empty()
     private val nil = ExprLit(Datum.nullValue())
@@ -64,20 +64,13 @@ public class StrategyTest {
      */
     @Test
     fun combineFilters() {
-        // val pattern = Strategy.pattern(RelFilter::class.java)
-        TODO()
-    }
-
-    @Test
-    @Disabled("Modify and enable for debugging.")
-    fun debug() {
-        // placeholder
+        TODO("need pattern matching algorithm")
     }
 
     // Helper to "compile with strategies".
     private fun compile(input: String, strategies: List<Strategy>): Statement {
         val mode = Mode.STRICT()
-        val ast = parser.parse(input).root
+        val ast = parser.parse(input).statements[0]
         val plan = planner.plan(ast, session).plan
         val compiler = PartiQLCompiler.builder().apply {
             for (s in strategies) {

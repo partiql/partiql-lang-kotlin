@@ -3,7 +3,6 @@ package org.partiql.eval.compiler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.plan.Operator;
-import org.partiql.planner.internal.ir.Rel;
 
 import java.util.Collections;
 import java.util.List;
@@ -98,7 +97,7 @@ public class Pattern {
      *        where(filter exclusive to join.child(0) OR filter exclusive to join.child(1))
      *
      * </pre>
-     * </code>
+     * <code>
      * Pattern.match(RelFilter::class)
      *        .predicate(::filterCanMoveInsideJoin)
      *        .child(Pattern.match(RelJoin::class))

@@ -8,7 +8,16 @@ public interface Operator {
     public fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R
 
     /**
-     * TODO make `getInputs()` and add `getInput(int index)`
+     * Get i-th child (input) operator.
+     *
+     * @param index
+     */
+    public fun getChild(index: Int) {
+        throw UnsupportedOperationException("getChild")
+    }
+
+    /**
+     * Get all child (input) operators.
      *
      * @return
      */
