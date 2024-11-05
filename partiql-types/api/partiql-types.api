@@ -333,6 +333,7 @@ public abstract interface class org/partiql/types/PType {
 	public static fun numeric ()Lorg/partiql/types/PType;
 	public static fun real ()Lorg/partiql/types/PType;
 	public static fun row (Ljava/util/Collection;)Lorg/partiql/types/PType;
+	public static fun row ([Lorg/partiql/types/Field;)Lorg/partiql/types/PType;
 	public static fun sexp ()Lorg/partiql/types/PType;
 	public static fun sexp (Lorg/partiql/types/PType;)Lorg/partiql/types/PType;
 	public static fun smallint ()Lorg/partiql/types/PType;

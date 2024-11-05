@@ -2,6 +2,7 @@ package org.partiql.types;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -32,13 +33,14 @@ public interface PType {
      * analyzed before calling any other method. For example:
      * <p></p>
      * {@code
-     *     public int getPrecisionOrNull(PType type) {
-     *         if (type.base == {@link Kind#DECIMAL}) {
-     *             return type.getPrecision();
-     *         }
-     *         return null;
-     *     }
+     * public int getPrecisionOrNull(PType type) {
+     * if (type.base == {@link Kind#DECIMAL}) {
+     * return type.getPrecision();
      * }
+     * return null;
+     * }
+     * }
+     *
      * @return the corresponding PartiQL {@link Kind}.
      */
     @NotNull
@@ -46,8 +48,9 @@ public interface PType {
 
     /**
      * The fields of the type
+     *
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#ROW}
+     *                                       {@link Kind#ROW}
      */
     @NotNull
     default Collection<Field> getFields() throws UnsupportedOperationException {
@@ -56,10 +59,11 @@ public interface PType {
 
     /**
      * The decimal precision of the type
+     *
      * @return decimal precision
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#DECIMAL}, {@link Kind#TIMESTAMPZ}, {@link Kind#TIMESTAMP}, {@link Kind#TIMEZ},
-     * {@link Kind#TIME}, {@link Kind#REAL}, {@link Kind#DOUBLE}
+     *                                       {@link Kind#DECIMAL}, {@link Kind#TIMESTAMPZ}, {@link Kind#TIMESTAMP}, {@link Kind#TIMEZ},
+     *                                       {@link Kind#TIME}, {@link Kind#REAL}, {@link Kind#DOUBLE}
      */
     default int getPrecision() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
@@ -67,9 +71,10 @@ public interface PType {
 
     /**
      * The max length of the type
+     *
      * @return max length of a type
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#CHAR}, {@link Kind#CLOB}, {@link Kind#BLOB}
+     *                                       {@link Kind#CHAR}, {@link Kind#CLOB}, {@link Kind#BLOB}
      */
     default int getLength() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
@@ -77,9 +82,10 @@ public interface PType {
 
     /**
      * The scale of the type. Example: <code>DECIMAL(&lt;param&gt;, &lt;scale&gt;)</code>
+     *
      * @return the scale of the type
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#DECIMAL}
+     *                                       {@link Kind#DECIMAL}
      */
     default int getScale() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
@@ -87,9 +93,10 @@ public interface PType {
 
     /**
      * The type parameter of the type. Example: <code>BAG(&lt;param&gt;)</code>
+     *
      * @return type parameter of the type
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#ARRAY}, {@link Kind#BAG}, {@link Kind#SEXP}
+     *                                       {@link Kind#ARRAY}, {@link Kind#BAG}, {@link Kind#SEXP}
      */
     @NotNull
     default PType getTypeParameter() throws UnsupportedOperationException {
@@ -106,6 +113,7 @@ public interface PType {
      * for each API exposed in {@link PType} before using them.
      * <p></p>
      * Future additions <b>may</b> add enums such as INTERVAL_YEAR_MONTH, INTERVAL_DAY_TIME, and more.
+     *
      * @see PType
      */
     enum Kind {
@@ -197,6 +205,7 @@ public interface PType {
          * <b>Type Syntax</b>: <code>TO_BE_DETERMINED</code>
          * <br>
          * <b>Applicable methods</b>: NONE
+         *
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated
@@ -261,6 +270,7 @@ public interface PType {
          * <b>Type Syntax</b>: <code>TO_BE_DETERMINED</code>
          * <br>
          * <b>Applicable methods</b>: NONE
+         *
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated
@@ -274,6 +284,7 @@ public interface PType {
          * <code>BINARY LARGE OBJECT</code>, <code>BINARY LARGE OBJECT(&lt;large object length&gt;)</code>
          * <br>
          * <b>Applicable methods</b>: {@link PType#getLength()}
+         *
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated
@@ -288,6 +299,7 @@ public interface PType {
          * <code>CHARACTER LARGE OBJECT</code>, <code>CHARACTER LARGE OBJECT(&lt;large object length&gt;)</code>
          * <br>
          * <b>Applicable methods</b>: {@link PType#getLength()}
+         *
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated
@@ -438,6 +450,7 @@ public interface PType {
          * <b>Type Syntax</b>: NONE
          * <br>
          * <b>Applicable methods</b>: NONE
+         *
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated
@@ -689,7 +702,6 @@ public interface PType {
     }
 
     /**
-     *
      * @param typeParam the component type to be used
      * @return a PartiQL sexp type containing a component type of {@code typeParam}.
      * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
@@ -697,6 +709,15 @@ public interface PType {
     @NotNull
     static PType sexp(@NotNull PType typeParam) {
         return new PTypeCollection(Kind.SEXP, typeParam);
+    }
+
+    /**
+     * @return a PartiQL row type
+     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
+     */
+    @NotNull
+    static PType row(@NotNull Field... fields) {
+        return new PTypeRow(Arrays.asList(fields));
     }
 
     /**

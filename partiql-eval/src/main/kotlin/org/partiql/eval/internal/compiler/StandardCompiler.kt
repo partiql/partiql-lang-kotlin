@@ -6,7 +6,9 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Mode
 import org.partiql.eval.Statement
+import org.partiql.eval.compiler.Match
 import org.partiql.eval.compiler.PartiQLCompiler
+import org.partiql.eval.compiler.Strategy
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
@@ -60,6 +62,7 @@ import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
 import org.partiql.plan.Operation
+import org.partiql.plan.Operator
 import org.partiql.plan.Plan
 import org.partiql.plan.Visitor
 import org.partiql.plan.rel.Rel
@@ -112,7 +115,11 @@ import org.partiql.types.PType
 /**
  * This class is responsible for producing an executable statement from logical operators.
  */
-internal class StandardCompiler : PartiQLCompiler {
+internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
+
+    private val strategies: List<Strategy> = strategies
+
+    internal constructor() : this(emptyList())
 
     override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {
         try {
@@ -139,7 +146,6 @@ internal class StandardCompiler : PartiQLCompiler {
     private inner class _Visitor(mode: Mode) : Visitor<Expr, Unit> {
 
         private val mode = mode.code()
-        private val unknown = PType.unknown()
 
         /**
          * Compile a query operation to a query statement.
@@ -153,19 +159,36 @@ internal class StandardCompiler : PartiQLCompiler {
             override fun execute(): Datum = root.eval(Environment())
         }
 
-        private fun compile(rel: Rel, ctx: Unit): ExprRelation = rel.accept(this, ctx) as ExprRelation
-
-        private fun compile(rex: Rex, ctx: Unit): ExprValue = rex.accept(this, ctx) as ExprValue
-
         /**
-         * TODO apply custom strategies left-to-right, returning the first match.
+         * Apply custom strategies left-to-right, returning the first match.
+         *
+         * This is very simple because I am trying to leverage the current visitor at the moment for a small diff.
          *
          * @param operator
-         * @param ctx
          * @return
          */
-        override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): Expr {
-            error("No compiler strategy matches the operator: ${operator::class.simpleName}")
+        private fun compileWithStrategies(operator: Operator, ctx: Unit): Expr {
+            // if strategy matches root, compile children to form a match.
+            for (strategy in strategies) {
+                // first match
+                if (strategy.getPattern().matches(operator)) {
+                    // compile children
+                    val children = operator.getChildren().map { compileWithStrategies(it, ctx) }
+                    val match = Match(operator, children)
+                    return strategy.apply(match)
+                }
+            }
+            return operator.accept(this, Unit)
+        }
+
+        // TODO REMOVE ME
+        private fun compile(rel: Rel, ctx: Unit): ExprRelation = compileWithStrategies(rel, ctx) as ExprRelation
+
+        // TODO REMOVE ME
+        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex, ctx) as ExprValue
+
+        override fun defaultReturn(operator: Operator, ctx: Unit): Expr {
+            error("No compiler strategy matches the operator: ${operator::class.java.simpleName}")
         }
 
         // OPERATORS

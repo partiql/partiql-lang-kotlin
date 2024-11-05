@@ -5,6 +5,9 @@ import org.partiql.plan.rex.Rex
 
 /**
  * Logical filter operation for the WHERE and HAVING clauses.
+ *
+ *   arg 0 – rel input
+ *   arg 1 - rex predicate
  */
 public interface RelFilter : Rel {
 

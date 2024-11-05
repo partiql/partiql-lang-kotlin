@@ -187,6 +187,14 @@ public class RelBuilder private constructor(builder: Builder) {
      * @param projections
      * @return
      */
+    public fun project(vararg projections: RexBuilder): RelBuilder = project(projections.toList())
+
+    /**
+     * Appends a RelProject to the current operator builder.
+     *
+     * @param projections
+     * @return
+     */
     public fun project(projections: List<RexBuilder>): RelBuilder = RelBuilder {
         val _input = self.build(it)
         val _projections = projections.map { rex -> rex.build(it) }

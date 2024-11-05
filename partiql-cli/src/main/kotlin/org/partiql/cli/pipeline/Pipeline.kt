@@ -18,7 +18,7 @@ internal class Pipeline private constructor(
     private val planner: PartiQLPlanner,
     private val compiler: PartiQLCompiler,
     private val ctx: Context,
-    private val mode: Mode
+    private val mode: Mode,
 ) {
 
     /**

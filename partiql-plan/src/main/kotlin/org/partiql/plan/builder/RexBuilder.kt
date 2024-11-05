@@ -4,14 +4,12 @@ import org.partiql.plan.rel.Rel
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexStruct
 import org.partiql.plan.rex.RexSubqueryTest
+import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
  * DataFrame style fluent-builder for PartiQL logical plans.
- *
- * TODO change all arguments to RexBuilder.
- * TODO schemas and field names.
  */
 @Suppress("LocalVariableName")
 public class RexBuilder private constructor(rex: Builder) {
@@ -35,8 +33,18 @@ public class RexBuilder private constructor(rex: Builder) {
     public companion object {
 
         @JvmStatic
+        public fun variable(offset: Int): RexBuilder = RexBuilder {
+            it.rexVar(0, offset)
+        }
+
+        @JvmStatic
         public fun variable(depth: Int, offset: Int): RexBuilder = RexBuilder {
             it.rexVar(depth, offset)
+        }
+
+        @JvmStatic
+        public fun table(table: Table): RexBuilder = RexBuilder {
+            it.rexTable(table)
         }
 
         @JvmStatic
@@ -86,9 +94,7 @@ public class RexBuilder private constructor(rex: Builder) {
          */
         @JvmStatic
         public fun subquery(rel: RelBuilder): RexBuilder = RexBuilder {
-            error("subquery builders are removed until they are fixed in partiql-planner")
-            // val _rel = rel.build(it)
-            // it.rexSubquery(_rel)
+            throw UnsupportedOperationException("subquery builders are removed until supported in partiql-planner")
         }
 
         /**
@@ -141,6 +147,34 @@ public class RexBuilder private constructor(rex: Builder) {
     public fun cast(target: PType): RexBuilder = RexBuilder {
         val _operand = self.build(it)
         it.rexCast(_operand, target)
+    }
+
+    /**
+     * Appends a RexPathKey (or RexPathSymbol) to the current rex builder.
+     *
+     * @param key
+     * @return
+     */
+    public fun path(key: String, caseInsensitive: Boolean = false): RexBuilder = RexBuilder {
+        val _key = it.rexLit(Datum.string(key))
+        val _operand = self.build(it)
+        if (caseInsensitive) {
+            it.rexPathSymbol(_operand, key)
+        } else {
+            it.rexPathKey(_operand, _key)
+        }
+    }
+
+    /**
+     * Appends a RexPathIndex to the current rex builder.
+     *
+     * @param index
+     * @return
+     */
+    public fun path(index: Int): RexBuilder = RexBuilder {
+        val _index = it.rexLit(Datum.integer(index))
+        val _operand = self.build(it)
+        it.rexPathIndex(_operand, _index)
     }
 
     /**
