@@ -1,3 +1,6 @@
 [submodule "test/partiql-tests"]
 	path = test/partiql-tests
 	url = git@github.com:partiql/partiql-tests.git
+[submodule "partiql-smithy"]
+	path = partiql-smithy
+	url = git@github.com:partiql/partiql-smithy.git
