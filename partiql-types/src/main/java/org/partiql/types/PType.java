@@ -4,9 +4,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This represents a PartiQL type, whether it be a PartiQL primitive or user-defined.
@@ -119,7 +116,7 @@ public interface PType {
     enum Kind {
 
         /**
-         * PartiQL's dynamic type.
+         * PartiQL's dynamic type. This is solely used during compilation -- it is not a possible runtime type.
          * <br>
          * <br>
          * <b>Type Syntax</b>: <code>DYNAMIC</code>

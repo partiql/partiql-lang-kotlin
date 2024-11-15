@@ -1,3 +1,5 @@
+import org.jetbrains.dokka.gradle.DokkaTask
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -26,6 +28,10 @@ dependencies {
 
 tasks.javadoc {
     enabled = false
+}
+
+tasks.withType(DokkaTask::class.java).configureEach {
+    failOnWarning = true
 }
 
 tasks.shadowJar {
