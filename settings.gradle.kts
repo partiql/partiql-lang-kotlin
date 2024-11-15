@@ -26,7 +26,6 @@ include(
     "partiql-planner",
     "partiql-spi",
     "partiql-types",
-    "plugins:partiql-local",
     "lib:sprout",
     "test:coverage-tests",
     "test:partiql-tests-runner",

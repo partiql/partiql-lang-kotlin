@@ -20,6 +20,7 @@ import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.fromStaticType
 import kotlin.test.assertEquals
 
 internal class PlannerPErrorReportingTests {
@@ -84,7 +85,7 @@ internal class PlannerPErrorReportingTests {
             isSignal: Boolean,
             assertion: (PErrorCollector) -> Unit,
             expectedType: StaticType = StaticType.ANY
-        ) : this(query, isSignal, assertion, PType.fromStaticType(expectedType).toCType())
+        ) : this(query, isSignal, assertion, fromStaticType(expectedType).toCType())
     }
 
     companion object {

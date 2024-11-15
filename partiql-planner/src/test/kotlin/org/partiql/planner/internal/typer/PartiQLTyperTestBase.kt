@@ -19,6 +19,7 @@ import org.partiql.spi.errors.PErrorListener
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
 import org.partiql.types.StaticType
+import org.partiql.types.fromStaticType
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -26,7 +27,7 @@ abstract class PartiQLTyperTestBase {
     sealed class TestResult {
         data class Success(val expectedType: PType) : TestResult() {
 
-            constructor(expectedType: StaticType) : this(PType.fromStaticType(expectedType))
+            constructor(expectedType: StaticType) : this(fromStaticType(expectedType))
 
             override fun toString(): String = "Success_$expectedType"
         }
@@ -68,7 +69,7 @@ abstract class PartiQLTyperTestBase {
         // define all bindings
         types.forEachIndexed { i, t ->
             val tableName = Name.of("t${i + 1}")
-            val tableSchema = PType.fromStaticType(t)
+            val tableSchema = fromStaticType(t)
             val table = Table.empty(tableName, tableSchema)
             catalog.define(table)
         }

@@ -1,4 +1,4 @@
-package org.partiql.plugins.local
+package org.partiql.planner.plugins.local
 
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
@@ -108,7 +108,8 @@ public class LocalCatalog internal constructor(
         private const val EXT = ".ion"
 
         @JvmStatic
-        public fun builder(): Builder = Builder()
+        public fun builder(): Builder =
+            Builder()
     }
 
     public class Builder internal constructor() {

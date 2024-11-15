@@ -11,7 +11,6 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.types.PType.Kind
-import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.stringValue
 
@@ -132,7 +131,7 @@ internal data class Scope(
     }
 
     /**
-     * Searches for the [Identifier.Part] within the given [StaticType].
+     * Searches for the [Identifier.Part] within the given [CompilerType].
      *
      * Returns
      *  - true  iff known to contain key

@@ -13,10 +13,10 @@ import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
-import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.fromStaticType
 import java.io.File
 import java.nio.file.Path
 import java.util.stream.Stream
@@ -36,7 +36,7 @@ class PlanTest {
     /**
      * Table schema
      */
-    private val schema = PType.fromStaticType(
+    private val schema = fromStaticType(
         BagType(
             StructType(
                 listOf(

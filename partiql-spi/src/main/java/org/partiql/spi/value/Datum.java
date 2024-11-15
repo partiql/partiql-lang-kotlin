@@ -26,6 +26,9 @@ import java.util.Objects;
 /**
  * This is an EXPERIMENTAL representation of a value in PartiQL's type system. The intention of this modeling is to
  * provide a layer of indirection between PartiQL's type semantics and Java's type semantics.
+ * <p>
+ * ! EXPERIMENTAL ! This API is experimental and may be removed/modified without prior notice.
+ * </p>
  * <p></p>
  * INTERNAL DEVELOPER NOTES:
  * <p></p>
@@ -40,7 +43,6 @@ import java.util.Objects;
  * - The comparator for ordering and aggregations
  * - Equality
  * - Adding support for annotations
- * @apiNote ! EXPERIMENTAL ! This API is experimental and may be removed/modified without prior notice.
  */
 public interface Datum extends Iterable<Datum> {
 
@@ -100,6 +102,9 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * <p>
+     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * </p>
      * @return the underlying value applicable to the types:
      * {@link PartiQLValueType#BINARY},
      * {@link PartiQLValueType#BLOB},
@@ -109,7 +114,6 @@ public interface Datum extends Iterable<Datum> {
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      * @deprecated BINARY doesn't exist in SQL or Ion. This is subject to deletion. BLOB and CLOB are typically represented
      * in a fashion that can support much larger values -- this may be modified at any time.
@@ -120,6 +124,7 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * @return the underlying value applicable to the types:
      * {@link PartiQLValueType#BYTE},
      * {@link PartiQLValueType#INT8}
@@ -128,7 +133,6 @@ public interface Datum extends Iterable<Datum> {
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      * @deprecated BYTE is not present in SQL or Ion. This is subject to deletion.
      */
@@ -180,6 +184,7 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * @return the underlying value applicable to the types:
      * {@link PartiQLValueType#INTERVAL}.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
@@ -187,7 +192,6 @@ public interface Datum extends Iterable<Datum> {
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      * @deprecated This implementation is likely wrong and is not recommended for use.
      */
@@ -555,10 +559,10 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * Returns a typed missing value
+     * ! EXPERIMENTAL ! This is subject to breaking changes and/or removal without prior notice.
      * @param type the type of the value
      * @return a typed missing value
      * @deprecated this may not be required. This is subject to removal.
-     * @apiNote ! EXPERIMENTAL ! This is subject to breaking changes and/or removal without prior notice.
      */
     @Deprecated
     @NotNull

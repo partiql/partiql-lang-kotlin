@@ -16,10 +16,16 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
+    id(Plugins.testFixtures)
 }
 
 dependencies {
+    implementation("org.jetbrains:annotations:26.0.1")
     // empty
+}
+
+tasks.javadoc {
+    enabled = false
 }
 
 tasks.shadowJar {
@@ -31,12 +37,6 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
         skip()
     }
-}
-
-// Need to add this as we have both Java and Kotlin sources. Dokka already handles multi-language projects. If
-// Javadoc is enabled, we end up overwriting index.html (causing compilation errors).
-tasks.withType<Javadoc> {
-    enabled = false
 }
 
 tasks.withType<Jar> {
@@ -52,6 +52,12 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
         skip()
     }
+}
+
+tasks.compileTestFixturesKotlin {
+    kotlinOptions.jvmTarget = Versions.jvmTarget
+    kotlinOptions.apiVersion = Versions.kotlinApi
+    kotlinOptions.languageVersion = Versions.kotlinLanguage
 }
 
 publish {

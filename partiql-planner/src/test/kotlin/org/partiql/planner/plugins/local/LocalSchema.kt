@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.plugins.local
+package org.partiql.planner.plugins.local
 
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.ListElement
