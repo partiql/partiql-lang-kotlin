@@ -54,8 +54,8 @@ internal object FnBitwiseAnd : ArithmeticDiadicOperator() {
         }
     }
 
-    override fun getDecimalInstance(v1: PType, v2: PType): Function.Instance {
-        return getNumericInstance(v1, v2)
+    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
+        return getNumericInstance(decimalLhs, decimalRhs)
     }
 
     override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {

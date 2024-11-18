@@ -28,8 +28,8 @@ internal abstract class ArithmeticDiadicOperator : Function {
             0 -> (lhs to rhs)
             else -> (lhs to lhs)
         }
-        val invocation = lookupTable[lhs.kind.ordinal][rhs.kind.ordinal]
-        return invocation.invoke(newLhs, newRhs)
+        val instance = instances[lhs.kind.ordinal][rhs.kind.ordinal]
+        return instance(newLhs, newRhs)
     }
 
     /**
@@ -69,11 +69,11 @@ internal abstract class ArithmeticDiadicOperator : Function {
     abstract fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance
 
     /**
-     * @param v1 TODO
-     * @param v2 TODO
+     * @param decimalLhs TODO
+     * @param decimalRhs TODO
      * @return TODO
      */
-    abstract fun getDecimalInstance(v1: PType, v2: PType): Function.Instance
+    abstract fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance
 
     /**
      * @param realLhs TODO
@@ -100,14 +100,18 @@ internal abstract class ArithmeticDiadicOperator : Function {
         return getInstance(args)?.returns ?: PType.dynamic() // TODO: Do we need this method?
     }
 
-    private val lookupTable: Array<Array<(PType, PType) -> Function.Instance?>> = Array(PType.Kind.entries.size) {
+    /**
+     * This is a lookup table for finding the appropriate instance for the given types. The table is
+     * initialized on construction using the get*Instance methods.
+     */
+    private val instances: Array<Array<(PType, PType) -> Function.Instance?>> = Array(PType.Kind.entries.size) {
         Array(PType.Kind.entries.size) {
             { _, _ -> null }
         }
     }
 
     private fun fillTable(lhs: PType.Kind, rhs: PType.Kind, instance: (PType, PType) -> Function.Instance) {
-        lookupTable[lhs.ordinal][rhs.ordinal] = instance
+        instances[lhs.ordinal][rhs.ordinal] = instance
     }
 
     private fun fillTable(highPrecedence: PType.Kind, instance: (PType, PType) -> Function.Instance) {

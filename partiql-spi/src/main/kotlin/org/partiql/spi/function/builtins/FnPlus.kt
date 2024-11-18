@@ -59,15 +59,15 @@ internal object FnPlus : ArithmeticDiadicOperator() {
      * P = max(s1, s2) + max(p1 - s1, p2 - s2) + 1
      * S = max(s1, s2)
      */
-    override fun getDecimalInstance(v1: PType, v2: PType): Function.Instance {
-        val p = Math.min(38, Math.max(v1.scale, v2.scale) + Math.max(v1.precision - v1.scale, v2.precision - v2.scale) + 1)
-        val s = Math.min(38, Math.max(v1.scale, v2.scale))
+    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
+        val p = Math.min(38, Math.max(decimalLhs.scale, decimalRhs.scale) + Math.max(decimalLhs.precision - decimalLhs.scale, decimalRhs.precision - decimalRhs.scale) + 1)
+        val s = Math.min(38, Math.max(decimalLhs.scale, decimalRhs.scale))
         return Function.instance(
             name = "plus",
             returns = PType.decimal(p, s),
             parameters = arrayOf(
-                Parameter("lhs", v1),
-                Parameter("rhs", v2),
+                Parameter("lhs", decimalLhs),
+                Parameter("rhs", decimalRhs),
             )
         ) { args ->
             val arg0 = args[0].bigDecimal
