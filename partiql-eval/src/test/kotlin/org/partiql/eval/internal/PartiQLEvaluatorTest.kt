@@ -8,18 +8,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
-import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Plan
-import org.partiql.planner.PartiQLPlanner
-import org.partiql.spi.catalog.Catalog
-import org.partiql.spi.catalog.Name
-import org.partiql.spi.catalog.Session
-import org.partiql.spi.catalog.Table
-import org.partiql.spi.value.Datum
-import org.partiql.spi.value.DatumReader
-import org.partiql.types.PType
-import org.partiql.types.StaticType
-import org.partiql.types.fromStaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -27,16 +15,12 @@ import org.partiql.value.boolValue
 import org.partiql.value.decimalValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
-import org.partiql.value.io.PartiQLValueIonWriterBuilder
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
-import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 /**
  * This holds sanity tests during the development of the [PartiQLCompiler.standard] implementation.
@@ -45,114 +29,41 @@ import kotlin.test.assertNotNull
 class PartiQLEvaluatorTest {
 
     @ParameterizedTest
-    @MethodSource("plusTestCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun plusTests(tc: SuccessTestCase) = tc.assert()
-
-    @ParameterizedTest
     @MethodSource("sanityTestsCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun sanityTests(tc: SuccessTestCase) = tc.assert()
+    fun sanityTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("typingModeTestCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun typingModeTests(tc: TypingTestCase) = tc.assert()
+    fun typingModeTests(tc: TypingTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("subqueryTestCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun subqueryTests(tc: SuccessTestCase) = tc.assert()
+    fun subqueryTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("aggregationTestCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun aggregationTests(tc: SuccessTestCase) = tc.assert()
+    fun aggregationTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("joinTestCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun joinTests(tc: SuccessTestCase) = tc.assert()
+    fun joinTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("globalsTestCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun globalsTests(tc: SuccessTestCase) = tc.assert()
+    fun globalsTests(tc: SuccessTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("castTestCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun castTests(tc: SuccessTestCase) = tc.assert()
+    fun castTests(tc: SuccessTestCase) = tc.run()
 
     companion object {
-
-        // Result precision: max(s1, s2) + max(p1 - s1, p2 - s2) + 1
-        // Result scale: max(s1, s2)
-        @JvmStatic
-        fun plusTestCases() = listOf(
-            SuccessTestCase(
-                input = """
-                    -- DEC(1, 0) + DEC(6, 5)
-                    -- P = 5 + MAX(1, 1) + 1 = 7
-                    -- S = MAX(0, 5) = 5
-                    1 + 2.00000;
-                """.trimIndent(),
-                mode = Mode.STRICT(),
-                expected = Datum.decimal(BigDecimal.valueOf(300000, 5), 7, 5),
-                jvmEquality = true
-            ),
-            SuccessTestCase(
-                input = """
-                    -- DEC(2, 1) + DEC(6, 5)
-                    -- P = 5 + MAX(1, 1) + 1 = 7
-                    -- S = MAX(1, 5) = 5
-                    1.0 + 2.00000;
-                """.trimIndent(),
-                mode = Mode.STRICT(),
-                expected = Datum.decimal(BigDecimal.valueOf(300000, 5), 7, 5),
-                jvmEquality = true
-            ),
-            SuccessTestCase(
-                input = """
-                    -- DEC(5, 4) + DEC(6, 5)
-                    -- P = 5 + MAX(1, 1) + 1 = 7
-                    -- S = MAX(4, 5) = 5
-                    1.0000 + 2.00000;
-                """.trimIndent(),
-                mode = Mode.STRICT(),
-                expected = Datum.decimal(BigDecimal.valueOf(300000, 5), 7, 5),
-                jvmEquality = true
-            ),
-            SuccessTestCase(
-                input = """
-                    -- DEC(7, 4) + DEC(13, 7)
-                    -- P = 7 + MAX(3, 6) + 1 = 14
-                    -- S = MAX(4, 7) = 7
-                    234.0000 + 456789.0000000;
-                """.trimIndent(),
-                mode = Mode.STRICT(),
-                expected = Datum.decimal(BigDecimal.valueOf(457023), 14, 7),
-                jvmEquality = true
-            ),
-            SuccessTestCase(
-                input = """
-                    -- This shows that the value, while dynamic, still produces the right precision/scale
-                    -- DEC(7, 4) + DEC(13, 7)
-                    -- P = 7 + MAX(3, 6) + 1 = 14
-                    -- S = MAX(4, 7) = 7
-                    234.0000 + dynamic_decimal;
-                """.trimIndent(),
-                mode = Mode.STRICT(),
-                expected = Datum.decimal(BigDecimal.valueOf(457023), 14, 7),
-                globals = listOf(
-                    SuccessTestCase.Global(
-                        "dynamic_decimal",
-                        "456789.0000000"
-                    )
-                ),
-                jvmEquality = true
-            ),
-        )
 
         @JvmStatic
         fun castTestCases() = listOf(
@@ -704,14 +615,14 @@ class PartiQLEvaluatorTest {
                     structValue(
                         "sensor" to int32Value(1),
                         "readings" to bagValue(
-                            org.partiql.value.decimalValue(0.4.toBigDecimal()),
-                            org.partiql.value.decimalValue(0.2.toBigDecimal())
+                            decimalValue(0.4.toBigDecimal()),
+                            decimalValue(0.2.toBigDecimal())
                         )
                     ),
                     structValue(
                         "sensor" to int32Value(2),
                         "readings" to bagValue(
-                            org.partiql.value.decimalValue(0.3.toBigDecimal())
+                            decimalValue(0.3.toBigDecimal())
                         )
                     ),
                 )
@@ -1364,154 +1275,6 @@ class PartiQLEvaluatorTest {
         )
     }
 
-    public class SuccessTestCase(
-        val input: String,
-        val expected: Datum,
-        val mode: Mode = Mode.PERMISSIVE(),
-        val globals: List<Global> = emptyList(),
-        val jvmEquality: Boolean = false
-    ) {
-
-        constructor(
-            input: String,
-            expected: PartiQLValue,
-            mode: Mode = Mode.PERMISSIVE(),
-            globals: List<Global> = emptyList(),
-        ) : this(input, Datum.of(expected), mode, globals)
-
-        private val compiler = PartiQLCompiler.standard()
-        private val parser = PartiQLParser.standard()
-        private val planner = PartiQLPlanner.standard()
-
-        /**
-         * @property value is a serialized Ion value.
-         */
-        class Global(
-            val name: String,
-            val value: String,
-            val type: StaticType = StaticType.ANY,
-        )
-
-        internal fun assert() {
-            val parseResult = parser.parse(input)
-            assertEquals(1, parseResult.statements.size)
-            val statement = parseResult.statements[0]
-            val catalog = Catalog.builder()
-                .name("memory")
-                .apply {
-                    globals.forEach {
-                        val table = Table.standard(
-                            name = Name.of(it.name),
-                            schema = fromStaticType(it.type),
-                            datum = DatumReader.ion(it.value.byteInputStream()).next()!!
-                        )
-                        define(table)
-                    }
-                }
-                .build()
-            val session = Session.builder()
-                .catalog("memory")
-                .catalogs(catalog)
-                .build()
-            val plan = planner.plan(statement, session).plan
-            val result = compiler.prepare(plan, mode).execute()
-            val comparison = when (jvmEquality) {
-                true -> expected == result
-                false -> Datum.comparator().compare(expected, result) == 0
-            }
-            assert(comparison) {
-                comparisonString(expected, result, plan)
-            }
-        }
-
-        private fun comparisonString(expected: Datum, actual: Datum, plan: Plan): String {
-            return buildString {
-                // TODO pretty-print V1 plans!
-                appendLine(plan)
-                // TODO: Add DatumWriter
-                appendLine("Expected : $expected")
-                appendLine("Actual   : $actual")
-            }
-        }
-
-        override fun toString(): String {
-            return input
-        }
-    }
-
-    public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
-        val name: String,
-        val input: String,
-        val expectedPermissive: PartiQLValue,
-    ) {
-
-        private val compiler = PartiQLCompiler.standard()
-        private val parser = PartiQLParser.standard()
-        private val planner = PartiQLPlanner.standard()
-
-        internal fun assert() {
-            val (permissiveResult, plan) = run(mode = Mode.PERMISSIVE())
-            val permissiveResultPValue = permissiveResult.toPartiQLValue()
-            val assertionCondition = try {
-                expectedPermissive == permissiveResultPValue // TODO: Assert using Datum
-            } catch (t: Throwable) {
-                val str = buildString {
-                    appendLine("Test Name: $name")
-                    // TODO pretty-print V1 plans!
-                    appendLine(plan)
-                }
-                throw RuntimeException(str, t)
-            }
-            assert(assertionCondition) {
-                comparisonString(expectedPermissive, permissiveResultPValue, plan)
-            }
-            var error: Throwable? = null
-            try {
-                val (strictResult, _) = run(mode = Mode.STRICT())
-                when (strictResult.type.kind) {
-                    PType.Kind.BAG, PType.Kind.ARRAY -> strictResult.toList()
-                    else -> strictResult
-                }
-            } catch (e: Throwable) {
-                error = e
-            }
-            assertNotNull(error)
-        }
-
-        private fun run(mode: Mode): Pair<Datum, Plan> {
-            val parseResult = parser.parse(input)
-            assertEquals(1, parseResult.statements.size)
-            val statement = parseResult.statements[0]
-            val catalog = Catalog.builder().name("memory").build()
-            val session = Session.builder()
-                .catalog("memory")
-                .catalogs(catalog)
-                .build()
-            val plan = planner.plan(statement, session).plan
-            val result = compiler.prepare(plan, mode).execute()
-            return result to plan
-        }
-
-        @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: Plan): String {
-            val expectedBuffer = ByteArrayOutputStream()
-            val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
-            expectedWriter.append(expected)
-            return buildString {
-                // TODO pretty-print V1 plans!
-                appendLine(plan)
-                appendLine("Expected : $expectedBuffer")
-                expectedBuffer.reset()
-                expectedWriter.append(actual)
-                appendLine("Actual   : $expectedBuffer")
-            }
-        }
-
-        override fun toString(): String {
-            return "$name -- $input"
-        }
-    }
-
     @Test
     @Disabled
     fun developmentTest() {
@@ -1535,7 +1298,7 @@ class PartiQLEvaluatorTest {
                 SuccessTestCase.Global("d", "3.")
             )
         )
-        tc.assert()
+        tc.run()
     }
 
     @Test
@@ -1548,7 +1311,7 @@ class PartiQLEvaluatorTest {
                 "v" to int32Value(5)
             )
         )
-    ).assert()
+    ).run()
 
     @Test
     @Disabled("This is just a placeholder. We should add support for this. Grouping is not yet supported.")
@@ -1559,7 +1322,7 @@ class PartiQLEvaluatorTest {
                     PLACEHOLDER FOR THE EXAMPLE IN THE RELEVANT SECTION. GROUPING NOT YET SUPPORTED.
             """.trimIndent(),
             expectedPermissive = missingValue()
-        ).assert()
+        ).run()
 
     @Test
     @Disabled("The planner fails this, though it should pass for permissive mode.")
@@ -1573,7 +1336,7 @@ class PartiQLEvaluatorTest {
                     "n" to stringValue("_1")
                 )
             )
-        ).assert()
+        ).run()
 
     @Test
     @Disabled("We don't yet support arrays.")
@@ -1591,7 +1354,7 @@ class PartiQLEvaluatorTest {
                     missingValue()
                 )
             )
-        ).assert()
+        ).run()
 
     @Test
     @Disabled("There is a bug in the planner which makes this always return missing.")
@@ -1600,7 +1363,7 @@ class PartiQLEvaluatorTest {
             name = "PartiQL Specification Section 4.2 -- non integer index",
             input = "SELECT VALUE [1,2,3][v] FROM <<1, 1.0>> AS v;",
             expectedPermissive = bagValue(int32Value(2), missingValue())
-        ).assert()
+        ).run()
 
     @Test
     @Disabled("CASTs aren't supported yet.")
@@ -1617,7 +1380,7 @@ class PartiQLEvaluatorTest {
                     "a" to int32Value(6),
                 ),
             )
-        ).assert()
+        ).run()
 
     @Test
     @Disabled("Arrays aren't supported yet.")
@@ -1638,7 +1401,7 @@ class PartiQLEvaluatorTest {
                     "i" to int64Value(2),
                 ),
             )
-        ).assert()
+        ).run()
 
     @Test
     @Disabled(
@@ -1687,7 +1450,7 @@ class PartiQLEvaluatorTest {
             ),
         ),
         mode = Mode.PERMISSIVE()
-    ).assert()
+    ).run()
 
     // PartiQL Specification Section 8
     @Test
@@ -1696,7 +1459,7 @@ class PartiQLEvaluatorTest {
         SuccessTestCase(
             input = "MISSING AND TRUE;",
             expected = boolValue(null),
-        ).assert()
+        ).run()
 
     // PartiQL Specification Section 8
     @Test
@@ -1705,7 +1468,7 @@ class PartiQLEvaluatorTest {
         input = "MISSING AND TRUE;",
         expected = boolValue(null), // TODO: Is this right?
         mode = Mode.STRICT()
-    ).assert()
+    ).run()
 
     @Test
     @Disabled("Support for ORDER BY needs to be added for this to pass.")
@@ -1716,7 +1479,7 @@ class PartiQLEvaluatorTest {
                 (4, 5) < (SELECT VALUE t.a FROM << { 'a': 3 }, { 'a': 4 } >> AS t ORDER BY t.a)
             """.trimIndent(),
             expected = boolValue(false)
-        ).assert()
+        ).run()
 
     @Test
     @Disabled("This is appropriately coerced, but this test is failing because LT currently doesn't support LISTS.")
@@ -1726,7 +1489,7 @@ class PartiQLEvaluatorTest {
                 (4, 5) < (SELECT t.a, t.a FROM << { 'a': 3 } >> AS t)
             """.trimIndent(),
             expected = boolValue(false)
-        ).assert()
+        ).run()
 
     @Test
     @Disabled("This broke in its introduction to the codebase on merge. See 5fb9a1ccbc7e630b0df62aa8b161d319c763c1f6.")
@@ -1770,7 +1533,7 @@ class PartiQLEvaluatorTest {
                     stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill")
                 )
             )
-        ).assert()
+        ).run()
 
     @Test
     @Disabled("This broke in its introduction to the codebase on merge. See 5fb9a1ccbc7e630b0df62aa8b161d319c763c1f6.")
@@ -1833,5 +1596,5 @@ class PartiQLEvaluatorTest {
                     stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill")
                 )
             )
-        ).assert()
+        ).run()
 }
