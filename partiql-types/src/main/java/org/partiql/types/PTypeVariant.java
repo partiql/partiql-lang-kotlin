@@ -2,7 +2,7 @@ package org.partiql.types;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PTypeVariant implements PType {
+class PTypeVariant implements PType {
 
     private final String encoding;
 

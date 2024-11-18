@@ -16,8 +16,8 @@ import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.planner.plugins.local.LocalCatalog
 import org.partiql.planner.util.PErrorCollector
-import org.partiql.plugins.local.LocalCatalog
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name

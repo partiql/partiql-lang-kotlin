@@ -33,7 +33,7 @@ dependencies {
     annotationProcessor(Deps.lombok)
     // Test
     testImplementation(project(":partiql-parser"))
-    testImplementation(project(":plugins:partiql-local"))
+    testImplementation(testFixtures(project(":partiql-types"))) // TODO: Remove use of StaticType
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4

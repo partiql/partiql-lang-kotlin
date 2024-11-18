@@ -3,7 +3,7 @@ package org.partiql.spi.value;
 /**
  * The {@link DatumWriter} interface is a low-level writer interface for writing streams of PartiQL data.
  * <br>
- * {@see java.io.Writer}
+ * @see java.io.Writer
  */
 public interface DatumWriter extends AutoCloseable {
 

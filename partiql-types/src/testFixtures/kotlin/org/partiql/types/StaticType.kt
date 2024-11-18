@@ -100,7 +100,11 @@ public sealed class StaticType {
         @JvmField public val SYMBOL: SymbolType = SymbolType()
         @JvmField public val STRING: StringType = StringType()
         @JvmField public val TEXT: StaticType = unionOf(SYMBOL, STRING)
-        @JvmField public val CHAR: StaticType = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1)))
+        @JvmField public val CHAR: StaticType = StringType(
+            StringType.StringLengthConstraint.Constrained(
+                NumberConstraint.Equals(1)
+            )
+        )
         @JvmField public val CLOB: ClobType = ClobType()
         @JvmField public val BLOB: BlobType = BlobType()
         @JvmField public val LIST: ListType = ListType()
@@ -781,10 +785,3 @@ public sealed class CollectionConstraint {
     public data class PrimaryKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
     public data class PartitionKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
 }
-
-@Suppress("DEPRECATION")
-internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
-internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
-internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
-@Suppress("DEPRECATION")
-internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)

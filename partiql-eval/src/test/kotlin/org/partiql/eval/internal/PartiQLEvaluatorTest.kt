@@ -19,6 +19,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.types.PType
 import org.partiql.types.StaticType
+import org.partiql.types.fromStaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -1327,7 +1328,7 @@ class PartiQLEvaluatorTest {
                     globals.forEach {
                         val table = Table.standard(
                             name = Name.of(it.name),
-                            schema = PType.fromStaticType(it.type),
+                            schema = fromStaticType(it.type),
                             datum = DatumReader.ion(it.value.byteInputStream()).next()!!
                         )
                         define(table)

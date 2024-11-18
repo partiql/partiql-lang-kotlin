@@ -4,9 +4,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This represents a PartiQL type, whether it be a PartiQL primitive or user-defined.
@@ -119,7 +116,7 @@ public interface PType {
     enum Kind {
 
         /**
-         * PartiQL's dynamic type.
+         * PartiQL's dynamic type. This is solely used during compilation -- it is not a possible runtime type.
          * <br>
          * <br>
          * <b>Type Syntax</b>: <code>DYNAMIC</code>
@@ -753,99 +750,5 @@ public interface PType {
     @NotNull
     static PType variant(String encoding) {
         return new PTypeVariant(encoding);
-    }
-
-    /**
-     * @return a corresponding PType from a {@link StaticType}
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice. This is
-     * meant for use internally by the PartiQL library. Public consumers should not use this API.
-     */
-    @NotNull
-    @Deprecated
-    static PType fromStaticType(@NotNull StaticType type) {
-        if (type instanceof AnyType) {
-            return PType.dynamic();
-        } else if (type instanceof AnyOfType) {
-            HashSet<StaticType> allTypes = new HashSet<>(type.flatten().getAllTypes());
-            if (allTypes.isEmpty()) {
-                return PType.dynamic();
-            } else if (allTypes.size() == 1) {
-                return fromStaticType(allTypes.stream().findFirst().get());
-            } else {
-                return PType.dynamic();
-            }
-//            if (allTypes.stream().allMatch((subType) -> subType instanceof CollectionType)) {}
-        } else if (type instanceof BagType) {
-            PType elementType = fromStaticType(((BagType) type).getElementType());
-            return PType.bag(elementType);
-        } else if (type instanceof BlobType) {
-            return PType.blob(Integer.MAX_VALUE); // TODO: Update this
-        } else if (type instanceof BoolType) {
-            return PType.bool();
-        } else if (type instanceof ClobType) {
-            return PType.clob(Integer.MAX_VALUE); // TODO: Update this
-        } else if (type instanceof DateType) {
-            return PType.date();
-        } else if (type instanceof DecimalType) {
-            DecimalType.PrecisionScaleConstraint precScale = ((DecimalType) type).getPrecisionScaleConstraint();
-            if (precScale instanceof DecimalType.PrecisionScaleConstraint.Unconstrained) {
-                return PType.decimal();
-            } else if (precScale instanceof DecimalType.PrecisionScaleConstraint.Constrained) {
-                DecimalType.PrecisionScaleConstraint.Constrained precisionScaleConstraint = (DecimalType.PrecisionScaleConstraint.Constrained) precScale;
-                return PType.decimal(precisionScaleConstraint.getPrecision(), precisionScaleConstraint.getScale());
-            } else {
-                throw new IllegalStateException();
-            }
-        } else if (type instanceof FloatType) {
-            return PType.doublePrecision();
-        } else if (type instanceof IntType) {
-            IntType.IntRangeConstraint cons = ((IntType) type).getRangeConstraint();
-            if (cons == IntType.IntRangeConstraint.INT4) {
-                return PType.integer();
-            } else if (cons == IntType.IntRangeConstraint.SHORT) {
-                return PType.smallint();
-            } else if (cons == IntType.IntRangeConstraint.LONG) {
-                return PType.bigint();
-            } else if (cons == IntType.IntRangeConstraint.UNCONSTRAINED) {
-                return PType.numeric();
-            } else {
-                throw new IllegalStateException();
-            }
-        } else if (type instanceof ListType) {
-            PType elementType = fromStaticType(((ListType) type).getElementType());
-            return PType.array(elementType);
-        } else if (type instanceof SexpType) {
-            PType elementType = fromStaticType(((SexpType) type).getElementType());
-            return PType.sexp(elementType);
-        } else if (type instanceof StringType) {
-            return PType.string();
-        } else if (type instanceof StructType) {
-            boolean isOrdered = ((StructType) type).getConstraints().contains(TupleConstraint.Ordered.INSTANCE);
-            boolean isClosed = ((StructType) type).getContentClosed();
-            List<Field> fields = ((StructType) type).getFields().stream().map((field) -> Field.of(field.getKey(), PType.fromStaticType(field.getValue()))).collect(Collectors.toList());
-            if (isClosed && isOrdered) {
-                return PType.row(fields);
-            } else if (isClosed) {
-                return PType.row(fields); // TODO: We currently use ROW when closed.
-            } else {
-                return PType.struct();
-            }
-        } else if (type instanceof SymbolType) {
-            return PType.symbol();
-        } else if (type instanceof TimeType) {
-            Integer precision = ((TimeType) type).getPrecision();
-            if (precision == null) {
-                precision = 6;
-            }
-            return PType.time(precision);
-        } else if (type instanceof TimestampType) {
-            Integer precision = ((TimestampType) type).getPrecision();
-            if (precision == null) {
-                precision = 6;
-            }
-            return PType.timestamp(precision);
-        } else {
-            throw new IllegalStateException("Unsupported type: " + type);
-        }
     }
 }

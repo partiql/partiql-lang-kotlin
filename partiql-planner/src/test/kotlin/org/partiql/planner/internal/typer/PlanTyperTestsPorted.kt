@@ -20,11 +20,11 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
+import org.partiql.planner.plugins.local.toStaticType
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
-import org.partiql.plugins.local.toStaticType
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
@@ -46,6 +46,7 @@ import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.fromStaticType
 import java.util.stream.Stream
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
@@ -74,7 +75,7 @@ internal class PlanTyperTestsPorted {
                 catalogPath: List<String> = emptyList(),
                 expected: StaticType,
                 warnings: PErrorListener? = null,
-            ) : this(name, key, query, catalog, catalogPath, PType.fromStaticType(expected).toCType(), warnings)
+            ) : this(name, key, query, catalog, catalogPath, fromStaticType(expected).toCType(), warnings)
 
             override fun toString(): String {
                 if (key != null) {
@@ -104,7 +105,7 @@ internal class PlanTyperTestsPorted {
                 note: String? = null,
                 expected: StaticType? = null,
                 problemHandler: ProblemHandler? = null,
-            ) : this(name, key, query, catalog, catalogPath, note, expected?.let { PType.fromStaticType(it).toCType() }, problemHandler)
+            ) : this(name, key, query, catalog, catalogPath, note, expected?.let { fromStaticType(it).toCType() }, problemHandler)
 
             override fun toString(): String = "$name : ${query ?: key}"
         }
@@ -174,7 +175,7 @@ internal class PlanTyperTestsPorted {
                     val catalogName = steps.first()
                     // args
                     val name = Name.of(steps.drop(1))
-                    val ptype = PType.fromStaticType(staticType)
+                    val ptype = fromStaticType(staticType)
                     if (map.containsKey(catalogName)) {
                         map[catalogName]!!.add(name to ptype)
                     } else {

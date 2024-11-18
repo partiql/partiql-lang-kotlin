@@ -1,3 +1,4 @@
+import org.jetbrains.dokka.gradle.DokkaTask
 import kotlin.io.path.relativeTo
 import kotlin.io.path.toPath
 
@@ -36,7 +37,7 @@ dependencies {
     annotationProcessor(Deps.lombok)
     // Test
     testImplementation(project(":partiql-parser"))
-    testImplementation(project(":plugins:partiql-local"))
+    testImplementation(testFixtures(project(":partiql-types"))) // TODO: Remove use of StaticType
     testImplementation(Deps.kotlinReflect)
     // Test Fixtures
     testFixturesImplementation(project(":partiql-spi"))
@@ -167,7 +168,7 @@ tasks.detekt {
     dependsOn(tasks.withType<Copy>())
 }
 
-tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+tasks.withType<DokkaTask>().configureEach {
     dependsOn(tasks.withType<Copy>())
 }
 

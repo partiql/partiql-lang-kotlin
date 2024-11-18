@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.plugins.local
+package org.partiql.planner.plugins.local
 
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
@@ -21,6 +21,7 @@ import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.types.StaticType
+import org.partiql.types.fromStaticType
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
 import kotlin.io.path.reader
@@ -43,7 +44,7 @@ internal class LocalTable(
         val reader = IonReaderBuilder.standard().build(path.reader())
         val element = loadSingleElement(reader)
         val staticType = element.toStaticType()
-        return PType.fromStaticType(staticType)
+        return fromStaticType(staticType)
     }
 
     // TODO for now files are `type` only.

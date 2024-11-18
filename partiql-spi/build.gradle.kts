@@ -36,6 +36,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     }
 }
 
+// TODO: Once we move to only public Java APIs, we can use Javadoc.
 // Need to add this as we have both Java and Kotlin sources. Dokka already handles multi-language projects. If
 // Javadoc is enabled, we end up overwriting index.html (causing compilation errors).
 tasks.withType<Javadoc> {

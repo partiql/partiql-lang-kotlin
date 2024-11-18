@@ -13,7 +13,7 @@ public class Encoding extends Enum {
     }
 
     /**
-     * This variant is meant for forward-compatibility and should not be used to represent a {@link PErrorKind}.
+     * This variant is meant for forward-compatibility and should not be used to represent an {@link Encoding}.
      */
     public static final int UNKNOWN = 0;
 
