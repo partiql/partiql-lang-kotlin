@@ -482,11 +482,12 @@ public interface PType {
     }
 
     /**
-     * @return a decimal with the default precision (38) and default scale (0)
+     * @return a PartiQL decimal type
+     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
     static PType decimal() {
-        return decimal(38, 0);
+        return new PTypeDecimal(38, 0);
     }
 
     /**

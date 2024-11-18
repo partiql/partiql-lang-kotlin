@@ -3842,6 +3842,10 @@ internal class PlanTyperTestsPorted {
         when (val statement = plan.getOperation()) {
             is org.partiql.plan.Operation.Query -> {
                 assert(collector.problems.isEmpty()) {
+                    // Throw internal error for debugging
+                    collector.problems.firstOrNull { it.code() == PError.INTERNAL_ERROR }?.let { pError ->
+                        pError.getOrNull("CAUSE", Throwable::class.java)?.let { throw it }
+                    }
                     buildString {
                         appendLine(collector.problems.toString())
                         appendLine()

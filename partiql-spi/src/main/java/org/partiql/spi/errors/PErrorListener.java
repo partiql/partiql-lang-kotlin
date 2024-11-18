@@ -26,6 +26,12 @@ public interface PErrorListener {
     static PErrorListener abortOnError() {
         return error -> {
             if (error.severity.code() == Severity.ERROR) {
+                if (error.code() == PError.INTERNAL_ERROR) {
+                    Throwable cause = error.getOrNull("CAUSE", Throwable.class);
+                    if (cause != null) {
+                        throw new PErrorException(error, cause);
+                    }
+                }
                 throw new PErrorException(error);
             }
         };

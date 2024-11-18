@@ -94,10 +94,10 @@ public class Parameter private constructor(
         public fun text(name: String): Parameter = Parameter(name, SqlTypeFamily.TEXT, false)
 
         /**
-         * Create a numeric [Parameter].
+         * Create a number [Parameter].
          */
         @JvmStatic
-        public fun numeric(name: String): Parameter = Parameter(name, SqlTypeFamily.NUMERIC, false)
+        public fun number(name: String): Parameter = Parameter(name, SqlTypeFamily.NUMBER, false)
 
         /**
          * Create a collection [Parameter].

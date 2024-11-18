@@ -88,6 +88,7 @@ import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.value.DecimalValue
 import org.partiql.value.MissingValue
+import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 import org.partiql.value.boolValue
@@ -144,6 +145,10 @@ internal object RexConverter {
             )
             val op = rexOpLit(node.value)
             return rex(cType, op)
+        }
+
+        private fun PartiQLValue.toPType(): PType {
+            return this.type.toPType()
         }
 
         /**

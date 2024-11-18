@@ -32,6 +32,7 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
     override fun getInstance(args: Array<PType>): Function.Instance = instance
 
     private val instance = object : Function.Instance(
+        name,
         parameters = arrayOf(PType.bag()),
         returns = PType.dynamic(),
     ) {

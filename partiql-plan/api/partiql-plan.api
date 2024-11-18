@@ -276,6 +276,7 @@ public abstract interface class org/partiql/plan/builder/PlanFactory {
 	public abstract fun rexBag (Ljava/util/Collection;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexBag;
 	public abstract fun rexCall (Lorg/partiql/spi/function/Function$Instance;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
 	public abstract fun rexCallDynamic (Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexCallDynamic;
+	public abstract fun rexCallDynamic (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexCallDynamic;
 	public abstract fun rexCase (Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
 	public abstract fun rexCase (Ljava/util/List;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCase;
 	public abstract fun rexCase (Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
@@ -344,6 +345,7 @@ public final class org/partiql/plan/builder/PlanFactory$DefaultImpls {
 	public static fun rexBag (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/Collection;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexBag;
 	public static fun rexCall (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/spi/function/Function$Instance;Ljava/util/List;)Lorg/partiql/plan/rex/RexCall;
 	public static fun rexCallDynamic (Lorg/partiql/plan/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/rex/RexCallDynamic;
+	public static fun rexCallDynamic (Lorg/partiql/plan/builder/PlanFactory;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lorg/partiql/types/PType;)Lorg/partiql/plan/rex/RexCallDynamic;
 	public static fun rexCase (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;
 	public static fun rexCase (Lorg/partiql/plan/builder/PlanFactory;Ljava/util/List;Lorg/partiql/plan/rex/Rex;Lorg/partiql/plan/rex/RexType;)Lorg/partiql/plan/rex/RexCase;
 	public static fun rexCase (Lorg/partiql/plan/builder/PlanFactory;Lorg/partiql/plan/rex/Rex;Ljava/util/List;Lorg/partiql/plan/rex/Rex;)Lorg/partiql/plan/rex/RexCase;

@@ -4,82 +4,65 @@
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import kotlin.experimental.and
 
-internal val Fn_BITWISE_AND__INT8_INT8__INT8 = Function.static(
+internal object FnBitwiseAnd : ArithmeticDiadicOperator() {
+    override fun getName(): String {
+        return "bitwise_and"
+    }
 
-    name = "bitwise_and",
-    returns = PType.tinyint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.tinyint()),
-        Parameter("rhs", PType.tinyint()),
-    ),
+    override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {
+        return basic(PType.tinyint()) { args ->
+            @Suppress("DEPRECATION") val arg0 = args[0].byte
+            @Suppress("DEPRECATION") val arg1 = args[1].byte
+            Datum.tinyint(arg0 and arg1)
+        }
+    }
 
-) { args ->
-    @Suppress("DEPRECATION") val arg0 = args[0].byte
-    @Suppress("DEPRECATION") val arg1 = args[1].byte
-    Datum.tinyint(arg0 and arg1)
-}
+    override fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Function.Instance {
+        return basic(PType.smallint()) { args ->
+            val arg0 = args[0].short
+            val arg1 = args[1].short
+            Datum.smallint(arg0 and arg1)
+        }
+    }
 
-internal val Fn_BITWISE_AND__INT16_INT16__INT16 = Function.static(
+    override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Function.Instance {
+        return basic(PType.integer()) { args ->
+            val arg0 = args[0].int
+            val arg1 = args[1].int
+            Datum.integer(arg0 and arg1)
+        }
+    }
 
-    name = "bitwise_and",
-    returns = PType.smallint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.smallint()),
-        Parameter("rhs", PType.smallint()),
-    ),
+    override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Function.Instance {
+        return basic(PType.bigint()) { args ->
+            val arg0 = args[0].long
+            val arg1 = args[1].long
+            Datum.bigint(arg0 and arg1)
+        }
+    }
 
-) { args ->
-    val arg0 = args[0].short
-    val arg1 = args[1].short
-    Datum.smallint(arg0 and arg1)
-}
+    // TODO: Probably remove this if we don't expose NUMERIC
+    override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
+        return basic(PType.numeric()) { args ->
+            val arg0 = args[0].bigInteger
+            val arg1 = args[1].bigInteger
+            Datum.numeric(arg0 and arg1)
+        }
+    }
 
-internal val Fn_BITWISE_AND__INT32_INT32__INT32 = Function.static(
+    override fun getDecimalInstance(v1: PType, v2: PType): Function.Instance {
+        return getNumericInstance(v1, v2)
+    }
 
-    name = "bitwise_and",
-    returns = PType.integer(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.integer()),
-        Parameter("rhs", PType.integer()),
-    ),
+    override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {
+        return getNumericInstance(realLhs, realRhs)
+    }
 
-) { args ->
-    val arg0 = args[0].int
-    val arg1 = args[1].int
-    Datum.integer(arg0 and arg1)
-}
-
-internal val Fn_BITWISE_AND__INT64_INT64__INT64 = Function.static(
-
-    name = "bitwise_and",
-    returns = PType.bigint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.bigint()),
-        Parameter("rhs", PType.bigint()),
-    ),
-
-) { args ->
-    val arg0 = args[0].long
-    val arg1 = args[1].long
-    Datum.bigint(arg0 and arg1)
-}
-
-internal val Fn_BITWISE_AND__INT_INT__INT = Function.static(
-
-    name = "bitwise_and",
-    returns = PType.numeric(),
-    parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("lhs", PType.numeric()),
-        @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
-    ),
-
-) { args ->
-    val arg0 = args[0].bigInteger
-    val arg1 = args[1].bigInteger
-    Datum.numeric(arg0 and arg1)
+    override fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Function.Instance {
+        return getNumericInstance(doubleLhs, doubleRhs)
+    }
 }

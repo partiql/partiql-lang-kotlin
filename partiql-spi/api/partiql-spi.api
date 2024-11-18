@@ -343,6 +343,7 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 public class org/partiql/spi/errors/PErrorException : org/partiql/spi/errors/PErrorListenerException {
 	public field error Lorg/partiql/spi/errors/PError;
 	public fun <init> (Lorg/partiql/spi/errors/PError;)V
+	public fun <init> (Lorg/partiql/spi/errors/PError;Ljava/lang/Throwable;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -407,10 +408,13 @@ public final class org/partiql/spi/function/Aggregation$DefaultImpls {
 public abstract interface class org/partiql/spi/function/Function : org/partiql/spi/function/Routine {
 	public static final field Companion Lorg/partiql/spi/function/Function$Companion;
 	public abstract fun getInstance ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Function$Instance;
+	public static fun instance (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function$Instance;
 	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
 }
 
 public final class org/partiql/spi/function/Function$Companion {
+	public final fun instance (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function$Instance;
+	public static synthetic fun instance$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function$Instance;
 	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
 	public static synthetic fun static$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function;
 }
@@ -423,10 +427,11 @@ public final class org/partiql/spi/function/Function$DefaultImpls {
 public abstract class org/partiql/spi/function/Function$Instance {
 	public final field isMissingCall Z
 	public final field isNullCall Z
+	public final field name Ljava/lang/String;
 	public final field parameters [Lorg/partiql/types/PType;
 	public final field returns Lorg/partiql/types/PType;
-	public fun <init> ([Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZZ)V
-	public synthetic fun <init> ([Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;[Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZZ)V
+	public synthetic fun <init> (Ljava/lang/String;[Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public abstract fun invoke ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
 }
 
@@ -438,14 +443,14 @@ public final class org/partiql/spi/function/Parameter {
 	public final fun getMatch (Lorg/partiql/types/PType;)Lorg/partiql/types/PType;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getType ()Lorg/partiql/types/PType;
-	public static final fun numeric (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public static final fun number (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 	public static final fun text (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 }
 
 public final class org/partiql/spi/function/Parameter$Companion {
 	public final fun collection (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 	public final fun dynamic (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public final fun numeric (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public final fun number (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 	public final fun text (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 }
 

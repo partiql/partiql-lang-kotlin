@@ -45,6 +45,11 @@ import kotlin.test.assertNotNull
 class PartiQLEvaluatorTest {
 
     @ParameterizedTest
+    @MethodSource("plusTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun plusTests(tc: SuccessTestCase) = tc.assert()
+
+    @ParameterizedTest
     @MethodSource("sanityTestsCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun sanityTests(tc: SuccessTestCase) = tc.assert()
@@ -80,6 +85,74 @@ class PartiQLEvaluatorTest {
     fun castTests(tc: SuccessTestCase) = tc.assert()
 
     companion object {
+
+        // Result precision: max(s1, s2) + max(p1 - s1, p2 - s2) + 1
+        // Result scale: max(s1, s2)
+        @JvmStatic
+        fun plusTestCases() = listOf(
+            SuccessTestCase(
+                input = """
+                    -- DEC(1, 0) + DEC(6, 5)
+                    -- P = 5 + MAX(1, 1) + 1 = 7
+                    -- S = MAX(0, 5) = 5
+                    1 + 2.00000;
+                """.trimIndent(),
+                mode = Mode.STRICT(),
+                expected = Datum.decimal(BigDecimal.valueOf(300000, 5), 7, 5),
+                jvmEquality = true
+            ),
+            SuccessTestCase(
+                input = """
+                    -- DEC(2, 1) + DEC(6, 5)
+                    -- P = 5 + MAX(1, 1) + 1 = 7
+                    -- S = MAX(1, 5) = 5
+                    1.0 + 2.00000;
+                """.trimIndent(),
+                mode = Mode.STRICT(),
+                expected = Datum.decimal(BigDecimal.valueOf(300000, 5), 7, 5),
+                jvmEquality = true
+            ),
+            SuccessTestCase(
+                input = """
+                    -- DEC(5, 4) + DEC(6, 5)
+                    -- P = 5 + MAX(1, 1) + 1 = 7
+                    -- S = MAX(4, 5) = 5
+                    1.0000 + 2.00000;
+                """.trimIndent(),
+                mode = Mode.STRICT(),
+                expected = Datum.decimal(BigDecimal.valueOf(300000, 5), 7, 5),
+                jvmEquality = true
+            ),
+            SuccessTestCase(
+                input = """
+                    -- DEC(7, 4) + DEC(13, 7)
+                    -- P = 7 + MAX(3, 6) + 1 = 14
+                    -- S = MAX(4, 7) = 7
+                    234.0000 + 456789.0000000;
+                """.trimIndent(),
+                mode = Mode.STRICT(),
+                expected = Datum.decimal(BigDecimal.valueOf(457023), 14, 7),
+                jvmEquality = true
+            ),
+            SuccessTestCase(
+                input = """
+                    -- This shows that the value, while dynamic, still produces the right precision/scale
+                    -- DEC(7, 4) + DEC(13, 7)
+                    -- P = 7 + MAX(3, 6) + 1 = 14
+                    -- S = MAX(4, 7) = 7
+                    234.0000 + dynamic_decimal;
+                """.trimIndent(),
+                mode = Mode.STRICT(),
+                expected = Datum.decimal(BigDecimal.valueOf(457023), 14, 7),
+                globals = listOf(
+                    SuccessTestCase.Global(
+                        "dynamic_decimal",
+                        "456789.0000000"
+                    )
+                ),
+                jvmEquality = true
+            ),
+        )
 
         @JvmStatic
         fun castTestCases() = listOf(
@@ -1291,12 +1364,20 @@ class PartiQLEvaluatorTest {
         )
     }
 
-    public class SuccessTestCase @OptIn(PartiQLValueExperimental::class) constructor(
+    public class SuccessTestCase(
         val input: String,
-        val expected: PartiQLValue,
+        val expected: Datum,
         val mode: Mode = Mode.PERMISSIVE(),
         val globals: List<Global> = emptyList(),
+        val jvmEquality: Boolean = false
     ) {
+
+        constructor(
+            input: String,
+            expected: PartiQLValue,
+            mode: Mode = Mode.PERMISSIVE(),
+            globals: List<Global> = emptyList(),
+        ) : this(input, Datum.of(expected), mode, globals)
 
         private val compiler = PartiQLCompiler.standard()
         private val parser = PartiQLParser.standard()
@@ -1334,24 +1415,22 @@ class PartiQLEvaluatorTest {
                 .build()
             val plan = planner.plan(statement, session).plan
             val result = compiler.prepare(plan, mode).execute()
-            val output = result.toPartiQLValue() // TODO: Assert directly on Datum
-            assert(expected == output) {
-                comparisonString(expected, output, plan)
+            val comparison = when (jvmEquality) {
+                true -> expected == result
+                false -> Datum.comparator().compare(expected, result) == 0
+            }
+            assert(comparison) {
+                comparisonString(expected, result, plan)
             }
         }
 
-        @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: Plan): String {
-            val expectedBuffer = ByteArrayOutputStream()
-            val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
-            expectedWriter.append(expected)
+        private fun comparisonString(expected: Datum, actual: Datum, plan: Plan): String {
             return buildString {
                 // TODO pretty-print V1 plans!
                 appendLine(plan)
-                appendLine("Expected : $expectedBuffer")
-                expectedBuffer.reset()
-                expectedWriter.append(actual)
-                appendLine("Actual   : $expectedBuffer")
+                // TODO: Add DatumWriter
+                appendLine("Expected : $expected")
+                appendLine("Actual   : $actual")
             }
         }
 

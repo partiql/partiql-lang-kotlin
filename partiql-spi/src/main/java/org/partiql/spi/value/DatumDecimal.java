@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 /**
  * This shall always be package-private (internal).
@@ -34,5 +35,26 @@ class DatumDecimal implements Datum {
     @Override
     public PType getType() {
         return _type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Datum)) return false;
+        Datum data = (Datum) o;
+        return Objects.equals(_type, data.getType()) && Objects.equals(_value, data.getBigDecimal());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(_value, _type);
+    }
+
+    @Override
+    public String toString() {
+        return "DatumDecimal{" +
+                "_value=" + _value +
+                ", _type=" + _type +
+                '}';
     }
 }

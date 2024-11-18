@@ -6,6 +6,7 @@ imports::{
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
     fn_signature::'org.partiql.spi.function.Function',
+    fn_instance::'org.partiql.spi.function.Function.Instance',
     agg_signature::'org.partiql.spi.function.Aggregation',
     table::'org.partiql.spi.catalog.Table',
   ],
@@ -127,7 +128,7 @@ rex::{
       },
 
       static::{
-        fn: '.ref.fn',
+        fn: fn_instance,
         args: list::[rex],
       },
 

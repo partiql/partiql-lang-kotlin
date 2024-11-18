@@ -779,14 +779,11 @@ internal class PlanTyper(private val env: Env, config: Context) {
                     else -> it
                 }
             }
-            // TODO pass argument types to compute the return type.
-            val returnType = node.fn.signature.getReturnType(emptyArray())
+            val instance = node.fn
+            val returnType: PType = instance.returns
 
             // Check if any arg is always missing
             val argIsAlwaysMissing = args.any { it.type.isMissingValue }
-
-            // TODO REMOVE ME !!! THIS IS A HACK (:
-            val instance = node.fn.signature.getInstance(emptyArray())
 
             if (argIsAlwaysMissing && instance.isMissingCall) {
                 return errorRexAndReport(_listener, PErrors.alwaysMissing(null))
@@ -805,8 +802,9 @@ internal class PlanTyper(private val env: Env, config: Context) {
          */
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: CompilerType?): Rex {
             // TODO pass argument types to compute the return type
+            val argTypes = node.args.map { it.type }
             val types = node.candidates
-                .map { it.fn.signature.getReturnType(emptyArray()) }
+                .mapNotNull { it.fn.signature.getInstance(argTypes.toTypedArray())?.returns }
                 .toMutableSet()
             // TODO: Should this always be DYNAMIC?
             return Rex(type = CompilerType(anyOf(types) ?: PType.dynamic()), op = node)
@@ -1151,7 +1149,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             if (firstBranchCondition !is Rex.Op.Call.Static) {
                 return null
             }
-            if (!firstBranchCondition.fn.signature.getName().equals("is_struct", ignoreCase = true)) {
+            if (!firstBranchCondition.fn.name.equals("is_struct", ignoreCase = true)) {
                 return null
             }
             val firstBranchResultType = firstBranch.rex.type

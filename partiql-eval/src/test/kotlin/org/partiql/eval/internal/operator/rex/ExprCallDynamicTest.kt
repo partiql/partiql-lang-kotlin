@@ -80,6 +80,7 @@ class ExprCallDynamicTest {
 
                     override fun getInstance(args: Array<PType>): Function.Instance {
                         return object : Function.Instance(
+                            name = "example",
                             returns = PType.integer(),
                             parameters = arrayOf(it.first.toPType(), it.second.toPType())
                         ) {

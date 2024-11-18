@@ -16,7 +16,7 @@ internal sealed class FnMatch {
      * @property mapping
      */
     class Static(
-        val function: Function,
+        val function: Function.Instance,
         val mapping: Array<Ref.Cast?>,
     ) : FnMatch() {
 
@@ -51,5 +51,5 @@ internal sealed class FnMatch {
      *
      * @property candidates     Ordered list of potentially applicable functions to dispatch dynamically.
      */
-    class Dynamic(val candidates: List<Static>) : FnMatch()
+    class Dynamic(val candidates: List<Function>) : FnMatch()
 }
