@@ -16,7 +16,7 @@ public interface RexCallDynamic : Rex {
     /**
      * Returns the functions to dispatch to.
      */
-    public fun getFunctions(): List<Function.Instance>
+    public fun getFunctions(): List<Function>
 
     /**
      * Returns the list of function arguments.
@@ -33,7 +33,7 @@ public interface RexCallDynamic : Rex {
  */
 internal class RexCallDynamicImpl(
     private var name: String,
-    private var functions: List<Function.Instance>,
+    private var functions: List<Function>,
     private var args: List<Rex>,
 ) : RexCallDynamic {
 
@@ -42,7 +42,7 @@ internal class RexCallDynamicImpl(
 
     override fun getName(): String = name
 
-    override fun getFunctions(): List<Function.Instance> = functions
+    override fun getFunctions(): List<Function> = functions
 
     override fun getArgs(): List<Rex> = args
 

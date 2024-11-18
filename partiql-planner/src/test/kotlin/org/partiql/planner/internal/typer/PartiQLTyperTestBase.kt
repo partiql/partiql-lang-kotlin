@@ -64,13 +64,12 @@ abstract class PartiQLTyperTestBase {
     /**
      * Build a ConnectorMetadata instance from the list of types.
      */
-    private fun buildCatalog(name: String, types: List<StaticType>): Catalog {
+    private fun buildCatalog(name: String, types: List<PType>): Catalog {
         val catalog = Catalog.builder().name(name)
         // define all bindings
         types.forEachIndexed { i, t ->
             val tableName = Name.of("t${i + 1}")
-            val tableSchema = fromStaticType(t)
-            val table = Table.empty(tableName, tableSchema)
+            val table = Table.empty(tableName, t)
             catalog.define(table)
         }
         return catalog.build()
@@ -81,11 +80,29 @@ abstract class PartiQLTyperTestBase {
         tests: List<PartiQLTest>,
         argsMap: Map<TestResult, Set<List<StaticType>>>,
     ): Stream<DynamicContainer> {
+        return testGenPType(
+            testCategory,
+            tests,
+            argsMap.entries.associate { (k, v) ->
+                k to v.map {
+                    it.map { staticType ->
+                        fromStaticType(staticType)
+                    }
+                }.toSet()
+            }
+        )
+    }
+
+    fun testGenPType(
+        testCategory: String,
+        tests: List<PartiQLTest>,
+        argsMap: Map<TestResult, Set<List<PType>>>,
+    ): Stream<DynamicContainer> {
 
         return tests.map { test ->
             val group = test.statement
             val children = argsMap.flatMap { (key, value) ->
-                value.mapIndexed { index: Int, types: List<StaticType> ->
+                value.mapIndexed { index: Int, types: List<PType> ->
                     val testName = "${testCategory}_${key}_$index"
                     val metadata = buildCatalog(testName, types)
                     val displayName = "$group | $testName | $types"

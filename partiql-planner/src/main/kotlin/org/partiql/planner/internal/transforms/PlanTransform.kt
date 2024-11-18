@@ -18,6 +18,7 @@ import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
+import org.partiql.value.DecimalValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
 import org.partiql.planner.internal.ir.PlanNode as INode
@@ -162,8 +163,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
-            // TODO add argument types and move to plan typer!!
-            val fns = node.candidates.map { it.fn.signature.getInstance(emptyArray()) }
+            val fns = node.candidates.map { it.fn.signature }
             val args = node.args.map { visitRex(it, ctx) }
             // TODO assert on function name in plan typer .. here is not the place.
             return factory.rexCallDynamic("unknown", fns, args)
@@ -229,6 +229,15 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpLit(node: IRex.Op.Lit, ctx: PType): Any {
+            val value = node.value
+            // TODO: PartiQLValue doesn't have a finite decimal type, so we need to specially handle this until we remove
+            //  PartiQLValue.
+            if (value is DecimalValue && ctx.kind == PType.Kind.DECIMAL) {
+                return when (val dec = value.value) {
+                    null -> factory.rexLit(Datum.nullValue(ctx))
+                    else -> factory.rexLit(Datum.decimal(dec, ctx.precision, ctx.scale))
+                }
+            }
             return factory.rexLit(Datum.of(node.value))
         }
 

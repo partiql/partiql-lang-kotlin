@@ -24,7 +24,7 @@ internal fun CompilerType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOpti
             Kind.DYNAMIC -> CompilerType(PType.dynamic())
             Kind.ROW -> acc.excludeStruct(step, lastStepOptional)
             Kind.STRUCT -> acc
-            Kind.ARRAY, Kind.BAG, Kind.SEXP -> acc.excludeCollection(step, lastStepOptional)
+            Kind.ARRAY, Kind.BAG -> acc.excludeCollection(step, lastStepOptional)
             else -> acc
         }
     }
@@ -108,7 +108,6 @@ internal fun CompilerType.excludeCollection(step: Rel.Op.Exclude.Step, lastStepO
     return when (this.kind) {
         Kind.ARRAY -> PType.array(e).toCType()
         Kind.BAG -> PType.bag(e).toCType()
-        Kind.SEXP -> PType.sexp(e).toCType()
         else -> throw IllegalStateException()
     }
 }

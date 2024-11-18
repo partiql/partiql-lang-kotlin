@@ -93,7 +93,7 @@ public interface PType {
      *
      * @return type parameter of the type
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     *                                       {@link Kind#ARRAY}, {@link Kind#BAG}, {@link Kind#SEXP}
+     * {@link Kind#ARRAY}, {@link Kind#BAG}
      */
     @NotNull
     default PType getTypeParameter() throws UnsupportedOperationException {
@@ -196,19 +196,6 @@ public interface PType {
         DECIMAL,
 
         /**
-         * Ion's arbitrary precision and scale decimal type.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>TO_BE_DETERMINED</code>
-         * <br>
-         * <b>Applicable methods</b>: NONE
-         *
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-         */
-        @Deprecated
-        DECIMAL_ARBITRARY,
-
-        /**
          * SQL's real type.
          * <br>
          * <br>
@@ -259,19 +246,6 @@ public interface PType {
          * <b>Applicable methods</b>: NONE
          */
         STRING,
-
-        /**
-         * Ion's symbol type.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>TO_BE_DETERMINED</code>
-         * <br>
-         * <b>Applicable methods</b>: NONE
-         *
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-         */
-        @Deprecated
-        SYMBOL,
 
         /**
          * SQL's blob type.
@@ -417,20 +391,6 @@ public interface PType {
         ROW,
 
         /**
-         * Ion's s-expression type. There is no size limit.
-         * <br>
-         * <br>
-         * <b>Type Syntax</b>: <code>SEXP</code>, <code>SEXP(&lt;type&gt;)</code>
-         * <br>
-         * <b>Applicable methods</b>:
-         * {@link PType#getTypeParameter()}
-         *
-         * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-         */
-        @Deprecated
-        SEXP,
-
-        /**
          * Ion's struct type. Characterized as an open, unordered collection of fields (duplicates allowed).
          * <br>
          * <br>
@@ -522,16 +482,15 @@ public interface PType {
     }
 
     /**
-     * @return a PartiQL decimal (arbitrary precision/scale) type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
+     * @return a decimal with the default precision (38) and default scale (0)
      */
     @NotNull
     static PType decimal() {
-        return new PTypePrimitive(Kind.DECIMAL_ARBITRARY);
+        return decimal(38, 0);
     }
 
     /**
-     * @return a PartiQL decimal type
+     * @return a decimal with user-specified precision and default scale (0)
      */
     @NotNull
     static PType decimal(int precision) {
@@ -586,16 +545,6 @@ public interface PType {
     @NotNull
     static PType string() {
         return new PTypePrimitive(Kind.STRING);
-    }
-
-    /**
-     * @return a PartiQL string type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    @Deprecated
-    static PType symbol() {
-        return new PTypePrimitive(Kind.SYMBOL);
     }
 
     /**
@@ -689,23 +638,12 @@ public interface PType {
     }
 
     /**
-     * @return a PartiQL sexp type containing a component type of dynamic.
-     * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
-     */
-    @Deprecated
-    @NotNull
-    static PType sexp() {
-        return new PTypeCollection(Kind.SEXP, PType.dynamic());
-    }
-
-    /**
-     * @param typeParam the component type to be used
-     * @return a PartiQL sexp type containing a component type of {@code typeParam}.
-     * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
+     * @return a PartiQL row type
+     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType sexp(@NotNull PType typeParam) {
-        return new PTypeCollection(Kind.SEXP, typeParam);
+    static PType row(@NotNull Collection<Field> fields) {
+        return new PTypeRow(fields);
     }
 
     /**
@@ -715,15 +653,6 @@ public interface PType {
     @NotNull
     static PType row(@NotNull Field... fields) {
         return new PTypeRow(Arrays.asList(fields));
-    }
-
-    /**
-     * @return a PartiQL row type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    static PType row(@NotNull Collection<Field> fields) {
-        return new PTypeRow(fields);
     }
 
     /**

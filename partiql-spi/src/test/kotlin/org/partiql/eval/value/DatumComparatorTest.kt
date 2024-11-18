@@ -202,35 +202,26 @@ class DatumComparatorTest {
         EquivValues(
             Datum.string(""),
             // TODO: Datum.string("", annotations = listOf("foobar")),
-            Datum.symbol(""),
-            // TODO: Datum.symbol("", annotations = listOf("foobar"))
         ),
         EquivValues(
             Datum.string("A"),
             // TODO: Datum.string("A", annotations = listOf("foobar")),
-            Datum.symbol("A"),
-            // TODO: Datum.symbol("A", annotations = listOf("foobar"))
         ),
         EquivValues(
             Datum.string("AA"),
-            Datum.symbol("AA"),
         ),
         EquivValues(
             Datum.string("a"),
-            Datum.symbol("a"),
         ),
         EquivValues(
             Datum.string("azzzzzzz"),
-            Datum.symbol("azzzzzzz"),
         ),
         EquivValues(
             Datum.string("z"),
-            Datum.symbol("z"),
         ),
         // TODO add a UTF-16 order breaker here to verify we're doing the right thing
         EquivValues(
             Datum.string("\uD83D\uDCA9"),
-            Datum.symbol("\uD83D\uDCA9"),
         ),
         EquivValues(
             Datum.blob(base64Decode("")), // `{{}}`
@@ -314,28 +305,6 @@ class DatumComparatorTest {
                     )
                 )
             ) // [[[1]]]
-        ),
-        // TODO: Annotations.
-//        EquivValues(
-//            Datum.sexp(emptyList(), annotations = listOf("a", "b", "c")) // `a::b::c::()`
-//        ),
-        EquivValues(
-            Datum.sexp(listOf(Datum.real(1f))), // `a::b::c::(1e0)`
-            Datum.sexp(listOf(Datum.doublePrecision(1.0))), // TODO: annotations = listOf("a", "b", "c")), // `a::b::c::(1e0)`
-            Datum.sexp(listOf(Datum.integer(1))), // `(1)`
-            Datum.sexp(listOf(Datum.decimal(BigDecimal("1.0000000000000")))) // `(1.0000000000000)`
-        ),
-        EquivValues(
-            Datum.sexp(listOf(Datum.timestamp(timestamp(year = 2012)), Datum.real(Float.NaN))) // `(2012T nan)`
-        ),
-        EquivValues(
-            Datum.sexp(listOf(Datum.timestamp(timestamp(year = 2012)), Datum.integer(1), Datum.integer(2), Datum.integer(3))) // `(2012T 1 2 3)`
-        ),
-        EquivValues(
-            Datum.sexp(listOf(Datum.array(emptyList()))) // `([])`
-        ),
-        EquivValues(
-            Datum.sexp(listOf(emptyList, emptyList)) // `([] [])`
         ),
         EquivValues(
             emptyStruct(), // {}

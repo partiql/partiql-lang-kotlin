@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Datum.array
 import org.partiql.spi.value.Datum.bag
@@ -62,12 +63,29 @@ class ExprCallDynamicTest {
             )
 
             @OptIn(PartiQLValueExperimental::class)
-            internal val functions: Array<Function.Instance> = params.mapIndexed { index, it ->
-                object : Function.Instance(
-                    returns = PType.integer(),
-                    parameters = arrayOf(it.first.toPType(), it.second.toPType())
-                ) {
-                    override fun invoke(args: Array<Datum>): Datum = integer(index)
+            internal val functions: Array<Function> = params.mapIndexed { index, it ->
+                object : Function {
+
+                    override fun getName(): String {
+                        return "example"
+                    }
+
+                    override fun getParameters(): Array<Parameter> {
+                        return arrayOf(Parameter("lhs", it.first.toPType()), Parameter("rhs", it.second.toPType()))
+                    }
+
+                    override fun getReturnType(args: Array<PType>): PType {
+                        return PType.integer()
+                    }
+
+                    override fun getInstance(args: Array<PType>): Function.Instance {
+                        return object : Function.Instance(
+                            returns = PType.integer(),
+                            parameters = arrayOf(it.first.toPType(), it.second.toPType())
+                        ) {
+                            override fun invoke(args: Array<Datum>): Datum = integer(index)
+                        }
+                    }
                 }
             }.toTypedArray()
         }

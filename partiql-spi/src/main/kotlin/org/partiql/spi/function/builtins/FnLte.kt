@@ -88,8 +88,8 @@ internal val Fn_LTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL = Function.static
     name = "lte",
     returns = PType.bool(),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("lhs", PType.decimal()),
-        @Suppress("DEPRECATION") Parameter("rhs", PType.decimal()),
+        Parameter("lhs", PType.decimal()),
+        Parameter("rhs", PType.decimal()),
     ),
 
 ) { args ->
@@ -135,21 +135,6 @@ internal val Fn_LTE__STRING_STRING__BOOL = Function.static(
     parameters = arrayOf(
         Parameter("lhs", PType.string()),
         Parameter("rhs", PType.string()),
-    ),
-
-) { args ->
-    val lhs = args[0].string
-    val rhs = args[1].string
-    Datum.bool(lhs <= rhs)
-}
-
-internal val Fn_LTE__SYMBOL_SYMBOL__BOOL = Function.static(
-
-    name = "lte",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.symbol()),
-        Parameter("rhs", PType.symbol()),
     ),
 
 ) { args ->

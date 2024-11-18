@@ -45,7 +45,7 @@ internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
  */
 { args ->
     val v = args[2]
-    if (v.type.kind != PType.Kind.DECIMAL && v.type.kind != PType.Kind.DECIMAL_ARBITRARY) {
+    if (v.type.kind != PType.Kind.DECIMAL) {
         return@static Datum.bool(false)
     }
     val p = args[0].int

@@ -31,19 +31,6 @@ internal val Fn_SIZE__LIST__INT32 = Function.static(
     Datum.integer(container.count())
 }
 
-internal val Fn_SIZE__SEXP__INT32 = Function.static(
-
-    name = "size",
-    returns = PType.integer(),
-    parameters = arrayOf(
-        Parameter("container", PType.sexp()),
-    ),
-
-) { args ->
-    val container = args[0]
-    Datum.integer(container.count())
-}
-
 internal val Fn_SIZE__STRUCT__INT32 = Function.static(
 
     name = "size",

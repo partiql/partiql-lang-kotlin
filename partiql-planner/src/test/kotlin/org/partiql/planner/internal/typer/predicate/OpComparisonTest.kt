@@ -3,10 +3,16 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.internal.typer.accumulateSuccessNullCall
-import org.partiql.planner.util.allSupportedType
+import org.partiql.planner.internal.typer.accumulateSuccess
+import org.partiql.planner.util.allBooleanPType
+import org.partiql.planner.util.allCharStringPType
+import org.partiql.planner.util.allDatePType
+import org.partiql.planner.util.allNumberPType
+import org.partiql.planner.util.allSupportedPType
+import org.partiql.planner.util.allTimePType
+import org.partiql.planner.util.allTimeStampPType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.StaticType
+import org.partiql.types.PType
 import java.util.stream.Stream
 
 // TODO : Behavior when Missing is one operand needs to be finalized
@@ -19,14 +25,14 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             "expr-08", // Not Equal !=
             "expr-09", // Not Equal <>
         ).map { inputs.get("basics", it)!! }
-        val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
-            val successArgs = cartesianProduct(allSupportedType, allSupportedType)
-            successArgs.forEach { args: List<StaticType> ->
-                accumulateSuccessNullCall(StaticType.BOOL, args)
+        val argsMap: Map<TestResult, Set<List<PType>>> = buildMap {
+            val successArgs = cartesianProduct(allSupportedPType, allSupportedPType)
+            successArgs.forEach { args: List<PType> ->
+                accumulateSuccess(PType.bool(), args)
             }
         }
 
-        return super.testGen("eq", tests, argsMap)
+        return super.testGenPType("eq", tests, argsMap)
     }
 
     @TestFactory
@@ -45,38 +51,38 @@ class OpComparisonTest : PartiQLTyperTestBase() {
         val argsMap = buildMap {
             val successArgs =
                 cartesianProduct(
-                    StaticType.NUMERIC.allTypes,
-                    StaticType.NUMERIC.allTypes
+                    allNumberPType,
+                    allNumberPType,
                 ) + cartesianProduct(
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB),
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB)
+                    allCharStringPType,
+                    allCharStringPType,
                 ) + cartesianProduct(
-                    listOf(StaticType.BOOL),
-                    listOf(StaticType.BOOL)
+                    allBooleanPType,
+                    allBooleanPType,
                 ) + cartesianProduct(
-                    listOf(StaticType.DATE),
-                    listOf(StaticType.DATE)
+                    allDatePType,
+                    allDatePType,
                 ) + cartesianProduct(
-                    listOf(StaticType.TIME),
-                    listOf(StaticType.TIME)
+                    allTimePType,
+                    allTimePType,
                 ) + cartesianProduct(
-                    listOf(StaticType.TIMESTAMP),
-                    listOf(StaticType.TIMESTAMP)
+                    allTimeStampPType,
+                    allTimeStampPType,
                 )
 
             val failureArgs = cartesianProduct(
-                allSupportedType,
-                allSupportedType,
+                allSupportedPType,
+                allSupportedPType,
             ).filterNot {
                 successArgs.contains(it)
             }.toSet()
 
-            successArgs.forEach { args: List<StaticType> ->
-                accumulateSuccessNullCall(StaticType.BOOL, args)
+            successArgs.forEach { args: List<PType> ->
+                accumulateSuccess(PType.bool(), args)
             }
             put(TestResult.Failure, failureArgs)
         }
 
-        return super.testGen("comparison", tests, argsMap)
+        return super.testGenPType("comparison", tests, argsMap)
     }
 }

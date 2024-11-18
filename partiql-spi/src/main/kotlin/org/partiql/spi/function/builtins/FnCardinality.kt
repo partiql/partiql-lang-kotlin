@@ -31,19 +31,6 @@ internal val Fn_CARDINALITY__LIST__INT32 = Function.static(
     Datum.integer(container.count())
 }
 
-internal val Fn_CARDINALITY__SEXP__INT32 = Function.static(
-
-    name = "cardinality",
-    returns = PType.integer(),
-    parameters = arrayOf(
-        Parameter("container", PType.sexp()),
-    ),
-
-) { args ->
-    val container = args[0]
-    Datum.integer(container.count())
-}
-
 internal val Fn_CARDINALITY__STRUCT__INT32 = Function.static(
 
     name = "cardinality",

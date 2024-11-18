@@ -3,13 +3,13 @@ package org.partiql.planner.internal.typer.operator
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.internal.typer.accumulateSuccessNullCall
+import org.partiql.planner.internal.typer.accumulateSuccess
 import org.partiql.planner.util.CastType
-import org.partiql.planner.util.allNumberType
-import org.partiql.planner.util.allSupportedType
+import org.partiql.planner.util.allNumberPType
+import org.partiql.planner.util.allSupportedPType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.planner.util.castTable
-import org.partiql.types.StaticType
+import org.partiql.planner.util.castTablePType
+import org.partiql.types.PType
 import java.util.stream.Stream
 
 class OpArithmeticTest : PartiQLTyperTestBase() {
@@ -23,30 +23,30 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
             "expr-41",
         ).map { inputs.get("basics", it)!! }
 
-        val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
-            val successArgs = allNumberType.let { cartesianProduct(it, it) }
+        val argsMap: Map<TestResult, Set<List<PType>>> = buildMap {
+            val successArgs = allNumberPType.let { cartesianProduct(it, it) }
             val failureArgs = cartesianProduct(
-                allSupportedType,
-                allSupportedType
+                allSupportedPType,
+                allSupportedPType
             ).filterNot {
                 successArgs.contains(it)
             }.toSet()
 
-            successArgs.forEach { args: List<StaticType> ->
+            successArgs.forEach { args: List<PType> ->
                 val arg0 = args.first()
                 val arg1 = args[1]
                 val output = when {
                     arg0 == arg1 -> arg1
-                    castTable(arg1, arg0) == CastType.COERCION -> arg0
-                    castTable(arg0, arg1) == CastType.COERCION -> arg1
+                    castTablePType(arg1, arg0) == CastType.COERCION -> arg0
+                    castTablePType(arg0, arg1) == CastType.COERCION -> arg1
                     else -> error("Arguments do not conform to parameters. Args: $args")
                 }
-                accumulateSuccessNullCall(output, args)
+                accumulateSuccess(output, args)
             }
 
             put(TestResult.Failure, failureArgs)
         }
 
-        return super.testGen("arithmetic", tests, argsMap)
+        return super.testGenPType("arithmetic", tests, argsMap)
     }
 }

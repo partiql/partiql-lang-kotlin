@@ -66,13 +66,6 @@
         items: "any",
       }
     },
-    {
-      name: "t_sexp",
-      type: {
-        type: "sexp",
-        items: "any",
-      }
-    },
     // structs
     {
       name: "t_struct_a",

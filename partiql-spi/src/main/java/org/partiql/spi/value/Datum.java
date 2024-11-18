@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.errors.DataException;
 import org.partiql.types.PType;
+import org.partiql.value.DecimalValue;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
@@ -295,9 +296,9 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return the elements of either bags, lists, or sexps; returns the fields' values if the type is a struct.
+     * @return the elements of either bags/lists; returns the fields' values if the type is a struct.
      * @throws UnsupportedOperationException if this operation is invoked on a value that is not of the following
-     *                                       types: {@link PartiQLValueType#BAG}, {@link PartiQLValueType#LIST}, {@link PartiQLValueType#SEXP}, and
+     *                                       types: {@link PartiQLValueType#BAG}, {@link PartiQLValueType#LIST}, and
      *                                       {@link PartiQLValueType#STRUCT}.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -400,7 +401,6 @@ public interface Datum extends Iterable<Datum> {
             case NUMERIC:
                 return this.isNull() ? PartiQL.intValue(null) : PartiQL.intValue(this.getBigInteger());
             case DECIMAL:
-            case DECIMAL_ARBITRARY:
                 return this.isNull() ? PartiQL.decimalValue(null) : PartiQL.decimalValue(this.getBigDecimal());
             case REAL:
                 return this.isNull() ? PartiQL.float32Value(null) : PartiQL.float32Value(this.getFloat());
@@ -410,8 +410,6 @@ public interface Datum extends Iterable<Datum> {
                 return this.isNull() ? PartiQL.charValue(null) : PartiQL.charValue(this.getString().charAt(0));
             case STRING:
                 return this.isNull() ? PartiQL.stringValue(null) : PartiQL.stringValue(this.getString());
-            case SYMBOL:
-                return this.isNull() ? PartiQL.symbolValue(null) : PartiQL.symbolValue(this.getString());
             case BLOB:
                 return this.isNull() ? PartiQL.blobValue(null) : PartiQL.blobValue(this.getBytes());
             case CLOB:
@@ -428,8 +426,6 @@ public interface Datum extends Iterable<Datum> {
                 return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(this));
             case ARRAY:
                 return this.isNull() ? PartiQL.listValue((Iterable<? extends PartiQLValue>) null) : PartiQL.listValue(new PQLToPartiQLIterable(this));
-            case SEXP:
-                return this.isNull() ? PartiQL.sexpValue((Iterable<? extends PartiQLValue>) null) : PartiQL.sexpValue(new PQLToPartiQLIterable(this));
             case STRUCT:
             case ROW:
                 return this.isNull() ? PartiQL.structValue((Iterable<? extends Pair<String, ? extends PartiQLValue>>) null) : PartiQL.structValue(new PQLToPartiQLStruct(this));
@@ -481,8 +477,7 @@ public interface Datum extends Iterable<Datum> {
                 org.partiql.value.Int16Value INT16Value = (org.partiql.value.Int16Value) value;
                 return new DatumShort(Objects.requireNonNull(INT16Value.getValue()));
             case SEXP:
-                @SuppressWarnings("unchecked") org.partiql.value.SexpValue<PartiQLValue> sexpValue = (org.partiql.value.SexpValue<PartiQLValue>) value;
-                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(sexpValue)), PType.sexp());
+                throw new IllegalStateException("SEXP is not supported.");
             case LIST:
                 @SuppressWarnings("unchecked") org.partiql.value.ListValue<PartiQLValue> LISTValue = (org.partiql.value.ListValue<PartiQLValue>) value;
                 return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(LISTValue)), PType.array());
@@ -516,15 +511,16 @@ public interface Datum extends Iterable<Datum> {
                 org.partiql.value.Float64Value FLOAT64Value = (org.partiql.value.Float64Value) value;
                 return new DatumDouble(Objects.requireNonNull(FLOAT64Value.getValue()));
             case DECIMAL:
+            case DECIMAL_ARBITRARY:
                 org.partiql.value.DecimalValue DECIMALValue = (org.partiql.value.DecimalValue) value;
-                return new DatumDecimal(Objects.requireNonNull(DECIMALValue.getValue()), PType.decimal());
+                BigDecimal d = Objects.requireNonNull(DECIMALValue.getValue());
+                return Datum.decimal(d, d.precision(), d.scale());
             case CHAR:
                 org.partiql.value.CharValue CHARValue = (org.partiql.value.CharValue) value;
                 String charString = Objects.requireNonNull(CHARValue.getValue()).toString();
                 return new DatumChars(charString, charString.length());
             case SYMBOL:
-                org.partiql.value.SymbolValue SYMBOLValue = (org.partiql.value.SymbolValue) value;
-                return new DatumString(Objects.requireNonNull(SYMBOLValue.getValue()), PType.symbol());
+                throw new IllegalStateException("SYMBOL not supported.");
             case CLOB:
                 org.partiql.value.ClobValue CLOBValue = (org.partiql.value.ClobValue) value;
                 return new DatumBytes(Objects.requireNonNull(CLOBValue.getValue()), PType.clob(Integer.MAX_VALUE)); // TODO
@@ -533,9 +529,6 @@ public interface Datum extends Iterable<Datum> {
                 return new DatumBytes(Objects.requireNonNull(BLOBValue.getValue()), PType.blob(Integer.MAX_VALUE)); // TODO
             case BYTE:
                 throw new UnsupportedOperationException();
-            case DECIMAL_ARBITRARY:
-                org.partiql.value.DecimalValue DECIMAL_ARBITRARYValue = (org.partiql.value.DecimalValue) value;
-                return new DatumDecimal(Objects.requireNonNull(DECIMAL_ARBITRARYValue.getValue()), PType.decimal());
             case ANY:
             default:
                 throw new NotImplementedError();
@@ -613,7 +606,6 @@ public interface Datum extends Iterable<Datum> {
         return new DatumDouble(value);
     }
 
-    @Deprecated
     @NotNull
     static Datum decimal(@NotNull BigDecimal value) {
         return new DatumDecimal(value, PType.decimal());
@@ -699,11 +691,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
-    static Datum symbol(@NotNull String value) {
-        return new DatumString(value, PType.symbol());
-    }
-
-    @NotNull
     static Datum clob(@NotNull byte[] value) {
         return clob(value, Integer.MAX_VALUE);
     }
@@ -752,11 +739,6 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum array(@NotNull Iterable<Datum> values) {
         return new DatumCollection(values, PType.array());
-    }
-
-    @NotNull
-    static Datum sexp(@NotNull Iterable<Datum> values) {
-        return new DatumCollection(values, PType.sexp());
     }
 
     // STRUCTURAL

@@ -110,7 +110,6 @@ internal fun Datum.numberValue(): Number = when (this.type.kind) {
     PType.Kind.REAL -> this.float
     PType.Kind.DOUBLE -> this.double
     PType.Kind.DECIMAL -> this.bigDecimal
-    PType.Kind.DECIMAL_ARBITRARY -> this.bigDecimal
     else -> error("Cannot convert PartiQLValue ($this) to number.")
 }
 
@@ -128,7 +127,6 @@ internal fun PType.isNumber(): Boolean = when (this.kind) {
     PType.Kind.REAL,
     PType.Kind.DOUBLE,
     PType.Kind.DECIMAL,
-    PType.Kind.DECIMAL_ARBITRARY,
     -> true
     else -> false
 }
@@ -145,7 +143,7 @@ internal fun Number.toTargetType(type: PType): Datum = when (type.kind) {
     PType.Kind.DYNAMIC -> this.toDatum()
     PType.Kind.REAL -> Datum.real(this.toFloat())
     PType.Kind.DOUBLE -> Datum.doublePrecision(this.toDouble())
-    PType.Kind.DECIMAL, PType.Kind.DECIMAL_ARBITRARY -> {
+    PType.Kind.DECIMAL -> {
         when (this) {
             is BigDecimal -> Datum.decimal(this)
             is BigInteger -> Datum.decimal(this.toBigDecimal())

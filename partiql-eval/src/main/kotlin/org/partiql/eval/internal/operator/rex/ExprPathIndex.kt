@@ -16,8 +16,7 @@ internal class ExprPathIndex(
         val input = root.eval(env)
         val iterator = when (input.type.kind) {
             PType.Kind.BAG,
-            PType.Kind.ARRAY,
-            PType.Kind.SEXP -> input.iterator()
+            PType.Kind.ARRAY -> input.iterator()
             else -> throw TypeCheckException("expected collection, found ${input.type.kind}")
         }
 

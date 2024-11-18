@@ -86,7 +86,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public BigDecimal getBigDecimal() {
-        if (_type.getKind() == PType.Kind.DECIMAL || _type.getKind() == PType.Kind.DECIMAL_ARBITRARY) {
+        if (_type.getKind() == PType.Kind.DECIMAL) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -143,7 +143,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Iterator<Datum> iterator() {
-        if (_type.getKind() == PType.Kind.BAG || _type.getKind() == PType.Kind.ARRAY || _type.getKind() == PType.Kind.SEXP) {
+        if (_type.getKind() == PType.Kind.BAG || _type.getKind() == PType.Kind.ARRAY) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -163,7 +163,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public String getString() {
-        if (_type.getKind() == PType.Kind.STRING || _type.getKind() == PType.Kind.CHAR || _type.getKind() == PType.Kind.SYMBOL) {
+        if (_type.getKind() == PType.Kind.STRING || _type.getKind() == PType.Kind.CHAR) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();

@@ -350,7 +350,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             // Compile the candidates
             val candidates = Array(functions.size) {
                 val fn = functions[it]
-                val fnArity = fn.parameters.size
+                val fnArity = fn.getParameters().size
                 if (arity == -1) {
                     // set first
                     arity = fnArity

@@ -10,8 +10,7 @@ import java.util.Iterator;
  * <p></p>
  * This is specifically for:
  * {@link PType.Kind#ARRAY},
- * {@link PType.Kind#BAG},
- * {@link PType.Kind#SEXP}
+ * {@link PType.Kind#BAG}
  */
 class DatumCollection implements Datum {
 

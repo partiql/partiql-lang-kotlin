@@ -20,18 +20,6 @@ internal val Fn_UPPER__STRING__STRING = Function.static(
     Datum.string(result)
 }
 
-internal val Fn_UPPER__SYMBOL__SYMBOL = Function.static(
-
-    name = "upper",
-    returns = PType.symbol(),
-    parameters = arrayOf(Parameter("value", PType.symbol())),
-
-) { args ->
-    val string = args[0].string
-    val result = string.uppercase()
-    Datum.symbol(result)
-}
-
 internal val Fn_UPPER__CLOB__CLOB = Function.static(
 
     name = "upper",

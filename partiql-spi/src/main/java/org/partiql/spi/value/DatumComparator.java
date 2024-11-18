@@ -148,7 +148,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         precedence.put(PType.Kind.BIGINT, 1);
         precedence.put(PType.Kind.NUMERIC, 1);
         precedence.put(PType.Kind.DECIMAL, 1);
-        precedence.put(PType.Kind.DECIMAL_ARBITRARY, 1);
         precedence.put(PType.Kind.REAL, 1);
         precedence.put(PType.Kind.DOUBLE, 1);
         // Date Type
@@ -163,14 +162,11 @@ abstract class DatumComparator implements Comparator<Datum> {
         precedence.put(PType.Kind.CHAR, 5);
         precedence.put(PType.Kind.VARCHAR, 5);
         precedence.put(PType.Kind.STRING, 5);
-        precedence.put(PType.Kind.SYMBOL, 5);
         // LOB Types
         precedence.put(PType.Kind.CLOB, 6);
         precedence.put(PType.Kind.BLOB, 6);
         // Array Type
         precedence.put(PType.Kind.ARRAY, 7);
-        // Sexp Type
-        precedence.put(PType.Kind.SEXP, 8);
         // Tuple Type
         precedence.put(PType.Kind.ROW, 9);
         precedence.put(PType.Kind.STRUCT, 9);
@@ -227,7 +223,6 @@ abstract class DatumComparator implements Comparator<Datum> {
                     fillIntArbitraryComparator(row);
                     break;
                 case DECIMAL:
-                case DECIMAL_ARBITRARY:
                     fillDecimalComparator(row);
                     break;
                 case REAL:
@@ -239,7 +234,6 @@ abstract class DatumComparator implements Comparator<Datum> {
                 case CHAR:
                 case VARCHAR:
                 case STRING:
-                case SYMBOL:
                     fillStringComparator(row);
                     break;
                 case BLOB:
@@ -263,9 +257,6 @@ abstract class DatumComparator implements Comparator<Datum> {
                 case ARRAY:
                     fillListComparator(row);
                     break;
-                case SEXP:
-                    fillSexpComparator(row);
-                    break;
                 case ROW:
                 case STRUCT:
                     fillStructComparator(row);
@@ -288,7 +279,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getByte(), real.getFloat()));
         comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getByte(), doublePrecision.getDouble()));
         comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getByte()).compareTo(decimal.getBigDecimal());
-        comps[PType.Kind.DECIMAL_ARBITRARY.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getByte()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
@@ -302,7 +292,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getShort(), real.getFloat()));
         comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getShort(), doublePrecision.getDouble()));
         comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getShort()).compareTo(decimal.getBigDecimal());
-        comps[PType.Kind.DECIMAL_ARBITRARY.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getShort()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
@@ -316,7 +305,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getInt(), real.getFloat()));
         comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getInt(), doublePrecision.getDouble()));
         comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getInt()).compareTo(decimal.getBigDecimal());
-        comps[PType.Kind.DECIMAL_ARBITRARY.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getInt()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
@@ -330,7 +318,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getLong(), real.getFloat()));
         comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getLong(), doublePrecision.getDouble()));
         comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getLong()).compareTo(decimal.getBigDecimal());
-        comps[PType.Kind.DECIMAL_ARBITRARY.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getLong()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
@@ -344,7 +331,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> new BigDecimal(self.getBigInteger()).compareTo(BigDecimal.valueOf(real.getFloat())));
         comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> new BigDecimal(self.getBigInteger()).compareTo(BigDecimal.valueOf(doublePrecision.getDouble())));
         comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> new BigDecimal(self.getBigInteger()).compareTo(decimal.getBigDecimal());
-        comps[PType.Kind.DECIMAL_ARBITRARY.ordinal()] = (self, decimal, comp) -> new BigDecimal(self.getBigInteger()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
@@ -362,7 +348,6 @@ abstract class DatumComparator implements Comparator<Datum> {
             return compareDoubles(selfFlt, otherDbl, () -> Double.compare(selfFlt, otherDbl));
         };
         comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> compareDoubleLhs(self.getFloat(), () -> BigDecimal.valueOf(self.getFloat()).compareTo(decimal.getBigDecimal()));
-        comps[PType.Kind.DECIMAL_ARBITRARY.ordinal()] = (self, decimal, comp) -> compareDoubleLhs(self.getFloat(), () -> BigDecimal.valueOf(self.getFloat()).compareTo(decimal.getBigDecimal()));
         return comps;
     }
 
@@ -474,7 +459,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         };
         comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubles(self.getDouble(), doublePrecision.getDouble(), () -> Double.compare(self.getDouble(), doublePrecision.getDouble()));
         comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> compareDoubleLhs(self.getDouble(), () -> BigDecimal.valueOf(self.getDouble()).compareTo(decimal.getBigDecimal()));
-        comps[PType.Kind.DECIMAL_ARBITRARY.ordinal()] = (self, decimal, comp) -> compareDoubleLhs(self.getDouble(), () -> BigDecimal.valueOf(self.getDouble()).compareTo(decimal.getBigDecimal()));
         return comps;
     }
 
@@ -488,7 +472,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> self.getBigDecimal().compareTo(BigDecimal.valueOf(real.getFloat())));
         comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> self.getBigDecimal().compareTo(BigDecimal.valueOf(doublePrecision.getDouble())));
         comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> self.getBigDecimal().compareTo(decimal.getBigDecimal());
-        comps[PType.Kind.DECIMAL_ARBITRARY.ordinal()] = (self, decimal, comp) -> self.getBigDecimal().compareTo(decimal.getBigDecimal());
         return comps;
     }
 
@@ -522,7 +505,7 @@ abstract class DatumComparator implements Comparator<Datum> {
     }
 
     /**
-     * Used for {@link PType.Kind#STRING}, {@link PType.Kind#CHAR}, {@link PType.Kind#VARCHAR}, and {@link PType.Kind#SYMBOL}.
+     * Used for {@link PType.Kind#STRING}, {@link PType.Kind#CHAR}, {@link PType.Kind#VARCHAR}.
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
      * {@link Datum}'s {@link PType.Kind#ordinal()}.
      * @return the modified array
@@ -532,7 +515,6 @@ abstract class DatumComparator implements Comparator<Datum> {
         comps[PType.Kind.STRING.ordinal()] = (self, string, comp) -> self.getString().compareTo(string.getString());
         comps[PType.Kind.CHAR.ordinal()] = (self, string, comp) -> self.getString().compareTo(string.getString());
         comps[PType.Kind.VARCHAR.ordinal()] = (self, string, comp) -> self.getString().compareTo(string.getString());
-        comps[PType.Kind.SYMBOL.ordinal()] = (self, string, comp) -> self.getString().compareTo(string.getString());
         return comps;
     }
 
@@ -543,17 +525,6 @@ abstract class DatumComparator implements Comparator<Datum> {
      */
     private static DatumComparison[] fillListComparator(DatumComparison[] comps) {
         comps[PType.Kind.ARRAY.ordinal()] = (self, list, comp) -> compareOrdered(self.iterator(), list.iterator(), comp);
-        return comps;
-    }
-
-    /**
-     * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
-     * @return the modified array
-     */
-    @SuppressWarnings("deprecation")
-    private static DatumComparison[] fillSexpComparator(DatumComparison[] comps) {
-        comps[PType.Kind.SEXP.ordinal()] = (self, list, comp) -> compareOrdered(self.iterator(), list.iterator(), comp);
         return comps;
     }
 

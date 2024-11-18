@@ -508,12 +508,10 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/spi/value/Datum;
 	public fun pack (Ljava/nio/charset/Charset;)[B
 	public static fun real (F)Lorg/partiql/spi/value/Datum;
-	public static fun sexp (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun smallint (S)Lorg/partiql/spi/value/Datum;
 	public static fun string (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public static fun struct ()Lorg/partiql/spi/value/Datum;
 	public static fun struct (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
-	public static fun symbol (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public static fun time (Lorg/partiql/value/datetime/Time;)Lorg/partiql/spi/value/Datum;
 	public static fun timestamp (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/spi/value/Datum;
 	public static fun tinyint (B)Lorg/partiql/spi/value/Datum;

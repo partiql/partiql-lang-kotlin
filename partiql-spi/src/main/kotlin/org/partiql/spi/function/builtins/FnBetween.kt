@@ -98,9 +98,9 @@ internal val Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__
     name = "between",
     returns = PType.bool(),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
-        @Suppress("DEPRECATION") Parameter("lower", PType.decimal()),
-        @Suppress("DEPRECATION") Parameter("upper", PType.decimal()),
+        Parameter("value", PType.decimal()),
+        Parameter("lower", PType.decimal()),
+        Parameter("upper", PType.decimal()),
     ),
 
 ) { args ->
@@ -152,23 +152,6 @@ internal val Fn_BETWEEN__STRING_STRING_STRING__BOOL = Function.static(
         Parameter("value", PType.string()),
         Parameter("lower", PType.string()),
         Parameter("upper", PType.string()),
-    ),
-
-) { args ->
-    val value = args[0].string
-    val lower = args[1].string
-    val upper = args[2].string
-    Datum.bool(value in lower..upper)
-}
-
-internal val Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL = Function.static(
-
-    name = "between",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("value", PType.symbol()),
-        Parameter("lower", PType.symbol()),
-        Parameter("upper", PType.symbol()),
     ),
 
 ) { args ->

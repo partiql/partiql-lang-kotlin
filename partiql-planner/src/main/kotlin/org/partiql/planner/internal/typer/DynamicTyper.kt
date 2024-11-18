@@ -25,10 +25,8 @@ import org.partiql.value.intValue
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
-import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
-import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
 
@@ -116,7 +114,7 @@ internal class DynamicTyper {
             return anyOf(types)!!.toCType() to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
-        if (superTypeBase in setOf(Kind.ROW, Kind.STRUCT, Kind.BAG, Kind.ARRAY, Kind.SEXP)) {
+        if (superTypeBase in setOf(Kind.ROW, Kind.STRUCT, Kind.BAG, Kind.ARRAY)) {
             return anyOf(types)!!.toCType() to null
         }
         // Decimal
@@ -254,7 +252,6 @@ internal class DynamicTyper {
                 Kind.BIGINT to Kind.BIGINT,
                 Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
                 Kind.DOUBLE to Kind.DOUBLE,
             )
@@ -265,7 +262,6 @@ internal class DynamicTyper {
                 Kind.BIGINT to Kind.BIGINT,
                 Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
                 Kind.DOUBLE to Kind.DOUBLE,
             )
@@ -276,7 +272,6 @@ internal class DynamicTyper {
                 Kind.BIGINT to Kind.BIGINT,
                 Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
                 Kind.DOUBLE to Kind.DOUBLE,
             )
@@ -287,7 +282,6 @@ internal class DynamicTyper {
                 Kind.BIGINT to Kind.BIGINT,
                 Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
                 Kind.DOUBLE to Kind.DOUBLE,
             )
@@ -298,7 +292,6 @@ internal class DynamicTyper {
                 Kind.BIGINT to Kind.NUMERIC,
                 Kind.NUMERIC to Kind.NUMERIC,
                 Kind.DECIMAL to Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
                 Kind.DOUBLE to Kind.DOUBLE,
             )
@@ -309,18 +302,6 @@ internal class DynamicTyper {
                 Kind.BIGINT to Kind.DECIMAL,
                 Kind.NUMERIC to Kind.DECIMAL,
                 Kind.DECIMAL to Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
-                Kind.REAL to Kind.REAL,
-                Kind.DOUBLE to Kind.DOUBLE,
-            )
-            graph[Kind.DECIMAL_ARBITRARY.ordinal] = edges(
-                Kind.TINYINT to Kind.DECIMAL_ARBITRARY,
-                Kind.SMALLINT to Kind.DECIMAL_ARBITRARY,
-                Kind.INTEGER to Kind.DECIMAL_ARBITRARY,
-                Kind.BIGINT to Kind.DECIMAL_ARBITRARY,
-                Kind.NUMERIC to Kind.DECIMAL_ARBITRARY,
-                Kind.DECIMAL to Kind.DECIMAL_ARBITRARY,
-                Kind.DECIMAL_ARBITRARY to Kind.DECIMAL_ARBITRARY,
                 Kind.REAL to Kind.REAL,
                 Kind.DOUBLE to Kind.DOUBLE,
             )
@@ -331,7 +312,6 @@ internal class DynamicTyper {
                 Kind.BIGINT to Kind.REAL,
                 Kind.NUMERIC to Kind.REAL,
                 Kind.DECIMAL to Kind.REAL,
-                Kind.DECIMAL_ARBITRARY to Kind.REAL,
                 Kind.REAL to Kind.REAL,
                 Kind.DOUBLE to Kind.DOUBLE,
             )
@@ -342,7 +322,6 @@ internal class DynamicTyper {
                 Kind.BIGINT to Kind.DOUBLE,
                 Kind.NUMERIC to Kind.DOUBLE,
                 Kind.DECIMAL to Kind.DOUBLE,
-                Kind.DECIMAL_ARBITRARY to Kind.DOUBLE,
                 Kind.REAL to Kind.DOUBLE,
                 Kind.DOUBLE to Kind.DOUBLE,
             )
@@ -350,28 +329,18 @@ internal class DynamicTyper {
                 Kind.CHAR to Kind.CHAR,
                 Kind.STRING to Kind.STRING,
                 Kind.VARCHAR to Kind.STRING,
-                Kind.SYMBOL to Kind.STRING,
                 Kind.CLOB to Kind.CLOB,
             )
             graph[Kind.STRING.ordinal] = edges(
                 Kind.CHAR to Kind.STRING,
                 Kind.STRING to Kind.STRING,
                 Kind.VARCHAR to Kind.STRING,
-                Kind.SYMBOL to Kind.STRING,
                 Kind.CLOB to Kind.CLOB,
             )
             graph[Kind.VARCHAR.ordinal] = edges(
                 Kind.CHAR to Kind.VARCHAR,
                 Kind.STRING to Kind.STRING,
                 Kind.VARCHAR to Kind.VARCHAR,
-                Kind.SYMBOL to Kind.STRING,
-                Kind.CLOB to Kind.CLOB,
-            )
-            graph[Kind.SYMBOL.ordinal] = edges(
-                Kind.CHAR to Kind.SYMBOL,
-                Kind.STRING to Kind.STRING,
-                Kind.VARCHAR to Kind.STRING,
-                Kind.SYMBOL to Kind.SYMBOL,
                 Kind.CLOB to Kind.CLOB,
             )
             graph[Kind.BLOB.ordinal] = edges(
@@ -384,7 +353,6 @@ internal class DynamicTyper {
                 Kind.CHAR to Kind.CLOB,
                 Kind.STRING to Kind.CLOB,
                 Kind.VARCHAR to Kind.CLOB,
-                Kind.SYMBOL to Kind.CLOB,
                 Kind.CLOB to Kind.CLOB,
             )
             graph[Kind.TIME.ordinal] = edges(
@@ -401,17 +369,10 @@ internal class DynamicTyper {
             )
             graph[Kind.ARRAY.ordinal] = edges(
                 Kind.ARRAY to Kind.ARRAY,
-                Kind.SEXP to Kind.SEXP,
-                Kind.BAG to Kind.BAG,
-            )
-            graph[Kind.SEXP.ordinal] = edges(
-                Kind.ARRAY to Kind.SEXP,
-                Kind.SEXP to Kind.SEXP,
                 Kind.BAG to Kind.BAG,
             )
             graph[Kind.BAG.ordinal] = edges(
                 Kind.ARRAY to Kind.BAG,
-                Kind.SEXP to Kind.BAG,
                 Kind.BAG to Kind.BAG,
             )
             graph[Kind.STRUCT.ordinal] = edges(
@@ -436,13 +397,11 @@ internal class DynamicTyper {
             Kind.BIGINT -> PType.bigint()
             Kind.NUMERIC -> PType.numeric()
             Kind.DECIMAL -> PType.decimal() // TODO: To be updated.
-            Kind.DECIMAL_ARBITRARY -> PType.decimal()
             Kind.REAL -> PType.real()
             Kind.DOUBLE -> PType.doublePrecision()
             Kind.CHAR -> PType.character(255) // TODO: To be updated
             Kind.VARCHAR -> PType.varchar(255) // TODO: To be updated
             Kind.STRING -> PType.string()
-            Kind.SYMBOL -> PType.symbol()
             Kind.BLOB -> PType.blob(Int.MAX_VALUE) // TODO: To be updated
             Kind.CLOB -> PType.clob(Int.MAX_VALUE) // TODO: To be updated
             Kind.DATE -> PType.date()
@@ -453,7 +412,6 @@ internal class DynamicTyper {
             Kind.BAG -> PType.bag() // TODO: To be updated
             Kind.ARRAY -> PType.array() // TODO: To be updated
             Kind.ROW -> PType.row(emptyList()) // TODO: To be updated
-            Kind.SEXP -> PType.sexp() // TODO: To be updated
             Kind.STRUCT -> PType.struct() // TODO: To be updated
             Kind.UNKNOWN -> PType.unknown() // TODO: To be updated
             Kind.VARIANT -> TODO("variant in dynamic typer")
@@ -470,13 +428,11 @@ internal class DynamicTyper {
                 Kind.BIGINT -> int64Value(null)
                 Kind.NUMERIC -> intValue(null)
                 Kind.DECIMAL -> decimalValue(null)
-                Kind.DECIMAL_ARBITRARY -> decimalValue(null)
                 Kind.REAL -> float32Value(null)
                 Kind.DOUBLE -> float64Value(null)
                 Kind.CHAR -> charValue(null)
                 Kind.VARCHAR -> TODO("No implementation of VAR CHAR")
                 Kind.STRING -> stringValue(null)
-                Kind.SYMBOL -> symbolValue(null)
                 Kind.BLOB -> blobValue(null)
                 Kind.CLOB -> clobValue(null)
                 Kind.DATE -> dateValue(null)
@@ -487,7 +443,6 @@ internal class DynamicTyper {
                 Kind.BAG -> bagValue<PartiQLValue>(null)
                 Kind.ARRAY -> listValue<PartiQLValue>(null)
                 Kind.ROW -> structValue<PartiQLValue>(null)
-                Kind.SEXP -> sexpValue<PartiQLValue>(null)
                 Kind.STRUCT -> structValue<PartiQLValue>()
                 Kind.UNKNOWN -> nullValue()
                 Kind.VARIANT -> TODO("variant in dynamic typer")

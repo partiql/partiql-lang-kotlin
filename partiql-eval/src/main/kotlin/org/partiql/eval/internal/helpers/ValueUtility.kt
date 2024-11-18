@@ -51,7 +51,7 @@ internal object ValueUtility {
      */
     fun Datum.getText(): String {
         return when (this.type.kind) {
-            PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
+            PType.Kind.STRING, PType.Kind.CHAR -> this.string
             else -> throw TypeCheckException("Expected text, but received ${this.type}.")
         }
     }

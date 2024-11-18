@@ -33,7 +33,6 @@ import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
-import org.partiql.value.symbolValue
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -123,12 +122,6 @@ class PartiQLEvaluatorTest {
                     decimalValue(BigDecimal.valueOf(2000, 1)),
                     decimalValue(BigDecimal.valueOf(3000, 1)),
                 )
-            ),
-            SuccessTestCase(
-                input = """
-                    CAST(20 AS SYMBOL);
-                """.trimIndent(),
-                expected = symbolValue("20"),
             ),
             // TODO: Use Datum for assertions. Currently, PartiQLValue doesn't support parameterized CHAR/VARCHAR
 //            SuccessTestCase(
@@ -1397,7 +1390,7 @@ class PartiQLEvaluatorTest {
             try {
                 val (strictResult, _) = run(mode = Mode.STRICT())
                 when (strictResult.type.kind) {
-                    PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> strictResult.toList()
+                    PType.Kind.BAG, PType.Kind.ARRAY -> strictResult.toList()
                     else -> strictResult
                 }
             } catch (e: Throwable) {

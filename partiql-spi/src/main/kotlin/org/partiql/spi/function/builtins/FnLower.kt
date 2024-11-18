@@ -20,18 +20,6 @@ internal val Fn_LOWER__STRING__STRING = Function.static(
     Datum.string(result)
 }
 
-internal val Fn_LOWER__SYMBOL__SYMBOL = Function.static(
-
-    name = "lower",
-    returns = PType.symbol(),
-    parameters = arrayOf(Parameter("value", PType.symbol())),
-
-) { args ->
-    val string = args[0].string
-    val result = string.lowercase()
-    Datum.string(result)
-}
-
 internal val Fn_LOWER__CLOB__CLOB = Function.static(
 
     name = "lower",

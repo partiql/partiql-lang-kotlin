@@ -62,8 +62,7 @@ fun fromStaticType(type: StaticType): PType {
         val elementType = fromStaticType(type.elementType)
         return PType.array(elementType)
     } else if (type is SexpType) {
-        val elementType = fromStaticType(type.elementType)
-        return PType.sexp(elementType)
+        throw java.lang.IllegalStateException("SEXP is not supported.")
     } else if (type is StringType) {
         return PType.string()
     } else if (type is StructType) {
@@ -83,7 +82,7 @@ fun fromStaticType(type: StaticType): PType {
             PType.struct()
         }
     } else if (type is SymbolType) {
-        return PType.symbol()
+        throw java.lang.IllegalStateException("SYMBOL not supported.")
     } else if (type is TimeType) {
         var precision = type.precision
         if (precision == null) {

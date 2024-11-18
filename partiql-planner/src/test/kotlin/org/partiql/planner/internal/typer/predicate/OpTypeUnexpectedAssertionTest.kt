@@ -4,28 +4,27 @@ import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
 import org.partiql.planner.internal.typer.accumulateSuccesses
-import org.partiql.planner.util.allSupportedType
-import org.partiql.types.SingleType
-import org.partiql.types.StaticType
+import org.partiql.planner.util.allSupportedPType
+import org.partiql.types.PType
 import java.util.stream.Stream
 
 class OpTypeUnexpectedAssertionTest : PartiQLTyperTestBase() {
     @TestFactory
     fun typeAssertion(): Stream<DynamicContainer> {
         val tests = buildList {
-            (12..29).forEach {
+            (12..27).forEach {
                 this.add("expr-$it")
             }
         }.map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs = allSupportedType.flatMap { t ->
+            val successArgs = allSupportedPType.flatMap { t ->
                 setOf(listOf(t))
             }.toSet()
-            accumulateSuccesses(StaticType.BOOL, successArgs)
-            put(TestResult.Failure, emptySet<List<SingleType>>())
+            accumulateSuccesses(PType.bool(), successArgs)
+            put(TestResult.Failure, emptySet<List<PType>>())
         }
 
-        return super.testGen("type-assertion", tests, argsMap)
+        return super.testGenPType("type-assertion", tests, argsMap)
     }
 }

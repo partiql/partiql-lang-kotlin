@@ -23,7 +23,7 @@ internal class RelOpIteratePermissive(
                 isIndexable = false
                 r.iterator()
             }
-            PType.Kind.ARRAY, PType.Kind.SEXP -> r.iterator()
+            PType.Kind.ARRAY -> r.iterator()
             else -> {
                 isIndexable = false
                 iterator { yield(r) }

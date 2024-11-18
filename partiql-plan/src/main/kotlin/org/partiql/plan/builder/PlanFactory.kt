@@ -395,7 +395,7 @@ public interface PlanFactory {
      * @param args
      * @return
      */
-    public fun rexCallDynamic(name: String, functions: List<Function.Instance>, args: List<Rex>): RexCallDynamic =
+    public fun rexCallDynamic(name: String, functions: List<Function>, args: List<Rex>): RexCallDynamic =
         RexCallDynamicImpl(name, functions, args)
 
     /**

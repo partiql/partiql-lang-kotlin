@@ -1,46 +1,28 @@
 package org.partiql.planner.internal.typer
 
-import org.partiql.types.NullType
-import org.partiql.types.StaticType
+import org.partiql.types.PType
 
 /**
  * In contrast to [set], this accumulates the passed-in [value] to the in-place value corresponding to [key].
  * Note that this does not replace the value corresponding to [key]. The [MutableMap] is acting as a way to
  * accumulate values, and this helper function aids in that.
  */
-
-internal fun MutableMap<PartiQLTyperTestBase.TestResult, Set<List<StaticType>>>.accumulateSuccess(
-    key: StaticType,
-    value: List<StaticType>,
+internal fun <T> MutableMap<PartiQLTyperTestBase.TestResult, Set<List<T>>>.accumulateSuccess(
+    key: PType,
+    value: List<T>,
 ) {
     val result = PartiQLTyperTestBase.TestResult.Success(key)
     this[result] = setOf(value) + (this[result] ?: emptySet())
 }
 
 /**
- * This internally calls [accumulateSuccess], however, this function also checks whether any of the [value] is of type
- * null. If so, it makes sure that the result is also nullable. If the [value] is of type MISSING, the result will
- * be MISSING.
+ * This runs [accumulateSuccess] over all elements of [value].
  */
-internal fun MutableMap<PartiQLTyperTestBase.TestResult, Set<List<StaticType>>>.accumulateSuccessNullCall(
-    key: StaticType,
-    value: List<StaticType>,
-) {
-    val actualKey = when {
-        value.any { it is NullType } -> key.asNullable()
-        else -> key
-    }
-    accumulateSuccess(actualKey, value)
-}
-
-/**
- * This runs [accumulateSuccessNullCall] over all elements of [value].
- */
-internal fun MutableMap<PartiQLTyperTestBase.TestResult, Set<List<StaticType>>>.accumulateSuccesses(
-    key: StaticType,
-    value: Set<List<StaticType>>,
+internal fun <T> MutableMap<PartiQLTyperTestBase.TestResult, Set<List<T>>>.accumulateSuccesses(
+    key: PType,
+    value: Set<List<T>>,
 ) {
     value.forEach {
-        accumulateSuccessNullCall(key, it)
+        accumulateSuccess(key, it)
     }
 }

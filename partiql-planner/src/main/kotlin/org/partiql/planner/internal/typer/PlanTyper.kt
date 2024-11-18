@@ -122,8 +122,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
             // Collapse Collections
             if (unique.all { it.kind == Kind.ARRAY } ||
-                unique.all { it.kind == Kind.BAG } ||
-                unique.all { it.kind == Kind.SEXP }
+                unique.all { it.kind == Kind.BAG }
             ) {
                 return collapseCollection(unique, unique.first().kind)
             }
@@ -139,7 +138,6 @@ internal class PlanTyper(private val env: Env, config: Context) {
             return when (type) {
                 Kind.ARRAY -> PType.array(typeParam)
                 Kind.BAG -> PType.array(typeParam)
-                Kind.SEXP -> PType.array(typeParam)
                 else -> error("This shouldn't have happened.")
             }
         }
@@ -637,8 +635,8 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Index(root, key))
             }
 
-            // Check Root Type (LIST/SEXP)
-            if (root.type.kind != Kind.ARRAY && root.type.kind != Kind.SEXP) {
+            // Check Root Type LIST
+            if (root.type.kind != Kind.ARRAY) {
                 return errorRexAndReport(_listener, PErrors.pathIndexNeverSucceeds(null))
             }
 
@@ -966,8 +964,8 @@ internal class PlanTyper(private val env: Env, config: Context) {
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: CompilerType?): Rex {
-            if (ctx!!.kind !in setOf(Kind.ARRAY, Kind.SEXP, Kind.BAG)) {
-                val problem = PErrors.typeUnexpected(null, ctx, listOf(PType.array(), PType.bag(), PType.sexp()))
+            if (ctx!!.kind !in setOf(Kind.ARRAY, Kind.BAG)) {
+                val problem = PErrors.typeUnexpected(null, ctx, listOf(PType.array(), PType.bag()))
                 return errorRexAndReport(_listener, problem)
             }
             val values = node.values.map { visitRex(it, it.type) }
@@ -978,7 +976,6 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val type = when (ctx.kind) {
                 Kind.BAG -> PType.bag(t)
                 Kind.ARRAY -> PType.array(t)
-                Kind.SEXP -> PType.sexp(t)
                 else -> error("This is impossible.")
             }
             return rex(CompilerType(type), rexOpCollection(values))
@@ -1284,7 +1281,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
     private fun getElementTypeForFromSource(fromSourceType: CompilerType): CompilerType = when (fromSourceType.kind) {
         Kind.DYNAMIC -> CompilerType(PType.dynamic())
-        Kind.BAG, Kind.ARRAY, Kind.SEXP -> fromSourceType.typeParameter
+        Kind.BAG, Kind.ARRAY -> fromSourceType.typeParameter
         // TODO: Should we emit a warning?
         else -> fromSourceType
     }

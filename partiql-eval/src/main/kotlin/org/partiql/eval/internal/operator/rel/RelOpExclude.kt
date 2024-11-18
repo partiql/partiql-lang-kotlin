@@ -81,7 +81,7 @@ internal class RelOpExclude(
      */
     private fun Datum.exclude(exclusions: List<Exclusion.Item>): Datum = when (this.type.kind) {
         PType.Kind.ROW, PType.Kind.STRUCT -> this.structExclude(exclusions)
-        PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> this.collExclude(exclusions)
+        PType.Kind.BAG, PType.Kind.ARRAY -> this.collExclude(exclusions)
         else -> this
     }
 
@@ -134,13 +134,12 @@ internal class RelOpExclude(
 
     /**
      * Returns a [PartiQLValue] created from an iterable of [coll]. Requires [type] to be a collection type
-     * (i.e. [PartiQLValueType.LIST], [PartiQLValueType.BAG], or [PartiQLValueType.SEXP]).
+     * (i.e. [PartiQLValueType.LIST] or [PartiQLValueType.BAG].).
      */
     private fun newCollValue(type: PType, coll: Iterable<Datum>): Datum {
         return when (type.kind) {
             PType.Kind.ARRAY -> Datum.array(coll)
             PType.Kind.BAG -> Datum.bag(coll)
-            PType.Kind.SEXP -> Datum.sexp(coll)
             else -> error("Collection type required")
         }
     }
@@ -172,13 +171,13 @@ internal class RelOpExclude(
             }
             // apply exclusions to subtree
             var value = element
-            // apply collection index exclusions at deeper levels for lists and sexps
-            if (type.kind == PType.Kind.ARRAY || type.kind == PType.Kind.SEXP) {
+            // apply collection index exclusions at deeper levels for lists
+            if (type.kind == PType.Kind.ARRAY) {
                 branches.getCollIndex(i)?.let {
                     value = value.exclude(it.getItems())
                 }
             }
-            // apply collection wildcard exclusions at deeper levels for lists, bags, and sexps
+            // apply collection wildcard exclusions at deeper levels for lists and bags
             branches.getCollWildcard()?.let {
                 value = value.exclude(it.getItems())
             }
