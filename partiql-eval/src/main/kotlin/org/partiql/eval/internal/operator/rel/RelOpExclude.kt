@@ -134,7 +134,7 @@ internal class RelOpExclude(
 
     /**
      * Returns a [PartiQLValue] created from an iterable of [coll]. Requires [type] to be a collection type
-     * (i.e. [PartiQLValueType.LIST], [PartiQLValueType.BAG], or [PartiQLValueType.SEXP]).
+     * (i.e. [PartiQLValueType.LIST] or [PartiQLValueType.BAG].).
      */
     private fun newCollValue(type: PType, coll: Iterable<Datum>): Datum {
         return when (type.kind) {
@@ -171,13 +171,13 @@ internal class RelOpExclude(
             }
             // apply exclusions to subtree
             var value = element
-            // apply collection index exclusions at deeper levels for lists and sexps
+            // apply collection index exclusions at deeper levels for lists
             if (type.kind == PType.Kind.ARRAY) {
                 branches.getCollIndex(i)?.let {
                     value = value.exclude(it.getItems())
                 }
             }
-            // apply collection wildcard exclusions at deeper levels for lists, bags, and sexps
+            // apply collection wildcard exclusions at deeper levels for lists and bags
             branches.getCollWildcard()?.let {
                 value = value.exclude(it.getItems())
             }

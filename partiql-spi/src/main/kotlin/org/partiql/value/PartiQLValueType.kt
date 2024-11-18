@@ -71,16 +71,16 @@ public enum class PartiQLValueType {
     public fun toPType(): PType {
         return when (this) {
             DECIMAL -> PType.decimal()
-            DECIMAL_ARBITRARY -> PType.decimal() // TODO: Figure out precision/scale implications.
+            DECIMAL_ARBITRARY -> error("DECIMAL_ARB has been removed.")
             INT8 -> PType.tinyint()
             CHAR -> PType.character(255)
             TIMESTAMP -> PType.timestampz(6)
             DATE -> PType.date()
             BOOL -> PType.bool()
-            SYMBOL -> TODO("SYMBOL has been removed")
+            SYMBOL -> error("SYMBOL has been removed")
             STRING -> PType.string()
             STRUCT -> PType.struct()
-            SEXP -> TODO("SEXP has been removed.")
+            SEXP -> error("SEXP has been removed.")
             LIST -> PType.array()
             BAG -> PType.bag()
             FLOAT32 -> PType.real()
