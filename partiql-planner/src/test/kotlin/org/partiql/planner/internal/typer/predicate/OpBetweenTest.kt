@@ -3,11 +3,15 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.internal.typer.accumulateSuccessNullCall
-import org.partiql.planner.util.allNumberType
-import org.partiql.planner.util.allSupportedType
+import org.partiql.planner.internal.typer.accumulateSuccess
+import org.partiql.planner.util.allCharStringPType
+import org.partiql.planner.util.allDatePType
+import org.partiql.planner.util.allNumberPType
+import org.partiql.planner.util.allSupportedPType
+import org.partiql.planner.util.allTimePType
+import org.partiql.planner.util.allTimeStampPType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.StaticType
+import org.partiql.types.PType
 import java.util.stream.Stream
 
 // TODO: Finalize the semantics for Between operator when operands contain MISSING
@@ -22,41 +26,41 @@ class OpBetweenTest : PartiQLTyperTestBase() {
         val argsMap = buildMap {
             val successArgs =
                 cartesianProduct(
-                    allNumberType,
-                    allNumberType,
-                    allNumberType,
+                    allNumberPType,
+                    allNumberPType,
+                    allNumberPType,
                 ) + cartesianProduct(
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB),
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB),
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB)
+                    allCharStringPType,
+                    allCharStringPType,
+                    allCharStringPType
                 ) + cartesianProduct(
-                    listOf(StaticType.DATE),
-                    listOf(StaticType.DATE),
-                    listOf(StaticType.DATE)
+                    allDatePType,
+                    allDatePType,
+                    allDatePType,
                 ) + cartesianProduct(
-                    listOf(StaticType.TIME),
-                    listOf(StaticType.TIME),
-                    listOf(StaticType.TIME)
+                    allTimePType,
+                    allTimePType,
+                    allTimePType,
                 ) + cartesianProduct(
-                    listOf(StaticType.TIMESTAMP),
-                    listOf(StaticType.TIMESTAMP),
-                    listOf(StaticType.TIMESTAMP)
+                    allTimeStampPType,
+                    allTimeStampPType,
+                    allTimeStampPType,
                 )
 
             val failureArgs = cartesianProduct(
-                allSupportedType,
-                allSupportedType,
-                allSupportedType
+                allSupportedPType,
+                allSupportedPType,
+                allSupportedPType
             ).filterNot {
                 successArgs.contains(it)
             }.toSet()
 
-            successArgs.forEach { args: List<StaticType> ->
-                accumulateSuccessNullCall(StaticType.BOOL, args)
+            successArgs.forEach { args: List<PType> ->
+                accumulateSuccess(PType.bool(), args)
             }
             put(TestResult.Failure, failureArgs)
         }
 
-        return super.testGen("between", tests, argsMap)
+        return super.testGenPType("between", tests, argsMap)
     }
 }

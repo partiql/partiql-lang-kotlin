@@ -34,6 +34,7 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
+import org.partiql.types.Field
 import org.partiql.types.ListType
 import org.partiql.types.NumberConstraint
 import org.partiql.types.PType
@@ -56,7 +57,7 @@ import kotlin.test.assertTrue
 internal class PlanTyperTestsPorted {
 
     sealed class TestCase {
-        class SuccessTestCase(
+        class SuccessTestCase private constructor(
             val name: String? = null,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
@@ -65,6 +66,24 @@ internal class PlanTyperTestsPorted {
             val expected: CompilerType,
             val warnings: PErrorListener? = null,
         ) : TestCase() {
+
+            constructor(
+                name: String? = null,
+                key: PartiQLTest.Key,
+                catalog: String = "pql",
+                catalogPath: List<String> = emptyList(),
+                expected: PType,
+                warnings: PErrorListener? = null,
+            ) : this(name, key, null, catalog, catalogPath, expected.toCType(), warnings)
+
+            constructor(
+                name: String? = null,
+                query: String,
+                catalog: String = "pql",
+                catalogPath: List<String> = emptyList(),
+                expected: PType,
+                warnings: PErrorListener? = null,
+            ) : this(name, null, query, catalog, catalogPath, expected.toCType(), warnings)
 
             // legacy shim!
             constructor(
@@ -85,27 +104,80 @@ internal class PlanTyperTestsPorted {
             }
         }
 
-        class ErrorTestCase(
+        class ErrorTestCase private constructor(
             val name: String,
-            val key: PartiQLTest.Key?,
-            val query: String?,
+            val key: PartiQLTest.Key? = null,
+            val query: String? = null,
             val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
-            val note: String?,
-            val expected: CompilerType?,
-            val problemHandler: ProblemHandler?,
+            val note: String? = null,
+            val expected: PType? = null,
+            val problemHandler: ProblemHandler? = null,
         ) : TestCase() {
 
             constructor(
                 name: String,
-                key: PartiQLTest.Key? = null,
-                query: String? = null,
-                catalog: String = "pql",
-                catalogPath: List<String> = emptyList(),
-                note: String? = null,
-                expected: StaticType? = null,
-                problemHandler: ProblemHandler? = null,
-            ) : this(name, key, query, catalog, catalogPath, note, expected?.let { fromStaticType(it).toCType() }, problemHandler)
+                query: String,
+                problemHandler: ProblemHandler
+            ) : this(name, key = null, query = query, problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: PType,
+                problemHandler: ProblemHandler
+            ) : this(name, key = null, query = query, expected = expected, problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                key: PartiQLTest.Key,
+                expected: PType,
+                problemHandler: ProblemHandler
+            ) : this(name, key = key, query = null, expected = expected, problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                key: PartiQLTest.Key,
+                catalog: String
+            ) : this(name, key = key, query = null, catalog = catalog)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: StaticType,
+                problemHandler: ProblemHandler
+            ) : this(name, query = query, expected = fromStaticType(expected).toCType(), problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: StaticType,
+            ) : this(name, query = query, expected = fromStaticType(expected).toCType())
+
+            constructor(
+                name: String,
+                query: String,
+                expected: PType,
+                catalog: String,
+                problemHandler: ProblemHandler
+            ) : this(name, key = null, query = query, catalog = catalog, expected = expected.toCType(), problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: StaticType,
+                catalog: String,
+                catalogPath: List<String>
+            ) : this(name, query = query, expected = fromStaticType(expected).toCType(), catalog = catalog, catalogPath = catalogPath)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: StaticType,
+                catalog: String,
+                catalogPath: List<String>,
+                problemHandler: ProblemHandler
+            ) : this(name, query = query, expected = fromStaticType(expected).toCType(), catalog = catalog, catalogPath = catalogPath, problemHandler = problemHandler)
 
             override fun toString(): String = "$name : ${query ?: key}"
         }
@@ -331,72 +403,72 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "cast decimal",
                 query = "CAST(1 AS DECIMAL)",
-                expected = StaticType.DECIMAL,
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1)",
                 query = "CAST(1 AS DECIMAL(1))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+                expected = PType.decimal(1, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1,0)",
                 query = "CAST(1 AS DECIMAL(1,0))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+                expected = PType.decimal(1, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1,1)",
                 query = "CAST(1 AS DECIMAL(1,1))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 1)),
+                expected = PType.decimal(1, 1),
             ),
             SuccessTestCase(
                 name = "cast decimal(38)",
                 query = "CAST(1 AS DECIMAL(38))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(38,0)",
                 query = "CAST(1 AS DECIMAL(38,0))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(38,38)",
                 query = "CAST(1 AS DECIMAL(38,38))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 38)),
+                expected = PType.decimal(38, 38),
             ),
             SuccessTestCase(
                 name = "cast decimal string",
                 query = "CAST('1' AS DECIMAL)",
-                expected = StaticType.DECIMAL,
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1) string",
                 query = "CAST('1' AS DECIMAL(1))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+                expected = PType.decimal(1, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1,0) string",
                 query = "CAST('1' AS DECIMAL(1,0))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+                expected = PType.decimal(1, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1,1) string",
                 query = "CAST('1' AS DECIMAL(1,1))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 1)),
+                expected = PType.decimal(1, 1),
             ),
             SuccessTestCase(
                 name = "cast decimal(38) string",
                 query = "CAST('1' AS DECIMAL(38))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(38,0) string",
                 query = "CAST('1' AS DECIMAL(38,0))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(38,38) string",
                 query = "CAST('1' AS DECIMAL(38,38))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 38)),
+                expected = PType.decimal(38, 38),
             ),
         )
 
@@ -715,7 +787,7 @@ internal class PlanTyperTestsPorted {
                 name = "DECIMAL_ARBITRARY AS DECIMAL",
                 key = key("cast-05"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL,
+                expected = PType.decimal(),
             ),
         )
 
@@ -867,92 +939,52 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "CROSS JOIN",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1, <<{ 'b': 2.0 }>> AS t2",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT4,
-                            "b" to StaticType.DECIMAL,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("b", PType.decimal(2, 1)),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT4,
-                            "b" to StaticType.DECIMAL,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("b", PType.decimal(2, 1))
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN",
                 query = "SELECT b, a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("b", StaticType.DECIMAL),
-                            StructType.Field("a", StaticType.INT4),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("b", PType.decimal(2, 1)),
+                        Field.of("a", PType.integer()),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN",
                 query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("a", PType.decimal(2, 1)),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN ALL",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("a", PType.decimal(2, 1)),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN ALL",
@@ -967,37 +999,21 @@ internal class PlanTyperTestsPorted {
                             <<{ 'a': 'hello, world' }>> AS t3
                         ON t3.a = 'hello'
                 """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.DECIMAL),
-                            StructType.Field("a", StaticType.STRING),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("a", PType.decimal(2, 1)),
+                        Field.of("a", PType.string()),
                     )
-                )
+                ),
             ),
             ErrorTestCase(
                 name = "LEFT JOIN Ambiguous Reference in ON",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON a = 3",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("a", PType.decimal(2, 1)),
                     )
                 ),
                 problemHandler = assertProblemExists(
@@ -2092,25 +2108,16 @@ internal class PlanTyperTestsPorted {
             ErrorTestCase(
                 name = "invalid exclude root",
                 key = key("exclude-34"),
-                expected = BagType(
-                    elementType = StructType(
-                        fields = mapOf(
-                            "a" to BagType(
-                                elementType = StructType(
-                                    fields = mapOf(
-                                        "b" to StaticType.INT4
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                expected = PType.bag(
+                    PType.row(
+                        Field.of(
+                            "a",
+                            PType.bag(
+                                PType.row(
+                                    Field.of("b", PType.integer())
                                 )
                             )
                         ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
                     )
                 ),
                 problemHandler = assertProblemExists(
@@ -2552,23 +2559,11 @@ internal class PlanTyperTestsPorted {
                 """,
                 catalog = "pql",
                 catalogPath = listOf("main"),
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "breed_descriptor" to StaticType.unionOf(
-                                StaticType.STRING,
-                                StaticType.INT4,
-                                StaticType.DECIMAL
-                            ),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("breed_descriptor", PType.dynamic()),
                     )
-                )
+                ),
             ),
             //
             SuccessTestCase(
@@ -2614,7 +2609,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-10"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL,
+                expected = PType.decimal(),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-11"),
@@ -2689,20 +2684,12 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-27"),
                 catalog = "pql",
-                expected = unionOf(
-                    StaticType.INT2,
-                    StaticType.INT4,
-                    StaticType.INT8,
-                    StaticType.INT,
-                    StaticType.DECIMAL,
-                    StaticType.STRING,
-                    StaticType.CLOB
-                ),
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-28"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB),
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-29"),
@@ -2778,12 +2765,12 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-43"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal(38, 5)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-44"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-45"),
@@ -2877,7 +2864,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-16"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL)
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-17"),
@@ -2906,22 +2893,22 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-02"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-03"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-04"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-05"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-06"),
@@ -2961,30 +2948,17 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-13"),
                 catalog = "pql",
-                expected = unionOf(
-                    StaticType.INT2,
-                    StaticType.INT4,
-                    StaticType.INT8,
-                    StaticType.INT,
-                    StaticType.DECIMAL
-                )
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-14"),
                 catalog = "pql",
-                expected = unionOf(
-                    StaticType.INT2,
-                    StaticType.INT4,
-                    StaticType.INT8,
-                    StaticType.INT,
-                    StaticType.DECIMAL,
-                    StaticType.STRING
-                )
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-15"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING)
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-16"),
@@ -3148,7 +3122,7 @@ internal class PlanTyperTestsPorted {
                 query = """
                     { 'aBc': 1, 'AbC': 2.0 }['AbC'];
                 """,
-                expected = StaticType.DECIMAL
+                expected = PType.decimal(2, 1)
             ),
             // This should fail because the Spec says tuple indexing MUST use a literal string or explicit cast.
             ErrorTestCase(
@@ -3313,22 +3287,14 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "AGGREGATE over DECIMALS",
                 query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StaticType.DECIMAL,
-                            "c" to StaticType.INT8,
-                            "s" to StaticType.DECIMAL,
-                            "m" to StaticType.DECIMAL,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.decimal(2, 1)),
+                        Field.of("c", PType.bigint()),
+                        Field.of("s", PType.decimal(38, 0)), // TODO: Check this
+                        Field.of("m", PType.decimal(38, 0)),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "AGGREGATE over nullable integers",
@@ -3662,35 +3628,28 @@ internal class PlanTyperTestsPorted {
                         { 'a': 5, 'b': NULL }
                     >> GROUP BY a
             """.trimIndent(),
-            expected = BagType(
-                StructType(
-                    fields = mapOf(
-                        "a" to StaticType.DECIMAL,
-                        "count_star" to StaticType.INT8,
-                        "count_a" to StaticType.INT8,
-                        "count_b" to StaticType.INT8,
-                        "sum_a" to StaticType.DECIMAL,
-                        "sum_b" to StaticType.DECIMAL,
-                        "min_a" to StaticType.DECIMAL,
-                        "min_b" to StaticType.DECIMAL,
-                        "max_a" to StaticType.DECIMAL,
-                        "max_b" to StaticType.DECIMAL,
-                        "avg_a" to StaticType.DECIMAL,
-                        "avg_b" to StaticType.DECIMAL,
-                    ),
-                    contentClosed = true,
-                    constraints = setOf(
-                        TupleConstraint.Open(false),
-                        TupleConstraint.UniqueAttrs(true),
-                        TupleConstraint.Ordered
-                    )
+            expected = PType.bag(
+                PType.row(
+                    Field.of("a", PType.decimal()),
+                    Field.of("count_star", PType.bigint()),
+                    Field.of("count_a", PType.bigint()),
+                    Field.of("count_b", PType.bigint()),
+                    Field.of("sum_a", PType.decimal()),
+                    Field.of("sum_b", PType.decimal()),
+                    Field.of("min_a", PType.decimal()),
+                    Field.of("min_b", PType.decimal()),
+                    Field.of("max_a", PType.decimal()),
+                    Field.of("max_b", PType.decimal()),
+                    Field.of("avg_a", PType.decimal()),
+                    Field.of("avg_b", PType.decimal()),
                 )
-            )
+            ),
         )
         runTest(tc)
     }
 
     @Test
+    @Disabled
     fun developmentTest() {
         val tc = SuccessTestCase(
             name = "DEV TEST",
@@ -4005,28 +3964,7 @@ internal class PlanTyperTestsPorted {
                 name = "Pets should not be accessible #2",
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM pets",
-                expected = BagType(
-                    unionOf(
-                        StructType(
-                            fields = emptyMap(),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = listOf(
-                                StructType.Field("_1", ANY)
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                    )
-                ),
+                expected = PType.bag(PType.dynamic()),
                 problemHandler = assertProblemExists(
                     PErrors.varRefNotFound(null, insensitive("pets"), emptyList())
                 )
@@ -4455,29 +4393,21 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "Non-tuples",
                 query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf("a" to ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL))),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.array()),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "Non-tuples in SELECT VALUE",
                 query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
-                expected =
-                BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
+                expected = PType.bag(PType.array())
             ),
             SuccessTestCase(
                 name = "SELECT VALUE",
                 query = "SELECT VALUE [1, 1.0] FROM <<>>",
-                expected =
-                BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
+                expected = PType.bag(PType.array())
             ),
             SuccessTestCase(
                 name = "Duplicate fields in struct",

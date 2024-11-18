@@ -25,22 +25,6 @@ internal val Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING = Function.static(
     Datum.string(result)
 }
 
-internal val Fn_TRIM_TRAILING_CHARS__SYMBOL_SYMBOL__SYMBOL = Function.static(
-
-    name = "trim_trailing_chars",
-    returns = PType.symbol(),
-    parameters = arrayOf(
-        Parameter("value", PType.symbol()),
-        Parameter("chars", PType.symbol()),
-    ),
-
-) { args ->
-    val value = args[0].string
-    val chars = args[1].string
-    val result = value.codepointTrimTrailing(chars)
-    Datum.symbol(result)
-}
-
 internal val Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB = Function.static(
 
     name = "trim_trailing_chars",

@@ -33,20 +33,6 @@ internal val Fn_EXISTS__LIST__BOOL = Function.static(
     Datum.bool(exists)
 }
 
-internal val Fn_EXISTS__SEXP__BOOL = Function.static(
-
-    name = "exists",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("container", PType.sexp()),
-    ),
-
-) { args ->
-    val container = args[0]
-    val exists = container.iterator().hasNext()
-    Datum.bool(exists)
-}
-
 internal val Fn_EXISTS__STRUCT__BOOL = Function.static(
 
     name = "exists",

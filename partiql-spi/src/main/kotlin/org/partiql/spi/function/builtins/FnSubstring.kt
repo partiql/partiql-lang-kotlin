@@ -114,41 +114,6 @@ internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = Function.static(
     Datum.string(result)
 }
 
-internal val Fn_SUBSTRING__SYMBOL_INT64__SYMBOL = Function.static(
-
-    name = "substring",
-    returns = PType.symbol(),
-    parameters = arrayOf(
-        Parameter("value", PType.symbol()),
-        Parameter("start", PType.integer()),
-    ),
-
-) { args ->
-    val value = args[0].string
-    val start = args[1].int
-    val result = value.codepointSubstring(start)
-    Datum.symbol(result)
-}
-
-internal val Fn_SUBSTRING__SYMBOL_INT32_INT32__SYMBOL = Function.static(
-
-    name = "substring",
-    returns = PType.symbol(),
-    parameters = arrayOf(
-        Parameter("value", PType.symbol()),
-        Parameter("start", PType.integer()),
-        Parameter("end", PType.integer()),
-    ),
-
-) { args ->
-    val value = args[0].string
-    val start = args[1].int
-    val end = args[1].int
-    if (end < 0) throw TypeCheckException()
-    val result = value.codepointSubstring(start, end)
-    Datum.symbol(result)
-}
-
 internal val Fn_SUBSTRING__CLOB_INT64__CLOB = Function.static(
 
     name = "substring",

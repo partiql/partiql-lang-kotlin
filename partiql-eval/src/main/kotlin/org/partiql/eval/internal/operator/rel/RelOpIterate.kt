@@ -23,7 +23,7 @@ internal class RelOpIterate(
                 close()
                 throw TypeCheckException()
             }
-            PType.Kind.ARRAY, PType.Kind.SEXP -> r.iterator()
+            PType.Kind.ARRAY -> r.iterator()
             else -> {
                 close()
                 throw TypeCheckException()

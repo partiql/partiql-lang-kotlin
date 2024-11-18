@@ -89,8 +89,8 @@ internal val Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = F
     name = "plus",
     returns = PType.decimal(),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("lhs", PType.decimal()),
-        @Suppress("DEPRECATION") Parameter("rhs", PType.decimal()),
+        Parameter("lhs", PType.decimal()),
+        Parameter("rhs", PType.decimal()),
     ),
 
 ) { args ->

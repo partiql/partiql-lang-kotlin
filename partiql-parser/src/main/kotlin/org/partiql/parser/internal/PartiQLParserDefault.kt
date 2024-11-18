@@ -1466,7 +1466,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitSequenceConstructor(ctx: GeneratedParser.SequenceConstructorContext) = translate(ctx) {
-            error("Sequence constructor not supported")
+            val expressions = visitOrEmpty<Expr>(ctx.expr())
+            exprArray(expressions)
         }
 
         private fun PathStep.copy(next: PathStep?) = when (this) {

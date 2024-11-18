@@ -81,7 +81,7 @@ public fun StringElement.toStaticType(): StaticType = when (textValue) {
     "int32" -> StaticType.INT4
     "int64" -> StaticType.INT8
     "int" -> StaticType.INT
-    "decimal" -> StaticType.DECIMAL
+    "decimal" -> DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)) // The default decimal type.
     "float32" -> StaticType.FLOAT
     "float64" -> StaticType.FLOAT
     "string" -> StaticType.STRING

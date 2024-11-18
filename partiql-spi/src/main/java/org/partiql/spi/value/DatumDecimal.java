@@ -10,7 +10,6 @@ import java.math.BigDecimal;
  * <p></p>
  * This is specifically for:
  * {@link PType.Kind#DECIMAL},
- * {@link PType.Kind#DECIMAL_ARBITRARY}
  */
 class DatumDecimal implements Datum {
 

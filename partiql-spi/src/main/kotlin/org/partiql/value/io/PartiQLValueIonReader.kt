@@ -23,10 +23,8 @@ import org.partiql.value.intValue
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
-import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
-import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
 import java.io.ByteArrayInputStream
@@ -124,15 +122,7 @@ internal class PartiQLValueIonReader(
                 }
             }
 
-            IonType.SYMBOL -> {
-                if (reader.isNullValue) {
-                    symbolValue(null, reader.typeAnnotations.toList())
-                } else {
-                    symbolValue(reader.stringValue(), reader.typeAnnotations.toList())
-                }
-            }
-
-            IonType.STRING -> {
+            IonType.STRING, IonType.SYMBOL -> {
                 if (reader.isNullValue) {
                     stringValue(null, reader.typeAnnotations.toList())
                 } else {
@@ -156,7 +146,7 @@ internal class PartiQLValueIonReader(
                 }
             }
 
-            IonType.LIST -> {
+            IonType.LIST, IonType.SEXP -> {
                 val annotations = reader.typeAnnotations.toList()
                 reader.stepIn()
                 val elements = mutableListOf<PartiQLValue>().also { elements ->
@@ -166,18 +156,6 @@ internal class PartiQLValueIonReader(
                 }
                 reader.stepOut()
                 listValue(elements, annotations)
-            }
-
-            IonType.SEXP -> {
-                val annotation = reader.typeAnnotations.toList()
-                reader.stepIn()
-                val elements = mutableListOf<PartiQLValue>().also { elements ->
-                    reader.loadEachValue {
-                        elements.add(fromIon(reader))
-                    }
-                }
-                reader.stepOut()
-                sexpValue(elements, annotation)
             }
 
             IonType.STRUCT -> {
@@ -306,25 +284,7 @@ internal class PartiQLValueIonReader(
                 }
             }
 
-            IonType.SYMBOL -> {
-                when (lastAnnotation) {
-                    PARTIQL_ANNOTATION.MISSING_ANNOTATION -> throw IllegalArgumentException("MISSING_ANNOTATION with Symbol Value")
-                    PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Symbol Value")
-                    PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Symbol Value")
-                    PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Symbol Value")
-                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Symbol Value")
-                    PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Symbol Value")
-                    null -> {
-                        if (reader.isNullValue) {
-                            symbolValue(null, annotations)
-                        } else {
-                            symbolValue(reader.stringValue(), annotations)
-                        }
-                    }
-                }
-            }
-
-            IonType.STRING -> {
+            IonType.STRING, IonType.SYMBOL -> {
                 when (lastAnnotation) {
                     PARTIQL_ANNOTATION.MISSING_ANNOTATION -> throw IllegalArgumentException("MISSING_ANNOTATION with String Value")
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with String Value")
@@ -426,7 +386,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Not yet implemented")
                     null -> {
                         if (reader.isNullValue) {
-                            sexpValue<PartiQLValue>(null, annotations)
+                            listValue(null, annotations)
                         } else {
                             reader.stepIn()
                             val elements = mutableListOf<PartiQLValue>().also { elements ->
@@ -435,7 +395,7 @@ internal class PartiQLValueIonReader(
                                 }
                             }
                             reader.stepOut()
-                            sexpValue(elements, annotations)
+                            listValue(elements, annotations)
                         }
                     }
                 }

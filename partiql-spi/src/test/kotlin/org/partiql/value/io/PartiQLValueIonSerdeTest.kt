@@ -33,10 +33,8 @@ import org.partiql.value.intValue
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
-import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
-import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
 import java.io.ByteArrayInputStream
@@ -115,11 +113,12 @@ class PartiQLValueIonSerdeTest {
                 timestampValue(null),
                 ION.newNullTimestamp()
             ),
+            // TODO: Potentially handle this with the impl of VARIANT
             // symbol.null
-            roundTrip(
-                symbolValue(null),
-                ION.newNullSymbol()
-            ),
+//            roundTrip(
+//                symbolValue(null),
+//                ION.newNullSymbol()
+//            ),
             // string.null
             roundTrip(
                 stringValue(null),
@@ -140,11 +139,12 @@ class PartiQLValueIonSerdeTest {
                 listValue<PartiQLValue>(null),
                 ION.newNullList()
             ),
+            // TODO: Potentially handle this with the impl of VARIANT
             // Sexp.null
-            roundTrip(
-                sexpValue<PartiQLValue>(null),
-                ION.newNullSexp()
-            ),
+//            roundTrip(
+//                sexpValue<PartiQLValue>(null),
+//                ION.newNullSexp()
+//            ),
             // struct.null
             roundTrip(
                 structValue<PartiQLValue>(null),
@@ -246,14 +246,15 @@ class PartiQLValueIonSerdeTest {
                 stringValue("word\nword"),
                 ION.newString("word\nword")
             ),
-            roundTrip(
-                symbolValue("x"),
-                ION.newSymbol("x"),
-            ),
-            roundTrip(
-                symbolValue("f.x"),
-                ION.newSymbol("f.x"),
-            ),
+            // TODO: Potentially handle this with the impl of variant
+//            roundTrip(
+//                symbolValue("x"),
+//                ION.newSymbol("x"),
+//            ),
+//            roundTrip(
+//                symbolValue("f.x"),
+//                ION.newSymbol("f.x"),
+//            ),
             roundTrip(
                 dateValue(DateTimeValue.date(2023, 6, 1)),
                 ION.newEmptyStruct().apply {
@@ -367,10 +368,11 @@ class PartiQLValueIonSerdeTest {
                 listValue<PartiQLValue>(),
                 ION.newEmptyList()
             ),
-            roundTrip(
-                sexpValue<PartiQLValue>(),
-                ION.newEmptySexp()
-            ),
+            // TODO: Do we want to cover this in the impl of variant?
+//            roundTrip(
+//                sexpValue<PartiQLValue>(),
+//                ION.newEmptySexp()
+//            ),
             oneWayTrip(
                 bagValue(
                     int32Value(1),
@@ -400,23 +402,24 @@ class PartiQLValueIonSerdeTest {
                     ION.newString("c")
                 )
             ),
-            oneWayTrip(
-                sexpValue(
-                    int32Value(1),
-                    int32Value(2),
-                    int32Value(3),
-                ),
-                ION.newSexp(
-                    ION.newInt(1),
-                    ION.newInt(2),
-                    ION.newInt(3)
-                ),
-                sexpValue(
-                    intValue(BigInteger.ONE),
-                    intValue(BigInteger.valueOf(2L)),
-                    intValue(BigInteger.valueOf(3L)),
-                )
-            ),
+            // TODO: Potentially handle this with VARIANT
+//            oneWayTrip(
+//                sexpValue(
+//                    int32Value(1),
+//                    int32Value(2),
+//                    int32Value(3),
+//                ),
+//                ION.newSexp(
+//                    ION.newInt(1),
+//                    ION.newInt(2),
+//                    ION.newInt(3)
+//                ),
+//                sexpValue(
+//                    intValue(BigInteger.ONE),
+//                    intValue(BigInteger.valueOf(2L)),
+//                    intValue(BigInteger.valueOf(3L)),
+//                )
+//            ),
             oneWayTrip(
                 structValue(
                     "a" to int32Value(1),

@@ -86,6 +86,7 @@ import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
+import org.partiql.value.DecimalValue
 import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
@@ -125,13 +126,24 @@ internal object RexConverter {
             throw IllegalArgumentException("unsupported rex $node")
 
         override fun visitExprLit(node: ExprLit, context: Env): Rex {
-            val type = CompilerType(
-                _delegate = node.value.type.toPType(),
+            val type = when (val value = node.value) {
+                // Specifically handle the lack of an infinite precision/scale
+                // TODO: PartiQLValue won't be in AST soon
+                is DecimalValue -> {
+                    when (val decimal = value.value) {
+                        null -> PType.decimal()
+                        else -> PType.decimal(decimal.precision(), decimal.scale())
+                    }
+                }
+                else -> value.type.toPType()
+            }
+            val cType = CompilerType(
+                _delegate = type,
                 isNullValue = node.value.isNull,
                 isMissingValue = node.value is MissingValue
             )
             val op = rexOpLit(node.value)
-            return rex(type, op)
+            return rex(cType, op)
         }
 
         /**
@@ -933,7 +945,6 @@ internal object RexConverter {
                 }
                 DataType.CLOB -> assertGtZeroAndCreate(PType.Kind.CLOB, "length", type.length ?: Int.MAX_VALUE, PType::clob)
                 DataType.STRING -> PType.string()
-                DataType.SYMBOL -> PType.symbol()
                 // <binary large object string type>
                 // TODO BINARY_LARGE_OBJECT
                 DataType.BLOB -> assertGtZeroAndCreate(PType.Kind.BLOB, "length", type.length ?: Int.MAX_VALUE, PType::blob)
@@ -1005,7 +1016,6 @@ internal object RexConverter {
                 // <collection type>
                 DataType.LIST -> PType.array()
                 DataType.BAG -> PType.bag()
-                DataType.SEXP -> PType.sexp()
                 // <user defined type>
                 DataType.USER_DEFINED -> TODO("Custom type not supported ")
                 else -> error("Unsupported DataType type: $type")
@@ -1069,7 +1079,6 @@ internal object RexConverter {
         private val STRUCT: CompilerType = CompilerType(PType.struct())
         private val BAG: CompilerType = CompilerType(PType.bag())
         private val LIST: CompilerType = CompilerType(PType.array())
-        private val SEXP: CompilerType = CompilerType(PType.sexp())
         private val INT: CompilerType = CompilerType(PType.numeric())
         private val INT4: CompilerType = CompilerType(PType.integer())
         private val TIMESTAMP: CompilerType = CompilerType(PType.timestamp(6))

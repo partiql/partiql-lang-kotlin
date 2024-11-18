@@ -16,7 +16,7 @@ internal class RelOpScanPermissive(
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Row()))
         records = when (r.type.kind) {
-            PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
+            PType.Kind.BAG, PType.Kind.ARRAY -> RecordValueIterator(r.iterator())
             else -> iterator { yield(Row(arrayOf(r))) }
         }
     }

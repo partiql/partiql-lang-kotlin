@@ -50,18 +50,6 @@ internal val Fn_TRIM__STRING__STRING = Function.static(
     Datum.string(result)
 }
 
-internal val Fn_TRIM__SYMBOL__SYMBOL = Function.static(
-
-    name = "trim",
-    returns = PType.symbol(),
-    parameters = arrayOf(Parameter("value", PType.symbol())),
-
-) { args ->
-    val value = args[0].string
-    val result = value.codepointTrim()
-    Datum.symbol(result)
-}
-
 internal val Fn_TRIM__CLOB__CLOB = Function.static(
 
     name = "trim",

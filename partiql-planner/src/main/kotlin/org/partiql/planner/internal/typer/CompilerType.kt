@@ -87,7 +87,6 @@ internal class CompilerType(
             Kind.REAL,
             Kind.DOUBLE,
             Kind.DECIMAL,
-            Kind.DECIMAL_ARBITRARY
         )
     }
 

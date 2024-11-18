@@ -3,11 +3,11 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.internal.typer.accumulateSuccessNullCall
-import org.partiql.planner.util.allCollectionType
-import org.partiql.planner.util.allSupportedType
+import org.partiql.planner.internal.typer.accumulateSuccess
+import org.partiql.planner.util.allCollectionPType
+import org.partiql.planner.util.allSupportedPType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.StaticType
+import org.partiql.types.PType
 import java.util.stream.Stream
 
 class OpInTest : PartiQLTyperTestBase() {
@@ -20,17 +20,17 @@ class OpInTest : PartiQLTyperTestBase() {
 
         val argsMap = buildMap {
             val successArgs =
-                allSupportedType
+                allSupportedPType
                     .map { t -> listOf(t) }
                     .toSet()
 
-            successArgs.forEach { args: List<StaticType> ->
-                accumulateSuccessNullCall(StaticType.BOOL, args)
+            successArgs.forEach { args: List<PType> ->
+                accumulateSuccess(PType.bool(), args)
             }
-            put(TestResult.Failure, emptySet<List<StaticType>>())
+            put(TestResult.Failure, emptySet<List<PType>>())
         }
 
-        return super.testGen("in", tests, argsMap)
+        return super.testGenPType("in", tests, argsMap)
     }
 
     @TestFactory
@@ -41,22 +41,22 @@ class OpInTest : PartiQLTyperTestBase() {
 
         val argsMap = buildMap {
             val successArgs = cartesianProduct(
-                allSupportedType,
-                allCollectionType
+                allSupportedPType,
+                allCollectionPType
             )
             val failureArgs = cartesianProduct(
-                allSupportedType,
-                allSupportedType,
+                allSupportedPType,
+                allSupportedPType,
             ).filterNot {
                 successArgs.contains(it)
             }.toSet()
 
-            successArgs.forEach { args: List<StaticType> ->
-                accumulateSuccessNullCall(StaticType.BOOL, args)
+            successArgs.forEach { args: List<PType> ->
+                accumulateSuccess(PType.bool(), args)
             }
             put(TestResult.Failure, failureArgs)
         }
 
-        return super.testGen("in", tests, argsMap)
+        return super.testGenPType("in", tests, argsMap)
     }
 }

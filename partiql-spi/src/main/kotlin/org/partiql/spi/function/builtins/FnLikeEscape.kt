@@ -43,36 +43,6 @@ internal val Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL = Function.static(
     }
 }
 
-internal val Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL = Function.static(
-
-    name = "like_escape",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("value", PType.symbol()),
-        Parameter("pattern", PType.symbol()),
-        Parameter("escape", PType.symbol()),
-    ),
-
-) { args ->
-    val value = args[0].string
-    val pattern = args[1].string
-    val escape = args[2].string
-    val (patternString, escapeChar) =
-        try {
-            checkPattern(pattern, escape)
-        } catch (e: IllegalStateException) {
-            throw TypeCheckException()
-        }
-    val likeRegexPattern = when {
-        patternString.isEmpty() -> Pattern.compile("")
-        else -> parsePattern(patternString, escapeChar)
-    }
-    when (PatternUtils.matchRegexPattern(value, likeRegexPattern)) {
-        true -> Datum.bool(true)
-        else -> Datum.bool(false)
-    }
-}
-
 internal val Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL = Function.static(
 
     name = "like_escape",

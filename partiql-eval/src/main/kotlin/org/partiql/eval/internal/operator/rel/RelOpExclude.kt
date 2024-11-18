@@ -81,7 +81,7 @@ internal class RelOpExclude(
      */
     private fun Datum.exclude(exclusions: List<Exclusion.Item>): Datum = when (this.type.kind) {
         PType.Kind.ROW, PType.Kind.STRUCT -> this.structExclude(exclusions)
-        PType.Kind.BAG, PType.Kind.ARRAY, PType.Kind.SEXP -> this.collExclude(exclusions)
+        PType.Kind.BAG, PType.Kind.ARRAY -> this.collExclude(exclusions)
         else -> this
     }
 
@@ -140,7 +140,6 @@ internal class RelOpExclude(
         return when (type.kind) {
             PType.Kind.ARRAY -> Datum.array(coll)
             PType.Kind.BAG -> Datum.bag(coll)
-            PType.Kind.SEXP -> Datum.sexp(coll)
             else -> error("Collection type required")
         }
     }
@@ -173,7 +172,7 @@ internal class RelOpExclude(
             // apply exclusions to subtree
             var value = element
             // apply collection index exclusions at deeper levels for lists and sexps
-            if (type.kind == PType.Kind.ARRAY || type.kind == PType.Kind.SEXP) {
+            if (type.kind == PType.Kind.ARRAY) {
                 branches.getCollIndex(i)?.let {
                     value = value.exclude(it.getItems())
                 }

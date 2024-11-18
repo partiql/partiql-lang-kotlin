@@ -21,18 +21,6 @@ internal val Fn_TRIM_LEADING__STRING__STRING = Function.static(
     Datum.string(result)
 }
 
-internal val Fn_TRIM_LEADING__SYMBOL__SYMBOL = Function.static(
-
-    name = "trim_leading",
-    returns = PType.symbol(),
-    parameters = arrayOf(Parameter("value", PType.symbol())),
-
-) { args ->
-    val value = args[0].string
-    val result = value.codepointTrimLeading()
-    Datum.symbol(result)
-}
-
 internal val Fn_TRIM_LEADING__CLOB__CLOB = Function.static(
 
     name = "trim_leading",

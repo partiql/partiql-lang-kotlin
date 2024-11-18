@@ -88,8 +88,8 @@ internal val Fn_GT__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL = Function.static(
     name = "gt",
     returns = PType.bool(),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("lhs", PType.decimal()),
-        @Suppress("DEPRECATION") Parameter("rhs", PType.decimal()),
+        Parameter("lhs", PType.decimal()),
+        Parameter("rhs", PType.decimal()),
     ),
 
 ) { args ->
@@ -135,21 +135,6 @@ internal val Fn_GT__STRING_STRING__BOOL = Function.static(
     parameters = arrayOf(
         Parameter("lhs", PType.string()),
         Parameter("rhs", PType.string()),
-    ),
-
-) { args ->
-    val lhs = args[0]
-    val rhs = args[1]
-    Datum.bool(lhs.string > rhs.string)
-}
-
-internal val Fn_GT__SYMBOL_SYMBOL__BOOL = Function.static(
-
-    name = "gt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.symbol()),
-        Parameter("rhs", PType.symbol()),
     ),
 
 ) { args ->

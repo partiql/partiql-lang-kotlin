@@ -25,22 +25,6 @@ internal val Fn_POSITION__STRING_STRING__INT64 = Function.static(
     Datum.bigint(result.toLong())
 }
 
-internal val Fn_POSITION__SYMBOL_SYMBOL__INT64 = Function.static(
-
-    name = "position",
-    returns = PType.bigint(),
-    parameters = arrayOf(
-        Parameter("probe", PType.symbol()),
-        Parameter("value", PType.symbol()),
-    ),
-
-) { args ->
-    val s1 = args[0].string
-    val s2 = args[1].string
-    val result = s2.codepointPosition(s1)
-    Datum.bigint(result.toLong())
-}
-
 internal val Fn_POSITION__CLOB_CLOB__INT64 = Function.static(
 
     name = "position",

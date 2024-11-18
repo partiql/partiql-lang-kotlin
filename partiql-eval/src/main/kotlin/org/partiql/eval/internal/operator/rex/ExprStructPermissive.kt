@@ -32,7 +32,7 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
                 return null
             }
             return when (this.type.kind) {
-                PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
+                PType.Kind.STRING, PType.Kind.CHAR -> this.string
                 else -> null
             }
         }

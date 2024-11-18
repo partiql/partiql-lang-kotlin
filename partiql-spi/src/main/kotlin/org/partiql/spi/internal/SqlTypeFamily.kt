@@ -45,7 +45,6 @@ internal class SqlTypeFamily private constructor(
                 Kind.CHAR,
                 Kind.VARCHAR,
                 Kind.STRING,
-                Kind.SYMBOL,
                 Kind.CLOB,
             )
         )
@@ -55,7 +54,6 @@ internal class SqlTypeFamily private constructor(
             preferred = PType.bag(),
             members = setOf(
                 Kind.ARRAY,
-                Kind.SEXP,
                 Kind.BAG
             )
         )
@@ -72,7 +70,6 @@ internal class SqlTypeFamily private constructor(
                 Kind.REAL,
                 Kind.DOUBLE,
                 Kind.DECIMAL,
-                Kind.DECIMAL_ARBITRARY
             )
         )
     }
