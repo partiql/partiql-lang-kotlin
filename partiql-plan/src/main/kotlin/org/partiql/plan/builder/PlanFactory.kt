@@ -400,19 +400,6 @@ public interface PlanFactory {
         RexCallDynamicImpl(name, functions, args)
 
     /**
-     * Create a [RexCallDynamic] instance.
-     *
-     * @param name TODO
-     * @param functions TODO
-     * @param args TODO
-     * @param type specifies the output type of the dynamic dispatch. This may be specified if all candidate functions
-     * return the same type.
-     * @return TODO
-     */
-    public fun rexCallDynamic(name: String, functions: List<Function>, args: List<Rex>, type: PType): RexCallDynamic =
-        RexCallDynamicImpl(name, functions, args, type)
-
-    /**
      * Create a [RexCase] instance for a searched case-when with dynamic type.
      *
      * @param branches

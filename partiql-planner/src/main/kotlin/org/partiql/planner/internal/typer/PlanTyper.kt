@@ -801,13 +801,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * @return
          */
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: CompilerType?): Rex {
-            // TODO pass argument types to compute the return type
-            val argTypes = node.args.map { it.type }
-            val types = node.candidates
-                .mapNotNull { it.fn.signature.getInstance(argTypes.toTypedArray())?.returns }
-                .toMutableSet()
-            // TODO: Should this always be DYNAMIC?
-            return Rex(type = CompilerType(anyOf(types) ?: PType.dynamic()), op = node)
+            return Rex(type = CompilerType(PType.dynamic()), op = node)
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: CompilerType?): Rex {
