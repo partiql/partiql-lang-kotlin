@@ -22,6 +22,16 @@ public class PErrorException extends PErrorListenerException {
         this.error = error;
     }
 
+    /**
+     * Creates an exception that holds an error.
+     * @param error the error that is wrapped
+     * @param cause the cause of the error
+     */
+    public PErrorException(@NotNull PError error, @NotNull Throwable cause) {
+        super(cause);
+        this.error = error;
+    }
+
     @Override
     public String toString() {
         return "ErrorException{" +

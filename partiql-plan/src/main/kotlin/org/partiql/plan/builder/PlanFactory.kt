@@ -391,9 +391,10 @@ public interface PlanFactory {
     /**
      * Create a [RexCallDynamic] instance.
      *
-     * @param functions
-     * @param args
-     * @return
+     * @param name TODO
+     * @param functions TODO
+     * @param args TODO
+     * @return TODO
      */
     public fun rexCallDynamic(name: String, functions: List<Function>, args: List<Rex>): RexCallDynamic =
         RexCallDynamicImpl(name, functions, args)

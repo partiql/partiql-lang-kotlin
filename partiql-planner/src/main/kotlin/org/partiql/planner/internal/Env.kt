@@ -134,7 +134,6 @@ internal class Env(private val session: Session) {
 
         // 2. Search along the PATH.
         // TODO
-
         val match = FnResolver.resolve(variants, args.map { it.type })
         // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {
@@ -148,30 +147,24 @@ internal class Env(private val session: Session) {
                         fn = refFn(
                             catalog = catalog.getName(),
                             name = Name.of(name),
-                            signature = it.function,
+                            signature = it,
                         ),
-                        coercions = it.mapping.toList(),
+                        coercions = emptyList(), // TODO: Remove this from the plan
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper
                 Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Dynamic(args, candidates))
             }
             is FnMatch.Static -> {
-                // Create an internal typed reference
-                val ref = refFn(
-                    catalog = catalog.getName(),
-                    name = Name.of(name),
-                    signature = match.function,
-                )
                 // Apply the coercions as explicit casts
                 val coercions: List<Rex> = args.mapIndexed { i, arg ->
                     when (val cast = match.mapping[i]) {
                         null -> arg
-                        else -> Rex(CompilerType(PType.dynamic()), Rex.Op.Cast.Resolved(cast, arg))
+                        else -> Rex(cast.target, Rex.Op.Cast.Resolved(cast, arg))
                     }
                 }
                 // Rewrite as a static call to be typed by PlanTyper
-                Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Static(ref, coercions))
+                Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Static(match.function, coercions))
             }
         }
     }

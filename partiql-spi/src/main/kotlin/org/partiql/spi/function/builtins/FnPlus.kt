@@ -8,123 +8,87 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-// TODO: Handle Overflow
-internal val Fn_PLUS__INT8_INT8__INT8 = Function.static(
+internal object FnPlus : ArithmeticDiadicOperator() {
+    override fun getName(): String {
+        return "plus"
+    }
 
-    name = "plus",
-    returns = PType.tinyint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.tinyint()),
-        Parameter("rhs", PType.tinyint()),
-    ),
+    override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {
+        return basic(PType.tinyint()) { args ->
+            @Suppress("DEPRECATION") val arg0 = args[0].byte
+            @Suppress("DEPRECATION") val arg1 = args[1].byte
+            Datum.tinyint((arg0 + arg1).toByte())
+        }
+    }
 
-) { args ->
-    @Suppress("DEPRECATION") val arg0 = args[0].byte
-    @Suppress("DEPRECATION") val arg1 = args[1].byte
-    Datum.tinyint((arg0 + arg1).toByte())
-}
+    override fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Function.Instance {
+        return basic(PType.smallint()) { args ->
+            val arg0 = args[0].short
+            val arg1 = args[1].short
+            Datum.smallint((arg0 + arg1).toShort())
+        }
+    }
 
-internal val Fn_PLUS__INT16_INT16__INT16 = Function.static(
+    override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Function.Instance {
+        return basic(PType.integer()) { args ->
+            val arg0 = args[0].int
+            val arg1 = args[1].int
+            Datum.integer(arg0 + arg1)
+        }
+    }
 
-    name = "plus",
-    returns = PType.smallint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.smallint()),
-        Parameter("rhs", PType.smallint()),
-    ),
+    override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Function.Instance {
+        return basic(PType.bigint()) { args ->
+            val arg0 = args[0].long
+            val arg1 = args[1].long
+            Datum.bigint(arg0 + arg1)
+        }
+    }
 
-) { args ->
-    val arg0 = args[0].short
-    val arg1 = args[1].short
-    Datum.smallint((arg0 + arg1).toShort())
-}
+    // TODO: Probably remove this if we don't expose NUMERIC
+    override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
+        return basic(PType.numeric()) { args ->
+            val arg0 = args[0].bigInteger
+            val arg1 = args[1].bigInteger
+            Datum.numeric(arg0 + arg1)
+        }
+    }
 
-internal val Fn_PLUS__INT32_INT32__INT32 = Function.static(
+    /**
+     * Precision and scale calculation:
+     * P = max(s1, s2) + max(p1 - s1, p2 - s2) + 1
+     * S = max(s1, s2)
+     */
+    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
+        val p = Math.min(38, Math.max(decimalLhs.scale, decimalRhs.scale) + Math.max(decimalLhs.precision - decimalLhs.scale, decimalRhs.precision - decimalRhs.scale) + 1)
+        val s = Math.min(38, Math.max(decimalLhs.scale, decimalRhs.scale))
+        return Function.instance(
+            name = "plus",
+            returns = PType.decimal(p, s),
+            parameters = arrayOf(
+                Parameter("lhs", decimalLhs),
+                Parameter("rhs", decimalRhs),
+            )
+        ) { args ->
+            val arg0 = args[0].bigDecimal
+            val arg1 = args[1].bigDecimal
+            Datum.decimal(arg0 + arg1, p, s)
+        }
+    }
 
-    name = "plus",
-    returns = PType.integer(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.integer()),
-        Parameter("rhs", PType.integer()),
-    ),
+    override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {
+        return basic(PType.real()) { args ->
+            val arg0 = args[0].float
+            val arg1 = args[1].float
+            Datum.real(arg0 + arg1)
+        }
+    }
 
-) { args ->
-    val arg0 = args[0].int
-    val arg1 = args[1].int
-    Datum.integer(arg0 + arg1)
-}
-
-internal val Fn_PLUS__INT64_INT64__INT64 = Function.static(
-
-    name = "plus",
-    returns = PType.bigint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.bigint()),
-        Parameter("rhs", PType.bigint()),
-    ),
-
-) { args ->
-    val arg0 = args[0].long
-    val arg1 = args[1].long
-    Datum.bigint(arg0 + arg1)
-}
-
-internal val Fn_PLUS__INT_INT__INT = Function.static(
-
-    name = "plus",
-    returns = PType.numeric(),
-    parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("lhs", PType.numeric()),
-        @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
-    ),
-
-) { args ->
-    val arg0 = args[0].bigInteger
-    val arg1 = args[1].bigInteger
-    Datum.numeric(arg0 + arg1)
-}
-
-internal val Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
-
-    name = "plus",
-    returns = PType.decimal(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.decimal()),
-        Parameter("rhs", PType.decimal()),
-    ),
-
-) { args ->
-    val arg0 = args[0].bigDecimal
-    val arg1 = args[1].bigDecimal
-    Datum.decimal(arg0 + arg1)
-}
-
-internal val Fn_PLUS__FLOAT32_FLOAT32__FLOAT32 = Function.static(
-
-    name = "plus",
-    returns = PType.real(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.real()),
-        Parameter("rhs", PType.real()),
-    ),
-
-) { args ->
-    val arg0 = args[0].float
-    val arg1 = args[1].float
-    Datum.real(arg0 + arg1)
-}
-
-internal val Fn_PLUS__FLOAT64_FLOAT64__FLOAT64 = Function.static(
-
-    name = "plus",
-    returns = PType.doublePrecision(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.doublePrecision()),
-        Parameter("rhs", PType.doublePrecision()),
-    ),
-
-) { args ->
-    val arg0 = args[0].double
-    val arg1 = args[1].double
-    Datum.doublePrecision(arg0 + arg1)
+    override fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Function.Instance {
+        return basic(PType.doublePrecision()) { args ->
+            val arg0 = args[0].double
+            val arg1 = args[1].double
+            Datum.doublePrecision(arg0 + arg1)
+        }
+    }
 }

@@ -42,15 +42,15 @@ internal object FnResolver {
         // 1. Look for exact match
         for (candidate in candidates) {
             if (candidate.matchesExactly(args)) {
-                return FnMatch.Static(candidate, arrayOfNulls(args.size))
+                val fn = candidate.getInstance(args.toTypedArray()) ?: error("This shouldn't have happened. Matching exactly should produce a function instance.")
+                return FnMatch.Static(fn, arrayOfNulls(args.size))
             }
         }
 
         // 2. If there are DYNAMIC arguments, return all candidates
         val isDynamic = args.any { it.kind == Kind.DYNAMIC }
         if (isDynamic) {
-            val matches = match(candidates, args).ifEmpty { return null }
-            val orderedMatches = matches.sortedWith(MatchResultComparator).map { it.match }
+            val orderedMatches = candidates.sortedWith(FnComparator)
             return FnMatch.Dynamic(orderedMatches)
         }
 
@@ -62,13 +62,17 @@ internal object FnResolver {
         // 3. Discard functions that cannot be matched (via implicit coercion or exact matches)
         val invocableMatches = match(candidates, args).ifEmpty { return null }
         if (invocableMatches.size == 1) {
-            return invocableMatches.first().match
+            val match = invocableMatches.first()
+            val fn = match.match.getInstance(args.toTypedArray()) ?: return null
+            return FnMatch.Static(fn, match.mapping)
         }
 
         // 4. Run through all candidates and keep those with the most exact matches on input types.
         val matches = matchOn(invocableMatches) { it.numberOfExactInputTypes }
         if (matches.size == 1) {
-            return matches.first().match
+            val match = matches.first()
+            val fn = match.match.getInstance(args.toTypedArray()) ?: return null
+            return FnMatch.Static(fn, match.mapping)
         }
 
         // TODO: Do we care about preferred types? This is a PostgreSQL concept.
@@ -76,7 +80,10 @@ internal object FnResolver {
 
         // 6. Find the highest precedence one. NOTE: This is a remnant of the previous implementation. Whether we want
         //  to keep this is up to us.
-        return matches.sortedWith(MatchResultComparator).first().match
+        val match = matches.sortedWith(MatchResultComparator).first()
+        val fn = match.match
+        val instance = fn.getInstance(args.toTypedArray()) ?: return null
+        return FnMatch.Static(instance, match.mapping)
     }
 
     /**
@@ -117,11 +124,12 @@ internal object FnResolver {
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
     private fun Function.matchesExactly(args: List<CompilerType>): Boolean {
-        val parameters = getParameters()
+        val instance = getInstance(args.toTypedArray()) ?: return false
+        val parameters = instance.parameters
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.getMatch(a) != a) return false
+            if (p != a) return false
         }
         return true
     }
@@ -133,7 +141,8 @@ internal object FnResolver {
      * @return
      */
     private fun Function.match(args: List<CompilerType>): MatchResult? {
-        val parameters = getParameters()
+        val instance = this.getInstance(args.toTypedArray()) ?: return null
+        val parameters = instance.parameters
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         var exactInputTypes = 0
         for (i in args.indices) {
@@ -143,31 +152,34 @@ internal object FnResolver {
             }
             // check match
             val p = parameters[i]
-            val m = p.getMatch(a)
             when {
-                m == null -> return null // short-circuit
-                m == a -> exactInputTypes++
-                else -> mapping[i] = coercion(a, m)
+                p == a -> exactInputTypes++
+                else -> mapping[i] = coercion(a, p) ?: return null
             }
         }
         return MatchResult(
-            FnMatch.Static(this, mapping),
+            this,
+            mapping,
             exactInputTypes,
         )
     }
 
-    private fun coercion(arg: PType, target: PType): Ref.Cast {
-        return Ref.Cast(arg.toCType(), target.toCType(), Ref.Cast.Safety.COERCION, true)
+    private fun coercion(arg: PType, target: PType): Ref.Cast? {
+        return when (CoercionFamily.canCoerce(arg, target)) {
+            true -> Ref.Cast(arg.toCType(), target.toCType(), Ref.Cast.Safety.COERCION, true)
+            false -> return null
+        }
     }
 
     private class MatchResult(
-        val match: FnMatch.Static,
+        val match: Function,
+        val mapping: Array<Ref.Cast?>,
         val numberOfExactInputTypes: Int,
     )
 
     private object MatchResultComparator : Comparator<MatchResult> {
         override fun compare(o1: MatchResult, o2: MatchResult): Int {
-            return FnComparator.reversed().compare(o1.match.function, o2.match.function)
+            return FnComparator.reversed().compare(o1.match, o2.match)
         }
     }
 }

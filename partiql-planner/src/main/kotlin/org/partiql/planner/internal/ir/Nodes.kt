@@ -442,12 +442,11 @@ internal data class Rex(
             }
 
             internal data class Static(
-                @JvmField internal val fn: Ref.Fn,
+                @JvmField internal val fn: Function.Instance,
                 @JvmField internal val args: List<Rex>,
             ) : Call() {
                 public override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
-                    kids.add(fn)
                     kids.addAll(args)
                     kids.filterNotNull()
                 }

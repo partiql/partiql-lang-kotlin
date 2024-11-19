@@ -23,6 +23,7 @@ internal val Fn_IS_MISSING__ANY__BOOL = object : Function {
      * IS MISSING implementation.
      */
     private var instance = object : Function.Instance(
+        name,
         parameters = arrayOf(PType.dynamic()),
         returns = PType.bool(),
         isNullCall = false,

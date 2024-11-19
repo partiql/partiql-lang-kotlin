@@ -119,7 +119,7 @@ internal object SqlTypes {
      * ```
      */
     private fun areAssignableNumberTypes(input: PType, target: PType): Boolean {
-        return input in SqlTypeFamily.NUMERIC && target in SqlTypeFamily.NUMERIC
+        return input in SqlTypeFamily.NUMBER && target in SqlTypeFamily.NUMBER
     }
 
     /**

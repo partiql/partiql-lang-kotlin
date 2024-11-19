@@ -11,7 +11,7 @@ public interface Function : Routine {
     /**
      * Returns an invocable implementation. Optional.
      */
-    public fun getInstance(args: Array<PType>): Instance {
+    public fun getInstance(args: Array<PType>): Instance? {
         throw Error("Function ${getName()} has no implementations.")
     }
 
@@ -23,6 +23,7 @@ public interface Function : Routine {
      * @see Function.getInstance
      */
     public abstract class Instance(
+        @JvmField public val name: String,
         @JvmField public val parameters: Array<PType>,
         @JvmField public val returns: PType,
         @JvmField public val isNullCall: Boolean = true,
@@ -54,6 +55,37 @@ public interface Function : Routine {
          * @return
          */
         @JvmStatic
+        public fun instance(
+            name: String,
+            parameters: Array<Parameter>,
+            returns: PType,
+            isNullCall: Boolean = true,
+            isMissingCall: Boolean = true,
+            invoke: (Array<Datum>) -> Datum,
+        ): Instance {
+            return object : Instance(
+                name,
+                Array(parameters.size) { parameters[it].getType() },
+                returns,
+                isNullCall,
+                isMissingCall,
+            ) {
+                override fun invoke(args: Array<Datum>): Datum = invoke(args)
+            }
+        }
+
+        /**
+         * TODO INTERNALIZE TO SPI AND REPLACE WITH A BUILDER (OR SOMETHING..)
+         *
+         * @param name
+         * @param parameters
+         * @param returns
+         * @param isNullCall
+         * @param isMissingCall
+         * @param invoke
+         * @return
+         */
+        @JvmStatic
         public fun static(
             name: String,
             parameters: Array<Parameter>,
@@ -64,6 +96,7 @@ public interface Function : Routine {
         ): Function = _Function(
             name, parameters, returns,
             object : Instance(
+                name,
                 Array(parameters.size) { parameters[it].getType() },
                 returns,
                 isNullCall,

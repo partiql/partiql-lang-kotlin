@@ -2,6 +2,7 @@ package org.partiql.plan.rex
 
 import org.partiql.plan.Visitor
 import org.partiql.spi.function.Function
+import org.partiql.types.PType
 
 /**
  * Logical operator for a dynamic dispatch call.
@@ -35,10 +36,11 @@ internal class RexCallDynamicImpl(
     private var name: String,
     private var functions: List<Function>,
     private var args: List<Rex>,
+    type: PType = PType.dynamic()
 ) : RexCallDynamic {
 
     // DO NOT USE FINAL
-    private var _type: RexType = RexType.dynamic()
+    private var _type: RexType = RexType(type)
 
     override fun getName(): String = name
 

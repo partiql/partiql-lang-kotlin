@@ -17,6 +17,7 @@ internal val Fn_NOT__BOOL__BOOL = object : Function {
     private var returns = PType.bool()
 
     private var instance = object : Function.Instance(
+        name,
         parameters = arrayOf(PType.dynamic()),
         returns = PType.bool(),
         isNullCall = true,

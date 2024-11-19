@@ -103,7 +103,10 @@ internal class ExprCallDynamic(
                 exactMatches = currentExactMatches
             }
         }
-        return if (currentMatch == null) null else Candidate(functions[currentMatch!!].getInstance(args.toTypedArray()))
+        return if (currentMatch == null) null else {
+            val instance = functions[currentMatch!!].getInstance(args.toTypedArray()) ?: return null
+            Candidate(instance)
+        }
     }
 
     /**

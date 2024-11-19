@@ -17,6 +17,7 @@ import java.util.stream.Stream
 // TODO: Finalize the semantics for Between operator when operands contain MISSING
 //  For now, Between propagates MISSING.
 class OpBetweenTest : PartiQLTyperTestBase() {
+
     @TestFactory
     fun between(): Stream<DynamicContainer> {
         val tests = listOf(
