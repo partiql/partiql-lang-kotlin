@@ -3,11 +3,11 @@ package org.partiql.parser.internal
 import org.junit.jupiter.api.Test
 import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprOperator
+import org.partiql.ast.Ast.literalInt
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
 import org.partiql.ast.expr.Expr
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int32Value
 import kotlin.test.assertEquals
 
 @OptIn(PartiQLValueExperimental::class)
@@ -24,7 +24,7 @@ class PartiQLParserOperatorTests {
             exprOperator(
                 symbol = "-",
                 lhs = null,
-                rhs = exprLit(int32Value(2))
+                rhs = exprLit(literalInt(2))
             )
         }
     )
@@ -35,8 +35,8 @@ class PartiQLParserOperatorTests {
         queryBody {
             exprOperator(
                 symbol = "<=",
-                lhs = exprLit(int32Value(1)),
-                rhs = exprLit(int32Value(2))
+                lhs = exprLit(literalInt(1)),
+                rhs = exprLit(literalInt(2))
             )
         }
     )
@@ -48,7 +48,7 @@ class PartiQLParserOperatorTests {
             exprOperator(
                 symbol = "==!",
                 lhs = null,
-                rhs = exprLit(int32Value(2))
+                rhs = exprLit(literalInt(2))
             )
         }
     )
@@ -59,8 +59,8 @@ class PartiQLParserOperatorTests {
         queryBody {
             exprOperator(
                 symbol = "==!",
-                lhs = exprLit(int32Value(1)),
-                rhs = exprLit(int32Value(2))
+                lhs = exprLit(literalInt(1)),
+                rhs = exprLit(literalInt(2))
             )
         }
     )

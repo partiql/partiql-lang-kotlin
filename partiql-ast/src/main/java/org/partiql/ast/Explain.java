@@ -3,7 +3,7 @@ package org.partiql.ast;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValue;
+import org.partiql.ast.literal.Literal;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,14 +16,13 @@ import java.util.Map;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public class Explain extends Statement {
-    // TODO get rid of PartiQLValue once https://github.com/partiql/partiql-lang-kotlin/issues/1589 is resolved
     @NotNull
-    public final Map<String, PartiQLValue> options;
+    public final Map<String, Literal> options;
 
     @NotNull
     public final Statement statement;
 
-    public Explain(@NotNull Map<String, PartiQLValue> options, @NotNull Statement statement) {
+    public Explain(@NotNull Map<String, Literal> options, @NotNull Statement statement) {
         this.options = options;
         this.statement = statement;
     }

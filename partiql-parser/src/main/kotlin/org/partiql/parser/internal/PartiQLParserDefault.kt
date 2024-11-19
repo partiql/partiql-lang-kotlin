@@ -106,6 +106,15 @@ import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.Ast.keyValue
 import org.partiql.ast.Ast.letBinding
+import org.partiql.ast.Ast.literalBool
+import org.partiql.ast.Ast.literalDecimal
+import org.partiql.ast.Ast.literalFloat
+import org.partiql.ast.Ast.literalInt
+import org.partiql.ast.Ast.literalLong
+import org.partiql.ast.Ast.literalMissing
+import org.partiql.ast.Ast.literalNull
+import org.partiql.ast.Ast.literalString
+import org.partiql.ast.Ast.literalTypedString
 import org.partiql.ast.Ast.orderBy
 import org.partiql.ast.Ast.partitionBy
 import org.partiql.ast.Ast.query
@@ -168,7 +177,6 @@ import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
 import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
-import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.spi.Context
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.SourceLocations
@@ -176,29 +184,12 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.PErrorListenerException
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.boolValue
-import org.partiql.value.dateValue
-import org.partiql.value.datetime.DateTimeException
-import org.partiql.value.datetime.DateTimeValue
-import org.partiql.value.decimalValue
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.intValue
-import org.partiql.value.missingValue
-import org.partiql.value.nullValue
-import org.partiql.value.stringValue
-import org.partiql.value.timeValue
-import org.partiql.value.timestampValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import org.partiql.parser.internal.antlr.PartiQLParser as GeneratedParser
 import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
 
@@ -220,7 +211,6 @@ import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
  */
 internal class PartiQLParserDefault : PartiQLParser {
 
-    @OptIn(PartiQLValueExperimental::class)
     @Throws(PErrorListenerException::class)
     override fun parse(source: String, ctx: Context): PartiQLParser.Result {
         try {
@@ -232,7 +222,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             ctx.errorListener.report(error)
             val locations = SourceLocations()
             return PartiQLParser.Result(
-                mutableListOf(org.partiql.ast.Query(org.partiql.ast.expr.ExprLit(nullValue()))) as List<Statement>,
+                mutableListOf(org.partiql.ast.Query(exprLit(literalNull()))) as List<Statement>,
                 locations
             )
         }
@@ -362,7 +352,6 @@ internal class PartiQLParserDefault : PartiQLParser {
     /**
      * Translate an ANTLR ParseTree to a PartiQL AST
      */
-    @OptIn(PartiQLValueExperimental::class)
     private class Visitor(
         private val tokens: CommonTokenStream,
         private val locations: MutableMap<String, SourceLocation>,
@@ -475,10 +464,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 }
             }
             explain(
-                // TODO get rid of usage of PartiQLValue https://github.com/partiql/partiql-lang-kotlin/issues/1589
                 options = mapOf(
-                    "type" to stringValue(type),
-                    "format" to stringValue(format)
+                    "type" to (type?.let { literalString(it) } ?: literalNull()),
+                    "format" to (format?.let { literalString(it) } ?: literalNull())
                 ),
                 statement = visit(ctx.statement()) as Statement,
             )
@@ -1736,7 +1724,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
             val lhs = visitExpr(ctx.expr(0))
             val rhs = visitExpr(ctx.expr(1))
-            // TODO change to not use PartiQLValue -- https://github.com/partiql/partiql-lang-kotlin/issues/1589
             val fieldLit = ctx.dt.text.lowercase()
             // TODO error on invalid datetime fields like TIMEZONE_HOUR and TIMEZONE_MINUTE
             when {
@@ -1885,7 +1872,12 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (e: NumberFormatException) {
                 throw error(ctx, "Invalid decimal literal", e)
             }
-            exprLit(decimalValue(decimal))
+            exprLit(literalDecimal(decimal))
+        }
+
+        override fun visitLiteralFloat(ctx: GeneratedParser.LiteralFloatContext) = translate(ctx) {
+            val v = ctx.LITERAL_FLOAT().text.trim()
+            exprLit(literalFloat(v))
         }
 
         override fun visitArray(ctx: GeneratedParser.ArrayContext) = translate(ctx) {
@@ -1894,19 +1886,19 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralNull(ctx: GeneratedParser.LiteralNullContext) = translate(ctx) {
-            exprLit(nullValue())
+            exprLit(literalNull())
         }
 
         override fun visitLiteralMissing(ctx: GeneratedParser.LiteralMissingContext) = translate(ctx) {
-            exprLit(missingValue())
+            exprLit(literalMissing())
         }
 
         override fun visitLiteralTrue(ctx: GeneratedParser.LiteralTrueContext) = translate(ctx) {
-            exprLit(boolValue(true))
+            exprLit(literalBool(value = true))
         }
 
         override fun visitLiteralFalse(ctx: GeneratedParser.LiteralFalseContext) = translate(ctx) {
-            exprLit(boolValue(false))
+            exprLit(literalBool(value = false))
         }
 
         override fun visitLiteralIon(ctx: GeneratedParser.LiteralIonContext) = translate(ctx) {
@@ -1917,32 +1909,31 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralString(ctx: GeneratedParser.LiteralStringContext) = translate(ctx) {
             val value = ctx.LITERAL_STRING().getStringValue()
-            exprLit(stringValue(value))
+            exprLit(literalString(value))
         }
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
             val n = ctx.LITERAL_INTEGER().text
-
-            // 1st, try parse as int
+            // 1st, try parse as int32
             try {
                 val v = n.toInt(10)
-                return@translate exprLit(int32Value(v))
+                return@translate exprLit(literalInt((v)))
             } catch (ex: NumberFormatException) {
                 // ignore
             }
 
-            // 2nd, try parse as long
+            // 2nd, try parse as int64
             try {
                 val v = n.toLong(10)
-                return@translate exprLit(int64Value(v))
+                return@translate exprLit(literalLong(v))
             } catch (ex: NumberFormatException) {
                 // ignore
             }
 
-            // 3rd, try parse as BigInteger
+            // 3rd, try parse as numeric (decimal)
             try {
-                val v = BigInteger(n)
-                return@translate exprLit(intValue(v))
+                val dec = BigDecimal(n, MathContext(38, RoundingMode.HALF_EVEN))
+                return@translate exprLit(literalDecimal(dec))
             } catch (ex: NumberFormatException) {
                 throw ex
             }
@@ -1954,37 +1945,49 @@ internal class PartiQLParserDefault : PartiQLParser {
             if (DATE_PATTERN_REGEX.matches(dateString).not()) {
                 throw error(pattern, "Expected DATE string to be of the format yyyy-MM-dd")
             }
-            val value = try {
-                LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
-            } catch (e: DateTimeParseException) {
-                throw error(pattern, e.localizedMessage, e)
-            } catch (e: IndexOutOfBoundsException) {
-                throw error(pattern, e.localizedMessage, e)
-            }
-            val date = DateTimeValue.date(value.year, value.monthValue, value.dayOfMonth)
-            exprLit(dateValue(date))
+            exprLit(literalTypedString(type = DataType.DATE(), dateString))
         }
 
         override fun visitLiteralTime(ctx: GeneratedParser.LiteralTimeContext) = translate(ctx) {
             val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
-            val time = try {
-                DateTimeUtils.parseTimeLiteral(timeString)
-            } catch (e: DateTimeException) {
-                throw error(ctx, "Invalid Date Time Literal", e)
+            val type = when (ctx.ZONE()) {
+                null -> {
+                    if (precision == null) {
+                        DataType.TIME()
+                    } else {
+                        DataType.TIME(precision)
+                    }
+                }
+                else -> {
+                    if (precision == null) {
+                        DataType.TIME_WITH_TIME_ZONE()
+                    } else {
+                        DataType.TIME_WITH_TIME_ZONE(precision)
+                    }
+                }
             }
-            val value = time.toPrecision(precision)
-            exprLit(timeValue(value))
+            exprLit(literalTypedString(type = type, timeString))
         }
 
         override fun visitLiteralTimestamp(ctx: GeneratedParser.LiteralTimestampContext) = translate(ctx) {
-            val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
-            val timestamp = try {
-                DateTimeUtils.parseTimestamp(timeString)
-            } catch (e: DateTimeException) {
-                throw error(ctx, "Invalid Date Time Literal", e)
+            val (timestampString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
+            val type = when (ctx.ZONE()) {
+                null -> {
+                    if (precision == null) {
+                        DataType.TIMESTAMP()
+                    } else {
+                        DataType.TIMESTAMP(precision)
+                    }
+                }
+                else -> {
+                    if (precision == null) {
+                        DataType.TIMESTAMP_WITH_TIME_ZONE()
+                    } else {
+                        DataType.TIMESTAMP_WITH_TIME_ZONE(precision)
+                    }
+                }
             }
-            val value = timestamp.toPrecision(precision)
-            exprLit(timestampValue(value))
+            exprLit(literalTypedString(type = type, timestampString))
         }
 
         override fun visitTuple(ctx: GeneratedParser.TupleContext) = translate(ctx) {

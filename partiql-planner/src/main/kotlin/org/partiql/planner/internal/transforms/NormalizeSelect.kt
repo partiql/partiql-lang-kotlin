@@ -25,6 +25,7 @@ import org.partiql.ast.Ast.exprStructField
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.identifierChain
+import org.partiql.ast.Ast.literalString
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.queryBodySetOp
 import org.partiql.ast.Ast.selectItemExpr
@@ -44,14 +45,11 @@ import org.partiql.ast.SelectStar
 import org.partiql.ast.SelectValue
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCase
-import org.partiql.ast.expr.ExprLit
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprStruct
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.Scope
 import org.partiql.planner.internal.helpers.toBinder
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.stringValue
 
 /**
  * Converts SQL-style SELECT to PartiQL SELECT VALUE.
@@ -315,12 +313,11 @@ internal object NormalizeSelect {
             )
         }
 
-        @OptIn(PartiQLValueExperimental::class)
         private fun visitSelectProjectWithoutProjectAll(node: SelectList): SelectValue {
             val structFields = node.items.map { item ->
                 val itemExpr = item as? SelectItem.Expr ?: error("Expected the projection to be an expression.")
                 exprStructField(
-                    name = exprLit(stringValue(itemExpr.asAlias?.symbol!!)),
+                    name = exprLit(literalString(itemExpr.asAlias?.symbol!!)),
                     value = item.expr
                 )
             }
@@ -343,19 +340,17 @@ internal object NormalizeSelect {
             defaultExpr = buildSimpleStruct(expr, col(index))
         )
 
-        @OptIn(PartiQLValueExperimental::class)
         private fun buildSimpleStruct(expr: Expr, name: String): ExprStruct = exprStruct(
             fields = listOf(
                 exprStructField(
-                    name = exprLit(stringValue(name)),
+                    name = exprLit(literalString(name)),
                     value = expr
                 )
             )
         )
 
-        @OptIn(PartiQLValueExperimental::class)
         private fun structField(name: String, expr: Expr): ExprStruct.Field = exprStructField(
-            name = ExprLit(stringValue(name)),
+            name = exprLit(literalString(name)),
             value = expr
         )
 

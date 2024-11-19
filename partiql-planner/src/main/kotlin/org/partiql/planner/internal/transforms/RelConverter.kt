@@ -20,6 +20,7 @@ import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.identifierChain
+import org.partiql.ast.Ast.literalInt
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
 import org.partiql.ast.AstVisitor
@@ -88,7 +89,6 @@ import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
-import org.partiql.value.int32Value
 import org.partiql.value.stringValue
 
 /**
@@ -439,7 +439,7 @@ internal object RelConverter {
                     relOpAggregateCallUnresolved(
                         name,
                         org.partiql.planner.internal.ir.SetQuantifier.ALL,
-                        args = listOf(exprLit(int32Value(1)).toRex(env))
+                        args = listOf(exprLit(literalInt(1)).toRex(env))
                     )
                 } else {
                     val setq = when (expr.setq?.code()) {

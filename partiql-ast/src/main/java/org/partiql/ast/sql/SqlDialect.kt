@@ -14,7 +14,9 @@
 
 package org.partiql.ast.sql
 
-import org.partiql.ast.Ast.exprLit
+import org.partiql.ast.Ast.exprVarRef
+import org.partiql.ast.Ast.identifier
+import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstVisitor
 import org.partiql.ast.DataType
@@ -79,14 +81,7 @@ import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
-import org.partiql.value.MissingValue
-import org.partiql.value.NullValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StringValue
-import org.partiql.value.io.PartiQLValueTextWriter
-import org.partiql.value.symbolValue
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
+import org.partiql.ast.literal.LiteralString
 
 /**
  * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
@@ -212,9 +207,9 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             //   no params
             DataType.DATE -> tail concat node.name()
             //   with params
-            DataType.TIME, DataType.TIMESTAMP -> tail concat type(node.name(), node.precision)
-            DataType.TIME_WITH_TIME_ZONE -> tail concat type("TIME WITH TIMEZONE", node.precision, gap = true)
-            DataType.TIMESTAMP_WITH_TIME_ZONE -> tail concat type("TIMESTAMP WITH TIMEZONE", node.precision, gap = true)
+            DataType.TIME, DataType.TIMESTAMP -> tail concat type(node.name(), node.precision, gap = true)
+            DataType.TIME_WITH_TIME_ZONE -> tail concat type("TIME", node.precision, gap = true) concat(" WITH TIME ZONE")
+            DataType.TIMESTAMP_WITH_TIME_ZONE -> tail concat type("TIMESTAMP", node.precision, gap = true) concat(" WITH TIME ZONE")
             // <interval type>
             DataType.INTERVAL -> tail concat type("INTERVAL", node.precision)
             // <container type>
@@ -229,20 +224,8 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     // Expressions
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun visitExprLit(node: ExprLit, tail: SqlBlock): SqlBlock {
-        // Simplified PartiQL Value writing, as this intentionally omits formatting
-        val value = when (node.value) {
-            is MissingValue -> "MISSING" // force uppercase
-            is NullValue -> "NULL" // force uppercase
-            else -> {
-                val buffer = ByteArrayOutputStream()
-                val valueWriter = PartiQLValueTextWriter(PrintStream(buffer), false)
-                valueWriter.append(node.value)
-                buffer.toString()
-            }
-        }
-        return tail concat value
+        return tail concat node.lit.text
     }
 
     override fun visitExprVariant(node: ExprVariant, tail: SqlBlock): SqlBlock {
@@ -334,7 +317,6 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitPathStepAllFields(node: PathStep.AllFields, tail: SqlBlock): SqlBlock = tail concat ".*"
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun visitExprCall(node: ExprCall, tail: SqlBlock): SqlBlock {
         var t = tail
         val f = node.function
@@ -344,13 +326,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         }
         // Special case -- DATE_ADD('<datetime_field>', <lhs>, <rhs>) -> DATE_ADD(<datetime_field>, <lhs>, <rhs>)
         // Special case -- DATE_DIFF('<datetime_field>', <lhs>, <rhs>) -> DATE_DIFF(<datetime_field>, <lhs>, <rhs>)
-        // TODO this will need to be rewritten once PartiQLValue is removed from AST
         if (f.next == null &&
             (f.root.symbol.uppercase() == "DATE_ADD" || f.root.symbol.uppercase() == "DATE_DIFF") &&
             node.args.size == 3
         ) {
-            val dtField = ((node.args[0] as ExprLit).value as StringValue).value!!
-            val newArgs = listOf(exprLit(symbolValue(dtField))) + node.args.drop(1)
+            val dtField = ((node.args[0] as ExprLit).lit as LiteralString).value
+            // Represent as an `ExprVarRef` to mimic a literal symbol.
+            // TODO consider some other representation for unquoted strings
+            val newArgs = listOf(exprVarRef(identifierChain(identifier(dtField, isDelimited = false), next = null), scope = Scope.DEFAULT())) + node.args.drop(1)
             t = visitIdentifierChain(f, t)
             t = t concat list { newArgs }
             return t

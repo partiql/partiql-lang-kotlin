@@ -61,6 +61,15 @@ import org.partiql.ast.Ast.groupByKey
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.Ast.letBinding
+import org.partiql.ast.Ast.literalBool
+import org.partiql.ast.Ast.literalDecimal
+import org.partiql.ast.Ast.literalFloat
+import org.partiql.ast.Ast.literalInt
+import org.partiql.ast.Ast.literalLong
+import org.partiql.ast.Ast.literalMissing
+import org.partiql.ast.Ast.literalNull
+import org.partiql.ast.Ast.literalString
+import org.partiql.ast.Ast.literalTypedString
 import org.partiql.ast.Ast.orderBy
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.queryBodySetOp
@@ -94,27 +103,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.boolValue
-import org.partiql.value.dateValue
-import org.partiql.value.datetime.DateTimeValue
-import org.partiql.value.datetime.TimeZone
-import org.partiql.value.decimalValue
-import org.partiql.value.float32Value
-import org.partiql.value.float64Value
-import org.partiql.value.int16Value
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.int8Value
-import org.partiql.value.intValue
-import org.partiql.value.missingValue
-import org.partiql.value.nullValue
-import org.partiql.value.stringValue
-import org.partiql.value.symbolValue
-import org.partiql.value.timeValue
-import org.partiql.value.timestampValue
 import java.math.BigDecimal
-import java.math.BigInteger
 import kotlin.test.assertFails
 
 /**
@@ -122,7 +111,6 @@ import kotlin.test.assertFails
  *
  * It does NOT test formatted output.
  */
-@OptIn(PartiQLValueExperimental::class)
 class SqlDialectTest {
 
     // Identifiers & Paths
@@ -245,7 +233,7 @@ class SqlDialectTest {
 
     companion object {
 
-        private val NULL = exprLit(nullValue())
+        private val NULL = exprLit(literalNull())
 
         @JvmStatic
         fun types() = listOf(
@@ -272,9 +260,9 @@ class SqlDialectTest {
             expect("CLOB", DataType.CLOB()),
             expect("DATE", DataType.DATE()),
             expect("TIME", DataType.TIME()),
-            expect("TIME(1)", DataType.TIME(1)),
-            expect("TIME WITH TIMEZONE", DataType.TIME_WITH_TIME_ZONE()),
-            expect("TIME WITH TIMEZONE (1)", DataType.TIME_WITH_TIME_ZONE(1)),
+            expect("TIME (1)", DataType.TIME(1)),
+            expect("TIME WITH TIME ZONE", DataType.TIME_WITH_TIME_ZONE()),
+            expect("TIME (1) WITH TIME ZONE", DataType.TIME_WITH_TIME_ZONE(1)),
             // TODO TIMESTAMP
             // TODO INTERVAL
             // TODO other types in `DataType`
@@ -415,58 +403,52 @@ class SqlDialectTest {
 
         // Expressions
 
-        @OptIn(PartiQLValueExperimental::class)
         @JvmStatic
         fun exprLitCases() = listOf(
             expect(
-                "NULL", exprLit(nullValue())
+                "NULL", exprLit(literalNull())
             ),
             expect(
-                "MISSING", exprLit(missingValue())
+                "MISSING", exprLit(literalMissing())
             ),
             expect(
-                "true", exprLit(boolValue(true))
+                "true", exprLit(literalBool(true))
             ),
             expect(
-                "1", exprLit(int8Value(1))
+                "1", exprLit(literalInt(1))
             ),
             expect(
-                "2", exprLit(int16Value(2))
+                "2", exprLit(literalInt(2))
             ),
             expect(
-                "3", exprLit(int32Value(3))
+                "3", exprLit(literalInt(3))
             ),
             expect(
-                "4", exprLit(int64Value(4))
+                "4", exprLit(literalLong(4))
             ),
             expect(
-                "5", exprLit(intValue(BigInteger.valueOf(5)))
+                "5", exprLit(literalDecimal(BigDecimal.valueOf(5)))
             ),
-            // TODO fix PartiQL Text writer for floats
-            // expect("1.1e0") {
-            expect("1.1", exprLit(float32Value(1.1f))),
-            // TODO fix PartiQL Text writer for floats
-            // expect("1.2e0") {
+            expect("1.1e0", exprLit(literalFloat("1.1e0"))),
+            expect("1.2e0", exprLit(literalFloat("1.2e0"))),
+            expect("1.2345E-5", exprLit(literalFloat("1.2345E-5"))),
             expect(
-                "1.2", exprLit(float64Value(1.2))
+                "1.3", exprLit(literalDecimal(BigDecimal.valueOf(1.3)))
             ),
             expect(
-                "1.3", exprLit(decimalValue(BigDecimal.valueOf(1.3)))
+                """'hello'""", exprLit(literalString("hello"))
             ),
             expect(
-                """'hello'""", exprLit(stringValue("hello"))
+                """hello""", id("hello")
             ),
             expect(
-                """hello""", exprLit(symbolValue("hello"))
+                "DATE '0001-02-03'", exprLit(literalTypedString(DataType.DATE(), "0001-02-03"))
             ),
             expect(
-                "DATE '0001-02-03'", exprLit(dateValue(DateTimeValue.date(1, 2, 3)))
+                "TIME '01:02:03.456-00:30'", exprLit(literalTypedString(DataType.TIME(), "01:02:03.456-00:30"))
             ),
             expect(
-                "TIME '01:02:03.456-00:30'", exprLit(timeValue(DateTimeValue.time(1, 2, BigDecimal.valueOf(3.456), TimeZone.UtcOffset.of(-30))))
-            ),
-            expect(
-                "TIMESTAMP '0001-02-03 04:05:06.78-00:30'", exprLit(timestampValue(DateTimeValue.timestamp(1, 2, 3, 4, 5, BigDecimal.valueOf(6.78), TimeZone.UtcOffset.of(-30))))
+                "TIMESTAMP '0001-02-03 04:05:06.78-00:30'", exprLit(literalTypedString(DataType.TIMESTAMP(), "0001-02-03 04:05:06.78-00:30"))
             ),
 
             // expect("""{{ '''Hello'''    '''World''' }}""") {
@@ -699,7 +681,7 @@ class SqlDialectTest {
                     next = exprPathStepElement(
                         element = exprOperator(
                             symbol = "+",
-                            lhs = exprLit(int32Value(1)),
+                            lhs = exprLit(literalInt(1)),
                             rhs = exprVarRef(
                                 identifierChain = idChain(id("a")),
                                 scope = Scope.DEFAULT()
@@ -716,7 +698,7 @@ class SqlDialectTest {
                         identifierChain = idChain(id("x")),
                         scope = Scope.DEFAULT()
                     ),
-                    next = exprPathStepElement(exprLit(stringValue("y")), next = null)
+                    next = exprPathStepElement(exprLit(literalString("y")), next = null)
                 )
             ),
         )
@@ -727,7 +709,7 @@ class SqlDialectTest {
                 "foo(1)",
                 exprCall(
                     function = idChain(id("foo")),
-                    args = listOf(exprLit(int32Value(1))),
+                    args = listOf(exprLit(literalInt(1))),
                     setq = null
                 )
             ),
@@ -736,8 +718,8 @@ class SqlDialectTest {
                 exprCall(
                     function = idChain(id("foo")),
                     args = listOf(
-                        exprLit(int32Value(1)),
-                        exprLit(int32Value(2)),
+                        exprLit(literalInt(1)),
+                        exprLit(literalInt(2)),
                     ),
                     setq = null
                 )
@@ -749,7 +731,7 @@ class SqlDialectTest {
                         root = id("foo"),
                         next = idChain(id("bar"))
                     ),
-                    args = listOf(exprLit(int32Value(1))),
+                    args = listOf(exprLit(literalInt(1))),
                     setq = null
                 )
             ),
@@ -761,8 +743,8 @@ class SqlDialectTest {
                         next = idChain(id("bar"))
                     ),
                     args = listOf(
-                        exprLit(int32Value(1)),
-                        exprLit(int32Value(2))
+                        exprLit(literalInt(1)),
+                        exprLit(literalInt(2))
                     ),
                     setq = null
                 )
@@ -848,9 +830,9 @@ class SqlDialectTest {
                 "<<1, 2, 3>>",
                 exprBag(
                     values = listOf(
-                        exprLit(int32Value(1)),
-                        exprLit(int32Value(2)),
-                        exprLit(int32Value(3))
+                        exprLit(literalInt(1)),
+                        exprLit(literalInt(2)),
+                        exprLit(literalInt(3))
                     )
                 )
             ),
@@ -862,9 +844,9 @@ class SqlDialectTest {
                 "[1, 2, 3]",
                 exprArray(
                     values = listOf(
-                        exprLit(int32Value(1)),
-                        exprLit(int32Value(2)),
-                        exprLit(int32Value(3))
+                        exprLit(literalInt(1)),
+                        exprLit(literalInt(2)),
+                        exprLit(literalInt(3))
                     )
                 )
             ),
@@ -884,9 +866,9 @@ class SqlDialectTest {
                     rows = listOf(
                         exprRowValue(
                             values = listOf(
-                                exprLit(int32Value(1)),
-                                exprLit(int32Value(2)),
-                                exprLit(int32Value(3))
+                                exprLit(literalInt(1)),
+                                exprLit(literalInt(2)),
+                                exprLit(literalInt(3))
                             )
                         )
                     )
@@ -902,9 +884,9 @@ class SqlDialectTest {
                 "(1, 2, 3)",
                 exprRowValue(
                     values = listOf(
-                        exprLit(int32Value(1)),
-                        exprLit(int32Value(2)),
-                        exprLit(int32Value(3))
+                        exprLit(literalInt(1)),
+                        exprLit(literalInt(2)),
+                        exprLit(literalInt(3))
                     )
                 )
             ),
@@ -919,9 +901,9 @@ class SqlDialectTest {
 //                "SEXP (1, 2, 3)",
 //                    exprCollection {
 //                    type = Expr.Collection.Type.SEXP
-//                    values += exprLit(int32Value(1))
-//                    values += exprLit(int32Value(2))
-//                    values += exprLit(int32Value(3))
+//                    values += exprLit(literalInt(1))
+//                    values += exprLit(literalInt(2))
+//                    values += exprLit(literalInt(3))
 //                }
 //            ),
         )
@@ -934,8 +916,8 @@ class SqlDialectTest {
                 exprStruct(
                     fields = listOf(
                         exprStructField(
-                            name = exprLit(symbolValue("a")),
-                            value = exprLit(int32Value(1))
+                            name = v("a"),
+                            value = exprLit(literalInt(1))
                         )
                     )
                 )
@@ -945,12 +927,12 @@ class SqlDialectTest {
                 exprStruct(
                     fields = listOf(
                         exprStructField(
-                            name = exprLit(symbolValue("a")),
-                            value = exprLit(int32Value(1))
+                            name = v("a"),
+                            value = exprLit(literalInt(1))
                         ),
                         exprStructField(
-                            name = exprLit(symbolValue("b")),
-                            value = exprLit(boolValue(false))
+                            name = v("b"),
+                            value = exprLit(literalBool(false))
                         )
                     )
                 )
@@ -1157,7 +1139,7 @@ class SqlDialectTest {
                 exprCall(
                     function = idChain(id("DATE_ADD")),
                     args = listOf(
-                        exprLit(stringValue("MINUTE")),
+                        exprLit(literalString("MINUTE")),
                         v("x"),
                         v("y")
                     ),
@@ -1169,7 +1151,7 @@ class SqlDialectTest {
                 exprCall(
                     function = idChain(id("DATE_DIFF")),
                     args = listOf(
-                        exprLit(stringValue("MINUTE")),
+                        exprLit(literalString("MINUTE")),
                         v("x"),
                         v("y")
                     ),
@@ -1966,7 +1948,7 @@ class SqlDialectTest {
                         select = select("a"),
                         from = table("T")
                     ),
-                    limit = exprLit(int32Value(1))
+                    limit = exprLit(literalInt(1))
                 )
             ),
             expect(
@@ -1976,7 +1958,7 @@ class SqlDialectTest {
                         select = select("a"),
                         from = table("T")
                     ),
-                    offset = exprLit(int32Value(2))
+                    offset = exprLit(literalInt(2))
                 )
             ),
             expect(
@@ -1986,8 +1968,8 @@ class SqlDialectTest {
                         select = select("a"),
                         from = table("T")
                     ),
-                    limit = exprLit(int32Value(1)),
-                    offset = exprLit(int32Value(2))
+                    limit = exprLit(literalInt(1)),
+                    offset = exprLit(literalInt(2))
                 )
             ),
             expect(
@@ -2408,7 +2390,7 @@ class SqlDialectTest {
                             )
                         )
                     ),
-                    limit = exprLit(int32Value(1)) // LIMIT associated with SQL set op
+                    limit = exprLit(literalInt(1)) // LIMIT associated with SQL set op
                 )
             ),
             expect(
@@ -2428,7 +2410,7 @@ class SqlDialectTest {
                                 select = select("b"),
                                 from = table("S"),
                             ),
-                            limit = exprLit(int32Value(1)) // LIMIT associated with rhs SFW query
+                            limit = exprLit(literalInt(1)) // LIMIT associated with rhs SFW query
                         )
                     )
                 )
@@ -2556,7 +2538,7 @@ class SqlDialectTest {
                 "1 = (SELECT a FROM T)",
                 exprOperator(
                     symbol = "=",
-                    lhs = exprLit(int32Value(1)),
+                    lhs = exprLit(literalInt(1)),
                     rhs = qSet(
                         body = sfw(
                             select = select("a"),
@@ -2571,8 +2553,8 @@ class SqlDialectTest {
                     symbol = "=",
                     lhs = exprRowValue(
                         values = listOf(
-                            exprLit(int32Value(1)),
-                            exprLit(int32Value(2))
+                            exprLit(literalInt(1)),
+                            exprLit(literalInt(2))
                         )
                     ),
                     rhs = qSet(

@@ -54,6 +54,16 @@ import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
+import org.partiql.ast.literal.Literal
+import org.partiql.ast.literal.LiteralBool
+import org.partiql.ast.literal.LiteralDecimal
+import org.partiql.ast.literal.LiteralDouble
+import org.partiql.ast.literal.LiteralInt
+import org.partiql.ast.literal.LiteralLong
+import org.partiql.ast.literal.LiteralMissing
+import org.partiql.ast.literal.LiteralNull
+import org.partiql.ast.literal.LiteralString
+import org.partiql.ast.literal.LiteralTypedString
 import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
@@ -84,19 +94,27 @@ import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.planner.internal.utils.DateTimeUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.value.DecimalValue
-import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StringValue
 import org.partiql.value.boolValue
+import org.partiql.value.dateValue
+import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.decimalValue
+import org.partiql.value.float64Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
+import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
+import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import org.partiql.ast.SetQuantifier as AstSetQuantifier
 
 /**
@@ -127,24 +145,102 @@ internal object RexConverter {
             throw IllegalArgumentException("unsupported rex $node")
 
         override fun visitExprLit(node: ExprLit, context: Env): Rex {
-            val type = when (val value = node.value) {
+            val pValue = node.lit.toPartiQLValue()
+            val type = when (pValue) {
                 // Specifically handle the lack of an infinite precision/scale
                 // TODO: PartiQLValue won't be in AST soon
                 is DecimalValue -> {
-                    when (val decimal = value.value) {
+                    when (val decimal = pValue.value) {
                         null -> PType.decimal(38, 19)
                         else -> PType.decimal(decimal.precision(), decimal.scale())
                     }
                 }
-                else -> value.type.toPType()
+                else -> pValue.type.toPType()
             }
             val cType = CompilerType(
-                _delegate = type,
-                isNullValue = node.value.isNull,
-                isMissingValue = node.value is MissingValue
+                _delegate = node.lit.toPType(),
+                isNullValue = node.lit is LiteralNull,
+                isMissingValue = node.lit is LiteralMissing
             )
-            val op = rexOpLit(node.value)
+            val op = rexOpLit(node.lit.toPartiQLValue())
             return rex(cType, op)
+        }
+
+        private fun Literal.toPType(): PType {
+            return when (this) {
+                is LiteralNull, is LiteralMissing -> PType.unknown()
+                is LiteralString -> PType.string()
+                is LiteralBool -> PType.bool()
+                is LiteralDecimal -> PType.decimal(this.value.precision(), this.value.scale())
+                is LiteralInt -> PType.integer()
+                is LiteralLong -> PType.bigint()
+                is LiteralDouble -> PType.real()
+                is LiteralTypedString -> {
+                    val type = this.type
+                    when (type.code()) {
+                        DataType.DATE -> PType.date()
+                        DataType.TIME -> if (type.precision == null) {
+                            PType.time(6)
+                        } else {
+                            PType.time(type.precision)
+                        }
+                        DataType.TIME_WITH_TIME_ZONE -> if (type.precision == null) {
+                            PType.timez(6)
+                        } else {
+                            PType.timez(type.precision)
+                        }
+                        DataType.TIMESTAMP -> if (type.precision == null) {
+                            PType.timestamp(6)
+                        } else {
+                            PType.timestamp(type.precision)
+                        }
+                        DataType.TIMESTAMP_WITH_TIME_ZONE -> if (type.precision == null) {
+                            PType.timestampz(6)
+                        } else {
+                            PType.timestampz(type.precision)
+                        }
+                        else -> error("Unsupported typed literal string: $this")
+                    }
+                }
+                else -> error("Unsupported literal: $this")
+            }
+        }
+
+        private fun Literal.toPartiQLValue(): PartiQLValue {
+            return when (this) {
+                is LiteralNull -> nullValue()
+                is LiteralMissing -> missingValue()
+                is LiteralString -> stringValue(value)
+                is LiteralBool -> boolValue(value)
+                is LiteralDecimal -> decimalValue(this.value)
+                is LiteralInt -> int32Value(this.value)
+                is LiteralLong -> int64Value(this.value)
+                is LiteralDouble -> float64Value(this.value)
+                is LiteralTypedString -> {
+                    val type = this.type
+                    val typedString = this.value
+                    when (type.code()) {
+                        DataType.DATE -> {
+                            val value = LocalDate.parse(typedString, DateTimeFormatter.ISO_LOCAL_DATE)
+                            val date = DateTimeValue.date(value.year, value.monthValue, value.dayOfMonth)
+                            dateValue(date)
+                        }
+                        DataType.TIME, DataType.TIME_WITH_TIME_ZONE -> {
+                            val time = DateTimeUtils.parseTimeLiteral(typedString)
+                            val precision = type.precision ?: 6
+                            timeValue(time.toPrecision(precision))
+                        }
+                        DataType.TIMESTAMP, DataType.TIMESTAMP_WITH_TIME_ZONE -> {
+                            val timestamp = DateTimeUtils.parseTimestamp(typedString)
+                            val precision = type.precision ?: 6
+                            val value = timestamp.toPrecision(precision)
+                            timestampValue(value)
+                        }
+                        else -> error("Unsupported typed literal string: $this")
+                    }
+                }
+                else -> error("Unsupported literal: $this")
+            }
         }
 
         private fun PartiQLValue.toPType(): PType {
@@ -391,8 +487,8 @@ internal object RexConverter {
                     is PathStep.Element -> {
                         val key = visitExprCoerce(curStep.element, context)
                         val op = when (val astKey = curStep.element) {
-                            is ExprLit -> when (astKey.value) {
-                                is StringValue -> rexOpPathKey(curPathNavi, key)
+                            is ExprLit -> when (astKey.lit) {
+                                is LiteralString -> rexOpPathKey(curPathNavi, key)
                                 else -> rexOpPathIndex(curPathNavi, key)
                             }
                             is ExprCast -> when (astKey.asType.code() == DataType.STRING) {
