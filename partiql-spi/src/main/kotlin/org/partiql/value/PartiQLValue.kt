@@ -220,7 +220,7 @@ public abstract class IntValue : NumericValue<BigInteger>() {
 @PartiQLValueExperimental
 public abstract class DecimalValue : NumericValue<BigDecimal>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.DECIMAL_ARBITRARY
+    override val type: PartiQLValueType = PartiQLValueType.DECIMAL
 
     abstract override fun copy(annotations: Annotations): DecimalValue
 

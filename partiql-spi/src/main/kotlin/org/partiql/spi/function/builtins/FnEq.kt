@@ -42,7 +42,7 @@ internal object FnEq : Function {
             "eq",
             args,
             boolType,
-            isNullCall = false,
+            isNullCall = true,
             isMissingCall = false
         ) {
             override fun invoke(args: Array<Datum>): Datum {
