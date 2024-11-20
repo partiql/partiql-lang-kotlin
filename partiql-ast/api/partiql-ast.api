@@ -2572,8 +2572,8 @@ public class org/partiql/ast/graph/GraphSelector$ShortestKGroup$Builder {
 }
 
 public abstract class org/partiql/ast/literal/Literal {
-	public final field text Ljava/lang/String;
-	protected fun <init> (Ljava/lang/String;)V
+	public fun <init> ()V
+	public abstract fun getText ()Ljava/lang/String;
 }
 
 public class org/partiql/ast/literal/LiteralBool : org/partiql/ast/literal/Literal {
@@ -2581,6 +2581,7 @@ public class org/partiql/ast/literal/LiteralBool : org/partiql/ast/literal/Liter
 	public fun <init> (Z)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -2589,14 +2590,17 @@ public class org/partiql/ast/literal/LiteralDecimal : org/partiql/ast/literal/Li
 	public fun <init> (Ljava/math/BigDecimal;)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
 public class org/partiql/ast/literal/LiteralDouble : org/partiql/ast/literal/Literal {
+	public field text Ljava/lang/String;
 	public field value D
 	public fun <init> (Ljava/lang/String;)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -2605,6 +2609,7 @@ public class org/partiql/ast/literal/LiteralInt : org/partiql/ast/literal/Litera
 	public fun <init> (I)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -2613,6 +2618,7 @@ public class org/partiql/ast/literal/LiteralLong : org/partiql/ast/literal/Liter
 	public fun <init> (J)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -2620,6 +2626,7 @@ public class org/partiql/ast/literal/LiteralMissing : org/partiql/ast/literal/Li
 	public fun <init> ()V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -2627,6 +2634,7 @@ public class org/partiql/ast/literal/LiteralNull : org/partiql/ast/literal/Liter
 	public fun <init> ()V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -2635,6 +2643,7 @@ public class org/partiql/ast/literal/LiteralString : org/partiql/ast/literal/Lit
 	public fun <init> (Ljava/lang/String;)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -2644,6 +2653,7 @@ public class org/partiql/ast/literal/LiteralTypedString : org/partiql/ast/litera
 	public fun <init> (Lorg/partiql/ast/DataType;Ljava/lang/String;)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 

@@ -1,6 +1,7 @@
 package org.partiql.ast.literal;
 
 import lombok.EqualsAndHashCode;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * TODO docs
@@ -10,7 +11,12 @@ public class LiteralInt extends Literal {
     public int value;
 
     public LiteralInt(int value) {
-        super(String.format("%d", value));
         this.value = value;
+    }
+
+    @NotNull
+    @Override
+    public String getText() {
+        return Integer.toString(value);
     }
 }

@@ -17,8 +17,13 @@ public class LiteralTypedString extends Literal {
     public String value;
 
     public LiteralTypedString(@NotNull DataType type, @NotNull String value) {
-        super(String.format("%s '%s'", type.name(), value));
         this.type = type;
         this.value = value;
+    }
+
+    @NotNull
+    @Override
+    public String getText() {
+        return String.format("%s '%s'", type.name(), value);
     }
 }

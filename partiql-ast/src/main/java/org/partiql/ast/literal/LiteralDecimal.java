@@ -14,7 +14,12 @@ public class LiteralDecimal extends Literal {
     public BigDecimal value;
 
     public LiteralDecimal(@NotNull BigDecimal value) {
-        super(value.toString());
         this.value = value;
+    }
+
+    @NotNull
+    @Override
+    public String getText() {
+        return value.toString();
     }
 }

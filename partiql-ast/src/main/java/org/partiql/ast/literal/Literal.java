@@ -7,9 +7,5 @@ import org.jetbrains.annotations.NotNull;
  */
 public abstract class Literal {
     @NotNull
-    public final String text;
-
-    protected Literal(@NotNull String _text) {
-        this.text = _text;
-    }
+    public abstract String getText();
 }

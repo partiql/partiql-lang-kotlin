@@ -12,7 +12,12 @@ public class LiteralString extends Literal {
     public String value;
 
     public LiteralString(@NotNull String value) {
-        super(String.format("'%s'", value));
         this.value = value;
+    }
+
+    @NotNull
+    @Override
+    public String getText() {
+        return String.format("'%s'", value);
     }
 }

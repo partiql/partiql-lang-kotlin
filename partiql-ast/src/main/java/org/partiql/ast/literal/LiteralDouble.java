@@ -10,8 +10,17 @@ import org.jetbrains.annotations.NotNull;
 public class LiteralDouble extends Literal {
     public double value;
 
+    @NotNull
+    public String text;
+
     public LiteralDouble(@NotNull String text) {
-        super(text);
+        this.text = text;
         this.value = Double.parseDouble(text);
+    }
+
+    @NotNull
+    @Override
+    public String getText() {
+        return text;
     }
 }

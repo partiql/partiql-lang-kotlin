@@ -7,10 +7,8 @@ import org.partiql.ast.Ast.literalInt
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
 import org.partiql.ast.expr.Expr
-import org.partiql.value.PartiQLValueExperimental
 import kotlin.test.assertEquals
 
-@OptIn(PartiQLValueExperimental::class)
 class PartiQLParserOperatorTests {
 
     private val parser = PartiQLParserDefault()
