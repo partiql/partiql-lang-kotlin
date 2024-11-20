@@ -107,6 +107,7 @@ import org.partiql.value.decimalValue
 import org.partiql.value.float64Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
+import org.partiql.value.intValue
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -171,10 +172,16 @@ internal object RexConverter {
                 is LiteralNull, is LiteralMissing -> PType.unknown()
                 is LiteralString -> PType.string()
                 is LiteralBool -> PType.bool()
-                is LiteralDecimal -> PType.decimal(this.value.precision(), this.value.scale())
+                is LiteralDecimal -> {
+                    if (this.value.scale() == 0) {
+                        PType.numeric()
+                    } else {
+                        PType.decimal(this.value.precision(), this.value.scale())
+                    }
+                }
                 is LiteralInt -> PType.integer()
                 is LiteralLong -> PType.bigint()
-                is LiteralDouble -> PType.real()
+                is LiteralDouble -> PType.doublePrecision()
                 is LiteralTypedString -> {
                     val type = this.type
                     when (type.code()) {
@@ -212,7 +219,13 @@ internal object RexConverter {
                 is LiteralMissing -> missingValue()
                 is LiteralString -> stringValue(value)
                 is LiteralBool -> boolValue(value)
-                is LiteralDecimal -> decimalValue(this.value)
+                is LiteralDecimal -> {
+                    if (this.value.scale() == 0) {
+                        intValue(this.value.toBigInteger())
+                    } else {
+                        decimalValue(this.value)
+                    }
+                }
                 is LiteralInt -> int32Value(this.value)
                 is LiteralLong -> int64Value(this.value)
                 is LiteralDouble -> float64Value(this.value)
