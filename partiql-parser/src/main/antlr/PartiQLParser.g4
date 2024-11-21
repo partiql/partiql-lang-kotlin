@@ -82,7 +82,7 @@ qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
 tableName : symbolPrimitive;
 tableConstraintName : symbolPrimitive;
 columnName : symbolPrimitive;
-columnConstraintName : symbolPrimitive;
+comment : COMMENT LITERAL_STRING;
 
 ddl
     : createCommand
@@ -90,8 +90,8 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )?                           # CreateTable
-    | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
+    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )? tableExtension*               # CreateTable
+    | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT       # CreateIndex
     ;
 
 dropCommand
@@ -100,22 +100,59 @@ dropCommand
     ;
 
 tableDef
-    : tableDefPart ( COMMA tableDefPart )*
+    : tableElement ( COMMA tableElement)*
     ;
 
-tableDefPart
-    : columnName type columnConstraint*                             # ColumnDeclaration
+tableElement
+    : columnName OPTIONAL? type columnConstraintDef* comment?          # ColumnDefinition
+    | ( CONSTRAINT constraintName )?  tableConstraint                  # TableConstrDefinition
     ;
 
-columnConstraint
-    : ( CONSTRAINT columnConstraintName )?  columnConstraintDef
+// TODO: For now, we just support table-level Unique/Primary Key constraint
+//  Other table-level constraint defined in SQL-99 includes referencial constraint and check constraint
+tableConstraint
+    : uniqueSpec PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT     # TableConstrUnique
     ;
 
 columnConstraintDef
-    : NOT NULL                                  # ColConstrNotNull
-    | NULL                                      # ColConstrNull
+    : ( CONSTRAINT constraintName )?  columnConstraint
     ;
 
+columnConstraint
+    : NOT NULL                                  # ColConstrNotNull
+    | NULL                                      # ColConstrNull
+    | uniqueSpec                                   # ColConstrUnique
+    | checkConstraintDef                           # ColConstrCheck
+    ;
+
+checkConstraintDef
+    : CHECK PAREN_LEFT searchCondition PAREN_RIGHT
+    ;
+
+uniqueSpec
+    : PRIMARY KEY                                # PrimaryKey
+    | UNIQUE                                     # Unique
+    ;
+
+// <search condition>    ::= <boolean term> | <search condition> OR <boolean term>
+// we cannot do exactly that for the way expression precedence is structured in the grammar file.
+// but we at least can eliminate SFW query here.
+searchCondition : exprOr;
+
+// SQL/HIVE DDL Extension, Support additional table metadatas such as partition by, tblProperties, etc.
+tableExtension
+    : PARTITION BY partitionBy                                                             # TblExtensionPartition
+    | TBLPROPERTIES PAREN_LEFT keyValuePair (COMMA keyValuePair)* PAREN_RIGHT              # TblExtensionTblProperties
+    ;
+
+// Limiting the scope to only allow String as valid value for now
+keyValuePair : key=LITERAL_STRING EQ value=LITERAL_STRING;
+
+// For now: just support a list of columns name
+// In the future, we might support common partition expression such as Hash(), Range(), etc.
+partitionBy
+    : PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT                   #PartitionColList
+    ;
 /**
  *
  * DATA MANIPULATION LANGUAGE (DML)
@@ -852,12 +889,19 @@ type
     : datatype=(
         NULL | BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
         | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER | MISSING
-        | STRING | SYMBOL | BLOB | CLOB | DATE | STRUCT | TUPLE | LIST | SEXP | BAG | ANY
+        | STRING | SYMBOL | BLOB | CLOB | DATE | ANY
       )                                                                                                                # TypeAtomic
+    | datatype=( STRUCT | TUPLE | LIST | ARRAY | SEXP | BAG )                                                          # TypeComplexAtomic
     | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
     | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
     | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
     | datatype=(TIME|TIMESTAMP) ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                # TypeTimeZone
+    | datatype=(STRUCT|TUPLE) (ANGLE_LEFT structField ( COMMA structField )* ANGLE_RIGHT)                              # TypeStruct
+    | datatype=(LIST|ARRAY) ANGLE_LEFT type ANGLE_RIGHT                                                                # TypeList
     | symbolPrimitive                                                                                                  # TypeCustom
+    ;
+
+structField
+    : columnName OPTIONAL? COLON type columnConstraintDef* comment?
     ;

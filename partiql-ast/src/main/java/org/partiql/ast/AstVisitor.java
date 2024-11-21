@@ -61,6 +61,58 @@ public abstract class AstVisitor<R, C> {
         return node.accept(this, ctx);
     }
 
+    //
+    // DDL
+    //
+    public R visitDdl(Ddl node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    public R visitCreateTable(CreateTable node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitColumnDefinition(ColumnDefinition node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitUnique(TableConstraint.Unique node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitPrimaryKey(TableConstraint.PrimaryKey node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitCheck(TableConstraint.Check node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitNullable(AttributeConstraint.Nullable node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitKeyValue(Options.KeyValue node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitPartitionBy(Options.PartitionBy partitionBy, C ctx) {
+        return defaultVisit(partitionBy, ctx);
+    }
+
+    public R visitUnique(AttributeConstraint.Unique node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitCheck(AttributeConstraint.Check node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+
+    //
+    // END OF DDL
+    //
+
     public R visitQuery(Query node, C ctx) {
         return defaultVisit(node, ctx);
     }
@@ -439,5 +491,9 @@ public abstract class AstVisitor<R, C> {
 
     public R visitDataType(DataType node, C ctx) {
         return defaultVisit(node, ctx);
+    }
+
+    public R visitStructField(DataType.StructField structField, C ctx) {
+        return defaultVisit(structField, ctx);
     }
 }

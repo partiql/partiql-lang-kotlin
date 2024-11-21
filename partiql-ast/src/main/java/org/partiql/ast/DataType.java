@@ -9,6 +9,53 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
 public class DataType extends AstEnum {
+
+    /**
+     * A field definition with in a Struct Type Definition
+     */
+    // At the moment, this is identical to column definition;
+    // But we split those into two classes for the following reason:
+    //  1. potentially feature addition to the columnDefinition node: See SQL-99 Grammar
+    //     <column definition>    ::=
+    //         <column name>
+    //         { <data type> | <domain name> }
+    //         [ <reference scope check> ]
+    //         [ <default clause> ]
+    //         [ <column constraint definition> ... ]
+    //         [ <collate clause> ]
+    //  2. the semantics of parameterized struct type has not been finalized,
+    //     and the fact that parameterized struct type being an extension to SQL-99.
+    @EqualsAndHashCode(callSuper = false)
+    public static class StructField extends AstNode {
+        public final Identifier name;
+        public final DataType type;
+        public final Boolean isOptional;
+        public final List<AttributeConstraint> constraints;
+        public final String comment;
+
+        public StructField(Identifier name, DataType type, Boolean isOptional, List<AttributeConstraint> constraints, String comment) {
+            this.name = name;
+            this.type = type;
+            this.isOptional = isOptional;
+            this.constraints = constraints;
+            this.comment = comment;
+        }
+
+        @NotNull
+        @Override
+        public Collection<AstNode> children() {
+            ArrayList<AstNode> kids = new ArrayList<>();
+            kids.add(name);
+            kids.add(type);
+            return kids;
+        }
+
+        @Override
+        public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
+            return visitor.visitStructField(this, ctx);
+        }
+    }
+
     public static final int UNKNOWN = 0;
     // TODO remove `NULL` and `MISSING` variants from DataType
     // <absent types>
@@ -66,6 +113,7 @@ public class DataType extends AstEnum {
     public static final int TUPLE = 43;
     // <collection type>
     public static final int LIST = 44;
+    public static final int ARRAY = 48;
     public static final int BAG = 45;
     public static final int SEXP = 46;
     // <user defined type>
@@ -311,6 +359,10 @@ public class DataType extends AstEnum {
         return new DataType(LIST);
     }
 
+    public static DataType ARRAY() {
+        return new DataType(ARRAY);
+    }
+
     public static DataType SEXP() {
         return new DataType(SEXP);
     }
@@ -363,10 +415,21 @@ public class DataType extends AstEnum {
         return new DataType(USER_DEFINED, name);
     }
 
+    // Parameterized Complex Data Type
+    public static DataType ARRAY(DataType elementType) {
+        return new DataType(ARRAY, elementType);
+    }
+
+    public static DataType STRUCT(List<StructField> fields) {
+        return new DataType(STRUCT, fields);
+    }
+
     private final int code;
     private final Integer precision;
     private final Integer scale;
     private final Integer length;
+    private final DataType elementType;
+    private final List<StructField> fields;
     private final IdentifierChain name;
 
     // Private constructor for no parameter DataTypes
@@ -375,6 +438,8 @@ public class DataType extends AstEnum {
         this.precision = null;
         this.scale = null;
         this.length = null;
+        this.elementType = null;
+        this.fields = null;
         this.name = null;
     }
 
@@ -384,6 +449,29 @@ public class DataType extends AstEnum {
         this.precision = precision;
         this.scale = scale;
         this.length = length;
+        this.elementType = null;
+        this.fields = null;
+        this.name = null;
+    }
+
+    // Private constructor for DataTypes with elementType parameter; set `name` to null
+    private DataType(int code, DataType elementType) {
+        this.code = code;
+        this.precision = null;
+        this.scale = null;
+        this.length = null;
+        this.elementType = elementType;
+        this.fields = null;
+        this.name = null;
+    }
+
+    private DataType(int code, List<StructField> fields) {
+        this.code = code;
+        this.precision = null;
+        this.scale = null;
+        this.length = null;
+        this.elementType = null;
+        this.fields = fields;
         this.name = null;
     }
 
@@ -394,6 +482,8 @@ public class DataType extends AstEnum {
         this.precision = null;
         this.scale = null;
         this.length = null;
+        this.elementType = null;
+        this.fields = null;
     }
 
     @Override
@@ -456,115 +546,6 @@ public class DataType extends AstEnum {
         }
     }
 
-    @NotNull
-    private static final int[] codes = {
-        NULL,
-        MISSING,
-        CHARACTER,
-        CHAR,
-        CHARACTER_VARYING,
-        CHAR_VARYING,
-        VARCHAR,
-        CHARACTER_LARGE_OBJECT,
-        CHAR_LARGE_OBJECT,
-        CLOB,
-        STRING,
-        SYMBOL,
-        BLOB,
-        BINARY_LARGE_OBJECT,
-        BIT,
-        BIT_VARYING,
-        NUMERIC,
-        DECIMAL,
-        DEC,
-        BIGINT,
-        INT8,
-        INTEGER8,
-        INT4,
-        INTEGER4,
-        INTEGER,
-        INT,
-        INT2,
-        INTEGER2,
-        SMALLINT,
-        TINYINT,
-        FLOAT,
-        REAL,
-        DOUBLE_PRECISION,
-        BOOLEAN,
-        BOOL,
-        DATE,
-        TIME,
-        TIME_WITH_TIME_ZONE,
-        TIMESTAMP,
-        TIMESTAMP_WITH_TIME_ZONE,
-        INTERVAL,
-        STRUCT,
-        TUPLE,
-        LIST,
-        BAG,
-        SEXP,
-        USER_DEFINED
-    };
-
-    @NotNull
-    public static DataType parse(@NotNull String value) {
-        switch (value) {
-            case "NULL": return NULL();
-            case "MISSING": return MISSING();
-            case "BOOL": return BOOL();
-            case "BOOLEAN": return BOOLEAN();
-            case "TINYINT": return TINYINT();
-            case "SMALLINT": return SMALLINT();
-            case "INTEGER2": return INTEGER2();
-            case "INT2": return INT2();
-            case "INTEGER": return INTEGER();
-            case "INT": return INT();
-            case "INTEGER4": return INTEGER4();
-            case "INT4": return INT4();
-            case "INTEGER8": return INTEGER8();
-            case "INT8": return INT8();
-            case "BIGINT": return BIGINT();
-            case "REAL": return REAL();
-            case "DOUBLE_PRECISION": return DOUBLE_PRECISION();
-            case "FLOAT": return FLOAT();
-            case "DECIMAL": return DECIMAL();
-            case "DEC": return DEC();
-            case "NUMERIC": return NUMERIC();
-            case "BIT": return BIT();
-            case "BIT_VARYING": return BIT_VARYING();
-            case "CHAR": return CHAR();
-            case "CHARACTER": return CHARACTER();
-            case "VARCHAR": return VARCHAR();
-            case "CHARACTER_LARGE_OBJECT": return CHARACTER_LARGE_OBJECT();
-            case "CHAR_LARGE_OBJECT": return CHAR_LARGE_OBJECT();
-            case "CHAR_VARYING": return CHAR_VARYING();
-            case "STRING": return STRING();
-            case "SYMBOL": return SYMBOL();
-            case "BLOB": return BLOB();
-            case "BINARY_LARGE_OBJECT": return BINARY_LARGE_OBJECT();
-            case "CLOB": return CLOB();
-            case "DATE": return DATE();
-            case "STRUCT": return STRUCT();
-            case "TUPLE": return TUPLE();
-            case "LIST": return LIST();
-            case "SEXP": return SEXP();
-            case "BAG": return BAG();
-            case "TIME": return TIME();
-            case "TIME_WITH_TIME_ZONE": return TIME_WITH_TIME_ZONE();
-            case "TIMESTAMP": return TIMESTAMP();
-            case "TIMESTAMP_WITH_TIME_ZONE": return TIMESTAMP_WITH_TIME_ZONE();
-            case "INTERVAL": return INTERVAL();
-            case "USER_DEFINED": return USER_DEFINED();
-            default: return UNKNOWN();
-        }
-    }
-
-    @NotNull
-    public static int[] codes() {
-        return codes;
-    }
-
     /**
      * TODO docs
      * @return
@@ -595,6 +576,22 @@ public class DataType extends AstEnum {
      */
     public IdentifierChain getName() {
         return name;
+    }
+
+    /**
+     * TODO docs
+     * @return
+     */
+    public DataType getElementType() {
+        return elementType;
+    }
+
+    /**
+     * TODO docs
+     * @return
+     */
+    public List<StructField> getFields() {
+        return fields;
     }
 
     @NotNull

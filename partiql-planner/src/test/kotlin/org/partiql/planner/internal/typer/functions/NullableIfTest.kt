@@ -20,7 +20,7 @@ import java.util.stream.Stream
  *
  * TODO: Model handling of Truth Value in typer better.
  */
-class NullIfTest : PartiQLTyperTestBase() {
+class NullableIfTest : PartiQLTyperTestBase() {
 
     @TestFactory
     fun nullIf(): Stream<DynamicContainer> {

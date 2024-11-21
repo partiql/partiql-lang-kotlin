@@ -49,6 +49,7 @@ import org.partiql.ast.graph.GraphRestrictor
 import org.partiql.ast.graph.GraphSelector
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.StringValue
 
 // TODO docs for all factory methods
 //  Also consider defaults for nullable. Need to look more into backwards compatibility.
@@ -505,5 +506,59 @@ public object Ast {
     @JvmStatic
     public fun sort(expr: Expr, order: Order?, nulls: Nulls?): Sort {
         return Sort(expr, order, nulls)
+    }
+
+    //
+    // DDL
+    //
+    @JvmStatic
+    public fun createTable(name: IdentifierChain, columns: List<ColumnDefinition>, constraints: List<TableConstraint>, partitionBy: Options.PartitionBy?, tableProperties: List<Options.KeyValue>): CreateTable {
+        return CreateTable(name, columns, constraints, partitionBy, tableProperties)
+    }
+
+    @JvmStatic
+    public fun columnDefinition(name: Identifier, type: DataType, isOptional: Boolean, constraints: List<AttributeConstraint>, comment: String?): ColumnDefinition {
+        return ColumnDefinition(name, type, isOptional, constraints, comment)
+    }
+
+    @JvmStatic
+    public fun tableConstraintUnique(name: String?, columns: List<Identifier>): TableConstraint.Unique {
+        return TableConstraint.Unique(name, columns)
+    }
+
+    @JvmStatic
+    public fun tableConstraintPrimaryKey(name: String?, columns: List<Identifier>): TableConstraint.PrimaryKey {
+        return TableConstraint.PrimaryKey(name, columns)
+    }
+
+    @JvmStatic
+    public fun tableConstraintCheck(name: String?, searchCondition: Expr): TableConstraint.Check {
+        return TableConstraint.Check(name, searchCondition)
+    }
+
+    @JvmStatic
+    public fun columnConstraintNullable(name: String?, isNullable: Boolean): AttributeConstraint.Nullable {
+        return AttributeConstraint.Nullable(name, isNullable)
+    }
+
+    @JvmStatic
+    public fun columnConstraintUnique(name: String?, isPrimaryKey: Boolean): AttributeConstraint.Unique {
+        return AttributeConstraint.Unique(name, isPrimaryKey)
+    }
+
+    @JvmStatic
+    public fun columnConstraintCheck(name: String?, searchCondition: Expr): AttributeConstraint.Check {
+        return AttributeConstraint.Check(name, searchCondition)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @JvmStatic
+    public fun keyValue(key: String, value: StringValue): Options.KeyValue {
+        return Options.KeyValue(key, value)
+    }
+
+    @JvmStatic
+    public fun partitionBy(columns: List<Identifier>): Options.PartitionBy {
+        return Options.PartitionBy(columns)
     }
 }

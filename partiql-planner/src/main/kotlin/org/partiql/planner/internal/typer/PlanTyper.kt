@@ -1217,7 +1217,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * separation is cleaner as the typing of NULLS is subtly different.
          *
          * SQL-99 6.16 General Rules on <set function specification>
-         *     Let TX be the single-column table that is the result of applying the <value expression>
+         *     Let TX be the single-columns table that is the result of applying the <value expression>
          *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
          */
 

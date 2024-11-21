@@ -4305,7 +4305,7 @@ internal class PlanTyperTestsPorted {
                 )
             ),
             ErrorTestCase(
-                name = "Unknown column",
+                name = "Unknown columns",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
