@@ -78,15 +78,6 @@ public final class org/partiql/ast/Ast {
 	public static final fun keyValue (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/ddl/KeyValue;
 	public static final fun let (Ljava/util/List;)Lorg/partiql/ast/Let;
 	public static final fun letBinding (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/Let$Binding;
-	public static final fun literalBool (Z)Lorg/partiql/ast/literal/LiteralBool;
-	public static final fun literalDecimal (Ljava/math/BigDecimal;)Lorg/partiql/ast/literal/LiteralDecimal;
-	public static final fun literalFloat (Ljava/lang/String;)Lorg/partiql/ast/literal/LiteralDouble;
-	public static final fun literalInt (I)Lorg/partiql/ast/literal/LiteralInt;
-	public static final fun literalLong (J)Lorg/partiql/ast/literal/LiteralLong;
-	public static final fun literalMissing ()Lorg/partiql/ast/literal/LiteralMissing;
-	public static final fun literalNull ()Lorg/partiql/ast/literal/LiteralNull;
-	public static final fun literalString (Ljava/lang/String;)Lorg/partiql/ast/literal/LiteralString;
-	public static final fun literalTypedString (Lorg/partiql/ast/DataType;Ljava/lang/String;)Lorg/partiql/ast/literal/LiteralTypedString;
 	public static final fun orderBy (Ljava/util/List;)Lorg/partiql/ast/OrderBy;
 	public static final fun partitionBy (Ljava/util/List;)Lorg/partiql/ast/ddl/PartitionBy;
 	public static final fun query (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/Query;
@@ -2576,58 +2567,52 @@ public abstract class org/partiql/ast/literal/Literal {
 	public abstract fun getText ()Ljava/lang/String;
 }
 
+public class org/partiql/ast/literal/LiteralApprox : org/partiql/ast/literal/Literal {
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDouble ()D
+	public fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun litApprox (D)Lorg/partiql/ast/literal/LiteralApprox;
+	public static fun litApprox (F)Lorg/partiql/ast/literal/LiteralApprox;
+	public static fun litApprox (Ljava/math/BigDecimal;)Lorg/partiql/ast/literal/LiteralApprox;
+	public static fun litApprox (Ljava/math/BigDecimal;I)Lorg/partiql/ast/literal/LiteralApprox;
+}
+
 public class org/partiql/ast/literal/LiteralBool : org/partiql/ast/literal/Literal {
 	public field value Z
-	public fun <init> (Z)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
+	public static fun litBool (Z)Lorg/partiql/ast/literal/LiteralBool;
 }
 
-public class org/partiql/ast/literal/LiteralDecimal : org/partiql/ast/literal/Literal {
-	public field value Ljava/math/BigDecimal;
-	public fun <init> (Ljava/math/BigDecimal;)V
+public class org/partiql/ast/literal/LiteralExact : org/partiql/ast/literal/Literal {
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getDecimal ()Ljava/math/BigDecimal;
 	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
+	public static fun litExact (Ljava/math/BigDecimal;)Lorg/partiql/ast/literal/LiteralExact;
 }
 
-public class org/partiql/ast/literal/LiteralDouble : org/partiql/ast/literal/Literal {
-	public field text Ljava/lang/String;
-	public field value D
-	public fun <init> (Ljava/lang/String;)V
+public class org/partiql/ast/literal/LiteralInteger : org/partiql/ast/literal/Literal {
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getInteger ()J
 	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
-}
-
-public class org/partiql/ast/literal/LiteralInt : org/partiql/ast/literal/Literal {
-	public field value I
-	public fun <init> (I)V
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getText ()Ljava/lang/String;
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/literal/LiteralLong : org/partiql/ast/literal/Literal {
-	public field value J
-	public fun <init> (J)V
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getText ()Ljava/lang/String;
-	public fun hashCode ()I
+	public static fun litInt (I)Lorg/partiql/ast/literal/LiteralInteger;
+	public static fun litInt (J)Lorg/partiql/ast/literal/LiteralInteger;
 }
 
 public class org/partiql/ast/literal/LiteralMissing : org/partiql/ast/literal/Literal {
-	public fun <init> ()V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
+	public static fun litMissing ()Lorg/partiql/ast/literal/LiteralMissing;
 }
 
 public class org/partiql/ast/literal/LiteralNull : org/partiql/ast/literal/Literal {
@@ -2636,25 +2621,26 @@ public class org/partiql/ast/literal/LiteralNull : org/partiql/ast/literal/Liter
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
+	public static fun litNull ()Lorg/partiql/ast/literal/LiteralNull;
 }
 
 public class org/partiql/ast/literal/LiteralString : org/partiql/ast/literal/Literal {
 	public field value Ljava/lang/String;
-	public fun <init> (Ljava/lang/String;)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
+	public static fun litString (Ljava/lang/String;)Lorg/partiql/ast/literal/LiteralString;
 }
 
 public class org/partiql/ast/literal/LiteralTypedString : org/partiql/ast/literal/Literal {
 	public field type Lorg/partiql/ast/DataType;
 	public field value Ljava/lang/String;
-	public fun <init> (Lorg/partiql/ast/DataType;Ljava/lang/String;)V
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
+	public static fun litTypedString (Lorg/partiql/ast/DataType;Ljava/lang/String;)Lorg/partiql/ast/literal/LiteralTypedString;
 }
 
 public abstract class org/partiql/ast/sql/SqlBlock {

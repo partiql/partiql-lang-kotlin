@@ -8,7 +8,12 @@ import org.jetbrains.annotations.NotNull;
  */
 @EqualsAndHashCode(callSuper = false)
 public class LiteralMissing extends Literal {
-    public LiteralMissing() {}
+    private LiteralMissing() {}
+
+    @NotNull
+    public static LiteralMissing litMissing() {
+        return new LiteralMissing();
+    }
 
     @NotNull
     @Override

@@ -10,8 +10,6 @@ import org.partiql.ast.Ast.from
 import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.identifierChain
-import org.partiql.ast.Ast.literalInt
-import org.partiql.ast.Ast.literalString
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.selectItemExpr
 import org.partiql.ast.Ast.selectList
@@ -20,6 +18,8 @@ import org.partiql.ast.FromType
 import org.partiql.ast.SelectItem
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.Scope
+import org.partiql.ast.literal.LiteralInteger.litInt
+import org.partiql.ast.literal.LiteralString.litString
 import kotlin.test.assertEquals
 
 class NormalizeSelectTest {
@@ -172,7 +172,7 @@ class NormalizeSelectTest {
                     constructor = exprStruct(
                         items.map {
                             exprStructField(
-                                name = exprLit(literalString(it.first)),
+                                name = exprLit(litString(it.first)),
                                 value = it.second
                             )
                         }
@@ -219,5 +219,5 @@ class NormalizeSelectTest {
         asAlias = asAlias?.let { identifier(asAlias, isDelimited = false) }
     )
 
-    private fun lit(value: Int) = exprLit(literalInt(value))
+    private fun lit(value: Int) = exprLit(litInt(value))
 }

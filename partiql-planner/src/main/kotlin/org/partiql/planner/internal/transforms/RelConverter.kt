@@ -20,7 +20,6 @@ import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.identifierChain
-import org.partiql.ast.Ast.literalInt
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
 import org.partiql.ast.AstVisitor
@@ -49,6 +48,7 @@ import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.Scope
+import org.partiql.ast.literal.LiteralInteger.litInt
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.helpers.toBinder
 import org.partiql.planner.internal.ir.Rel
@@ -439,7 +439,7 @@ internal object RelConverter {
                     relOpAggregateCallUnresolved(
                         name,
                         org.partiql.planner.internal.ir.SetQuantifier.ALL,
-                        args = listOf(exprLit(literalInt(1)).toRex(env))
+                        args = listOf(exprLit(litInt(1)).toRex(env))
                     )
                 } else {
                     val setq = when (expr.setq?.code()) {

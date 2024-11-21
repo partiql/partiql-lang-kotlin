@@ -55,11 +55,10 @@ import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.literal.Literal
+import org.partiql.ast.literal.LiteralApprox
 import org.partiql.ast.literal.LiteralBool
-import org.partiql.ast.literal.LiteralDecimal
-import org.partiql.ast.literal.LiteralDouble
-import org.partiql.ast.literal.LiteralInt
-import org.partiql.ast.literal.LiteralLong
+import org.partiql.ast.literal.LiteralExact
+import org.partiql.ast.literal.LiteralInteger
 import org.partiql.ast.literal.LiteralMissing
 import org.partiql.ast.literal.LiteralNull
 import org.partiql.ast.literal.LiteralString
@@ -159,58 +158,12 @@ internal object RexConverter {
                 else -> pValue.type.toPType()
             }
             val cType = CompilerType(
-                _delegate = node.lit.toPType(),
+                _delegate = type,
                 isNullValue = node.lit is LiteralNull,
                 isMissingValue = node.lit is LiteralMissing
             )
-            val op = rexOpLit(node.lit.toPartiQLValue())
+            val op = rexOpLit(pValue)
             return rex(cType, op)
-        }
-
-        private fun Literal.toPType(): PType {
-            return when (this) {
-                is LiteralNull, is LiteralMissing -> PType.unknown()
-                is LiteralString -> PType.string()
-                is LiteralBool -> PType.bool()
-                is LiteralDecimal -> {
-                    if (this.value.scale() == 0) {
-                        PType.numeric()
-                    } else {
-                        PType.decimal(this.value.precision(), this.value.scale())
-                    }
-                }
-                is LiteralInt -> PType.integer()
-                is LiteralLong -> PType.bigint()
-                is LiteralDouble -> PType.doublePrecision()
-                is LiteralTypedString -> {
-                    val type = this.type
-                    when (type.code()) {
-                        DataType.DATE -> PType.date()
-                        DataType.TIME -> if (type.precision == null) {
-                            PType.time(6)
-                        } else {
-                            PType.time(type.precision)
-                        }
-                        DataType.TIME_WITH_TIME_ZONE -> if (type.precision == null) {
-                            PType.timez(6)
-                        } else {
-                            PType.timez(type.precision)
-                        }
-                        DataType.TIMESTAMP -> if (type.precision == null) {
-                            PType.timestamp(6)
-                        } else {
-                            PType.timestamp(type.precision)
-                        }
-                        DataType.TIMESTAMP_WITH_TIME_ZONE -> if (type.precision == null) {
-                            PType.timestampz(6)
-                        } else {
-                            PType.timestampz(type.precision)
-                        }
-                        else -> error("Unsupported typed literal string: $this")
-                    }
-                }
-                else -> error("Unsupported literal: $this")
-            }
         }
 
         private fun Literal.toPartiQLValue(): PartiQLValue {
@@ -219,16 +172,27 @@ internal object RexConverter {
                 is LiteralMissing -> missingValue()
                 is LiteralString -> stringValue(value)
                 is LiteralBool -> boolValue(value)
-                is LiteralDecimal -> {
-                    if (this.value.scale() == 0) {
-                        intValue(this.value.toBigInteger())
+                is LiteralExact -> {
+                    val dec = this.decimal
+                    if (dec.scale() == 0) {
+                        intValue(dec.toBigInteger())
                     } else {
-                        decimalValue(this.value)
+                        decimalValue(dec)
                     }
                 }
-                is LiteralInt -> int32Value(this.value)
-                is LiteralLong -> int64Value(this.value)
-                is LiteralDouble -> float64Value(this.value)
+                is LiteralInteger -> {
+                    val n = this.integer
+                    // 1st, try parse as int
+                    try {
+                        val v = n.toInt()
+                        int32Value(v)
+                    } catch (ex: NumberFormatException) {
+                        int64Value(n)
+                    }
+                }
+                is LiteralApprox -> {
+                    float64Value(this.double)
+                }
                 is LiteralTypedString -> {
                     val type = this.type
                     val typedString = this.value

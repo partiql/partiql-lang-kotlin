@@ -11,8 +11,13 @@ public class LiteralString extends Literal {
     @NotNull
     public String value;
 
-    public LiteralString(@NotNull String value) {
+    private LiteralString(@NotNull String value) {
         this.value = value;
+    }
+
+    @NotNull
+    public static LiteralString litString(@NotNull String value) {
+        return new LiteralString(value);
     }
 
     @NotNull

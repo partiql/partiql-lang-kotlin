@@ -16,9 +16,14 @@ public class LiteralTypedString extends Literal {
     @NotNull
     public String value;
 
-    public LiteralTypedString(@NotNull DataType type, @NotNull String value) {
+    private LiteralTypedString(@NotNull DataType type, @NotNull String value) {
         this.type = type;
         this.value = value;
+    }
+
+    @NotNull
+    public static LiteralTypedString litTypedString(@NotNull DataType type, @NotNull String value) {
+        return new LiteralTypedString(type, value);
     }
 
     @NotNull

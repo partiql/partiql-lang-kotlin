@@ -106,15 +106,6 @@ import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.Ast.keyValue
 import org.partiql.ast.Ast.letBinding
-import org.partiql.ast.Ast.literalBool
-import org.partiql.ast.Ast.literalDecimal
-import org.partiql.ast.Ast.literalFloat
-import org.partiql.ast.Ast.literalInt
-import org.partiql.ast.Ast.literalLong
-import org.partiql.ast.Ast.literalMissing
-import org.partiql.ast.Ast.literalNull
-import org.partiql.ast.Ast.literalString
-import org.partiql.ast.Ast.literalTypedString
 import org.partiql.ast.Ast.orderBy
 import org.partiql.ast.Ast.partitionBy
 import org.partiql.ast.Ast.query
@@ -173,6 +164,14 @@ import org.partiql.ast.graph.GraphPattern
 import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphRestrictor
 import org.partiql.ast.graph.GraphSelector
+import org.partiql.ast.literal.LiteralApprox.litApprox
+import org.partiql.ast.literal.LiteralBool.litBool
+import org.partiql.ast.literal.LiteralExact.litExact
+import org.partiql.ast.literal.LiteralInteger.litInt
+import org.partiql.ast.literal.LiteralMissing.litMissing
+import org.partiql.ast.literal.LiteralNull.litNull
+import org.partiql.ast.literal.LiteralString.litString
+import org.partiql.ast.literal.LiteralTypedString.litTypedString
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
@@ -222,7 +221,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             ctx.errorListener.report(error)
             val locations = SourceLocations()
             return PartiQLParser.Result(
-                mutableListOf(org.partiql.ast.Query(exprLit(literalNull()))) as List<Statement>,
+                mutableListOf(org.partiql.ast.Query(exprLit(litNull()))) as List<Statement>,
                 locations
             )
         }
@@ -465,8 +464,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
             explain(
                 options = mapOf(
-                    "type" to (type?.let { literalString(it) } ?: literalNull()),
-                    "format" to (format?.let { literalString(it) } ?: literalNull())
+                    "type" to (type?.let { litString(it) } ?: litNull()),
+                    "format" to (format?.let { litString(it) } ?: litNull())
                 ),
                 statement = visit(ctx.statement()) as Statement,
             )
@@ -1872,12 +1871,16 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (e: NumberFormatException) {
                 throw error(ctx, "Invalid decimal literal", e)
             }
-            exprLit(literalDecimal(decimal))
+            exprLit(litExact(decimal))
         }
 
         override fun visitLiteralFloat(ctx: GeneratedParser.LiteralFloatContext) = translate(ctx) {
             val v = ctx.LITERAL_FLOAT().text.trim()
-            exprLit(literalFloat(v))
+            val parts = v.split(Regex("[eE]"))
+            assert(parts.size == 2)
+            val mantissa = parts[0].trim()
+            val exponent = parts[1].trim()
+            exprLit(litApprox(BigDecimal(mantissa, MathContext(38, RoundingMode.HALF_EVEN)), exponent.toInt()))
         }
 
         override fun visitArray(ctx: GeneratedParser.ArrayContext) = translate(ctx) {
@@ -1886,19 +1889,19 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralNull(ctx: GeneratedParser.LiteralNullContext) = translate(ctx) {
-            exprLit(literalNull())
+            exprLit(litNull())
         }
 
         override fun visitLiteralMissing(ctx: GeneratedParser.LiteralMissingContext) = translate(ctx) {
-            exprLit(literalMissing())
+            exprLit(litMissing())
         }
 
         override fun visitLiteralTrue(ctx: GeneratedParser.LiteralTrueContext) = translate(ctx) {
-            exprLit(literalBool(value = true))
+            exprLit(litBool(true))
         }
 
         override fun visitLiteralFalse(ctx: GeneratedParser.LiteralFalseContext) = translate(ctx) {
-            exprLit(literalBool(value = false))
+            exprLit(litBool(false))
         }
 
         override fun visitLiteralIon(ctx: GeneratedParser.LiteralIonContext) = translate(ctx) {
@@ -1909,31 +1912,23 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralString(ctx: GeneratedParser.LiteralStringContext) = translate(ctx) {
             val value = ctx.LITERAL_STRING().getStringValue()
-            exprLit(literalString(value))
+            exprLit(litString(value))
         }
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
             val n = ctx.LITERAL_INTEGER().text
-            // 1st, try parse as int32
-            try {
-                val v = n.toInt(10)
-                return@translate exprLit(literalInt((v)))
-            } catch (ex: NumberFormatException) {
-                // ignore
-            }
-
-            // 2nd, try parse as int64
+            // 1st, try parse as int64
             try {
                 val v = n.toLong(10)
-                return@translate exprLit(literalLong(v))
+                return@translate exprLit(litInt(v))
             } catch (ex: NumberFormatException) {
                 // ignore
             }
 
-            // 3rd, try parse as numeric (decimal)
+            // 2nd, try parse as numeric (decimal)
             try {
                 val dec = BigDecimal(n, MathContext(38, RoundingMode.HALF_EVEN))
-                return@translate exprLit(literalDecimal(dec))
+                return@translate exprLit(litExact(dec))
             } catch (ex: NumberFormatException) {
                 throw ex
             }
@@ -1945,7 +1940,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             if (DATE_PATTERN_REGEX.matches(dateString).not()) {
                 throw error(pattern, "Expected DATE string to be of the format yyyy-MM-dd")
             }
-            exprLit(literalTypedString(type = DataType.DATE(), dateString))
+            exprLit(litTypedString(DataType.DATE(), dateString))
         }
 
         override fun visitLiteralTime(ctx: GeneratedParser.LiteralTimeContext) = translate(ctx) {
@@ -1966,7 +1961,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                     }
                 }
             }
-            exprLit(literalTypedString(type = type, timeString))
+            exprLit(litTypedString(type, timeString))
         }
 
         override fun visitLiteralTimestamp(ctx: GeneratedParser.LiteralTimestampContext) = translate(ctx) {
@@ -1987,7 +1982,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                     }
                 }
             }
-            exprLit(literalTypedString(type = type, timestampString))
+            exprLit(litTypedString(type, timestampString))
         }
 
         override fun visitTuple(ctx: GeneratedParser.TupleContext) = translate(ctx) {

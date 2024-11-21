@@ -11,6 +11,11 @@ public class LiteralNull extends Literal {
     public LiteralNull() {}
 
     @NotNull
+    public static LiteralNull litNull() {
+        return new LiteralNull();
+    }
+
+    @NotNull
     @Override
     public String getText() {
         return "NULL";

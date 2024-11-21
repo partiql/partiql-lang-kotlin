@@ -54,16 +54,6 @@ import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphRestrictor
 import org.partiql.ast.graph.GraphSelector
 import org.partiql.ast.literal.Literal
-import org.partiql.ast.literal.LiteralBool
-import org.partiql.ast.literal.LiteralDecimal
-import org.partiql.ast.literal.LiteralDouble
-import org.partiql.ast.literal.LiteralInt
-import org.partiql.ast.literal.LiteralLong
-import org.partiql.ast.literal.LiteralMissing
-import org.partiql.ast.literal.LiteralNull
-import org.partiql.ast.literal.LiteralString
-import org.partiql.ast.literal.LiteralTypedString
-import java.math.BigDecimal
 
 // TODO docs for all factory methods
 //  Also consider defaults for nullable. Need to look more into backwards compatibility.
@@ -367,52 +357,6 @@ public object Ast {
     @JvmStatic
     public fun graphSelectorShortestKGroup(k: Long): GraphSelector.ShortestKGroup {
         return GraphSelector.ShortestKGroup(k)
-    }
-
-    // Literal
-    @JvmStatic
-    public fun literalBool(value: Boolean): LiteralBool {
-        return LiteralBool(value)
-    }
-
-    @JvmStatic
-    public fun literalDecimal(value: BigDecimal): LiteralDecimal {
-        return LiteralDecimal(value)
-    }
-
-    @JvmStatic
-    public fun literalFloat(text: String): LiteralDouble {
-        return LiteralDouble(text)
-    }
-
-    @JvmStatic
-    public fun literalInt(value: Int): LiteralInt {
-        return LiteralInt(value)
-    }
-
-    @JvmStatic
-    public fun literalLong(value: Long): LiteralLong {
-        return LiteralLong(value)
-    }
-
-    @JvmStatic
-    public fun literalNull(): LiteralNull {
-        return LiteralNull()
-    }
-
-    @JvmStatic
-    public fun literalMissing(): LiteralMissing {
-        return LiteralMissing()
-    }
-
-    @JvmStatic
-    public fun literalString(value: String): LiteralString {
-        return LiteralString(value)
-    }
-
-    @JvmStatic
-    public fun literalTypedString(type: DataType, value: String): LiteralTypedString {
-        return LiteralTypedString(type, value)
     }
 
     // Other

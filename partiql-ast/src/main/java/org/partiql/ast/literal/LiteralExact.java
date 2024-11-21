@@ -9,12 +9,22 @@ import java.math.BigDecimal;
  * TODO DOCS
  */
 @EqualsAndHashCode(callSuper = false)
-public class LiteralDecimal extends Literal {
+public class LiteralExact extends Literal {
     @NotNull
-    public BigDecimal value;
+    private final BigDecimal value;
 
-    public LiteralDecimal(@NotNull BigDecimal value) {
+    private LiteralExact(@NotNull BigDecimal value) {
         this.value = value;
+    }
+
+    @NotNull
+    public static LiteralExact litExact(BigDecimal value) {
+        return new LiteralExact(value);
+    }
+
+    @NotNull
+    public BigDecimal getDecimal() {
+        return value;
     }
 
     @NotNull

@@ -10,8 +10,13 @@ import org.jetbrains.annotations.NotNull;
 public class LiteralBool extends Literal {
     public boolean value;
 
-    public LiteralBool(boolean value) {
+    private LiteralBool(boolean value) {
         this.value = value;
+    }
+
+    @NotNull
+    public static LiteralBool litBool(boolean value) {
+        return new LiteralBool(value);
     }
 
     @NotNull
