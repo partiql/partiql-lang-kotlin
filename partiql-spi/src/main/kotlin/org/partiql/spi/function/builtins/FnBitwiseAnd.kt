@@ -8,9 +8,10 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import kotlin.experimental.and
 
-internal object FnBitwiseAnd : ArithmeticDiadicOperator() {
-    override fun getName(): String {
-        return "bitwise_and"
+internal object FnBitwiseAnd : DiadicArithmeticOperator("bitwise_and") {
+
+    init {
+        fillTable()
     }
 
     override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {

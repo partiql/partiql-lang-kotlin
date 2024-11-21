@@ -4,128 +4,81 @@
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-// TODO: Handle Overflow
-internal val Fn_DIVIDE__INT8_INT8__INT8 = Function.static(
+internal object FnDivide : DiadicArithmeticOperator("divide") {
 
-    name = "divide",
-    returns = PType.tinyint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.tinyint()),
-        Parameter("rhs", PType.tinyint()),
-    ),
-
-) { args ->
-    @Suppress("DEPRECATION") val arg0 = args[0].byte
-    @Suppress("DEPRECATION") val arg1 = args[1].byte
-    Datum.tinyint((arg0 / arg1).toByte())
-}
-
-internal val Fn_DIVIDE__INT16_INT16__INT16 = Function.static(
-
-    name = "divide",
-    returns = PType.smallint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.smallint()),
-        Parameter("rhs", PType.smallint()),
-    ),
-
-) { args ->
-    val arg0 = args[0].short
-    val arg1 = args[1].short
-    Datum.smallint((arg0 / arg1).toShort())
-}
-
-internal val Fn_DIVIDE__INT32_INT32__INT32 = Function.static(
-
-    name = "divide",
-    returns = PType.integer(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.integer()),
-        Parameter("rhs", PType.integer()),
-    ),
-
-) { args ->
-    val arg0 = args[0].int
-    val arg1 = args[1].int
-    Datum.integer(arg0 / arg1)
-}
-
-internal val Fn_DIVIDE__INT64_INT64__INT64 = Function.static(
-
-    name = "divide",
-    returns = PType.bigint(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.bigint()),
-        Parameter("rhs", PType.bigint()),
-    ),
-
-) { args ->
-    val arg0 = args[0].long
-    val arg1 = args[1].long
-    Datum.bigint(arg0 / arg1)
-}
-
-internal val Fn_DIVIDE__INT_INT__INT = Function.static(
-
-    name = "divide",
-    returns = PType.numeric(),
-    parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("lhs", PType.numeric()),
-        @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
-    ),
-
-) { args ->
-    val arg0 = args[0].bigInteger
-    val arg1 = args[1].bigInteger
-    Datum.numeric(arg0 / arg1)
-}
-
-internal val Fn_DIVIDE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY =
-    Function.static(
-
-        name = "divide",
-        returns = PType.decimal(),
-        parameters = arrayOf(
-            @Suppress("DEPRECATION") Parameter("lhs", PType.decimal()),
-            @Suppress("DEPRECATION") Parameter("rhs", PType.decimal()),
-        ),
-
-    ) { args ->
-        val arg0 = args[0].bigDecimal
-        val arg1 = args[1].bigDecimal
-        Datum.decimal(arg0 / arg1)
+    init {
+        fillTable()
     }
 
-internal val Fn_DIVIDE__FLOAT32_FLOAT32__FLOAT32 = Function.static(
+    override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {
+        return basic(PType.tinyint()) { args ->
+            @Suppress("DEPRECATION") val arg0 = args[0].byte
+            @Suppress("DEPRECATION") val arg1 = args[1].byte
+            Datum.tinyint((arg0 / arg1).toByte())
+        }
+    }
 
-    name = "divide",
-    returns = PType.real(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.real()),
-        Parameter("rhs", PType.real()),
-    ),
+    override fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Function.Instance {
+        return basic(PType.smallint()) { args ->
+            val arg0 = args[0].short
+            val arg1 = args[1].short
+            Datum.smallint((arg0 / arg1).toShort())
+        }
+    }
 
-) { args ->
-    val arg0 = args[0].float
-    val arg1 = args[1].float
-    Datum.real(arg0 / arg1)
-}
+    override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Function.Instance {
+        return basic(PType.integer()) { args ->
+            val arg0 = args[0].int
+            val arg1 = args[1].int
+            Datum.integer(arg0 / arg1)
+        }
+    }
 
-internal val Fn_DIVIDE__FLOAT64_FLOAT64__FLOAT64 = Function.static(
+    override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Function.Instance {
+        return basic(PType.bigint()) { args ->
+            val arg0 = args[0].long
+            val arg1 = args[1].long
+            Datum.bigint(arg0 / arg1)
+        }
+    }
 
-    name = "divide",
-    returns = PType.doublePrecision(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.doublePrecision()),
-        Parameter("rhs", PType.doublePrecision()),
-    ),
+    override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
+        return basic(PType.numeric()) { args ->
+            val arg0 = args[0].bigInteger
+            val arg1 = args[1].bigInteger
+            Datum.numeric(arg0 / arg1)
+        }
+    }
 
-) { args ->
-    val arg0 = args[0].double
-    val arg1 = args[1].double
-    Datum.doublePrecision(arg0 / arg1)
+    // SQL:Server:
+    // p = p1 - s1 + s2 + max(6, s1 + p2 + 1)
+    // s = max(6, s1 + p2 + 1)
+    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
+        val p = decimalLhs.precision - decimalLhs.scale + decimalRhs.scale + Math.max(6, decimalLhs.scale + decimalRhs.precision + 1)
+        val s = Math.max(6, decimalLhs.scale + decimalRhs.precision + 1)
+        return basic(PType.decimal()) { args ->
+            val arg0 = args[0].bigDecimal
+            val arg1 = args[1].bigDecimal
+            Datum.decimal(arg0 / arg1, p, s)
+        }
+    }
+
+    override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {
+        return basic(PType.real()) { args ->
+            val arg0 = args[0].float
+            val arg1 = args[1].float
+            Datum.real(arg0 / arg1)
+        }
+    }
+
+    override fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Function.Instance {
+        return basic(PType.doublePrecision()) { args ->
+            val arg0 = args[0].double
+            val arg1 = args[1].double
+            Datum.doublePrecision(arg0 / arg1)
+        }
+    }
 }

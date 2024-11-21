@@ -4,201 +4,138 @@
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
+import org.partiql.value.util.compareTo
 
-internal val Fn_LT__INT8_INT8__BOOL = Function.static(
+internal object FnLt : DiadicComparisonOperator("lt") {
 
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.tinyint()),
-        Parameter("rhs", PType.tinyint()),
-    ),
+    init {
+        fillTable()
+    }
 
-) { args ->
-    val lhs = args[0].byte
-    val rhs = args[1].byte
-    Datum.bool(lhs < rhs)
-}
+    override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.tinyint()) { args ->
+            val lhs = args[0].byte
+            val rhs = args[1].byte
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-internal val Fn_LT__INT16_INT16__BOOL = Function.static(
+    override fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.smallint()) { args ->
+            val lhs = args[0].short
+            val rhs = args[1].short
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.smallint()),
-        Parameter("rhs", PType.smallint()),
-    ),
+    override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.integer()) { args ->
+            val lhs = args[0].int
+            val rhs = args[1].int
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-) { args ->
-    val lhs = args[0].short
-    val rhs = args[1].short
-    Datum.bool(lhs < rhs)
-}
+    override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.bigint()) { args ->
+            val lhs = args[0].long
+            val rhs = args[1].long
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-internal val Fn_LT__INT32_INT32__BOOL = Function.static(
+    // TODO: Update
+    override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.numeric()) { args ->
+            val lhs = args[0].bigInteger
+            val rhs = args[1].bigInteger
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.integer()),
-        Parameter("rhs", PType.integer()),
-    ),
+    override fun getComparison(lhs: Number, rhs: Number): Boolean {
+        return lhs < rhs
+    }
 
-) { args ->
-    val lhs = args[0].int
-    val rhs = args[1].int
-    Datum.bool(lhs < rhs)
-}
+    override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.real()) { args ->
+            val lhs = args[0].float
+            val rhs = args[1].float
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-internal val Fn_LT__INT64_INT64__BOOL = Function.static(
+    override fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.doublePrecision()) { args ->
+            val lhs = args[0].double
+            val rhs = args[1].double
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.bigint()),
-        Parameter("rhs", PType.bigint()),
-    ),
+    override fun getStringInstance(stringLhs: PType, stringRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.string()) { args ->
+            val lhs = args[0].string
+            val rhs = args[1].string
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-) { args ->
-    val lhs = args[0].long
-    val rhs = args[1].long
-    Datum.bool(lhs < rhs)
-}
+    override fun getTimestampInstance(timestampLhs: PType, timestampRhs: PType): Function.Instance {
+        return basic(PType.bool(), timestampLhs, timestampRhs) { args ->
+            val lhs = args[0].timestamp
+            val rhs = args[1].timestamp
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-internal val Fn_LT__INT_INT__BOOL = Function.static(
+    override fun getDateInstance(dateLhs: PType, dateRhs: PType): Function.Instance {
+        return basic(PType.bool(), PType.date()) { args ->
+            val lhs = args[0].date
+            val rhs = args[1].date
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("lhs", PType.numeric()),
-        @Suppress("DEPRECATION") Parameter("rhs", PType.numeric()),
-    ),
+    override fun getTimeInstance(timeLhs: PType, timeRhs: PType): Function.Instance {
+        return basic(PType.bool(), timeLhs, timeRhs) { args ->
+            val lhs = args[0].time
+            val rhs = args[1].time
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-) { args ->
-    val lhs = args[0].bigInteger
-    val rhs = args[1].bigInteger
-    Datum.bool(lhs < rhs)
-}
+    override fun getBooleanInstance(booleanLhs: PType, booleanRhs: PType): Function.Instance {
+        return basic(PType.bool()) { args ->
+            val lhs = args[0].boolean
+            val rhs = args[1].boolean
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-internal val Fn_LT__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL = Function.static(
+    override fun getCharInstance(charLhs: PType, charRhs: PType): Function.Instance {
+        return basic(PType.bool(), charLhs, charRhs) { args ->
+            val lhs = args[0].string
+            val rhs = args[1].string
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.decimal()),
-        Parameter("rhs", PType.decimal()),
-    ),
+    override fun getVarcharInstance(varcharLhs: PType, varcharRhs: PType): Function.Instance {
+        return basic(PType.bool(), varcharLhs, varcharRhs) { args ->
+            val lhs = args[0].string
+            val rhs = args[1].string
+            Datum.bool(lhs < rhs)
+        }
+    }
 
-) { args ->
-    val lhs = args[0].bigDecimal
-    val rhs = args[1].bigDecimal
-    Datum.bool(lhs < rhs)
-}
-
-internal val Fn_LT__FLOAT32_FLOAT32__BOOL = Function.static(
-
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.real()),
-        Parameter("rhs", PType.real()),
-    ),
-
-) { args ->
-    val lhs = args[0].float
-    val rhs = args[1].float
-    Datum.bool(lhs < rhs)
-}
-
-internal val Fn_LT__FLOAT64_FLOAT64__BOOL = Function.static(
-
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.doublePrecision()),
-        Parameter("rhs", PType.doublePrecision()),
-    ),
-
-) { args ->
-    val lhs = args[0].double
-    val rhs = args[1].double
-    Datum.bool(lhs < rhs)
-}
-
-internal val Fn_LT__STRING_STRING__BOOL = Function.static(
-
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.string()),
-        Parameter("rhs", PType.string()),
-    ),
-
-) { args ->
-    val lhs = args[0].string
-    val rhs = args[1].string
-    Datum.bool(lhs < rhs)
-}
-
-internal val Fn_LT__DATE_DATE__BOOL = Function.static(
-
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.date()),
-        Parameter("rhs", PType.date()),
-    ),
-
-) { args ->
-    val lhs = args[0].date
-    val rhs = args[1].date
-    Datum.bool(lhs < rhs)
-}
-
-internal val Fn_LT__TIME_TIME__BOOL = Function.static(
-
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.time(6)),
-        Parameter("rhs", PType.time(6)),
-    ),
-
-) { args ->
-    val lhs = args[0].time
-    val rhs = args[1].time
-    Datum.bool(lhs < rhs)
-}
-
-internal val Fn_LT__TIMESTAMP_TIMESTAMP__BOOL = Function.static(
-
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.timestamp(6)),
-        Parameter("rhs", PType.timestamp(6)),
-    ),
-
-) { args ->
-    val lhs = args[0].timestamp
-    val rhs = args[1].timestamp
-    Datum.bool(lhs < rhs)
-}
-
-internal val Fn_LT__BOOL_BOOL__BOOL = Function.static(
-
-    name = "lt",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("lhs", PType.bool()),
-        Parameter("rhs", PType.bool()),
-    ),
-
-) { args ->
-    val lhs = args[0].boolean
-    val rhs = args[1].boolean
-    Datum.bool(lhs < rhs)
+    override fun getClobInstance(clobLhs: PType, clobRhs: PType): Function.Instance {
+        return basic(PType.bool(), clobLhs, clobRhs) { args ->
+            val lhs = args[0].bytes.toString()
+            val rhs = args[1].bytes.toString()
+            Datum.bool(lhs < rhs)
+        }
+    }
 }

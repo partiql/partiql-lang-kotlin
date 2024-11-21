@@ -129,7 +129,8 @@ internal object FnResolver {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p != a) return false
+            // TODO: Don't use kind! Once all functions use the new modelling, we can just make it p != a.
+            if (p.kind != a.kind) return false
         }
         return true
     }
@@ -153,7 +154,7 @@ internal object FnResolver {
             // check match
             val p = parameters[i]
             when {
-                p == a -> exactInputTypes++
+                p.kind == a.kind -> exactInputTypes++ // TODO: Don't use kind! Once all functions use the new modelling, we can just make it p == a.
                 else -> mapping[i] = coercion(a, p) ?: return null
             }
         }

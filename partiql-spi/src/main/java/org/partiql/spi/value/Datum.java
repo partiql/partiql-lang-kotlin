@@ -615,7 +615,7 @@ public interface Datum extends Iterable<Datum> {
     static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws DataException {
         BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
         if (d.precision() > precision) {
-            throw new DataException("Value " + d + " could not fit into decimal with precision/scale.");
+            throw new DataException("Value " + d + " could not fit into decimal with precision " + precision + " and scale " + scale + ".");
         }
         return new DatumDecimal(d, PType.decimal(precision, scale));
     }

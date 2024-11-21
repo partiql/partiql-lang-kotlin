@@ -166,7 +166,8 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             // TODO assert on function name in plan typer .. here is not the place.
             val args = node.args.map { visitRex(it, ctx) }
             val fns = node.candidates.map { it.fn.signature }
-            return factory.rexCallDynamic("unknown", fns, args)
+            val name = node.candidates.first().fn.name.getName()
+            return factory.rexCallDynamic(name, fns, args)
         }
 
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
