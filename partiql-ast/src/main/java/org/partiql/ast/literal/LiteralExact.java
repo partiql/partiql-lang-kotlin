@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * TODO DOCS
@@ -20,6 +21,11 @@ public class LiteralExact extends Literal {
     @NotNull
     public static LiteralExact litExact(BigDecimal value) {
         return new LiteralExact(value);
+    }
+
+    @NotNull
+    public static LiteralExact litExact(BigInteger value) {
+        return new LiteralExact(new BigDecimal(value));
     }
 
     @NotNull

@@ -2595,6 +2595,7 @@ public class org/partiql/ast/literal/LiteralExact : org/partiql/ast/literal/Lite
 	public fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
 	public static fun litExact (Ljava/math/BigDecimal;)Lorg/partiql/ast/literal/LiteralExact;
+	public static fun litExact (Ljava/math/BigInteger;)Lorg/partiql/ast/literal/LiteralExact;
 }
 
 public class org/partiql/ast/literal/LiteralInteger : org/partiql/ast/literal/Literal {

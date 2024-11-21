@@ -173,6 +173,9 @@ internal object RexConverter {
                 is LiteralString -> stringValue(value)
                 is LiteralBool -> boolValue(value)
                 is LiteralExact -> {
+                    // TODO previous behavior inferred decimals with scale = 0 to be a PartiQLValue.IntValue with
+                    //  PType of numeric. Since we're keeping numeric and decimal, need to take another look at
+                    //  whether the literal should have type decimal or numeric.
                     val dec = this.decimal
                     if (dec.scale() == 0) {
                         intValue(dec.toBigInteger())
@@ -182,11 +185,12 @@ internal object RexConverter {
                 }
                 is LiteralInteger -> {
                     val n = this.integer
-                    // 1st, try parse as int
-                    try {
-                        val v = n.toInt()
-                        int32Value(v)
-                    } catch (ex: NumberFormatException) {
+                    // try parsing as an int32 to preserve previous behavior.
+                    // we could add always remove or add further narrowing
+                    if (n in Int.MIN_VALUE..Int.MAX_VALUE) {
+                        int32Value(n.toInt())
+                    } else {
+                        // keep as an int64
                         int64Value(n)
                     }
                 }
