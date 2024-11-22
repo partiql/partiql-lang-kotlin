@@ -1,3 +1,4 @@
+@file:Suppress("ConstPropertyName")
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -101,7 +102,6 @@ object Deps {
 object Plugins {
     // PartiQL
     const val conventions = "partiql.conventions"
-    const val pig = "org.partiql.pig.pig-gradle-plugin"
     const val publish = "org.partiql.gradle.plugin.publish"
 
     // 3P
@@ -111,5 +111,6 @@ object Plugins {
     const val dokka = "org.jetbrains.dokka"
     const val library = "org.gradle.java-library"
     const val kotlinLombok = "org.jetbrains.kotlin.plugin.lombok"
+    const val smithy = "software.amazon.smithy.gradle.smithy-base"
     const val testFixtures = "org.gradle.java-test-fixtures"
 }

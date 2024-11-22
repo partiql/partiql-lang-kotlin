@@ -24,6 +24,7 @@ include(
     "partiql-parser",
     "partiql-plan",
     "partiql-planner",
+    "partiql-sdk",
     "partiql-spi",
     "partiql-types",
     "plugins:partiql-local",
