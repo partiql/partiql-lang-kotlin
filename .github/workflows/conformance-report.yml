@@ -67,7 +67,7 @@ jobs:
         with:
           gradle-version: 8.7
       - name: Download `conformance_test_results.ion` from target branch
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v6
         id: download-report
         continue-on-error: true
         with:
