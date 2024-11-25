@@ -14,10 +14,8 @@ import java.math.BigDecimal;
  * Developer Note:
  * - There should be a method for every Datum *java* value and all PType arguments.
  * - Method names are derived from PType.Kind as pascal case.
- *
- * TODO move datetime to spi.datetime.
  */
-public interface PWriter {
+public interface PSink {
 
     default void close() {
         // no-op
