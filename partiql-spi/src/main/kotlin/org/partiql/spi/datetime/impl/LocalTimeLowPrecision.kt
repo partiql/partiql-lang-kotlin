@@ -1,0 +1,112 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package org.partiql.spi.datetime.impl
+
+import org.partiql.spi.datetime.Date
+import org.partiql.spi.datetime.DateTimeException
+import org.partiql.spi.datetime.util.DatetimeUtil
+import org.partiql.spi.datetime.TimeWithTimeZone
+import org.partiql.spi.datetime.TimeWithoutTimeZone
+import org.partiql.spi.datetime.Timezone
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.LocalTime
+import kotlin.math.max
+
+/**
+ * This implementation utilize [java.time.LocalTime] to handle time without time zone if :
+ * 1. The desired precision is below nanosecond (9 digits after decimal point).
+ *
+ * The constructor functions assumes the above condition to be true.
+ */
+internal class LocalTimeLowPrecision private constructor(
+    private val localTime: LocalTime,
+    _hour: Int? = null,
+    _minute: Int? = null,
+    _decimalSecond: BigDecimal? = null,
+) : TimeWithoutTimeZone() {
+    companion object {
+        /**
+         * Creates a [TimeWithTimeZone] value.
+         * If using this API, the precision will be nanosecond (i.e., exactly 9 digits in second fraction)
+         */
+        fun forNano(hour: Int, minute: Int, second: Int, nanoOfSecond: Int): LocalTimeLowPrecision {
+            try {
+                return LocalTimeLowPrecision(LocalTime.of(hour, minute, second, nanoOfSecond))
+            } catch (e: java.time.DateTimeException) {
+                throw DateTimeException(e.localizedMessage)
+            }
+        }
+
+        fun of(hour: Int, minute: Int, decimalSecond: BigDecimal): LocalTimeLowPrecision {
+            val wholeSecond = decimalSecond.setScale(0, RoundingMode.DOWN)
+            val nano = decimalSecond.minus(wholeSecond).movePointRight(9)
+            return forNano(hour, minute, wholeSecond.intValueExact(), nano.intValueExact()).copy(
+                _hour = hour,
+                _minute = minute,
+                _decimalSecond = decimalSecond
+            )
+        }
+    }
+
+    override val hour: Int = _hour ?: localTime.hour
+    override val minute: Int = _minute ?: localTime.minute
+
+    /**
+     * Whole second.
+     */
+    internal val second: Int = localTime.second
+
+    /**
+     * Nano of second.
+     */
+    internal val nano: Int = localTime.nano
+    override val decimalSecond: BigDecimal =
+        _decimalSecond ?: Utils.getDecimalSecondFromSecondAndNano(this.second.toLong(), this.nano.toLong())
+    override val elapsedSecond: BigDecimal by lazy {
+        BigDecimal.valueOf(this.hour * DatetimeUtil.SECONDS_IN_HOUR + this.minute * DatetimeUtil.SECONDS_IN_MINUTE) + this.decimalSecond
+    }
+
+    override fun plusHours(hours: Long): LocalTimeLowPrecision =
+        localTime.plusHours(hours).let {
+            of(it.hour, it.minute, decimalSecond)
+        }
+
+    override fun plusMinutes(minutes: Long): LocalTimeLowPrecision =
+        localTime.plusMinutes(minutes).let {
+            of(it.hour, it.minute, decimalSecond)
+        }
+
+    override fun plusSeconds(seconds: BigDecimal): TimeWithoutTimeZone =
+        if (seconds.scale() > 9) {
+            LocalTimeHighPrecision.of(hour, minute, decimalSecond).plusSeconds(seconds)
+        } else {
+            val (wholeSecond, nano) = Utils.getSecondAndNanoFromDecimalSecond(seconds)
+            val newTime = localTime.plusSeconds(wholeSecond).plusNanos(nano)
+            val newDecimalSecond = Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
+            val roundedDecimalSecond = newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
+            of(newTime.hour, newTime.minute, roundedDecimalSecond)
+        }
+
+    override fun atDate(date: Date): LocalTimestampLowPrecision =
+        LocalTimestampLowPrecision.forDateTime(date as SqlDate, this)
+
+    override fun withTimeZone(timeZone: Timezone): OffsetTimeLowPrecision =
+        OffsetTimeLowPrecision.of(hour, minute, decimalSecond, timeZone)
+
+    fun copy(_hour: Int? = null, _minute: Int? = null, _decimalSecond: BigDecimal?) =
+        LocalTimeLowPrecision(this.localTime, _hour, _minute, _decimalSecond)
+}

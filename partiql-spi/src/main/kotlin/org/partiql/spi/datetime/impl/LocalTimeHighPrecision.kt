@@ -1,0 +1,89 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package org.partiql.spi.datetime.impl
+
+import org.partiql.spi.datetime.Date
+import org.partiql.spi.datetime.DateTimeException
+import org.partiql.spi.datetime.util.DatetimeUtil
+import org.partiql.spi.datetime.util.DatetimeUtil.toBigDecimal
+import org.partiql.spi.datetime.TimeWithoutTimeZone
+import org.partiql.spi.datetime.Timezone
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.temporal.ChronoField
+
+/**
+ * This implementation handles edge cases that can not be supported by [LocalTimeLowPrecision], that is:
+ * 1. The desired precision exceeds nanosecond.
+ * 2. The desired timestamp exceeds the range of +18:00 to -18:00
+ */
+internal class LocalTimeHighPrecision private constructor(
+    override val hour: Int,
+    override val minute: Int,
+    override val decimalSecond: BigDecimal,
+    _elapsedSecond: BigDecimal? = null
+) : TimeWithoutTimeZone() {
+    companion object {
+        fun of(
+            hour: Int,
+            minute: Int,
+            decimalSecond: BigDecimal
+        ): LocalTimeHighPrecision {
+            try {
+                ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
+                ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong())
+                // round down the decimalSecond to check
+                ChronoField.SECOND_OF_MINUTE.checkValidValue(decimalSecond.setScale(0, RoundingMode.DOWN).toLong())
+                return LocalTimeHighPrecision(hour, minute, decimalSecond)
+            } catch (e: java.time.DateTimeException) {
+                throw DateTimeException(e.localizedMessage, e)
+            }
+        }
+
+        fun forSeconds(elapsedSeconds: BigDecimal): LocalTimeHighPrecision {
+            val wholeSecond = elapsedSeconds.setScale(0, RoundingMode.DOWN).longValueExact()
+            val fraction = elapsedSeconds.minus(BigDecimal.valueOf(wholeSecond))
+            var total = wholeSecond
+            val hour = total / DatetimeUtil.SECONDS_IN_HOUR
+            total -= hour * DatetimeUtil.SECONDS_IN_HOUR
+            val minute = total / DatetimeUtil.SECONDS_IN_MINUTE
+            total -= minute * DatetimeUtil.SECONDS_IN_MINUTE
+            return of(hour.toInt(), minute.toInt(), fraction.plus(BigDecimal.valueOf(total))).copy(elapsedSeconds)
+        }
+    }
+
+    override val elapsedSecond: BigDecimal by lazy {
+        _elapsedSecond
+            ?: (BigDecimal.valueOf(this.hour * DatetimeUtil.SECONDS_IN_HOUR + this.minute * DatetimeUtil.SECONDS_IN_MINUTE) + this.decimalSecond)
+    }
+
+    override fun plusHours(hours: Long): LocalTimeHighPrecision =
+        forSeconds(this.elapsedSecond.plus((hours * DatetimeUtil.SECONDS_IN_HOUR).toBigDecimal()))
+
+    override fun plusMinutes(minutes: Long): LocalTimeHighPrecision =
+        forSeconds(this.elapsedSecond.plus((minutes * DatetimeUtil.SECONDS_IN_MINUTE).toBigDecimal()))
+
+    override fun plusSeconds(seconds: BigDecimal): LocalTimeHighPrecision =
+        forSeconds(this.elapsedSecond.plus(seconds))
+
+    override fun atDate(date: Date): LocalTimestampHighPrecision =
+        LocalTimestampHighPrecision.forDateTime(date as SqlDate, this)
+
+    override fun withTimeZone(timeZone: Timezone): OffsetTimeHighPrecision =
+        OffsetTimeHighPrecision.of(hour, minute, decimalSecond, timeZone)
+
+    fun copy(_elapsedSecond: BigDecimal? = null) = LocalTimeHighPrecision(this.hour, this.minute, this.decimalSecond, _elapsedSecond)
+}
