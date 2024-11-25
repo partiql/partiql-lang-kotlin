@@ -314,6 +314,10 @@ class DatumIonReader(
     }
 }
 
+/**
+ * @param sourceDataFormat  The source data format of the Ion data; if not specified, defaults to [SourceDataFormat.IonForPartiQL].
+ * @param ionReaderBuilder The builder for creating the [IonReader].
+ */
 public class DatumIonReaderBuilder private constructor(
     private var sourceDataFormat: SourceDataFormat = SourceDataFormat.IonForPartiQL,
     private var ionReaderBuilder: IonReaderBuilder,
@@ -338,6 +342,11 @@ public class DatumIonReaderBuilder private constructor(
     }
 
     public companion object {
+
+        /**
+         * Creates a [DatumIonReaderBuilder] with the default settings.
+         * The default source data format is [SourceDataFormat.IonForPartiQL] and the default [IonReaderBuilder] is [IonReaderBuilder.standard]
+         */
         @JvmStatic
         public fun standard(): DatumIonReaderBuilder = DatumIonReaderBuilder(
             sourceDataFormat = SourceDataFormat.IonForPartiQL,

@@ -14,7 +14,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         fillTable()
     }
 
-    override fun getComparison(lhs: Number, rhs: Number): Boolean {
+    override fun getNumberComparison(lhs: Number, rhs: Number): Boolean {
         return lhs > rhs
     }
 
@@ -50,7 +50,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    // TODO: Update
+    // TODO: Update numeric to use bigDecimal rather than bigInteger.
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
         return basic(PType.bool(), PType.numeric()) { args ->
             val lhs = args[0].bigInteger

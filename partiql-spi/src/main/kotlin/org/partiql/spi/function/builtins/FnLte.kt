@@ -14,7 +14,7 @@ internal object FnLte : DiadicComparisonOperator("lte") {
         fillTable()
     }
 
-    override fun getComparison(lhs: Number, rhs: Number): Boolean {
+    override fun getNumberComparison(lhs: Number, rhs: Number): Boolean {
         return lhs <= rhs
     }
 

@@ -29,20 +29,20 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
         val hasDecimal = lhs.kind == PType.Kind.DECIMAL || rhs.kind == PType.Kind.DECIMAL
         val allNumbers = (SqlTypeFamily.NUMBER.contains(lhs) && SqlTypeFamily.NUMBER.contains(rhs))
         if (hasDecimal && allNumbers) {
-            return getAnyInstance(lhs, rhs)
+            return getNumberInstance(lhs, rhs)
         }
         return super.getInstance(args)
     }
 
-    private fun getAnyInstance(lhs: PType, rhs: PType): Function.Instance {
+    private fun getNumberInstance(lhs: PType, rhs: PType): Function.Instance {
         return basic(PType.bool(), lhs, rhs) { args ->
             val l = args[0].getNumber()
             val r = args[1].getNumber()
-            Datum.bool(getComparison(l, r))
+            Datum.bool(getNumberComparison(l, r))
         }
     }
 
-    abstract fun getComparison(lhs: Number, rhs: Number): Boolean
+    abstract fun getNumberComparison(lhs: Number, rhs: Number): Boolean
 
     private fun Datum.getNumber(): Number {
         return when (this.type.kind) {

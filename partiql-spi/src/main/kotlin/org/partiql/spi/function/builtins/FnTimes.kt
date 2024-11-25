@@ -53,6 +53,9 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
         }
     }
 
+    // SQL Server:
+    // p = p1 + p2 + 1
+    // s = s1 + s2
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
         val p = decimalLhs.precision + decimalRhs.precision + 1
         val s = decimalLhs.scale + decimalRhs.scale

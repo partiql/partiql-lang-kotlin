@@ -53,9 +53,6 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
         }
     }
 
-    // SQL:Server:
-    // p = p1 - s1 + s2 + max(6, s1 + p2 + 1)
-    // s = max(6, s1 + p2 + 1)
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
         val p = decimalLhs.precision - decimalLhs.scale + decimalRhs.scale + Math.max(6, decimalLhs.scale + decimalRhs.precision + 1)
         val s = Math.max(6, decimalLhs.scale + decimalRhs.precision + 1)

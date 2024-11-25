@@ -55,7 +55,7 @@ internal val Agg_AVG__INT__INT = Aggregation.static(
 internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
 
     name = "avg",
-    returns = PType.decimal(38, 19), // TODO
+    returns = PType.decimal(38, 19),
     parameters = arrayOf(
         @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
     ),
