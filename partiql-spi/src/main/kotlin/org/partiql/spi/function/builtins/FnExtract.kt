@@ -21,7 +21,7 @@ internal val Fn_EXTRACT_YEAR__DATE__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].date
+    val v = args[0].localDate
     Datum.integer(v.year)
 }
 
@@ -34,7 +34,7 @@ internal val Fn_EXTRACT_YEAR__TIMESTAMP__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].timestamp
+    val v = args[0].localDateTime
     Datum.integer(v.year)
 }
 
@@ -50,8 +50,8 @@ internal val Fn_EXTRACT_MONTH__DATE__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].date
-    Datum.integer(v.month)
+    val v = args[0].localDate
+    Datum.integer(v.monthValue)
 }
 
 internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = Function.static(
@@ -63,8 +63,8 @@ internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].timestamp
-    Datum.integer(v.month)
+    val v = args[0].localDateTime
+    Datum.integer(v.monthValue)
 }
 
 //
@@ -80,8 +80,8 @@ internal val Fn_EXTRACT_DAY__DATE__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].date
-    Datum.integer(v.day)
+    val v = args[0].localDate
+    Datum.integer(v.dayOfMonth)
 }
 
 internal val Fn_EXTRACT_DAY__TIMESTAMP__INT32 = Function.static(
@@ -93,8 +93,8 @@ internal val Fn_EXTRACT_DAY__TIMESTAMP__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].timestamp
-    Datum.integer(v.day)
+    val v = args[0].localDateTime
+    Datum.integer(v.dayOfMonth)
 }
 
 //
@@ -109,7 +109,7 @@ internal val Fn_EXTRACT_HOUR__TIME__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].time
+    val v = args[0].localTime
     Datum.integer(v.hour)
 }
 
@@ -122,7 +122,7 @@ internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].timestamp
+    val v = args[0].localDateTime
     Datum.integer(v.hour)
 }
 
@@ -138,7 +138,7 @@ internal val Fn_EXTRACT_MINUTE__TIME__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].time
+    val v = args[0].localTime
     Datum.integer(v.minute)
 }
 
@@ -151,7 +151,7 @@ internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].timestamp
+    val v = args[0].localDateTime
     Datum.integer(v.minute)
 }
 
@@ -196,7 +196,7 @@ internal val Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].time
+    val v = args[0].offsetTime
     when (val tz = v.timeZone) {
         TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
         is TimeZone.UtcOffset -> Datum.integer(tz.tzHour)
@@ -213,7 +213,7 @@ internal val Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].timestamp
+    val v = args[0].localDateTime
     when (val tz = v.timeZone) {
         TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
         is TimeZone.UtcOffset -> Datum.integer(tz.tzHour)
@@ -233,7 +233,7 @@ internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].time
+    val v = args[0].localTime
     when (val tz = v.timeZone) {
         TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
         is TimeZone.UtcOffset -> Datum.integer(tz.tzMinute)
@@ -250,7 +250,7 @@ internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIMESTAMP__INT32 = Function.static(
     ),
 
 ) { args ->
-    val v = args[0].timestamp
+    val v = args[0].localDateTime
     when (val tz = v.timeZone) {
         TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
         is TimeZone.UtcOffset -> Datum.integer(tz.tzMinute)

@@ -179,6 +179,7 @@ class DatumNull implements Datum {
     public LocalTime getLocalTime() {
         switch (_type.code()) {
             case PType.TIME:
+            case PType.TIMEZ:
             case PType.TIMESTAMP:
             case PType.TIMESTAMPZ:
                 throw new NullPointerException();
@@ -202,17 +203,19 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public LocalDateTime getLocalDateTime() {
-        if (_type.getKind() == PType.Kind.TIMESTAMP) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
+        switch (_type.code()) {
+            case PType.TIMESTAMP:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
         }
     }
 
     @NotNull
     @Override
     public OffsetDateTime getOffsetDateTime() {
-        if (_type.getKind() == PType.Kind.TIMESTAMPZ) {
+        if (_type.code() == PType.TIMESTAMPZ) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
