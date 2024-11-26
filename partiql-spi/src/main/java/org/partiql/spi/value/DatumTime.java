@@ -2,33 +2,34 @@ package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
-import org.partiql.value.datetime.Time;
+
+import java.time.LocalTime;
 
 /**
- * This shall always be package-private (internal).
+ * Today we wrap a {@link LocalTime}, in the future we do a 4-byte array to avoid double references.
  */
-class DatumTime implements Datum {
+final class DatumTime implements Datum {
 
     @NotNull
-    private final Time _value;
+    private final PType type;
 
-    // TODO: Pass precision to constructor.
-    // TODO: Create a variant specifically for without TZ
-    private final static PType _type = PType.timez(6);
-
-    DatumTime(@NotNull Time value) {
-        _value = value;
-    }
-
-    @Override
     @NotNull
-    public Time getTime() {
-        return _value;
+    private final LocalTime value;
+
+    DatumTime(@NotNull LocalTime value, int precision) {
+        this.type = PType.time(precision);
+        this.value = value;
     }
 
     @NotNull
     @Override
     public PType getType() {
-        return _type;
+        return type;
+    }
+
+    @NotNull
+    @Override
+    public LocalTime getLocalTime() {
+        return value;
     }
 }
