@@ -18,6 +18,13 @@ internal abstract class DiadicOperator(
     private val rhs: Parameter
 ) : Function {
 
+    companion object {
+        private val DEC_TINY_INT = PType.decimal(3, 0)
+        private val DEC_SMALL_INT = PType.decimal(5, 0)
+        private val DEC_INT = PType.decimal(10, 0)
+        private val DEC_BIG_INT = PType.decimal(19, 0)
+    }
+
     override fun getName(): String {
         return name
     }
@@ -271,11 +278,34 @@ internal abstract class DiadicOperator(
         fillTable(PType.UNKNOWN, PType.BLOB) { _, rhs -> instance(rhs, rhs) }
     }
 
-    open fun fillDecimalTable() {
-        fillNumberTable(PType.DECIMAL, ::getDecimalInstance)
+    private fun fillDecimalTable() {
+        // Tiny Int
+        fillTable(PType.TINYINT, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(DEC_TINY_INT, rhs) }
+        fillTable(PType.DECIMAL, PType.TINYINT) { lhs, rhs -> getDecimalInstance(lhs, DEC_TINY_INT) }
+
+        // Small Int
+        fillTable(PType.SMALLINT, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(DEC_SMALL_INT, rhs) }
+        fillTable(PType.DECIMAL, PType.SMALLINT) { lhs, rhs -> getDecimalInstance(lhs, DEC_SMALL_INT) }
+
+        // Integer
+        fillTable(PType.INTEGER, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(DEC_INT, rhs) }
+        fillTable(PType.DECIMAL, PType.INTEGER) { lhs, rhs -> getDecimalInstance(lhs, DEC_INT) }
+
+        // Big Int
+        fillTable(PType.BIGINT, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(DEC_BIG_INT, rhs) }
+        fillTable(PType.DECIMAL, PType.BIGINT) { lhs, rhs -> getDecimalInstance(lhs, DEC_BIG_INT) }
+
+        // Numeric
+        fillTable(PType.NUMERIC, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(PType.decimal(38, 19), rhs) } // TODO: Convert numeric to decimal once numeric is not modeled as BigInteger
+        fillTable(PType.DECIMAL, PType.NUMERIC) { lhs, rhs -> getDecimalInstance(lhs, PType.decimal(38, 19)) } // TODO: Convert numeric to decimal once numeric is not modeled as BigInteger
+
+        // Decimal
+        fillTable(PType.DECIMAL, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(lhs, rhs) }
+        fillTable(PType.UNKNOWN, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(rhs, rhs) }
+        fillTable(PType.DECIMAL, PType.UNKNOWN) { lhs, rhs -> getDecimalInstance(lhs, lhs) }
     }
 
-    open fun fillTable() {
+    protected fun fillTable() {
         fillBooleanTable(::getBooleanInstance)
         fillNumberTable(PType.TINYINT, ::getTinyIntInstance)
         fillNumberTable(PType.SMALLINT, ::getSmallIntInstance)

@@ -3291,8 +3291,8 @@ internal class PlanTyperTestsPorted {
                     PType.row(
                         Field.of("a", PType.decimal(2, 1)),
                         Field.of("c", PType.bigint()),
-                        Field.of("s", PType.decimal(38, 0)), // TODO: Check this
-                        Field.of("m", PType.decimal(38, 0)),
+                        Field.of("s", PType.decimal(38, 19)), // TODO: Check this
+                        Field.of("m", PType.decimal(38, 19)),
                     )
                 ),
             ),

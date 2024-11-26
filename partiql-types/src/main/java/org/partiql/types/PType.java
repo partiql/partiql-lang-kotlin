@@ -125,36 +125,6 @@ public abstract class PType extends Enum {
     @Override
     public @NotNull String name() {
         switch (code()) {
-            case PType.INTEGER:
-                return "INTEGER";
-            case PType.BIGINT:
-                return "BIGINT";
-            case PType.DECIMAL:
-                return "DECIMAL";
-            case PType.TIMESTAMPZ:
-                return "TIMESTAMPZ";
-            case PType.TIMESTAMP:
-                return "TIMESTAMP";
-            case PType.TIMEZ:
-                return "TIMEZ";
-            case PType.TIME:
-                return "TIME";
-            case PType.REAL:
-                return "REAL";
-            case PType.DOUBLE:
-                return "DOUBLE";
-            case PType.CHAR:
-                return "CHAR";
-            case PType.CLOB:
-                return "CLOB";
-            case PType.BLOB:
-                return "BLOB";
-            case PType.ROW:
-                return "ROW";
-            case PType.ARRAY:
-                return "ARRAY";
-            case PType.BAG:
-                return "BAG";
             case PType.DYNAMIC:
                 return "DYNAMIC";
             case PType.BOOL:
@@ -163,8 +133,50 @@ public abstract class PType extends Enum {
                 return "TINYINT";
             case PType.SMALLINT:
                 return "SMALLINT";
+            case PType.INTEGER:
+                return "INTEGER";
+            case PType.BIGINT:
+                return "BIGINT";
+            case PType.NUMERIC:
+                return "NUMERIC";
+            case PType.DECIMAL:
+                return "DECIMAL";
+            case PType.REAL:
+                return "REAL";
+            case PType.DOUBLE:
+                return "DOUBLE";
+            case PType.CHAR:
+                return "CHAR";
+            case PType.VARCHAR:
+                return "VARCHAR";
+            case PType.STRING:
+                return "STRING";
+            case PType.BLOB:
+                return "BLOB";
+            case PType.CLOB:
+                return "CLOB";
             case PType.DATE:
                 return "DATE";
+            case PType.TIME:
+                return "TIME";
+            case PType.TIMEZ:
+                return "TIMEZ";
+            case PType.TIMESTAMP:
+                return "TIMESTAMP";
+            case PType.TIMESTAMPZ:
+                return "TIMESTAMPZ";
+            case PType.ARRAY:
+                return "ARRAY";
+            case PType.BAG:
+                return "BAG";
+            case PType.ROW:
+                return "ROW";
+            case PType.STRUCT:
+                return "STRUCT";
+            case PType.UNKNOWN:
+                return "UNKNOWN";
+            case PType.VARIANT:
+                return "VARIANT";
             default:
                 return "UNKNOWN";
         }
@@ -196,7 +208,7 @@ public abstract class PType extends Enum {
      * <br>
      * <b>Type Syntax</b>: <code>TINYINT</code>
      * <br>
-     * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
+     * <b>Applicable methods</b>: NONE
      */
     public static final int TINYINT = 2;
 
@@ -206,7 +218,7 @@ public abstract class PType extends Enum {
      * <br>
      * <b>Type Syntax</b>: <code>SMALLINT</code>
      * <br>
-     * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
+     * <b>Applicable methods</b>: NONE
      */
     public static final int SMALLINT = 3;
 
@@ -216,7 +228,7 @@ public abstract class PType extends Enum {
      * <br>
      * <b>Type Syntax</b>: <code>INT</code>, <code>INTEGER</code>
      * <br>
-     * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
+     * <b>Applicable methods</b>: NONE
      */
     public static final int INTEGER = 4;
 
@@ -226,7 +238,7 @@ public abstract class PType extends Enum {
      * <br>
      * <b>Type Syntax</b>: <code>BIGINT</code>
      * <br>
-     * <b>Applicable methods</b>: {@link PType#getPrecision()}, {@link PType#getScale()}
+     * <b>Applicable methods</b>: NONE
      */
     public static final int BIGINT = 5;
 
@@ -256,7 +268,7 @@ public abstract class PType extends Enum {
      * <br>
      * <b>Type Syntax</b>: <code>REAL</code>
      * <br>
-     * <b>Applicable methods</b>: {@link PType#getPrecision()}
+     * <b>Applicable methods</b>: NONE
      */
     public static final int REAL = 8;
 
@@ -266,7 +278,7 @@ public abstract class PType extends Enum {
      * <br>
      * <b>Type Syntax</b>: <code>DOUBLE PRECISION</code>
      * <br>
-     * <b>Applicable methods</b>: {@link PType#getPrecision()}
+     * <b>Applicable methods</b>: NONE
      */
     public static final int DOUBLE = 9;
 

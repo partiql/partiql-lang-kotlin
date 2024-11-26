@@ -76,11 +76,10 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#STRING},
-     * {@link PartiQLValueType#SYMBOL},
-     * {@link PartiQLValueType#CHAR}
+     * {@link PType#STRING},
+     * {@link PType#CHAR}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -92,9 +91,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#BOOL}
+     * {@link PType#BOOL}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -108,11 +107,10 @@ public interface Datum extends Iterable<Datum> {
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * </p>
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#BINARY},
-     * {@link PartiQLValueType#BLOB},
-     * {@link PartiQLValueType#CLOB}
+     * {@link PType#BLOB},
+     * {@link PType#CLOB}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -128,10 +126,9 @@ public interface Datum extends Iterable<Datum> {
     /**
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#BYTE},
-     * {@link PartiQLValueType#INT8}
+     * {@link PType#TINYINT}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -145,9 +142,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#DATE}.
+     * {@link PType#DATE}.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -159,9 +156,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#TIME}
+     * {@link PType#TIME}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -173,9 +170,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#TIMESTAMP}.
+     * {@link PType#TIMESTAMP}.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -188,9 +185,9 @@ public interface Datum extends Iterable<Datum> {
     /**
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#INTERVAL}.
+     * TODO
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -204,9 +201,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#INT16}
+     * {@link PType#SMALLINT}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -217,9 +214,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#INT32}
+     * {@link PType#INTEGER}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -230,9 +227,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#INT64}
+     * {@link PType#BIGINT}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -243,9 +240,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#INT}
+     * {@link PType#INTEGER}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -257,9 +254,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#FLOAT32}
+     * {@link PType#REAL}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -270,9 +267,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#FLOAT64}
+     * {@link PType#DOUBLE}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -283,10 +280,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PartiQLValueType#DECIMAL},
-     * {@link PartiQLValueType#DECIMAL_ARBITRARY}
+     * {@link PType#DECIMAL}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -299,8 +295,8 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @return the elements of either bags/lists; returns the fields' values if the type is a struct.
      * @throws UnsupportedOperationException if this operation is invoked on a value that is not of the following
-     *                                       types: {@link PartiQLValueType#BAG}, {@link PartiQLValueType#LIST}, and
-     *                                       {@link PartiQLValueType#STRUCT}.
+     *                                       types: {@link PType#BAG}, {@link PType#ARRAY}, and
+     *                                       {@link PType#STRUCT}.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
@@ -311,9 +307,9 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return the underlying values applicable to the type {@link PartiQLValueType#STRUCT}.
+     * @return the underlying values applicable to the type {@link PType#STRUCT}.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -324,10 +320,10 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#STRUCT} and requested field name. This
+     * @return the underlying value applicable to the type {@link PType#STRUCT} and requested field name. This
      * is a case-sensitive lookup.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
@@ -337,10 +333,10 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#STRUCT} and requested field name. This
+     * @return the underlying value applicable to the type {@link PType#STRUCT} and requested field name. This
      * is a case-insensitive lookup.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
