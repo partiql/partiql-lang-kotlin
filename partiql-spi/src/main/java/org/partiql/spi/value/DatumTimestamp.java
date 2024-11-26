@@ -41,4 +41,10 @@ final class DatumTimestamp implements Datum {
     public LocalTime getLocalTime() {
         return value.toLocalTime();
     }
+
+    @NotNull
+    @Override
+    public LocalDateTime getLocalDateTime() {
+        return value;
+    }
 }

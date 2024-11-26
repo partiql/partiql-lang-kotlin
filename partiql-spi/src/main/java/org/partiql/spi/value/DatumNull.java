@@ -201,6 +201,26 @@ class DatumNull implements Datum {
 
     @NotNull
     @Override
+    public LocalDateTime getLocalDateTime() {
+        if (_type.getKind() == PType.Kind.TIMESTAMP) {
+            throw new NullPointerException();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
+    public OffsetDateTime getOffsetDateTime() {
+        if (_type.getKind() == PType.Kind.TIMESTAMPZ) {
+            throw new NullPointerException();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
     public Duration getDuration() {
         switch (_type.code()) {
             // TODO INTERVAL_DT

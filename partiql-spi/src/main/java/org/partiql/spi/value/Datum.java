@@ -198,6 +198,28 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
+     * @return a {@link LocalDateTime} for TIMESTAMP types.
+     *
+     * @throws UnsupportedOperationException if type not TIMESTAMP
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default LocalDateTime getLocalDateTime() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return a {@link OffsetDateTime} for TIMESTAMPZ types.
+     *
+     * @throws UnsupportedOperationException if type not TIMESTAMPZ
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default OffsetDateTime getOffsetDateTime() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * @return a {@link Period} for the INTERVALYM type.
      *
      * @throws UnsupportedOperationException if type not in [INTERVAL]

@@ -41,4 +41,10 @@ final class DatumTimestampz implements Datum {
     public OffsetTime getOffsetTime() {
         return value.toOffsetTime();
     }
+
+    @NotNull
+    @Override
+    public OffsetDateTime getOffsetDateTime() {
+        return value;
+    }
 }
