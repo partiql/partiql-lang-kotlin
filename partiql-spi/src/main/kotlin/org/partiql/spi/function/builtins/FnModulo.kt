@@ -53,9 +53,14 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
         }
     }
 
+    /**
+     * SQL Server
+     * p = min(p1 - s1, p2 - s2) + max(s1, s2)
+     * s = max(s1, s2)
+     */
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
-        val p = decimalLhs.precision - decimalLhs.scale + decimalRhs.scale + Math.max(6, decimalLhs.scale + decimalRhs.precision + 1)
-        val s = Math.max(6, decimalLhs.scale + decimalRhs.precision + 1)
+        val p = Math.min(decimalLhs.precision - decimalLhs.scale, decimalRhs.precision - decimalRhs.scale) + Math.max(decimalLhs.scale, decimalRhs.scale)
+        val s = Math.max(decimalLhs.scale, decimalRhs.scale)
         return basic(PType.decimal()) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
