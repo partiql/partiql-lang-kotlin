@@ -8,6 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorAvg
 import org.partiql.types.PType
 
+// TODO: This needs to be formalized. See https://github.com/partiql/partiql-lang-kotlin/issues/1659
 private val AVG_DECIMAL = PType.decimal(38, 19)
 
 internal val Agg_AVG__INT8__INT8 = Aggregation.static(
