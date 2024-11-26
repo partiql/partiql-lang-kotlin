@@ -310,6 +310,124 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
+public class org/partiql/spi/datetime/Date {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDay ()I
+	public fun getMonth ()I
+	public fun getYear ()I
+	public fun hashCode ()I
+	public fun minus (Lorg/partiql/spi/datetime/Date;)Lorg/partiql/spi/datetime/Interval;
+	public fun minus (Lorg/partiql/spi/datetime/Interval;)Lorg/partiql/spi/datetime/Date;
+	public static fun now ()Lorg/partiql/spi/datetime/Date;
+	public static fun of (III)Lorg/partiql/spi/datetime/Date;
+	public static fun of (Ljava/time/LocalDate;)Lorg/partiql/spi/datetime/Date;
+	public fun plus (Lorg/partiql/spi/datetime/Interval;)Lorg/partiql/spi/datetime/Date;
+	public fun toLocalDate ()Ljava/time/LocalDate;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/spi/datetime/Interval {
+	public static fun days (I)Lorg/partiql/spi/datetime/Interval$YM;
+	public static fun duration (Ljava/time/Duration;)Lorg/partiql/spi/datetime/Interval$DT;
+	public static fun hours (I)Lorg/partiql/spi/datetime/Interval$DT;
+	public static fun millis (J)Lorg/partiql/spi/datetime/Interval$DT;
+	public static fun minutes (I)Lorg/partiql/spi/datetime/Interval$DT;
+	public static fun months (I)Lorg/partiql/spi/datetime/Interval$YM;
+	public static fun nanos (J)Lorg/partiql/spi/datetime/Interval$DT;
+	public static fun period (Ljava/time/Period;)Lorg/partiql/spi/datetime/Interval$YM;
+	public static fun seconds (J)Lorg/partiql/spi/datetime/Interval$DT;
+	public static fun weeks (I)Lorg/partiql/spi/datetime/Interval$YM;
+	public static fun years (I)Lorg/partiql/spi/datetime/Interval$YM;
+}
+
+public class org/partiql/spi/datetime/Interval$DT : org/partiql/spi/datetime/Interval {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toDuration ()Ljava/time/Duration;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/spi/datetime/Interval$YM : org/partiql/spi/datetime/Interval {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toPeriod ()Ljava/time/Period;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/spi/datetime/Time {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getHour ()I
+	public fun getMinute ()I
+	public fun getNano ()I
+	public fun getSecond ()I
+	public fun hashCode ()I
+	public static fun now ()Lorg/partiql/spi/datetime/Time;
+	public static fun of (II)Lorg/partiql/spi/datetime/Time;
+	public static fun of (III)Lorg/partiql/spi/datetime/Time;
+	public static fun of (IIII)Lorg/partiql/spi/datetime/Time;
+	public static fun of (Ljava/time/LocalTime;)Lorg/partiql/spi/datetime/Time;
+	public fun toLocalTime ()Ljava/time/LocalTime;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/spi/datetime/Timestamp {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDay ()I
+	public fun getHour ()I
+	public fun getMinute ()I
+	public fun getMonth ()I
+	public fun getNano ()I
+	public fun getSecond ()I
+	public fun getYear ()I
+	public fun hashCode ()I
+	public fun now ()Lorg/partiql/spi/datetime/Timestamp;
+	public static fun of (IIIIII)Lorg/partiql/spi/datetime/Timestamp;
+	public static fun of (IIIIIII)Lorg/partiql/spi/datetime/Timestamp;
+	public static fun of (Ljava/time/LocalDateTime;)Lorg/partiql/spi/datetime/Timestamp;
+	public static fun of (Lorg/partiql/spi/datetime/Date;Lorg/partiql/spi/datetime/Time;)Lorg/partiql/spi/datetime/Timestamp;
+	public fun toDate ()Lorg/partiql/spi/datetime/Date;
+	public fun toLocalDateTime ()Ljava/time/LocalDateTime;
+	public fun toString ()Ljava/lang/String;
+	public fun toTime ()Lorg/partiql/spi/datetime/Time;
+}
+
+public class org/partiql/spi/datetime/Timestampz {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDay ()I
+	public fun getHour ()I
+	public fun getMinute ()I
+	public fun getMonth ()I
+	public fun getNano ()I
+	public fun getOffset ()Ljava/time/ZoneOffset;
+	public fun getSecond ()I
+	public fun getYear ()I
+	public fun hashCode ()I
+	public fun now ()Lorg/partiql/spi/datetime/Timestampz;
+	public static fun of (Ljava/time/OffsetDateTime;)Lorg/partiql/spi/datetime/Timestampz;
+	public static fun of (Lorg/partiql/spi/datetime/Date;Lorg/partiql/spi/datetime/Timez;)Lorg/partiql/spi/datetime/Timestampz;
+	public fun toDate ()Lorg/partiql/spi/datetime/Date;
+	public fun toLocalDateTime ()Ljava/time/LocalDateTime;
+	public fun toOffsetDateTime ()Ljava/time/OffsetDateTime;
+	public fun toString ()Ljava/lang/String;
+	public fun toTimez ()Lorg/partiql/spi/datetime/Timez;
+}
+
+public class org/partiql/spi/datetime/Timez {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getHour ()I
+	public fun getMinute ()I
+	public fun getNano ()I
+	public fun getOffset ()Ljava/time/ZoneOffset;
+	public fun getSecond ()I
+	public fun hashCode ()I
+	public static fun now ()Lorg/partiql/spi/datetime/Timez;
+	public static fun of (Ljava/time/LocalTime;Ljava/time/ZoneOffset;)Lorg/partiql/spi/datetime/Timez;
+	public static fun of (Ljava/time/OffsetTime;)Lorg/partiql/spi/datetime/Timez;
+	public fun toLocalTime ()Ljava/time/LocalTime;
+	public fun toOffsetTime ()Ljava/time/OffsetTime;
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field ALWAYS_MISSING I
 	public static final field FEATURE_NOT_SUPPORTED I
