@@ -7,35 +7,58 @@ import org.partiql.plan.rex.Rex;
 import org.partiql.spi.function.Aggregation;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
- * Interface for an aggregation operator.
- * <br>
- * TODO GROUP STRATEGY <a href="https://github.com/partiql/partiql-lang-kotlin/issues/1664">ISSUE</a>
+ * The logical aggregation abstract base class.
  */
-public interface RelAggregate extends Rel {
+public abstract class RelAggregate extends RelBase {
+
+    // TODO GROUP STRATEGY: https://github.com/partiql/partiql-lang-kotlin/issues/1664
+
+    private final RelType type = null;
+    private List<Operator> children = null;
+
+    /**
+     * @return the input (child 0)
+     */
+    @NotNull
+    public abstract Rel getInput();
 
     @NotNull
-    public Rel getInput();
+    public abstract Collection<Measure> getMeasures();
 
     @NotNull
-    public Collection<Measure> getMeasures();
+    public abstract Collection<Rex> getGroups();
 
     @NotNull
-    public Collection<Rex> getGroups();
+    @Override
+    public final RelType getType() {
+        if (type == null) {
+            throw new UnsupportedOperationException("Derive type is not implemented");
+        }
+        return type;
+    }
 
     @NotNull
-    public Collection<Operator> getChildren();
+    @Override
+    public final List<Operator> getChildren() {
+        if (children == null) {
+            Rel c0 = getInput();
+            children = List.of(c0);
+        }
+        return children;
+    }
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitAggregate(this, ctx);
     }
 
     /**
      * An aggregation function along with its arguments and any additional filters (e.g. DISTINCT).
      */
-    public class Measure {
+    public static class Measure {
 
         private final Aggregation agg;
         private final Collection<Rex> args;

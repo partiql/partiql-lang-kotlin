@@ -8,16 +8,16 @@ import org.partiql.types.Field;
  */
 public interface RelType {
 
-    public int getFieldSize();
+    int getFieldSize();
 
     @NotNull
-    public Field[] getFields();
+    Field[] getFields();
 
     @NotNull
-    public Field getField(String name);
+    Field getField(String name);
 
     /**
      * @return true if the rel produces an ordered stream of rows.
      */
-    public boolean isOrdered();
+    boolean isOrdered();
 }

@@ -1,25 +1,49 @@
-package org.partiql.plan
+package org.partiql.plan;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 /**
- * Operator is the interface for a logical plan operator.
+ * The interface for all logical plan operators.
  */
 public interface Operator {
 
-    public fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R
+    /**
+     * Tag getter.
+     */
+    public int getTag();
+
+    /**
+     * Tag setter.
+     *
+     * @param tag new tag value.
+     */
+    public void setTag(int tag);
+
+    /**
+     * Visitor accept.
+     *
+     * @param visitor visitor implementation.
+     * @param ctx     visitor scoped args.
+     * @param <R>     Visitor return type.
+     * @param <C>     Visitor context type (scoped args).
+     * @return R
+     */
+    public abstract <R, C> R accept(Visitor<R, C> visitor, C ctx);
 
     /**
      * Get i-th child (input) operator.
      *
-     * @param index
+     * @param index child index
+     * @return child operator
      */
-    public fun getChild(index: Int) {
-        throw UnsupportedOperationException("getChild")
-    }
+    @NotNull
+    public abstract Operator getChild(int index);
 
     /**
-     * Get all child (input) operators.
-     *
-     * @return
+     * @return all child (input) operators.
      */
-    public fun getChildren(): Collection<Operator>
+    @NotNull
+    public abstract List<Operator> getChildren();
 }

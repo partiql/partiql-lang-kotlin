@@ -11,7 +11,8 @@ public interface RexPathIndex : Rex {
 
     public fun getIndex(): Rex
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitPathIndex(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitPathIndex(this, ctx)
 }
 
 /**
@@ -30,5 +31,5 @@ internal class RexPathIndexImpl(operand: Rex, index: Rex, type: RexType) : RexPa
 
     override fun getType(): RexType = _type
 
-    override fun getChildren(): Collection<Rex> = listOf(_operand, _index)
+   
 }

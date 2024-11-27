@@ -12,5 +12,5 @@ public interface Rel extends Operator {
      * @return RelType.
      */
     @NotNull
-    public RelType getType();
+    RelType getType();
 }

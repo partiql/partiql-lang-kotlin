@@ -15,7 +15,8 @@ public interface RexSubqueryTest : Rex {
 
     public fun getRel(): org.partiql.plan.rel.Rel
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSubqueryTest(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSubqueryTest(this, ctx)
 
     /**
      * EXISTS and UNIQUE are defined by SQL.
@@ -48,7 +49,7 @@ internal class RexSubqueryTestImpl(test: Test, rel: org.partiql.plan.rel.Rel) : 
 
     override fun getRel(): org.partiql.plan.rel.Rel = _rel
 
-    override fun getChildren(): Collection<Rex> = emptyList()
+   
 
     // TODO hashcode/equals?
 }

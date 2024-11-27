@@ -9,9 +9,10 @@ public interface RexArray : Rex {
 
     public fun getValues(): Collection<Rex>
 
-    override fun getChildren(): Collection<Rex> = getValues().toList()
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitArray(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitArray(this, ctx)
 }
 
 /**
@@ -25,7 +26,7 @@ internal class RexArrayImpl(values: Collection<Rex>, type: RexType) : RexArray {
 
     override fun getValues(): Collection<Rex> = _values
 
-    override fun getChildren(): Collection<Rex> = _values.toList()
+   
 
     override fun getType(): RexType = _type
 

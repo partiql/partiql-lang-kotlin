@@ -13,9 +13,10 @@ public interface RexCase : Rex {
 
     public fun getDefault(): Rex?
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitCase(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitCase(this, ctx)
 
-    override fun getChildren(): Collection<Rex> {
+   
         val children = mutableListOf<Rex>()
         val match = getMatch()
         val branches = getBranches()
@@ -60,7 +61,7 @@ internal class RexCaseImpl(match: Rex?, branches: List<RexCase.Branch>, default:
 
     override fun getDefault(): Rex? = _default
 
-    override fun getChildren(): Collection<Rex> {
+   
         if (_children == null) {
             _children = super.getChildren()
         }

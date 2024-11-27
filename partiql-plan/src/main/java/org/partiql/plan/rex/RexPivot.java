@@ -15,9 +15,10 @@ public interface RexPivot : Rex {
 
     public fun getValue(): Rex
 
-    override fun getChildren(): Collection<Rex> = listOf(getKey(), getValue())
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitPivot(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitPivot(this, ctx)
 }
 
 /**
@@ -46,7 +47,7 @@ internal class RexPivotImpl(input: Rel, key: Rex, value: Rex) : RexPivot {
         return RexType(type!!)
     }
 
-    override fun getChildren(): Collection<Rex> {
+   
         if (children == null) {
             children = listOf(getKey(), getValue())
         }

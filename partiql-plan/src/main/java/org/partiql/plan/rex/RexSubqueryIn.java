@@ -9,7 +9,8 @@ public interface RexSubqueryIn : Rex {
 
     public fun getRel(): Rel
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSubqueryIn(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSubqueryIn(this, ctx)
 }
 
 /**
@@ -29,7 +30,7 @@ internal class RexSubqueryInImpl(args: List<Rex>, rel: Rel) : RexSubqueryIn {
 
     override fun getRel(): Rel = _rel
 
-    override fun getChildren(): Collection<Rex> = _args
+   
 
     // TODO hashcode/equals?
 }

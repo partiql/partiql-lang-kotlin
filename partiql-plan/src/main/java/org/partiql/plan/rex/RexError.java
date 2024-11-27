@@ -10,9 +10,10 @@ public interface RexError : Rex {
 
     override fun getType(): RexType = RexType.dynamic()
 
-    override fun getChildren(): Collection<Rex> = emptyList()
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitError(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitError(this, ctx)
 }
 
 internal class RexErrorImpl : RexError

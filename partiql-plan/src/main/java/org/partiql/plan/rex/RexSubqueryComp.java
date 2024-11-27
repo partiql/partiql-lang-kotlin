@@ -21,7 +21,8 @@ public interface RexSubqueryComp : Rex {
 
     public fun getRel(): Rel
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSubqueryComp(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSubqueryComp(this, ctx)
 
     /**
      * SQL <comp op> for use in the <quantified comparison predicate>.
@@ -79,7 +80,7 @@ internal class RexSubqueryCompImpl(
 
     override fun getRel(): Rel = _rel
 
-    override fun getChildren(): Collection<Rex> = _args
+   
 
     // TODO hashcode/equals?
 }

@@ -11,7 +11,8 @@ public interface RexPathSymbol : Rex {
 
     public fun getSymbol(): String
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitPathSymbol(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitPathSymbol(this, ctx)
 }
 
 /**
@@ -30,5 +31,5 @@ internal class RexPathSymbolImpl(operand: Rex, symbol: String, type: RexType) : 
 
     override fun getType(): RexType = _type
 
-    override fun getChildren(): Collection<Rex> = listOf(_operand)
+   
 }

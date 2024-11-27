@@ -195,7 +195,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitAggregate(rel: RelAggregate, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
-            val aggs = rel.getCalls().map { call ->
+            val aggs = rel.getMeasures().map { call ->
                 val agg = call.getAgg()
                 val args = call.getArgs().map { compile(it, ctx).catch() }
                 val distinct = call.isDistinct()
@@ -241,7 +241,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitIterate(rel: RelIterate, ctx: Unit): ExprRelation {
-            val input = compile(rel.getInput(), ctx)
+            val input = compile(rel.getRex(), ctx)
             return when (mode) {
                 Mode.PERMISSIVE -> RelOpIteratePermissive(input)
                 Mode.STRICT -> RelOpIterate(input)

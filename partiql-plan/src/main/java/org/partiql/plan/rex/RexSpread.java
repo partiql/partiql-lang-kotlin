@@ -9,9 +9,10 @@ public interface RexSpread : Rex {
 
     public fun getArgs(): List<Rex>
 
-    override fun getChildren(): Collection<Rex> = getArgs()
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSpread(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSpread(this, ctx)
 }
 
 /**

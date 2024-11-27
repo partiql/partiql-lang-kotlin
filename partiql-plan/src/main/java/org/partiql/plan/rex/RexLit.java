@@ -10,9 +10,10 @@ public interface RexLit : Rex {
 
     public fun getValue(): Datum
 
-    override fun getChildren(): Collection<Rex> = emptyList()
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitLit(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitLit(this, ctx)
 }
 
 internal class RexLitImpl(value: Datum) : RexLit {

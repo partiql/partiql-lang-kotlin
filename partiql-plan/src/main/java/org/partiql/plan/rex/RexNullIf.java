@@ -11,9 +11,10 @@ public interface RexNullIf : Rex {
 
     public fun getV2(): Rex
 
-    override fun getChildren(): Collection<Rex> = listOf(getV1(), getV2())
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitNullIf(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitNullIf(this, ctx)
 }
 
 /**
@@ -31,7 +32,7 @@ internal class RexNullIfImpl(v1: Rex, v2: Rex) : RexNullIf {
 
     override fun getType(): RexType = _v1.getType()
 
-    override fun getChildren(): Collection<Rex> = listOf(_v1, _v2)
+   
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

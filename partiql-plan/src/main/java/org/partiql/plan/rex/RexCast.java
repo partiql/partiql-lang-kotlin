@@ -12,9 +12,10 @@ public interface RexCast : Rex {
 
     public fun getTarget(): PType
 
-    override fun getChildren(): Collection<Rex> = listOf(getOperand())
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitCast(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitCast(this, ctx)
 }
 
 /**
@@ -32,7 +33,7 @@ internal class RexCastImpl(operand: Rex, target: PType) : RexCast {
 
     override fun getTarget(): PType = _target
 
-    override fun getChildren(): Collection<Rex> {
+   
         if (_children == null) {
             _children = listOf(_operand)
         }

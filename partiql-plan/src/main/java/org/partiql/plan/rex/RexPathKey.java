@@ -11,7 +11,8 @@ public interface RexPathKey : Rex {
 
     public fun getKey(): Rex
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitPathKey(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitPathKey(this, ctx)
 }
 
 /**
@@ -30,5 +31,5 @@ internal class RexPathKeyImpl(operand: Rex, key: Rex, type: RexType) : RexPathKe
 
     override fun getType(): RexType = _type
 
-    override fun getChildren(): Collection<Rex> = listOf(_operand, _key)
+   
 }

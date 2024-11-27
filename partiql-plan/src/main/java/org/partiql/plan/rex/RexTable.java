@@ -10,9 +10,10 @@ public interface RexTable : Rex {
 
     public fun getTable(): Table
 
-    override fun getChildren(): Collection<Rex> = emptyList()
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitTable(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitTable(this, ctx)
 }
 
 /**

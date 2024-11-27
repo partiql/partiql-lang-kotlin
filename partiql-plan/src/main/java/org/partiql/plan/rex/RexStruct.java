@@ -9,7 +9,7 @@ public interface RexStruct : Rex {
 
     public fun getFields(): List<Field>
 
-    override fun getChildren(): Collection<Rex> {
+   
         val children = mutableListOf<Rex>()
         for (field in getFields()) {
             children.add(field.getKey())
@@ -18,7 +18,8 @@ public interface RexStruct : Rex {
         return children
     }
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitStruct(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitStruct(this, ctx)
 
     /**
      * TODO DOCUMENTATION
@@ -46,7 +47,7 @@ internal class RexStructImpl(fields: List<RexStruct.Field>, type: RexType) : Rex
 
     override fun getType(): RexType = _type
 
-    override fun getChildren(): Collection<Rex> {
+   
         if (_children == null) {
             _children = super.getChildren()
         }

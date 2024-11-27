@@ -9,9 +9,10 @@ public interface RexCoalesce : Rex {
 
     public fun getArgs(): List<Rex>
 
-    override fun getChildren(): Collection<Rex> = getArgs()
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitCoalesce(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitCoalesce(this, ctx)
 }
 
 internal class RexCoalesceImpl(args: List<Rex>, type: RexType) : RexCoalesce {
@@ -22,7 +23,7 @@ internal class RexCoalesceImpl(args: List<Rex>, type: RexType) : RexCoalesce {
 
     override fun getArgs(): List<Rex> = _args
 
-    override fun getChildren(): Collection<Rex> = _args
+   
 
     override fun getType(): RexType = _type
 

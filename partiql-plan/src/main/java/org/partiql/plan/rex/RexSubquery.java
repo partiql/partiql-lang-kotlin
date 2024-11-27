@@ -15,7 +15,8 @@ public interface RexSubquery : Rex {
     // TODO REMOVE ME – TEMPORARY UNTIL PLANNER PROPERLY HANDLES SUBQUERIES
     public fun asScalar(): Boolean
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSubquery(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSubquery(this, ctx)
 }
 
 /**
@@ -38,7 +39,7 @@ internal class RexSubqueryImpl(rel: org.partiql.plan.rel.Rel, constructor: Rex, 
         TODO("Not yet implemented")
     }
 
-    override fun getChildren(): Collection<Rex> {
+   
         TODO("Not yet implemented")
     }
 

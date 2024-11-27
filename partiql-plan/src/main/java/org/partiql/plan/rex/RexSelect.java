@@ -13,9 +13,10 @@ public interface RexSelect : Rex {
 
     public fun getConstructor(): Rex
 
-    override fun getChildren(): Collection<Rex> = listOf(getConstructor())
+   
 
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSelect(this, ctx)
+    @Override
+    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSelect(this, ctx)
 }
 
 internal class RexSelectImpl(input: Rel, constructor: Rex) : RexSelect {
@@ -41,7 +42,7 @@ internal class RexSelectImpl(input: Rel, constructor: Rex) : RexSelect {
         return _type!!
     }
 
-    override fun getChildren(): Collection<Rex> = listOf(_constructor)
+   
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
