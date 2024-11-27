@@ -123,8 +123,6 @@ import org.partiql.ast.Ast.tableConstraintCheck
 import org.partiql.ast.Ast.tableConstraintPrimaryKey
 import org.partiql.ast.Ast.tableConstraintUnique
 import org.partiql.ast.AstNode
-import org.partiql.ast.AttributeConstraint
-import org.partiql.ast.ColumnDefinition
 import org.partiql.ast.DataType
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Exclude
@@ -139,7 +137,6 @@ import org.partiql.ast.IdentifierChain
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Nulls
-import org.partiql.ast.Options
 import org.partiql.ast.Order
 import org.partiql.ast.Select
 import org.partiql.ast.SelectItem
@@ -147,7 +144,10 @@ import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
-import org.partiql.ast.TableConstraint
+import org.partiql.ast.ddl.AttributeConstraint
+import org.partiql.ast.ddl.ColumnDefinition
+import org.partiql.ast.ddl.PartitionBy
+import org.partiql.ast.ddl.TableConstraint
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag
@@ -580,7 +580,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                     tblPropertiesCtx?.keyValuePair()?.map {
                         val key = it.key.getStringValue()
                         val value = it.value.getStringValue()
-                        keyValue(key, stringValue(value))
+                        keyValue(key, value)
                     } ?: emptyList()
                 }
             createTable(qualifiedName, columns, tblConstrs, partitionBy, tblProperties)
@@ -637,7 +637,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val body = visitAs<AttributeConstraint>(ctx.columnConstraint())
             when (body) {
                 is AttributeConstraint.Unique -> columnConstraintUnique(constrName, body.isPrimary)
-                is AttributeConstraint.Nullable -> columnConstraintNullable(constrName, body.isNullable)
+                is AttributeConstraint.Null -> columnConstraintNullable(constrName, body.isNullable)
                 is AttributeConstraint.Check -> columnConstraintCheck(constrName, body.searchCondition)
                 else -> throw error(ctx, "Unexpected Table Constraint Definition")
             }
@@ -685,7 +685,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitTblExtensionPartition(ctx: GeneratedParser.TblExtensionPartitionContext) =
-            ctx.partitionBy().accept(this) as Options.PartitionBy
+            ctx.partitionBy().accept(this) as PartitionBy
 
         override fun visitPartitionColList(ctx: GeneratedParser.PartitionColListContext) = translate(ctx) {
             partitionBy(ctx.columnName().map { visitSymbolPrimitive(it.symbolPrimitive()) })

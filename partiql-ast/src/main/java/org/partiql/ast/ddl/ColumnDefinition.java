@@ -1,8 +1,13 @@
-package org.partiql.ast;
+package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.partiql.ast.AstNode;
+import org.partiql.ast.AstVisitor;
+import org.partiql.ast.DataType;
+import org.partiql.ast.Identifier;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,19 +21,25 @@ import java.util.List;
 public class ColumnDefinition extends AstNode {
 
     @NotNull
-    private final Identifier name;
+    public final Identifier name;
 
     @NotNull
-    private final DataType dataType;
+    public final DataType dataType;
 
-    @NotNull
-    private final Boolean isOptional;
+    public final boolean isOptional;
 
-    private final List<AttributeConstraint> constraints;
+    @Nullable
+    public final List<AttributeConstraint> constraints;
 
-    private final String comment;
+    @Nullable
+    public final String comment;
 
-    public ColumnDefinition(@NotNull Identifier name, @NotNull DataType dataType, @NotNull Boolean isOptional, List<AttributeConstraint> constraints, String comment) {
+    public ColumnDefinition(
+            @NotNull Identifier name,
+            @NotNull DataType dataType,
+            boolean isOptional,
+            @Nullable List<AttributeConstraint> constraints,
+            @Nullable String comment) {
         this.name = name;
         this.dataType = dataType;
         this.isOptional = isOptional;

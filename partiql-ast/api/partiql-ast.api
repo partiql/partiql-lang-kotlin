@@ -1,10 +1,10 @@
 public final class org/partiql/ast/Ast {
 	public static final field INSTANCE Lorg/partiql/ast/Ast;
-	public static final fun columnConstraintCheck (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/AttributeConstraint$Check;
-	public static final fun columnConstraintNullable (Ljava/lang/String;Z)Lorg/partiql/ast/AttributeConstraint$Nullable;
-	public static final fun columnConstraintUnique (Ljava/lang/String;Z)Lorg/partiql/ast/AttributeConstraint$Unique;
-	public static final fun columnDefinition (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/DataType;ZLjava/util/List;Ljava/lang/String;)Lorg/partiql/ast/ColumnDefinition;
-	public static final fun createTable (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Ljava/util/List;Lorg/partiql/ast/Options$PartitionBy;Ljava/util/List;)Lorg/partiql/ast/CreateTable;
+	public static final fun columnConstraintCheck (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/ddl/AttributeConstraint$Check;
+	public static final fun columnConstraintNullable (Ljava/lang/String;Z)Lorg/partiql/ast/ddl/AttributeConstraint$Null;
+	public static final fun columnConstraintUnique (Ljava/lang/String;Z)Lorg/partiql/ast/ddl/AttributeConstraint$Unique;
+	public static final fun columnDefinition (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/DataType;ZLjava/util/List;Ljava/lang/String;)Lorg/partiql/ast/ddl/ColumnDefinition;
+	public static final fun createTable (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Ljava/util/List;Lorg/partiql/ast/ddl/PartitionBy;Ljava/util/List;)Lorg/partiql/ast/ddl/CreateTable;
 	public static final fun exclude (Ljava/util/List;)Lorg/partiql/ast/Exclude;
 	public static final fun excludePath (Lorg/partiql/ast/expr/ExprVarRef;Ljava/util/List;)Lorg/partiql/ast/ExcludePath;
 	public static final fun excludeStepCollIndex (I)Lorg/partiql/ast/ExcludeStep$CollIndex;
@@ -75,11 +75,11 @@ public final class org/partiql/ast/Ast {
 	public static final fun groupByKey (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/GroupBy$Key;
 	public static final fun identifier (Ljava/lang/String;Z)Lorg/partiql/ast/Identifier;
 	public static final fun identifierChain (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/IdentifierChain;
-	public static final fun keyValue (Ljava/lang/String;Lorg/partiql/value/StringValue;)Lorg/partiql/ast/Options$KeyValue;
+	public static final fun keyValue (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/ddl/KeyValue;
 	public static final fun let (Ljava/util/List;)Lorg/partiql/ast/Let;
 	public static final fun letBinding (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/Let$Binding;
 	public static final fun orderBy (Ljava/util/List;)Lorg/partiql/ast/OrderBy;
-	public static final fun partitionBy (Ljava/util/List;)Lorg/partiql/ast/Options$PartitionBy;
+	public static final fun partitionBy (Ljava/util/List;)Lorg/partiql/ast/ddl/PartitionBy;
 	public static final fun query (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/Query;
 	public static final fun queryBodySFW (Lorg/partiql/ast/Select;Lorg/partiql/ast/Exclude;Lorg/partiql/ast/From;Lorg/partiql/ast/Let;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/GroupBy;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/QueryBody$SFW;
 	public static final fun queryBodySetOp (Lorg/partiql/ast/SetOp;ZLorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/QueryBody$SetOp;
@@ -91,9 +91,9 @@ public final class org/partiql/ast/Ast {
 	public static final fun selectValue (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SelectValue;
 	public static final fun setOp (Lorg/partiql/ast/SetOpType;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SetOp;
 	public static final fun sort (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Order;Lorg/partiql/ast/Nulls;)Lorg/partiql/ast/Sort;
-	public static final fun tableConstraintCheck (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/TableConstraint$Check;
-	public static final fun tableConstraintPrimaryKey (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/ast/TableConstraint$PrimaryKey;
-	public static final fun tableConstraintUnique (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/ast/TableConstraint$Unique;
+	public static final fun tableConstraintCheck (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/ddl/TableConstraint$Check;
+	public static final fun tableConstraintPrimaryKey (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/ast/ddl/TableConstraint$PrimaryKey;
+	public static final fun tableConstraintUnique (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/ast/ddl/TableConstraint$Unique;
 }
 
 public abstract class org/partiql/ast/AstEnum : org/partiql/ast/AstNode {
@@ -268,12 +268,12 @@ public abstract class org/partiql/ast/AstVisitor {
 	public abstract fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun defaultVisit (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visit (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitCheck (Lorg/partiql/ast/AttributeConstraint$Check;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitCheck (Lorg/partiql/ast/TableConstraint$Check;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitColumnDefinition (Lorg/partiql/ast/ColumnDefinition;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitCreateTable (Lorg/partiql/ast/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCheck (Lorg/partiql/ast/ddl/AttributeConstraint$Check;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCheck (Lorg/partiql/ast/ddl/TableConstraint$Check;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitColumnDefinition (Lorg/partiql/ast/ddl/ColumnDefinition;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDataType (Lorg/partiql/ast/DataType;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitDdl (Lorg/partiql/ast/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludePath (Lorg/partiql/ast/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludeStep (Lorg/partiql/ast/ExcludeStep;Ljava/lang/Object;)Ljava/lang/Object;
@@ -346,18 +346,18 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitGroupByKey (Lorg/partiql/ast/GroupBy$Key;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitKeyValue (Lorg/partiql/ast/Options$KeyValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitKeyValue (Lorg/partiql/ast/ddl/KeyValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitNullable (Lorg/partiql/ast/AttributeConstraint$Nullable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitNullable (Lorg/partiql/ast/ddl/AttributeConstraint$Null;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitPartitionBy (Lorg/partiql/ast/Options$PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionBy (Lorg/partiql/ast/ddl/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStep (Lorg/partiql/ast/expr/PathStep;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepAllElements (Lorg/partiql/ast/expr/PathStep$AllElements;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepAllFields (Lorg/partiql/ast/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepElement (Lorg/partiql/ast/expr/PathStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepField (Lorg/partiql/ast/expr/PathStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitPrimaryKey (Lorg/partiql/ast/TableConstraint$PrimaryKey;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPrimaryKey (Lorg/partiql/ast/ddl/TableConstraint$PrimaryKey;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQuery (Lorg/partiql/ast/Query;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQueryBody (Lorg/partiql/ast/QueryBody;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQueryBodySFW (Lorg/partiql/ast/QueryBody$SFW;Ljava/lang/Object;)Ljava/lang/Object;
@@ -374,114 +374,8 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatement (Lorg/partiql/ast/Statement;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStructField (Lorg/partiql/ast/DataType$StructField;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitUnique (Lorg/partiql/ast/AttributeConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitUnique (Lorg/partiql/ast/TableConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public abstract class org/partiql/ast/AttributeConstraint : org/partiql/ast/AstNode {
-	public fun <init> ()V
-}
-
-public class org/partiql/ast/AttributeConstraint$Check : org/partiql/ast/AttributeConstraint {
-	public final field name Ljava/lang/String;
-	public final field searchCondition Lorg/partiql/ast/expr/Expr;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/AttributeConstraint$Check$Builder;
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun children ()Ljava/util/Collection;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/AttributeConstraint$Check$Builder {
-	public fun build ()Lorg/partiql/ast/AttributeConstraint$Check;
-	public fun name (Ljava/lang/String;)Lorg/partiql/ast/AttributeConstraint$Check$Builder;
-	public fun searchCondition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/AttributeConstraint$Check$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
-public class org/partiql/ast/AttributeConstraint$Nullable : org/partiql/ast/AttributeConstraint {
-	public final field isNullable Ljava/lang/Boolean;
-	public final field name Ljava/lang/String;
-	public fun <init> (Ljava/lang/String;Ljava/lang/Boolean;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/AttributeConstraint$Nullable$Builder;
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun children ()Ljava/util/Collection;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/AttributeConstraint$Nullable$Builder {
-	public fun build ()Lorg/partiql/ast/AttributeConstraint$Nullable;
-	public fun isNullable (Ljava/lang/Boolean;)Lorg/partiql/ast/AttributeConstraint$Nullable$Builder;
-	public fun name (Ljava/lang/String;)Lorg/partiql/ast/AttributeConstraint$Nullable$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
-public class org/partiql/ast/AttributeConstraint$Unique : org/partiql/ast/AttributeConstraint {
-	public final field isPrimary Ljava/lang/Boolean;
-	public final field name Ljava/lang/String;
-	public fun <init> (Ljava/lang/String;Ljava/lang/Boolean;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/AttributeConstraint$Unique$Builder;
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun children ()Ljava/util/Collection;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/AttributeConstraint$Unique$Builder {
-	public fun build ()Lorg/partiql/ast/AttributeConstraint$Unique;
-	public fun isPrimary (Ljava/lang/Boolean;)Lorg/partiql/ast/AttributeConstraint$Unique$Builder;
-	public fun name (Ljava/lang/String;)Lorg/partiql/ast/AttributeConstraint$Unique$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
-public class org/partiql/ast/ColumnDefinition : org/partiql/ast/AstNode {
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/DataType;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/ColumnDefinition$Builder;
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun children ()Ljava/util/Collection;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/ColumnDefinition$Builder {
-	public fun build ()Lorg/partiql/ast/ColumnDefinition;
-	public fun comment (Ljava/lang/String;)Lorg/partiql/ast/ColumnDefinition$Builder;
-	public fun constraints (Ljava/util/List;)Lorg/partiql/ast/ColumnDefinition$Builder;
-	public fun dataType (Lorg/partiql/ast/DataType;)Lorg/partiql/ast/ColumnDefinition$Builder;
-	public fun isOptional (Ljava/lang/Boolean;)Lorg/partiql/ast/ColumnDefinition$Builder;
-	public fun name (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/ColumnDefinition$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
-public class org/partiql/ast/CreateTable : org/partiql/ast/Ddl {
-	public final field columns Ljava/util/List;
-	public final field constraints Ljava/util/List;
-	public final field name Lorg/partiql/ast/IdentifierChain;
-	public final field partitionBy Lorg/partiql/ast/Options$PartitionBy;
-	public final field tableProperties Ljava/util/List;
-	public fun <init> (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Ljava/util/List;Lorg/partiql/ast/Options$PartitionBy;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/CreateTable$Builder;
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun children ()Ljava/util/Collection;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/CreateTable$Builder {
-	public fun build ()Lorg/partiql/ast/CreateTable;
-	public fun columns (Ljava/util/List;)Lorg/partiql/ast/CreateTable$Builder;
-	public fun constraints (Ljava/util/List;)Lorg/partiql/ast/CreateTable$Builder;
-	public fun name (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/CreateTable$Builder;
-	public fun partitionBy (Lorg/partiql/ast/Options$PartitionBy;)Lorg/partiql/ast/CreateTable$Builder;
-	public fun tableProperties (Ljava/util/List;)Lorg/partiql/ast/CreateTable$Builder;
-	public fun toString ()Ljava/lang/String;
+	public fun visitUnique (Lorg/partiql/ast/ddl/AttributeConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUnique (Lorg/partiql/ast/ddl/TableConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
@@ -630,10 +524,10 @@ public class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 public class org/partiql/ast/DataType$StructField : org/partiql/ast/AstNode {
 	public final field comment Ljava/lang/String;
 	public final field constraints Ljava/util/List;
-	public final field isOptional Ljava/lang/Boolean;
+	public final field isOptional Z
 	public final field name Lorg/partiql/ast/Identifier;
 	public final field type Lorg/partiql/ast/DataType;
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/DataType;Ljava/lang/Boolean;Ljava/util/List;Ljava/lang/String;)V
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/DataType;ZLjava/util/List;Ljava/lang/String;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
@@ -669,10 +563,6 @@ public class org/partiql/ast/DatetimeField : org/partiql/ast/AstEnum {
 	public fun hashCode ()I
 	public fun name ()Ljava/lang/String;
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/DatetimeField;
-}
-
-public abstract class org/partiql/ast/Ddl : org/partiql/ast/Statement {
-	public fun <init> ()V
 }
 
 public class org/partiql/ast/Exclude : org/partiql/ast/AstNode {
@@ -1059,46 +949,6 @@ public class org/partiql/ast/Nulls : org/partiql/ast/AstEnum {
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/Nulls;
 }
 
-public abstract class org/partiql/ast/Options : org/partiql/ast/AstNode {
-	public fun <init> ()V
-}
-
-public class org/partiql/ast/Options$KeyValue : org/partiql/ast/Options {
-	public final field key Ljava/lang/String;
-	public final field value Lorg/partiql/value/StringValue;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/value/StringValue;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/Options$KeyValue$Builder;
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun children ()Ljava/util/Collection;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/Options$KeyValue$Builder {
-	public fun build ()Lorg/partiql/ast/Options$KeyValue;
-	public fun key (Ljava/lang/String;)Lorg/partiql/ast/Options$KeyValue$Builder;
-	public fun toString ()Ljava/lang/String;
-	public fun value (Lorg/partiql/value/StringValue;)Lorg/partiql/ast/Options$KeyValue$Builder;
-}
-
-public class org/partiql/ast/Options$PartitionBy : org/partiql/ast/Options {
-	public final field columns Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/Options$PartitionBy$Builder;
-	protected fun canEqual (Ljava/lang/Object;)Z
-	public fun children ()Ljava/util/Collection;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/Options$PartitionBy$Builder {
-	public fun build ()Lorg/partiql/ast/Options$PartitionBy;
-	public fun columns (Ljava/util/List;)Lorg/partiql/ast/Options$PartitionBy$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
 public class org/partiql/ast/Order : org/partiql/ast/AstEnum {
 	public static final field ASC I
 	public static final field DESC I
@@ -1407,64 +1257,215 @@ public abstract class org/partiql/ast/Statement : org/partiql/ast/AstNode {
 	public fun <init> ()V
 }
 
-public abstract class org/partiql/ast/TableConstraint : org/partiql/ast/AstNode {
+public abstract class org/partiql/ast/ddl/AttributeConstraint : org/partiql/ast/AstNode {
 	public fun <init> ()V
 }
 
-public class org/partiql/ast/TableConstraint$Check : org/partiql/ast/TableConstraint {
+public class org/partiql/ast/ddl/AttributeConstraint$Check : org/partiql/ast/ddl/AttributeConstraint {
 	public final field name Ljava/lang/String;
 	public final field searchCondition Lorg/partiql/ast/expr/Expr;
 	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/TableConstraint$Check$Builder;
+	public static fun builder ()Lorg/partiql/ast/ddl/AttributeConstraint$Check$Builder;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 }
 
-public class org/partiql/ast/TableConstraint$Check$Builder {
-	public fun build ()Lorg/partiql/ast/TableConstraint$Check;
-	public fun name (Ljava/lang/String;)Lorg/partiql/ast/TableConstraint$Check$Builder;
-	public fun searchCondition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/TableConstraint$Check$Builder;
+public class org/partiql/ast/ddl/AttributeConstraint$Check$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/AttributeConstraint$Check;
+	public fun name (Ljava/lang/String;)Lorg/partiql/ast/ddl/AttributeConstraint$Check$Builder;
+	public fun searchCondition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/ddl/AttributeConstraint$Check$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
-public class org/partiql/ast/TableConstraint$PrimaryKey : org/partiql/ast/TableConstraint {
+public class org/partiql/ast/ddl/AttributeConstraint$Null : org/partiql/ast/ddl/AttributeConstraint {
+	public final field isNullable Ljava/lang/Boolean;
+	public final field name Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/Boolean;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/ddl/AttributeConstraint$Null$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/ddl/AttributeConstraint$Null$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/AttributeConstraint$Null;
+	public fun isNullable (Ljava/lang/Boolean;)Lorg/partiql/ast/ddl/AttributeConstraint$Null$Builder;
+	public fun name (Ljava/lang/String;)Lorg/partiql/ast/ddl/AttributeConstraint$Null$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/ast/ddl/AttributeConstraint$Unique : org/partiql/ast/ddl/AttributeConstraint {
+	public final field isPrimary Ljava/lang/Boolean;
+	public final field name Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/Boolean;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/ddl/AttributeConstraint$Unique$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/ddl/AttributeConstraint$Unique$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/AttributeConstraint$Unique;
+	public fun isPrimary (Ljava/lang/Boolean;)Lorg/partiql/ast/ddl/AttributeConstraint$Unique$Builder;
+	public fun name (Ljava/lang/String;)Lorg/partiql/ast/ddl/AttributeConstraint$Unique$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/ast/ddl/ColumnDefinition : org/partiql/ast/AstNode {
+	public final field comment Ljava/lang/String;
+	public final field constraints Ljava/util/List;
+	public final field dataType Lorg/partiql/ast/DataType;
+	public final field isOptional Z
+	public final field name Lorg/partiql/ast/Identifier;
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/DataType;ZLjava/util/List;Ljava/lang/String;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/ddl/ColumnDefinition$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/ddl/ColumnDefinition$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/ColumnDefinition;
+	public fun comment (Ljava/lang/String;)Lorg/partiql/ast/ddl/ColumnDefinition$Builder;
+	public fun constraints (Ljava/util/List;)Lorg/partiql/ast/ddl/ColumnDefinition$Builder;
+	public fun dataType (Lorg/partiql/ast/DataType;)Lorg/partiql/ast/ddl/ColumnDefinition$Builder;
+	public fun isOptional (Z)Lorg/partiql/ast/ddl/ColumnDefinition$Builder;
+	public fun name (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/ddl/ColumnDefinition$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/ast/ddl/CreateTable : org/partiql/ast/ddl/Ddl {
+	public final field columns Ljava/util/List;
+	public final field constraints Ljava/util/List;
+	public final field name Lorg/partiql/ast/IdentifierChain;
+	public final field partitionBy Lorg/partiql/ast/ddl/PartitionBy;
+	public final field tableProperties Ljava/util/List;
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Ljava/util/List;Lorg/partiql/ast/ddl/PartitionBy;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/ddl/CreateTable$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/ddl/CreateTable$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/CreateTable;
+	public fun columns (Ljava/util/List;)Lorg/partiql/ast/ddl/CreateTable$Builder;
+	public fun constraints (Ljava/util/List;)Lorg/partiql/ast/ddl/CreateTable$Builder;
+	public fun name (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/ddl/CreateTable$Builder;
+	public fun partitionBy (Lorg/partiql/ast/ddl/PartitionBy;)Lorg/partiql/ast/ddl/CreateTable$Builder;
+	public fun tableProperties (Ljava/util/List;)Lorg/partiql/ast/ddl/CreateTable$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/ast/ddl/Ddl : org/partiql/ast/Statement {
+	public fun <init> ()V
+}
+
+public class org/partiql/ast/ddl/KeyValue : org/partiql/ast/AstNode {
+	public final field key Ljava/lang/String;
+	public final field value Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/ddl/KeyValue$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/ddl/KeyValue$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/KeyValue;
+	public fun key (Ljava/lang/String;)Lorg/partiql/ast/ddl/KeyValue$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Ljava/lang/String;)Lorg/partiql/ast/ddl/KeyValue$Builder;
+}
+
+public class org/partiql/ast/ddl/PartitionBy : org/partiql/ast/AstNode {
+	public final field columns Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/ddl/PartitionBy$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/ddl/PartitionBy$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/PartitionBy;
+	public fun columns (Ljava/util/List;)Lorg/partiql/ast/ddl/PartitionBy$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/ast/ddl/TableConstraint : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public class org/partiql/ast/ddl/TableConstraint$Check : org/partiql/ast/ddl/TableConstraint {
+	public final field name Ljava/lang/String;
+	public final field searchCondition Lorg/partiql/ast/expr/Expr;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/ddl/TableConstraint$Check$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/ddl/TableConstraint$Check$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/TableConstraint$Check;
+	public fun name (Ljava/lang/String;)Lorg/partiql/ast/ddl/TableConstraint$Check$Builder;
+	public fun searchCondition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/ddl/TableConstraint$Check$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/ast/ddl/TableConstraint$PrimaryKey : org/partiql/ast/ddl/TableConstraint {
 	public final field columns Ljava/util/List;
 	public final field name Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/TableConstraint$PrimaryKey$Builder;
+	public static fun builder ()Lorg/partiql/ast/ddl/TableConstraint$PrimaryKey$Builder;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 }
 
-public class org/partiql/ast/TableConstraint$PrimaryKey$Builder {
-	public fun build ()Lorg/partiql/ast/TableConstraint$PrimaryKey;
-	public fun columns (Ljava/util/List;)Lorg/partiql/ast/TableConstraint$PrimaryKey$Builder;
-	public fun name (Ljava/lang/String;)Lorg/partiql/ast/TableConstraint$PrimaryKey$Builder;
+public class org/partiql/ast/ddl/TableConstraint$PrimaryKey$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/TableConstraint$PrimaryKey;
+	public fun columns (Ljava/util/List;)Lorg/partiql/ast/ddl/TableConstraint$PrimaryKey$Builder;
+	public fun name (Ljava/lang/String;)Lorg/partiql/ast/ddl/TableConstraint$PrimaryKey$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
-public class org/partiql/ast/TableConstraint$Unique : org/partiql/ast/TableConstraint {
+public class org/partiql/ast/ddl/TableConstraint$Unique : org/partiql/ast/ddl/TableConstraint {
 	public final field columns Ljava/util/List;
-	public field name Ljava/lang/String;
+	public final field name Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/TableConstraint$Unique$Builder;
+	public static fun builder ()Lorg/partiql/ast/ddl/TableConstraint$Unique$Builder;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 }
 
-public class org/partiql/ast/TableConstraint$Unique$Builder {
-	public fun build ()Lorg/partiql/ast/TableConstraint$Unique;
-	public fun columns (Ljava/util/List;)Lorg/partiql/ast/TableConstraint$Unique$Builder;
-	public fun name (Ljava/lang/String;)Lorg/partiql/ast/TableConstraint$Unique$Builder;
+public class org/partiql/ast/ddl/TableConstraint$Unique$Builder {
+	public fun build ()Lorg/partiql/ast/ddl/TableConstraint$Unique;
+	public fun columns (Ljava/util/List;)Lorg/partiql/ast/ddl/TableConstraint$Unique$Builder;
+	public fun name (Ljava/lang/String;)Lorg/partiql/ast/ddl/TableConstraint$Unique$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 

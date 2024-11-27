@@ -1,9 +1,12 @@
-package org.partiql.ast;
+package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
-import org.partiql.ast.expr.Expr;
+import org.jetbrains.annotations.Nullable;
+import org.partiql.ast.AstNode;
+import org.partiql.ast.AstVisitor;
+import org.partiql.ast.IdentifierChain;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,15 +22,24 @@ public class CreateTable extends Ddl {
     @NotNull
     public final IdentifierChain name;
 
+    @Nullable
     public final List<ColumnDefinition> columns;
 
+    @Nullable
     public final List<TableConstraint> constraints;
 
-    public final Options.PartitionBy partitionBy;
+    @Nullable
+    public final PartitionBy partitionBy;
 
-    public final List<Options.KeyValue> tableProperties;
+    @Nullable
+    public final List<KeyValue> tableProperties;
 
-    public CreateTable(@NotNull IdentifierChain name, List<ColumnDefinition> columns, List<TableConstraint> constraints, Options.PartitionBy partitionBy, List<Options.KeyValue> tableProperties) {
+    public CreateTable(
+            @NotNull IdentifierChain name,
+            @Nullable List<ColumnDefinition> columns,
+            @Nullable List<TableConstraint> constraints,
+            @Nullable PartitionBy partitionBy,
+            @Nullable List<KeyValue> tableProperties) {
         this.name = name;
         this.columns = columns;
         this.constraints = constraints;

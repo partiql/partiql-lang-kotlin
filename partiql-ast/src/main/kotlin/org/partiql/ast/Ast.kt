@@ -1,5 +1,11 @@
 package org.partiql.ast
 
+import org.partiql.ast.ddl.AttributeConstraint
+import org.partiql.ast.ddl.ColumnDefinition
+import org.partiql.ast.ddl.CreateTable
+import org.partiql.ast.ddl.KeyValue
+import org.partiql.ast.ddl.PartitionBy
+import org.partiql.ast.ddl.TableConstraint
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
@@ -49,7 +55,6 @@ import org.partiql.ast.graph.GraphRestrictor
 import org.partiql.ast.graph.GraphSelector
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StringValue
 
 // TODO docs for all factory methods
 //  Also consider defaults for nullable. Need to look more into backwards compatibility.
@@ -512,8 +517,14 @@ public object Ast {
     // DDL
     //
     @JvmStatic
-    public fun createTable(name: IdentifierChain, columns: List<ColumnDefinition>, constraints: List<TableConstraint>, partitionBy: Options.PartitionBy?, tableProperties: List<Options.KeyValue>): CreateTable {
-        return CreateTable(name, columns, constraints, partitionBy, tableProperties)
+    public fun createTable(name: IdentifierChain, columns: List<ColumnDefinition>, constraints: List<TableConstraint>, partitionBy: PartitionBy?, tableProperties: List<KeyValue>): CreateTable {
+        return CreateTable(
+            name,
+            columns,
+            constraints,
+            partitionBy,
+            tableProperties
+        )
     }
 
     @JvmStatic
@@ -537,8 +548,8 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun columnConstraintNullable(name: String?, isNullable: Boolean): AttributeConstraint.Nullable {
-        return AttributeConstraint.Nullable(name, isNullable)
+    public fun columnConstraintNullable(name: String?, isNullable: Boolean): AttributeConstraint.Null {
+        return AttributeConstraint.Null(name, isNullable)
     }
 
     @JvmStatic
@@ -553,12 +564,12 @@ public object Ast {
 
     @OptIn(PartiQLValueExperimental::class)
     @JvmStatic
-    public fun keyValue(key: String, value: StringValue): Options.KeyValue {
-        return Options.KeyValue(key, value)
+    public fun keyValue(key: String, value: String): KeyValue {
+        return KeyValue(key, value)
     }
 
     @JvmStatic
-    public fun partitionBy(columns: List<Identifier>): Options.PartitionBy {
-        return Options.PartitionBy(columns)
+    public fun partitionBy(columns: List<Identifier>): PartitionBy {
+        return PartitionBy(columns)
     }
 }

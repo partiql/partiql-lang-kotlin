@@ -1,8 +1,12 @@
-package org.partiql.ast;
+package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.partiql.ast.AstNode;
+import org.partiql.ast.AstVisitor;
+import org.partiql.ast.Identifier;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
@@ -14,8 +18,8 @@ public abstract class TableConstraint extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends TableConstraint {
-        // TODO: Should this be an identifier
-        public String name;
+        @Nullable
+        public final String name;
 
         @NotNull
         public final List<Identifier> columns;
@@ -24,7 +28,6 @@ public abstract class TableConstraint extends AstNode {
             this.name = name;
             this.columns = column;
         }
-
 
         @NotNull
         @Override
@@ -41,6 +44,7 @@ public abstract class TableConstraint extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class PrimaryKey extends TableConstraint {
+        @Nullable
         public final String name;
 
         @NotNull
@@ -67,8 +71,8 @@ public abstract class TableConstraint extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     // TODO: Table Level Check Constraint not yet supported in the grammar
     public static class Check extends TableConstraint {
+        @Nullable
         public final String name;
-
         @NotNull
         public final Expr searchCondition;
 
@@ -76,7 +80,6 @@ public abstract class TableConstraint extends AstNode {
             this.name = name;
             this.searchCondition = searchCondition;
         }
-
 
         @NotNull
         @Override

@@ -24,7 +24,6 @@ import org.partiql.ast.DataType
 import org.partiql.ast.expr.Scope
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
-import org.partiql.value.stringValue
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -869,7 +868,7 @@ class PartiQLParserDDLTests {
                     listOf(),
                     null,
                     listOf(
-                        keyValue("k1", stringValue("v1"))
+                        keyValue("k1", "v1")
                     )
                 )
             ),
@@ -889,7 +888,7 @@ class PartiQLParserDDLTests {
                     listOf(),
                     null,
                     listOf(
-                        keyValue("K1k", stringValue("V1v"))
+                        keyValue("K1k", "V1v")
                     )
                 )
             ),
@@ -909,8 +908,8 @@ class PartiQLParserDDLTests {
                     listOf(),
                     null,
                     listOf(
-                        keyValue("k1", stringValue("v1")),
-                        keyValue("k2", stringValue("v2"))
+                        keyValue("k1", "v1"),
+                        keyValue("k2", "v2")
                     )
                 )
             ),
@@ -931,7 +930,7 @@ class PartiQLParserDDLTests {
                     listOf(),
                     partitionBy(listOf(identifier("a", false))),
                     listOf(
-                        keyValue("k1", stringValue("v1")),
+                        keyValue("k1", "v1"),
                     )
                 )
             ),

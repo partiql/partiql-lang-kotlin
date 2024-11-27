@@ -2,6 +2,8 @@ package org.partiql.ast;
 
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.partiql.ast.ddl.AttributeConstraint;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,13 +29,24 @@ public class DataType extends AstEnum {
     //     and the fact that parameterized struct type being an extension to SQL-99.
     @EqualsAndHashCode(callSuper = false)
     public static class StructField extends AstNode {
+        @NotNull
         public final Identifier name;
+        @NotNull
         public final DataType type;
-        public final Boolean isOptional;
+
+        public final boolean isOptional;
+
+        @Nullable
         public final List<AttributeConstraint> constraints;
+        @Nullable
         public final String comment;
 
-        public StructField(Identifier name, DataType type, Boolean isOptional, List<AttributeConstraint> constraints, String comment) {
+        public StructField(
+                @NotNull Identifier name,
+                @NotNull DataType type,
+                boolean isOptional,
+                @Nullable List<AttributeConstraint> constraints,
+                @Nullable String comment) {
             this.name = name;
             this.type = type;
             this.isOptional = isOptional;
@@ -47,6 +60,7 @@ public class DataType extends AstEnum {
             ArrayList<AstNode> kids = new ArrayList<>();
             kids.add(name);
             kids.add(type);
+            kids.addAll(constraints);
             return kids;
         }
 
@@ -539,6 +553,7 @@ public class DataType extends AstEnum {
             case STRUCT: return "STRUCT";
             case TUPLE: return "TUPLE";
             case LIST: return "LIST";
+            case ARRAY: return "ARRAY";
             case BAG: return "BAG";
             case SEXP: return "SEXP";
             case USER_DEFINED: return "USER_DEFINED";
@@ -711,6 +726,12 @@ public class DataType extends AstEnum {
         List<AstNode> kids = new ArrayList<>();
         if (name != null) {
             kids.add(name);
+        }
+        if (elementType != null) {
+            kids.add(elementType);
+        }
+        if (fields != null) {
+            kids.addAll(fields);
         }
         return kids;
     }
