@@ -1,29 +1,6 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Visitor
 import org.partiql.plan.rex.Rex
-
-/**
- * Logical filter operation for the WHERE and HAVING clauses.
- *
- *   arg 0 – rel input
- *   arg 1 - rex predicate
- */
-public interface RelFilter : Rel {
-
-    public fun getInput(): Rel
-
-    public fun getPredicate(): Rex
-
-    override fun getChildren(): Collection<Rel> = listOf(getInput())
-
-    override fun getType(): RelType = getInput().getType()
-
-    override fun isOrdered(): Boolean = getInput().isOrdered()
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R =
-        visitor.visitFilter(this, ctx)
-}
 
 /**
  * Default [RelFilter] implementation.

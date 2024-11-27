@@ -1,31 +1,10 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Visitor
-
 /**
- * Logical `EXCEPT [ALL|DISTINCT]` operator for set (or multiset) difference.
+ * Default [RelIntersect] implementation.
  */
-public interface RelExcept : Rel {
-
-    public fun isAll(): Boolean
-
-    public fun getLeft(): Rel
-
-    public fun getRight(): Rel
-
-    override fun getChildren(): Collection<Rel> = listOf(getLeft(), getRight())
-
-    override fun isOrdered(): Boolean = false
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R =
-        visitor.visitExcept(this, ctx)
-}
-
-/**
- * Default [RelExcept] implementation.
- */
-internal class RelExceptImpl(left: Rel, right: Rel, isAll: Boolean) :
-    RelExcept {
+internal class RelIntersectImpl(left: Rel, right: Rel, isAll: Boolean) :
+    RelIntersect {
 
     // DO NOT USE FINAL
     private var _isAll = isAll
@@ -54,7 +33,7 @@ internal class RelExceptImpl(left: Rel, right: Rel, isAll: Boolean) :
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is RelExcept) return false
+        if (other !is RelIntersect) return false
         if (_isAll != other.isAll()) return false
         if (_left != other.getLeft()) return false
         if (_right != other.getRight()) return false

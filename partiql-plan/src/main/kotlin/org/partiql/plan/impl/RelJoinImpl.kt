@@ -1,34 +1,7 @@
 package org.partiql.plan.rel
 
 import org.partiql.plan.JoinType
-import org.partiql.plan.Visitor
 import org.partiql.plan.rex.Rex
-
-/**
- * TODO DOCUMENTATION
- */
-public interface RelJoin : Rel {
-
-    public fun getLeft(): Rel
-
-    // TODO REMOVE ME TEMPORARY – https://github.com/partiql/partiql-lang-kotlin/issues/1575
-    public fun getLeftSchema(): RelType?
-
-    public fun getRight(): Rel
-
-    // TODO REMOVE ME TEMPORARY – https://github.com/partiql/partiql-lang-kotlin/issues/1575
-    public fun getRightSchema(): RelType?
-
-    public fun getCondition(): Rex?
-
-    public fun getJoinType(): JoinType
-
-    override fun getChildren(): Collection<Rel> = listOf(getLeft(), getRight())
-
-    override fun isOrdered(): Boolean = false
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitJoin(this, ctx)
-}
 
 /**
  * Default [RelJoin] implementation.

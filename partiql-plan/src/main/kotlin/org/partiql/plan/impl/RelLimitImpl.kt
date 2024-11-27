@@ -1,25 +1,6 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Visitor
 import org.partiql.plan.rex.Rex
-
-/**
- * Logical `LIMIT` operator.
- */
-public interface RelLimit : Rel {
-
-    public fun getInput(): Rel
-
-    public fun getLimit(): Rex
-
-    override fun getChildren(): Collection<Rel> = listOf(getInput())
-
-    override fun getType(): RelType = getInput().getType()
-
-    override fun isOrdered(): Boolean = getInput().isOrdered()
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitLimit(this, ctx)
-}
 
 /**
  * Default [RelLimit] implementation.

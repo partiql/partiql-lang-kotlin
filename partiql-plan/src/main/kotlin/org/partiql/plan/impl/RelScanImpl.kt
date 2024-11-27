@@ -1,21 +1,6 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Visitor
 import org.partiql.plan.rex.Rex
-
-/**
- * Logical scan corresponding to the clause `FROM <expression> AS <v>`.
- */
-public interface RelScan : Rel {
-
-    public fun getInput(): Rex
-
-    override fun getChildren(): Collection<Rel> = emptyList()
-
-    override fun isOrdered(): Boolean = false
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitScan(this, ctx)
-}
 
 /**
  * Default [RelScan] implementation.

@@ -1,25 +1,6 @@
 package org.partiql.plan.rel
 
 import org.partiql.plan.Collation
-import org.partiql.plan.Visitor
-
-/**
- * Logical sort operator.
- */
-public interface RelSort : Rel {
-
-    public fun getInput(): Rel
-
-    public fun getCollations(): List<Collation>
-
-    override fun getChildren(): Collection<Rel> = listOf(getInput())
-
-    override fun getType(): RelType = getInput().getType()
-
-    override fun isOrdered(): Boolean = true
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitSort(this, ctx)
-}
 
 /**
  * Default [RelSort] implementation.

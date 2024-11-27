@@ -1,25 +1,6 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Visitor
 import org.partiql.plan.rex.Rex
-
-/**
- * Logical `OFFSET` operator.
- */
-public interface RelOffset : Rel {
-
-    public fun getInput(): Rel
-
-    public fun getOffset(): Rex
-
-    override fun getChildren(): Collection<Rel> = listOf(getInput())
-
-    override fun getType(): RelType = getInput().getType()
-
-    override fun isOrdered(): Boolean = getInput().isOrdered()
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitOffset(this, ctx)
-}
 
 /**
  * Default [RelOffset] implementation.

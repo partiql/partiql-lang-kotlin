@@ -1,25 +1,5 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Visitor
-
-/**
- * Logical `UNION [ALL|DISTINCT]` operator for set (or multiset) union.
- */
-public interface RelUnion : Rel {
-
-    public fun isAll(): Boolean
-
-    public fun getLeft(): Rel
-
-    public fun getRight(): Rel
-
-    override fun getChildren(): Collection<Rel> = listOf(getLeft(), getRight())
-
-    override fun isOrdered(): Boolean = false
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitUnion(this, ctx)
-}
-
 /**
  * Default [RelUnion] implementation.
  */

@@ -1,24 +1,6 @@
 package org.partiql.plan.rel
 
 import org.partiql.plan.Exclusion
-import org.partiql.plan.Visitor
-
-/**
- * Logical `EXCLUDE` operation.
- */
-public interface RelExclude : Rel {
-
-    public fun getInput(): Rel
-
-    public fun getExclusions(): List<Exclusion>
-
-    override fun getChildren(): Collection<Rel> = listOf(getInput())
-
-    override fun isOrdered(): Boolean = getInput().isOrdered()
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R =
-        visitor.visitExclude(this, ctx)
-}
 
 /**
  * Default [RelExclude] implementation.

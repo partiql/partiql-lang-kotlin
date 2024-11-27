@@ -1,24 +1,5 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Visitor
-
-/**
- * Logical `DISTINCT` operator.
- */
-public interface RelDistinct : Rel {
-
-    public fun getInput(): Rel
-
-    override fun getChildren(): Collection<Rel> = listOf(getInput())
-
-    override fun getType(): RelType = getInput().getType()
-
-    override fun isOrdered(): Boolean = getInput().isOrdered()
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R =
-        visitor.visitDistinct(this, ctx)
-}
-
 /**
  * Default [RelDistinct] implementation.
  */

@@ -1,23 +1,6 @@
 package org.partiql.plan.rel
 
-import org.partiql.plan.Visitor
 import org.partiql.plan.rex.Rex
-
-/**
- * Logical `PROJECTION` operator
- */
-public interface RelProject : Rel {
-
-    public fun getInput(): Rel
-
-    public fun getProjections(): List<Rex>
-
-    override fun getChildren(): Collection<Rel> = listOf(getInput())
-
-    override fun isOrdered(): Boolean = getInput().isOrdered()
-
-    override fun <R, C> accept(visitor: Visitor<R, C>, ctx: C): R = visitor.visitProject(this, ctx)
-}
 
 /**
  * Default [RelProject] implementation.
