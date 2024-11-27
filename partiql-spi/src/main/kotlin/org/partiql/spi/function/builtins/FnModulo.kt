@@ -61,7 +61,7 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
         val p = Math.min(decimalLhs.precision - decimalLhs.scale, decimalRhs.precision - decimalRhs.scale) + Math.max(decimalLhs.scale, decimalRhs.scale)
         val s = Math.max(decimalLhs.scale, decimalRhs.scale)
-        return basic(PType.decimal()) { args ->
+        return basic(PType.decimal(p, s), decimalLhs, decimalRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
             Datum.decimal(arg0 % arg1, p, s)
