@@ -382,7 +382,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val limit = node.limit.type(input.type.schema, outer, Strategy.GLOBAL)
             // check types
             if (limit.type.isNumeric().not()) {
-                val problem = PErrors.typeUnexpected(null, limit.type, listOf(PType.numeric()))
+                val problem = PErrors.typeUnexpected(null, limit.type, listOf(PType.numeric(38, 0)))
                 val err = errorRexAndReport(_listener, problem)
                 return rel(input.type, relOpLimit(input, err))
             }
@@ -400,7 +400,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val offset = node.offset.type(input.type.schema, outer, Strategy.GLOBAL)
             // check types
             if (offset.type.isNumeric().not()) {
-                val problem = PErrors.typeUnexpected(null, offset.type, listOf(PType.numeric()))
+                val problem = PErrors.typeUnexpected(null, offset.type, listOf(PType.numeric(38, 0)))
                 val err = errorRexAndReport(_listener, problem)
                 return rel(input.type, relOpLimit(input, err))
             }

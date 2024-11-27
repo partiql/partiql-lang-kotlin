@@ -50,8 +50,8 @@ internal val Fn_POS__INT64__INT64 = Function.static(
 internal val Fn_POS__INT__INT = Function.static(
 
     name = "pos",
-    returns = PType.numeric(),
-    parameters = arrayOf(Parameter("value", PType.numeric())),
+    returns = DefaultNumeric.NUMERIC,
+    parameters = arrayOf(Parameter("value", DefaultNumeric.NUMERIC)),
 
 ) { args ->
     args[0]

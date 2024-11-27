@@ -527,20 +527,9 @@ public abstract class PType extends Enum {
     }
 
     /**
-     * @return a PartiQL int (arbitrary precision) type
-     * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
-     */
-    @NotNull
-    @Deprecated
-    public static PType numeric() {
-        return new PTypeDecimal(NUMERIC, 38, 0);
-    }
-
-    /**
      * @return a SQL:1999 NUMERIC type.
      */
     @NotNull
-    @SuppressWarnings("unused")
     public static PType numeric(int precision, int scale) {
         return new PTypeDecimal(NUMERIC, precision, scale);
     }

@@ -48,7 +48,7 @@ internal object FnBitwiseAnd : DiadicArithmeticOperator("bitwise_and") {
 
     // TODO: Probably remove this if we don't expose NUMERIC
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
-        return basic(PType.numeric()) { args ->
+        return basic(DefaultNumeric.NUMERIC) { args ->
             val arg0 = args[0].bigInteger
             val arg1 = args[1].bigInteger
             Datum.numeric(arg0 and arg1)

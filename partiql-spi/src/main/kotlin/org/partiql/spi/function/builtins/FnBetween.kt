@@ -81,9 +81,9 @@ internal val Fn_BETWEEN__INT_INT_INT__BOOL = Function.static(
     name = "between",
     returns = PType.bool(),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
-        @Suppress("DEPRECATION") Parameter("lower", PType.numeric()),
-        @Suppress("DEPRECATION") Parameter("upper", PType.numeric()),
+        Parameter("value", DefaultNumeric.NUMERIC),
+        Parameter("lower", DefaultNumeric.NUMERIC),
+        Parameter("upper", DefaultNumeric.NUMERIC),
     ),
 
 ) { args ->

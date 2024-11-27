@@ -100,7 +100,7 @@ class DatumComparatorTest {
             Datum.missing(), // missing
             Datum.nullValue(), // TODO: annotations = listOf("a")), // `a::null`
             Datum.missing(), // TODO: annotations = listOf("a")), // `a::missing`
-            Datum.nullValue(PType.numeric()), // `null.int`,
+            Datum.nullValue(PType.numeric(38, 0)), // `null.int`,
             Datum.nullValue(PType.struct()) // `null.struct`
         )
     )

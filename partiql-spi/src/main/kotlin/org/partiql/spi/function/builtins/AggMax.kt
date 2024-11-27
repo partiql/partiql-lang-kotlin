@@ -48,12 +48,12 @@ internal val Agg_MAX__INT64__INT64 = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__INT__INT = Aggregation.static(
+internal val Agg_MAX__NUMERIC__NUMERIC = Aggregation.static(
 
     name = "max",
-    returns = PType.numeric(),
+    returns = DefaultNumeric.NUMERIC,
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
+        Parameter("value", DefaultNumeric.NUMERIC),
     ),
     accumulator = ::AccumulatorMax,
 )

@@ -394,7 +394,7 @@ internal class DynamicTyper {
             PType.SMALLINT -> PType.smallint()
             PType.INTEGER -> PType.integer()
             PType.BIGINT -> PType.bigint()
-            PType.NUMERIC -> PType.numeric()
+            PType.NUMERIC -> PType.numeric(38, 0) // TODO: To be updated
             PType.DECIMAL -> PType.decimal(38, 0) // TODO: To be updated.
             PType.REAL -> PType.real()
             PType.DOUBLE -> PType.doublePrecision()

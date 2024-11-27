@@ -49,7 +49,7 @@ internal val Fn_DATE_ADD_YEAR__INT_DATE__DATE = Function.static(
     name = "date_add_year",
     returns = PType.date(),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("interval", PType.numeric()),
+        Parameter("interval", DefaultNumeric.NUMERIC),
         Parameter("datetime", PType.date()),
     ),
 
@@ -104,7 +104,7 @@ internal val Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP = Function.static(
     name = "date_add_year",
     returns = PType.timestamp(6),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("interval", PType.numeric()),
+        Parameter("interval", DefaultNumeric.NUMERIC),
         Parameter("datetime", PType.timestamp(6)),
     ),
 

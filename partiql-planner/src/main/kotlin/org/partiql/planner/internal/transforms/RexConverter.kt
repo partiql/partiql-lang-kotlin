@@ -1084,7 +1084,7 @@ internal object RexConverter {
         private val STRUCT: CompilerType = CompilerType(PType.struct())
         private val BAG: CompilerType = CompilerType(PType.bag())
         private val LIST: CompilerType = CompilerType(PType.array())
-        private val INT: CompilerType = CompilerType(PType.numeric())
+        private val INT: CompilerType = CompilerType(PType.numeric(38, 0))
         private val INT4: CompilerType = CompilerType(PType.integer())
         private val TIMESTAMP: CompilerType = CompilerType(PType.timestamp(6))
     }

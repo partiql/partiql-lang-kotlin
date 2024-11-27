@@ -4340,7 +4340,7 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM pets LIMIT '5'",
                 expected = TABLE_AWS_DDB_PETS,
                 problemHandler = assertProblemExists(
-                    PErrors.typeUnexpected(null, PType.string(), listOf(PType.numeric()))
+                    PErrors.typeUnexpected(null, PType.string(), listOf(PType.numeric(38, 0)))
                 )
             ),
             SuccessTestCase(
@@ -4357,7 +4357,7 @@ internal class PlanTyperTestsPorted {
                 query = "SELECT * FROM pets LIMIT 1 OFFSET '5'",
                 expected = TABLE_AWS_DDB_PETS,
                 problemHandler = assertProblemExists(
-                    PErrors.typeUnexpected(null, PType.string(), listOf(PType.numeric()))
+                    PErrors.typeUnexpected(null, PType.string(), listOf(PType.numeric(38, 0)))
                 )
             ),
             SuccessTestCase(

@@ -72,7 +72,7 @@ val allBooleanPType = setOf(
     PType.bool()
 )
 
-val allIntPType = setOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint(), PType.numeric())
+val allIntPType = setOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint(), PType.numeric(38, 0))
 
 val allNumberPType = allIntPType + setOf(
     PType.decimal(38, 19),

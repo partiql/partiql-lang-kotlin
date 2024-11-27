@@ -23,7 +23,30 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 
-import static org.partiql.types.PType.*; // TODO
+import static org.partiql.types.PType.DYNAMIC;
+import static org.partiql.types.PType.BOOL;
+import static org.partiql.types.PType.TINYINT;
+import static org.partiql.types.PType.SMALLINT;
+import static org.partiql.types.PType.INTEGER;
+import static org.partiql.types.PType.BIGINT;
+import static org.partiql.types.PType.NUMERIC;
+import static org.partiql.types.PType.DECIMAL;
+import static org.partiql.types.PType.REAL;
+import static org.partiql.types.PType.DOUBLE;
+import static org.partiql.types.PType.CHAR;
+import static org.partiql.types.PType.STRING;
+import static org.partiql.types.PType.BLOB;
+import static org.partiql.types.PType.CLOB;
+import static org.partiql.types.PType.DATE;
+import static org.partiql.types.PType.TIME;
+import static org.partiql.types.PType.TIMEZ;
+import static org.partiql.types.PType.TIMESTAMP;
+import static org.partiql.types.PType.TIMESTAMPZ;
+import static org.partiql.types.PType.ARRAY;
+import static org.partiql.types.PType.BAG;
+import static org.partiql.types.PType.ROW;
+import static org.partiql.types.PType.STRUCT;
+import static org.partiql.types.PType.UNKNOWN;
 
 /**
  * This is an EXPERIMENTAL representation of a value in PartiQL's type system. The intention of this modeling is to

@@ -54,7 +54,7 @@ fun fromStaticType(type: StaticType): PType {
         } else if (cons == IntType.IntRangeConstraint.LONG) {
             PType.bigint()
         } else if (cons == IntType.IntRangeConstraint.UNCONSTRAINED) {
-            PType.numeric()
+            PType.numeric(38, 0)
         } else {
             throw IllegalStateException()
         }

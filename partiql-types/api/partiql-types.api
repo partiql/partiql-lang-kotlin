@@ -61,7 +61,6 @@ public abstract class org/partiql/types/PType : org/partiql/types/Enum {
 	public fun getTypeParameter ()Lorg/partiql/types/PType;
 	public static fun integer ()Lorg/partiql/types/PType;
 	public fun name ()Ljava/lang/String;
-	public static fun numeric ()Lorg/partiql/types/PType;
 	public static fun numeric (II)Lorg/partiql/types/PType;
 	public static fun real ()Lorg/partiql/types/PType;
 	public static fun row (Ljava/util/Collection;)Lorg/partiql/types/PType;
