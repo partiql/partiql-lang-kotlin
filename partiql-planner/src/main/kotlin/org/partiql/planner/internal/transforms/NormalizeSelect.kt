@@ -180,7 +180,7 @@ internal object NormalizeSelect {
          * FROM t AS t
          * ```
          *
-         * In order to produce the struct's key in `{ '_1': t }` above, we use [col] to produce the columns name
+         * In order to produce the struct's key in `{ '_1': t }` above, we use [col] to produce the column name
          * given the ordinal.
          */
         private val col = { index: Int -> "_${index + 1}" }

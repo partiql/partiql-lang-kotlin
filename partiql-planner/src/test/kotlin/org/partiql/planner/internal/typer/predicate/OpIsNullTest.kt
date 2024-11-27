@@ -9,7 +9,7 @@ import java.util.stream.Stream
 
 // TODO: Finalize the semantics for IS NULL operator when operand is MISSING.
 //  For now, the IS NULL function can take missing as a operand, and returns TRUE.
-class OpIsNullableTest : PartiQLTyperTestBase() {
+class OpIsNullTest : PartiQLTyperTestBase() {
     @TestFactory
     fun isNull(): Stream<DynamicContainer> {
         val tests = listOf(

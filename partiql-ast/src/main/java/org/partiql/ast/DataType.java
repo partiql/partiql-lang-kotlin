@@ -113,7 +113,7 @@ public class DataType extends AstEnum {
     public static final int TUPLE = 43;
     // <collection type>
     public static final int LIST = 44;
-    public static final int ARRAY = 48;
+    public static final int ARRAY = 48; // TODO: Fix the numbering
     public static final int BAG = 45;
     public static final int SEXP = 46;
     // <user defined type>
@@ -544,6 +544,117 @@ public class DataType extends AstEnum {
             case USER_DEFINED: return "USER_DEFINED";
             default: return "UNKNOWN";
         }
+    }
+
+    @NotNull
+    private static final int[] codes = {
+        NULL,
+        MISSING,
+        CHARACTER,
+        CHAR,
+        CHARACTER_VARYING,
+        CHAR_VARYING,
+        VARCHAR,
+        CHARACTER_LARGE_OBJECT,
+        CHAR_LARGE_OBJECT,
+        CLOB,
+        STRING,
+        SYMBOL,
+        BLOB,
+        BINARY_LARGE_OBJECT,
+        BIT,
+        BIT_VARYING,
+        NUMERIC,
+        DECIMAL,
+        DEC,
+        BIGINT,
+        INT8,
+        INTEGER8,
+        INT4,
+        INTEGER4,
+        INTEGER,
+        INT,
+        INT2,
+        INTEGER2,
+        SMALLINT,
+        TINYINT,
+        FLOAT,
+        REAL,
+        DOUBLE_PRECISION,
+        BOOLEAN,
+        BOOL,
+        DATE,
+        TIME,
+        TIME_WITH_TIME_ZONE,
+        TIMESTAMP,
+        TIMESTAMP_WITH_TIME_ZONE,
+        INTERVAL,
+        STRUCT,
+        TUPLE,
+        LIST,
+        ARRAY,
+        BAG,
+        SEXP,
+        USER_DEFINED
+    };
+
+    @NotNull
+    public static DataType parse(@NotNull String value) {
+        switch (value) {
+            case "NULL": return NULL();
+            case "MISSING": return MISSING();
+            case "BOOL": return BOOL();
+            case "BOOLEAN": return BOOLEAN();
+            case "TINYINT": return TINYINT();
+            case "SMALLINT": return SMALLINT();
+            case "INTEGER2": return INTEGER2();
+            case "INT2": return INT2();
+            case "INTEGER": return INTEGER();
+            case "INT": return INT();
+            case "INTEGER4": return INTEGER4();
+            case "INT4": return INT4();
+            case "INTEGER8": return INTEGER8();
+            case "INT8": return INT8();
+            case "BIGINT": return BIGINT();
+            case "REAL": return REAL();
+            case "DOUBLE_PRECISION": return DOUBLE_PRECISION();
+            case "FLOAT": return FLOAT();
+            case "DECIMAL": return DECIMAL();
+            case "DEC": return DEC();
+            case "NUMERIC": return NUMERIC();
+            case "BIT": return BIT();
+            case "BIT_VARYING": return BIT_VARYING();
+            case "CHAR": return CHAR();
+            case "CHARACTER": return CHARACTER();
+            case "VARCHAR": return VARCHAR();
+            case "CHARACTER_LARGE_OBJECT": return CHARACTER_LARGE_OBJECT();
+            case "CHAR_LARGE_OBJECT": return CHAR_LARGE_OBJECT();
+            case "CHAR_VARYING": return CHAR_VARYING();
+            case "STRING": return STRING();
+            case "SYMBOL": return SYMBOL();
+            case "BLOB": return BLOB();
+            case "BINARY_LARGE_OBJECT": return BINARY_LARGE_OBJECT();
+            case "CLOB": return CLOB();
+            case "DATE": return DATE();
+            case "STRUCT": return STRUCT();
+            case "TUPLE": return TUPLE();
+            case "LIST": return LIST();
+            case "ARRAY": return ARRAY();
+            case "SEXP": return SEXP();
+            case "BAG": return BAG();
+            case "TIME": return TIME();
+            case "TIME_WITH_TIME_ZONE": return TIME_WITH_TIME_ZONE();
+            case "TIMESTAMP": return TIMESTAMP();
+            case "TIMESTAMP_WITH_TIME_ZONE": return TIMESTAMP_WITH_TIME_ZONE();
+            case "INTERVAL": return INTERVAL();
+            case "USER_DEFINED": return USER_DEFINED();
+            default: return UNKNOWN();
+        }
+    }
+
+    @NotNull
+    public static int[] codes() {
+        return codes;
     }
 
     /**

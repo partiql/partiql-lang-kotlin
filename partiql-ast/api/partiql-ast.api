@@ -614,6 +614,7 @@ public class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun children ()Ljava/util/Collection;
 	public fun code ()I
+	public static fun codes ()[I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getElementType ()Lorg/partiql/ast/DataType;
 	public fun getFields ()Ljava/util/List;
@@ -623,6 +624,7 @@ public class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public fun getScale ()Ljava/lang/Integer;
 	public fun hashCode ()I
 	public fun name ()Ljava/lang/String;
+	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/DataType;
 }
 
 public class org/partiql/ast/DataType$StructField : org/partiql/ast/AstNode {
