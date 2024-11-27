@@ -29,7 +29,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.io.PartiQLValueIonReaderBuilder
+import org.partiql.value.io.DatumIonReaderBuilder
 import org.partiql.value.toIon
 import kotlin.test.assertEquals
 
@@ -90,9 +90,7 @@ class EvalExecutor(
     }
 
     override fun fromIon(value: IonValue): Datum {
-        val partiql = PartiQLValueIonReaderBuilder.standard().build(value.toIonElement()).read()
-        val datum = Datum.of(partiql)
-        return datum
+        return DatumIonReaderBuilder.standard().build(value.toIonElement()).read()
     }
 
     override fun toIon(value: Datum): IonValue {
@@ -209,8 +207,7 @@ class EvalExecutor(
         private fun Catalog.Builder.load(env: StructElement) {
             for (f in env.fields) {
                 val name = Name.of(f.name)
-                val value = PartiQLValueIonReaderBuilder.standard().build(f.value).read()
-                val datum = Datum.of(value)
+                val datum = DatumIonReaderBuilder.standard().build(f.value).read()
                 val table = Table.standard(
                     name = name,
                     schema = PType.dynamic(),

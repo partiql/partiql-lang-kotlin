@@ -8,7 +8,6 @@ import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
@@ -42,26 +41,6 @@ internal class ExprCallDynamic(
     private val paramIndices: IntRange = args.indices
 
     /**
-     * @property paramTypes represents a two-dimensional array.
-     *
-     *  1. Dimension-1 maps to a candidate.
-     *  2. Dimension-2 maps to that candidate's parameter types.
-     *
-     * TODO actually make this an array instead of lists.
-     */
-    private val paramTypes: List<List<Parameter>> = functions.map { c -> c.getParameters().toList() }
-
-    /**
-     * @property paramFamilies is a two-dimensional array.
-     *
-     *   1. Dimension-1 maps to the [candidates]
-     *   2. Dimension-2 maps to the [CoercionFamily].
-     *
-     * TODO actually make this an array instead of lists.
-     */
-    private val paramFamilies: List<List<CoercionFamily>> = functions.map { c -> c.getParameters().map { p -> family(p.getType().kind) } }
-
-    /**
      * A memoization cache for the [match] function.
      */
     private val candidates: MutableMap<List<PType>, Candidate> = mutableMapOf()
@@ -90,13 +69,14 @@ internal class ExprCallDynamic(
         val argFamilies = args.map { family(it.kind) }
         functions.indices.forEach { candidateIndex ->
             var currentExactMatches = 0
+            val params = functions[candidateIndex].getInstance(args.toTypedArray())?.parameters ?: return@forEach
             for (paramIndex in paramIndices) {
                 val argType = args[paramIndex]
-                val paramType = paramTypes[candidateIndex][paramIndex]
-                if (paramType.getMatch(argType) == argType) { currentExactMatches++ }
+                val paramType = params[paramIndex]
+                if (paramType.kind == argType.kind) { currentExactMatches++ } // TODO: Convert all functions to use the new modelling, or else we need to only check kinds
                 val argFamily = argFamilies[paramIndex]
-                val paramFamily = paramFamilies[candidateIndex][paramIndex]
-                if (paramFamily != argFamily && argFamily != CoercionFamily.UNKNOWN && paramFamily != CoercionFamily.DYNAMIC) { return@forEach }
+                val paramFamily = family(paramType.kind)
+                if (paramFamily != argFamily && argFamily != UNKNOWN && paramFamily != DYNAMIC) { return@forEach }
             }
             if (currentExactMatches > exactMatches) {
                 currentMatch = candidateIndex

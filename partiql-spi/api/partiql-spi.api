@@ -445,6 +445,7 @@ public final class org/partiql/spi/function/Parameter {
 	public final fun getType ()Lorg/partiql/types/PType;
 	public static final fun number (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 	public static final fun text (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/spi/function/Parameter$Companion {

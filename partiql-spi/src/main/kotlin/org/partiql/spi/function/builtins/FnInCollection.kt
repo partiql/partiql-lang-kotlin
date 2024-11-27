@@ -8,46 +8,43 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_IN_COLLECTION__ANY_BAG__BOOL = Function.static(
+internal object FnInCollection : Function {
 
-    name = "in_collection",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("value", PType.dynamic()),
-        Parameter("collection", PType.bag()),
-    ),
+    override fun getName(): String {
+        return "in_collection"
+    }
 
-) { args ->
-    val value = args[0]
-    val collection = args[1]
-    val iter = collection.iterator()
-    while (iter.hasNext()) {
-        val v = iter.next()
-        if (Datum.comparator().compare(value, v) == 0) {
-            return@static Datum.bool(true)
+    override fun getReturnType(args: Array<PType>): PType {
+        return getInstance(args)!!.returns
+    }
+
+    override fun getParameters(): Array<Parameter> {
+        return arrayOf(Parameter.dynamic("value"), Parameter.collection("collection"))
+    }
+
+    override fun getInstance(args: Array<PType>): Function.Instance? {
+        val vType = args[0]
+        val cType = args[1]
+        if (cType.kind !in setOf(PType.Kind.UNKNOWN, PType.Kind.ARRAY, PType.Kind.BAG)) {
+            return null
+        }
+        return object : Function.Instance(
+            "in_collection",
+            arrayOf(vType, cType),
+            PType.bool(),
+        ) {
+            override fun invoke(args: Array<Datum>): Datum {
+                val value = args[0]
+                val collection = args[1]
+                val iter = collection.iterator()
+                while (iter.hasNext()) {
+                    val v = iter.next()
+                    if (Datum.comparator().compare(value, v) == 0) {
+                        return Datum.bool(true)
+                    }
+                }
+                return Datum.bool(false)
+            }
         }
     }
-    Datum.bool(false)
-}
-
-internal val Fn_IN_COLLECTION__ANY_LIST__BOOL = Function.static(
-
-    name = "in_collection",
-    returns = PType.bool(),
-    parameters = arrayOf(
-        Parameter("value", PType.dynamic()),
-        Parameter("collection", PType.array()),
-    ),
-
-) { args ->
-    val value = args[0]
-    val collection = args[1]
-    val iter = collection.iterator()
-    while (iter.hasNext()) {
-        val v = iter.next()
-        if (Datum.comparator().compare(value, v) == 0) {
-            return@static Datum.bool(true)
-        }
-    }
-    Datum.bool(false)
 }

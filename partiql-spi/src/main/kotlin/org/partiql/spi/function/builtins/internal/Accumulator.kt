@@ -64,6 +64,7 @@ internal operator fun Number.plus(other: Number): Number {
 internal operator fun Number.div(other: Number): Number {
     val (first, second) = coerceNumbers(this, other)
     return when (first) {
+        is Int -> first / second as Int
         is Long -> first.checkOverflowDivision(second as Long)
         is Double -> first / second as Double
         is BigDecimal -> first.divide(second as BigDecimal, MATH_CONTEXT)
@@ -145,9 +146,15 @@ internal fun Number.toTargetType(type: PType): Datum = when (type.kind) {
     PType.Kind.DOUBLE -> Datum.doublePrecision(this.toDouble())
     PType.Kind.DECIMAL -> {
         when (this) {
-            is BigDecimal -> Datum.decimal(this)
-            is BigInteger -> Datum.decimal(this.toBigDecimal())
-            else -> Datum.decimal(BigDecimal.valueOf(this.toDouble()))
+            is BigDecimal -> Datum.decimal(this, this.precision(), this.scale())
+            is BigInteger -> {
+                val d = this.toBigDecimal()
+                Datum.decimal(d, d.precision(), d.scale())
+            }
+            else -> {
+                val d = BigDecimal.valueOf(this.toDouble())
+                Datum.decimal(d, d.precision(), d.scale())
+            }
         }
     }
     PType.Kind.TINYINT -> Datum.tinyint(this.toByte())
@@ -166,7 +173,7 @@ internal fun Number.toDatum(): Datum = when (this) {
     is Int -> Datum.integer(this)
     is Long -> Datum.bigint(this)
     is Double -> Datum.doublePrecision(this)
-    is BigDecimal -> Datum.decimal(this)
+    is BigDecimal -> Datum.decimal(this, this.precision(), this.scale())
     is BigInteger -> Datum.numeric(this)
     else -> TODO("Could not convert $this to PartiQL Value")
 }

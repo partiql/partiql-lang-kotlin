@@ -61,6 +61,10 @@ public class Parameter private constructor(
      */
     public fun getType(): PType = type.preferred
 
+    override fun toString(): String {
+        return name + ": " + type.preferred.toString()
+    }
+
     /**
      * Get match is used for function resolution; it indicates an exact match, coercion, or no match.
      *

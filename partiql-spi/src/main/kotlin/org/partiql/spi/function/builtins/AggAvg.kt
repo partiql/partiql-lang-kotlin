@@ -8,16 +8,19 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorAvg
 import org.partiql.types.PType
 
+// TODO: This needs to be formalized. See https://github.com/partiql/partiql-lang-kotlin/issues/1659
+private val AVG_DECIMAL = PType.decimal(38, 19)
+
 internal val Agg_AVG__INT8__INT8 = Aggregation.static(
     name = "avg",
-    returns = PType.decimal(),
+    returns = AVG_DECIMAL,
     parameters = arrayOf(Parameter("value", PType.tinyint())),
     accumulator = ::AccumulatorAvg,
 )
 
 internal val Agg_AVG__INT16__INT16 = Aggregation.static(
     name = "avg",
-    returns = PType.decimal(),
+    returns = AVG_DECIMAL,
     parameters = arrayOf(Parameter("value", PType.smallint())),
     accumulator = ::AccumulatorAvg,
 )
@@ -25,7 +28,7 @@ internal val Agg_AVG__INT16__INT16 = Aggregation.static(
 internal val Agg_AVG__INT32__INT32 = Aggregation.static(
 
     name = "avg",
-    returns = PType.decimal(),
+    returns = AVG_DECIMAL,
     parameters = arrayOf(
         Parameter("value", PType.integer()),
     ),
@@ -35,7 +38,7 @@ internal val Agg_AVG__INT32__INT32 = Aggregation.static(
 internal val Agg_AVG__INT64__INT64 = Aggregation.static(
 
     name = "avg",
-    returns = PType.decimal(),
+    returns = AVG_DECIMAL,
     parameters = arrayOf(
         Parameter("value", PType.bigint()),
     ),
@@ -45,7 +48,7 @@ internal val Agg_AVG__INT64__INT64 = Aggregation.static(
 internal val Agg_AVG__INT__INT = Aggregation.static(
 
     name = "avg",
-    returns = PType.decimal(),
+    returns = AVG_DECIMAL,
     parameters = arrayOf(
         @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
     ),
@@ -55,9 +58,9 @@ internal val Agg_AVG__INT__INT = Aggregation.static(
 internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
 
     name = "avg",
-    returns = PType.decimal(),
+    returns = AVG_DECIMAL,
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
+        Parameter("value", AVG_DECIMAL),
     ),
     accumulator = ::AccumulatorAvg,
 )
@@ -85,7 +88,7 @@ internal val Agg_AVG__FLOAT64__FLOAT64 = Aggregation.static(
 internal val Agg_AVG__ANY__ANY = Aggregation.static(
 
     name = "avg",
-    returns = PType.decimal(),
+    returns = PType.dynamic(),
     parameters = arrayOf(
         Parameter("value", PType.dynamic()),
     ),

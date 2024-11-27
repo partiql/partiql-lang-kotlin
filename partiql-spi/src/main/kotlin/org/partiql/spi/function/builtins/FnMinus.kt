@@ -8,10 +8,10 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal object FnMinus : ArithmeticDiadicOperator() {
+internal object FnMinus : DiadicArithmeticOperator("minus") {
 
-    override fun getName(): String {
-        return "minus"
+    init {
+        fillTable()
     }
 
     override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Function.Instance {
