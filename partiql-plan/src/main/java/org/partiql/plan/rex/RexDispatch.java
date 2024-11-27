@@ -8,36 +8,39 @@ import org.partiql.spi.function.Function;
 import java.util.List;
 
 /**
- * Logical scalar function expression abstract base class.
+ * Logical operator for a dynamic dispatch.
  */
-public abstract class RexCall extends RexBase {
+public abstract class RexDispatch extends RexBase {
 
     /**
-     * Returns the function to invoke.
+     * Dynamic function name.
      */
-    @NotNull
-    public abstract Function.Instance getFunction();
+    public abstract String getName();
+
+    /**
+     * Returns the functions to dispatch to.
+     */
+    public abstract List<Function> getFunctions();
 
     /**
      * Returns the list of function arguments.
      */
-    @NotNull
     public abstract List<Rex> getArgs();
 
+    @NotNull
     @Override
-    protected RexType type() {
-        return new RexType(getFunction().returns);
+    protected final RexType type() {
+        return RexType.dynamic();
     }
 
     @Override
-    protected List<Operator> children() {
+    protected final List<Operator> children() {
         List<Rex> varargs = getArgs();
         return List.copyOf(varargs);
     }
 
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
-        return visitor.visitCall(this, ctx);
+        return visitor.visitCallDynamic(this, ctx);
     }
 }
-

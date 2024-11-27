@@ -1,75 +1,52 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
-import org.partiql.plan.rel.Rel
-import org.partiql.types.PType
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.plan.rel.Rel;
+import org.partiql.types.PType;
+
+import java.util.List;
 
 /**
- * TODO DOCUMENTATION
+ * Logical pivot expression abstract base class.
  */
-public interface RexPivot : Rex {
+public abstract class RexPivot extends RexBase {
 
-    public fun getInput(): Rel
+    /**
+     * @return input rel (child 0)
+     */
+    @NotNull
+    public abstract Rel getInput();
 
-    public fun getKey(): Rex
+    /**
+     * @return key rex (child 1)
+     */
+    @NotNull
+    public abstract Rex getKey();
 
-    public fun getValue(): Rex
+    /**
+     * @return value rex (child 2)
+     */
+    @NotNull
+    public abstract Rex getValue();
 
-   
+    @NotNull
+    @Override
+    protected final RexType type() {
+        return new RexType(PType.struct());
+    }
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitPivot(this, ctx)
-}
-
-/**
- * Default [RexPivot] operator.
- */
-internal class RexPivotImpl(input: Rel, key: Rex, value: Rex) : RexPivot {
-
-    // DO NOT USE FINAL
-    private var _input = input
-    private var _key = key
-    private var _value = value
-
-    private var children: List<Rex>? = null
-    private var type: PType? = null
-
-    override fun getInput(): Rel = _input
-
-    override fun getKey(): Rex = _key
-
-    override fun getValue(): Rex = _value
-
-    override fun getType(): RexType {
-        if (type == null) {
-            type = PType.struct()
-        }
-        return RexType(type!!)
+    protected final List<Operator> children() {
+        Rel c0 = getInput();
+        Rex c1 = getKey();
+        Rex c2 = getValue();
+        return List.of(c0, c1, c2);
     }
 
-   
-        if (children == null) {
-            children = listOf(getKey(), getValue())
-        }
-        return children!!
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexPivot) return false
-
-        if (_input != other.getInput()) return false
-        if (_key != other.getKey()) return false
-        if (_value != other.getValue()) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = 1
-        result = 31 * result + _input.hashCode()
-        result = 31 * result + _key.hashCode()
-        result = 31 * result + _value.hashCode()
-        return result
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitPivot(this, ctx);
     }
 }

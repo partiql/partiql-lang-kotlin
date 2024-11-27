@@ -1,35 +1,43 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+
+import java.util.List;
 
 /**
- * Logical operator for path lookup by key.
+ * Logical path by key lookup expression abstract base class.
  */
-public interface RexPathKey : Rex {
+public abstract class RexPathKey extends RexBase {
 
-    public fun getOperand(): Rex
+    /**
+     * @return operand rex (child 0)
+     */
+    @NotNull
+    public abstract Rex getOperand();
 
-    public fun getKey(): Rex
+    /**
+     * @return key rex (child 1)
+     */
+    @NotNull
+    public abstract Rex getKey();
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitPathKey(this, ctx)
-}
+    @NotNull
+    protected final RexType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
+    }
 
-/**
- * Standard internal implementation for [RexPathKey].
- */
-internal class RexPathKeyImpl(operand: Rex, key: Rex, type: RexType) : RexPathKey {
+    @Override
+    protected List<Operator> children() {
+        Rex c0 = getOperand();
+        Rex c1 = getKey();
+        return List.of(c0, c1);
+    }
 
-    // DO NOT USE FINAL
-    private var _operand = operand
-    private var _key = key
-    private var _type = type
-
-    override fun getOperand() = _operand
-
-    override fun getKey() = _key
-
-    override fun getType(): RexType = _type
-
-   
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitPathKey(this, ctx);
+    }
 }

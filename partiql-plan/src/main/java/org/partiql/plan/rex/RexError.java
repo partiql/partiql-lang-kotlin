@@ -1,19 +1,29 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
+
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.types.PType;
+
+import java.util.List;
 
 /**
  * This represents scenarios in which certain operations are statically known to fail in strict mode but return missing
  * in permissive mode.
  */
-import org.partiql.plan.Visitor
-
-public interface RexError : Rex {
-
-    override fun getType(): RexType = RexType.dynamic()
-
-   
+public abstract class RexError extends RexBase {
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitError(this, ctx)
-}
+    protected RexType type() {
+        return new RexType(PType.unknown());
+    }
 
-internal class RexErrorImpl : RexError
+    @Override
+    protected List<Operator> children() {
+        return List.of();
+    }
+
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitError(this, ctx);
+    }
+}

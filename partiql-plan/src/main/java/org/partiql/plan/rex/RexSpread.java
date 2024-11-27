@@ -1,44 +1,36 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.types.PType;
+
+import java.util.List;
 
 /**
- * TODO DOCUMENTATION
+ * Logical spread expression abstract base class.
  */
-public interface RexSpread : Rex {
+public abstract class RexSpread extends RexBase {
 
-    public fun getArgs(): List<Rex>
+    /**
+     * @return list of spread arguments (the children)
+     */
+    public abstract List<Rex> getArgs();
 
-   
-
+    @NotNull
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSpread(this, ctx)
-}
-
-/**
- * Default [RexSpread] operator intended for extension.
- */
-internal class RexSpreadImpl(args: List<Rex>, type: RexType) : RexSpread {
-
-    // DO NOT USE FINAL
-    private var _args = args
-    private var _type = type
-
-    override fun getArgs(): List<Rex> = _args
-
-    override fun getType(): RexType = _type
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexSpreadImpl) return false
-        if (_args != other._args) return false
-        if (_type != other._type) return false
-        return true
+    protected final RexType type() {
+        return new RexType(PType.struct());
     }
 
-    override fun hashCode(): Int {
-        var result = _args.hashCode()
-        result = 31 * result + _type.hashCode()
-        return result
+    @NotNull
+    @Override
+    protected final List<Operator> children() {
+        List<Rex> varargs = getArgs().stream().toList();
+        return List.copyOf(varargs);
+    }
+
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitSpread(this, ctx);
     }
 }

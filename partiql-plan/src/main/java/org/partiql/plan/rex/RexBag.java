@@ -1,41 +1,38 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.types.PType;
+
+import java.util.List;
 
 /**
- * TODO DOCUMENTATION
+ * Logical bag expression abstract base class.
  */
-public interface RexBag : Rex {
+public abstract class RexBag extends RexBase {
 
-    public fun getValues(): Collection<Rex>
+    /**
+     * @return the values of the array, also the children.
+     */
+    @NotNull
+    public abstract List<Rex> getValues();
 
-   
-
+    @NotNull
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitBag(this, ctx)
-}
-
-/**
- * Default [RexBag] operator for extension.
- */
-internal class RexBagImpl(values: Collection<Rex>, type: RexType) : RexBag {
-
-    // DO NOT USE FINAL
-    private var _values = values
-    private var _type = type
-
-    override fun getValues(): Collection<Rex> = _values
-
-   
-
-    override fun getType(): RexType = _type
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexBag) return false
-        if (_values != other.getValues()) return false
-        return true
+    protected final RexType type() {
+        return new RexType(PType.bag());
     }
 
-    override fun hashCode(): Int = _values.hashCode()
+    @NotNull
+    @Override
+    protected final List<Operator> children() {
+        List<Rex> varargs = getValues();
+        return List.copyOf(varargs);
+    }
+
+    @Override
+    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+        return visitor.visitBag(this, ctx);
+    }
 }

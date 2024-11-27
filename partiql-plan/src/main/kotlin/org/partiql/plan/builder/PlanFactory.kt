@@ -45,7 +45,7 @@ import org.partiql.plan.rex.RexArrayImpl
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexBagImpl
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexCallDynamic
+import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexCallDynamicImpl
 import org.partiql.plan.rex.RexCallImpl
 import org.partiql.plan.rex.RexCase
@@ -389,14 +389,14 @@ public interface PlanFactory {
     public fun rexCall(function: Function.Instance, args: List<Rex>): RexCall = RexCallImpl(function, args)
 
     /**
-     * Create a [RexCallDynamic] instance.
+     * Create a [RexDispatch] instance.
      *
      * @param name TODO
      * @param functions TODO
      * @param args TODO
      * @return TODO
      */
-    public fun rexCallDynamic(name: String, functions: List<Function>, args: List<Rex>): RexCallDynamic =
+    public fun rexCallDynamic(name: String, functions: List<Function>, args: List<Rex>): RexDispatch =
         RexCallDynamicImpl(name, functions, args)
 
     /**
@@ -632,31 +632,31 @@ public interface PlanFactory {
      * Create a [RexSubqueryComp] instance.
      *
      * @param args
-     * @param comp
+     * @param comparison
      * @param rel
      * @return
      */
     public fun rexSubqueryComp(
         args: List<Rex>,
-        comp: RexSubqueryComp.Comp,
+        comparison: RexSubqueryComp.Comparison,
         rel: Rel,
-    ): RexSubqueryComp = RexSubqueryCompImpl(args, comp, null, rel)
+    ): RexSubqueryComp = RexSubqueryCompImpl(args, comparison, null, rel)
 
     /**
      * Create a [RexSubqueryComp] instance.
      *
      * @param args
-     * @param comp
+     * @param comparison
      * @param quantifier
      * @param rel
      * @return
      */
     public fun rexSubqueryComp(
         args: List<Rex>,
-        comp: RexSubqueryComp.Comp,
+        comparison: RexSubqueryComp.Comparison,
         quantifier: RexSubqueryComp.Quantifier?,
         rel: Rel,
-    ): RexSubqueryComp = RexSubqueryCompImpl(args, comp, quantifier, rel)
+    ): RexSubqueryComp = RexSubqueryCompImpl(args, comparison, quantifier, rel)
 
     /**
      * Create a [RexSubqueryIn] instance for single argument.

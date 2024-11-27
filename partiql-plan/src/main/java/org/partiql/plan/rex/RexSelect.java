@@ -1,60 +1,45 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
-import org.partiql.plan.rel.Rel
-import org.partiql.types.PType
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.plan.rel.Rel;
+import org.partiql.types.PType;
+
+import java.util.List;
 
 /**
- * TODO DOCUMENTATION
+ * Logical select expression abstract base class.
  */
-public interface RexSelect : Rex {
+public abstract class RexSelect extends RexBase {
 
-    public fun getInput(): Rel
+    /**
+     * @return input rel (child 0)
+     */
+    @NotNull
+    public abstract Rel getInput();
 
-    public fun getConstructor(): Rex
+    /**
+     * @return constructor rex (child 1)
+     */
+    public abstract Rex getConstructor();
 
-   
+    @NotNull
+    @Override
+    protected final RexType type() {
+        return new RexType(PType.bag());
+    }
+
+    @NotNull
+    @Override
+    protected final List<Operator> children() {
+        Rel c0 = getInput();
+        Rex c1 = getConstructor();
+        return List.of(c0, c1);
+    }
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSelect(this, ctx)
-}
-
-internal class RexSelectImpl(input: Rel, constructor: Rex) : RexSelect {
-
-    private var _input = input
-    private var _constructor = constructor
-    private var _type: RexType? = null
-
-    override fun getInput(): Rel = _input
-
-    override fun getConstructor(): Rex = _constructor
-
-    override fun getType(): RexType {
-        // compute type
-        if (_type == null) {
-            val e = _constructor.getType().getPType()
-            _type = if (_input.isOrdered()) {
-                RexType(PType.array(e))
-            } else {
-                RexType(PType.bag(e))
-            }
-        }
-        return _type!!
-    }
-
-   
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexSelect) return false
-        if (_input != other.getInput()) return false
-        if (_constructor != other.getConstructor()) return false
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = _input.hashCode()
-        result = 31 * result + _constructor.hashCode()
-        return result
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitSelect(this, ctx);
     }
 }

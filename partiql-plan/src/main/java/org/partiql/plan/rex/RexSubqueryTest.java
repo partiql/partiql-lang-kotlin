@@ -1,55 +1,60 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
-import org.partiql.plan.rex.RexSubqueryTest.Test
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.plan.rel.Rel;
+import org.partiql.types.PType;
+
+import java.util.List;
 
 /**
- * Logical expression for subquery tests EXISTS and UNIQUE.
- *
+ * Logical subquery test expression abstract base class.
+ * <br>
+ * <pre>
  *  - <exists predicate>    "Specify a test for a non-empty set."
  *  - <unique predicate>    "Specify a test for the absence of duplicate rows."
+ * </pre>
  */
-public interface RexSubqueryTest : Rex {
+public abstract class RexSubqueryTest extends RexBase {
 
-    public fun getTest(): Test
+    /**
+     * @return input rel (child 0)
+     */
+    @NotNull
+    public abstract Rel getInput();
 
-    public fun getRel(): org.partiql.plan.rel.Rel
+    /**
+     * @return subquery test
+     */
+    @NotNull
+    public abstract Test getTest();
+
+    @NotNull
+    @Override
+    protected final RexType type() {
+        return new RexType(PType.bool());
+    }
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSubqueryTest(this, ctx)
+    protected List<Operator> children() {
+        Rel c0 = getInput();
+        return List.of(c0);
+    }
+
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitSubqueryTest(this, ctx);
+    }
 
     /**
      * EXISTS and UNIQUE are defined by SQL.
-     *
+     * <p>
      * TODO use 1.0 enum modeling.
      */
-    public enum class Test {
+    public enum Test {
         EXISTS,
         UNIQUE,
         OTHER;
     }
-}
-
-/**
- * Logical operator for SQL subquery comparisons.
- *
- *  - <comparison predicate> for subqueries.
- *  - <quantified comparison predicate>.
- */
-internal class RexSubqueryTestImpl(test: Test, rel: org.partiql.plan.rel.Rel) : RexSubqueryTest {
-
-    private var _test = test
-    private var _rel = rel
-
-    override fun getType(): RexType {
-        TODO("Not yet implemented")
-    }
-
-    override fun getTest(): Test = _test
-
-    override fun getRel(): org.partiql.plan.rel.Rel = _rel
-
-   
-
-    // TODO hashcode/equals?
 }

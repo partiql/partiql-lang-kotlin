@@ -1,37 +1,33 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
-import org.partiql.spi.value.Datum
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.spi.value.Datum;
+
+import java.util.List;
 
 /**
- * TODO DOCUMENTATION
+ * Literal value expression abstract base class.
  */
-public interface RexLit : Rex {
+public abstract class RexLit extends RexBase {
 
-    public fun getValue(): Datum
+    @NotNull
+    public abstract Datum getDatum();
 
-   
-
+    @NotNull
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitLit(this, ctx)
-}
-
-internal class RexLitImpl(value: Datum) : RexLit {
-
-    // DO NOT USE FINAL
-    private var _value = value
-    private var _type = RexType(_value.type)
-
-    override fun getValue(): Datum = _value
-
-    override fun getType(): RexType = _type
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexLit) return false
-        if (_value != other.getValue()) return false
-        return true
+    protected final RexType type() {
+        return new RexType(getDatum().getType());
     }
 
-    override fun hashCode(): Int = _value.hashCode()
+    @Override
+    protected List<Operator> children() {
+        return List.of();
+    }
+
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitLit(this, ctx);
+    }
 }

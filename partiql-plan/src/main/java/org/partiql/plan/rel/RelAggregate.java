@@ -6,7 +6,6 @@ import org.partiql.plan.Visitor;
 import org.partiql.plan.rex.Rex;
 import org.partiql.spi.function.Aggregation;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,9 +15,6 @@ public abstract class RelAggregate extends RelBase {
 
     // TODO GROUP STRATEGY: https://github.com/partiql/partiql-lang-kotlin/issues/1664
 
-    private final RelType type = null;
-    private List<Operator> children = null;
-
     /**
      * @return the input (child 0)
      */
@@ -26,32 +22,26 @@ public abstract class RelAggregate extends RelBase {
     public abstract Rel getInput();
 
     @NotNull
-    public abstract Collection<Measure> getMeasures();
+    public abstract List<Measure> getMeasures();
 
     @NotNull
-    public abstract Collection<Rex> getGroups();
+    public abstract List<Rex> getGroups();
 
     @NotNull
     @Override
-    public final RelType getType() {
-        if (type == null) {
-            throw new UnsupportedOperationException("Derive type is not implemented");
-        }
-        return type;
+    protected final RelType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
     @NotNull
     @Override
-    public final List<Operator> getChildren() {
-        if (children == null) {
-            Rel c0 = getInput();
-            children = List.of(c0);
-        }
-        return children;
+    protected final List<Operator> children() {
+        Rel c0 = getInput();
+        return List.of(c0);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitAggregate(this, ctx);
     }
 
@@ -61,10 +51,10 @@ public abstract class RelAggregate extends RelBase {
     public static class Measure {
 
         private final Aggregation agg;
-        private final Collection<Rex> args;
+        private final List<Rex> args;
         private final Boolean distinct;
 
-        public Measure(Aggregation agg, Collection<Rex> args, Boolean distinct) {
+        public Measure(Aggregation agg, List<Rex> args, Boolean distinct) {
             this.agg = agg;
             this.args = args;
             this.distinct = distinct;
@@ -76,7 +66,7 @@ public abstract class RelAggregate extends RelBase {
         }
 
         @NotNull
-        public Collection<Rex> getArgs() {
+        public List<Rex> getArgs() {
             return args;
         }
 

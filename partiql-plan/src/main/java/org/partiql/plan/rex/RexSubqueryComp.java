@@ -1,86 +1,129 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
-import org.partiql.plan.rel.Rel
-import org.partiql.plan.rex.RexSubqueryComp.Comp
-import org.partiql.plan.rex.RexSubqueryComp.Quantifier
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Visitor;
+import org.partiql.plan.rel.Rel;
+import org.partiql.types.PType;
+
+import java.util.List;
 
 /**
- * Logical operator for SQL subquery comparisons.
- *
- *  - <comparison predicate> for subqueries.
- *  - <quantified comparison predicate>.
+ * Logical subquery comparison expression abstract base class.
+ * <p>
+ * See SQL-99 <comparison predicate> and <quantified comparison predicate>.
  */
-public interface RexSubqueryComp : Rex {
+public abstract class RexSubqueryComp extends RexBase {
 
-    public fun getArgs(): List<Rex>
+    /**
+     * @return input rel (child 0)
+     */
+    @NotNull
+    public abstract Rel getInput();
 
-    public fun getComp(): Comp
+    /**
+     * @return collection comparison arguments (not children).
+     */
+    @NotNull
+    public abstract List<Rex> getArgs();
 
-    public fun getQuantifier(): Quantifier?
+    /**
+     * @return subquery comparison operator
+     */
+    @NotNull
+    public abstract Comparison getComparison();
 
-    public fun getRel(): Rel
+    /**
+     * @return subquery comparison quantifier
+     */
+    @NotNull
+    public abstract Quantifier getQuantifier();
+
+    @NotNull
+    @Override
+    protected final RexType type() {
+        return new RexType(PType.bool());
+    }
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSubqueryComp(this, ctx)
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitSubqueryComp(this, ctx);
+    }
 
     /**
      * SQL <comp op> for use in the <quantified comparison predicate>.
-     *
-     * TODO transition to 1.0 enums.
      */
-    public enum class Comp {
-        EQ,
-        NE,
-        LT,
-        LE,
-        GT,
-        GE,
-        OTHER;
+    public static class Comparison extends org.partiql.spi.Enum {
+
+        private Comparison(int code) {
+            super(code);
+        }
+
+        public static int UNKNOWN = 0;
+        public static int EQ = 1;
+        public static int NE = 2;
+        public static int LT = 3;
+        public static int LE = 4;
+        public static int GT = 5;
+        public static int GE = 6;
+
+        @NotNull
+        public static Comparison EQ() {
+            return new Comparison(EQ);
+        }
+
+        @NotNull
+        public static Comparison NE() {
+            return new Comparison(NE);
+        }
+
+        @NotNull
+        public static Comparison LT() {
+            return new Comparison(LT);
+        }
+
+        @NotNull
+        public static Comparison LE() {
+            return new Comparison(LE);
+        }
+
+        @NotNull
+        public static Comparison GT() {
+            return new Comparison(GT);
+        }
+
+        @NotNull
+        public static Comparison GE() {
+            return new Comparison(GE);
+        }
     }
 
     /**
      * SQL <quantifier> for use in the <quantified comparison predicate>.
-     *
-     * TODO transition to 1.0 enums.
      */
-    public enum class Quantifier {
-        ANY,
-        ALL,
-        SOME,
-        OTHER;
+    public static class Quantifier extends org.partiql.spi.Enum {
+
+        private Quantifier(int code) {
+            super(code);
+        }
+
+        public static int UNKNOWN = 0;
+        public static int ANY = 1;
+        public static int ALL = 2;
+        public static int SOME = 3;
+
+        @NotNull
+        public static Quantifier ANY() {
+            return new Quantifier(ANY);
+        }
+
+        @NotNull
+        public static Quantifier ALL() {
+            return new Quantifier(ALL);
+        }
+
+        @NotNull
+        public static Quantifier SOME() {
+            return new Quantifier(SOME);
+        }
     }
-}
-
-/**
- * Logical operator for SQL subquery comparisons.
- *
- *  - <comparison predicate> for subqueries.
- *  - <quantified comparison predicate>.
- */
-internal class RexSubqueryCompImpl(
-    args: List<Rex>,
-    comp: Comp,
-    quantifier: Quantifier?,
-    rel: Rel,
-) : RexSubqueryComp {
-
-    private var _args = args
-    private var _comp = comp
-    private var _quantifier = quantifier
-    private var _rel = rel
-
-    override fun getType(): RexType = TODO("Not yet implemented")
-
-    override fun getArgs(): List<Rex> = _args
-
-    override fun getComp(): Comp = _comp
-
-    override fun getQuantifier(): Quantifier? = _quantifier
-
-    override fun getRel(): Rel = _rel
-
-   
-
-    // TODO hashcode/equals?
 }

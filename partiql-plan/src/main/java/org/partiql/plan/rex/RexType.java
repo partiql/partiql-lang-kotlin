@@ -1,32 +1,53 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.types.PType
+import org.partiql.types.PType;
 
 /**
  * [RexType] is a simple wrapper over [PType], but does not necessarily only hold a PType.
- *
- *
+ * <p>
+ * <p>
  * Developer Note: In later releases, a [RexType] may hold metadata to aid custom planner implementations.
  */
-public class RexType public constructor(type: PType) {
+public class RexType {
 
-    // PRIVATE VAR
-    private var _type: PType = type
+    private final PType type;
 
-    public fun getPType(): PType = _type
+    public RexType(PType type) {
+        this.type = type;
+    }
 
-    override fun equals(other: Any?): Boolean = _type == other
+    public PType getPType() {
+        return type;
+    }
 
-    override fun hashCode(): Int = _type.hashCode()
+    @Override
+    public int hashCode() {
+        return type.hashCode();
+    }
 
-    override fun toString(): String = _type.toString()
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof RexType)) {
+            return false;
+        }
+        return type.equals(((RexType) obj).type);
+    }
 
-    public companion object {
+    @Override
+    public String toString() {
+        return type.toString();
+    }
 
-        /**
-         * A [RexType] for an "untyped" logical plan node.
-         */
-        @JvmStatic
-        public fun dynamic(): RexType = RexType(PType.dynamic())
+    /**
+     * A [RexType] for an "untyped" logical plan node.
+     */
+    public static RexType dynamic() {
+        return new RexType(PType.dynamic());
     }
 }

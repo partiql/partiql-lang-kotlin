@@ -12,10 +12,6 @@ import java.util.List;
  */
 public abstract class RelFilter extends RelBase {
 
-
-    private List<Operator> children = null;
-    private final RelType type = null;
-
     /**
      * @return input rel (child 0)
      */
@@ -30,26 +26,20 @@ public abstract class RelFilter extends RelBase {
 
     @NotNull
     @Override
-    public final RelType getType() {
-        if (type == null) {
-            throw new UnsupportedOperationException("Derive type is not implemented");
-        }
-        return type;
+    protected final RelType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
     @NotNull
     @Override
-    public final List<Operator> getChildren() {
-        if (children == null) {
-            Rel c0 = getInput();
-            Rex c1 = getPredicate();
-            children = List.of(c0, c1);
-        }
-        return children;
+    protected final List<Operator> children() {
+        Rel c0 = getInput();
+        Rex c1 = getPredicate();
+        return List.of(c0, c1);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitFilter(this, ctx);
     }
 }

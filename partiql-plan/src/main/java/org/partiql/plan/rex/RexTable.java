@@ -1,44 +1,35 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
-import org.partiql.spi.catalog.Table
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.spi.catalog.Table;
+
+import java.util.List;
 
 /**
  * Global variable references e.g. tables and views.
  */
-public interface RexTable : Rex {
+public abstract class RexTable extends RexBase {
 
-    public fun getTable(): Table
+    /**
+     * @return the table implementation.
+     */
+    public abstract Table getTable();
 
-   
-
+    @NotNull
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitTable(this, ctx)
-}
-
-/**
- * Default [RexTable] implementation.
- */
-internal class RexTableImpl(table: Table) : RexTable {
-
-    // DO NOT USE FINAL
-    private var _table = table
-    private var _type = RexType(table.getSchema())
-
-    override fun getTable(): Table = _table
-
-    override fun getType(): RexType = _type
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexTable) return false
-        if (_table != other.getTable()) return false
-        return true
+    protected final RexType type() {
+        return new RexType(getTable().getSchema());
     }
 
-    override fun hashCode(): Int {
-        var result = 1
-        result = 31 * result + _table.hashCode()
-        return result
+    @Override
+    protected final List<Operator> children() {
+        return List.of();
+    }
+
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitTable(this, ctx);
     }
 }

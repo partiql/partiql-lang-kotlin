@@ -19,7 +19,7 @@ import org.partiql.plan.rel.RelUnpivot
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexCallDynamic
+import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
@@ -101,7 +101,7 @@ public interface Visitor<R, C> {
 
     public fun visitCall(rex: RexCall, ctx: C): R = defaultVisit(rex, ctx)
 
-    public fun visitCallDynamic(rex: RexCallDynamic, ctx: C): R = defaultVisit(rex, ctx)
+    public fun visitCallDynamic(rex: RexDispatch, ctx: C): R = defaultVisit(rex, ctx)
 
     public fun visitCase(rex: RexCase, ctx: C): R = defaultVisit(rex, ctx)
 

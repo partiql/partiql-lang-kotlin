@@ -1,50 +1,43 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+
+import java.util.List;
 
 /**
- * Logical operator for the SQL NULLIF special form.
+ * Logical nullif expression abstraction base class.
  */
-public interface RexNullIf : Rex {
+public abstract class RexNullIf extends RexBase {
 
-    public fun getV1(): Rex
+    /**
+     * @return v1 rex (child 0)
+     */
+    @NotNull
+    public abstract Rex getV1();
 
-    public fun getV2(): Rex
+    /**
+     * @return v2 rex (child 1)
+     */
+    @NotNull
+    public abstract Rex getV2();
 
-   
-
+    @NotNull
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitNullIf(this, ctx)
-}
-
-/**
- * Internal
- */
-internal class RexNullIfImpl(v1: Rex, v2: Rex) : RexNullIf {
-
-    // DO NOT USE FINAL
-    private var _v1 = v1
-    private var _v2 = v2
-
-    override fun getV1(): Rex = _v1
-
-    override fun getV2(): Rex = _v2
-
-    override fun getType(): RexType = _v1.getType()
-
-   
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexNullIf) return false
-        if (_v1 != other.getV1()) return false
-        if (_v2 != other.getV2()) return false
-        return true
+    protected final RexType type() {
+        return getV1().getType();
     }
 
-    override fun hashCode(): Int {
-        var result = _v1.hashCode()
-        result = 31 * result + _v2.hashCode()
-        return result
+    @Override
+    protected final List<Operator> children() {
+        Rex c0 = getV1();
+        Rex c1 = getV2();
+        return List.of(c0, c1);
+    }
+
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitNullIf(this, ctx);
     }
 }

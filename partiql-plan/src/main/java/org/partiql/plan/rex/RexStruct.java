@@ -1,65 +1,57 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.types.PType;
+
+import java.util.List;
 
 /**
- * TODO DOCUMENTATION
+ * Logical struct expression abstract base class.
  */
-public interface RexStruct : Rex {
+public abstract class RexStruct extends RexBase {
 
-    public fun getFields(): List<Field>
+    /**
+     * @return list of struct fields (NOT children)
+     */
+    public abstract List<Field> getFields();
 
-   
-        val children = mutableListOf<Rex>()
-        for (field in getFields()) {
-            children.add(field.getKey())
-            children.add(field.getValue())
-        }
-        return children
+    @NotNull
+    @Override
+    protected final RexType type() {
+        return new RexType(PType.struct());
     }
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitStruct(this, ctx)
+    protected List<Operator> children() {
+        return List.of();
+    }
+
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitStruct(this, ctx);
+    }
 
     /**
-     * TODO DOCUMENTATION
+     * Struct expression field constructor.
      */
-    public class Field(
-        private var key: Rex,
-        private var value: Rex,
-    ) {
-        public fun getKey(): Rex = key
-        public fun getValue(): Rex = value
-    }
-}
+    public static class Field {
 
-/**
- * Default [RexStruct] implementation intended for extension.
- */
-internal class RexStructImpl(fields: List<RexStruct.Field>, type: RexType) : RexStruct {
+        private final Rex key;
+        private final Rex value;
 
-    // DO NOT USE FINAL
-    private var _fields = fields
-    private var _children: Collection<Rex>? = null
-    private var _type = type
-
-    override fun getFields(): List<RexStruct.Field> = _fields
-
-    override fun getType(): RexType = _type
-
-   
-        if (_children == null) {
-            _children = super.getChildren()
+        public Field(Rex key, Rex value) {
+            this.key = key;
+            this.value = value;
         }
-        return _children!!
-    }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexStruct) return false
-        if (_fields != other.getFields()) return false
-        return true
-    }
+        public Rex getKey() {
+            return key;
+        }
 
-    override fun hashCode(): Int = _fields.hashCode()
+        public Rex getValue() {
+            return value;
+        }
+    }
 }

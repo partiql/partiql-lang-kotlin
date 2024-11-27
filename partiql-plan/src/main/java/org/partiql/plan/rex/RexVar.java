@@ -1,57 +1,40 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+
+import java.util.List;
 
 /**
- * TODO DOCUMENTATION
- * TODO NAMING??
+ * Logical variable reference expression abstract base class.
  */
-public interface RexVar : Rex {
+public abstract class RexVar extends RexBase {
 
     /**
-     * 0-indexed scope offset.
+     * @return 0-indexed scope offset.
      */
-    public fun getDepth(): Int
+    public abstract int getDepth();
 
     /**
-     * 0-index tuple offset.
+     * @return 0-index tuple offset.
      */
-    public fun getOffset(): Int
+    public abstract int getOffset();
 
-   
-
+    @NotNull
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitVar(this, ctx)
-}
-
-/**
- * Default [RexVar] implementation intended for extension.
- */
-internal class RexVarImpl(depth: Int, offset: Int, type: RexType) : RexVar {
-
-    // DO NOT USE FINAL
-    private var _depth = depth
-    private var _offset = offset
-    private var _type = type
-
-    override fun getDepth(): Int = _depth
-
-    override fun getOffset(): Int = _offset
-
-    override fun getType(): RexType = _type
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexVar) return false
-        if (_depth != other.getDepth()) return false
-        if (_offset != other.getOffset()) return false
-        return true
+    protected final RexType type() {
+        // would need to lookup in context
+        throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
-    override fun hashCode(): Int {
-        var result = 1
-        result = 31 * result + _depth
-        result = 31 * result + _offset
-        return result
+    @Override
+    protected final List<Operator> children() {
+        return List.of();
+    }
+
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitVar(this, ctx);
     }
 }

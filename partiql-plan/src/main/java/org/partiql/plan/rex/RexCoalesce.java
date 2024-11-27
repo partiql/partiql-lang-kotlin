@@ -1,38 +1,35 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+
+import java.util.List;
 
 /**
- * TODO DOCUMENTATION
+ * Logical coalesce expression abstract base class.
  */
-public interface RexCoalesce : Rex {
+public abstract class RexCoalesce extends RexBase {
 
-    public fun getArgs(): List<Rex>
-
-   
+    /**
+     * @return the list of arguments (also the children).
+     */
+    @NotNull
+    public abstract List<Rex> getArgs();
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitCoalesce(this, ctx)
-}
-
-internal class RexCoalesceImpl(args: List<Rex>, type: RexType) : RexCoalesce {
-
-    // DO NOT USE FINAL
-    private var _args = args
-    private var _type = type
-
-    override fun getArgs(): List<Rex> = _args
-
-   
-
-    override fun getType(): RexType = _type
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexCoalesce) return false
-        if (_args != other.getArgs()) return false
-        return true
+    protected final RexType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
-    override fun hashCode(): Int = _args.hashCode()
+    @Override
+    protected final List<Operator> children() {
+        List<Rex> varargs = getArgs();
+        return List.copyOf(varargs);
+    }
+
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitCoalesce(this, ctx);
+    }
 }

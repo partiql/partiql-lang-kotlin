@@ -1,35 +1,42 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+
+import java.util.List;
 
 /**
- * Logical operator for path lookup by symbol.
+ * Logical path by symbol lookup expression abstract base class.
  */
-public interface RexPathSymbol : Rex {
+public abstract class RexPathSymbol extends RexBase {
 
-    public fun getOperand(): Rex
+    /**
+     * @return operand rex (child 0)
+     */
+    @NotNull
+    public abstract Rex getOperand();
 
-    public fun getSymbol(): String
+    /**
+     * @return symbol string
+     */
+    @NotNull
+    public abstract String getSymbol();
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitPathSymbol(this, ctx)
-}
+    @NotNull
+    protected final RexType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
+    }
 
-/**
- * Standard internal implementation for [RexPathSymbol].
- */
-internal class RexPathSymbolImpl(operand: Rex, symbol: String, type: RexType) : RexPathSymbol {
+    @Override
+    protected final List<Operator> children() {
+        Rex c0 = getOperand();
+        return List.of(c0);
+    }
 
-    // DO NOT USE FINAL
-    private var _operand = operand
-    private var _symbol = symbol
-    private var _type = type
-
-    override fun getOperand() = _operand
-
-    override fun getSymbol() = _symbol
-
-    override fun getType(): RexType = _type
-
-   
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitPathSymbol(this, ctx);
+    }
 }

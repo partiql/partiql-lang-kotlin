@@ -85,7 +85,7 @@ import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexCallDynamic
+import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
@@ -338,7 +338,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             return ExprBag(values)
         }
 
-        override fun visitCallDynamic(rex: RexCallDynamic, ctx: Unit): ExprValue {
+        override fun visitCallDynamic(rex: RexDispatch, ctx: Unit): ExprValue {
             // Check candidate arity for uniformity
             var arity: Int = -1
             val name = rex.getName()
@@ -401,7 +401,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitLit(rex: RexLit, ctx: Unit): ExprValue {
-            return ExprLit(rex.getValue())
+            return ExprLit(rex.getDatum())
         }
 
         override fun visitNullIf(rex: RexNullIf, ctx: Unit): ExprValue {
@@ -460,7 +460,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitSubquery(rex: RexSubquery, ctx: Unit): ExprValue {
-            val rel = compile(rex.getRel(), ctx)
+            val rel = compile(rex.getInput(), ctx)
             val constructor = compile(rex.getConstructor(), ctx)
             return when (rex.asScalar()) {
                 true -> ExprSubquery(rel, constructor)

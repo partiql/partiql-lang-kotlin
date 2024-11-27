@@ -25,7 +25,7 @@ import org.partiql.plan.rel.RelUnpivot
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexCallDynamic
+import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
@@ -155,7 +155,7 @@ object PlanEquivalenceVisitor : Visitor<Boolean, Any> {
         return super.visitCall(rex, other)
     }
 
-    override fun visitCallDynamic(rex: RexCallDynamic, other: Any): Boolean {
+    override fun visitCallDynamic(rex: RexDispatch, other: Any): Boolean {
         return super.visitCallDynamic(rex, other)
     }
 

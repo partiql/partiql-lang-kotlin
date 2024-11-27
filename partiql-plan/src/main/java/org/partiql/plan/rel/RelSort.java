@@ -5,7 +5,6 @@ import org.partiql.plan.Collation;
 import org.partiql.plan.Operator;
 import org.partiql.plan.Visitor;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -13,36 +12,27 @@ import java.util.List;
  */
 public abstract class RelSort extends RelBase {
 
-    private final RelType type = null;
-    private List<Operator> children = null;
-
     @NotNull
     public abstract Rel getInput();
 
     @NotNull
-    public abstract Collection<Collation> getCollations();
+    public abstract List<Collation> getCollations();
 
     @NotNull
     @Override
-    public final RelType getType() {
-        if (type == null) {
-            throw new UnsupportedOperationException("Derive type is not implemented");
-        }
-        return type;
+    protected final RelType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
     @NotNull
     @Override
-    public List<Operator> getChildren() {
-        if (children == null) {
-            Rel c0 = getInput();
-            children = List.of(c0);
-        }
-        return children;
+    protected final List<Operator> children() {
+        Rel c0 = getInput();
+        return List.of(c0);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitSort(this, ctx);
     }
 }

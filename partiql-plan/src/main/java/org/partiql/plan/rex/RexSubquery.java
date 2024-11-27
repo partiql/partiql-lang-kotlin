@@ -1,56 +1,43 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+import org.partiql.plan.rel.Rel;
+
+import java.util.List;
 
 /**
- * Scalar subquery coercion.
+ * Logical subquery expression abstract base class.
  */
-public interface RexSubquery : Rex {
+public abstract class RexSubquery extends RexBase {
 
-    public fun getRel(): org.partiql.plan.rel.Rel
+    /**
+     * @return input rel (child 0)
+     */
+    @NotNull
+    public abstract Rel getInput();
 
     // TODO REMOVE ME – TEMPORARY UNTIL PLANNER PROPERLY HANDLES SUBQUERIES
-    public fun getConstructor(): Rex
+    public abstract Rex getConstructor();
 
     // TODO REMOVE ME – TEMPORARY UNTIL PLANNER PROPERLY HANDLES SUBQUERIES
-    public fun asScalar(): Boolean
+    public abstract boolean asScalar();
+
+    @NotNull
+    @Override
+    protected final RexType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
+    }
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitSubquery(this, ctx)
-}
-
-/**
- * Implementation of scalar subquery coercion.
- */
-internal class RexSubqueryImpl(rel: org.partiql.plan.rel.Rel, constructor: Rex, asScalar: Boolean) : RexSubquery {
-
-    // DO NOT USE FINAL
-    private var _rel = rel
-    private var _constructor = constructor
-    private var _asScalar = asScalar
-
-    override fun getRel(): org.partiql.plan.rel.Rel = _rel
-
-    override fun getConstructor(): Rex = _constructor
-
-    override fun asScalar(): Boolean = _asScalar
-
-    override fun getType(): RexType {
-        TODO("Not yet implemented")
+    protected final List<Operator> children() {
+        Rel c0 = getInput();
+        return List.of(c0);
     }
 
-   
-        TODO("Not yet implemented")
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RexSubquery) return false
-        if (_rel != other.getRel()) return false
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return _rel.hashCode()
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitSubquery(this, ctx);
     }
 }

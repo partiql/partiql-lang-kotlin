@@ -1,35 +1,42 @@
-package org.partiql.plan.rex
+package org.partiql.plan.rex;
 
-import org.partiql.plan.Visitor
+import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
+import org.partiql.plan.Visitor;
+
+import java.util.List;
 
 /**
- * Logical path index operator.
+ * Logical path by index expression abstract base class.
  */
-public interface RexPathIndex : Rex {
+public abstract class RexPathIndex extends RexBase {
 
-    public fun getOperand(): Rex
+    /**
+     * @return operand rex (child 0)
+     */
+    @NotNull
+    public abstract Rex getOperand();
 
-    public fun getIndex(): Rex
+    /**
+     * @return index rex (child 1)
+     */
+    public abstract Rex getIndex();
 
     @Override
-    default public <R, C> R accept(Visitor<R, C> visitor, C ctx) { = visitor.visitPathIndex(this, ctx)
-}
+    @NotNull
+    protected final RexType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
+    }
 
-/**
- * Standard internal implementation for [RexPathIndex].
- */
-internal class RexPathIndexImpl(operand: Rex, index: Rex, type: RexType) : RexPathIndex {
+    @Override
+    protected final List<Operator> children() {
+        Rex c0 = getOperand();
+        Rex c1 = getIndex();
+        return List.of(c0, c1);
+    }
 
-    // DO NOT USE FINAL
-    private var _operand = operand
-    private var _index = index
-    private var _type = type
-
-    override fun getOperand() = _operand
-
-    override fun getIndex() = _index
-
-    override fun getType(): RexType = _type
-
-   
+    @Override
+    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+        return visitor.visitPathIndex(this, ctx);
+    }
 }

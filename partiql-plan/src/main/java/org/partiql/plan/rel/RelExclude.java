@@ -5,16 +5,12 @@ import org.partiql.plan.Exclusion;
 import org.partiql.plan.Operator;
 import org.partiql.plan.Visitor;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
  * Logical exclude abstract base class.
  */
 public abstract class RelExclude extends RelBase {
-
-    private final RelType type = null;
-    private List<Operator> children = null;
 
     /**
      * @return input rel (child 0)
@@ -26,29 +22,23 @@ public abstract class RelExclude extends RelBase {
      * @return exclusions (not an operator child).
      */
     @NotNull
-    public abstract Collection<Exclusion> getExclusions();
+    public abstract List<Exclusion> getExclusions();
 
     @NotNull
     @Override
-    public final RelType getType() {
-        if (type == null) {
-            throw new UnsupportedOperationException("Derive type is not implemented");
-        }
-        return type;
+    protected final RelType type() {
+        throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
     @NotNull
     @Override
-    public final List<Operator> getChildren() {
-        if (children == null) {
-            Rel c0 = getInput();
-            children = List.of(c0);
-        }
-        return children;
+    protected final List<Operator> children() {
+        Rel c0 = getInput();
+        return List.of(c0);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitExclude(this, ctx);
     }
 }

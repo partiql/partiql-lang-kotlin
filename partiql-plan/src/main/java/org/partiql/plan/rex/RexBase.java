@@ -1,4 +1,4 @@
-package org.partiql.plan.rel;
+package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
@@ -6,13 +6,13 @@ import org.partiql.plan.Operator;
 import java.util.List;
 
 /**
- * Abstract base class for all relational operators.
+ * Abstract base class for all scalar expressions.
  */
-public abstract class RelBase implements Rel {
+public abstract class RexBase implements Rex {
 
     private int tag = 0;
-    private RelType type;
     private List<Operator> children;
+    private RexType type;
 
     @Override
     public int getTag() {
@@ -26,7 +26,7 @@ public abstract class RelBase implements Rel {
 
     @NotNull
     @Override
-    public final RelType getType() {
+    public final RexType getType() {
         if (type == null) {
             type = type();
         }
@@ -53,7 +53,7 @@ public abstract class RelBase implements Rel {
      *
      * @return computed type.
      */
-    protected abstract RelType type();
+    protected abstract RexType type();
 
     /**
      * PROTECTED (could also be package private atm).

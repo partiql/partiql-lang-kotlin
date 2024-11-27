@@ -14,9 +14,6 @@ import java.util.List;
  */
 public abstract class RelJoin extends RelBase {
 
-    private final RelType type = null;
-    private List<Operator> children = null;
-
     /**
      * @return left input (child 0)
      */
@@ -43,18 +40,15 @@ public abstract class RelJoin extends RelBase {
 
     @NotNull
     @Override
-    public final List<Operator> getChildren() {
-        if (children == null) {
-            Rel c0 = getLeft();
-            Rel c1 = getRight();
-            Rex c2 = getCondition(); // can be null!
-            children = List.of(c0, c1, c2);
-        }
-        return children;
+    protected final List<Operator> children() {
+        Rel c0 = getLeft();
+        Rel c1 = getRight();
+        Rex c2 = getCondition(); // can be null!
+        return List.of(c0, c1, c2);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitJoin(this, ctx);
     }
 }
