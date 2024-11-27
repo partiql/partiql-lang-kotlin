@@ -2,7 +2,6 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 /**
  * This is largely just to show that the planner does not need to use [_delegate] ([PType]) directly. Using an
@@ -18,9 +17,8 @@ internal class CompilerType(
     internal val isNullValue: Boolean = false,
     // Note: This is an experimental property.
     internal val isMissingValue: Boolean = false
-) : PType {
+) : PType(_delegate.code()) {
     fun getDelegate(): PType = _delegate
-    override fun getKind(): Kind = _delegate.kind
     override fun getFields(): MutableCollection<Field> {
         return _delegate.fields.map { field ->
             when (field) {
@@ -78,15 +76,15 @@ internal class CompilerType(
     }
 
     internal fun isNumeric(): Boolean {
-        return this.kind in setOf(
-            Kind.INTEGER,
-            Kind.NUMERIC,
-            Kind.BIGINT,
-            Kind.TINYINT,
-            Kind.SMALLINT,
-            Kind.REAL,
-            Kind.DOUBLE,
-            Kind.DECIMAL,
+        return this.code() in setOf(
+            PType.INTEGER,
+            PType.NUMERIC,
+            PType.BIGINT,
+            PType.TINYINT,
+            PType.SMALLINT,
+            PType.REAL,
+            PType.DOUBLE,
+            PType.DECIMAL,
         )
     }
 
@@ -96,7 +94,7 @@ internal class CompilerType(
      * @return null when the field definitely does not exist; dynamic when the type cannot be determined
      */
     internal fun getSymbol(field: String): Pair<Identifier.Part, CompilerType>? {
-        if (this.kind == Kind.STRUCT) {
+        if (this.code() == PType.STRUCT) {
             return Identifier.Part.regular(field) to CompilerType(PType.dynamic())
         }
         val fields = this.fields.mapNotNull {

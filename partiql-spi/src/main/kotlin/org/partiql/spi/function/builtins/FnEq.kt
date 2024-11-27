@@ -5,7 +5,6 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
-import org.partiql.spi.function.builtins.FnPlus.fillTable
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -24,10 +23,6 @@ import org.partiql.types.PType
  *  follows the existing conformance tests and SQL:1999.
  */
 internal object FnEq : Function {
-
-    init {
-        fillTable()
-    }
 
     // Memoize shared variables
     private val comparator = Datum.comparator()

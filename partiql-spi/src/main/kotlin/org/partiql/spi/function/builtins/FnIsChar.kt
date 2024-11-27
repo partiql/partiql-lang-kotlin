@@ -14,12 +14,12 @@ internal val Fn_IS_CHAR__ANY__BOOL = Function.static(
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 ) { args ->
-    Datum.bool(args[0].type.kind == PType.Kind.CHAR)
+    Datum.bool(args[0].type.code() == PType.CHAR)
 }
 
 private val TEXT_TYPES_WITH_LENGTH = setOf(
-    PType.Kind.CHAR,
-    PType.Kind.VARCHAR
+    PType.CHAR,
+    PType.VARCHAR
 )
 
 internal val Fn_IS_CHAR__INT32_ANY__BOOL = Function.static(
@@ -31,7 +31,7 @@ internal val Fn_IS_CHAR__INT32_ANY__BOOL = Function.static(
     ),
 ) { args ->
     val value = args[0]
-    if (value.type.kind in TEXT_TYPES_WITH_LENGTH) {
+    if (value.type.code() in TEXT_TYPES_WITH_LENGTH) {
         Datum.bool(false)
     }
     val length = args[0].int

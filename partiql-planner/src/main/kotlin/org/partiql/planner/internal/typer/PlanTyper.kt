@@ -57,7 +57,6 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.types.Field
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 import org.partiql.value.BoolValue
 import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
@@ -113,7 +112,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             }
 
             // Filter out UNKNOWN
-            unique = unique.filter { it.kind != Kind.UNKNOWN }
+            unique = unique.filter { it.code() != PType.UNKNOWN }
             if (unique.size == 0) {
                 return PType.unknown()
             } else if (unique.size == 1) {
@@ -121,23 +120,23 @@ internal class PlanTyper(private val env: Env, config: Context) {
             }
 
             // Collapse Collections
-            if (unique.all { it.kind == Kind.ARRAY } ||
-                unique.all { it.kind == Kind.BAG }
+            if (unique.all { it.code() == PType.ARRAY } ||
+                unique.all { it.code() == PType.BAG }
             ) {
-                return collapseCollection(unique, unique.first().kind)
+                return collapseCollection(unique, unique.first().code())
             }
             // Collapse Structs
-            if (unique.all { it.kind == Kind.ROW }) {
+            if (unique.all { it.code() == PType.ROW }) {
                 return collapseRows(unique)
             }
             return PType.dynamic()
         }
 
-        private fun collapseCollection(collections: Iterable<PType>, type: Kind): PType {
+        private fun collapseCollection(collections: Iterable<PType>, type: Int): PType {
             val typeParam = anyOfLiterals(collections.map { it.typeParameter.toCType() })!!
             return when (type) {
-                Kind.ARRAY -> PType.array(typeParam)
-                Kind.BAG -> PType.array(typeParam)
+                PType.ARRAY -> PType.array(typeParam)
+                PType.BAG -> PType.array(typeParam)
                 else -> error("This shouldn't have happened.")
             }
         }
@@ -230,15 +229,15 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val kType = PType.string()
 
             // Check Root (Dynamic)
-            if (rex.type.kind == Kind.DYNAMIC) {
+            if (rex.type.code() == PType.DYNAMIC) {
                 val type = ctx!!.copyWithSchema(listOf(kType, PType.dynamic()).toCType())
                 return rel(type, op)
             }
 
             // Check Root
-            val vType = when (rex.type.kind) {
-                Kind.ROW -> anyOf(rex.type.fields!!.map { it.type }) ?: PType.dynamic()
-                Kind.STRUCT -> PType.dynamic()
+            val vType = when (rex.type.code()) {
+                PType.ROW -> anyOf(rex.type.fields!!.map { it.type }) ?: PType.dynamic()
+                PType.STRUCT -> PType.dynamic()
                 else -> rex.type
             }
 
@@ -383,7 +382,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val limit = node.limit.type(input.type.schema, outer, Strategy.GLOBAL)
             // check types
             if (limit.type.isNumeric().not()) {
-                val problem = PErrors.typeUnexpected(null, limit.type, listOf(PType.numeric()))
+                val problem = PErrors.typeUnexpected(null, limit.type, listOf(PType.numeric(38, 0)))
                 val err = errorRexAndReport(_listener, problem)
                 return rel(input.type, relOpLimit(input, err))
             }
@@ -401,7 +400,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val offset = node.offset.type(input.type.schema, outer, Strategy.GLOBAL)
             // check types
             if (offset.type.isNumeric().not()) {
-                val problem = PErrors.typeUnexpected(null, offset.type, listOf(PType.numeric()))
+                val problem = PErrors.typeUnexpected(null, offset.type, listOf(PType.numeric(38, 0)))
                 val err = errorRexAndReport(_listener, problem)
                 return rel(input.type, relOpLimit(input, err))
             }
@@ -625,18 +624,18 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val key = visitRex(node.key, node.key.type)
 
             // Check Key Type (INT or coercible to INT). TODO: Allow coercions to INT
-            if (key.type.kind !in setOf(Kind.TINYINT, Kind.SMALLINT, Kind.INTEGER, Kind.BIGINT, Kind.NUMERIC)) {
+            if (key.type.code() !in setOf(PType.TINYINT, PType.SMALLINT, PType.INTEGER, PType.BIGINT, PType.NUMERIC)) {
                 val problem = PErrors.pathIndexNeverSucceeds(null)
                 return errorRexAndReport(_listener, problem)
             }
 
             // Check if Root is DYNAMIC
-            if (root.type.kind == Kind.DYNAMIC) {
+            if (root.type.code() == PType.DYNAMIC) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Index(root, key))
             }
 
             // Check Root Type LIST
-            if (root.type.kind != Kind.ARRAY) {
+            if (root.type.code() != PType.ARRAY) {
                 return errorRexAndReport(_listener, PErrors.pathIndexNeverSucceeds(null))
             }
 
@@ -655,17 +654,17 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val key = visitRex(node.key, node.key.type)
 
             // Check Key Type (STRING). TODO: Allow coercions to STRING
-            if (key.type.kind != Kind.STRING) {
+            if (key.type.code() != PType.STRING) {
                 return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null))
             }
 
             // Check if Root is DYNAMIC
-            if (root.type.kind == Kind.DYNAMIC) {
+            if (root.type.code() == PType.DYNAMIC) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Key(root, key))
             }
 
             // Check Root Type (STRUCT)
-            if (root.type.kind != Kind.STRUCT && root.type.kind != Kind.ROW) {
+            if (root.type.code() != PType.STRUCT && root.type.code() != PType.ROW) {
                 return errorRexAndReport(_listener, PErrors.pathKeyNeverSucceeds(null))
             }
 
@@ -688,12 +687,12 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val root = visitRex(node.root, node.root.type)
 
             // Check if Root is DYNAMIC
-            if (root.type.kind == Kind.DYNAMIC) {
+            if (root.type.code() == PType.DYNAMIC) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Symbol(root, node.key))
             }
 
             // Check Root Type (STRUCT)
-            if (root.type.kind != Kind.STRUCT && root.type.kind != Kind.ROW) {
+            if (root.type.code() != PType.STRUCT && root.type.code() != PType.ROW) {
                 return errorRexAndReport(_listener, PErrors.pathSymbolNeverSucceeds(null))
             }
 
@@ -719,7 +718,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * @return null when the field definitely does not exist; dynamic when the type cannot be determined
          */
         private fun CompilerType.getField(field: String, ignoreCase: Boolean): CompilerType? {
-            if (this.kind == Kind.STRUCT) {
+            if (this.code() == PType.STRUCT) {
                 return CompilerType(PType.dynamic())
             }
             val fields = this.fields!!.filter { it.name.equals(field, ignoreCase) }.map { it.type }.toSet()
@@ -926,7 +925,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * Hence, we permit Static Type BOOL, Static Type NULL, Static Type Missing here.
          */
         private fun canBeBoolean(type: CompilerType): Boolean {
-            return type.kind == Kind.DYNAMIC || type.kind == Kind.BOOL
+            return type.code() == PType.DYNAMIC || type.code() == PType.BOOL
         }
 
         /**
@@ -956,7 +955,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: CompilerType?): Rex {
-            if (ctx!!.kind !in setOf(Kind.ARRAY, Kind.BAG)) {
+            if (ctx!!.code() !in setOf(PType.ARRAY, PType.BAG)) {
                 val problem = PErrors.typeUnexpected(null, ctx, listOf(PType.array(), PType.bag()))
                 return errorRexAndReport(_listener, problem)
             }
@@ -965,9 +964,9 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 0 -> PType.dynamic()
                 else -> anyOfLiterals(values.map { it.type })!!
             }
-            val type = when (ctx.kind) {
-                Kind.BAG -> PType.bag(t)
-                Kind.ARRAY -> PType.array(t)
+            val type = when (ctx.code()) {
+                PType.BAG -> PType.bag(t)
+                PType.ARRAY -> PType.array(t)
                 else -> error("This is impossible.")
             }
             return rex(CompilerType(type), rexOpCollection(values))
@@ -1026,7 +1025,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * Calculate output type of a row-value subquery.
          */
         private fun visitRexOpSubqueryRow(subquery: Rex.Op.Subquery, cons: CompilerType): Rex {
-            if (cons.kind != Kind.ROW) {
+            if (cons.code() != PType.ROW) {
                 error("Subquery with non-SQL SELECT cannot be coerced to a row-value expression. Found constructor type: $cons")
             }
             // Do a simple cardinality check for the moment.
@@ -1045,10 +1044,10 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * Calculate output type of a scalar subquery.
          */
         private fun visitRexOpSubqueryScalar(subquery: Rex.Op.Subquery, cons: CompilerType): Rex {
-            if (cons.kind == Kind.DYNAMIC) {
+            if (cons.code() == PType.DYNAMIC) {
                 return Rex(PType.dynamic().toCType(), subquery)
             }
-            if (cons.kind != Kind.ROW) {
+            if (cons.code() != PType.ROW) {
                 error("Subquery with non-SQL SELECT cannot be coerced to a scalar. Found constructor type: $cons")
             }
             val n = cons.fields!!.size
@@ -1131,7 +1130,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
         }
 
         private fun replaceGeneratedTupleUnionArg(node: Rex): Rex? {
-            if (node.op is Rex.Op.Struct && node.type.kind == Kind.ROW) {
+            if (node.op is Rex.Op.Struct && node.type.code() == PType.ROW) {
                 return node
             }
             val case = node.op as? Rex.Op.Case ?: return null
@@ -1147,7 +1146,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 return null
             }
             val firstBranchResultType = firstBranch.rex.type
-            if (firstBranchResultType.kind != Kind.ROW) {
+            if (firstBranchResultType.code() != PType.ROW) {
                 return null
             }
             return Rex(firstBranchResultType, firstBranch.rex.op)
@@ -1185,14 +1184,14 @@ internal class PlanTyper(private val env: Env, config: Context) {
             var containsDynamic = false
             var containsNonStruct = false
             args.forEach { arg ->
-                if (arg.kind == Kind.UNKNOWN) {
+                if (arg.code() == PType.UNKNOWN) {
                     return@forEach
                 }
-                when (arg.kind) {
-                    Kind.ROW -> fields.addAll(arg.fields!!)
-                    Kind.STRUCT -> structIsOpen = true
-                    Kind.DYNAMIC -> containsDynamic = true
-                    Kind.UNKNOWN -> structIsOpen = true
+                when (arg.code()) {
+                    PType.ROW -> fields.addAll(arg.fields!!)
+                    PType.STRUCT -> structIsOpen = true
+                    PType.DYNAMIC -> containsDynamic = true
+                    PType.UNKNOWN -> structIsOpen = true
                     else -> containsNonStruct = true
                 }
             }
@@ -1271,9 +1270,9 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
     private fun Rel.isOrdered(): Boolean = type.props.contains(Rel.Prop.ORDERED)
 
-    private fun getElementTypeForFromSource(fromSourceType: CompilerType): CompilerType = when (fromSourceType.kind) {
-        Kind.DYNAMIC -> CompilerType(PType.dynamic())
-        Kind.BAG, Kind.ARRAY -> fromSourceType.typeParameter
+    private fun getElementTypeForFromSource(fromSourceType: CompilerType): CompilerType = when (fromSourceType.code()) {
+        PType.DYNAMIC -> CompilerType(PType.dynamic())
+        PType.BAG, PType.ARRAY -> fromSourceType.typeParameter
         // TODO: Should we emit a warning?
         else -> fromSourceType
     }

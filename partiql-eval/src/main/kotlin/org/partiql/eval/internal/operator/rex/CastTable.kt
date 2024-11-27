@@ -7,28 +7,28 @@ import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind.ARRAY
-import org.partiql.types.PType.Kind.BAG
-import org.partiql.types.PType.Kind.BIGINT
-import org.partiql.types.PType.Kind.BOOL
-import org.partiql.types.PType.Kind.CHAR
-import org.partiql.types.PType.Kind.CLOB
-import org.partiql.types.PType.Kind.DATE
-import org.partiql.types.PType.Kind.DECIMAL
-import org.partiql.types.PType.Kind.DOUBLE
-import org.partiql.types.PType.Kind.DYNAMIC
-import org.partiql.types.PType.Kind.INTEGER
-import org.partiql.types.PType.Kind.NUMERIC
-import org.partiql.types.PType.Kind.REAL
-import org.partiql.types.PType.Kind.SMALLINT
-import org.partiql.types.PType.Kind.STRING
-import org.partiql.types.PType.Kind.STRUCT
-import org.partiql.types.PType.Kind.TIME
-import org.partiql.types.PType.Kind.TIMESTAMP
-import org.partiql.types.PType.Kind.TIMESTAMPZ
-import org.partiql.types.PType.Kind.TIMEZ
-import org.partiql.types.PType.Kind.TINYINT
-import org.partiql.types.PType.Kind.VARCHAR
+import org.partiql.types.PType.ARRAY
+import org.partiql.types.PType.BAG
+import org.partiql.types.PType.BIGINT
+import org.partiql.types.PType.BOOL
+import org.partiql.types.PType.CHAR
+import org.partiql.types.PType.CLOB
+import org.partiql.types.PType.DATE
+import org.partiql.types.PType.DECIMAL
+import org.partiql.types.PType.DOUBLE
+import org.partiql.types.PType.DYNAMIC
+import org.partiql.types.PType.INTEGER
+import org.partiql.types.PType.NUMERIC
+import org.partiql.types.PType.REAL
+import org.partiql.types.PType.SMALLINT
+import org.partiql.types.PType.STRING
+import org.partiql.types.PType.STRUCT
+import org.partiql.types.PType.TIME
+import org.partiql.types.PType.TIMESTAMP
+import org.partiql.types.PType.TIMESTAMPZ
+import org.partiql.types.PType.TIMEZ
+import org.partiql.types.PType.TINYINT
+import org.partiql.types.PType.VARCHAR
 import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -40,15 +40,15 @@ import java.math.RoundingMode
 private typealias Cast = (Datum, PType) -> Datum
 
 /**
- * A two-dimensional array to look up casts by an input [PType.Kind] and target [PType.Kind]. If a [Cast] is found
+ * A two-dimensional array to look up casts by an input [PType.code] and target [PType.code]. If a [Cast] is found
  * (aka not null), then the cast is valid and may proceed. If the cast is null, then the cast is not supported between the
  * two types.
  *
- * The cast table is made fast by using the [ordinal] for indexing. It is up to the [Cast] to provide
+ * The cast table is made fast by using the [PType.code] for indexing. It is up to the [Cast] to provide
  * additional logic regarding a type's parameters (aka [PType]).
  *
  * @see PType
- * @see PType.Kind
+ * @see PType.code
  */
 private typealias CastLookupTable = Array<Array<Cast?>>
 
@@ -67,10 +67,10 @@ internal object CastTable {
         if (source.isMissing) {
             return Datum.missing(target)
         }
-        if (target.kind == DYNAMIC) {
+        if (target.code() == DYNAMIC) {
             return source
         }
-        val cast = _table[source.type.kind.ordinal][target.kind.ordinal]
+        val cast = _table[source.type.code()][target.code()]
             ?: throw TypeCheckException("CAST(${source.type} AS $target) is not supported.")
         return try {
             cast.invoke(source, target)
@@ -79,11 +79,11 @@ internal object CastTable {
         }
     }
 
-    private val TYPES = PType.Kind.entries.toTypedArray()
+    private val TYPES = PType.codes()
     private val SIZE = TYPES.size
-    private val TYPE_NAME_MAX_LENGTH = TYPES.maxOf { it.name.length }
-    private val _table: CastLookupTable = Array(PType.Kind.entries.size) {
-        Array(PType.Kind.entries.size) {
+    private val TYPE_NAME_MAX_LENGTH = TYPES.maxOf { it.toString().length }
+    private val _table: CastLookupTable = Array(PType.codes().size) {
+        Array(PType.codes().size) {
             null
         }
     }
@@ -107,10 +107,6 @@ internal object CastTable {
         registerTime()
     }
 
-    private fun PType.Kind.pad(): String {
-        return this.name.pad()
-    }
-
     private fun String.pad(): String {
         return this.padEnd(TYPE_NAME_MAX_LENGTH, ' ').plus("|")
     }
@@ -124,7 +120,7 @@ internal object CastTable {
                     else -> append("".pad())
                 }
                 for (targetTypeIndex in 0 until SIZE) {
-                    val typeName = TYPES[targetTypeIndex].name
+                    val typeName = TYPES[targetTypeIndex].toString()
                     val charIndex = typeStringIndex - (TYPE_NAME_MAX_LENGTH - typeName.length)
                     val char = typeName.getOrElse(charIndex) { ' ' }
                     append(' ')
@@ -138,7 +134,7 @@ internal object CastTable {
             appendLine("_".repeat(numberOfSpaces))
             // Print content with source type on left side
             for (sourceTypeIndex in 0 until SIZE) {
-                append(TYPES[sourceTypeIndex].pad())
+                append(TYPES[sourceTypeIndex].toString().pad())
                 val row = _table[sourceTypeIndex]
                 row.forEach { cell ->
                     if (cell != null) {
@@ -497,8 +493,8 @@ internal object CastTable {
         register(TIMEZ, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
     }
 
-    private fun register(source: PType.Kind, target: PType.Kind, cast: (Datum, PType) -> Datum) {
-        _table[source.ordinal][target.ordinal] = cast
+    private fun register(source: Int, target: Int, cast: (Datum, PType) -> Datum) {
+        _table[source][target] = cast
     }
 
     /**

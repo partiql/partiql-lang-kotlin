@@ -21,6 +21,6 @@ internal class ExprCase(
     }
 
     private fun Datum.isTrue(): Boolean {
-        return this.type.kind == PType.Kind.BOOL && !this.isNull && !this.isMissing && this.boolean
+        return this.type.code() == PType.BOOL && !this.isNull && !this.isMissing && this.boolean
     }
 }

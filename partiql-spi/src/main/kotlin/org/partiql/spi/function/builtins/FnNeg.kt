@@ -57,8 +57,8 @@ internal val Fn_NEG__INT64__INT64 = Function.static(
 internal val Fn_NEG__INT__INT = Function.static(
 
     name = "neg",
-    returns = PType.numeric(),
-    parameters = arrayOf(Parameter("value", PType.numeric())),
+    returns = DefaultNumeric.NUMERIC,
+    parameters = arrayOf(Parameter("value", DefaultNumeric.NUMERIC)),
 
 ) { args ->
     val value = args[0].bigInteger
@@ -68,8 +68,8 @@ internal val Fn_NEG__INT__INT = Function.static(
 internal val Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
 
     name = "neg",
-    returns = PType.decimal(),
-    parameters = arrayOf(Parameter("value", PType.decimal())),
+    returns = PType.decimal(38, 19), // TODO: Rewrite using new function modeling.
+    parameters = arrayOf(Parameter("value", PType.decimal(38, 19))),
 
 ) { args ->
     val value = args[0].bigDecimal

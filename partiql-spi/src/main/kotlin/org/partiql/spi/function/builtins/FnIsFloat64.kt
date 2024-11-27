@@ -15,9 +15,9 @@ internal val Fn_IS_FLOAT64__ANY__BOOL = Function.static(
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
 ) { args ->
-    when (args[0].type.kind) {
-        PType.Kind.REAL,
-        PType.Kind.DOUBLE,
+    when (args[0].type.code()) {
+        PType.REAL,
+        PType.DOUBLE,
         -> Datum.bool(true)
         else -> Datum.bool(false)
     }

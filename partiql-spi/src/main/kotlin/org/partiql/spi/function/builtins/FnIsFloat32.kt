@@ -16,9 +16,9 @@ internal val Fn_IS_FLOAT32__ANY__BOOL = Function.static(
 
 ) { args ->
     val arg = args[0]
-    when (arg.type.kind) {
-        PType.Kind.REAL -> Datum.bool(true)
-        PType.Kind.DOUBLE -> {
+    when (arg.type.code()) {
+        PType.REAL -> Datum.bool(true)
+        PType.DOUBLE -> {
             val v = arg.double
             Datum.bool(Float.MIN_VALUE <= v && v <= Float.MAX_VALUE)
         }

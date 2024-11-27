@@ -3,7 +3,7 @@ package org.partiql.spi.function
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.internal.SqlTypes
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind.DYNAMIC
+import org.partiql.types.PType.DYNAMIC
 
 /**
  * [Parameter] is a formal argument's definition.
@@ -47,7 +47,7 @@ public class Parameter private constructor(
      * @param type  Parameter type used for function resolution.
      */
     public constructor(name: String, type: PType) : this(name, SqlTypeFamily(type)) {
-        dynamic = type.kind == DYNAMIC
+        dynamic = type.code() == DYNAMIC
         variadic = false
     }
 
@@ -77,7 +77,7 @@ public class Parameter private constructor(
         if (dynamic || arg in type) {
             return arg // exact match
         }
-        if (arg.kind == DYNAMIC || SqlTypes.isAssignable(arg, type.preferred)) {
+        if (arg.code() == DYNAMIC || SqlTypes.isAssignable(arg, type.preferred)) {
             return type.preferred
         }
         return null

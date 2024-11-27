@@ -3,7 +3,6 @@ package org.partiql.planner.internal.typer
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 /**
  * Applies the given exclusion path to produce the reduced [CompilerType]. [lastStepOptional] indicates if a previous
@@ -20,11 +19,11 @@ import org.partiql.types.PType.Kind
 internal fun CompilerType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = false): CompilerType {
     val type = this
     return steps.fold(type) { acc, step ->
-        when (acc.kind) {
-            Kind.DYNAMIC -> CompilerType(PType.dynamic())
-            Kind.ROW -> acc.excludeStruct(step, lastStepOptional)
-            Kind.STRUCT -> acc
-            Kind.ARRAY, Kind.BAG -> acc.excludeCollection(step, lastStepOptional)
+        when (acc.code()) {
+            PType.DYNAMIC -> CompilerType(PType.dynamic())
+            PType.ROW -> acc.excludeStruct(step, lastStepOptional)
+            PType.STRUCT -> acc
+            PType.ARRAY, PType.BAG -> acc.excludeCollection(step, lastStepOptional)
             else -> acc
         }
     }
@@ -105,9 +104,9 @@ internal fun CompilerType.excludeCollection(step: Rel.Op.Exclude.Step, lastStepO
             // the future
         }
     }
-    return when (this.kind) {
-        Kind.ARRAY -> PType.array(e).toCType()
-        Kind.BAG -> PType.bag(e).toCType()
+    return when (this.code()) {
+        PType.ARRAY -> PType.array(e).toCType()
+        PType.BAG -> PType.bag(e).toCType()
         else -> throw IllegalStateException()
     }
 }

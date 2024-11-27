@@ -23,13 +23,13 @@ class PlusTest {
         fun plusTestCases() = listOf(
             SuccessTestCase(
                 input = """
-                    -- DEC(1, 0) + DEC(6, 5)
-                    -- P = 5 + MAX(1, 1) + 1 = 7
+                    -- DEC(10, 0) + DEC(6, 5)
+                    -- P = 5 + MAX(10, 1) + 1 = 16
                     -- S = MAX(0, 5) = 5
                     1 + 2.00000;
                 """.trimIndent(),
                 mode = Mode.STRICT(),
-                expected = Datum.decimal(BigDecimal.valueOf(300000, 5), 7, 5),
+                expected = Datum.decimal(BigDecimal.valueOf(300000, 5), 16, 5),
                 jvmEquality = true
             ),
             SuccessTestCase(

@@ -48,12 +48,12 @@ internal val Agg_MAX__INT64__INT64 = Aggregation.static(
     accumulator = ::AccumulatorMax,
 )
 
-internal val Agg_MAX__INT__INT = Aggregation.static(
+internal val Agg_MAX__NUMERIC__NUMERIC = Aggregation.static(
 
     name = "max",
-    returns = PType.numeric(),
+    returns = DefaultNumeric.NUMERIC,
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
+        Parameter("value", DefaultNumeric.NUMERIC),
     ),
     accumulator = ::AccumulatorMax,
 )
@@ -61,9 +61,9 @@ internal val Agg_MAX__INT__INT = Aggregation.static(
 internal val Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
 
     name = "max",
-    returns = PType.decimal(),
+    returns = PType.decimal(38, 19),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
+        Parameter("value", PType.decimal(38, 19)), // TODO: Rewrite aggregations using new function modeling.
     ),
 
     accumulator = ::AccumulatorMax,

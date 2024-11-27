@@ -13,10 +13,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static org.partiql.types.PType.ARRAY;
+import static org.partiql.types.PType.BAG;
+import static org.partiql.types.PType.BIGINT;
+import static org.partiql.types.PType.BLOB;
+import static org.partiql.types.PType.BOOL;
+import static org.partiql.types.PType.CHAR;
+import static org.partiql.types.PType.CLOB;
+import static org.partiql.types.PType.DATE;
+import static org.partiql.types.PType.DECIMAL;
+import static org.partiql.types.PType.DOUBLE;
+import static org.partiql.types.PType.DYNAMIC;
+import static org.partiql.types.PType.INTEGER;
+import static org.partiql.types.PType.NUMERIC;
+import static org.partiql.types.PType.REAL;
+import static org.partiql.types.PType.SMALLINT;
+import static org.partiql.types.PType.STRING;
+import static org.partiql.types.PType.STRUCT;
+import static org.partiql.types.PType.TIME;
+import static org.partiql.types.PType.TIMESTAMP;
+import static org.partiql.types.PType.TIMESTAMPZ;
+import static org.partiql.types.PType.TIMEZ;
+import static org.partiql.types.PType.TINYINT;
+import static org.partiql.types.PType.UNKNOWN;
+import static org.partiql.types.PType.VARCHAR;
+import static org.partiql.types.PType.ROW;
+
 /**
  * This class allows for the comparison between two {@link Datum}s. This is internally implemented by constructing
  * a comparison table, where each cell contains a reference to a {@link DatumComparison} to compute the comparison.
- * The table's rows and columns are indexed by the {@link PType.Kind#ordinal()}. The first dimension matches the
+ * The table's rows and columns are indexed by the {@link PType#code()}. The first dimension matches the
  * left-hand-side's type of {@link #compare(Datum lhs, Datum rhs)}. The second dimension matches the right-hand-side's
  * type of {@link #compare(Datum lhs, Datum rhs)}. As such, this implementation allows for O(1) comparison of scalars.
  */
@@ -29,7 +55,7 @@ abstract class DatumComparator implements Comparator<Datum> {
     private static final int GREATER = 1;
 
     @NotNull
-    private static final PType.Kind[] TYPE_KINDS = PType.Kind.values();
+    private static final int[] TYPE_KINDS = PType.codes();
 
     private static final int TYPE_KINDS_LENGTH = TYPE_KINDS.length;
 
@@ -43,7 +69,7 @@ abstract class DatumComparator implements Comparator<Datum> {
      * </p>
      */
     @NotNull
-    private static final Map<PType.Kind, Integer> TYPE_PRECEDENCE = initializeTypePrecedence();
+    private static final Map<Integer, Integer> TYPE_PRECEDENCE = initializeTypePrecedence();
 
     /**
      * <p>
@@ -88,8 +114,8 @@ abstract class DatumComparator implements Comparator<Datum> {
         }
 
         // Invoke the Comparison Table
-        int lhsKind = lhs.getType().getKind().ordinal();
-        int rhsKind = rhs.getType().getKind().ordinal();
+        int lhsKind = lhs.getType().code();
+        int rhsKind = rhs.getType().code();
         return COMPARISON_TABLE[lhsKind][rhsKind].apply(lhs, rhs, this);
     }
 
@@ -136,46 +162,45 @@ abstract class DatumComparator implements Comparator<Datum> {
      * @see #TYPE_PRECEDENCE
      */
     @NotNull
-    @SuppressWarnings("deprecation")
-    private static Map<PType.Kind, Integer> initializeTypePrecedence() {
-        Map<PType.Kind, Integer> precedence = new HashMap<>();
+    private static Map<Integer, Integer> initializeTypePrecedence() {
+        Map<Integer, Integer> precedence = new HashMap<>();
         // Boolean Type
-        precedence.put(PType.Kind.BOOL, 0);
+        precedence.put(BOOL, 0);
         // Number Types
-        precedence.put(PType.Kind.TINYINT, 1);
-        precedence.put(PType.Kind.SMALLINT, 1);
-        precedence.put(PType.Kind.INTEGER, 1);
-        precedence.put(PType.Kind.BIGINT, 1);
-        precedence.put(PType.Kind.NUMERIC, 1);
-        precedence.put(PType.Kind.DECIMAL, 1);
-        precedence.put(PType.Kind.REAL, 1);
-        precedence.put(PType.Kind.DOUBLE, 1);
+        precedence.put(TINYINT, 1);
+        precedence.put(SMALLINT, 1);
+        precedence.put(INTEGER, 1);
+        precedence.put(BIGINT, 1);
+        precedence.put(NUMERIC, 1);
+        precedence.put(DECIMAL, 1);
+        precedence.put(REAL, 1);
+        precedence.put(DOUBLE, 1);
         // Date Type
-        precedence.put(PType.Kind.DATE, 2);
+        precedence.put(DATE, 2);
         // Time Type
-        precedence.put(PType.Kind.TIMEZ, 3);
-        precedence.put(PType.Kind.TIME, 3);
+        precedence.put(TIMEZ, 3);
+        precedence.put(TIME, 3);
         // Timestamp Types
-        precedence.put(PType.Kind.TIMESTAMPZ, 4);
-        precedence.put(PType.Kind.TIMESTAMP, 4);
+        precedence.put(TIMESTAMPZ, 4);
+        precedence.put(TIMESTAMP, 4);
         // Text Types
-        precedence.put(PType.Kind.CHAR, 5);
-        precedence.put(PType.Kind.VARCHAR, 5);
-        precedence.put(PType.Kind.STRING, 5);
+        precedence.put(CHAR, 5);
+        precedence.put(PType.VARCHAR, 5);
+        precedence.put(STRING, 5);
         // LOB Types
-        precedence.put(PType.Kind.CLOB, 6);
-        precedence.put(PType.Kind.BLOB, 6);
+        precedence.put(CLOB, 6);
+        precedence.put(BLOB, 6);
         // Array Type
-        precedence.put(PType.Kind.ARRAY, 7);
+        precedence.put(ARRAY, 7);
         // Tuple Type
-        precedence.put(PType.Kind.ROW, 9);
-        precedence.put(PType.Kind.STRUCT, 9);
+        precedence.put(PType.ROW, 9);
+        precedence.put(STRUCT, 9);
         // Bag Type
-        precedence.put(PType.Kind.BAG, 10);
+        precedence.put(BAG, 10);
         // OTHER
-        precedence.put(PType.Kind.DYNAMIC, 100);
-        precedence.put(PType.Kind.UNKNOWN, 100);
-        precedence.put(PType.Kind.VARIANT, 100);
+        precedence.put(DYNAMIC, 100);
+        precedence.put(UNKNOWN, 100);
+        precedence.put(PType.VARIANT, 100);
         return precedence;
     }
 
@@ -188,16 +213,15 @@ abstract class DatumComparator implements Comparator<Datum> {
      * need to have their JVM primitives extracted before making comparison judgements.</li>
      * </ol>
      * @return the 2D comparison table
-     * @see #initializeComparatorArray(PType.Kind)
+     * @see #initializeComparatorArray(int)
      * @see #fillIntComparator(DatumComparison[])
      */
-    @SuppressWarnings("deprecation")
     private static DatumComparison[][] initializeComparators() {
         // Initialize Table
         DatumComparison[][] table = new DatumComparison[TYPE_KINDS_LENGTH][TYPE_KINDS_LENGTH];
         for (int i = 0; i < TYPE_KINDS_LENGTH; i++) {
             @SuppressWarnings("ConstantConditions")
-            PType.Kind kind = TYPE_KINDS[i];
+            int kind = TYPE_KINDS[i];
             DatumComparison[] row = initializeComparatorArray(kind);
             table[i] = row;
             switch (kind) {
@@ -269,85 +293,85 @@ abstract class DatumComparator implements Comparator<Datum> {
         return table;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillTinyIntComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TINYINT.ordinal()] = (self, tinyInt, comp) -> Byte.compare(self.getByte(), tinyInt.getByte());
-        comps[PType.Kind.SMALLINT.ordinal()] = (self, smallInt, comp) -> Short.compare(self.getByte(), smallInt.getShort());
-        comps[PType.Kind.INTEGER.ordinal()] = (self, intNum, comp) -> Integer.compare(self.getByte(), intNum.getInt());
-        comps[PType.Kind.BIGINT.ordinal()] = (self, bigInt, comp) -> Long.compare(self.getByte(), bigInt.getLong());
-        comps[PType.Kind.NUMERIC.ordinal()] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getByte()).compareTo(intArbitrary.getBigInteger());
-        comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getByte(), real.getFloat()));
-        comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getByte(), doublePrecision.getDouble()));
-        comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getByte()).compareTo(decimal.getBigDecimal());
+        comps[TINYINT] = (self, tinyInt, comp) -> Byte.compare(self.getByte(), tinyInt.getByte());
+        comps[SMALLINT] = (self, smallInt, comp) -> Short.compare(self.getByte(), smallInt.getShort());
+        comps[INTEGER] = (self, intNum, comp) -> Integer.compare(self.getByte(), intNum.getInt());
+        comps[BIGINT] = (self, bigInt, comp) -> Long.compare(self.getByte(), bigInt.getLong());
+        comps[NUMERIC] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getByte()).compareTo(intArbitrary.getBigInteger());
+        comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getByte(), real.getFloat()));
+        comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getByte(), doublePrecision.getDouble()));
+        comps[DECIMAL] = (self, decimal, comp) -> BigDecimal.valueOf(self.getByte()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillSmallIntComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TINYINT.ordinal()] = (self, tinyInt, comp) -> Short.compare(self.getShort(), tinyInt.getByte());
-        comps[PType.Kind.SMALLINT.ordinal()] = (self, smallInt, comp) -> Short.compare(self.getShort(), smallInt.getShort());
-        comps[PType.Kind.INTEGER.ordinal()] = (self, intNum, comp) -> Integer.compare(self.getShort(), intNum.getInt());
-        comps[PType.Kind.BIGINT.ordinal()] = (self, bigInt, comp) -> Long.compare(self.getShort(), bigInt.getLong());
-        comps[PType.Kind.NUMERIC.ordinal()] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getShort()).compareTo(intArbitrary.getBigInteger());
-        comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getShort(), real.getFloat()));
-        comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getShort(), doublePrecision.getDouble()));
-        comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getShort()).compareTo(decimal.getBigDecimal());
+        comps[TINYINT] = (self, tinyInt, comp) -> Short.compare(self.getShort(), tinyInt.getByte());
+        comps[SMALLINT] = (self, smallInt, comp) -> Short.compare(self.getShort(), smallInt.getShort());
+        comps[INTEGER] = (self, intNum, comp) -> Integer.compare(self.getShort(), intNum.getInt());
+        comps[BIGINT] = (self, bigInt, comp) -> Long.compare(self.getShort(), bigInt.getLong());
+        comps[NUMERIC] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getShort()).compareTo(intArbitrary.getBigInteger());
+        comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getShort(), real.getFloat()));
+        comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getShort(), doublePrecision.getDouble()));
+        comps[DECIMAL] = (self, decimal, comp) -> BigDecimal.valueOf(self.getShort()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillIntComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TINYINT.ordinal()] = (self, tinyInt, comp) -> Integer.compare(self.getInt(), tinyInt.getByte());
-        comps[PType.Kind.SMALLINT.ordinal()] = (self, smallInt, comp) -> Integer.compare(self.getInt(), smallInt.getShort());
-        comps[PType.Kind.INTEGER.ordinal()] = (self, intNum, comp) -> Integer.compare(self.getInt(), intNum.getInt());
-        comps[PType.Kind.BIGINT.ordinal()] = (self, bigInt, comp) -> Long.compare(self.getInt(), bigInt.getLong());
-        comps[PType.Kind.NUMERIC.ordinal()] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getInt()).compareTo(intArbitrary.getBigInteger());
-        comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getInt(), real.getFloat()));
-        comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getInt(), doublePrecision.getDouble()));
-        comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getInt()).compareTo(decimal.getBigDecimal());
+        comps[TINYINT] = (self, tinyInt, comp) -> Integer.compare(self.getInt(), tinyInt.getByte());
+        comps[SMALLINT] = (self, smallInt, comp) -> Integer.compare(self.getInt(), smallInt.getShort());
+        comps[INTEGER] = (self, intNum, comp) -> Integer.compare(self.getInt(), intNum.getInt());
+        comps[BIGINT] = (self, bigInt, comp) -> Long.compare(self.getInt(), bigInt.getLong());
+        comps[NUMERIC] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getInt()).compareTo(intArbitrary.getBigInteger());
+        comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getInt(), real.getFloat()));
+        comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getInt(), doublePrecision.getDouble()));
+        comps[DECIMAL] = (self, decimal, comp) -> BigDecimal.valueOf(self.getInt()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillBigIntComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TINYINT.ordinal()] = (self, tinyInt, comp) -> Long.compare(self.getLong(), tinyInt.getByte());
-        comps[PType.Kind.SMALLINT.ordinal()] = (self, smallInt, comp) -> Long.compare(self.getLong(), smallInt.getShort());
-        comps[PType.Kind.INTEGER.ordinal()] = (self, intNum, comp) -> Long.compare(self.getLong(), intNum.getInt());
-        comps[PType.Kind.BIGINT.ordinal()] = (self, bigInt, comp) -> Long.compare(self.getLong(), bigInt.getLong());
-        comps[PType.Kind.NUMERIC.ordinal()] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getLong()).compareTo(intArbitrary.getBigInteger());
-        comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getLong(), real.getFloat()));
-        comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getLong(), doublePrecision.getDouble()));
-        comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> BigDecimal.valueOf(self.getLong()).compareTo(decimal.getBigDecimal());
+        comps[TINYINT] = (self, tinyInt, comp) -> Long.compare(self.getLong(), tinyInt.getByte());
+        comps[SMALLINT] = (self, smallInt, comp) -> Long.compare(self.getLong(), smallInt.getShort());
+        comps[INTEGER] = (self, intNum, comp) -> Long.compare(self.getLong(), intNum.getInt());
+        comps[BIGINT] = (self, bigInt, comp) -> Long.compare(self.getLong(), bigInt.getLong());
+        comps[NUMERIC] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getLong()).compareTo(intArbitrary.getBigInteger());
+        comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getLong(), real.getFloat()));
+        comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getLong(), doublePrecision.getDouble()));
+        comps[DECIMAL] = (self, decimal, comp) -> BigDecimal.valueOf(self.getLong()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillIntArbitraryComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TINYINT.ordinal()] = (self, tinyInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(tinyInt.getByte()));
-        comps[PType.Kind.SMALLINT.ordinal()] = (self, smallInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(smallInt.getShort()));
-        comps[PType.Kind.INTEGER.ordinal()] = (self, intNum, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(intNum.getInt()));
-        comps[PType.Kind.BIGINT.ordinal()] = (self, bigInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(bigInt.getLong()));
-        comps[PType.Kind.NUMERIC.ordinal()] = (self, intArbitrary, comp) -> self.getBigInteger().compareTo(intArbitrary.getBigInteger());
-        comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> new BigDecimal(self.getBigInteger()).compareTo(BigDecimal.valueOf(real.getFloat())));
-        comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> new BigDecimal(self.getBigInteger()).compareTo(BigDecimal.valueOf(doublePrecision.getDouble())));
-        comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> new BigDecimal(self.getBigInteger()).compareTo(decimal.getBigDecimal());
+        comps[TINYINT] = (self, tinyInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(tinyInt.getByte()));
+        comps[SMALLINT] = (self, smallInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(smallInt.getShort()));
+        comps[INTEGER] = (self, intNum, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(intNum.getInt()));
+        comps[BIGINT] = (self, bigInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(bigInt.getLong()));
+        comps[NUMERIC] = (self, intArbitrary, comp) -> self.getBigInteger().compareTo(intArbitrary.getBigInteger());
+        comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> new BigDecimal(self.getBigInteger()).compareTo(BigDecimal.valueOf(real.getFloat())));
+        comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> new BigDecimal(self.getBigInteger()).compareTo(BigDecimal.valueOf(doublePrecision.getDouble())));
+        comps[DECIMAL] = (self, decimal, comp) -> new BigDecimal(self.getBigInteger()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillRealComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TINYINT.ordinal()] = (self, tinyInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), tinyInt.getByte()));
-        comps[PType.Kind.SMALLINT.ordinal()] = (self, smallInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), smallInt.getShort()));
-        comps[PType.Kind.INTEGER.ordinal()] = (self, intNum, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), intNum.getInt()));
-        comps[PType.Kind.BIGINT.ordinal()] = (self, bigInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), bigInt.getLong()));
-        comps[PType.Kind.NUMERIC.ordinal()] = (self, intArbitrary, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), intArbitrary.getBigInteger().floatValue()));
-        comps[PType.Kind.REAL.ordinal()] = (self, real, comp) -> compareDoubles(self.getFloat(), real.getFloat(), () -> Float.compare(self.getFloat(), real.getFloat()));
-        comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> {
+        comps[TINYINT] = (self, tinyInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), tinyInt.getByte()));
+        comps[SMALLINT] = (self, smallInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), smallInt.getShort()));
+        comps[INTEGER] = (self, intNum, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), intNum.getInt()));
+        comps[BIGINT] = (self, bigInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), bigInt.getLong()));
+        comps[NUMERIC] = (self, intArbitrary, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), intArbitrary.getBigInteger().floatValue()));
+        comps[REAL] = (self, real, comp) -> compareDoubles(self.getFloat(), real.getFloat(), () -> Float.compare(self.getFloat(), real.getFloat()));
+        comps[DOUBLE] = (self, doublePrecision, comp) -> {
             float selfFlt = self.getFloat();
             double otherDbl = doublePrecision.getDouble();
             return compareDoubles(selfFlt, otherDbl, () -> Double.compare(selfFlt, otherDbl));
         };
-        comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> compareDoubleLhs(self.getFloat(), () -> BigDecimal.valueOf(self.getFloat()).compareTo(decimal.getBigDecimal()));
+        comps[DECIMAL] = (self, decimal, comp) -> compareDoubleLhs(self.getFloat(), () -> BigDecimal.valueOf(self.getFloat()).compareTo(decimal.getBigDecimal()));
         return comps;
     }
 
@@ -445,106 +469,112 @@ abstract class DatumComparator implements Comparator<Datum> {
         return comparison.get();
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillDoubleComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TINYINT.ordinal()] = (self, tinyInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), tinyInt.getByte()));
-        comps[PType.Kind.SMALLINT.ordinal()] = (self, smallInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), smallInt.getShort()));
-        comps[PType.Kind.INTEGER.ordinal()] = (self, intNum, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), intNum.getInt()));
-        comps[PType.Kind.BIGINT.ordinal()] = (self, bigInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), bigInt.getLong()));
-        comps[PType.Kind.NUMERIC.ordinal()] = (self, intArbitrary, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), intArbitrary.getBigInteger().doubleValue()));
-        comps[PType.Kind.REAL.ordinal()] = (self, real, comp) -> {
+        comps[TINYINT] = (self, tinyInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), tinyInt.getByte()));
+        comps[SMALLINT] = (self, smallInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), smallInt.getShort()));
+        comps[INTEGER] = (self, intNum, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), intNum.getInt()));
+        comps[BIGINT] = (self, bigInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), bigInt.getLong()));
+        comps[NUMERIC] = (self, intArbitrary, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), intArbitrary.getBigInteger().doubleValue()));
+        comps[REAL] = (self, real, comp) -> {
             double selfDbl = self.getDouble();
             float otherFlt = real.getFloat();
             return compareDoubles(selfDbl, otherFlt, () -> Double.compare(selfDbl, otherFlt));
         };
-        comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubles(self.getDouble(), doublePrecision.getDouble(), () -> Double.compare(self.getDouble(), doublePrecision.getDouble()));
-        comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> compareDoubleLhs(self.getDouble(), () -> BigDecimal.valueOf(self.getDouble()).compareTo(decimal.getBigDecimal()));
+        comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubles(self.getDouble(), doublePrecision.getDouble(), () -> Double.compare(self.getDouble(), doublePrecision.getDouble()));
+        comps[DECIMAL] = (self, decimal, comp) -> compareDoubleLhs(self.getDouble(), () -> BigDecimal.valueOf(self.getDouble()).compareTo(decimal.getBigDecimal()));
         return comps;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillDecimalComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TINYINT.ordinal()] = (self, tinyInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(tinyInt.getByte()));
-        comps[PType.Kind.SMALLINT.ordinal()] = (self, smallInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(smallInt.getShort()));
-        comps[PType.Kind.INTEGER.ordinal()] = (self, intNum, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(intNum.getInt()));
-        comps[PType.Kind.BIGINT.ordinal()] = (self, bigInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(bigInt.getLong()));
-        comps[PType.Kind.NUMERIC.ordinal()] = (self, intArbitrary, comp) -> self.getBigDecimal().compareTo(new BigDecimal(intArbitrary.getBigInteger()));
-        comps[PType.Kind.REAL.ordinal()] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> self.getBigDecimal().compareTo(BigDecimal.valueOf(real.getFloat())));
-        comps[PType.Kind.DOUBLE.ordinal()] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> self.getBigDecimal().compareTo(BigDecimal.valueOf(doublePrecision.getDouble())));
-        comps[PType.Kind.DECIMAL.ordinal()] = (self, decimal, comp) -> self.getBigDecimal().compareTo(decimal.getBigDecimal());
+        comps[TINYINT] = (self, tinyInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(tinyInt.getByte()));
+        comps[SMALLINT] = (self, smallInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(smallInt.getShort()));
+        comps[INTEGER] = (self, intNum, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(intNum.getInt()));
+        comps[BIGINT] = (self, bigInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(bigInt.getLong()));
+        comps[NUMERIC] = (self, intArbitrary, comp) -> self.getBigDecimal().compareTo(new BigDecimal(intArbitrary.getBigInteger()));
+        comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> self.getBigDecimal().compareTo(BigDecimal.valueOf(real.getFloat())));
+        comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> self.getBigDecimal().compareTo(BigDecimal.valueOf(doublePrecision.getDouble())));
+        comps[DECIMAL] = (self, decimal, comp) -> self.getBigDecimal().compareTo(decimal.getBigDecimal());
         return comps;
     }
 
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillDateComparator(DatumComparison[] comps) {
-        comps[PType.Kind.DATE.ordinal()] = (self, date, comp) -> self.getDate().compareTo(date.getDate());
+        comps[DATE] = (self, date, comp) -> self.getDate().compareTo(date.getDate());
         return comps;
     }
 
     /**
-     * Used for both {@link PType.Kind#TIME} and {@link PType.Kind#TIMEZ}
+     * Used for both {@link PType#TIME} and {@link PType#TIMEZ}
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
+     * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimeComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TIME.ordinal()] = (self, time, comp) -> self.getTime().compareTo(time.getTime());
-        comps[PType.Kind.TIMEZ.ordinal()] = (self, time, comp) -> self.getTime().compareTo(time.getTime());
+        comps[TIME] = (self, time, comp) -> self.getTime().compareTo(time.getTime());
+        comps[TIMEZ] = (self, time, comp) -> self.getTime().compareTo(time.getTime());
         return comps;
     }
 
     /**
-     * Used for both {@link PType.Kind#TIMESTAMP} and {@link PType.Kind#TIMESTAMPZ}
+     * Used for both {@link PType#TIMESTAMP} and {@link PType#TIMESTAMPZ}
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
+     * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimestampComparator(DatumComparison[] comps) {
-        comps[PType.Kind.TIMESTAMPZ.ordinal()] = (self, timestamp, comp) -> self.getTimestamp().compareTo(timestamp.getTimestamp());
-        comps[PType.Kind.TIMESTAMP.ordinal()] = (self, timestamp, comp) -> self.getTimestamp().compareTo(timestamp.getTimestamp());
+        comps[TIMESTAMPZ] = (self, timestamp, comp) -> self.getTimestamp().compareTo(timestamp.getTimestamp());
+        comps[TIMESTAMP] = (self, timestamp, comp) -> self.getTimestamp().compareTo(timestamp.getTimestamp());
         return comps;
     }
 
     /**
-     * Used for {@link PType.Kind#STRING}, {@link PType.Kind#CHAR}, {@link PType.Kind#VARCHAR}.
+     * Used for {@link PType#STRING}, {@link PType#CHAR}, {@link PType#VARCHAR}.
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
+     * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillStringComparator(DatumComparison[] comps) {
-        comps[PType.Kind.STRING.ordinal()] = (self, string, comp) -> self.getString().compareTo(string.getString());
-        comps[PType.Kind.CHAR.ordinal()] = (self, string, comp) -> self.getString().compareTo(string.getString());
-        comps[PType.Kind.VARCHAR.ordinal()] = (self, string, comp) -> self.getString().compareTo(string.getString());
+        comps[STRING] = (self, string, comp) -> self.getString().compareTo(string.getString());
+        comps[CHAR] = (self, string, comp) -> self.getString().compareTo(string.getString());
+        comps[PType.VARCHAR] = (self, string, comp) -> self.getString().compareTo(string.getString());
         return comps;
     }
 
     /**
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
+     * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillListComparator(DatumComparison[] comps) {
-        comps[PType.Kind.ARRAY.ordinal()] = (self, list, comp) -> compareOrdered(self.iterator(), list.iterator(), comp);
+        comps[ARRAY] = (self, list, comp) -> compareOrdered(self.iterator(), list.iterator(), comp);
         return comps;
     }
 
     /**
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
+     * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillBagComparator(DatumComparison[] comps) {
-        comps[PType.Kind.BAG.ordinal()] = DatumComparator::compareUnordered;
+        comps[BAG] = DatumComparator::compareUnordered;
         return comps;
     }
 
     /**
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
+     * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillBooleanComparator(DatumComparison[] comps) {
-        comps[PType.Kind.BOOL.ordinal()] = (self, bool, comp) -> Boolean.compare(self.getBoolean(), bool.getBoolean());
+        comps[BOOL] = (self, bool, comp) -> Boolean.compare(self.getBoolean(), bool.getBoolean());
         return comps;
     }
 
@@ -575,28 +605,28 @@ abstract class DatumComparator implements Comparator<Datum> {
     }
 
     /**
-     * Used for both {@link PType.Kind#BLOB} and {@link PType.Kind#CLOB}.
+     * Used for both {@link PType#BLOB} and {@link PType#CLOB}.
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
+     * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
     private static DatumComparison[] fillLobComparator(DatumComparison[] comps) {
-        comps[PType.Kind.BLOB.ordinal()] = (self, blob, comp) -> compareArray(self.getBytes(), blob.getBytes());
-        comps[PType.Kind.CLOB.ordinal()] = (self, blob, comp) -> compareArray(self.getBytes(), blob.getBytes());
+        comps[BLOB] = (self, blob, comp) -> compareArray(self.getBytes(), blob.getBytes());
+        comps[CLOB] = (self, blob, comp) -> compareArray(self.getBytes(), blob.getBytes());
         return comps;
     }
 
     /**
-     * Used for both {@link PType.Kind#STRUCT} and {@link PType.Kind#ROW}.
+     * Used for both {@link PType#STRUCT} and {@link PType#ROW}.
      * @param comps the array of {@link DatumComparison} to modify. Each {@link DatumComparison} is indexed by the other
-     * {@link Datum}'s {@link PType.Kind#ordinal()}.
+     * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillStructComparator(DatumComparison[] comps) {
-        comps[PType.Kind.STRUCT.ordinal()] = (self, struct, comp) -> compareUnordered(new DatumFieldIterable(self), new DatumFieldIterable(struct), new FieldComparator(comp));
-        comps[PType.Kind.ROW.ordinal()] = (self, row, comp) -> compareOrdered(self.getFields(), row.getFields(), new FieldComparator(comp));
+        comps[STRUCT] = (self, struct, comp) -> compareUnordered(new DatumFieldIterable(self), new DatumFieldIterable(struct), new FieldComparator(comp));
+        comps[PType.ROW] = (self, row, comp) -> compareOrdered(self.getFields(), row.getFields(), new FieldComparator(comp));
         return comps;
     }
 
@@ -671,16 +701,16 @@ abstract class DatumComparator implements Comparator<Datum> {
     /**
      * @param lhs the original left-hand-side argument's type of {@link Comparator#compare(Object, Object)}.
      * @return an array that indicates the type precedence output of {@code lhs.compare(rhs)}. This uses the
-     * {@link PType.Kind#ordinal()} to make O(1) judgements. This array will be further modified by type-specific
+     * {@link PType#code() to make O(1) judgements. This array will be further modified by type-specific
      * methods.
      * @see #fillTinyIntComparator(DatumComparison[])
      * @see #fillSmallIntComparator(DatumComparison[])
      */
     @NotNull
-    private static DatumComparison[] initializeComparatorArray(@NotNull PType.Kind lhs) {
+    private static DatumComparison[] initializeComparatorArray(int lhs) {
         DatumComparison[] array = new DatumComparison[TYPE_KINDS_LENGTH];
         for (int i = 0; i < TYPE_KINDS_LENGTH; i++) {
-            PType.Kind rhs = TYPE_KINDS[i];
+            int rhs = TYPE_KINDS[i];
             int lhsPrecedence = TYPE_PRECEDENCE.getOrDefault(lhs, -1);
             int rhsPrecedence = TYPE_PRECEDENCE.getOrDefault(rhs, -1);
             if (lhsPrecedence < 0) {

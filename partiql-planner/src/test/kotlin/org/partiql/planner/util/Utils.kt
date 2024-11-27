@@ -72,10 +72,10 @@ val allBooleanPType = setOf(
     PType.bool()
 )
 
-val allIntPType = setOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint(), PType.numeric())
+val allIntPType = setOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint(), PType.numeric(38, 0))
 
 val allNumberPType = allIntPType + setOf(
-    PType.decimal(),
+    PType.decimal(38, 19),
     PType.real(),
     PType.doublePrecision(),
 )
@@ -280,37 +280,37 @@ val castTablePType: ((PType, PType) -> CastType) = { from, to ->
 //            Ref.Cast.Safety.EXPLICIT -> CastType.EXPLICIT
 //        }
 //    }
-    val fromKind = from.kind
+    val fromKind = from.code()
     when (fromKind) {
-        PType.Kind.DYNAMIC -> CastType.UNSAFE
-        PType.Kind.BLOB -> when (to.kind) {
-            PType.Kind.BLOB -> CastType.COERCION
+        PType.DYNAMIC -> CastType.UNSAFE
+        PType.BLOB -> when (to.code()) {
+            PType.BLOB -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.BOOL -> when (to.kind) {
-            PType.Kind.BOOL, PType.Kind.DECIMAL, PType.Kind.REAL, PType.Kind.DOUBLE, PType.Kind.INTEGER, PType.Kind.TINYINT, PType.Kind.SMALLINT, PType.Kind.BIGINT, PType.Kind.NUMERIC -> CastType.COERCION
-            PType.Kind.STRING -> CastType.COERCION
+        PType.BOOL -> when (to.code()) {
+            PType.BOOL, PType.DECIMAL, PType.REAL, PType.DOUBLE, PType.INTEGER, PType.TINYINT, PType.SMALLINT, PType.BIGINT, PType.NUMERIC -> CastType.COERCION
+            PType.STRING -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.CLOB -> when (to.kind) {
-            PType.Kind.CLOB -> CastType.COERCION
+        PType.CLOB -> when (to.code()) {
+            PType.CLOB -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.BAG -> when (to.kind) {
-            PType.Kind.BAG -> CastType.COERCION
+        PType.BAG -> when (to.code()) {
+            PType.BAG -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.ARRAY -> when (to.kind) {
-            PType.Kind.BAG -> CastType.COERCION
+        PType.ARRAY -> when (to.code()) {
+            PType.BAG -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.DATE -> when (to.kind) {
-            PType.Kind.DATE -> CastType.COERCION
+        PType.DATE -> when (to.code()) {
+            PType.DATE -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.DECIMAL -> {
-            when (val toKind = to.kind) {
-                PType.Kind.DECIMAL -> {
+        PType.DECIMAL -> {
+            when (val toKind = to.code()) {
+                PType.DECIMAL -> {
                     val toPrecision = to.precision
                     val toScale = to.scale
                     val fromPrecision = from.precision
@@ -319,70 +319,73 @@ val castTablePType: ((PType, PType) -> CastType) = { from, to ->
                         CastType.COERCION
                     } else CastType.EXPLICIT
                 }
-                PType.Kind.REAL -> CastType.COERCION
-                PType.Kind.DOUBLE -> CastType.COERCION
-                PType.Kind.INTEGER -> CastType.EXPLICIT
+                PType.REAL -> CastType.COERCION
+                PType.DOUBLE -> CastType.COERCION
+                PType.INTEGER -> CastType.EXPLICIT
                 else -> CastType.UNSAFE
             }
         }
-        PType.Kind.REAL -> when (to.kind) {
-            PType.Kind.REAL -> CastType.COERCION
-            PType.Kind.DOUBLE -> CastType.COERCION
+        PType.REAL -> when (to.code()) {
+            PType.REAL -> CastType.COERCION
+            PType.DOUBLE -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.TINYINT -> when (to.kind) {
-            PType.Kind.TINYINT, PType.Kind.SMALLINT, PType.Kind.INTEGER, PType.Kind.BIGINT, PType.Kind.NUMERIC, PType.Kind.DECIMAL, PType.Kind.REAL, PType.Kind.DOUBLE -> CastType.COERCION
+        PType.TINYINT -> when (to.code()) {
+            PType.TINYINT, PType.SMALLINT, PType.INTEGER, PType.BIGINT, PType.NUMERIC, PType.DECIMAL, PType.REAL, PType.DOUBLE -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.SMALLINT -> when (to.kind) {
-            PType.Kind.SMALLINT, PType.Kind.INTEGER, PType.Kind.BIGINT, PType.Kind.NUMERIC, PType.Kind.DECIMAL, PType.Kind.REAL, PType.Kind.DOUBLE -> CastType.COERCION
+        PType.SMALLINT -> when (to.code()) {
+            PType.SMALLINT, PType.INTEGER, PType.BIGINT, PType.NUMERIC, PType.DECIMAL, PType.REAL, PType.DOUBLE -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.INTEGER -> when (to.kind) {
-            PType.Kind.INTEGER, PType.Kind.BIGINT, PType.Kind.NUMERIC, PType.Kind.DECIMAL, PType.Kind.REAL, PType.Kind.DOUBLE -> CastType.COERCION
+        PType.INTEGER -> when (to.code()) {
+            PType.INTEGER, PType.BIGINT, PType.NUMERIC, PType.DECIMAL, PType.REAL, PType.DOUBLE -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.BIGINT -> when (to.kind) {
-            PType.Kind.BIGINT, PType.Kind.NUMERIC, PType.Kind.DECIMAL, PType.Kind.REAL, PType.Kind.DOUBLE -> CastType.COERCION
+        PType.BIGINT -> when (to.code()) {
+            PType.BIGINT, PType.NUMERIC, PType.DECIMAL, PType.REAL, PType.DOUBLE -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.STRING -> when (to.kind) {
-            PType.Kind.STRING, PType.Kind.CLOB -> CastType.COERCION
+        PType.STRING -> when (to.code()) {
+            PType.STRING, PType.CLOB -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.STRUCT -> when (to.kind) {
-            PType.Kind.STRUCT -> CastType.COERCION
+        PType.STRUCT -> when (to.code()) {
+            PType.STRUCT -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.TIME, PType.Kind.TIMEZ -> when (to.kind) {
-            PType.Kind.TIME, PType.Kind.TIMEZ -> CastType.COERCION
+        PType.TIME, PType.TIMEZ -> when (to.code()) {
+            PType.TIME, PType.TIMEZ -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.TIMESTAMP, PType.Kind.TIMESTAMPZ -> when (to.kind) {
-            PType.Kind.TIMESTAMP, PType.Kind.TIMESTAMPZ -> CastType.COERCION
+        PType.TIMESTAMP, PType.TIMESTAMPZ -> when (to.code()) {
+            PType.TIMESTAMP, PType.TIMESTAMPZ -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.NUMERIC -> when (to.kind) {
-            PType.Kind.NUMERIC, PType.Kind.DECIMAL, PType.Kind.REAL, PType.Kind.DOUBLE -> CastType.COERCION
+        PType.NUMERIC -> when (to.code()) {
+            PType.NUMERIC, PType.DECIMAL, PType.REAL, PType.DOUBLE -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.DOUBLE -> when (to.kind) {
-            PType.Kind.DOUBLE -> CastType.COERCION
+        PType.DOUBLE -> when (to.code()) {
+            PType.DOUBLE -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.CHAR -> when (to.kind) {
-            PType.Kind.CHAR, PType.Kind.VARCHAR, PType.Kind.STRING, PType.Kind.CLOB -> CastType.COERCION
+        PType.CHAR -> when (to.code()) {
+            PType.CHAR, PType.VARCHAR, PType.STRING, PType.CLOB -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.VARCHAR -> when (to.kind) {
-            PType.Kind.VARCHAR, PType.Kind.STRING, PType.Kind.CLOB -> CastType.COERCION
+        PType.VARCHAR -> when (to.code()) {
+            PType.VARCHAR, PType.STRING, PType.CLOB -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.ROW -> when (to.kind) {
-            PType.Kind.ROW, PType.Kind.STRUCT -> CastType.COERCION
+        PType.ROW -> when (to.code()) {
+            PType.ROW, PType.STRUCT -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        PType.Kind.UNKNOWN -> CastType.UNSAFE
-        PType.Kind.VARIANT -> TODO()
+        PType.UNKNOWN -> CastType.UNSAFE
+        PType.VARIANT -> TODO()
+        else -> {
+            error("Unknown type: $fromKind")
+        }
     }
 }

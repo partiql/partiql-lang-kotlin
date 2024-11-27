@@ -70,7 +70,7 @@ public enum class PartiQLValueType {
     )
     public fun toPType(): PType {
         return when (this) {
-            DECIMAL -> PType.decimal()
+            DECIMAL -> PType.decimal(38, 0)
             DECIMAL_ARBITRARY -> error("DECIMAL_ARB has been removed.")
             INT8 -> PType.tinyint()
             CHAR -> PType.character(255)
@@ -84,7 +84,7 @@ public enum class PartiQLValueType {
             LIST -> PType.array()
             BAG -> PType.bag()
             FLOAT32 -> PType.real()
-            INT -> PType.numeric()
+            INT -> PType.numeric(38, 0)
             INT64 -> PType.bigint()
             INT32 -> PType.integer()
             INT16 -> PType.smallint()

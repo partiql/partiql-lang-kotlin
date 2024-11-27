@@ -16,16 +16,16 @@ internal val Fn_IS_INT32__ANY__BOOL = Function.static(
 
 ) { args ->
     val arg = args[0]
-    when (arg.type.kind) {
-        PType.Kind.TINYINT,
-        PType.Kind.SMALLINT,
-        PType.Kind.INTEGER,
+    when (arg.type.code()) {
+        PType.TINYINT,
+        PType.SMALLINT,
+        PType.INTEGER,
         -> Datum.bool(true)
-        PType.Kind.BIGINT -> {
+        PType.BIGINT -> {
             val v = arg
             Datum.bool(Integer.MIN_VALUE <= v.long && v.long <= Integer.MAX_VALUE)
         }
-        PType.Kind.NUMERIC -> {
+        PType.NUMERIC -> {
             val v = arg.bigInteger
             try {
                 v.intValueExact()

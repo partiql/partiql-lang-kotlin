@@ -3,7 +3,6 @@ package org.partiql.planner.internal
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 /**
  * Function precedence comparator; this is not formally specified.
@@ -36,8 +35,8 @@ internal object FnComparator : Comparator<Function> {
 
     private fun comparePrecedence(t1: PType, t2: PType): Int {
         if (t1 == t2) return 0
-        val p1 = precedence[t1.kind]!!
-        val p2 = precedence[t2.kind]!!
+        val p1 = precedence[t1.code()]!!
+        val p2 = precedence[t2.code()]!!
         return p1 - p2
     }
 
@@ -45,32 +44,32 @@ internal object FnComparator : Comparator<Function> {
      * This simply describes some precedence for ordering functions.
      * This is not explicitly defined in the PartiQL Specification!!
      * This does not imply the ability to CAST; this defines function resolution behavior.
-     * This excludes [Kind.ROW] and [Kind.UNKNOWN].
+     * This excludes [PType.ROW] and [PType.UNKNOWN].
      */
-    private val precedence: Map<Kind, Int> = listOf(
-        Kind.BOOL,
-        Kind.TINYINT,
-        Kind.SMALLINT,
-        Kind.INTEGER,
-        Kind.BIGINT,
-        Kind.NUMERIC,
-        Kind.DECIMAL,
-        Kind.REAL,
-        Kind.DOUBLE,
-        Kind.CHAR,
-        Kind.VARCHAR,
-        Kind.STRING,
-        Kind.CLOB,
-        Kind.BLOB,
-        Kind.DATE,
-        Kind.TIME,
-        Kind.TIMEZ,
-        Kind.TIMESTAMP,
-        Kind.TIMESTAMPZ,
-        Kind.ARRAY,
-        Kind.BAG,
-        Kind.ROW,
-        Kind.STRUCT,
-        Kind.DYNAMIC,
+    private val precedence: Map<Int, Int> = listOf(
+        PType.BOOL,
+        PType.TINYINT,
+        PType.SMALLINT,
+        PType.INTEGER,
+        PType.BIGINT,
+        PType.NUMERIC,
+        PType.DECIMAL,
+        PType.REAL,
+        PType.DOUBLE,
+        PType.CHAR,
+        PType.VARCHAR,
+        PType.STRING,
+        PType.CLOB,
+        PType.BLOB,
+        PType.DATE,
+        PType.TIME,
+        PType.TIMEZ,
+        PType.TIMESTAMP,
+        PType.TIMESTAMPZ,
+        PType.ARRAY,
+        PType.BAG,
+        PType.ROW,
+        PType.STRUCT,
+        PType.DYNAMIC,
     ).mapIndexed { precedence, type -> type to precedence }.toMap()
 }

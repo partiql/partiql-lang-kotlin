@@ -1,10 +1,45 @@
+public abstract class org/partiql/types/Enum {
+	protected fun <init> (I)V
+	public final fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public abstract fun name ()Ljava/lang/String;
+}
+
 public abstract interface class org/partiql/types/Field {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getType ()Lorg/partiql/types/PType;
 	public static fun of (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/types/Field;
 }
 
-public abstract interface class org/partiql/types/PType {
+public abstract class org/partiql/types/PType : org/partiql/types/Enum {
+	public static final field ARRAY I
+	public static final field BAG I
+	public static final field BIGINT I
+	public static final field BLOB I
+	public static final field BOOL I
+	public static final field CHAR I
+	public static final field CLOB I
+	public static final field DATE I
+	public static final field DECIMAL I
+	public static final field DOUBLE I
+	public static final field DYNAMIC I
+	public static final field INTEGER I
+	public static final field NUMERIC I
+	public static final field REAL I
+	public static final field ROW I
+	public static final field SMALLINT I
+	public static final field STRING I
+	public static final field STRUCT I
+	public static final field TIME I
+	public static final field TIMESTAMP I
+	public static final field TIMESTAMPZ I
+	public static final field TIMEZ I
+	public static final field TINYINT I
+	public static final field UNKNOWN I
+	public static final field VARCHAR I
+	public static final field VARIANT I
+	protected fun <init> (I)V
 	public static fun array ()Lorg/partiql/types/PType;
 	public static fun array (Lorg/partiql/types/PType;)Lorg/partiql/types/PType;
 	public static fun bag ()Lorg/partiql/types/PType;
@@ -14,20 +49,19 @@ public abstract interface class org/partiql/types/PType {
 	public static fun bool ()Lorg/partiql/types/PType;
 	public static fun character (I)Lorg/partiql/types/PType;
 	public static fun clob (I)Lorg/partiql/types/PType;
+	public static fun codes ()[I
 	public static fun date ()Lorg/partiql/types/PType;
-	public static fun decimal ()Lorg/partiql/types/PType;
-	public static fun decimal (I)Lorg/partiql/types/PType;
 	public static fun decimal (II)Lorg/partiql/types/PType;
 	public static fun doublePrecision ()Lorg/partiql/types/PType;
 	public static fun dynamic ()Lorg/partiql/types/PType;
 	public fun getFields ()Ljava/util/Collection;
-	public abstract fun getKind ()Lorg/partiql/types/PType$Kind;
 	public fun getLength ()I
 	public fun getPrecision ()I
 	public fun getScale ()I
 	public fun getTypeParameter ()Lorg/partiql/types/PType;
 	public static fun integer ()Lorg/partiql/types/PType;
-	public static fun numeric ()Lorg/partiql/types/PType;
+	public fun name ()Ljava/lang/String;
+	public static fun numeric (II)Lorg/partiql/types/PType;
 	public static fun real ()Lorg/partiql/types/PType;
 	public static fun row (Ljava/util/Collection;)Lorg/partiql/types/PType;
 	public static fun row ([Lorg/partiql/types/Field;)Lorg/partiql/types/PType;
@@ -42,36 +76,5 @@ public abstract interface class org/partiql/types/PType {
 	public static fun unknown ()Lorg/partiql/types/PType;
 	public static fun varchar (I)Lorg/partiql/types/PType;
 	public static fun variant (Ljava/lang/String;)Lorg/partiql/types/PType;
-}
-
-public final class org/partiql/types/PType$Kind : java/lang/Enum {
-	public static final field ARRAY Lorg/partiql/types/PType$Kind;
-	public static final field BAG Lorg/partiql/types/PType$Kind;
-	public static final field BIGINT Lorg/partiql/types/PType$Kind;
-	public static final field BLOB Lorg/partiql/types/PType$Kind;
-	public static final field BOOL Lorg/partiql/types/PType$Kind;
-	public static final field CHAR Lorg/partiql/types/PType$Kind;
-	public static final field CLOB Lorg/partiql/types/PType$Kind;
-	public static final field DATE Lorg/partiql/types/PType$Kind;
-	public static final field DECIMAL Lorg/partiql/types/PType$Kind;
-	public static final field DOUBLE Lorg/partiql/types/PType$Kind;
-	public static final field DYNAMIC Lorg/partiql/types/PType$Kind;
-	public static final field INTEGER Lorg/partiql/types/PType$Kind;
-	public static final field NUMERIC Lorg/partiql/types/PType$Kind;
-	public static final field REAL Lorg/partiql/types/PType$Kind;
-	public static final field ROW Lorg/partiql/types/PType$Kind;
-	public static final field SMALLINT Lorg/partiql/types/PType$Kind;
-	public static final field STRING Lorg/partiql/types/PType$Kind;
-	public static final field STRUCT Lorg/partiql/types/PType$Kind;
-	public static final field TIME Lorg/partiql/types/PType$Kind;
-	public static final field TIMESTAMP Lorg/partiql/types/PType$Kind;
-	public static final field TIMESTAMPZ Lorg/partiql/types/PType$Kind;
-	public static final field TIMEZ Lorg/partiql/types/PType$Kind;
-	public static final field TINYINT Lorg/partiql/types/PType$Kind;
-	public static final field UNKNOWN Lorg/partiql/types/PType$Kind;
-	public static final field VARCHAR Lorg/partiql/types/PType$Kind;
-	public static final field VARIANT Lorg/partiql/types/PType$Kind;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/types/PType$Kind;
-	public static fun values ()[Lorg/partiql/types/PType$Kind;
 }
 

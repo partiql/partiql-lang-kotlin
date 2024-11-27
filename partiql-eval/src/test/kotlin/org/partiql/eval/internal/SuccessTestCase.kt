@@ -69,7 +69,7 @@ public class SuccessTestCase(
             .catalogs(catalog)
             .build()
         val plan = planner.plan(statement, session).plan
-        val result = compiler.prepare(plan, mode).execute()
+        val result = DatumMaterialize.materialize(compiler.prepare(plan, mode).execute())
         val comparison = when (jvmEquality) {
             true -> expected == result
             false -> Datum.comparator().compare(expected, result) == 0

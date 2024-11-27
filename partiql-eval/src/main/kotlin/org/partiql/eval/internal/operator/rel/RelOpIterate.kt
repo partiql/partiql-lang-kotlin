@@ -18,12 +18,12 @@ internal class RelOpIterate(
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Row()))
         index = 0
-        iterator = when (r.type.kind) {
-            PType.Kind.BAG -> {
+        iterator = when (r.type.code()) {
+            PType.BAG -> {
                 close()
                 throw TypeCheckException()
             }
-            PType.Kind.ARRAY -> r.iterator()
+            PType.ARRAY -> r.iterator()
             else -> {
                 close()
                 throw TypeCheckException()

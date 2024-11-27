@@ -7,12 +7,11 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 internal val Fn_IS_BAG__ANY__BOOL = Function.static(
     name = "is_bag",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 ) { args ->
-    Datum.bool(args[0].type.kind == Kind.BAG)
+    Datum.bool(args[0].type.code() == PType.BAG)
 }

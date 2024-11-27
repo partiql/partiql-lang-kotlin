@@ -123,8 +123,8 @@ public interface Function : Routine {
         override fun getInstance(args: Array<PType>): Instance = instance
         override fun toString(): String {
             // TODO debug strings for SqlTypeFamily
-            // val parameters = parameters.joinToString("__") { it.getType().kind.name }
-            val returnType = returns.kind.name
+            // val parameters = parameters.joinToString("__") { it.getType().PType.name }
+            val returnType = returns.name()
             return "FN_${name}___${parameters}___$returnType"
         }
     }

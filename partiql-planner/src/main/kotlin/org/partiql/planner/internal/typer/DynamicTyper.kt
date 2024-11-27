@@ -4,7 +4,6 @@ import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.typer.PlanTyper.Companion.anyOf
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -33,7 +32,7 @@ import org.partiql.value.timestampValue
 /**
  * Graph of super types for quick lookup because we don't have a tree.
  */
-internal typealias SuperGraph = Array<Array<Kind?>>
+internal typealias SuperGraph = Array<Array<Int?>>
 
 /**
  * For lack of a better name, this is the "dynamic typer" which implements the typing rules of SQL-99 9.3.
@@ -108,24 +107,24 @@ internal class DynamicTyper {
     @OptIn(PartiQLValueExperimental::class)
     fun mapping(): Pair<CompilerType, List<Mapping?>?> {
         var s = supertype ?: return CompilerType(PType.dynamic()) to null
-        val superTypeBase = s.kind
+        val superTypeBase = s.code()
         // If at top supertype, then return union of all accumulated types
-        if (superTypeBase == Kind.DYNAMIC) {
+        if (superTypeBase == PType.DYNAMIC) {
             return anyOf(types)!!.toCType() to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
-        if (superTypeBase in setOf(Kind.ROW, Kind.STRUCT, Kind.BAG, Kind.ARRAY)) {
+        if (superTypeBase in setOf(PType.ROW, PType.STRUCT, PType.BAG, PType.ARRAY)) {
             return anyOf(types)!!.toCType() to null
         }
         // Decimal
-        if (superTypeBase == Kind.DECIMAL) {
+        if (superTypeBase == PType.DECIMAL) {
             val type = computeDecimal()
             if (type != null) {
                 s = type
             }
         }
         // Text
-        if (superTypeBase in setOf(Kind.CHAR, Kind.VARCHAR, Kind.STRING)) {
+        if (superTypeBase in setOf(PType.CHAR, PType.VARCHAR, PType.STRING)) {
             val type = computeText()
             if (type != null) {
                 s = type
@@ -135,7 +134,7 @@ internal class DynamicTyper {
         // Otherwise, return the supertype along with the coercion mapping
         val mapping = args.map {
             when {
-                it.isLiteralNull() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(nullValue(s.kind))))
+                it.isLiteralNull() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(nullValue(s.code()))))
                 it.isLiteralMissing() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(missingValue())))
                 it.type == s -> Mapping.Coercion(s)
                 else -> null
@@ -147,7 +146,7 @@ internal class DynamicTyper {
     // TODO: Fix the computation of the supertype: https://github.com/partiql/partiql-lang-kotlin/issues/1566
     private fun computeDecimal(): CompilerType? {
         val (precision, scale) = types.fold((0 to 0)) { acc, type ->
-            if (type.kind != Kind.DECIMAL) {
+            if (type.code() != PType.DECIMAL) {
                 return null
             }
             val precision = Math.max(type.precision, acc.first)
@@ -161,19 +160,19 @@ internal class DynamicTyper {
         var containsString = false
         var containsVarChar = false
         val length = types.fold(0) { acc, type ->
-            if (type.kind !in setOf(Kind.VARCHAR, Kind.CHAR, Kind.STRING)) {
+            if (type.code() !in setOf(PType.VARCHAR, PType.CHAR, PType.STRING)) {
                 return null
             }
-            when (type.kind) {
-                Kind.STRING -> {
+            when (type.code()) {
+                PType.STRING -> {
                     containsString = true
                     Int.MAX_VALUE
                 }
-                Kind.VARCHAR -> {
+                PType.VARCHAR -> {
                     containsVarChar = true
                     Math.max(acc, type.length)
                 }
-                Kind.CHAR -> {
+                PType.CHAR -> {
                     Math.max(acc, type.length)
                 }
                 else -> error("Received type: $type")
@@ -199,12 +198,12 @@ internal class DynamicTyper {
             return
         }
         // Don't bother calculating the new supertype, we've already hit `dynamic`.
-        if (s.kind == Kind.DYNAMIC) return
+        if (s.code() == PType.DYNAMIC) return
         // Lookup and set the new minimum common supertype
         supertype = when {
-            type.kind == Kind.DYNAMIC -> type
+            type.code() == PType.DYNAMIC -> type
             s == type -> return // skip
-            else -> graph[s.kind.ordinal][type.kind.ordinal]?.toPType() ?: CompilerType(PType.dynamic()) // lookup, if missing then go to top.
+            else -> graph[s.code()][type.code()]?.toPType() ?: CompilerType(PType.dynamic()) // lookup, if missing then go to top.
         }
     }
 
@@ -217,13 +216,13 @@ internal class DynamicTyper {
     companion object {
 
         @JvmStatic
-        private val N = Kind.values().size
+        private val N = PType.codes().size
 
         @JvmStatic
-        private fun edges(vararg edges: Pair<Kind, Kind>): Array<Kind?> {
-            val arr = arrayOfNulls<Kind?>(N)
+        private fun edges(vararg edges: Pair<Int, Int>): Array<Int?> {
+            val arr = arrayOfNulls<Int?>(N)
             for (type in edges) {
-                arr[type.first.ordinal] = type.second
+                arr[type.first] = type.second
             }
             return arr
         }
@@ -236,150 +235,150 @@ internal class DynamicTyper {
          */
         @JvmStatic
         internal val graph: SuperGraph = run {
-            val graph = arrayOfNulls<Array<Kind?>>(N)
-            for (type in Kind.values()) {
+            val graph = arrayOfNulls<Array<Int?>>(N)
+            for (type in PType.codes()) {
                 // initialize all with empty edges
-                graph[type.ordinal] = arrayOfNulls(N)
+                graph[type] = arrayOfNulls(N)
             }
-            graph[Kind.DYNAMIC.ordinal] = edges()
-            graph[Kind.BOOL.ordinal] = edges(
-                Kind.BOOL to Kind.BOOL
+            graph[PType.DYNAMIC] = edges()
+            graph[PType.BOOL] = edges(
+                PType.BOOL to PType.BOOL
             )
-            graph[Kind.TINYINT.ordinal] = edges(
-                Kind.TINYINT to Kind.TINYINT,
-                Kind.SMALLINT to Kind.SMALLINT,
-                Kind.INTEGER to Kind.INTEGER,
-                Kind.BIGINT to Kind.BIGINT,
-                Kind.NUMERIC to Kind.NUMERIC,
-                Kind.DECIMAL to Kind.DECIMAL,
-                Kind.REAL to Kind.REAL,
-                Kind.DOUBLE to Kind.DOUBLE,
+            graph[PType.TINYINT] = edges(
+                PType.TINYINT to PType.TINYINT,
+                PType.SMALLINT to PType.SMALLINT,
+                PType.INTEGER to PType.INTEGER,
+                PType.BIGINT to PType.BIGINT,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[Kind.SMALLINT.ordinal] = edges(
-                Kind.TINYINT to Kind.SMALLINT,
-                Kind.SMALLINT to Kind.SMALLINT,
-                Kind.INTEGER to Kind.INTEGER,
-                Kind.BIGINT to Kind.BIGINT,
-                Kind.NUMERIC to Kind.NUMERIC,
-                Kind.DECIMAL to Kind.DECIMAL,
-                Kind.REAL to Kind.REAL,
-                Kind.DOUBLE to Kind.DOUBLE,
+            graph[PType.SMALLINT] = edges(
+                PType.TINYINT to PType.SMALLINT,
+                PType.SMALLINT to PType.SMALLINT,
+                PType.INTEGER to PType.INTEGER,
+                PType.BIGINT to PType.BIGINT,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[Kind.INTEGER.ordinal] = edges(
-                Kind.TINYINT to Kind.INTEGER,
-                Kind.SMALLINT to Kind.INTEGER,
-                Kind.INTEGER to Kind.INTEGER,
-                Kind.BIGINT to Kind.BIGINT,
-                Kind.NUMERIC to Kind.NUMERIC,
-                Kind.DECIMAL to Kind.DECIMAL,
-                Kind.REAL to Kind.REAL,
-                Kind.DOUBLE to Kind.DOUBLE,
+            graph[PType.INTEGER] = edges(
+                PType.TINYINT to PType.INTEGER,
+                PType.SMALLINT to PType.INTEGER,
+                PType.INTEGER to PType.INTEGER,
+                PType.BIGINT to PType.BIGINT,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[Kind.BIGINT.ordinal] = edges(
-                Kind.TINYINT to Kind.BIGINT,
-                Kind.SMALLINT to Kind.BIGINT,
-                Kind.INTEGER to Kind.BIGINT,
-                Kind.BIGINT to Kind.BIGINT,
-                Kind.NUMERIC to Kind.NUMERIC,
-                Kind.DECIMAL to Kind.DECIMAL,
-                Kind.REAL to Kind.REAL,
-                Kind.DOUBLE to Kind.DOUBLE,
+            graph[PType.BIGINT] = edges(
+                PType.TINYINT to PType.BIGINT,
+                PType.SMALLINT to PType.BIGINT,
+                PType.INTEGER to PType.BIGINT,
+                PType.BIGINT to PType.BIGINT,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[Kind.NUMERIC.ordinal] = edges(
-                Kind.TINYINT to Kind.NUMERIC,
-                Kind.SMALLINT to Kind.NUMERIC,
-                Kind.INTEGER to Kind.NUMERIC,
-                Kind.BIGINT to Kind.NUMERIC,
-                Kind.NUMERIC to Kind.NUMERIC,
-                Kind.DECIMAL to Kind.DECIMAL,
-                Kind.REAL to Kind.REAL,
-                Kind.DOUBLE to Kind.DOUBLE,
+            graph[PType.NUMERIC] = edges(
+                PType.TINYINT to PType.NUMERIC,
+                PType.SMALLINT to PType.NUMERIC,
+                PType.INTEGER to PType.NUMERIC,
+                PType.BIGINT to PType.NUMERIC,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[Kind.DECIMAL.ordinal] = edges(
-                Kind.TINYINT to Kind.DECIMAL,
-                Kind.SMALLINT to Kind.DECIMAL,
-                Kind.INTEGER to Kind.DECIMAL,
-                Kind.BIGINT to Kind.DECIMAL,
-                Kind.NUMERIC to Kind.DECIMAL,
-                Kind.DECIMAL to Kind.DECIMAL,
-                Kind.REAL to Kind.REAL,
-                Kind.DOUBLE to Kind.DOUBLE,
+            graph[PType.DECIMAL] = edges(
+                PType.TINYINT to PType.DECIMAL,
+                PType.SMALLINT to PType.DECIMAL,
+                PType.INTEGER to PType.DECIMAL,
+                PType.BIGINT to PType.DECIMAL,
+                PType.NUMERIC to PType.DECIMAL,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[Kind.REAL.ordinal] = edges(
-                Kind.TINYINT to Kind.REAL,
-                Kind.SMALLINT to Kind.REAL,
-                Kind.INTEGER to Kind.REAL,
-                Kind.BIGINT to Kind.REAL,
-                Kind.NUMERIC to Kind.REAL,
-                Kind.DECIMAL to Kind.REAL,
-                Kind.REAL to Kind.REAL,
-                Kind.DOUBLE to Kind.DOUBLE,
+            graph[PType.REAL] = edges(
+                PType.TINYINT to PType.REAL,
+                PType.SMALLINT to PType.REAL,
+                PType.INTEGER to PType.REAL,
+                PType.BIGINT to PType.REAL,
+                PType.NUMERIC to PType.REAL,
+                PType.DECIMAL to PType.REAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[Kind.DOUBLE.ordinal] = edges(
-                Kind.TINYINT to Kind.DOUBLE,
-                Kind.SMALLINT to Kind.DOUBLE,
-                Kind.INTEGER to Kind.DOUBLE,
-                Kind.BIGINT to Kind.DOUBLE,
-                Kind.NUMERIC to Kind.DOUBLE,
-                Kind.DECIMAL to Kind.DOUBLE,
-                Kind.REAL to Kind.DOUBLE,
-                Kind.DOUBLE to Kind.DOUBLE,
+            graph[PType.DOUBLE] = edges(
+                PType.TINYINT to PType.DOUBLE,
+                PType.SMALLINT to PType.DOUBLE,
+                PType.INTEGER to PType.DOUBLE,
+                PType.BIGINT to PType.DOUBLE,
+                PType.NUMERIC to PType.DOUBLE,
+                PType.DECIMAL to PType.DOUBLE,
+                PType.REAL to PType.DOUBLE,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[Kind.CHAR.ordinal] = edges(
-                Kind.CHAR to Kind.CHAR,
-                Kind.STRING to Kind.STRING,
-                Kind.VARCHAR to Kind.STRING,
-                Kind.CLOB to Kind.CLOB,
+            graph[PType.CHAR] = edges(
+                PType.CHAR to PType.CHAR,
+                PType.STRING to PType.STRING,
+                PType.VARCHAR to PType.STRING,
+                PType.CLOB to PType.CLOB,
             )
-            graph[Kind.STRING.ordinal] = edges(
-                Kind.CHAR to Kind.STRING,
-                Kind.STRING to Kind.STRING,
-                Kind.VARCHAR to Kind.STRING,
-                Kind.CLOB to Kind.CLOB,
+            graph[PType.STRING] = edges(
+                PType.CHAR to PType.STRING,
+                PType.STRING to PType.STRING,
+                PType.VARCHAR to PType.STRING,
+                PType.CLOB to PType.CLOB,
             )
-            graph[Kind.VARCHAR.ordinal] = edges(
-                Kind.CHAR to Kind.VARCHAR,
-                Kind.STRING to Kind.STRING,
-                Kind.VARCHAR to Kind.VARCHAR,
-                Kind.CLOB to Kind.CLOB,
+            graph[PType.VARCHAR] = edges(
+                PType.CHAR to PType.VARCHAR,
+                PType.STRING to PType.STRING,
+                PType.VARCHAR to PType.VARCHAR,
+                PType.CLOB to PType.CLOB,
             )
-            graph[Kind.BLOB.ordinal] = edges(
-                Kind.BLOB to Kind.BLOB,
+            graph[PType.BLOB] = edges(
+                PType.BLOB to PType.BLOB,
             )
-            graph[Kind.DATE.ordinal] = edges(
-                Kind.DATE to Kind.DATE,
+            graph[PType.DATE] = edges(
+                PType.DATE to PType.DATE,
             )
-            graph[Kind.CLOB.ordinal] = edges(
-                Kind.CHAR to Kind.CLOB,
-                Kind.STRING to Kind.CLOB,
-                Kind.VARCHAR to Kind.CLOB,
-                Kind.CLOB to Kind.CLOB,
+            graph[PType.CLOB] = edges(
+                PType.CHAR to PType.CLOB,
+                PType.STRING to PType.CLOB,
+                PType.VARCHAR to PType.CLOB,
+                PType.CLOB to PType.CLOB,
             )
-            graph[Kind.TIME.ordinal] = edges(
-                Kind.TIME to Kind.TIME,
+            graph[PType.TIME] = edges(
+                PType.TIME to PType.TIME,
             )
-            graph[Kind.TIMEZ.ordinal] = edges(
-                Kind.TIMEZ to Kind.TIMEZ,
+            graph[PType.TIMEZ] = edges(
+                PType.TIMEZ to PType.TIMEZ,
             )
-            graph[Kind.TIMESTAMP.ordinal] = edges(
-                Kind.TIMESTAMP to Kind.TIMESTAMP,
+            graph[PType.TIMESTAMP] = edges(
+                PType.TIMESTAMP to PType.TIMESTAMP,
             )
-            graph[Kind.TIMESTAMPZ.ordinal] = edges(
-                Kind.TIMESTAMPZ to Kind.TIMESTAMPZ,
+            graph[PType.TIMESTAMPZ] = edges(
+                PType.TIMESTAMPZ to PType.TIMESTAMPZ,
             )
-            graph[Kind.ARRAY.ordinal] = edges(
-                Kind.ARRAY to Kind.ARRAY,
-                Kind.BAG to Kind.BAG,
+            graph[PType.ARRAY] = edges(
+                PType.ARRAY to PType.ARRAY,
+                PType.BAG to PType.BAG,
             )
-            graph[Kind.BAG.ordinal] = edges(
-                Kind.ARRAY to Kind.BAG,
-                Kind.BAG to Kind.BAG,
+            graph[PType.BAG] = edges(
+                PType.ARRAY to PType.BAG,
+                PType.BAG to PType.BAG,
             )
-            graph[Kind.STRUCT.ordinal] = edges(
-                Kind.STRUCT to Kind.STRUCT,
+            graph[PType.STRUCT] = edges(
+                PType.STRUCT to PType.STRUCT,
             )
-            graph[Kind.ROW.ordinal] = edges(
-                Kind.ROW to Kind.ROW,
+            graph[PType.ROW] = edges(
+                PType.ROW to PType.ROW,
             )
             graph.requireNoNulls()
         }
@@ -388,64 +387,68 @@ internal class DynamicTyper {
          * TODO: We need to update the logic of this whole file. We are currently limited by not using parameters
          *  of types.
          */
-        private fun Kind.toPType(): CompilerType = when (this) {
-            Kind.BOOL -> PType.bool()
-            Kind.DYNAMIC -> PType.dynamic()
-            Kind.TINYINT -> PType.tinyint()
-            Kind.SMALLINT -> PType.smallint()
-            Kind.INTEGER -> PType.integer()
-            Kind.BIGINT -> PType.bigint()
-            Kind.NUMERIC -> PType.numeric()
-            Kind.DECIMAL -> PType.decimal() // TODO: To be updated.
-            Kind.REAL -> PType.real()
-            Kind.DOUBLE -> PType.doublePrecision()
-            Kind.CHAR -> PType.character(255) // TODO: To be updated
-            Kind.VARCHAR -> PType.varchar(255) // TODO: To be updated
-            Kind.STRING -> PType.string()
-            Kind.BLOB -> PType.blob(Int.MAX_VALUE) // TODO: To be updated
-            Kind.CLOB -> PType.clob(Int.MAX_VALUE) // TODO: To be updated
-            Kind.DATE -> PType.date()
-            Kind.TIMEZ -> PType.timez(6) // TODO: To be updated
-            Kind.TIME -> PType.time(6) // TODO: To be updated
-            Kind.TIMESTAMPZ -> PType.timestampz(6) // TODO: To be updated
-            Kind.TIMESTAMP -> PType.timestamp(6) // TODO: To be updated
-            Kind.BAG -> PType.bag() // TODO: To be updated
-            Kind.ARRAY -> PType.array() // TODO: To be updated
-            Kind.ROW -> PType.row(emptyList()) // TODO: To be updated
-            Kind.STRUCT -> PType.struct() // TODO: To be updated
-            Kind.UNKNOWN -> PType.unknown() // TODO: To be updated
-            Kind.VARIANT -> TODO("variant in dynamic typer")
+        private fun Int.toPType(): CompilerType = when (this) {
+            PType.BOOL -> PType.bool()
+            PType.DYNAMIC -> PType.dynamic()
+            PType.TINYINT -> PType.tinyint()
+            PType.SMALLINT -> PType.smallint()
+            PType.INTEGER -> PType.integer()
+            PType.BIGINT -> PType.bigint()
+            PType.NUMERIC -> PType.numeric(38, 0) // TODO: To be updated
+            PType.DECIMAL -> PType.decimal(38, 0) // TODO: To be updated.
+            PType.REAL -> PType.real()
+            PType.DOUBLE -> PType.doublePrecision()
+            PType.CHAR -> PType.character(255) // TODO: To be updated
+            PType.VARCHAR -> PType.varchar(255) // TODO: To be updated
+            PType.STRING -> PType.string()
+            PType.BLOB -> PType.blob(Int.MAX_VALUE) // TODO: To be updated
+            PType.CLOB -> PType.clob(Int.MAX_VALUE) // TODO: To be updated
+            PType.DATE -> PType.date()
+            PType.TIMEZ -> PType.timez(6) // TODO: To be updated
+            PType.TIME -> PType.time(6) // TODO: To be updated
+            PType.TIMESTAMPZ -> PType.timestampz(6) // TODO: To be updated
+            PType.TIMESTAMP -> PType.timestamp(6) // TODO: To be updated
+            PType.BAG -> PType.bag() // TODO: To be updated
+            PType.ARRAY -> PType.array() // TODO: To be updated
+            PType.ROW -> PType.row(emptyList()) // TODO: To be updated
+            PType.STRUCT -> PType.struct() // TODO: To be updated
+            PType.UNKNOWN -> PType.unknown() // TODO: To be updated
+            PType.VARIANT -> TODO("variant in dynamic typer")
+            else -> error("Unknown type: $this")
         }.toCType()
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun nullValue(kind: Kind): PartiQLValue {
+        private fun nullValue(kind: Int): PartiQLValue {
             return when (kind) {
-                Kind.DYNAMIC -> nullValue()
-                Kind.BOOL -> boolValue(null)
-                Kind.TINYINT -> int8Value(null)
-                Kind.SMALLINT -> int16Value(null)
-                Kind.INTEGER -> int32Value(null)
-                Kind.BIGINT -> int64Value(null)
-                Kind.NUMERIC -> intValue(null)
-                Kind.DECIMAL -> decimalValue(null)
-                Kind.REAL -> float32Value(null)
-                Kind.DOUBLE -> float64Value(null)
-                Kind.CHAR -> charValue(null)
-                Kind.VARCHAR -> TODO("No implementation of VAR CHAR")
-                Kind.STRING -> stringValue(null)
-                Kind.BLOB -> blobValue(null)
-                Kind.CLOB -> clobValue(null)
-                Kind.DATE -> dateValue(null)
-                Kind.TIMEZ,
-                Kind.TIME -> timeValue(null)
-                Kind.TIMESTAMPZ,
-                Kind.TIMESTAMP -> timestampValue(null)
-                Kind.BAG -> bagValue<PartiQLValue>(null)
-                Kind.ARRAY -> listValue<PartiQLValue>(null)
-                Kind.ROW -> structValue<PartiQLValue>(null)
-                Kind.STRUCT -> structValue<PartiQLValue>()
-                Kind.UNKNOWN -> nullValue()
-                Kind.VARIANT -> TODO("variant in dynamic typer")
+                PType.DYNAMIC -> nullValue()
+                PType.BOOL -> boolValue(null)
+                PType.TINYINT -> int8Value(null)
+                PType.SMALLINT -> int16Value(null)
+                PType.INTEGER -> int32Value(null)
+                PType.BIGINT -> int64Value(null)
+                PType.NUMERIC -> intValue(null)
+                PType.DECIMAL -> decimalValue(null)
+                PType.REAL -> float32Value(null)
+                PType.DOUBLE -> float64Value(null)
+                PType.CHAR -> charValue(null)
+                PType.VARCHAR -> TODO("No implementation of VAR CHAR")
+                PType.STRING -> stringValue(null)
+                PType.BLOB -> blobValue(null)
+                PType.CLOB -> clobValue(null)
+                PType.DATE -> dateValue(null)
+                PType.TIMEZ,
+                PType.TIME -> timeValue(null)
+
+                PType.TIMESTAMPZ,
+                PType.TIMESTAMP -> timestampValue(null)
+
+                PType.BAG -> bagValue<PartiQLValue>(null)
+                PType.ARRAY -> listValue<PartiQLValue>(null)
+                PType.ROW -> structValue<PartiQLValue>(null)
+                PType.STRUCT -> structValue<PartiQLValue>()
+                PType.UNKNOWN -> nullValue()
+                PType.VARIANT -> TODO("variant in dynamic typer")
+                else -> error("Unknown type: $kind")
             }
         }
     }

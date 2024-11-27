@@ -45,12 +45,12 @@ internal val Agg_AVG__INT64__INT64 = Aggregation.static(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__INT__INT = Aggregation.static(
+internal val Agg_AVG__NUMERIC__NUMERIC = Aggregation.static(
 
     name = "avg",
     returns = AVG_DECIMAL,
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
+        Parameter("value", DefaultNumeric.NUMERIC),
     ),
     accumulator = ::AccumulatorAvg,
 )

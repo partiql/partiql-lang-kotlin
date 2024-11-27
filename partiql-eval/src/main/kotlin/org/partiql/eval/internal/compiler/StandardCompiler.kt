@@ -369,7 +369,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitCall(rex: RexCall, ctx: Unit): ExprValue {
             val func = rex.getFunction()
             val args = rex.getArgs()
-            val catch = func.parameters.any { it.kind == PType.Kind.DYNAMIC }
+            val catch = func.parameters.any { it.code() == PType.DYNAMIC }
             return when (catch) {
                 true -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit).catch() })
                 else -> ExprCall(func, Array(args.size) { i -> compile(args[i], Unit) })

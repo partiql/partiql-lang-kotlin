@@ -16,19 +16,19 @@ internal val Fn_IS_INT16__ANY__BOOL = Function.static(
 
 ) { args ->
     val arg = args[0]
-    when (arg.type.kind) {
-        PType.Kind.TINYINT,
-        PType.Kind.SMALLINT,
+    when (arg.type.code()) {
+        PType.TINYINT,
+        PType.SMALLINT,
         -> Datum.bool(true)
-        PType.Kind.INTEGER -> {
+        PType.INTEGER -> {
             val v = arg.int
             Datum.bool(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
         }
-        PType.Kind.BIGINT -> {
+        PType.BIGINT -> {
             val v = arg.long
             Datum.bool(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
         }
-        PType.Kind.NUMERIC -> {
+        PType.NUMERIC -> {
             val v = arg.bigInteger
             try {
                 v.shortValueExact()

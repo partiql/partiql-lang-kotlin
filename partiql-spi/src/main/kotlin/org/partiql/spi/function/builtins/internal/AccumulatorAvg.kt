@@ -5,7 +5,7 @@ import org.partiql.types.PType
 
 internal class AccumulatorAvg : Accumulator() {
 
-    private var targetType = PType.decimal()
+    private var targetType = PType.decimal(38, 19)
     private var sum: Number = 0.0
     private var count: Long = 0L
 

@@ -15,5 +15,5 @@ internal val Fn_IS_STRUCT__ANY__BOOL = Function.static(
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
 ) { args ->
-    Datum.bool(args[0].type.kind == PType.Kind.STRUCT)
+    Datum.bool(args[0].type.code() == PType.STRUCT)
 }

@@ -46,7 +46,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
     }
 
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
-        return basic(PType.numeric()) { args ->
+        return basic(DefaultNumeric.NUMERIC) { args ->
             val arg0 = args[0].bigInteger
             val arg1 = args[1].bigInteger
             Datum.numeric(arg0 * arg1)
@@ -59,7 +59,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
         val p = decimalLhs.precision + decimalRhs.precision + 1
         val s = decimalLhs.scale + decimalRhs.scale
-        return basic(PType.decimal()) { args ->
+        return basic(PType.decimal(p, s), decimalLhs, decimalRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
             Datum.decimal(arg0 * arg1, p, s)

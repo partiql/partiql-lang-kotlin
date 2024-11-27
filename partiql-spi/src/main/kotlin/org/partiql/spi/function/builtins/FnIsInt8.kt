@@ -16,21 +16,21 @@ internal val Fn_IS_INT8__ANY__BOOL = Function.static(
 
 ) { args ->
     val arg = args[0]
-    when (arg.type.kind) {
-        PType.Kind.TINYINT -> Datum.bool(true)
-        PType.Kind.SMALLINT -> {
+    when (arg.type.code()) {
+        PType.TINYINT -> Datum.bool(true)
+        PType.SMALLINT -> {
             val v = arg.short
             Datum.bool(Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE)
         }
-        PType.Kind.INTEGER -> {
+        PType.INTEGER -> {
             val v = arg.int
             Datum.bool(Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE)
         }
-        PType.Kind.BIGINT -> {
+        PType.BIGINT -> {
             val v = arg.long
             Datum.bool(Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE)
         }
-        PType.Kind.NUMERIC -> {
+        PType.NUMERIC -> {
             val v = arg.bigInteger
             try {
                 v.byteValueExact()

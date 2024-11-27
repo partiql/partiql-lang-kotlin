@@ -1,7 +1,6 @@
 package org.partiql.spi.internal
 
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 /**
  * A basic "set" representation for type categorization; perhaps we optimize later..
@@ -26,15 +25,15 @@ import org.partiql.types.PType.Kind
  */
 internal class SqlTypeFamily private constructor(
     @JvmField val preferred: PType,
-    @JvmField val members: Set<Kind>,
+    @JvmField val members: Set<Int>,
 ) {
 
     /**
      * Constructor a singleton [SqlTypeFamily].
      */
-    constructor(preferred: PType) : this(preferred, setOf(preferred.kind))
+    constructor(preferred: PType) : this(preferred, setOf(preferred.code()))
 
-    operator fun contains(type: PType) = type.kind in members
+    operator fun contains(type: PType) = type.code() in members
 
     companion object {
 
@@ -42,10 +41,10 @@ internal class SqlTypeFamily private constructor(
         val TEXT = SqlTypeFamily(
             preferred = PType.string(),
             members = setOf(
-                Kind.CHAR,
-                Kind.VARCHAR,
-                Kind.STRING,
-                Kind.CLOB,
+                PType.CHAR,
+                PType.VARCHAR,
+                PType.STRING,
+                PType.CLOB,
             )
         )
 
@@ -53,23 +52,23 @@ internal class SqlTypeFamily private constructor(
         val COLLECTION = SqlTypeFamily(
             preferred = PType.bag(),
             members = setOf(
-                Kind.ARRAY,
-                Kind.BAG
+                PType.ARRAY,
+                PType.BAG
             )
         )
 
         @JvmStatic
         val NUMBER = SqlTypeFamily(
-            preferred = PType.decimal(),
+            preferred = PType.decimal(38, 19),
             members = setOf(
-                Kind.TINYINT,
-                Kind.SMALLINT,
-                Kind.INTEGER,
-                Kind.BIGINT,
-                Kind.NUMERIC,
-                Kind.REAL,
-                Kind.DOUBLE,
-                Kind.DECIMAL,
+                PType.TINYINT,
+                PType.SMALLINT,
+                PType.INTEGER,
+                PType.BIGINT,
+                PType.NUMERIC,
+                PType.REAL,
+                PType.DOUBLE,
+                PType.DECIMAL,
             )
         )
     }

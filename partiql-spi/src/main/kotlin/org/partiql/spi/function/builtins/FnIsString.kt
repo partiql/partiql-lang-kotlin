@@ -15,7 +15,7 @@ internal val Fn_IS_STRING__ANY__BOOL = Function.static(
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
 ) { args ->
-    Datum.bool(args[0].type.kind == PType.Kind.STRING)
+    Datum.bool(args[0].type.code() == PType.STRING)
 }
 
 internal val Fn_IS_STRING__INT32_ANY__BOOL = Function.static(
@@ -27,7 +27,7 @@ internal val Fn_IS_STRING__INT32_ANY__BOOL = Function.static(
     ),
 ) { args ->
     val v = args[1]
-    if (v.type.kind != PType.Kind.STRING) {
+    if (v.type.code() != PType.STRING) {
         return@static Datum.bool(false)
     }
     val length = args[0].int

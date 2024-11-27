@@ -31,8 +31,8 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
             if (this.isNull || this.isMissing) {
                 return null
             }
-            return when (this.type.kind) {
-                PType.Kind.STRING, PType.Kind.CHAR -> this.string
+            return when (this.type.code()) {
+                PType.STRING, PType.CHAR -> this.string
                 else -> null
             }
         }

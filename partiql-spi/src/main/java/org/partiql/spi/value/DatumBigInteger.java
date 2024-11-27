@@ -13,7 +13,7 @@ class DatumBigInteger implements Datum {
     @NotNull
     private final BigInteger _value;
 
-    private final static PType _type = PType.numeric();
+    private final static PType _type = PType.numeric(38, 0);
 
     DatumBigInteger(@NotNull BigInteger value) {
         _value = value;

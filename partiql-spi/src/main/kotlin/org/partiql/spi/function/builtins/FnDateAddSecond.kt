@@ -49,7 +49,7 @@ internal val Fn_DATE_ADD_SECOND__INT_TIME__TIME = Function.static(
     name = "date_add_second",
     returns = PType.time(6),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("interval", PType.numeric()),
+        Parameter("interval", DefaultNumeric.NUMERIC),
         Parameter("datetime", PType.time(6)),
     ),
 
@@ -104,7 +104,7 @@ internal val Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP = Function.static(
     name = "date_add_second",
     returns = PType.timestamp(6),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("interval", PType.numeric()),
+        Parameter("interval", DefaultNumeric.NUMERIC),
         Parameter("datetime", PType.timestamp(6)),
     ),
 

@@ -15,7 +15,7 @@ internal val Fn_IS_DECIMAL__ANY__BOOL = Function.static(
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 ) { args ->
-    Datum.bool(args[0].type.kind == PType.Kind.DECIMAL)
+    Datum.bool(args[0].type.code() == PType.DECIMAL)
 }
 
 internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
@@ -45,7 +45,7 @@ internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
  */
 { args ->
     val v = args[2]
-    if (v.type.kind != PType.Kind.DECIMAL) {
+    if (v.type.code() != PType.DECIMAL) {
         return@static Datum.bool(false)
     }
     val p = args[0].int

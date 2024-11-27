@@ -52,7 +52,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
 
     // TODO: Update numeric to use bigDecimal rather than bigInteger.
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
-        return basic(PType.bool(), PType.numeric()) { args ->
+        return basic(PType.bool(), DefaultNumeric.NUMERIC) { args ->
             val lhs = args[0].bigInteger
             val rhs = args[1].bigInteger
             Datum.bool(lhs > rhs)

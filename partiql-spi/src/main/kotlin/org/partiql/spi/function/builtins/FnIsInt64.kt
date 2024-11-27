@@ -16,13 +16,13 @@ internal val Fn_IS_INT64__ANY__BOOL = Function.static(
 
 ) { args ->
     val arg = args[0]
-    when (arg.type.kind) {
-        PType.Kind.TINYINT,
-        PType.Kind.SMALLINT,
-        PType.Kind.INTEGER,
-        PType.Kind.BIGINT,
+    when (arg.type.code()) {
+        PType.TINYINT,
+        PType.SMALLINT,
+        PType.INTEGER,
+        PType.BIGINT,
         -> Datum.bool(true)
-        PType.Kind.NUMERIC -> {
+        PType.NUMERIC -> {
             val v = arg.bigInteger
             try {
                 v.longValueExact()

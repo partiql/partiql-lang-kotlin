@@ -44,22 +44,22 @@ internal val Agg_SUM__INT64__INT64 = Aggregation.static(
     accumulator = { AccumulatorSum(PType.bigint()) },
 )
 
-internal val Agg_SUM__INT__INT = Aggregation.static(
+internal val Agg_SUM__NUMERIC__NUMERIC = Aggregation.static(
     name = "sum",
-    returns = PType.numeric(),
+    returns = DefaultNumeric.NUMERIC,
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.numeric()),
+        Parameter("value", DefaultNumeric.NUMERIC),
     ),
-    accumulator = { AccumulatorSum(PType.numeric()) },
+    accumulator = { AccumulatorSum(DefaultNumeric.NUMERIC) },
 )
 
 internal val Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
     name = "sum",
-    returns = PType.decimal(),
+    returns = PType.decimal(38, 19),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
+        Parameter("value", PType.decimal(38, 19)), // TODO: Rewrite aggregations using new function modeling.
     ),
-    accumulator = { AccumulatorSum(PType.decimal()) },
+    accumulator = { AccumulatorSum(PType.decimal(38, 19)) },
 )
 
 internal val Agg_SUM__FLOAT32__FLOAT32 = Aggregation.static(
