@@ -60,8 +60,8 @@ internal val Fn_POS__INT__INT = Function.static(
 internal val Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
 
     name = "pos",
-    returns = PType.decimal(),
-    parameters = arrayOf(Parameter("value", PType.decimal())),
+    returns = PType.decimal(38, 19), // TODO: Rewrite this using the new modeling
+    parameters = arrayOf(Parameter("value", PType.decimal(38, 19))),
 
 ) { args ->
     args[0]

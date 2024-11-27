@@ -39,7 +39,7 @@ class PlanTyperTest {
         private val STRING = PType.string().toCType()
         private val INT4 = PType.integer().toCType()
         private val DOUBLE_PRECISION = PType.doublePrecision().toCType()
-        private val DECIMAL = PType.decimal().toCType()
+        private val DECIMAL = PType.decimal(38, 0).toCType()
 
         @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1 = rex(

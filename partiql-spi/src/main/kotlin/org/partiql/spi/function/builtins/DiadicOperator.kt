@@ -29,14 +29,14 @@ internal abstract class DiadicOperator(
     override fun getInstance(args: Array<PType>): Function.Instance? {
         val lhs = args[0]
         val rhs = args[1]
-        val lhsPrecedence = TYPE_PRECEDENCE[lhs.kind] ?: throw IllegalArgumentException("Type not supported -- LHS = $lhs")
-        val rhsPrecedence = TYPE_PRECEDENCE[rhs.kind] ?: throw IllegalArgumentException("Type not supported -- RHS = $rhs")
+        val lhsPrecedence = TYPE_PRECEDENCE[lhs.code()] ?: throw IllegalArgumentException("Type not supported -- LHS = $lhs")
+        val rhsPrecedence = TYPE_PRECEDENCE[rhs.code()] ?: throw IllegalArgumentException("Type not supported -- RHS = $rhs")
         val (newLhs, newRhs) = when (lhsPrecedence.compareTo(rhsPrecedence)) {
             -1 -> (rhs to rhs)
             0 -> (lhs to rhs)
             else -> (lhs to lhs)
         }
-        val instance = instances[lhs.kind.ordinal][rhs.kind.ordinal]
+        val instance = instances[lhs.code()][rhs.code()]
         return instance(newLhs, newRhs)
     }
 
@@ -202,26 +202,26 @@ internal abstract class DiadicOperator(
      * This is a lookup table for finding the appropriate instance for the given types. The table is
      * initialized on construction using the get*Instance methods.
      */
-    protected val instances: Array<Array<(PType, PType) -> Function.Instance?>> = Array(PType.Kind.entries.size) {
-        Array(PType.Kind.entries.size) {
+    protected val instances: Array<Array<(PType, PType) -> Function.Instance?>> = Array(PType.codes().size) {
+        Array(PType.codes().size) {
             { _, _ -> null }
         }
     }
 
-    protected fun fillTable(lhs: PType.Kind, rhs: PType.Kind, instance: (PType, PType) -> Function.Instance?) {
-        instances[lhs.ordinal][rhs.ordinal] = instance
+    protected fun fillTable(lhs: Int, rhs: Int, instance: (PType, PType) -> Function.Instance?) {
+        instances[lhs][rhs] = instance
     }
 
-    protected fun fillNumberTable(highPrecedence: PType.Kind, instance: (PType, PType) -> Function.Instance?) {
+    protected fun fillNumberTable(highPrecedence: Int, instance: (PType, PType) -> Function.Instance?) {
         return fillPrioritizedTable(highPrecedence, SqlTypeFamily.NUMBER, instance)
     }
 
-    private fun fillCharacterStringTable(highPrecedence: PType.Kind, instance: (PType, PType) -> Function.Instance?) {
+    private fun fillCharacterStringTable(highPrecedence: Int, instance: (PType, PType) -> Function.Instance?) {
         return fillPrioritizedTable(highPrecedence, SqlTypeFamily.TEXT, instance)
     }
 
-    protected fun fillPrioritizedTable(highPrecedence: PType.Kind, family: SqlTypeFamily, instance: (PType, PType) -> Function.Instance?) {
-        val members = family.members + setOf(PType.Kind.UNKNOWN)
+    protected fun fillPrioritizedTable(highPrecedence: Int, family: SqlTypeFamily, instance: (PType, PType) -> Function.Instance?) {
+        val members = family.members + setOf(PType.UNKNOWN)
         members.filter {
             (TYPE_PRECEDENCE[highPrecedence]!! > TYPE_PRECEDENCE[it]!!)
         }.forEach {
@@ -232,67 +232,67 @@ internal abstract class DiadicOperator(
     }
 
     private fun fillBooleanTable(instance: (PType, PType) -> Function.Instance?) {
-        fillTable(PType.Kind.BOOL, PType.Kind.BOOL) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.BOOL, PType.Kind.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.Kind.UNKNOWN, PType.Kind.BOOL) { _, rhs -> instance(rhs, rhs) }
+        fillTable(PType.BOOL, PType.BOOL) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.BOOL, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
+        fillTable(PType.UNKNOWN, PType.BOOL) { _, rhs -> instance(rhs, rhs) }
     }
 
     private fun fillTimestampTable(instance: (PType, PType) -> Function.Instance?) {
-        fillTable(PType.Kind.TIMESTAMPZ, PType.Kind.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.TIMESTAMP, PType.Kind.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.TIMESTAMPZ, PType.Kind.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.TIMESTAMP, PType.Kind.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.TIMESTAMP, PType.Kind.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.Kind.TIMESTAMPZ, PType.Kind.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.Kind.UNKNOWN, PType.Kind.TIMESTAMP) { _, rhs -> instance(rhs, rhs) }
-        fillTable(PType.Kind.UNKNOWN, PType.Kind.TIMESTAMPZ) { _, rhs -> instance(rhs, rhs) }
+        fillTable(PType.TIMESTAMPZ, PType.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.TIMESTAMP, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.TIMESTAMPZ, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.TIMESTAMP, PType.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.TIMESTAMP, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
+        fillTable(PType.TIMESTAMPZ, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
+        fillTable(PType.UNKNOWN, PType.TIMESTAMP) { _, rhs -> instance(rhs, rhs) }
+        fillTable(PType.UNKNOWN, PType.TIMESTAMPZ) { _, rhs -> instance(rhs, rhs) }
     }
 
     private fun fillTimeTable(instance: (PType, PType) -> Function.Instance?) {
-        fillTable(PType.Kind.TIMEZ, PType.Kind.TIMEZ) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.TIME, PType.Kind.TIME) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.TIMEZ, PType.Kind.TIME) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.TIME, PType.Kind.TIMEZ) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.TIMEZ, PType.Kind.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.Kind.TIME, PType.Kind.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.Kind.UNKNOWN, PType.Kind.TIME) { _, rhs -> instance(rhs, rhs) }
-        fillTable(PType.Kind.UNKNOWN, PType.Kind.TIMEZ) { _, rhs -> instance(rhs, rhs) }
+        fillTable(PType.TIMEZ, PType.TIMEZ) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.TIME, PType.TIME) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.TIMEZ, PType.TIME) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.TIME, PType.TIMEZ) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.TIMEZ, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
+        fillTable(PType.TIME, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
+        fillTable(PType.UNKNOWN, PType.TIME) { _, rhs -> instance(rhs, rhs) }
+        fillTable(PType.UNKNOWN, PType.TIMEZ) { _, rhs -> instance(rhs, rhs) }
     }
 
     private fun fillDateTable(instance: (PType, PType) -> Function.Instance?) {
-        fillTable(PType.Kind.DATE, PType.Kind.DATE) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.DATE, PType.Kind.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.Kind.UNKNOWN, PType.Kind.DATE) { _, rhs -> instance(rhs, rhs) }
+        fillTable(PType.DATE, PType.DATE) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.DATE, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
+        fillTable(PType.UNKNOWN, PType.DATE) { _, rhs -> instance(rhs, rhs) }
     }
 
     private fun fillBlobTable(instance: (PType, PType) -> Function.Instance?) {
-        fillTable(PType.Kind.BLOB, PType.Kind.BLOB) { lhs, rhs -> instance(lhs, rhs) }
-        fillTable(PType.Kind.BLOB, PType.Kind.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
-        fillTable(PType.Kind.UNKNOWN, PType.Kind.BLOB) { _, rhs -> instance(rhs, rhs) }
+        fillTable(PType.BLOB, PType.BLOB) { lhs, rhs -> instance(lhs, rhs) }
+        fillTable(PType.BLOB, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
+        fillTable(PType.UNKNOWN, PType.BLOB) { _, rhs -> instance(rhs, rhs) }
     }
 
     open fun fillDecimalTable() {
-        fillNumberTable(PType.Kind.DECIMAL, ::getDecimalInstance)
+        fillNumberTable(PType.DECIMAL, ::getDecimalInstance)
     }
 
     open fun fillTable() {
         fillBooleanTable(::getBooleanInstance)
-        fillNumberTable(PType.Kind.TINYINT, ::getTinyIntInstance)
-        fillNumberTable(PType.Kind.SMALLINT, ::getSmallIntInstance)
-        fillNumberTable(PType.Kind.INTEGER, ::getIntegerInstance)
-        fillNumberTable(PType.Kind.BIGINT, ::getBigIntInstance)
+        fillNumberTable(PType.TINYINT, ::getTinyIntInstance)
+        fillNumberTable(PType.SMALLINT, ::getSmallIntInstance)
+        fillNumberTable(PType.INTEGER, ::getIntegerInstance)
+        fillNumberTable(PType.BIGINT, ::getBigIntInstance)
         fillDecimalTable()
-        fillNumberTable(PType.Kind.NUMERIC, ::getNumericInstance)
-        fillNumberTable(PType.Kind.REAL, ::getRealInstance)
-        fillNumberTable(PType.Kind.DOUBLE, ::getDoubleInstance)
+        fillNumberTable(PType.NUMERIC, ::getNumericInstance)
+        fillNumberTable(PType.REAL, ::getRealInstance)
+        fillNumberTable(PType.DOUBLE, ::getDoubleInstance)
         fillTimeTable(::getTimeInstance)
         fillDateTable(::getDateInstance)
         fillBlobTable(::getBlobInstance)
         fillTimestampTable(::getTimestampInstance)
-        fillCharacterStringTable(PType.Kind.STRING, ::getStringInstance)
-        fillCharacterStringTable(PType.Kind.CHAR, ::getCharInstance)
-        fillCharacterStringTable(PType.Kind.VARCHAR, ::getVarcharInstance)
-        fillCharacterStringTable(PType.Kind.CLOB, ::getClobInstance)
+        fillCharacterStringTable(PType.STRING, ::getStringInstance)
+        fillCharacterStringTable(PType.CHAR, ::getCharInstance)
+        fillCharacterStringTable(PType.VARCHAR, ::getVarcharInstance)
+        fillCharacterStringTable(PType.CLOB, ::getClobInstance)
     }
 
     protected fun basic(returns: PType, lhs: PType, rhs: PType, invocation: (Array<Datum>) -> Datum): Function.Instance {

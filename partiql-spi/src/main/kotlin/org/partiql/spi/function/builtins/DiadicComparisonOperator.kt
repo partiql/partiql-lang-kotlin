@@ -26,7 +26,7 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
     override fun getInstance(args: Array<PType>): Function.Instance? {
         val lhs = args[0]
         val rhs = args[1]
-        val hasDecimal = lhs.kind == PType.Kind.DECIMAL || rhs.kind == PType.Kind.DECIMAL
+        val hasDecimal = lhs.code() == PType.DECIMAL || rhs.code() == PType.DECIMAL
         val allNumbers = (SqlTypeFamily.NUMBER.contains(lhs) && SqlTypeFamily.NUMBER.contains(rhs))
         if (hasDecimal && allNumbers) {
             return getNumberInstance(lhs, rhs)
@@ -45,15 +45,15 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
     abstract fun getNumberComparison(lhs: Number, rhs: Number): Boolean
 
     private fun Datum.getNumber(): Number {
-        return when (this.type.kind) {
-            PType.Kind.TINYINT -> this.byte
-            PType.Kind.INTEGER -> this.int
-            PType.Kind.SMALLINT -> this.short
-            PType.Kind.BIGINT -> this.long
-            PType.Kind.REAL -> this.float
-            PType.Kind.DOUBLE -> this.double
-            PType.Kind.DECIMAL -> this.bigDecimal
-            PType.Kind.NUMERIC -> this.bigInteger
+        return when (this.type.code()) {
+            PType.TINYINT -> this.byte
+            PType.INTEGER -> this.int
+            PType.SMALLINT -> this.short
+            PType.BIGINT -> this.long
+            PType.REAL -> this.float
+            PType.DOUBLE -> this.double
+            PType.DECIMAL -> this.bigDecimal
+            PType.NUMERIC -> this.bigInteger
             else -> error("Unexpected type: ${this.type}")
         }
     }

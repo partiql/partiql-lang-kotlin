@@ -8,20 +8,15 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Applicable to {@link PType.Kind#ROW}.
+ * Applicable to {@link PType#ROW}.
  */
-class PTypeRow implements PType {
+class PTypeRow extends PType {
 
     final Collection<Field> _fields;
 
     PTypeRow(@NotNull Collection<Field> fields) {
+        super(PType.ROW);
         _fields = fields;
-    }
-
-    @NotNull
-    @Override
-    public Kind getKind() {
-        return Kind.ROW;
     }
 
     @NotNull
@@ -34,7 +29,7 @@ class PTypeRow implements PType {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof PType)) return false;
-        if (Kind.ROW != ((PType) o).getKind()) {
+        if (PType.ROW != ((PType) o).code()) {
             return false;
         }
         Collection<Field> otherFields = ((PType) o).getFields();
@@ -58,11 +53,11 @@ class PTypeRow implements PType {
     public String toString() {
         Collection<String> fieldStringList = _fields.stream().map((f) -> f.getName() + ": " + f.getType()).collect(Collectors.toList());
         String fieldStrings = String.join(", ", fieldStringList);
-        return Kind.ROW.name() + "(" + fieldStrings + ")";
+        return "ROW(" + fieldStrings + ")";
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(Kind.ROW, _fields);
+        return Objects.hash(code(), _fields);
     }
 }

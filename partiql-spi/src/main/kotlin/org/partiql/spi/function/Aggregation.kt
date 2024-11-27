@@ -71,8 +71,8 @@ public interface Aggregation : Routine {
         override fun getReturnType(args: Array<PType>): PType = returns
         override fun getAccumulator(args: Array<PType>): Accumulator = accumulator()
         override fun toString(): String {
-            val parameters = parameters.joinToString("__") { it.getType().kind.name }
-            val returnType = returns.kind.name
+            val parameters = parameters.joinToString("__") { it.getType().name() }
+            val returnType = returns.name()
             return "FN_${name}___${parameters}___$returnType"
         }
     }

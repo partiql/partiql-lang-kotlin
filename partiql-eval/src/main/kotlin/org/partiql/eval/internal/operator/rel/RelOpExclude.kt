@@ -79,9 +79,9 @@ internal class RelOpExclude(
     /**
      * Entry-point to apply exclusions to an arbitrary [Datum].
      */
-    private fun Datum.exclude(exclusions: List<Exclusion.Item>): Datum = when (this.type.kind) {
-        PType.Kind.ROW, PType.Kind.STRUCT -> this.structExclude(exclusions)
-        PType.Kind.BAG, PType.Kind.ARRAY -> this.collExclude(exclusions)
+    private fun Datum.exclude(exclusions: List<Exclusion.Item>): Datum = when (this.type.code()) {
+        PType.ROW, PType.STRUCT -> this.structExclude(exclusions)
+        PType.BAG, PType.ARRAY -> this.collExclude(exclusions)
         else -> this
     }
 
@@ -137,9 +137,9 @@ internal class RelOpExclude(
      * (i.e. [PartiQLValueType.LIST] or [PartiQLValueType.BAG].).
      */
     private fun newCollValue(type: PType, coll: Iterable<Datum>): Datum {
-        return when (type.kind) {
-            PType.Kind.ARRAY -> Datum.array(coll)
-            PType.Kind.BAG -> Datum.bag(coll)
+        return when (type.code()) {
+            PType.ARRAY -> Datum.array(coll)
+            PType.BAG -> Datum.bag(coll)
             else -> error("Collection type required")
         }
     }
@@ -172,7 +172,7 @@ internal class RelOpExclude(
             // apply exclusions to subtree
             var value = element
             // apply collection index exclusions at deeper levels for lists
-            if (type.kind == PType.Kind.ARRAY) {
+            if (type.code() == PType.ARRAY) {
                 branches.getCollIndex(i)?.let {
                     value = value.exclude(it.getItems())
                 }

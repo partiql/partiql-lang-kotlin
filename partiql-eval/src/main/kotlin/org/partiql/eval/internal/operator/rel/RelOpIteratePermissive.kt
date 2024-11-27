@@ -18,12 +18,12 @@ internal class RelOpIteratePermissive(
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Row()))
         index = 0
-        iterator = when (r.type.kind) {
-            PType.Kind.BAG -> {
+        iterator = when (r.type.code()) {
+            PType.BAG -> {
                 isIndexable = false
                 r.iterator()
             }
-            PType.Kind.ARRAY -> r.iterator()
+            PType.ARRAY -> r.iterator()
             else -> {
                 isIndexable = false
                 iterator { yield(r) }

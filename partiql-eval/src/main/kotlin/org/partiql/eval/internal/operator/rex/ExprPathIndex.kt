@@ -14,10 +14,10 @@ internal class ExprPathIndex(
 
     override fun eval(env: Environment): Datum {
         val input = root.eval(env)
-        val iterator = when (input.type.kind) {
-            PType.Kind.BAG,
-            PType.Kind.ARRAY -> input.iterator()
-            else -> throw TypeCheckException("expected collection, found ${input.type.kind}")
+        val iterator = when (input.type.code()) {
+            PType.BAG,
+            PType.ARRAY -> input.iterator()
+            else -> throw TypeCheckException("expected collection, found ${input.type.code()}")
         }
 
         // Calculate index

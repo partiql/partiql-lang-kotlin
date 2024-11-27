@@ -18,7 +18,7 @@ internal object ValueUtility {
      */
     @JvmStatic
     fun Datum.isTrue(): Boolean {
-        return this.type.kind == PType.Kind.BOOL && !this.isNull && !this.isMissing && this.boolean
+        return this.type.code() == PType.BOOL && !this.isNull && !this.isMissing && this.boolean
     }
 
     @OptIn(PartiQLValueExperimental::class)
@@ -50,8 +50,8 @@ internal object ValueUtility {
      * @throws TypeCheckException if the value's type is not a text type (string, symbol, char)
      */
     fun Datum.getText(): String {
-        return when (this.type.kind) {
-            PType.Kind.STRING, PType.Kind.CHAR -> this.string
+        return when (this.type.code()) {
+            PType.STRING, PType.CHAR -> this.string
             else -> throw TypeCheckException("Expected text, but received ${this.type}.")
         }
     }
@@ -67,12 +67,12 @@ internal object ValueUtility {
      * @throws TypeCheckException if type is not an integer type
      */
     fun Datum.getBigIntCoerced(): BigInteger {
-        return when (this.type.kind) {
-            PType.Kind.TINYINT -> this.byte.toInt().toBigInteger()
-            PType.Kind.SMALLINT -> this.short.toInt().toBigInteger()
-            PType.Kind.INTEGER -> this.int.toBigInteger()
-            PType.Kind.BIGINT -> this.long.toBigInteger()
-            PType.Kind.NUMERIC -> this.bigInteger
+        return when (this.type.code()) {
+            PType.TINYINT -> this.byte.toInt().toBigInteger()
+            PType.SMALLINT -> this.short.toInt().toBigInteger()
+            PType.INTEGER -> this.int.toBigInteger()
+            PType.BIGINT -> this.long.toBigInteger()
+            PType.NUMERIC -> this.bigInteger
             else -> throw TypeCheckException()
         }
     }
@@ -89,12 +89,12 @@ internal object ValueUtility {
      * @throws TypeCheckException if type is not an integer type
      */
     fun Datum.getInt32Coerced(): Int {
-        return when (this.type.kind) {
-            PType.Kind.TINYINT -> this.byte.toInt()
-            PType.Kind.SMALLINT -> this.short.toInt()
-            PType.Kind.INTEGER -> this.int
-            PType.Kind.BIGINT -> this.long.toInt()
-            PType.Kind.NUMERIC -> this.bigInteger.toInt()
+        return when (this.type.code()) {
+            PType.TINYINT -> this.byte.toInt()
+            PType.SMALLINT -> this.short.toInt()
+            PType.INTEGER -> this.int
+            PType.BIGINT -> this.long.toInt()
+            PType.NUMERIC -> this.bigInteger.toInt()
             else -> throw TypeCheckException()
         }
     }

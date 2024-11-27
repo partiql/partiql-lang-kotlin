@@ -98,9 +98,9 @@ internal val Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__
     name = "between",
     returns = PType.bool(),
     parameters = arrayOf(
-        Parameter("value", PType.decimal()),
-        Parameter("lower", PType.decimal()),
-        Parameter("upper", PType.decimal()),
+        Parameter("value", PType.decimal(38, 19)), // TODO: Rewrite using new function modeling.
+        Parameter("lower", PType.decimal(38, 19)),
+        Parameter("upper", PType.decimal(38, 19)),
     ),
 
 ) { args ->

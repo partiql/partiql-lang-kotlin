@@ -59,7 +59,7 @@ internal sealed class RelOpUnpivot : ExprRelation {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Row()))
-            if (v.type.kind != PType.Kind.STRUCT && v.type.kind != PType.Kind.ROW) {
+            if (v.type.code() != PType.STRUCT && v.type.code() != PType.ROW) {
                 throw TypeCheckException()
             }
             return v
@@ -82,8 +82,8 @@ internal sealed class RelOpUnpivot : ExprRelation {
             if (v.isMissing) {
                 return Datum.struct(emptyList())
             }
-            return when (v.type.kind) {
-                PType.Kind.STRUCT, PType.Kind.ROW -> v
+            return when (v.type.code()) {
+                PType.STRUCT, PType.ROW -> v
                 else -> Datum.struct(listOf(Field.of("_1", v)))
             }
         }

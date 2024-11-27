@@ -216,7 +216,7 @@ internal class PlanTyperTestsPorted {
 
         // TODO: We don't assert on the properties right now.
         private fun errorsEqual(lhs: PError, rhs: PError): Boolean {
-            return lhs.code() == rhs.code() && lhs.kind == rhs.kind && lhs.severity == rhs.severity && lhs.location == rhs.location
+            return lhs.code() == rhs.code() && lhs.code() == rhs.code() && lhs.severity == rhs.severity && lhs.location == rhs.location
         }
 
         // private fun id(vararg parts: Identifier.Symbol): Identifier {
@@ -787,7 +787,7 @@ internal class PlanTyperTestsPorted {
                 name = "DECIMAL_ARBITRARY AS DECIMAL",
                 key = key("cast-05"),
                 catalog = "pql",
-                expected = PType.decimal(),
+                expected = PType.decimal(38, 0),
             ),
         )
 
@@ -2609,7 +2609,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-10"),
                 catalog = "pql",
-                expected = PType.decimal(),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-11"),
@@ -2770,7 +2770,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-44"),
                 catalog = "pql",
-                expected = PType.decimal()
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-45"),
@@ -2893,22 +2893,22 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-02"),
                 catalog = "pql",
-                expected = PType.decimal()
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-03"),
                 catalog = "pql",
-                expected = PType.decimal()
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-04"),
                 catalog = "pql",
-                expected = PType.decimal()
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-05"),
                 catalog = "pql",
-                expected = PType.decimal()
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-06"),
@@ -3630,18 +3630,18 @@ internal class PlanTyperTestsPorted {
             """.trimIndent(),
             expected = PType.bag(
                 PType.row(
-                    Field.of("a", PType.decimal()),
+                    Field.of("a", PType.decimal(38, 0)),
                     Field.of("count_star", PType.bigint()),
                     Field.of("count_a", PType.bigint()),
                     Field.of("count_b", PType.bigint()),
-                    Field.of("sum_a", PType.decimal()),
-                    Field.of("sum_b", PType.decimal()),
-                    Field.of("min_a", PType.decimal()),
-                    Field.of("min_b", PType.decimal()),
-                    Field.of("max_a", PType.decimal()),
-                    Field.of("max_b", PType.decimal()),
-                    Field.of("avg_a", PType.decimal()),
-                    Field.of("avg_b", PType.decimal()),
+                    Field.of("sum_a", PType.decimal(38, 0)),
+                    Field.of("sum_b", PType.decimal(38, 0)),
+                    Field.of("min_a", PType.decimal(38, 0)),
+                    Field.of("min_b", PType.decimal(38, 0)),
+                    Field.of("max_a", PType.decimal(38, 0)),
+                    Field.of("max_b", PType.decimal(38, 0)),
+                    Field.of("avg_a", PType.decimal(38, 0)),
+                    Field.of("avg_b", PType.decimal(38, 0)),
                 )
             ),
         )

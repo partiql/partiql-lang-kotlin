@@ -2,7 +2,6 @@ package org.partiql.spi.internal
 
 import org.partiql.types.Field
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 /**
  * Important SQL Definitions:
@@ -49,7 +48,7 @@ internal object SqlTypes {
      * for the [PType.getTypeParameter] and [PType.getFields]
      */
     private fun areAssignableDynamicTypes(target: PType): Boolean {
-        return target.kind == Kind.DYNAMIC
+        return target.code() == PType.DYNAMIC
     }
 
     /**
@@ -66,10 +65,10 @@ internal object SqlTypes {
      */
     private fun areAssignableStructuralTypes(input: PType, target: PType): Boolean {
         return when {
-            input.kind == Kind.ROW && target.kind == Kind.ROW -> fieldsAreAssignable(input.fields.toList(), target.fields!!.toList())
-            input.kind == Kind.STRUCT && target.kind == Kind.ROW -> true
-            input.kind == Kind.ROW && target.kind == Kind.STRUCT -> true
-            input.kind == Kind.STRUCT && target.kind == Kind.STRUCT -> true
+            input.code() == PType.ROW && target.code() == PType.ROW -> fieldsAreAssignable(input.fields.toList(), target.fields!!.toList())
+            input.code() == PType.STRUCT && target.code() == PType.ROW -> true
+            input.code() == PType.ROW && target.code() == PType.STRUCT -> true
+            input.code() == PType.STRUCT && target.code() == PType.STRUCT -> true
             else -> false
         }
     }
@@ -130,7 +129,7 @@ internal object SqlTypes {
      * ```
      */
     private fun areAssignableBooleanTypes(input: PType, target: PType): Boolean {
-        return input.kind == Kind.BOOL && target.kind == Kind.BOOL
+        return input.code() == PType.BOOL && target.code() == PType.BOOL
     }
 
     /**
@@ -156,12 +155,12 @@ internal object SqlTypes {
      * ```
      */
     private fun areAssignableDateTimeTypes(input: PType, target: PType): Boolean {
-        val i = input.kind
-        val t = target.kind
+        val i = input.code()
+        val t = target.code()
         return when {
-            i == Kind.DATE && t == Kind.DATE -> true
-            (i == Kind.TIMEZ || i == Kind.TIME) && (t == Kind.TIMEZ || t == Kind.TIME) -> true
-            (i == Kind.TIMESTAMPZ || i == Kind.TIMESTAMP) && (t == Kind.TIMESTAMPZ || t == Kind.TIMESTAMP) -> true
+            i == PType.DATE && t == PType.DATE -> true
+            (i == PType.TIMEZ || i == PType.TIME) && (t == PType.TIMEZ || t == PType.TIME) -> true
+            (i == PType.TIMESTAMPZ || i == PType.TIMESTAMP) && (t == PType.TIMESTAMPZ || t == PType.TIMESTAMP) -> true
             else -> false
         }
     }

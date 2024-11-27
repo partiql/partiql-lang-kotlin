@@ -15,5 +15,5 @@ internal val Fn_IS_CLOB__ANY__BOOL = Function.static(
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
 ) { args ->
-    Datum.bool(args[0].type.kind == PType.Kind.CLOB)
+    Datum.bool(args[0].type.code() == PType.CLOB)
 }

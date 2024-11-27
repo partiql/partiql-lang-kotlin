@@ -132,7 +132,7 @@ internal object RexConverter {
                 // TODO: PartiQLValue won't be in AST soon
                 is DecimalValue -> {
                     when (val decimal = value.value) {
-                        null -> PType.decimal()
+                        null -> PType.decimal(38, 19)
                         else -> PType.decimal(decimal.precision(), decimal.scale())
                     }
                 }
@@ -942,17 +942,17 @@ internal object RexConverter {
                 // TODO CHAR_VARYING, CHARACTER_LARGE_OBJECT, CHAR_LARGE_OBJECT
                 DataType.CHARACTER, DataType.CHAR -> {
                     val length = type.length ?: 1
-                    assertGtZeroAndCreate(PType.Kind.CHAR, "length", length, PType::character)
+                    assertGtZeroAndCreate(PType.CHAR, "length", length, PType::character)
                 }
                 DataType.CHARACTER_VARYING, DataType.VARCHAR -> {
                     val length = type.length ?: 1
-                    assertGtZeroAndCreate(PType.Kind.VARCHAR, "length", length, PType::varchar)
+                    assertGtZeroAndCreate(PType.VARCHAR, "length", length, PType::varchar)
                 }
-                DataType.CLOB -> assertGtZeroAndCreate(PType.Kind.CLOB, "length", type.length ?: Int.MAX_VALUE, PType::clob)
+                DataType.CLOB -> assertGtZeroAndCreate(PType.CLOB, "length", type.length ?: Int.MAX_VALUE, PType::clob)
                 DataType.STRING -> PType.string()
                 // <binary large object string type>
                 // TODO BINARY_LARGE_OBJECT
-                DataType.BLOB -> assertGtZeroAndCreate(PType.Kind.BLOB, "length", type.length ?: Int.MAX_VALUE, PType::blob)
+                DataType.BLOB -> assertGtZeroAndCreate(PType.BLOB, "length", type.length ?: Int.MAX_VALUE, PType::blob)
                 // <bit string type>
                 DataType.BIT -> error("BIT is not supported yet.")
                 DataType.BIT_VARYING -> error("BIT VARYING is not supported yet.")
@@ -961,17 +961,17 @@ internal object RexConverter {
                     val p = type.precision
                     val s = type.scale
                     when {
-                        p == null && s == null -> PType.decimal()
+                        p == null && s == null -> PType.decimal(38, 0)
                         p != null && s != null -> {
-                            assertParamCompToZero(PType.Kind.NUMERIC, "precision", p, false)
-                            assertParamCompToZero(PType.Kind.NUMERIC, "scale", s, true)
+                            assertParamCompToZero(PType.NUMERIC, "precision", p, false)
+                            assertParamCompToZero(PType.NUMERIC, "scale", s, true)
                             if (s > p) {
                                 throw TypeCheckException("Numeric scale cannot be greater than precision.")
                             }
                             PType.decimal(type.precision!!, type.scale!!)
                         }
                         p != null && s == null -> {
-                            assertParamCompToZero(PType.Kind.NUMERIC, "precision", p, false)
+                            assertParamCompToZero(PType.NUMERIC, "precision", p, false)
                             PType.decimal(p, 0)
                         }
                         else -> error("Precision can never be null while scale is specified.")
@@ -981,17 +981,17 @@ internal object RexConverter {
                     val p = type.precision
                     val s = type.scale
                     when {
-                        p == null && s == null -> PType.decimal()
+                        p == null && s == null -> PType.decimal(38, 0)
                         p != null && s != null -> {
-                            assertParamCompToZero(PType.Kind.DECIMAL, "precision", p, false)
-                            assertParamCompToZero(PType.Kind.DECIMAL, "scale", s, true)
+                            assertParamCompToZero(PType.DECIMAL, "precision", p, false)
+                            assertParamCompToZero(PType.DECIMAL, "scale", s, true)
                             if (s > p) {
                                 throw TypeCheckException("Decimal scale cannot be greater than precision.")
                             }
                             PType.decimal(p, s)
                         }
                         p != null && s == null -> {
-                            assertParamCompToZero(PType.Kind.DECIMAL, "precision", p, false)
+                            assertParamCompToZero(PType.DECIMAL, "precision", p, false)
                             PType.decimal(p, 0)
                         }
                         else -> error("Precision can never be null while scale is specified.")
@@ -1009,10 +1009,10 @@ internal object RexConverter {
                 DataType.BOOL -> PType.bool()
                 // <datetime type>
                 DataType.DATE -> PType.date()
-                DataType.TIME -> assertGtEqZeroAndCreate(PType.Kind.TIME, "precision", type.precision ?: 0, PType::time)
-                DataType.TIME_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(PType.Kind.TIMEZ, "precision", type.precision ?: 0, PType::timez)
-                DataType.TIMESTAMP -> assertGtEqZeroAndCreate(PType.Kind.TIMESTAMP, "precision", type.precision ?: 6, PType::timestamp)
-                DataType.TIMESTAMP_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(PType.Kind.TIMESTAMPZ, "precision", type.precision ?: 6, PType::timestampz)
+                DataType.TIME -> assertGtEqZeroAndCreate(PType.TIME, "precision", type.precision ?: 0, PType::time)
+                DataType.TIME_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(PType.TIMEZ, "precision", type.precision ?: 0, PType::timez)
+                DataType.TIMESTAMP -> assertGtEqZeroAndCreate(PType.TIMESTAMP, "precision", type.precision ?: 6, PType::timestamp)
+                DataType.TIMESTAMP_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(PType.TIMESTAMPZ, "precision", type.precision ?: 6, PType::timestampz)
                 // <interval type>
                 DataType.INTERVAL -> error("INTERVAL is not supported yet.")
                 // <container type>
@@ -1027,12 +1027,12 @@ internal object RexConverter {
             }.toCType()
         }
 
-        private fun assertGtZeroAndCreate(type: PType.Kind, param: String, value: Int, create: (Int) -> PType): PType {
+        private fun assertGtZeroAndCreate(type: Int, param: String, value: Int, create: (Int) -> PType): PType {
             assertParamCompToZero(type, param, value, false)
             return create.invoke(value)
         }
 
-        private fun assertGtEqZeroAndCreate(type: PType.Kind, param: String, value: Int, create: (Int) -> PType): PType {
+        private fun assertGtEqZeroAndCreate(type: Int, param: String, value: Int, create: (Int) -> PType): PType {
             assertParamCompToZero(type, param, value, true)
             return create.invoke(value)
         }
@@ -1040,7 +1040,7 @@ internal object RexConverter {
         /**
          * @param allowZero when FALSE, this asserts that [value] > 0. If TRUE, this asserts that [value] >= 0.
          */
-        private fun assertParamCompToZero(type: PType.Kind, param: String, value: Int, allowZero: Boolean) {
+        private fun assertParamCompToZero(type: Int, param: String, value: Int, allowZero: Boolean) {
             val (result, compString) = when (allowZero) {
                 true -> (value >= 0) to "greater than"
                 false -> (value > 0) to "greater than or equal to"

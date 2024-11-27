@@ -10,7 +10,6 @@ import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.stringValue
 
@@ -142,10 +141,10 @@ internal data class Scope(
      * @return
      */
     private fun CompilerType.containsKey(name: Identifier.Part): Boolean? {
-        return when (this.kind) {
-            Kind.ROW -> this.fields.any { name.matches(it.name) }
-            Kind.STRUCT -> null
-            Kind.DYNAMIC -> null
+        return when (this.code()) {
+            PType.ROW -> this.fields.any { name.matches(it.name) }
+            PType.STRUCT -> null
+            PType.DYNAMIC -> null
             else -> false
         }
     }

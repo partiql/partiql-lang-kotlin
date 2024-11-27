@@ -97,37 +97,37 @@ private fun Long.checkOverflowPlus(other: Long): Number {
 }
 
 internal fun checkIsBooleanType(funcName: String, value: Datum) {
-    if (value.type.kind != PType.Kind.BOOL) {
-        throw TypeCheckException("Expected ${PType.Kind.BOOL} but received ${value.type}.")
+    if (value.type.code() != PType.BOOL) {
+        throw TypeCheckException("Expected ${PType.BOOL} but received ${value.type}.")
     }
 }
 
-internal fun Datum.numberValue(): Number = when (this.type.kind) {
-    PType.Kind.TINYINT -> this.byte
-    PType.Kind.SMALLINT -> this.short
-    PType.Kind.INTEGER -> this.int
-    PType.Kind.BIGINT -> this.long
-    PType.Kind.NUMERIC -> this.bigInteger
-    PType.Kind.REAL -> this.float
-    PType.Kind.DOUBLE -> this.double
-    PType.Kind.DECIMAL -> this.bigDecimal
+internal fun Datum.numberValue(): Number = when (this.type.code()) {
+    PType.TINYINT -> this.byte
+    PType.SMALLINT -> this.short
+    PType.INTEGER -> this.int
+    PType.BIGINT -> this.long
+    PType.NUMERIC -> this.bigInteger
+    PType.REAL -> this.float
+    PType.DOUBLE -> this.double
+    PType.DECIMAL -> this.bigDecimal
     else -> error("Cannot convert PartiQLValue ($this) to number.")
 }
 
-internal fun Datum.booleanValue(): Boolean = when (this.type.kind) {
-    PType.Kind.BOOL -> this.boolean
+internal fun Datum.booleanValue(): Boolean = when (this.type.code()) {
+    PType.BOOL -> this.boolean
     else -> error("Cannot convert PartiQLValue ($this) to boolean.")
 }
 
-internal fun PType.isNumber(): Boolean = when (this.kind) {
-    PType.Kind.INTEGER,
-    PType.Kind.TINYINT,
-    PType.Kind.SMALLINT,
-    PType.Kind.BIGINT,
-    PType.Kind.NUMERIC,
-    PType.Kind.REAL,
-    PType.Kind.DOUBLE,
-    PType.Kind.DECIMAL,
+internal fun PType.isNumber(): Boolean = when (this.code()) {
+    PType.INTEGER,
+    PType.TINYINT,
+    PType.SMALLINT,
+    PType.BIGINT,
+    PType.NUMERIC,
+    PType.REAL,
+    PType.DOUBLE,
+    PType.DECIMAL,
     -> true
     else -> false
 }
@@ -140,11 +140,11 @@ internal fun nullToTargetType(type: PType): Datum = Datum.nullValue(type)
 /**
  * This is specifically for SUM/AVG
  */
-internal fun Number.toTargetType(type: PType): Datum = when (type.kind) {
-    PType.Kind.DYNAMIC -> this.toDatum()
-    PType.Kind.REAL -> Datum.real(this.toFloat())
-    PType.Kind.DOUBLE -> Datum.doublePrecision(this.toDouble())
-    PType.Kind.DECIMAL -> {
+internal fun Number.toTargetType(type: PType): Datum = when (type.code()) {
+    PType.DYNAMIC -> this.toDatum()
+    PType.REAL -> Datum.real(this.toFloat())
+    PType.DOUBLE -> Datum.doublePrecision(this.toDouble())
+    PType.DECIMAL -> {
         when (this) {
             is BigDecimal -> Datum.decimal(this, this.precision(), this.scale())
             is BigInteger -> {
@@ -157,11 +157,11 @@ internal fun Number.toTargetType(type: PType): Datum = when (type.kind) {
             }
         }
     }
-    PType.Kind.TINYINT -> Datum.tinyint(this.toByte())
-    PType.Kind.SMALLINT -> Datum.smallint(this.toShort())
-    PType.Kind.INTEGER -> Datum.integer(this.toInt())
-    PType.Kind.BIGINT -> Datum.bigint(this.toLong())
-    PType.Kind.NUMERIC -> when (this) {
+    PType.TINYINT -> Datum.tinyint(this.toByte())
+    PType.SMALLINT -> Datum.smallint(this.toShort())
+    PType.INTEGER -> Datum.integer(this.toInt())
+    PType.BIGINT -> Datum.bigint(this.toLong())
+    PType.NUMERIC -> when (this) {
         is BigInteger -> Datum.numeric(this)
         is BigDecimal -> Datum.numeric(this.toBigInteger())
         else -> Datum.numeric(BigInteger.valueOf(this.toLong()))

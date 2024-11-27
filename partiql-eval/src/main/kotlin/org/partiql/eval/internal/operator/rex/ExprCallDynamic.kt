@@ -66,16 +66,16 @@ internal class ExprCallDynamic(
     private fun match(args: List<PType>): Candidate? {
         var exactMatches: Int = -1
         var currentMatch: Int? = null
-        val argFamilies = args.map { family(it.kind) }
+        val argFamilies = args.map { family(it.code()) }
         functions.indices.forEach { candidateIndex ->
             var currentExactMatches = 0
             val params = functions[candidateIndex].getInstance(args.toTypedArray())?.parameters ?: return@forEach
             for (paramIndex in paramIndices) {
                 val argType = args[paramIndex]
                 val paramType = params[paramIndex]
-                if (paramType.kind == argType.kind) { currentExactMatches++ } // TODO: Convert all functions to use the new modelling, or else we need to only check kinds
+                if (paramType.code() == argType.code()) { currentExactMatches++ } // TODO: Convert all functions to use the new modelling, or else we need to only check kinds
                 val argFamily = argFamilies[paramIndex]
-                val paramFamily = family(paramType.kind)
+                val paramFamily = family(paramType.code())
                 if (paramFamily != argFamily && argFamily != UNKNOWN && paramFamily != DYNAMIC) { return@forEach }
             }
             if (currentExactMatches > exactMatches) {
@@ -119,34 +119,35 @@ internal class ExprCallDynamic(
          * @see family
          */
         @JvmStatic
-        fun family(type: PType.Kind): CoercionFamily {
+        fun family(type: Int): CoercionFamily {
             return when (type) {
-                PType.Kind.TINYINT -> CoercionFamily.NUMBER
-                PType.Kind.SMALLINT -> CoercionFamily.NUMBER
-                PType.Kind.INTEGER -> CoercionFamily.NUMBER
-                PType.Kind.NUMERIC -> CoercionFamily.NUMBER
-                PType.Kind.BIGINT -> CoercionFamily.NUMBER
-                PType.Kind.REAL -> CoercionFamily.NUMBER
-                PType.Kind.DOUBLE -> CoercionFamily.NUMBER
-                PType.Kind.DECIMAL -> CoercionFamily.NUMBER
-                PType.Kind.STRING -> CoercionFamily.STRING
-                PType.Kind.BOOL -> CoercionFamily.BOOLEAN
-                PType.Kind.TIMEZ -> CoercionFamily.TIME
-                PType.Kind.TIME -> CoercionFamily.TIME
-                PType.Kind.TIMESTAMPZ -> CoercionFamily.TIMESTAMP
-                PType.Kind.TIMESTAMP -> CoercionFamily.TIMESTAMP
-                PType.Kind.DATE -> CoercionFamily.DATE
-                PType.Kind.STRUCT -> CoercionFamily.STRUCTURE
-                PType.Kind.ARRAY -> CoercionFamily.COLLECTION
-                PType.Kind.BAG -> CoercionFamily.COLLECTION
-                PType.Kind.ROW -> CoercionFamily.STRUCTURE
-                PType.Kind.CHAR -> CoercionFamily.STRING
-                PType.Kind.VARCHAR -> CoercionFamily.STRING
-                PType.Kind.DYNAMIC -> DYNAMIC // TODO: REMOVE
-                PType.Kind.BLOB -> CoercionFamily.BINARY
-                PType.Kind.CLOB -> CoercionFamily.STRING
-                PType.Kind.UNKNOWN -> UNKNOWN // TODO: REMOVE
-                PType.Kind.VARIANT -> UNKNOWN // TODO: HANDLE VARIANT
+                PType.TINYINT -> CoercionFamily.NUMBER
+                PType.SMALLINT -> CoercionFamily.NUMBER
+                PType.INTEGER -> CoercionFamily.NUMBER
+                PType.NUMERIC -> CoercionFamily.NUMBER
+                PType.BIGINT -> CoercionFamily.NUMBER
+                PType.REAL -> CoercionFamily.NUMBER
+                PType.DOUBLE -> CoercionFamily.NUMBER
+                PType.DECIMAL -> CoercionFamily.NUMBER
+                PType.STRING -> CoercionFamily.STRING
+                PType.BOOL -> CoercionFamily.BOOLEAN
+                PType.TIMEZ -> CoercionFamily.TIME
+                PType.TIME -> CoercionFamily.TIME
+                PType.TIMESTAMPZ -> CoercionFamily.TIMESTAMP
+                PType.TIMESTAMP -> CoercionFamily.TIMESTAMP
+                PType.DATE -> CoercionFamily.DATE
+                PType.STRUCT -> CoercionFamily.STRUCTURE
+                PType.ARRAY -> CoercionFamily.COLLECTION
+                PType.BAG -> CoercionFamily.COLLECTION
+                PType.ROW -> CoercionFamily.STRUCTURE
+                PType.CHAR -> CoercionFamily.STRING
+                PType.VARCHAR -> CoercionFamily.STRING
+                PType.DYNAMIC -> DYNAMIC // TODO: REMOVE
+                PType.BLOB -> CoercionFamily.BINARY
+                PType.CLOB -> CoercionFamily.STRING
+                PType.UNKNOWN -> UNKNOWN // TODO: REMOVE
+                PType.VARIANT -> UNKNOWN // TODO: HANDLE VARIANT
+                else -> error("Unknown type: $type")
             }
         }
     }

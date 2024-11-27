@@ -25,7 +25,7 @@ internal object FnInCollection : Function {
     override fun getInstance(args: Array<PType>): Function.Instance? {
         val vType = args[0]
         val cType = args[1]
-        if (cType.kind !in setOf(PType.Kind.UNKNOWN, PType.Kind.ARRAY, PType.Kind.BAG)) {
+        if (cType.code() !in setOf(PType.UNKNOWN, PType.ARRAY, PType.BAG)) {
             return null
         }
         return object : Function.Instance(

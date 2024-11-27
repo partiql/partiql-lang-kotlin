@@ -4,7 +4,6 @@ import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Ref.Cast
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).
@@ -13,13 +12,13 @@ import org.partiql.types.PType.Kind
  * @property graph      Going with a matrix here (using enum ordinals) as it's simple and avoids walking.
  */
 internal class CastTable private constructor(
-    private val types: Array<Kind>,
+    private val types: Array<Int>,
     private val graph: Array<Array<Status>>,
 ) {
 
     fun get(operand: PType, target: PType): Cast? {
-        val i = operand.kind.ordinal
-        val j = target.kind.ordinal
+        val i = operand.code()
+        val j = target.code()
         return when (graph[i][j]) {
             Status.YES, Status.MODIFIED -> Cast(CompilerType(operand), CompilerType(target), Ref.Cast.Safety.COERCION, isNullable = true)
             Status.NO -> null
@@ -37,7 +36,7 @@ internal class CastTable private constructor(
 
     companion object {
 
-        private val N = Kind.entries.size
+        private val N = PType.codes().size
 
         private fun relationships(block: RelationshipBuilder.() -> Unit): Array<Status> {
             return with(RelationshipBuilder()) {
@@ -53,240 +52,240 @@ internal class CastTable private constructor(
          */
         @JvmStatic
         val partiql: CastTable = run {
-            val types = Kind.entries.toTypedArray()
+            val types = PType.codes().toTypedArray()
             val graph = arrayOfNulls<Array<Status>>(N)
             for (type in types) {
                 // initialize all with empty relationships
-                graph[type.ordinal] = Array(N) { Status.NO }
+                graph[type] = Array(N) { Status.NO }
             }
-            graph[Kind.UNKNOWN.ordinal] = relationships {
-                PType.Kind.values().map {
+            graph[PType.UNKNOWN] = relationships {
+                PType.codes().map {
                     cast(it)
                 }
             }
-            graph[Kind.DYNAMIC.ordinal] = relationships {
-                cast(Kind.DYNAMIC)
-                Kind.entries.filterNot { it == Kind.DYNAMIC }.forEach {
+            graph[PType.DYNAMIC] = relationships {
+                cast(PType.DYNAMIC)
+                PType.codes().filterNot { it == PType.DYNAMIC }.forEach {
                     cast(it)
                 }
             }
-            graph[Kind.BOOL.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.CHAR)
-                cast(Kind.STRING)
-                cast(Kind.VARCHAR)
+            graph[PType.BOOL] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.CHAR)
+                cast(PType.STRING)
+                cast(PType.VARCHAR)
             }
-            graph[Kind.TINYINT.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.STRING)
-                cast(Kind.VARCHAR)
-                cast(Kind.CHAR)
+            graph[PType.TINYINT] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.STRING)
+                cast(PType.VARCHAR)
+                cast(PType.CHAR)
             }
-            graph[Kind.SMALLINT.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.STRING)
-                cast(Kind.CHAR)
-                cast(Kind.VARCHAR)
+            graph[PType.SMALLINT] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.STRING)
+                cast(PType.CHAR)
+                cast(PType.VARCHAR)
             }
-            graph[Kind.INTEGER.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.STRING)
-                cast(Kind.CHAR)
-                cast(Kind.VARCHAR)
+            graph[PType.INTEGER] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.STRING)
+                cast(PType.CHAR)
+                cast(PType.VARCHAR)
             }
-            graph[Kind.BIGINT.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.STRING)
-                cast(Kind.CHAR)
-                cast(Kind.VARCHAR)
+            graph[PType.BIGINT] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.STRING)
+                cast(PType.CHAR)
+                cast(PType.VARCHAR)
             }
-            graph[Kind.NUMERIC.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.STRING)
-                cast(Kind.CHAR)
-                cast(Kind.VARCHAR)
+            graph[PType.NUMERIC] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.STRING)
+                cast(PType.CHAR)
+                cast(PType.VARCHAR)
             }
-            graph[Kind.DECIMAL.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.STRING)
-                cast(Kind.CHAR)
-                cast(Kind.VARCHAR)
+            graph[PType.DECIMAL] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.STRING)
+                cast(PType.CHAR)
+                cast(PType.VARCHAR)
             }
-            graph[Kind.REAL.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.STRING)
-                cast(Kind.CHAR)
-                cast(Kind.VARCHAR)
+            graph[PType.REAL] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.STRING)
+                cast(PType.CHAR)
+                cast(PType.VARCHAR)
             }
-            graph[Kind.DOUBLE.ordinal] = relationships {
-                cast(Kind.BOOL)
-                cast(Kind.TINYINT)
-                cast(Kind.SMALLINT)
-                cast(Kind.INTEGER)
-                cast(Kind.BIGINT)
-                cast(Kind.NUMERIC)
-                cast(Kind.DECIMAL)
-                cast(Kind.REAL)
-                cast(Kind.DOUBLE)
-                cast(Kind.STRING)
-                cast(Kind.CHAR)
-                cast(Kind.VARCHAR)
+            graph[PType.DOUBLE] = relationships {
+                cast(PType.BOOL)
+                cast(PType.TINYINT)
+                cast(PType.SMALLINT)
+                cast(PType.INTEGER)
+                cast(PType.BIGINT)
+                cast(PType.NUMERIC)
+                cast(PType.DECIMAL)
+                cast(PType.REAL)
+                cast(PType.DOUBLE)
+                cast(PType.STRING)
+                cast(PType.CHAR)
+                cast(PType.VARCHAR)
             }
-            graph[Kind.CHAR.ordinal] = relationships {
-                Kind.values().filterNot {
-                    it in setOf(Kind.BLOB, Kind.UNKNOWN, Kind.DYNAMIC, Kind.ARRAY, Kind.BAG, Kind.ROW)
+            graph[PType.CHAR] = relationships {
+                PType.codes().filterNot {
+                    it in setOf(PType.BLOB, PType.UNKNOWN, PType.DYNAMIC, PType.ARRAY, PType.BAG, PType.ROW)
                 }.forEach {
                     cast(it)
                 }
             }
-            graph[Kind.STRING.ordinal] = relationships {
-                Kind.values().filterNot {
-                    it in setOf(Kind.BLOB, Kind.UNKNOWN, Kind.DYNAMIC, Kind.ARRAY, Kind.BAG, Kind.ROW)
+            graph[PType.STRING] = relationships {
+                PType.codes().filterNot {
+                    it in setOf(PType.BLOB, PType.UNKNOWN, PType.DYNAMIC, PType.ARRAY, PType.BAG, PType.ROW)
                 }.forEach {
                     cast(it)
                 }
             }
-            graph[Kind.VARCHAR.ordinal] = relationships {
-                Kind.values().filterNot {
-                    it in setOf(Kind.BLOB, Kind.UNKNOWN, Kind.DYNAMIC, Kind.ARRAY, Kind.BAG, Kind.ROW)
+            graph[PType.VARCHAR] = relationships {
+                PType.codes().filterNot {
+                    it in setOf(PType.BLOB, PType.UNKNOWN, PType.DYNAMIC, PType.ARRAY, PType.BAG, PType.ROW)
                 }.forEach {
                     cast(it)
                 }
             }
-            graph[Kind.CLOB.ordinal] = relationships {
-                Kind.values().filterNot {
-                    it in setOf(Kind.BLOB, Kind.UNKNOWN, Kind.DYNAMIC, Kind.ARRAY, Kind.BAG, Kind.ROW)
+            graph[PType.CLOB] = relationships {
+                PType.codes().filterNot {
+                    it in setOf(PType.BLOB, PType.UNKNOWN, PType.DYNAMIC, PType.ARRAY, PType.BAG, PType.ROW)
                 }.forEach {
                     cast(it)
                 }
             }
-            graph[Kind.BLOB.ordinal] = Array(N) { Status.NO }
-            graph[Kind.DATE.ordinal] = relationships {
-                cast(Kind.TIMESTAMPZ)
-                cast(Kind.TIMESTAMP)
-                cast(Kind.TIMEZ)
-                cast(Kind.DATE)
-                cast(Kind.STRING)
-                cast(Kind.VARCHAR)
-                cast(Kind.CHAR)
-                cast(Kind.CLOB)
+            graph[PType.BLOB] = Array(N) { Status.NO }
+            graph[PType.DATE] = relationships {
+                cast(PType.TIMESTAMPZ)
+                cast(PType.TIMESTAMP)
+                cast(PType.TIMEZ)
+                cast(PType.DATE)
+                cast(PType.STRING)
+                cast(PType.VARCHAR)
+                cast(PType.CHAR)
+                cast(PType.CLOB)
             }
-            graph[Kind.TIMEZ.ordinal] = relationships {
-                cast(Kind.TIMESTAMPZ)
-                cast(Kind.TIMESTAMP)
-                cast(Kind.TIMEZ)
-                cast(Kind.TIME)
-                cast(Kind.STRING)
-                cast(Kind.VARCHAR)
-                cast(Kind.CHAR)
-                cast(Kind.CLOB)
+            graph[PType.TIMEZ] = relationships {
+                cast(PType.TIMESTAMPZ)
+                cast(PType.TIMESTAMP)
+                cast(PType.TIMEZ)
+                cast(PType.TIME)
+                cast(PType.STRING)
+                cast(PType.VARCHAR)
+                cast(PType.CHAR)
+                cast(PType.CLOB)
             }
-            graph[Kind.TIME.ordinal] = relationships {
-                cast(Kind.TIMESTAMPZ)
-                cast(Kind.TIMESTAMP)
-                cast(Kind.TIMEZ)
-                cast(Kind.TIME)
-                cast(Kind.STRING)
-                cast(Kind.VARCHAR)
-                cast(Kind.CHAR)
-                cast(Kind.CLOB)
+            graph[PType.TIME] = relationships {
+                cast(PType.TIMESTAMPZ)
+                cast(PType.TIMESTAMP)
+                cast(PType.TIMEZ)
+                cast(PType.TIME)
+                cast(PType.STRING)
+                cast(PType.VARCHAR)
+                cast(PType.CHAR)
+                cast(PType.CLOB)
             }
-            graph[Kind.TIMESTAMPZ.ordinal] = relationships {
-                cast(Kind.TIMESTAMPZ)
-                cast(Kind.TIMESTAMP)
-                cast(Kind.DATE)
-                cast(Kind.TIMEZ)
-                cast(Kind.TIME)
-                cast(Kind.STRING)
-                cast(Kind.VARCHAR)
-                cast(Kind.CHAR)
-                cast(Kind.CLOB)
+            graph[PType.TIMESTAMPZ] = relationships {
+                cast(PType.TIMESTAMPZ)
+                cast(PType.TIMESTAMP)
+                cast(PType.DATE)
+                cast(PType.TIMEZ)
+                cast(PType.TIME)
+                cast(PType.STRING)
+                cast(PType.VARCHAR)
+                cast(PType.CHAR)
+                cast(PType.CLOB)
             }
-            graph[Kind.TIMESTAMP.ordinal] = relationships {
-                cast(Kind.TIMESTAMPZ)
-                cast(Kind.TIMESTAMP)
-                cast(Kind.DATE)
-                cast(Kind.TIMEZ)
-                cast(Kind.TIME)
-                cast(Kind.STRING)
-                cast(Kind.VARCHAR)
-                cast(Kind.CHAR)
-                cast(Kind.CLOB)
+            graph[PType.TIMESTAMP] = relationships {
+                cast(PType.TIMESTAMPZ)
+                cast(PType.TIMESTAMP)
+                cast(PType.DATE)
+                cast(PType.TIMEZ)
+                cast(PType.TIME)
+                cast(PType.STRING)
+                cast(PType.VARCHAR)
+                cast(PType.CHAR)
+                cast(PType.CLOB)
             }
-            graph[Kind.BAG.ordinal] = relationships {
-                cast(Kind.BAG)
-                cast(Kind.ARRAY)
+            graph[PType.BAG] = relationships {
+                cast(PType.BAG)
+                cast(PType.ARRAY)
             }
-            graph[Kind.ARRAY.ordinal] = relationships {
-                cast(Kind.BAG)
-                cast(Kind.ARRAY)
+            graph[PType.ARRAY] = relationships {
+                cast(PType.BAG)
+                cast(PType.ARRAY)
             }
-            graph[Kind.STRUCT.ordinal] = relationships {
-                cast(Kind.STRUCT)
+            graph[PType.STRUCT] = relationships {
+                cast(PType.STRUCT)
             }
             CastTable(types, graph.requireNoNulls())
         }
@@ -301,8 +300,8 @@ internal class CastTable private constructor(
 
         fun build() = relationships
 
-        fun cast(target: Kind) {
-            relationships[target.ordinal] = Status.YES
+        fun cast(target: Int) {
+            relationships[target] = Status.YES
         }
     }
 }

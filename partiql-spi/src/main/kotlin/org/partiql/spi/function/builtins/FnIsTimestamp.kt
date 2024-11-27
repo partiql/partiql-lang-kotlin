@@ -15,8 +15,8 @@ internal val Fn_IS_TIMESTAMP__ANY__BOOL = Function.static(
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
 ) { args ->
-    val argKind = args[0].type.kind
-    Datum.bool(argKind == PType.Kind.TIMESTAMPZ || argKind == PType.Kind.TIMESTAMP)
+    val argKind = args[0].type.code()
+    Datum.bool(argKind == PType.TIMESTAMPZ || argKind == PType.TIMESTAMP)
 }
 
 internal val Fn_IS_TIMESTAMP__BOOL_INT32_ANY__BOOL = Function.static(

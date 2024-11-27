@@ -16,8 +16,8 @@ internal class RelOpScan(
 
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Row()))
-        records = when (r.type.kind) {
-            PType.Kind.ARRAY, PType.Kind.BAG -> RecordValueIterator(r.iterator())
+        records = when (r.type.code()) {
+            PType.ARRAY, PType.BAG -> RecordValueIterator(r.iterator())
             else -> {
                 close()
                 throw TypeCheckException("Unexpected type for scan: ${r.type}")

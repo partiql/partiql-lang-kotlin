@@ -13,5 +13,5 @@ internal val Fn_IS_BOOL__ANY__BOOL = Function.static(
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 ) { args ->
-    Datum.bool(args[0].type.kind == PType.Kind.BOOL)
+    Datum.bool(args[0].type.code() == PType.BOOL)
 }

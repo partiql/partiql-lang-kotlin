@@ -32,34 +32,35 @@ internal enum class CoercionFamily {
          * @see family
          */
         @JvmStatic
-        fun family(type: PType.Kind): CoercionFamily {
+        fun family(type: Int): CoercionFamily {
             return when (type) {
-                PType.Kind.TINYINT -> NUMBER
-                PType.Kind.SMALLINT -> NUMBER
-                PType.Kind.INTEGER -> NUMBER
-                PType.Kind.NUMERIC -> NUMBER
-                PType.Kind.BIGINT -> NUMBER
-                PType.Kind.REAL -> NUMBER
-                PType.Kind.DOUBLE -> NUMBER
-                PType.Kind.DECIMAL -> NUMBER
-                PType.Kind.STRING -> STRING
-                PType.Kind.BOOL -> BOOLEAN
-                PType.Kind.TIMEZ -> TIME
-                PType.Kind.TIME -> TIME
-                PType.Kind.TIMESTAMPZ -> TIMESTAMP
-                PType.Kind.TIMESTAMP -> TIMESTAMP
-                PType.Kind.DATE -> DATE
-                PType.Kind.STRUCT -> STRUCTURE
-                PType.Kind.ARRAY -> COLLECTION
-                PType.Kind.BAG -> COLLECTION
-                PType.Kind.ROW -> STRUCTURE
-                PType.Kind.CHAR -> STRING
-                PType.Kind.VARCHAR -> STRING
-                PType.Kind.DYNAMIC -> DYNAMIC // TODO: REMOVE
-                PType.Kind.BLOB -> BINARY
-                PType.Kind.CLOB -> STRING
-                PType.Kind.UNKNOWN -> UNKNOWN // TODO: REMOVE
-                PType.Kind.VARIANT -> UNKNOWN // TODO: HANDLE VARIANT
+                PType.TINYINT -> NUMBER
+                PType.SMALLINT -> NUMBER
+                PType.INTEGER -> NUMBER
+                PType.NUMERIC -> NUMBER
+                PType.BIGINT -> NUMBER
+                PType.REAL -> NUMBER
+                PType.DOUBLE -> NUMBER
+                PType.DECIMAL -> NUMBER
+                PType.STRING -> STRING
+                PType.BOOL -> BOOLEAN
+                PType.TIMEZ -> TIME
+                PType.TIME -> TIME
+                PType.TIMESTAMPZ -> TIMESTAMP
+                PType.TIMESTAMP -> TIMESTAMP
+                PType.DATE -> DATE
+                PType.STRUCT -> STRUCTURE
+                PType.ARRAY -> COLLECTION
+                PType.BAG -> COLLECTION
+                PType.ROW -> STRUCTURE
+                PType.CHAR -> STRING
+                PType.VARCHAR -> STRING
+                PType.DYNAMIC -> DYNAMIC // TODO: REMOVE
+                PType.BLOB -> BINARY
+                PType.CLOB -> STRING
+                PType.UNKNOWN -> UNKNOWN // TODO: REMOVE
+                PType.VARIANT -> UNKNOWN // TODO: HANDLE VARIANT
+                else -> error("Unknown type: $type")
             }
         }
 
@@ -72,13 +73,13 @@ internal enum class CoercionFamily {
          */
         @JvmStatic
         fun canCoerce(from: PType, to: PType): Boolean {
-            if (from.kind == PType.Kind.UNKNOWN) {
+            if (from.code() == PType.UNKNOWN) {
                 return true
             }
-            if (to.kind == PType.Kind.DYNAMIC) {
+            if (to.code() == PType.DYNAMIC) {
                 return true
             }
-            return family(from.kind) == family(to.kind)
+            return family(from.code()) == family(to.code())
         }
     }
 }

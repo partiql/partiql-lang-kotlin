@@ -26,4 +26,11 @@ class DatumInt implements Datum {
     public PType getType() {
         return _type;
     }
+
+    @Override
+    public String toString() {
+        return "DatumInt{" +
+                "_value=" + _value +
+                '}';
+    }
 }

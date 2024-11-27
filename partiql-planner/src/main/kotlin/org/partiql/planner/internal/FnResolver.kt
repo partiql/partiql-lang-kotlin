@@ -5,7 +5,6 @@ import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.function.Function
 import org.partiql.types.PType
-import org.partiql.types.PType.Kind
 
 /**
  *
@@ -48,7 +47,7 @@ internal object FnResolver {
         }
 
         // 2. If there are DYNAMIC arguments, return all candidates
-        val isDynamic = args.any { it.kind == Kind.DYNAMIC }
+        val isDynamic = args.any { it.code() == PType.DYNAMIC }
         if (isDynamic) {
             val orderedMatches = candidates.sortedWith(FnComparator)
             return FnMatch.Dynamic(orderedMatches)
@@ -130,7 +129,7 @@ internal object FnResolver {
             val a = args[i]
             val p = parameters[i]
             // TODO: Don't use kind! Once all functions use the new modelling, we can just make it p != a.
-            if (p.kind != a.kind) return false
+            if (p.code() != a.code()) return false
         }
         return true
     }
@@ -148,13 +147,13 @@ internal object FnResolver {
         var exactInputTypes = 0
         for (i in args.indices) {
             val a = args[i]
-            if (a.kind == Kind.UNKNOWN) {
+            if (a.code() == PType.UNKNOWN) {
                 continue // skip unknown arguments
             }
             // check match
             val p = parameters[i]
             when {
-                p.kind == a.kind -> exactInputTypes++ // TODO: Don't use kind! Once all functions use the new modelling, we can just make it p == a.
+                p.code() == a.code() -> exactInputTypes++ // TODO: Don't use kind! Once all functions use the new modelling, we can just make it p == a.
                 else -> mapping[i] = coercion(a, p) ?: return null
             }
         }

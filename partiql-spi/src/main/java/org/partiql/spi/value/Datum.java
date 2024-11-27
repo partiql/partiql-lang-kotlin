@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.errors.DataException;
 import org.partiql.types.PType;
-import org.partiql.value.DecimalValue;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
@@ -23,6 +22,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
+
+import static org.partiql.types.PType.*; // TODO
 
 /**
  * This is an EXPERIMENTAL representation of a value in PartiQL's type system. The intention of this modeling is to
@@ -387,7 +388,7 @@ public interface Datum extends Iterable<Datum> {
         if (this.isMissing()) {
             return PartiQL.missingValue();
         }
-        switch (type.getKind()) {
+        switch (type.code()) {
             case BOOL:
                 return this.isNull() ? PartiQL.boolValue(null) : PartiQL.boolValue(this.getBoolean());
             case TINYINT:
@@ -607,8 +608,9 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
+    @Deprecated
     static Datum decimal(@NotNull BigDecimal value) {
-        return new DatumDecimal(value, PType.decimal());
+        return new DatumDecimal(value, PType.decimal(38, 0));
     }
 
     @NotNull

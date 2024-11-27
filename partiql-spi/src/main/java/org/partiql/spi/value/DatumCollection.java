@@ -9,8 +9,8 @@ import java.util.Iterator;
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PType.Kind#ARRAY},
- * {@link PType.Kind#BAG}
+ * {@link PType#ARRAY},
+ * {@link PType#BAG}
  */
 class DatumCollection implements Datum {
 

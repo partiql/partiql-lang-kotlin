@@ -36,7 +36,7 @@ fun fromStaticType(type: StaticType): PType {
     } else if (type is DecimalType) {
         val precScale = type.precisionScaleConstraint
         if (precScale is DecimalType.PrecisionScaleConstraint.Unconstrained) {
-            return PType.decimal()
+            return PType.decimal(38, 0)
         } else if (precScale is DecimalType.PrecisionScaleConstraint.Constrained) {
             val precisionScaleConstraint = precScale
             return PType.decimal(precisionScaleConstraint.precision, precisionScaleConstraint.scale)

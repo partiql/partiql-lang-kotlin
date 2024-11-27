@@ -4,16 +4,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-class PTypeCollection implements PType {
+class PTypeCollection extends PType {
 
     @NotNull
     final PType _typeParam;
 
-    @NotNull
-    final Kind _kind;
-
-    PTypeCollection(@NotNull Kind base, @NotNull PType typeParam) {
-        _kind = base;
+    PTypeCollection(int code, @NotNull PType typeParam) {
+        super(code);
         _typeParam = typeParam;
     }
 
@@ -23,26 +20,20 @@ class PTypeCollection implements PType {
         return _typeParam;
     }
 
-    @NotNull
-    @Override
-    public Kind getKind() {
-        return _kind;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof PType)) return false;
-        return ((PType) o).getKind() == this._kind && ((PType) o).getTypeParameter().equals(_typeParam);
+        return ((PType) o).code() == this.code() && ((PType) o).getTypeParameter().equals(_typeParam);
     }
 
     @Override
     public String toString() {
-        return _kind.name() + "(" + _typeParam + ")";
+        return name() + "(" + _typeParam + ")";
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_kind, _typeParam);
+        return Objects.hash(code(), _typeParam);
     }
 }

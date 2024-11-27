@@ -47,8 +47,8 @@ public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
         var error: Throwable? = null
         try {
             val (strictResult, _) = run(mode = Mode.STRICT())
-            when (strictResult.type.kind) {
-                PType.Kind.BAG, PType.Kind.ARRAY -> strictResult.toList()
+            when (strictResult.type.code()) {
+                PType.BAG, PType.ARRAY -> strictResult.toList()
                 else -> strictResult
             }
         } catch (e: Throwable) {

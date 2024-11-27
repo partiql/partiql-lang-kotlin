@@ -161,7 +161,7 @@ internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = Function.static(
 internal val Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY = Function.static(
 
     name = "extract_second",
-    returns = PType.decimal(),
+    returns = PType.decimal(38, 19), // TODO: Rewrite using new function modeling.
     parameters = arrayOf(
         Parameter("datetime", PType.time(6)),
     ),
@@ -174,7 +174,7 @@ internal val Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY = Function.static(
 internal val Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY = Function.static(
 
     name = "extract_second",
-    returns = PType.decimal(),
+    returns = PType.decimal(38, 19), // TODO: Rewrite using new function modeling.
     parameters = arrayOf(
         Parameter("datetime", PType.timestamp(6)),
     ),

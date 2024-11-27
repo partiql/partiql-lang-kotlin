@@ -9,11 +9,11 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 private val INT_TYPES = setOf(
-    PType.Kind.TINYINT,
-    PType.Kind.SMALLINT,
-    PType.Kind.INTEGER,
-    PType.Kind.BIGINT,
-    PType.Kind.NUMERIC
+    PType.TINYINT,
+    PType.SMALLINT,
+    PType.INTEGER,
+    PType.BIGINT,
+    PType.NUMERIC
 )
 
 internal val Fn_IS_INT__ANY__BOOL = Function.static(
@@ -22,5 +22,5 @@ internal val Fn_IS_INT__ANY__BOOL = Function.static(
     parameters = arrayOf(Parameter("value", PType.dynamic()))
 ) { args ->
     val arg = args[0]
-    Datum.bool(arg.type.kind in INT_TYPES)
+    Datum.bool(arg.type.code() in INT_TYPES)
 }

@@ -15,8 +15,8 @@ internal val Fn_IS_TIME__ANY__BOOL = Function.static(
     parameters = arrayOf(Parameter("value", PType.dynamic())),
 
 ) { args ->
-    val argKind = args[0].type.kind
-    Datum.bool(argKind == PType.Kind.TIMEZ || argKind == PType.Kind.TIME)
+    val argKind = args[0].type.code()
+    Datum.bool(argKind == PType.TIMEZ || argKind == PType.TIME)
 }
 
 internal val Fn_IS_TIME__BOOL_INT32_ANY__BOOL = Function.static(

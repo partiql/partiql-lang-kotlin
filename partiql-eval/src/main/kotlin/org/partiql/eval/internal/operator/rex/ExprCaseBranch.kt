@@ -22,7 +22,7 @@ internal class ExprCaseBranch(value: ExprValue, result: ExprValue) {
      */
     fun eval(env: Environment): Datum? {
         val v = _value.eval(env)
-        if (v.type.kind == PType.Kind.BOOL && !v.isNull && !v.isMissing && v.boolean) {
+        if (v.type.code() == PType.BOOL && !v.isNull && !v.isMissing && v.boolean) {
             return _result.eval(env)
         }
         return null

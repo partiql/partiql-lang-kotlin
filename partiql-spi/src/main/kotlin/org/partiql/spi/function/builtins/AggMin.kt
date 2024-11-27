@@ -55,9 +55,9 @@ internal val Agg_MIN__INT__INT = Aggregation.static(
 
 internal val Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
     name = "min",
-    returns = PType.decimal(),
+    returns = PType.decimal(38, 19),
     parameters = arrayOf(
-        @Suppress("DEPRECATION") Parameter("value", PType.decimal()),
+        Parameter("value", PType.decimal(38, 19)), // TODO: Rewrite aggregations using new function modeling.
     ),
     accumulator = ::AccumulatorMin,
 )

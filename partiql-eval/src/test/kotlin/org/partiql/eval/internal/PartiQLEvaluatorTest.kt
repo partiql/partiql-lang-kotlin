@@ -1276,28 +1276,19 @@ class PartiQLEvaluatorTest {
     }
 
     @Test
-    @Disabled
+    // @Disabled
     fun developmentTest() {
-        val tc = SuccessTestCase(
-            input = """
-                SELECT VALUE
-                    CASE x + 1
-                        WHEN NULL THEN 'shouldnt be null'
-                        WHEN MISSING THEN 'shouldnt be missing'
-                        WHEN i THEN 'ONE'
-                        WHEN f THEN 'TWO'
-                        WHEN d THEN 'THREE'
-                        ELSE '?'
-                    END
-                FROM << i, f, d, null, missing >> AS x
-            """,
-            expected = boolValue(true),
-            globals = listOf(
-                SuccessTestCase.Global("i", "1"),
-                SuccessTestCase.Global("f", "2e0"),
-                SuccessTestCase.Global("d", "3.")
+        val tc =
+            SuccessTestCase(
+                input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
+                expected = bagValue(
+                    int32Value(0),
+                    int32Value(100),
+                    decimalValue(BigDecimal.valueOf(2000, 1)),
+                    decimalValue(BigDecimal.valueOf(3000, 1)),
+                ),
+                mode = Mode.STRICT()
             )
-        )
         tc.run()
     }
 
