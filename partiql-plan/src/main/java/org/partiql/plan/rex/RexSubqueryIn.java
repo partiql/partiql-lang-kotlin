@@ -7,7 +7,6 @@ import org.partiql.plan.rel.Rel;
 import org.partiql.types.PType;
 
 import java.util.List;
-import java.util.List;
 
 /**
  * Logical subquery in expression abstract base class.

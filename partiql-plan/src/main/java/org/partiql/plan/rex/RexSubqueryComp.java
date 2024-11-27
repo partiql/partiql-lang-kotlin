@@ -3,6 +3,7 @@ package org.partiql.plan.rex;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Visitor;
 import org.partiql.plan.rel.Rel;
+import org.partiql.spi.Enum;
 import org.partiql.types.PType;
 
 import java.util.List;
@@ -52,19 +53,19 @@ public abstract class RexSubqueryComp extends RexBase {
     /**
      * SQL <comp op> for use in the <quantified comparison predicate>.
      */
-    public static class Comparison extends org.partiql.spi.Enum {
+    public static class Comparison extends Enum {
 
         private Comparison(int code) {
             super(code);
         }
 
-        public static int UNKNOWN = 0;
-        public static int EQ = 1;
-        public static int NE = 2;
-        public static int LT = 3;
-        public static int LE = 4;
-        public static int GT = 5;
-        public static int GE = 6;
+        public static final int UNKNOWN = 0;
+        public static final int EQ = 1;
+        public static final int NE = 2;
+        public static final int LT = 3;
+        public static final int LE = 4;
+        public static final int GT = 5;
+        public static final int GE = 6;
 
         @NotNull
         public static Comparison EQ() {
@@ -100,16 +101,16 @@ public abstract class RexSubqueryComp extends RexBase {
     /**
      * SQL <quantifier> for use in the <quantified comparison predicate>.
      */
-    public static class Quantifier extends org.partiql.spi.Enum {
+    public static class Quantifier extends Enum {
 
         private Quantifier(int code) {
             super(code);
         }
 
-        public static int UNKNOWN = 0;
-        public static int ANY = 1;
-        public static int ALL = 2;
-        public static int SOME = 3;
+        public static final int UNKNOWN = 0;
+        public static final int ANY = 1;
+        public static final int ALL = 2;
+        public static final int SOME = 3;
 
         @NotNull
         public static Quantifier ANY() {

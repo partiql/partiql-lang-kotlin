@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
 import org.partiql.plan.Visitor;
 import org.partiql.plan.rel.Rel;
+import org.partiql.spi.Enum;
 import org.partiql.types.PType;
 
 import java.util.List;
@@ -49,12 +50,25 @@ public abstract class RexSubqueryTest extends RexBase {
 
     /**
      * EXISTS and UNIQUE are defined by SQL.
-     * <p>
-     * TODO use 1.0 enum modeling.
      */
-    public enum Test {
-        EXISTS,
-        UNIQUE,
-        OTHER;
+    public static class Test extends Enum {
+
+        public static final int UKNOWNN = 0;
+        public static final int EXISTS = 1;
+        public static final int UNIQUE = 2;
+
+        private Test(int code) {
+            super(code);
+        }
+
+        @NotNull
+        public static Test EXISTS() {
+            return new Test(EXISTS);
+        }
+
+        @NotNull
+        public static Test UNIQUE() {
+            return new Test(UNIQUE);
+        }
     }
 }
