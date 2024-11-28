@@ -12,6 +12,14 @@ import java.util.List;
 public abstract class RexPathSymbol extends RexBase {
 
     /**
+     * @return new RexPathSymbol instance
+     */
+    @NotNull
+    public static RexPathSymbol create(@NotNull Rex operand, @NotNull String symbol) {
+        return new Impl(operand, symbol);
+    }
+
+    /**
      * @return operand rex (child 0)
      */
     @NotNull
@@ -38,5 +46,28 @@ public abstract class RexPathSymbol extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitPathSymbol(this, ctx);
+    }
+
+    private static class Impl extends RexPathSymbol {
+
+        private final Rex operand;
+        private final String symbol;
+
+        private Impl(@NotNull Rex operand, @NotNull String symbol) {
+            this.operand = operand;
+            this.symbol = symbol;
+        }
+
+        @NotNull
+        @Override
+        public Rex getOperand() {
+            return operand;
+        }
+
+        @NotNull
+        @Override
+        public String getSymbol() {
+            return symbol;
+        }
     }
 }

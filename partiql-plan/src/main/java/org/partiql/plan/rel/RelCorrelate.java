@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RelCorrelate extends RelBase {
 
     /**
+     * @return new {@link RelCorrelate} instance
+     */
+    @NotNull
+    public static RelCorrelate create(@NotNull Rel left, @NotNull Rel right, @NotNull JoinType joinType) {
+        return new Impl(left, right, joinType);
+    }
+
+    /**
      * @return the left input (child 0)
      */
     @NotNull
@@ -44,5 +52,36 @@ public abstract class RelCorrelate extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitCorrelate(this, ctx);
+    }
+
+    private static class Impl extends RelCorrelate {
+
+        private final Rel left;
+        private final Rel right;
+        private final JoinType joinType;
+
+        public Impl(Rel left, Rel right, JoinType joinType) {
+            this.left = left;
+            this.right = right;
+            this.joinType = joinType;
+        }
+
+        @NotNull
+        @Override
+        public Rel getLeft() {
+            return left;
+        }
+
+        @NotNull
+        @Override
+        public Rel getRight() {
+            return right;
+        }
+
+        @NotNull
+        @Override
+        public JoinType getJoinType() {
+            return joinType;
+        }
     }
 }

@@ -12,6 +12,14 @@ import java.util.List;
 public abstract class RelUnion extends RelBase {
 
     /**
+     * @return new {@link RelUnion} instance
+     */
+    @NotNull
+    public static RelUnion create(@NotNull Rel left, @NotNull Rel right, boolean all) {
+        return new Impl(left, right, all);
+    }
+
+    /**
      * @return true if ALL else DISTINCT.
      */
     public abstract boolean isAll();
@@ -45,5 +53,35 @@ public abstract class RelUnion extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitUnion(this, ctx);
+    }
+
+    private static class Impl extends RelUnion {
+
+        private final Rel left;
+        private final Rel right;
+        private final boolean all;
+
+        public Impl(Rel left, Rel right, boolean all) {
+            this.left = left;
+            this.right = right;
+            this.all = all;
+        }
+
+        @Override
+        public boolean isAll() {
+            return all;
+        }
+
+        @NotNull
+        @Override
+        public Rel getLeft() {
+            return left;
+        }
+
+        @NotNull
+        @Override
+        public Rel getRight() {
+            return right;
+        }
     }
 }

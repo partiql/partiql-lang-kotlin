@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RexTable extends RexBase {
 
     /**
+     * @return new RexTable instance
+     */
+    @NotNull
+    public static RexTable create(@NotNull Table table) {
+        return new Impl(table);
+    }
+
+    /**
      * @return the table implementation.
      */
     public abstract Table getTable();
@@ -31,5 +39,19 @@ public abstract class RexTable extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitTable(this, ctx);
+    }
+
+    private static class Impl extends RexTable {
+
+        private final Table table;
+
+        private Impl(Table table) {
+            this.table = table;
+        }
+
+        @Override
+        public Table getTable() {
+            return table;
+        }
     }
 }

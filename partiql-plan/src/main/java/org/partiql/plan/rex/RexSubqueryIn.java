@@ -14,6 +14,14 @@ import java.util.List;
 public abstract class RexSubqueryIn extends RexBase {
 
     /**
+     * @return new RexSubqueryIn instance
+     */
+    @NotNull
+    public static RexSubqueryIn create(@NotNull Rel input, @NotNull List<Rex> args) {
+        return new Impl(input, args);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -31,7 +39,7 @@ public abstract class RexSubqueryIn extends RexBase {
     }
 
     @Override
-    protected List<Operator> children() {
+    protected final List<Operator> children() {
         Rel c0 = getInput();
         return List.of(c0);
     }
@@ -39,5 +47,28 @@ public abstract class RexSubqueryIn extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitSubqueryIn(this, ctx);
+    }
+
+    private static class Impl extends RexSubqueryIn {
+
+        private final Rel input;
+        private final List<Rex> args;
+
+        private Impl(Rel input, List<Rex> args) {
+            this.input = input;
+            this.args = args;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public List<Rex> getArgs() {
+            return args;
+        }
     }
 }

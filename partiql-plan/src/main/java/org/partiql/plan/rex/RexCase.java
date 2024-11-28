@@ -12,6 +12,11 @@ import java.util.List;
  */
 public abstract class RexCase extends RexBase {
 
+    @NotNull
+    public static RexCase create(@Nullable Rex match, @NotNull List<Branch> branches, @Nullable Rex def) {
+        return new Impl(match, branches, def);
+    }
+
     /**
      * @return the match expression, or {@code null} if none (child 0)
      */
@@ -72,6 +77,36 @@ public abstract class RexCase extends RexBase {
         @NotNull
         public Rex getResult() {
             return result;
+        }
+    }
+
+    private static class Impl extends RexCase {
+        private final Rex match;
+        private final List<Branch> branches;
+        private final Rex def;
+
+        private Impl(Rex match, List<Branch> branches, Rex def) {
+            this.match = match;
+            this.branches = branches;
+            this.def = def;
+        }
+
+        @Nullable
+        @Override
+        public Rex getMatch() {
+            return match;
+        }
+
+        @NotNull
+        @Override
+        public List<Branch> getBranches() {
+            return branches;
+        }
+
+        @Nullable
+        @Override
+        public Rex getDefault() {
+            return def;
         }
     }
 }

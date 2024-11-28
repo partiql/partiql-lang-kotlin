@@ -13,8 +13,25 @@ import java.util.List;
 public abstract class RexStruct extends RexBase {
 
     /**
+     * @return new RexStruct instance
+     */
+    @NotNull
+    public static RexStruct create(@NotNull List<Field> fields) {
+        return new Impl(fields);
+    }
+
+    /**
+     * @return a field constructor instance
+     */
+    @NotNull
+    public static Field field(Rex key, Rex value) {
+        return new Field(key, value);
+    }
+
+    /**
      * @return list of struct fields (NOT children)
      */
+    @NotNull
     public abstract List<Field> getFields();
 
     @NotNull
@@ -41,7 +58,7 @@ public abstract class RexStruct extends RexBase {
         private final Rex key;
         private final Rex value;
 
-        public Field(Rex key, Rex value) {
+        private Field(Rex key, Rex value) {
             this.key = key;
             this.value = value;
         }
@@ -52,6 +69,22 @@ public abstract class RexStruct extends RexBase {
 
         public Rex getValue() {
             return value;
+        }
+    }
+
+    private static class Impl extends RexStruct {
+
+        @NotNull
+        private final List<Field> fields;
+
+        private Impl(@NotNull List<Field> fields) {
+            this.fields = fields;
+        }
+
+        @Override
+        @NotNull
+        public List<Field> getFields() {
+            return fields;
         }
     }
 }

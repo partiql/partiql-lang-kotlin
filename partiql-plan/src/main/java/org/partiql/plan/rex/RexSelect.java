@@ -14,6 +14,14 @@ import java.util.List;
 public abstract class RexSelect extends RexBase {
 
     /**
+     * @return new RexSelect instance
+     */
+    @NotNull
+    public static RexSelect create(@NotNull Rel input, @NotNull Rex constructor) {
+        return new Impl(input, constructor);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -41,5 +49,28 @@ public abstract class RexSelect extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitSelect(this, ctx);
+    }
+
+    private static class Impl extends RexSelect {
+
+        private final Rel input;
+        private final Rex constructor;
+
+        private Impl(Rel input, Rex constructor) {
+            this.input = input;
+            this.constructor = constructor;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public Rex getConstructor() {
+            return constructor;
+        }
     }
 }

@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RelProject extends RelBase {
 
     /**
+     * @return new {@link RelProject} instance
+     */
+    @NotNull
+    public static RelProject create(Rel input, List<Rex> projections) {
+        return new Impl(input, projections);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -40,5 +48,28 @@ public abstract class RelProject extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitProject(this, ctx);
+    }
+
+    private static class Impl extends RelProject {
+
+        private final Rel input;
+        private final List<Rex> projections;
+
+        public Impl(Rel input, List<Rex> projections) {
+            this.input = input;
+            this.projections = projections;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public List<Rex> getProjections() {
+            return projections;
+        }
     }
 }

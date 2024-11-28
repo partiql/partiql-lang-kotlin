@@ -12,6 +12,14 @@ import java.util.List;
 public abstract class RexNullIf extends RexBase {
 
     /**
+     * @return new RexNullIf instance
+     */
+    @NotNull
+    public static RexNullIf create(@NotNull Rex v1, @NotNull Rex v2) {
+        return new Impl(v1, v2);
+    }
+
+    /**
      * @return v1 rex (child 0)
      */
     @NotNull
@@ -39,5 +47,28 @@ public abstract class RexNullIf extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitNullIf(this, ctx);
+    }
+
+    private static class Impl extends RexNullIf {
+
+        private final Rex v1;
+        private final Rex v2;
+
+        private Impl(Rex v1, Rex v2) {
+            this.v1 = v1;
+            this.v2 = v2;
+        }
+
+        @NotNull
+        @Override
+        public Rex getV1() {
+            return v1;
+        }
+
+        @NotNull
+        @Override
+        public Rex getV2() {
+            return v2;
+        }
     }
 }

@@ -20,6 +20,14 @@ import java.util.List;
 public abstract class RexSubqueryTest extends RexBase {
 
     /**
+     * @return new RexSubqueryTest instance
+     */
+    @NotNull
+    public static RexSubqueryTest create(@NotNull Rel input, @NotNull Test test) {
+        return new Impl(input, test);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -53,7 +61,7 @@ public abstract class RexSubqueryTest extends RexBase {
      */
     public static class Test extends Enum {
 
-        public static final int UKNOWNN = 0;
+        public static final int UNKNOWN = 0;
         public static final int EXISTS = 1;
         public static final int UNIQUE = 2;
 
@@ -69,6 +77,29 @@ public abstract class RexSubqueryTest extends RexBase {
         @NotNull
         public static Test UNIQUE() {
             return new Test(UNIQUE);
+        }
+    }
+
+    private static class Impl extends RexSubqueryTest {
+
+        private final Rel input;
+        private final Test test;
+
+        private Impl(Rel input, Test test) {
+            this.input = input;
+            this.test = test;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public Test getTest() {
+            return test;
         }
     }
 }

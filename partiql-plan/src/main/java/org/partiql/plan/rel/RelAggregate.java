@@ -8,12 +8,20 @@ import org.partiql.spi.function.Aggregation;
 
 import java.util.List;
 
+// TODO GROUP STRATEGY: https://github.com/partiql/partiql-lang-kotlin/issues/1664
+
 /**
  * The logical aggregation abstract base class.
  */
 public abstract class RelAggregate extends RelBase {
 
-    // TODO GROUP STRATEGY: https://github.com/partiql/partiql-lang-kotlin/issues/1664
+    /**
+     * @return new {@link RelAggregate} instance
+     */
+    @NotNull
+    public static RelAggregate create(@NotNull Rel input, @NotNull List<Measure> measures, @NotNull List<Rex> groups) {
+        return new Impl(input, measures, groups);
+    }
 
     /**
      * @return the input (child 0)
@@ -47,6 +55,8 @@ public abstract class RelAggregate extends RelBase {
 
     /**
      * An aggregation function along with its arguments and any additional filters (e.g. DISTINCT).
+     * <br>
+     * TODO unnest ??
      */
     public static class Measure {
 
@@ -73,6 +83,37 @@ public abstract class RelAggregate extends RelBase {
         @NotNull
         public Boolean isDistinct() {
             return distinct;
+        }
+    }
+
+    private static class Impl extends RelAggregate {
+
+        private final Rel input;
+        private final List<Measure> measures;
+        private final List<Rex> groups;
+
+        public Impl(Rel input, List<Measure> measures, List<Rex> groups) {
+            this.input = input;
+            this.measures = measures;
+            this.groups = groups;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public List<Measure> getMeasures() {
+            return measures;
+        }
+
+        @NotNull
+        @Override
+        public List<Rex> getGroups() {
+            return groups;
         }
     }
 }

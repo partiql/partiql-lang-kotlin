@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RexArray extends RexBase {
 
     /**
+     * @return new RexArray instance
+     */
+    @NotNull
+    public static RexArray create(@NotNull List<Rex> values) {
+        return new Impl(values);
+    }
+
+    /**
      * @return the values of the array, also the children.
      */
     @NotNull
@@ -34,5 +42,20 @@ public abstract class RexArray extends RexBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitArray(this, ctx);
+    }
+
+    private static class Impl extends RexArray {
+
+        private final List<Rex> values;
+
+        private Impl(List<Rex> values) {
+            this.values = values;
+        }
+
+        @NotNull
+        @Override
+        public List<Rex> getValues() {
+            return values;
+        }
     }
 }

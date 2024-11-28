@@ -12,6 +12,14 @@ import java.util.List;
  */
 public abstract class RelSort extends RelBase {
 
+    /**
+     * @return new {@link RelSort} instance
+     */
+    @NotNull
+    public static RelSort create(@NotNull Rel input, @NotNull List<Collation> collations) {
+        return new Impl(input, collations);
+    }
+
     @NotNull
     public abstract Rel getInput();
 
@@ -21,7 +29,7 @@ public abstract class RelSort extends RelBase {
     @NotNull
     @Override
     protected final RelType type() {
-        throw new UnsupportedOperationException("Derive type is not implemented");
+        return getInput().getType();
     }
 
     @NotNull
@@ -34,5 +42,28 @@ public abstract class RelSort extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitSort(this, ctx);
+    }
+
+    private static class Impl extends RelSort {
+
+        private final Rel input;
+        private final List<Collation> collations;
+
+        public Impl(Rel input, List<Collation> collations) {
+            this.input = input;
+            this.collations = collations;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public List<Collation> getCollations() {
+            return collations;
+        }
     }
 }

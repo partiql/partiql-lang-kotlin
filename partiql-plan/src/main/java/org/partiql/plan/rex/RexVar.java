@@ -12,6 +12,14 @@ import java.util.List;
 public abstract class RexVar extends RexBase {
 
     /**
+     * @return new variable reference expression.
+     */
+    @NotNull
+    public static RexVar create(int depth, int offset) {
+        return new Impl(depth, offset);
+    }
+
+    /**
      * @return 0-indexed scope offset.
      */
     public abstract int getDepth();
@@ -36,5 +44,26 @@ public abstract class RexVar extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitVar(this, ctx);
+    }
+
+    private static class Impl extends RexVar {
+
+        private final int depth;
+        private final int offset;
+
+        private Impl(int depth, int offset) {
+            this.depth = depth;
+            this.offset = offset;
+        }
+
+        @Override
+        public int getDepth() {
+            return depth;
+        }
+
+        @Override
+        public int getOffset() {
+            return offset;
+        }
     }
 }

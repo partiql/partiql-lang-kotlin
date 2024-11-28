@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RelUnpivot extends RelBase {
 
     /**
+     * @return new {@link RelUnpivot} instance
+     */
+    @NotNull
+    public static RelUnpivot create(@NotNull Rex rex) {
+        return new Impl(rex);
+    }
+
+    /**
      * @return input rex (child 0)
      */
     @NotNull
@@ -34,5 +42,20 @@ public abstract class RelUnpivot extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitUnpivot(this, ctx);
+    }
+
+    private static class Impl extends RelUnpivot {
+
+        private final Rex rex;
+
+        public Impl(Rex rex) {
+            this.rex = rex;
+        }
+
+        @NotNull
+        @Override
+        public Rex getRex() {
+            return rex;
+        }
     }
 }

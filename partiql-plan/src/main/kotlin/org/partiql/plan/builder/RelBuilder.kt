@@ -1,10 +1,10 @@
 package org.partiql.plan.builder
 
-import org.partiql.plan.AggregateCall
 import org.partiql.plan.Collation
 import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
 import org.partiql.plan.rel.Rel
+import org.partiql.plan.rel.RelAggregate
 
 /**
  * DataFrame style fluent-builder for PartiQL logical plans.
@@ -64,13 +64,13 @@ public class RelBuilder private constructor(builder: Builder) {
      * Appends a RelAggregate to the current operator builder.
      */
     public fun aggregate(
-        calls: List<AggregateCall>,
+        measures: List<RelAggregate.Measure>,
         groups: List<RexBuilder>,
     ): RelBuilder = RelBuilder {
         val _input = self.build(it)
-        val _calls = calls // TODO calls needs to be builder
+        val _measures = measures
         val _groups = groups.map { group -> group.build(it) }
-        it.relAggregate(_input, _calls, _groups)
+        it.relAggregate(_input, _measures, _groups)
     }
 
     public fun distinct(): RelBuilder = RelBuilder {
@@ -115,7 +115,7 @@ public class RelBuilder private constructor(builder: Builder) {
     /**
      * Appends a RelJoin to the current operator builder for LATERAL CROSS JOIN.
      */
-    public fun join(rhs: RelBuilder): RelBuilder = join(rhs, null, JoinType.INNER)
+    public fun join(rhs: RelBuilder): RelBuilder = join(rhs, null, JoinType.INNER())
 
     /**
      * Appends a RelJoin to the current operator builder for INNER JOIN ON <condition>.
@@ -127,7 +127,7 @@ public class RelBuilder private constructor(builder: Builder) {
     public fun join(
         rhs: RelBuilder,
         condition: RexBuilder,
-    ): RelBuilder = join(rhs, condition, JoinType.INNER)
+    ): RelBuilder = join(rhs, condition, JoinType.INNER())
 
     /**
      * Appends a RelJoin to the current operator builder for [LEFT|RIGHT|INNER|FULL] JOIN.

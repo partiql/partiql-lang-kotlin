@@ -12,6 +12,14 @@ import java.util.List;
 public abstract class RexPathKey extends RexBase {
 
     /**
+     * @return new RexPathKey instance
+     */
+    @NotNull
+    public static RexPathKey create(@NotNull Rex operand, @NotNull Rex key) {
+        return new Impl(operand, key);
+    }
+
+    /**
      * @return operand rex (child 0)
      */
     @NotNull
@@ -39,5 +47,28 @@ public abstract class RexPathKey extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitPathKey(this, ctx);
+    }
+
+    private static class Impl extends RexPathKey {
+
+        private final Rex operand;
+        private final Rex key;
+
+        private Impl(@NotNull Rex operand, @NotNull Rex key) {
+            this.operand = operand;
+            this.key = key;
+        }
+
+        @NotNull
+        @Override
+        public Rex getOperand() {
+            return operand;
+        }
+
+        @NotNull
+        @Override
+        public Rex getKey() {
+            return key;
+        }
     }
 }

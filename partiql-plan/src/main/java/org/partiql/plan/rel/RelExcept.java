@@ -12,9 +12,12 @@ import java.util.List;
 public abstract class RelExcept extends RelBase {
 
     /**
-     * @return true if ALL else DISTINCT.
+     * @return new {@link RelExcept} instance
      */
-    public abstract boolean isAll();
+    @NotNull
+    public static RelExcept create(@NotNull Rel left, @NotNull Rel right, boolean all) {
+        return new Impl(left, right, all);
+    }
 
     /**
      * @return left input (child 0)
@@ -27,6 +30,11 @@ public abstract class RelExcept extends RelBase {
      */
     @NotNull
     public abstract Rel getRight();
+
+    /**
+     * @return true if ALL else DISTINCT.
+     */
+    public abstract boolean isAll();
 
     @NotNull
     @Override
@@ -45,5 +53,35 @@ public abstract class RelExcept extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitExcept(this, ctx);
+    }
+
+    private static class Impl extends RelExcept {
+
+        private final Rel left;
+        private final Rel right;
+        private final boolean all;
+
+        public Impl(Rel left, Rel right, boolean all) {
+            this.left = left;
+            this.right = right;
+            this.all = all;
+        }
+
+        @NotNull
+        @Override
+        public Rel getLeft() {
+            return left;
+        }
+
+        @NotNull
+        @Override
+        public Rel getRight() {
+            return right;
+        }
+
+        @Override
+        public boolean isAll() {
+            return all;
+        }
     }
 }

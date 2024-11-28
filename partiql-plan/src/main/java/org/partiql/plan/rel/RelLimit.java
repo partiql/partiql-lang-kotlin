@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RelLimit extends RelBase {
 
     /**
+     * @return new {@link RelLimit} instance
+     */
+    @NotNull
+    public static RelLimit create(@NotNull Rel input, @NotNull Rex limit) {
+        return new Impl(input, limit);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -27,7 +35,7 @@ public abstract class RelLimit extends RelBase {
     @NotNull
     @Override
     protected final RelType type() {
-        throw new UnsupportedOperationException("Derive type is not implemented");
+        return getInput().getType();
     }
 
     @NotNull
@@ -41,5 +49,28 @@ public abstract class RelLimit extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitLimit(this, ctx);
+    }
+
+    private static class Impl extends RelLimit {
+
+        private final Rel input;
+        private final Rex limit;
+
+        public Impl(Rel input, Rex limit) {
+            this.input = input;
+            this.limit = limit;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public Rex getLimit() {
+            return limit;
+        }
     }
 }

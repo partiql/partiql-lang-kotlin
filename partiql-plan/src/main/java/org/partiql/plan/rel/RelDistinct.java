@@ -12,6 +12,14 @@ import java.util.List;
 public abstract class RelDistinct extends RelBase {
 
     /**
+     * @return new {@link RelDistinct} instance
+     */
+    @NotNull
+    public static RelDistinct create(@NotNull Rel input) {
+        return new Impl(input);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -33,5 +41,20 @@ public abstract class RelDistinct extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitDistinct(this, ctx);
+    }
+
+    private static class Impl extends RelDistinct {
+
+        private final Rel input;
+
+        public Impl(Rel input) {
+            this.input = input;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
     }
 }

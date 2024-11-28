@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RexDispatch extends RexBase {
 
     /**
+     * @return new RexDispatch instance
+     */
+    @NotNull
+    public static RexDispatch create(String name, List<Function> functions, List<Rex> args) {
+        return new Impl(name, functions, args);
+    }
+
+    /**
      * Dynamic function name.
      */
     public abstract String getName();
@@ -42,5 +50,33 @@ public abstract class RexDispatch extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitCallDynamic(this, ctx);
+    }
+
+    private static class Impl extends RexDispatch {
+
+        private final String name;
+        private final List<Function> functions;
+        private final List<Rex> args;
+
+        private Impl(String name, List<Function> functions, List<Rex> args) {
+            this.name = name;
+            this.functions = functions;
+            this.args = args;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public List<Function> getFunctions() {
+            return functions;
+        }
+
+        @Override
+        public List<Rex> getArgs() {
+            return args;
+        }
     }
 }

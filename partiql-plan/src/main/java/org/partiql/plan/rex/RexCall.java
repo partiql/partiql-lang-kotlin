@@ -12,6 +12,11 @@ import java.util.List;
  */
 public abstract class RexCall extends RexBase {
 
+    @NotNull
+    public static RexCall create(@NotNull Function.Instance function, @NotNull List<Rex> args) {
+        return new Impl(function, args);
+    }
+
     /**
      * Returns the function to invoke.
      */
@@ -38,6 +43,29 @@ public abstract class RexCall extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitCall(this, ctx);
+    }
+
+    private static class Impl extends RexCall {
+
+        private final Function.Instance function;
+        private final List<Rex> args;
+
+        private Impl(Function.Instance function, List<Rex> args) {
+            this.function = function;
+            this.args = args;
+        }
+
+        @NotNull
+        @Override
+        public Function.Instance getFunction() {
+            return function;
+        }
+
+        @NotNull
+        @Override
+        public List<Rex> getArgs() {
+            return args;
+        }
     }
 }
 

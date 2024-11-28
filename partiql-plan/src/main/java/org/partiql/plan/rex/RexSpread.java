@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RexSpread extends RexBase {
 
     /**
+     * @return new RexSpread instance
+     */
+    @NotNull
+    public static RexSpread create(@NotNull List<Rex> args) {
+        return new Impl(args);
+    }
+
+    /**
      * @return list of spread arguments (the children)
      */
     public abstract List<Rex> getArgs();
@@ -32,5 +40,19 @@ public abstract class RexSpread extends RexBase {
 
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitSpread(this, ctx);
+    }
+
+    private static class Impl extends RexSpread {
+
+        private final List<Rex> args;
+
+        private Impl(List<Rex> args) {
+            this.args = args;
+        }
+
+        @Override
+        public List<Rex> getArgs() {
+            return args;
+        }
     }
 }

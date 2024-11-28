@@ -12,6 +12,14 @@ import java.util.List;
 public abstract class RexCoalesce extends RexBase {
 
     /**
+     * @return new RexCoalesce instance
+     */
+    @NotNull
+    public static RexCoalesce create(List<Rex> args) {
+        return new Impl(args);
+    }
+
+    /**
      * @return the list of arguments (also the children).
      */
     @NotNull
@@ -31,5 +39,20 @@ public abstract class RexCoalesce extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitCoalesce(this, ctx);
+    }
+
+    private static class Impl extends RexCoalesce {
+
+        private final List<Rex> args;
+
+        private Impl(List<Rex> args) {
+            this.args = args;
+        }
+
+        @NotNull
+        @Override
+        public List<Rex> getArgs() {
+            return args;
+        }
     }
 }

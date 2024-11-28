@@ -462,7 +462,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitSubquery(rex: RexSubquery, ctx: Unit): ExprValue {
             val rel = compile(rex.getInput(), ctx)
             val constructor = compile(rex.getConstructor(), ctx)
-            return when (rex.asScalar()) {
+            return when (rex.isScalar()) {
                 true -> ExprSubquery(rel, constructor)
                 else -> ExprSubqueryRow(rel, constructor)
             }

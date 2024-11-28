@@ -1,6 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operator;
 import org.partiql.plan.Visitor;
 import org.partiql.plan.rel.Rel;
 import org.partiql.spi.Enum;
@@ -14,6 +15,19 @@ import java.util.List;
  * See SQL-99 <comparison predicate> and <quantified comparison predicate>.
  */
 public abstract class RexSubqueryComp extends RexBase {
+
+    /**
+     * @return new RexSubqueryComp instance
+     */
+    @NotNull
+    public static RexSubqueryComp create(
+            @NotNull Rel input,
+            @NotNull List<Rex> args,
+            @NotNull Comparison comparison,
+            @NotNull Quantifier quantifier
+    ) {
+        return new Impl(input, args, comparison, quantifier);
+    }
 
     /**
      * @return input rel (child 0)
@@ -43,6 +57,12 @@ public abstract class RexSubqueryComp extends RexBase {
     @Override
     protected final RexType type() {
         return new RexType(PType.bool());
+    }
+
+    @Override
+    protected final List<Operator> children() {
+        Rel c0 = getInput();
+        return List.of(c0);
     }
 
     @Override
@@ -125,6 +145,45 @@ public abstract class RexSubqueryComp extends RexBase {
         @NotNull
         public static Quantifier SOME() {
             return new Quantifier(SOME);
+        }
+    }
+
+    private static class Impl extends RexSubqueryComp {
+
+        private final Rel input;
+        private final List<Rex> args;
+        private final Comparison comparison;
+        private final Quantifier quantifier;
+
+        private Impl(Rel input, List<Rex> args, Comparison comparison, Quantifier quantifier) {
+            this.input = input;
+            this.args = args;
+            this.comparison = comparison;
+            this.quantifier = quantifier;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public List<Rex> getArgs() {
+            return args;
+        }
+
+        @NotNull
+        @Override
+        public Comparison getComparison() {
+            return comparison;
+        }
+
+        @NotNull
+        @Override
+        public Quantifier getQuantifier() {
+            return quantifier;
         }
     }
 }

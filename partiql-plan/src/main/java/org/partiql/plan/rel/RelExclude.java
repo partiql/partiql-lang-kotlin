@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RelExclude extends RelBase {
 
     /**
+     * @return new {@link RelExclude} instance
+     */
+    @NotNull
+    public static RelExclude create(@NotNull Rel input, @NotNull List<Exclusion> exclusions) {
+        return new Impl(input, exclusions);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -41,4 +49,28 @@ public abstract class RelExclude extends RelBase {
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitExclude(this, ctx);
     }
+
+    private static class Impl extends RelExclude {
+
+        private final Rel input;
+        private final List<Exclusion> exclusions;
+
+        public Impl(Rel input, List<Exclusion> exclusions) {
+            this.input = input;
+            this.exclusions = exclusions;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public List<Exclusion> getExclusions() {
+            return exclusions;
+        }
+    }
+
 }

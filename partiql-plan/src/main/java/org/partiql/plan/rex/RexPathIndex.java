@@ -12,6 +12,14 @@ import java.util.List;
 public abstract class RexPathIndex extends RexBase {
 
     /**
+     * @return new RexPathIndex instance
+     */
+    @NotNull
+    public static RexPathIndex create(@NotNull Rex operand, @NotNull Rex index) {
+        return new Impl(operand, index);
+    }
+
+    /**
      * @return operand rex (child 0)
      */
     @NotNull
@@ -38,5 +46,28 @@ public abstract class RexPathIndex extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitPathIndex(this, ctx);
+    }
+
+    private static class Impl extends RexPathIndex {
+
+        private final Rex operand;
+        private final Rex index;
+
+        private Impl(@NotNull Rex operand, @NotNull Rex index) {
+            this.operand = operand;
+            this.index = index;
+        }
+
+        @NotNull
+        @Override
+        public Rex getOperand() {
+            return operand;
+        }
+
+        @NotNull
+        @Override
+        public Rex getIndex() {
+            return index;
+        }
     }
 }

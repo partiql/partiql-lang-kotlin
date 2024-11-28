@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RelIterate extends RelBase {
 
     /**
+     * @return new {@link RelIterate} instance
+     */
+    @NotNull
+    public static RelIterate create(@NotNull Rex rex) {
+        return new Impl(rex);
+    }
+
+    /**
      * @return input rex (child 0)
      */
     @NotNull
@@ -34,5 +42,20 @@ public abstract class RelIterate extends RelBase {
     @Override
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitIterate(this, ctx);
+    }
+
+    private static class Impl extends RelIterate {
+
+        private final Rex rex;
+
+        public Impl(Rex rex) {
+            this.rex = rex;
+        }
+
+        @NotNull
+        @Override
+        public Rex getRex() {
+            return rex;
+        }
     }
 }

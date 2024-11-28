@@ -14,6 +14,14 @@ import java.util.List;
 public abstract class RexPivot extends RexBase {
 
     /**
+     * @return new RexPivot instance
+     */
+    @NotNull
+    public static RexPivot create(@NotNull Rel input, @NotNull Rex key, @NotNull Rex value) {
+        return new Impl(input, key, value);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -48,5 +56,36 @@ public abstract class RexPivot extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitPivot(this, ctx);
+    }
+
+    private static class Impl extends RexPivot {
+
+        private final Rel input;
+        private final Rex key;
+        private final Rex value;
+
+        private Impl(Rel input, Rex key, Rex value) {
+            this.input = input;
+            this.key = key;
+            this.value = value;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public Rex getKey() {
+            return key;
+        }
+
+        @NotNull
+        @Override
+        public Rex getValue() {
+            return value;
+        }
     }
 }

@@ -12,6 +12,14 @@ import java.util.List;
  */
 public abstract class RexLit extends RexBase {
 
+    /**
+     * @return new RexLit instance
+     */
+    @NotNull
+    public static RexLit create(@NotNull Datum value) {
+        return new Impl(value);
+    }
+
     @NotNull
     public abstract Datum getDatum();
 
@@ -29,5 +37,20 @@ public abstract class RexLit extends RexBase {
     @Override
     public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
         return visitor.visitLit(this, ctx);
+    }
+
+    private static class Impl extends RexLit {
+
+        private final Datum value;
+
+        private Impl(Datum value) {
+            this.value = value;
+        }
+
+        @NotNull
+        @Override
+        public Datum getDatum() {
+            return value;
+        }
     }
 }

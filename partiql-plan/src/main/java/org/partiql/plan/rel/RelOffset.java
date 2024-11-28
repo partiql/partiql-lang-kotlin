@@ -13,6 +13,14 @@ import java.util.List;
 public abstract class RelOffset extends RelBase {
 
     /**
+     * @return new {@link RelOffset} instance
+     */
+    @NotNull
+    public static RelOffset create(@NotNull Rel input, @NotNull Rex offset) {
+        return new Impl(input, offset);
+    }
+
+    /**
      * @return input rel (child 0)
      */
     @NotNull
@@ -27,7 +35,7 @@ public abstract class RelOffset extends RelBase {
     @NotNull
     @Override
     protected final RelType type() {
-        throw new UnsupportedOperationException("Derive type is not implemented");
+        return getInput().getType();
     }
 
     @NotNull
@@ -42,5 +50,27 @@ public abstract class RelOffset extends RelBase {
     public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
         return visitor.visitOffset(this, ctx);
     }
-}
 
+    private static class Impl extends RelOffset {
+
+        private final Rel input;
+        private final Rex offset;
+
+        public Impl(Rel input, Rex offset) {
+            this.input = input;
+            this.offset = offset;
+        }
+
+        @NotNull
+        @Override
+        public Rel getInput() {
+            return input;
+        }
+
+        @NotNull
+        @Override
+        public Rex getOffset() {
+            return offset;
+        }
+    }
+}
