@@ -2,7 +2,7 @@ package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
 
 import java.util.List;
@@ -21,13 +21,13 @@ public abstract class RelLimit extends RelBase {
     }
 
     /**
-     * @return input rel (child 0)
+     * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
-     * @return limit rex (child 1)
+     * @return limit rex (operand 1)
      */
     @NotNull
     public abstract Rex getLimit();
@@ -40,23 +40,29 @@ public abstract class RelLimit extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rel c0 = getInput();
         Rex c1 = getLimit();
         return List.of(c0, c1);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitLimit(this, ctx);
     }
+
+    @NotNull
+    public abstract RelLimit copy(@NotNull Rel input);
+
+    @NotNull
+    public abstract RelLimit copy(@NotNull Rel input, @NotNull Rex limit);
 
     private static class Impl extends RelLimit {
 
         private final Rel input;
         private final Rex limit;
 
-        public Impl(Rel input, Rex limit) {
+        private Impl(Rel input, Rex limit) {
             this.input = input;
             this.limit = limit;
         }
@@ -71,6 +77,18 @@ public abstract class RelLimit extends RelBase {
         @Override
         public Rex getLimit() {
             return limit;
+        }
+
+        @NotNull
+        @Override
+        public RelLimit copy(@NotNull Rel input) {
+            return new Impl(input, limit);
+        }
+
+        @NotNull
+        @Override
+        public RelLimit copy(@NotNull Rel input, @NotNull Rex limit) {
+            return new Impl(input, limit);
         }
     }
 }

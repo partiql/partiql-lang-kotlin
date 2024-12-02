@@ -2,7 +2,7 @@ package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
 
 import java.util.List;
@@ -21,13 +21,13 @@ public abstract class RelFilter extends RelBase {
     }
 
     /**
-     * @return input rel (child 0)
+     * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
-     * @return predicate rex (child 1)
+     * @return predicate rex (operand 1)
      */
     @NotNull
     public abstract Rex getPredicate();
@@ -40,23 +40,29 @@ public abstract class RelFilter extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rel c0 = getInput();
         Rex c1 = getPredicate();
         return List.of(c0, c1);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitFilter(this, ctx);
     }
+
+    @NotNull
+    public abstract RelFilter copy(@NotNull Rel input);
+
+    @NotNull
+    public abstract RelFilter copy(@NotNull Rel input, @NotNull Rex predicate);
 
     private static class Impl extends RelFilter {
 
         private final Rel input;
         private final Rex predicate;
 
-        public Impl(Rel input, Rex predicate) {
+        private Impl(Rel input, Rex predicate) {
             this.input = input;
             this.predicate = predicate;
         }
@@ -71,6 +77,18 @@ public abstract class RelFilter extends RelBase {
         @Override
         public Rex getPredicate() {
             return predicate;
+        }
+
+        @NotNull
+        @Override
+        public RelFilter copy(@NotNull Rel input) {
+            return new Impl(input, predicate);
+        }
+
+        @NotNull
+        @Override
+        public RelFilter copy(@NotNull Rel input, @NotNull Rex predicate) {
+            return new Impl(input, predicate);
         }
     }
 }

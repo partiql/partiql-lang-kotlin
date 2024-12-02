@@ -54,13 +54,12 @@ import org.partiql.types.PType
  */
 public interface Operators {
 
-    // ALL MEMBERS SHOULD BE @JvmStatic
     public companion object {
 
         /**
          * A singleton of the [Operators] with all the standard implementations.
          */
-        @JvmStatic
+        @JvmField
         public val STANDARD: Operators = object : Operators {}
     }
 
@@ -75,7 +74,7 @@ public interface Operators {
      *
      * @param input
      */
-    public fun relAggregate(
+    public fun aggregate(
         input: Rel,
         measures: List<Measure>,
         groups: List<Rex>,
@@ -89,7 +88,7 @@ public interface Operators {
      * @param joinType
      * @return
      */
-    public fun relCorrelate(
+    public fun correlate(
         lhs: Rel,
         rhs: Rel,
         joinType: JoinType,
@@ -101,7 +100,7 @@ public interface Operators {
      * @param input
      * @return
      */
-    public fun relDistinct(input: Rel): RelDistinct = RelDistinct.create(input)
+    public fun distinct(input: Rel): RelDistinct = RelDistinct.create(input)
 
     /**
      * Create a [RelExcept] instance for EXCEPT [ALL|DISTINCT].
@@ -110,7 +109,7 @@ public interface Operators {
      * @param rhs
      * @return
      */
-    public fun relExcept(
+    public fun except(
         lhs: Rel,
         rhs: Rel,
         all: Boolean,
@@ -123,7 +122,7 @@ public interface Operators {
      * @param exclusions
      * @return
      */
-    public fun relExclude(input: Rel, exclusions: List<Exclusion>): RelExclude = RelExclude.create(input, exclusions)
+    public fun exclude(input: Rel, exclusions: List<Exclusion>): RelExclude = RelExclude.create(input, exclusions)
 
     /**
      * Create a [RelFilter] instance.
@@ -132,7 +131,7 @@ public interface Operators {
      * @param predicate
      * @return
      */
-    public fun relFilter(input: Rel, predicate: Rex): RelFilter = RelFilter.create(input, predicate)
+    public fun filter(input: Rel, predicate: Rex): RelFilter = RelFilter.create(input, predicate)
 
     /**
      * Create a [RelIntersect] instance for INTERSECT [ALL|DISTINCT].
@@ -142,7 +141,7 @@ public interface Operators {
      * @param all
      * @return
      */
-    public fun relIntersect(
+    public fun intersect(
         lhs: Rel,
         rhs: Rel,
         all: Boolean,
@@ -154,7 +153,7 @@ public interface Operators {
      * @param rex
      * @return
      */
-    public fun relIterate(rex: Rex): RelIterate = RelIterate.create(rex)
+    public fun iterate(rex: Rex): RelIterate = RelIterate.create(rex)
 
     /**
      * Create a [RelJoin] instance.
@@ -165,12 +164,12 @@ public interface Operators {
      * @param type
      * @return
      */
-    public fun relJoin(
+    public fun join(
         lhs: Rel,
         rhs: Rel,
-        type: JoinType,
         condition: Rex,
-    ): RelJoin = RelJoin.create(lhs, rhs, type, condition)
+        type: JoinType,
+    ): RelJoin = RelJoin.create(lhs, rhs, condition, type)
 
     /**
      * Create a [RelLimit] instance.
@@ -179,7 +178,7 @@ public interface Operators {
      * @param limit
      * @return
      */
-    public fun relLimit(input: Rel, limit: Rex): RelLimit = RelLimit.create(input, limit)
+    public fun limit(input: Rel, limit: Rex): RelLimit = RelLimit.create(input, limit)
 
     /**
      * Create a [RelLimit] instance.
@@ -188,7 +187,7 @@ public interface Operators {
      * @param offset
      * @return
      */
-    public fun relOffset(input: Rel, offset: Rex): RelOffset = RelOffset.create(input, offset)
+    public fun offset(input: Rel, offset: Rex): RelOffset = RelOffset.create(input, offset)
 
     /**
      * Create a [RelProject] instance.
@@ -197,7 +196,7 @@ public interface Operators {
      * @param projections
      * @return
      */
-    public fun relProject(input: Rel, projections: List<Rex>): RelProject = RelProject.create(input, projections)
+    public fun project(input: Rel, projections: List<Rex>): RelProject = RelProject.create(input, projections)
 
     /**
      * Create a [RelScan] instance.
@@ -205,7 +204,7 @@ public interface Operators {
      * @param rex
      * @return
      */
-    public fun relScan(rex: Rex): RelScan = RelScan.create(rex)
+    public fun scan(rex: Rex): RelScan = RelScan.create(rex)
 
     /**
      * Create a [RelSort] instance.
@@ -214,7 +213,7 @@ public interface Operators {
      * @param collations
      * @return
      */
-    public fun relSort(input: Rel, collations: List<Collation>): RelSort = RelSort.create(input, collations)
+    public fun sort(input: Rel, collations: List<Collation>): RelSort = RelSort.create(input, collations)
 
     /**
      * Create a [RelUnion] instance for UNION [ALL|DISTINCT].
@@ -223,15 +222,15 @@ public interface Operators {
      * @param rhs
      * @return
      */
-    public fun relUnion(lhs: Rel, rhs: Rel, all: Boolean): RelUnion = RelUnion.create(lhs, rhs, all)
+    public fun union(lhs: Rel, rhs: Rel, all: Boolean): RelUnion = RelUnion.create(lhs, rhs, all)
 
     /**
      * Create a [RelUnpivot] instance.
      *
-     * @param input
+     * @param rex
      * @return
      */
-    public fun relUnpivot(input: Rex): RelUnpivot = RelUnpivot.create(input)
+    public fun unpivot(rex: Rex): RelUnpivot = RelUnpivot.create(rex)
 
     // --- REX OPERATORS -----------------------------------------------------------------------------------------------
 

@@ -2,7 +2,7 @@ package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rel.Rel;
 import org.partiql.types.PType;
 
@@ -22,19 +22,19 @@ public abstract class RexPivot extends RexBase {
     }
 
     /**
-     * @return input rel (child 0)
+     * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
-     * @return key rex (child 1)
+     * @return key rex (operand 1)
      */
     @NotNull
     public abstract Rex getKey();
 
     /**
-     * @return value rex (child 2)
+     * @return value rex (operand 2)
      */
     @NotNull
     public abstract Rex getValue();
@@ -46,7 +46,7 @@ public abstract class RexPivot extends RexBase {
     }
 
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rel c0 = getInput();
         Rex c1 = getKey();
         Rex c2 = getValue();
@@ -54,7 +54,7 @@ public abstract class RexPivot extends RexBase {
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitPivot(this, ctx);
     }
 

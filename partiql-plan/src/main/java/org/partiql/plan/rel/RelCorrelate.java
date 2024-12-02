@@ -3,7 +3,7 @@ package org.partiql.plan.rel;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.JoinType;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
 
@@ -24,13 +24,13 @@ public abstract class RelCorrelate extends RelBase {
     }
 
     /**
-     * @return the left input (child 0)
+     * @return the left input (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
-     * @return the right input (child 1)
+     * @return the right input (operand 1)
      */
     @NotNull
     public abstract Rel getRight();
@@ -46,16 +46,22 @@ public abstract class RelCorrelate extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rel c0 = getLeft();
         Rel c1 = getRight();
         return List.of(c0, c1);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitCorrelate(this, ctx);
     }
+
+    @NotNull
+    public abstract RelCorrelate copy(@NotNull Rel left, @NotNull Rel right);
+
+    @NotNull
+    public abstract RelCorrelate copy(@NotNull Rel left, @NotNull Rel right, @NotNull JoinType joinType);
 
     private static class Impl extends RelCorrelate {
 
@@ -63,7 +69,7 @@ public abstract class RelCorrelate extends RelBase {
         private final Rel right;
         private final JoinType joinType;
 
-        public Impl(Rel left, Rel right, JoinType joinType) {
+        private Impl(Rel left, Rel right, JoinType joinType) {
             this.left = left;
             this.right = right;
             this.joinType = joinType;
@@ -85,6 +91,18 @@ public abstract class RelCorrelate extends RelBase {
         @Override
         public JoinType getJoinType() {
             return joinType;
+        }
+
+        @NotNull
+        @Override
+        public RelCorrelate copy(@NotNull Rel left, @NotNull Rel right) {
+            return new Impl(left, right, joinType);
+        }
+
+        @NotNull
+        @Override
+        public RelCorrelate copy(@NotNull Rel left, @NotNull Rel right, @NotNull JoinType joinType) {
+            return new Impl(left, right, joinType);
         }
     }
 }

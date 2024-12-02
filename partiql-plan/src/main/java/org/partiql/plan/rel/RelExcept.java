@@ -2,7 +2,7 @@ package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
 
@@ -20,13 +20,13 @@ public abstract class RelExcept extends RelBase {
     }
 
     /**
-     * @return left input (child 0)
+     * @return left input (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
-     * @return right input (child 1)
+     * @return right input (operand 1)
      */
     @NotNull
     public abstract Rel getRight();
@@ -44,16 +44,28 @@ public abstract class RelExcept extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rel c0 = getLeft();
         Rel c1 = getRight();
         return List.of(c0, c1);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitExcept(this, ctx);
     }
+
+    /**
+     * @return copy with new inputs (non-final).
+     */
+    @NotNull
+    public abstract RelExcept copy(@NotNull Rel left, @NotNull Rel right);
+
+    /**
+     * @return copy with new inputs and args (non-final).
+     */
+    @NotNull
+    public abstract RelExcept copy(@NotNull Rel left, @NotNull Rel right, boolean all);
 
     private static class Impl extends RelExcept {
 
@@ -61,7 +73,7 @@ public abstract class RelExcept extends RelBase {
         private final Rel right;
         private final boolean all;
 
-        public Impl(Rel left, Rel right, boolean all) {
+        private Impl(Rel left, Rel right, boolean all) {
             this.left = left;
             this.right = right;
             this.all = all;
@@ -82,6 +94,24 @@ public abstract class RelExcept extends RelBase {
         @Override
         public boolean isAll() {
             return all;
+        }
+
+        /**
+         * @return copy with new inputs (non-final).
+         */
+        @NotNull
+        @Override
+        public RelExcept copy(@NotNull Rel left, @NotNull Rel right) {
+            return new Impl(left, right, all);
+        }
+
+        /**
+         * @return copy with new inputs and args (non-final).
+         */
+        @NotNull
+        @Override
+        public RelExcept copy(@NotNull Rel left, @NotNull Rel right, boolean all) {
+            return new Impl(left, right, all);
         }
     }
 }

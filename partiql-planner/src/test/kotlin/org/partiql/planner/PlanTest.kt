@@ -128,7 +128,7 @@ class PlanTest {
     }
 
     private fun assertPlanEqual(actual: Plan, expected: Plan) {
-        assert(PlanEquivalenceVisitor.equals(actual, expected)) {
+        assert(PlanEquivalenceOperatorVisitor.equals(actual, expected)) {
             buildString {
                 appendLine("plans were not equivalent")
                 // TODO print diff

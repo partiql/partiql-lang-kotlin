@@ -2,7 +2,7 @@ package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.types.PType;
 
 import java.util.List;
@@ -29,7 +29,7 @@ public abstract class RexStruct extends RexBase {
     }
 
     /**
-     * @return list of struct fields (NOT children)
+     * @return list of struct fields (NOT operands)
      */
     @NotNull
     public abstract List<Field> getFields();
@@ -41,12 +41,12 @@ public abstract class RexStruct extends RexBase {
     }
 
     @Override
-    protected List<Operator> children() {
+    protected List<Operator> operands() {
         return List.of();
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitStruct(this, ctx);
     }
 

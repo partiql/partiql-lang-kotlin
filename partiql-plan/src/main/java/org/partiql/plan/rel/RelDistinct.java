@@ -2,7 +2,7 @@ package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public abstract class RelDistinct extends RelBase {
     }
 
     /**
-     * @return input rel (child 0)
+     * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
@@ -33,21 +33,27 @@ public abstract class RelDistinct extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rel c0 = getInput();
         return List.of(c0);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitDistinct(this, ctx);
     }
+
+    /**
+     * @return copy with new input.
+     */
+    @NotNull
+    public abstract RelDistinct copy(@NotNull Rel input);
 
     private static class Impl extends RelDistinct {
 
         private final Rel input;
 
-        public Impl(Rel input) {
+        private Impl(Rel input) {
             this.input = input;
         }
 
@@ -55,6 +61,15 @@ public abstract class RelDistinct extends RelBase {
         @Override
         public Rel getInput() {
             return input;
+        }
+
+        /**
+         * @return copy with new input (non-final).
+         */
+        @NotNull
+        @Override
+        public RelDistinct copy(@NotNull Rel input) {
+            return create(input);
         }
     }
 }

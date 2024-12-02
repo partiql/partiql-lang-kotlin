@@ -2,7 +2,7 @@ package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
 
 import java.util.List;
@@ -21,13 +21,13 @@ public abstract class RelProject extends RelBase {
     }
 
     /**
-     * @return input rel (child 0)
+     * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
-     * @return projection (not a child, it's a list not an operator).
+     * @return projection (not a operand, it's a list not an operator).
      */
     @NotNull
     public abstract List<Rex> getProjections();
@@ -40,22 +40,28 @@ public abstract class RelProject extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rel c0 = getInput();
         return List.of(c0);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitProject(this, ctx);
     }
+
+    @NotNull
+    public abstract RelProject copy(@NotNull Rel input);
+
+    @NotNull
+    public abstract RelProject copy(@NotNull Rel input, @NotNull List<Rex> projections);
 
     private static class Impl extends RelProject {
 
         private final Rel input;
         private final List<Rex> projections;
 
-        public Impl(Rel input, List<Rex> projections) {
+        private Impl(Rel input, List<Rex> projections) {
             this.input = input;
             this.projections = projections;
         }
@@ -70,6 +76,18 @@ public abstract class RelProject extends RelBase {
         @Override
         public List<Rex> getProjections() {
             return projections;
+        }
+
+        @NotNull
+        @Override
+        public RelProject copy(@NotNull Rel input) {
+            return new Impl(input, projections);
+        }
+
+        @NotNull
+        @Override
+        public RelProject copy(@NotNull Rel input, @NotNull List<Rex> projections) {
+            return new Impl(input, projections);
         }
     }
 }

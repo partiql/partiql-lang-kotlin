@@ -64,7 +64,7 @@ import org.partiql.plan.JoinType
 import org.partiql.plan.Operation
 import org.partiql.plan.Operator
 import org.partiql.plan.Plan
-import org.partiql.plan.Visitor
+import org.partiql.plan.OperatorVisitor
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelDistinct
@@ -123,7 +123,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
     override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {
         try {
-            val visitor = _Visitor(mode)
+            val visitor = _Operator_Visitor(mode)
             val operation = plan.getOperation()
             val statement: Statement = when {
                 operation is Operation.Query -> visitor.compile(operation)
@@ -143,7 +143,8 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
      * Transforms plan relation operators into the internal physical operators.
      */
     @Suppress("ClassName")
-    private inner class _Visitor(mode: Mode) : Visitor<Expr, Unit> {
+    private inner class _Operator_Visitor(mode: Mode) :
+        OperatorVisitor<Expr, Unit> {
 
         private val mode = mode.code()
 
@@ -173,7 +174,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 // first match
                 if (strategy.getPattern().matches(operator)) {
                     // compile children
-                    val children = operator.getChildren().map { compileWithStrategies(it, ctx) }
+                    val children = operator.getOperands().map { compileWithStrategies(it, ctx) }
                     val match = Match(operator, children)
                     return strategy.apply(match)
                 }

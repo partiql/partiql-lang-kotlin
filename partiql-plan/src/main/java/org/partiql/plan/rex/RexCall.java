@@ -2,7 +2,7 @@ package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.spi.function.Function;
 
 import java.util.List;
@@ -35,13 +35,13 @@ public abstract class RexCall extends RexBase {
     }
 
     @Override
-    protected List<Operator> children() {
+    protected List<Operator> operands() {
         List<Rex> varargs = getArgs();
         return List.copyOf(varargs);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitCall(this, ctx);
     }
 

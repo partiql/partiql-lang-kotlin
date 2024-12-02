@@ -5,7 +5,7 @@ package org.partiql.planner
 import org.partiql.plan.Operation
 import org.partiql.plan.Operator
 import org.partiql.plan.Plan
-import org.partiql.plan.Visitor
+import org.partiql.plan.OperatorVisitor
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelCorrelate
 import org.partiql.plan.rel.RelDistinct
@@ -51,7 +51,7 @@ import org.partiql.plan.rex.RexVar
  *
  * Replacement for https://github.com/partiql/partiql-lang-kotlin/blob/main/partiql-planner/src/test/kotlin/org/partiql/planner/util/PlanNodeEquivalentVisitor.kt#L16
  */
-object PlanEquivalenceVisitor : Visitor<Boolean, Any> {
+object PlanEquivalenceOperatorVisitor : OperatorVisitor<Boolean, Any> {
 
     @JvmStatic
     public fun equals(p1: Plan, p2: Plan): Boolean = visitPlan(p1, p2)

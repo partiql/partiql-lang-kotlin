@@ -2,7 +2,7 @@ package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
 
@@ -20,13 +20,13 @@ public abstract class RexPathKey extends RexBase {
     }
 
     /**
-     * @return operand rex (child 0)
+     * @return operand rex (operand 0)
      */
     @NotNull
     public abstract Rex getOperand();
 
     /**
-     * @return key rex (child 1)
+     * @return key rex (operand 1)
      */
     @NotNull
     public abstract Rex getKey();
@@ -38,14 +38,14 @@ public abstract class RexPathKey extends RexBase {
     }
 
     @Override
-    protected List<Operator> children() {
+    protected List<Operator> operands() {
         Rex c0 = getOperand();
         Rex c1 = getKey();
         return List.of(c0, c1);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitPathKey(this, ctx);
     }
 

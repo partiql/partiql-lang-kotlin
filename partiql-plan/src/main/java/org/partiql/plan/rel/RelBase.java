@@ -12,7 +12,7 @@ public abstract class RelBase implements Rel {
 
     private int tag = 0;
     private RelType type;
-    private List<Operator> children;
+    private List<Operator> operands;
 
     @Override
     public int getTag() {
@@ -35,17 +35,17 @@ public abstract class RelBase implements Rel {
 
     @NotNull
     @Override
-    public final Operator getChild(int index) {
-        return children.get(index);
+    public final Operator getOperand(int index) {
+        return operands.get(index);
     }
 
     @NotNull
     @Override
-    public final List<Operator> getChildren() {
-        if (children == null) {
-            children = children();
+    public final List<Operator> getOperands() {
+        if (operands == null) {
+            operands = operands();
         }
-        return children;
+        return operands;
     }
 
     /**
@@ -58,7 +58,7 @@ public abstract class RelBase implements Rel {
     /**
      * PROTECTED (could also be package private atm).
      *
-     * @return computed children.
+     * @return computed operands.
      */
-    protected abstract List<Operator> children();
+    protected abstract List<Operator> operands();
 }

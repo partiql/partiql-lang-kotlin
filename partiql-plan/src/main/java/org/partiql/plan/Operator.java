@@ -30,7 +30,7 @@ public interface Operator {
      * @param <C>     Visitor context type (scoped args).
      * @return R
      */
-    public abstract <R, C> R accept(Visitor<R, C> visitor, C ctx);
+    public abstract <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx);
 
     /**
      * Get i-th child (input) operator.
@@ -39,11 +39,11 @@ public interface Operator {
      * @return child operator
      */
     @NotNull
-    public abstract Operator getChild(int index);
+    public abstract Operator getOperand(int index);
 
     /**
      * @return all child (input) operators.
      */
     @NotNull
-    public abstract List<Operator> getChildren();
+    public abstract List<Operator> getOperands();
 }

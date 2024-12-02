@@ -3,7 +3,7 @@ package org.partiql.plan.rex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
 
@@ -18,19 +18,19 @@ public abstract class RexCase extends RexBase {
     }
 
     /**
-     * @return the match expression, or {@code null} if none (child 0)
+     * @return the match expression, or {@code null} if none (operand 0)
      */
     @Nullable
     public abstract Rex getMatch();
 
     /**
-     * @return the list of branches (not children).
+     * @return the list of branches (not operands).
      */
     @NotNull
     public abstract List<Branch> getBranches();
 
     /**
-     * @return the default expression, or {@code null} if none (child 1)
+     * @return the default expression, or {@code null} if none (operand 1)
      */
     @Nullable
     public abstract Rex getDefault();
@@ -42,14 +42,14 @@ public abstract class RexCase extends RexBase {
     }
 
     @Override
-    protected List<Operator> children() {
+    protected List<Operator> operands() {
         Rex c0 = getMatch();
         Rex c1 = getDefault();
         return List.of(c0, c1);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitCase(this, ctx);
     }
 

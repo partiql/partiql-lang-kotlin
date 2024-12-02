@@ -3,7 +3,7 @@ package org.partiql.plan.rel;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.JoinType;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
 
 import java.util.List;
@@ -17,18 +17,18 @@ public abstract class RelJoin extends RelBase {
      * @return new {@link RelJoin} instance
      */
     @NotNull
-    public static RelJoin create(@NotNull Rel left, @NotNull Rel right, @NotNull JoinType joinType, @NotNull Rex condition) {
-        return new Impl(left, right, joinType, condition);
+    public static RelJoin create(@NotNull Rel left, @NotNull Rel right, @NotNull Rex condition, @NotNull JoinType joinType) {
+        return new Impl(left, right, condition, joinType);
     }
 
     /**
-     * @return left input (child 0)
+     * @return left input (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
-     * @return right input (child 1)
+     * @return right input (operand 1)
      */
     @NotNull
     public abstract Rel getRight();
@@ -40,7 +40,7 @@ public abstract class RelJoin extends RelBase {
     public abstract JoinType getJoinType();
 
     /**
-     * @return the join condition (child 2), or null if there is no condition.
+     * @return the join condition (operand 2), or null if there is no condition.
      */
     @NotNull
     public abstract Rex getCondition();
@@ -52,7 +52,7 @@ public abstract class RelJoin extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rel c0 = getLeft();
         Rel c1 = getRight();
         Rex c2 = getCondition(); // can be null!
@@ -60,22 +60,28 @@ public abstract class RelJoin extends RelBase {
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitJoin(this, ctx);
     }
+
+    @NotNull
+    public abstract RelJoin copy(@NotNull Rel left, @NotNull Rel right);
+
+    @NotNull
+    public abstract RelJoin copy(@NotNull Rel left, @NotNull Rel right, @NotNull Rex condition, @NotNull JoinType joinType);
 
     private static class Impl extends RelJoin {
 
         private final Rel left;
         private final Rel right;
-        private final JoinType joinType;
         private final Rex condition;
+        private final JoinType joinType;
 
-        public Impl(Rel left, Rel right, JoinType joinType, Rex condition) {
+        private Impl(Rel left, Rel right, Rex condition, JoinType joinType) {
             this.left = left;
             this.right = right;
-            this.joinType = joinType;
             this.condition = condition;
+            this.joinType = joinType;
         }
 
         @NotNull
@@ -92,14 +98,26 @@ public abstract class RelJoin extends RelBase {
 
         @NotNull
         @Override
+        public Rex getCondition() {
+            return condition;
+        }
+
+        @NotNull
+        @Override
         public JoinType getJoinType() {
             return joinType;
         }
 
         @NotNull
         @Override
-        public Rex getCondition() {
-            return condition;
+        public RelJoin copy(@NotNull Rel left, @NotNull Rel right) {
+            return new Impl(left, right, condition, joinType);
+        }
+
+        @NotNull
+        @Override
+        public RelJoin copy(@NotNull Rel left, @NotNull Rel right, @NotNull Rex condition, @NotNull JoinType joinType) {
+            return new Impl(left, right, condition, joinType);
         }
     }
 }

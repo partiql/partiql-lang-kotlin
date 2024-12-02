@@ -2,7 +2,7 @@ package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.types.PType;
 
 import java.util.Collection;
@@ -22,7 +22,7 @@ public abstract class RexBag extends RexBase {
     }
 
     /**
-     * @return the values of the bag, also the children (unordered).
+     * @return the values of the bag, also the operands (unordered).
      */
     @NotNull
     public abstract Collection<Rex> getValues();
@@ -35,13 +35,13 @@ public abstract class RexBag extends RexBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         List<Rex> varargs = getValues().stream().toList();
         return List.copyOf(varargs);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitBag(this, ctx);
     }
 

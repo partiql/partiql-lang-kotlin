@@ -2,7 +2,7 @@ package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public abstract class RelScan extends RelBase {
     }
 
     /**
-     * @return input rex (child 0)
+     * @return input rex (operand 0)
      */
     @NotNull
     public abstract Rex getRex();
@@ -34,21 +34,24 @@ public abstract class RelScan extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         Rex c0 = getRex();
         return List.of(c0);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitScan(this, ctx);
     }
+
+    @NotNull
+    public abstract RelScan copy(@NotNull Rex rex);
 
     private static class Impl extends RelScan {
 
         private final Rex rex;
 
-        public Impl(Rex rex) {
+        private Impl(Rex rex) {
             this.rex = rex;
         }
 
@@ -56,6 +59,12 @@ public abstract class RelScan extends RelBase {
         @Override
         public Rex getRex() {
             return rex;
+        }
+
+        @NotNull
+        @Override
+        public RelScan copy(@NotNull Rex rex) {
+            return new Impl(rex);
         }
     }
 }

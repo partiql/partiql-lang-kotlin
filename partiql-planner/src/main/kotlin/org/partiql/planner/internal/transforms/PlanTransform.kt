@@ -86,7 +86,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         override fun visitRelOpErr(node: org.partiql.planner.internal.ir.Rel.Op.Err, ctx: PType): Any {
             // Listener should have already received the error. This node is a dud. Registered error listeners should
             // have failed compilation already.
-            return factory.relScan(factory.rexError(ctx))
+            return factory.scan(factory.rexError(ctx))
         }
 
         // EXPRESSIONS
@@ -252,7 +252,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             val input = visitRel(node.input, ctx)
             val calls = node.calls.map { visitRelOpAggregateCall(it, ctx) as AggregateCall }
             val groups = node.groups.map { visitRex(it, ctx) }
-            return factory.relAggregate(input, calls, groups)
+            return factory.aggregate(input, calls, groups)
         }
 
         override fun visitRelOpAggregateCallUnresolved(node: IRel.Op.Aggregate.Call.Unresolved, ctx: PType): Any {
@@ -281,13 +281,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
                 IRel.Op.Join.Type.RIGHT -> JoinType.RIGHT
                 IRel.Op.Join.Type.FULL -> JoinType.FULL
             }
-            return factory.relJoin(lhs, rhs, condition, type, lhsType, rhsType)
+            return factory.join(lhs, rhs, condition, type, lhsType, rhsType)
         }
 
         override fun visitRelOpExclude(node: IRel.Op.Exclude, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
             val paths = node.paths.mapNotNull { visitRelOpExcludePath(it, ctx) }
-            return factory.relExclude(input, paths)
+            return factory.exclude(input, paths)
         }
 
         override fun visitRelOpExcludePath(node: IRel.Op.Exclude.Path, ctx: PType): Exclusion? {
@@ -310,72 +310,72 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         override fun visitRelOpProject(node: IRel.Op.Project, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
             val projections = node.projections.map { visitRex(it, ctx) }
-            return factory.relProject(input, projections)
+            return factory.project(input, projections)
         }
 
         override fun visitRelOpOffset(node: IRel.Op.Offset, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
             val offset = visitRex(node.offset, ctx)
-            return factory.relOffset(input, offset)
+            return factory.offset(input, offset)
         }
 
         override fun visitRelOpLimit(node: IRel.Op.Limit, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
             val limit = visitRex(node.limit, ctx)
-            return factory.relLimit(input, limit)
+            return factory.limit(input, limit)
         }
 
         override fun visitRelOpIntersect(node: IRel.Op.Intersect, ctx: PType): Any {
             val lhs = visitRel(node.lhs, ctx)
             val rhs = visitRel(node.rhs, ctx)
             val isAll = node.setq == SetQuantifier.ALL
-            return factory.relIntersect(lhs, rhs, isAll)
+            return factory.intersect(lhs, rhs, isAll)
         }
 
         override fun visitRelOpUnion(node: IRel.Op.Union, ctx: PType): Any {
             val lhs = visitRel(node.lhs, ctx)
             val rhs = visitRel(node.rhs, ctx)
             val isAll = node.setq == SetQuantifier.ALL
-            return factory.relUnion(lhs, rhs, isAll)
+            return factory.union(lhs, rhs, isAll)
         }
 
         override fun visitRelOpExcept(node: IRel.Op.Except, ctx: PType): Any {
             val lhs = visitRel(node.lhs, ctx)
             val rhs = visitRel(node.rhs, ctx)
             val isAll = node.setq == SetQuantifier.ALL
-            return factory.relExcept(lhs, rhs, isAll)
+            return factory.except(lhs, rhs, isAll)
         }
 
         override fun visitRelOpSort(node: IRel.Op.Sort, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
             val collations = node.specs.map { collation(it) }
-            return factory.relSort(input, collations)
+            return factory.sort(input, collations)
         }
 
         override fun visitRelOpFilter(node: IRel.Op.Filter, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
             val condition = visitRex(node.predicate, ctx)
-            return factory.relFilter(input, condition)
+            return factory.filter(input, condition)
         }
 
         override fun visitRelOpDistinct(node: IRel.Op.Distinct, ctx: PType): Any {
             val input = visitRel(node.input, ctx)
-            return factory.relDistinct(input)
+            return factory.distinct(input)
         }
 
         override fun visitRelOpUnpivot(node: IRel.Op.Unpivot, ctx: PType): Any {
             val input = visitRex(node.rex, ctx)
-            return factory.relUnpivot(input)
+            return factory.unpivot(input)
         }
 
         override fun visitRelOpScanIndexed(node: IRel.Op.ScanIndexed, ctx: PType): Any {
             val input = visitRex(node.rex, ctx)
-            return factory.relIterate(input)
+            return factory.iterate(input)
         }
 
         override fun visitRelOpScan(node: IRel.Op.Scan, ctx: PType): Any {
             val input = visitRex(node.rex, ctx)
-            return factory.relScan(input)
+            return factory.scan(input)
         }
 
         // HELPERS

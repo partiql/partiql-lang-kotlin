@@ -2,7 +2,7 @@ package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public abstract class RexCoalesce extends RexBase {
     }
 
     /**
-     * @return the list of arguments (also the children).
+     * @return the list of arguments (also the operands).
      */
     @NotNull
     public abstract List<Rex> getArgs();
@@ -31,13 +31,13 @@ public abstract class RexCoalesce extends RexBase {
     }
 
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         List<Rex> varargs = getArgs();
         return List.copyOf(varargs);
     }
 
     @Override
-    public <R, C> R accept(Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitCoalesce(this, ctx);
     }
 

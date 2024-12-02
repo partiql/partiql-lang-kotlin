@@ -2,7 +2,7 @@ package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
-import org.partiql.plan.Visitor;
+import org.partiql.plan.OperatorVisitor;
 import org.partiql.types.PType;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public abstract class RexArray extends RexBase {
     }
 
     /**
-     * @return the values of the array, also the children.
+     * @return the values of the array, also the operands.
      */
     @NotNull
     public abstract List<Rex> getValues();
@@ -34,13 +34,13 @@ public abstract class RexArray extends RexBase {
 
     @NotNull
     @Override
-    protected final List<Operator> children() {
+    protected final List<Operator> operands() {
         List<Rex> varargs = getValues();
         return List.copyOf(varargs);
     }
 
     @Override
-    public <R, C> R accept(@NotNull Visitor<R, C> visitor, C ctx) {
+    public <R, C> R accept(@NotNull OperatorVisitor<R, C> visitor, C ctx) {
         return visitor.visitArray(this, ctx);
     }
 

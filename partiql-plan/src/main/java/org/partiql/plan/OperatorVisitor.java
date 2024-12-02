@@ -1,8 +1,45 @@
 package org.partiql.plan;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.rel.*;
-import org.partiql.plan.rex.*;
+import org.partiql.plan.rel.RelAggregate;
+import org.partiql.plan.rel.RelCorrelate;
+import org.partiql.plan.rel.RelDistinct;
+import org.partiql.plan.rel.RelExcept;
+import org.partiql.plan.rel.RelExclude;
+import org.partiql.plan.rel.RelFilter;
+import org.partiql.plan.rel.RelIntersect;
+import org.partiql.plan.rel.RelIterate;
+import org.partiql.plan.rel.RelJoin;
+import org.partiql.plan.rel.RelLimit;
+import org.partiql.plan.rel.RelOffset;
+import org.partiql.plan.rel.RelProject;
+import org.partiql.plan.rel.RelScan;
+import org.partiql.plan.rel.RelSort;
+import org.partiql.plan.rel.RelUnion;
+import org.partiql.plan.rel.RelUnpivot;
+import org.partiql.plan.rex.RexArray;
+import org.partiql.plan.rex.RexBag;
+import org.partiql.plan.rex.RexCall;
+import org.partiql.plan.rex.RexCase;
+import org.partiql.plan.rex.RexCast;
+import org.partiql.plan.rex.RexCoalesce;
+import org.partiql.plan.rex.RexDispatch;
+import org.partiql.plan.rex.RexError;
+import org.partiql.plan.rex.RexLit;
+import org.partiql.plan.rex.RexNullIf;
+import org.partiql.plan.rex.RexPathIndex;
+import org.partiql.plan.rex.RexPathKey;
+import org.partiql.plan.rex.RexPathSymbol;
+import org.partiql.plan.rex.RexPivot;
+import org.partiql.plan.rex.RexSelect;
+import org.partiql.plan.rex.RexSpread;
+import org.partiql.plan.rex.RexStruct;
+import org.partiql.plan.rex.RexSubquery;
+import org.partiql.plan.rex.RexSubqueryComp;
+import org.partiql.plan.rex.RexSubqueryIn;
+import org.partiql.plan.rex.RexSubqueryTest;
+import org.partiql.plan.rex.RexTable;
+import org.partiql.plan.rex.RexVar;
 
 /**
  * A visitor for a logical [Operator] tree.
@@ -10,10 +47,10 @@ import org.partiql.plan.rex.*;
  * @param <R> Visit return type
  * @param <C> Context parameter type
  */
-public interface Visitor<R, C> {
+public interface OperatorVisitor<R, C> {
 
     default R defaultVisit(Operator operator, C ctx) {
-        for (Operator child : operator.getChildren()) {
+        for (Operator child : operator.getOperands()) {
             child.accept(this, ctx);
         }
         return defaultReturn(operator, ctx);
@@ -28,6 +65,10 @@ public interface Visitor<R, C> {
     // --[Rel]-----------------------------------------------------------------------------------------------------------
 
     default R visitAggregate(@NotNull RelAggregate rel, C ctx) {
+        return defaultVisit(rel, ctx);
+    }
+
+    default R visitCorrelate(@NotNull RelCorrelate rel, C ctx) {
         return defaultVisit(rel, ctx);
     }
 
@@ -56,10 +97,6 @@ public interface Visitor<R, C> {
     }
 
     default R visitJoin(@NotNull RelJoin rel, C ctx) {
-        return defaultVisit(rel, ctx);
-    }
-
-    default R visitCorrelate(@NotNull RelCorrelate rel, C ctx) {
         return defaultVisit(rel, ctx);
     }
 
