@@ -4,6 +4,7 @@ import org.partiql.plan.AggregateCall
 import org.partiql.plan.Collation
 import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
+import org.partiql.plan.Operators
 import org.partiql.plan.Plan
 import org.partiql.plan.rel.RelType
 import org.partiql.plan.rex.Rex
@@ -58,7 +59,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         private val signal: Boolean,
     ) : PlanBaseVisitor<Any?, PType>() {
 
-        private val factory = org.partiql.plan.builder.Operators.STANDARD
+        private val factory = Operators.STANDARD
 
         override fun defaultReturn(node: INode, ctx: PType): Any {
             TODO("Translation not supported for ${node::class.simpleName}")

@@ -1,8 +1,5 @@
-package org.partiql.plan.builder
+package org.partiql.plan
 
-import org.partiql.plan.Collation
-import org.partiql.plan.Exclusion
-import org.partiql.plan.JoinType
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelAggregate.Measure

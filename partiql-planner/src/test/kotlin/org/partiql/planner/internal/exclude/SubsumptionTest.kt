@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Exclusion
 import org.partiql.plan.Operation
-import org.partiql.plan.builder.Operators
+import org.partiql.plan.Operators
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelProject
 import org.partiql.plan.rex.RexSelect

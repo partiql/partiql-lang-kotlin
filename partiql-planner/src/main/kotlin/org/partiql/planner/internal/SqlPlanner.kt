@@ -3,7 +3,7 @@ package org.partiql.planner.internal
 import org.partiql.ast.Statement
 import org.partiql.plan.Operation
 import org.partiql.plan.Plan
-import org.partiql.plan.builder.Operators
+import org.partiql.plan.Operators
 import org.partiql.plan.rex.Rex
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
