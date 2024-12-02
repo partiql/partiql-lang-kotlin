@@ -1,7 +1,6 @@
 package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.partiql.plan.JoinType;
 import org.partiql.plan.Operator;
 import org.partiql.plan.Visitor;
@@ -10,7 +9,7 @@ import org.partiql.plan.rex.Rex;
 import java.util.List;
 
 /**
- * Logical join abstract base class.
+ * Logical theta-join abstract base class.
  */
 public abstract class RelJoin extends RelBase {
 
@@ -18,8 +17,8 @@ public abstract class RelJoin extends RelBase {
      * @return new {@link RelJoin} instance
      */
     @NotNull
-    public static RelJoin create(@NotNull Rel left, @NotNull Rel right, @Nullable Rex condition, @NotNull JoinType joinType) {
-        return new Impl(left, right, condition, joinType);
+    public static RelJoin create(@NotNull Rel left, @NotNull Rel right, @NotNull JoinType joinType, @NotNull Rex condition) {
+        return new Impl(left, right, joinType, condition);
     }
 
     /**
@@ -35,16 +34,16 @@ public abstract class RelJoin extends RelBase {
     public abstract Rel getRight();
 
     /**
-     * @return the join condition (child 2), or null if there is no condition.
-     */
-    @Nullable
-    public abstract Rex getCondition();
-
-    /**
      * @return JoinType
      */
     @NotNull
     public abstract JoinType getJoinType();
+
+    /**
+     * @return the join condition (child 2), or null if there is no condition.
+     */
+    @NotNull
+    public abstract Rex getCondition();
 
     @Override
     protected RelType type() {
@@ -69,14 +68,14 @@ public abstract class RelJoin extends RelBase {
 
         private final Rel left;
         private final Rel right;
-        private final Rex condition;
         private final JoinType joinType;
+        private final Rex condition;
 
-        public Impl(Rel left, Rel right, Rex condition, JoinType joinType) {
+        public Impl(Rel left, Rel right, JoinType joinType, Rex condition) {
             this.left = left;
             this.right = right;
-            this.condition = condition;
             this.joinType = joinType;
+            this.condition = condition;
         }
 
         @NotNull
@@ -91,16 +90,16 @@ public abstract class RelJoin extends RelBase {
             return right;
         }
 
-        @Nullable
-        @Override
-        public Rex getCondition() {
-            return condition;
-        }
-
         @NotNull
         @Override
         public JoinType getJoinType() {
             return joinType;
+        }
+
+        @NotNull
+        @Override
+        public Rex getCondition() {
+            return condition;
         }
     }
 }

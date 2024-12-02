@@ -8,7 +8,10 @@ import org.partiql.plan.Visitor;
 import java.util.List;
 
 /**
- * Logical nested-loop joins (correlated subqueries // lateral joins) abstract base class.
+ * Logical nested-loop joins (correlated subqueries, lateral joins, and cross joins) abstract base class.
+ * <pre>
+ *     l, r <=> l CROSS JOIN r <=> l JOIN r ON TRUE
+ * </pre>
  */
 public abstract class RelCorrelate extends RelBase {
 

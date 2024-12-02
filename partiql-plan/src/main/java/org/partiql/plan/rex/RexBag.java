@@ -5,6 +5,7 @@ import org.partiql.plan.Operator;
 import org.partiql.plan.Visitor;
 import org.partiql.types.PType;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,15 +17,15 @@ public abstract class RexBag extends RexBase {
      * @return new RexBag instance
      */
     @NotNull
-    public static RexBag create(@NotNull List<Rex> values) {
+    public static RexBag create(@NotNull Collection<Rex> values) {
         return new Impl(values);
     }
 
     /**
-     * @return the values of the array, also the children.
+     * @return the values of the bag, also the children (unordered).
      */
     @NotNull
-    public abstract List<Rex> getValues();
+    public abstract Collection<Rex> getValues();
 
     @NotNull
     @Override
@@ -35,7 +36,7 @@ public abstract class RexBag extends RexBase {
     @NotNull
     @Override
     protected final List<Operator> children() {
-        List<Rex> varargs = getValues();
+        List<Rex> varargs = getValues().stream().toList();
         return List.copyOf(varargs);
     }
 
@@ -46,15 +47,15 @@ public abstract class RexBag extends RexBase {
 
     private static class Impl extends RexBag {
 
-        private final List<Rex> values;
+        private final Collection<Rex> values;
 
-        private Impl(List<Rex> values) {
+        private Impl(Collection<Rex> values) {
             this.values = values;
         }
 
         @NotNull
         @Override
-        public List<Rex> getValues() {
+        public Collection<Rex> getValues() {
             return values;
         }
     }

@@ -12,8 +12,7 @@ public interface Collation {
     /**
      * API WARNING – THIS WILL BE REPLACED WITH AN `int` IN 1.0.
      * <br>
-     * TODO replace with an `int` in 1.0
-     * TODO <a href="https://github.com/partiql/partiql-lang-kotlin/issues/1664">...</a>
+     * TODO <a href="https://github.com/partiql/partiql-lang-kotlin/issues/1664">replace with an `int` in 1.0</a>
      *
      * @return the column to sort by
      */

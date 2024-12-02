@@ -3,7 +3,7 @@ package org.partiql.planner.internal
 import org.partiql.ast.Statement
 import org.partiql.plan.Operation
 import org.partiql.plan.Plan
-import org.partiql.plan.builder.PlanFactory
+import org.partiql.plan.builder.Operators
 import org.partiql.plan.rex.Rex
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerPass
@@ -63,7 +63,7 @@ internal class SqlPlanner(
                 override fun getOperation(): Operation {
                     return object : Operation.Query {
                         override fun getRex(): Rex {
-                            return PlanFactory.STANDARD.rexError(PType.dynamic())
+                            return Operators.STANDARD.rexError(PType.dynamic())
                         }
                     }
                 }

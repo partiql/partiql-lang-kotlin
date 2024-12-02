@@ -58,7 +58,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         private val signal: Boolean,
     ) : PlanBaseVisitor<Any?, PType>() {
 
-        private val factory = org.partiql.plan.builder.PlanFactory.STANDARD
+        private val factory = org.partiql.plan.builder.Operators.STANDARD
 
         override fun defaultReturn(node: INode, ctx: PType): Any {
             TODO("Translation not supported for ${node::class.simpleName}")

@@ -3,6 +3,7 @@ package org.partiql.plan.rex;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
 import org.partiql.plan.Visitor;
+import org.partiql.types.PType;
 
 import java.util.List;
 
@@ -15,8 +16,8 @@ public abstract class RexVar extends RexBase {
      * @return new variable reference expression.
      */
     @NotNull
-    public static RexVar create(int depth, int offset) {
-        return new Impl(depth, offset);
+    public static RexVar create(int depth, int offset, PType type) {
+        return new Impl(depth, offset, type);
     }
 
     /**
@@ -28,13 +29,6 @@ public abstract class RexVar extends RexBase {
      * @return 0-index tuple offset.
      */
     public abstract int getOffset();
-
-    @NotNull
-    @Override
-    protected final RexType type() {
-        // would need to lookup in context
-        throw new UnsupportedOperationException("Derive type is not implemented");
-    }
 
     @Override
     protected final List<Operator> children() {
@@ -50,10 +44,17 @@ public abstract class RexVar extends RexBase {
 
         private final int depth;
         private final int offset;
+        private final PType type;
 
-        private Impl(int depth, int offset) {
+        private Impl(int depth, int offset, PType type) {
             this.depth = depth;
             this.offset = offset;
+            this.type = type;
+        }
+
+        @Override
+        protected RexType type() {
+            return new RexType(type);
         }
 
         @Override

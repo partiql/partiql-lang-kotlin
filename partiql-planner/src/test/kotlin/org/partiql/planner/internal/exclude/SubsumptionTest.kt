@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Exclusion
 import org.partiql.plan.Operation
-import org.partiql.plan.builder.PlanFactory
+import org.partiql.plan.builder.Operators
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelProject
 import org.partiql.plan.rex.RexSelect
@@ -59,7 +59,7 @@ class SubsumptionTest {
             return parameters.map { Arguments.of(it) }.stream()
         }
 
-        private val factory = PlanFactory.STANDARD
+        private val factory = Operators.STANDARD
 
         private fun rexOpVar(depth: Int, offset: Int): RexVar = factory.rexVar(depth, offset)
 
