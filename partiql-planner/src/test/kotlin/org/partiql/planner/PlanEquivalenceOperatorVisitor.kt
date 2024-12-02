@@ -155,8 +155,8 @@ object PlanEquivalenceOperatorVisitor : OperatorVisitor<Boolean, Any> {
         return super.visitCall(rex, other)
     }
 
-    override fun visitCallDynamic(rex: RexDispatch, other: Any): Boolean {
-        return super.visitCallDynamic(rex, other)
+    override fun visitDispatch(rex: RexDispatch, other: Any): Boolean {
+        return super.visitDispatch(rex, other)
     }
 
     override fun visitCase(rex: RexCase, other: Any): Boolean {

@@ -240,7 +240,7 @@ public interface Operators {
      * @param values
      * @return
      */
-    public fun rexArray(values: List<Rex>): RexArray = RexArray.create(values)
+    public fun array(values: List<Rex>): RexArray = RexArray.create(values)
 
     /**
      * Create a [RexBag] instance.
@@ -248,7 +248,7 @@ public interface Operators {
      * @param values
      * @return
      */
-    public fun rexBag(values: Collection<Rex>): RexBag = RexBag.create(values)
+    public fun bag(values: Collection<Rex>): RexBag = RexBag.create(values)
 
     /**
      * Create a [RexCall] instance.
@@ -257,17 +257,17 @@ public interface Operators {
      * @param args
      * @return
      */
-    public fun rexCall(function: Function.Instance, args: List<Rex>): RexCall = RexCall.create(function, args)
+    public fun call(function: Function.Instance, args: List<Rex>): RexCall = RexCall.create(function, args)
 
     /**
-     * Create a [RexCase] instance for a case-when with dynamic type.
+     * Create a [RexCase] instance for a case-when with dynamic type (case is a reserved word in Java).
      *
      * @param match
      * @param branches
      * @param default
      * @return
      */
-    public fun rexCase(match: Rex?, branches: List<RexCase.Branch>, default: Rex?): RexCase =
+    public fun caseWhen(match: Rex?, branches: List<RexCase.Branch>, default: Rex?): RexCase =
         RexCase.create(match, branches, default)
 
     /**
@@ -277,7 +277,7 @@ public interface Operators {
      * @param target
      * @return
      */
-    public fun rexCast(operand: Rex, target: PType): RexCast = RexCast.create(operand, target)
+    public fun cast(operand: Rex, target: PType): RexCast = RexCast.create(operand, target)
 
     /**
      * Create a [RexCoalesce] instance.
@@ -285,7 +285,7 @@ public interface Operators {
      * @param args
      * @return
      */
-    public fun rexCoalesce(args: List<Rex>): RexCoalesce = RexCoalesce.create(args)
+    public fun coalesce(args: List<Rex>): RexCoalesce = RexCoalesce.create(args)
 
     /**
      * Create a [RexDispatch] instance.
@@ -295,13 +295,13 @@ public interface Operators {
      * @param args
      * @return
      */
-    public fun rexDispatch(name: String, functions: List<Function>, args: List<Rex>): RexDispatch =
+    public fun dispatch(name: String, functions: List<Function>, args: List<Rex>): RexDispatch =
         RexDispatch.create(name, functions, args)
 
     /**
      * Create a [RexError] instance.
      */
-    public fun rexError(type: PType): RexError = RexError.create()
+    public fun error(type: PType): RexError = RexError.create()
 
     /**
      * Create a [RexLit] instance.
@@ -309,12 +309,12 @@ public interface Operators {
      * @param value
      * @return
      */
-    public fun rexLit(value: Datum): RexLit = RexLit.create(value)
+    public fun lit(value: Datum): RexLit = RexLit.create(value)
 
     /**
      * Create a [RexNullIf] instance.
      */
-    public fun rexNullIf(v1: Rex, v2: Rex): RexNullIf = RexNullIf.create(v1, v2)
+    public fun nullIf(v1: Rex, v2: Rex): RexNullIf = RexNullIf.create(v1, v2)
 
     /**
      * Create a [RexPathIndex] instance.
@@ -323,7 +323,7 @@ public interface Operators {
      * @param index
      * @return
      */
-    public fun rexPathIndex(operand: Rex, index: Rex): RexPathIndex = RexPathIndex.create(operand, index)
+    public fun pathIndex(operand: Rex, index: Rex): RexPathIndex = RexPathIndex.create(operand, index)
 
     /**
      * Create a [RexPathKey] instance.
@@ -332,7 +332,7 @@ public interface Operators {
      * @param key
      * @return
      */
-    public fun rexPathKey(operand: Rex, key: Rex): RexPathKey = RexPathKey.create(operand, key)
+    public fun pathKey(operand: Rex, key: Rex): RexPathKey = RexPathKey.create(operand, key)
 
     /**
      * Create a [RexPathSymbol] instance.
@@ -341,7 +341,7 @@ public interface Operators {
      * @param symbol
      * @return
      */
-    public fun rexPathSymbol(operand: Rex, symbol: String): RexPathSymbol = RexPathSymbol.create(operand, symbol)
+    public fun pathSymbol(operand: Rex, symbol: String): RexPathSymbol = RexPathSymbol.create(operand, symbol)
 
     /**
      * Create a [RexPivot] instance.
@@ -351,7 +351,7 @@ public interface Operators {
      * @param value
      * @return
      */
-    public fun rexPivot(input: Rel, key: Rex, value: Rex): RexPivot = RexPivot.create(input, key, value)
+    public fun pivot(input: Rel, key: Rex, value: Rex): RexPivot = RexPivot.create(input, key, value)
 
     /**
      * Create a [RexSelect] instance.
@@ -360,7 +360,7 @@ public interface Operators {
      * @param constructor
      * @return
      */
-    public fun rexSelect(input: Rel, constructor: Rex): RexSelect = RexSelect.create(input, constructor)
+    public fun select(input: Rel, constructor: Rex): RexSelect = RexSelect.create(input, constructor)
 
     /**
      * Create a [RexSpread] instance with open struct type.
@@ -368,7 +368,7 @@ public interface Operators {
      * @param args
      * @return
      */
-    public fun rexSpread(args: List<Rex>): RexSpread = RexSpread.create(args)
+    public fun spread(args: List<Rex>): RexSpread = RexSpread.create(args)
 
     /**
      * Create a [RexStruct] instance.
@@ -376,7 +376,7 @@ public interface Operators {
      * @param fields
      * @return
      */
-    public fun rexStruct(fields: List<RexStruct.Field>): RexStruct = RexStruct.create(fields)
+    public fun struct(fields: List<RexStruct.Field>): RexStruct = RexStruct.create(fields)
 
     /**
      * Create a [RexSubquery] instance.
@@ -386,7 +386,7 @@ public interface Operators {
      * @param input
      * @return
      */
-    public fun rexSubquery(input: Rel, constructor: Rex, scalar: Boolean): RexSubquery =
+    public fun subquery(input: Rel, constructor: Rex, scalar: Boolean): RexSubquery =
         RexSubquery.create(input, constructor, scalar)
 
     /**
@@ -398,7 +398,7 @@ public interface Operators {
      * @param quantifier
      * @return
      */
-    public fun rexSubqueryComp(
+    public fun subqueryComp(
         input: Rel,
         args: List<Rex>,
         comparison: RexSubqueryComp.Comparison,
@@ -412,7 +412,7 @@ public interface Operators {
      * @param args
      * @return
      */
-    public fun rexSubqueryIn(input: Rel, args: List<Rex>): RexSubqueryIn = RexSubqueryIn.create(input, args)
+    public fun subqueryIn(input: Rel, args: List<Rex>): RexSubqueryIn = RexSubqueryIn.create(input, args)
 
     /**
      * Create a [RexSubqueryTest] instance.
@@ -421,7 +421,7 @@ public interface Operators {
      * @param test
      * @return
      */
-    public fun rexSubqueryTest(input: Rel, test: RexSubqueryTest.Test): RexSubqueryTest =
+    public fun subqueryTest(input: Rel, test: RexSubqueryTest.Test): RexSubqueryTest =
         RexSubqueryTest.create(input, test)
 
     /**
@@ -430,7 +430,7 @@ public interface Operators {
      * @param table
      * @return
      */
-    public fun rexTable(table: Table): RexTable = RexTable.create(table)
+    public fun table(table: Table): RexTable = RexTable.create(table)
 
     /**
      * Create a [RexVar] instance (requires a type).
@@ -440,5 +440,5 @@ public interface Operators {
      * @param type
      * @return
      */
-    public fun rexVar(depth: Int, offset: Int, type: PType): RexVar = RexVar.create(depth, offset, type)
+    public fun variable(depth: Int, offset: Int, type: PType): RexVar = RexVar.create(depth, offset, type)
 }

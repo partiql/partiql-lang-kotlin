@@ -63,7 +63,7 @@ internal class SqlPlanner(
                 override fun getOperation(): Operation {
                     return object : Operation.Query {
                         override fun getRex(): Rex {
-                            return Operators.STANDARD.rexError(PType.dynamic())
+                            return Operators.STANDARD.error(PType.dynamic())
                         }
                     }
                 }

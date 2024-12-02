@@ -339,7 +339,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             return ExprBag(values)
         }
 
-        override fun visitCallDynamic(rex: RexDispatch, ctx: Unit): ExprValue {
+        override fun visitDispatch(rex: RexDispatch, ctx: Unit): ExprValue {
             // Check candidate arity for uniformity
             var arity: Int = -1
             val name = rex.getName()

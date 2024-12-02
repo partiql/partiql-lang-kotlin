@@ -61,7 +61,7 @@ class SubsumptionTest {
 
         private val factory = Operators.STANDARD
 
-        private fun rexOpVar(depth: Int, offset: Int): RexVar = factory.rexVar(depth, offset)
+        private fun rexOpVar(depth: Int, offset: Int): RexVar = factory.variable(depth, offset)
 
         private val parameters = listOf(
             SubsumptionTC(

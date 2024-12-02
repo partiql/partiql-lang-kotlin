@@ -4,16 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.rel.*;
 import org.partiql.plan.rel.RelAggregate.Measure;
 import org.partiql.plan.rex.*;
+import org.partiql.plan.rex.RexCase.Branch;
+import org.partiql.plan.rex.RexStruct.Field;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Operator transform is an abstract base visitor which recursively rewrites an operator tree.
- * <br>
- * Developer Note
- * -
- * - use the visitAll for rewriting collections as it's more efficient and won't trigger rewrites.
  */
 public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, C> {
 
@@ -322,122 +320,335 @@ public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, 
 
     @Override
     public Operator visitArray(@NotNull RexArray rex, C ctx) {
-        return OperatorVisitor.super.visitArray(rex, ctx);
+        // rewrite values
+        List<Rex> values = rex.getValues();
+        List<Rex> values_new = visitAll(values, ctx, this::visitRex);
+        // rewrite array
+        if (values != values_new) {
+            return operators.array(values_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitBag(@NotNull RexBag rex, C ctx) {
-        return OperatorVisitor.super.visitBag(rex, ctx);
+        // rewrite values (necessarily ascribes order)
+        List<Rex> values = rex.getValues().stream().toList();
+        List<Rex> values_new = visitAll(values, ctx, this::visitRex);
+        // rewrite bag
+        if (values != values_new) {
+            return operators.bag(values_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitCall(@NotNull RexCall rex, C ctx) {
-        return OperatorVisitor.super.visitCall(rex, ctx);
-    }
-
-    @Override
-    public Operator visitCallDynamic(@NotNull RexDispatch rex, C ctx) {
-        return OperatorVisitor.super.visitCallDynamic(rex, ctx);
+        // rewrite args
+        List<Rex> args = rex.getArgs();
+        List<Rex> args_new = visitAll(args, ctx, this::visitRex);
+        // rewrite call
+        if (args != args_new) {
+            return operators.call(rex.getFunction(), args_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitCase(@NotNull RexCase rex, C ctx) {
-        return OperatorVisitor.super.visitCase(rex, ctx);
+        // rewrite match
+        Rex match = rex.getMatch();
+        Rex match_new = (match != null) ? visit(match, ctx, Rex.class) : null;
+        // rewrite branches
+        List<Branch> branches = rex.getBranches();
+        List<Branch> branches_new = visitAll(branches, ctx, this::visitCaseBranch);
+        // rewrite default
+        Rex default_ = rex.getDefault();
+        Rex default_new = (default_ != null) ? visit(default_, ctx, Rex.class) : null;
+        // rewrite case
+        if (match != match_new || branches != branches_new || default_ != default_new) {
+            return operators.caseWhen(match_new, branches_new, default_new);
+        }
+        return rex;
+    }
+
+    @NotNull
+    public Branch visitCaseBranch(@NotNull Branch branch, C ctx) {
+        // rewrite condition
+        Rex condition = branch.getCondition();
+        Rex condition_new = visit(condition, ctx, Rex.class);
+        // rewrite result
+        Rex result = branch.getResult();
+        Rex result_new = visit(result, ctx, Rex.class);
+        // rewrite branch
+        if (condition != condition_new || result != result_new) {
+            return new Branch(condition_new, result_new);
+        }
+        return branch;
     }
 
     @Override
     public Operator visitCast(@NotNull RexCast rex, C ctx) {
-        return OperatorVisitor.super.visitCast(rex, ctx);
+        // rewrite operand
+        Rex operand = rex.getOperand();
+        Rex operand_new = visit(operand, ctx, Rex.class);
+        // rewrite cast
+        if (operand != operand_new) {
+            return operators.cast(operand_new, rex.getTarget());
+        }
+        return rex;
     }
 
     @Override
     public Operator visitCoalesce(@NotNull RexCoalesce rex, C ctx) {
-        return OperatorVisitor.super.visitCoalesce(rex, ctx);
+        // rewrite args
+        List<Rex> args = rex.getArgs();
+        List<Rex> args_new = visitAll(args, ctx, this::visitRex);
+        // rewrite coalesce
+        if (args != args_new) {
+            return operators.coalesce(args_new);
+        }
+        return rex;
+    }
+
+    @Override
+    public Operator visitDispatch(@NotNull RexDispatch rex, C ctx) {
+        // rewrite args
+        List<Rex> args = rex.getArgs();
+        List<Rex> args_new = visitAll(args, ctx, this::visitRex);
+        // rewrite dispatch
+        if (args != args_new) {
+            return operators.dispatch(rex.getName(), rex.getFunctions(), args_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitError(@NotNull RexError rex, C ctx) {
-        return OperatorVisitor.super.visitError(rex, ctx);
+        return rex;
     }
 
     @Override
     public Operator visitLit(@NotNull RexLit rex, C ctx) {
-        return OperatorVisitor.super.visitLit(rex, ctx);
+        return rex;
     }
 
     @Override
     public Operator visitNullIf(@NotNull RexNullIf rex, C ctx) {
-        return OperatorVisitor.super.visitNullIf(rex, ctx);
+        // rewrite v1
+        Rex v1 = rex.getV1();
+        Rex v1_new = visit(v1, ctx, Rex.class);
+        // rewrite v2
+        Rex v2 = rex.getV2();
+        Rex v2_new = visit(v2, ctx, Rex.class);
+        // rewrite nullif
+        if (v1 != v1_new || v2 != v2_new) {
+            return operators.nullIf(v1_new, v2_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitPathIndex(@NotNull RexPathIndex rex, C ctx) {
-        return OperatorVisitor.super.visitPathIndex(rex, ctx);
+        // rewrite operand
+        Rex operand = rex.getOperand();
+        Rex operand_new = visit(operand, ctx, Rex.class);
+        // rewrite index
+        Rex index = rex.getIndex();
+        Rex index_new = visit(index, ctx, Rex.class);
+        // rewrite path index
+        if (operand != operand_new || index != index_new) {
+            return operators.pathIndex(operand_new, index_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitPathKey(@NotNull RexPathKey rex, C ctx) {
-        return OperatorVisitor.super.visitPathKey(rex, ctx);
+        // rewrite operand
+        Rex operand = rex.getOperand();
+        Rex operand_new = visit(operand, ctx, Rex.class);
+        // rewrite key
+        Rex key = rex.getKey();
+        Rex key_new = visit(key, ctx, Rex.class);
+        // rewrite path key
+        if (operand != operand_new || key != key_new) {
+            return operators.pathKey(operand_new, key_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitPathSymbol(@NotNull RexPathSymbol rex, C ctx) {
-        return OperatorVisitor.super.visitPathSymbol(rex, ctx);
+        // rewrite operand
+        Rex operand = rex.getOperand();
+        Rex operand_new = visit(operand, ctx, Rex.class);
+        // rewrite path symbol
+        if (operand != operand_new) {
+            return operators.pathSymbol(operand_new, rex.getSymbol());
+        }
+        return rex;
     }
 
     @Override
     public Operator visitPivot(@NotNull RexPivot rex, C ctx) {
-        return OperatorVisitor.super.visitPivot(rex, ctx);
+        // rewrite input
+        Rel input = rex.getInput();
+        Rel input_new = visit(input, ctx, Rel.class);
+        // rewrite key
+        Rex key = rex.getKey();
+        Rex key_new = visit(key, ctx, Rex.class);
+        // rewrite value
+        Rex value = rex.getValue();
+        Rex value_new = visit(value, ctx, Rex.class);
+        // rewrite pivot
+        if (input != input_new || key != key_new || value != value_new) {
+            return operators.pivot(input_new, key_new, value_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitSelect(@NotNull RexSelect rex, C ctx) {
-        return OperatorVisitor.super.visitSelect(rex, ctx);
+        // rewrite input
+        Rel input = rex.getInput();
+        Rel input_new = visit(input, ctx, Rel.class);
+        // rewrite constructor
+        Rex constructor = rex.getConstructor();
+        Rex constructor_new = visit(constructor, ctx, Rex.class);
+        // rewrite select
+        if (input != input_new || constructor != constructor_new) {
+            return operators.select(input_new, constructor_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitStruct(@NotNull RexStruct rex, C ctx) {
-        return OperatorVisitor.super.visitStruct(rex, ctx);
+        // rewrite fields
+        List<Field> fields = rex.getFields();
+        List<Field> fields_new = visitAll(fields, ctx, this::visitStructField);
+        // rewrite struct
+        if (fields != fields_new) {
+            return operators.struct(fields_new);
+        }
+        return rex;
+    }
+
+    @NotNull
+    public Field visitStructField(@NotNull Field field, C ctx) {
+        // rewrite key
+        Rex key = field.getKey();
+        Rex key_new = visit(key, ctx, Rex.class);
+        // rewrite value
+        Rex value = field.getValue();
+        Rex value_new = visit(value, ctx, Rex.class);
+        // rewrite field
+        if (key != key_new || value != value_new) {
+            return RexStruct.field(key_new, value_new);
+        }
+        return field;
     }
 
     @Override
     public Operator visitSubquery(@NotNull RexSubquery rex, C ctx) {
-        return OperatorVisitor.super.visitSubquery(rex, ctx);
+        // rewrite input
+        Rel input = rex.getInput();
+        Rel input_new = visit(input, ctx, Rel.class);
+        // rewrite constructor
+        Rex constructor = rex.getConstructor();
+        Rex constructor_new = visit(constructor, ctx, Rex.class);
+        // rewrite subquery
+        if (input != input_new || constructor != constructor_new) {
+            return operators.subquery(input_new, constructor_new, rex.isScalar());
+        }
+        return rex;
     }
 
     @Override
     public Operator visitSubqueryComp(@NotNull RexSubqueryComp rex, C ctx) {
-        return OperatorVisitor.super.visitSubqueryComp(rex, ctx);
+        // rewrite input
+        Rel input = rex.getInput();
+        Rel input_new = visit(input, ctx, Rel.class);
+        // rewrite args
+        List<Rex> args = rex.getArgs();
+        List<Rex> args_new = visitAll(args, ctx, this::visitRex);
+        // rewrite subquery comp
+        if (input != input_new) {
+            return operators.subqueryComp(input_new, args_new, rex.getComparison(), rex.getQuantifier());
+        }
+        return rex;
     }
 
     @Override
     public Operator visitSubqueryIn(@NotNull RexSubqueryIn rex, C ctx) {
-        return OperatorVisitor.super.visitSubqueryIn(rex, ctx);
+        // rewrite input
+        Rel input = rex.getInput();
+        Rel input_new = visit(input, ctx, Rel.class);
+        // rewrite args
+        List<Rex> args = rex.getArgs();
+        List<Rex> args_new = visitAll(args, ctx, this::visitRex);
+        // rewrite subquery in
+        if (input != input_new) {
+            return operators.subqueryIn(input_new, args_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitSubqueryTest(@NotNull RexSubqueryTest rex, C ctx) {
-        return OperatorVisitor.super.visitSubqueryTest(rex, ctx);
+        // rewrite input
+        Rel input = rex.getInput();
+        Rel input_new = visit(input, ctx, Rel.class);
+        // rewrite subquery test
+        if (input != input_new) {
+            return operators.subqueryTest(input_new, rex.getTest());
+        }
+        return rex;
     }
 
     @Override
     public Operator visitSpread(@NotNull RexSpread rex, C ctx) {
-        return OperatorVisitor.super.visitSpread(rex, ctx);
+        // rewrite args
+        List<Rex> args = rex.getArgs();
+        List<Rex> args_new = visitAll(args, ctx, this::visitRex);
+        // rewrite spread
+        if (args != args_new) {
+            return operators.spread(args_new);
+        }
+        return rex;
     }
 
     @Override
     public Operator visitTable(@NotNull RexTable rex, C ctx) {
-        return OperatorVisitor.super.visitTable(rex, ctx);
+        return rex;
     }
 
     @Override
     public Operator visitVar(@NotNull RexVar rex, C ctx) {
-        return OperatorVisitor.super.visitVar(rex, ctx);
+        return rex;
+    }
+
+    /**
+     * Helper method to visit a rel and cast as rel.
+     */
+    @NotNull
+    public final Rel visitRel(@NotNull Rel rel, C ctx) {
+        return visit(rel, ctx, Rel.class);
+    }
+
+    /**
+     * Helper method to visit a rex and cast as rex.
+     */
+    @NotNull
+    public final Rex visitRex(@NotNull Rex rex, C ctx) {
+        return visit(rex, ctx, Rex.class);
     }
 
     /**
      * Helper method to visit an operator and cast to the expected type.
      */
+    @NotNull
     public final <T extends Operator> T visit(@NotNull Operator operator, C ctx, Class<T> clazz) {
         Operator o = visit(operator, ctx);
         if (clazz.isInstance(o)) {
@@ -451,7 +662,8 @@ public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, 
      * Using this will drastically reduce rebuilds since a new list is created ONLY IF necessary.
      * Doing .stream().map().collect() will always create a new list, even if no operators were rewritten.
      */
-    public final <T> List<T> visitAll(List<T> objects, C ctx, Mapper<T, C> mapper) {
+    @NotNull
+    public final <T> List<T> visitAll(@NotNull List<T> objects, C ctx, @NotNull Mapper<T, C> mapper) {
         if (objects.isEmpty()) {
             return objects;
         }
@@ -468,7 +680,8 @@ public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, 
     /**
      * Default error handling throws a ClassCastException.
      */
-    public <T extends Operator> T onError(Operator o, Class<T> clazz) {
+    @NotNull
+    public <T extends Operator> T onError(@NotNull Operator o, @NotNull Class<T> clazz) {
         throw new ClassCastException("OperatorTransform expected " + clazz.getName() + ", found: " + o.getClass().getName());
     }
 

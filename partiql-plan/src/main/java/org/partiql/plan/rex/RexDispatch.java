@@ -49,7 +49,7 @@ public abstract class RexDispatch extends RexBase {
 
     @Override
     public <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx) {
-        return visitor.visitCallDynamic(this, ctx);
+        return visitor.visitDispatch(this, ctx);
     }
 
     private static class Impl extends RexDispatch {

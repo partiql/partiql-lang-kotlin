@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
 
 /**
- * A Rel is an {@link Operator that produces a collection of tuples.
+ * A Rel is an {@link Operator} that produces a collection of tuples.
  */
 public interface Rel extends Operator {
 

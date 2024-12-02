@@ -80,13 +80,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
          */
         override fun visitRexOpErr(node: IRex.Op.Err, ctx: PType): Any {
             // Listener should have already received the error/warning. The listener should have already failed compilation.
-            return factory.rexError(ctx)
+            return factory.error(ctx)
         }
 
         override fun visitRelOpErr(node: org.partiql.planner.internal.ir.Rel.Op.Err, ctx: PType): Any {
             // Listener should have already received the error. This node is a dud. Registered error listeners should
             // have failed compilation already.
-            return factory.scan(factory.rexError(ctx))
+            return factory.scan(factory.error(ctx))
         }
 
         // EXPRESSIONS
@@ -98,13 +98,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         override fun visitRexOpTupleUnion(node: IRex.Op.TupleUnion, ctx: PType): Any {
             val args = node.args.map { visitRex(it, ctx) }
             val type = RexType(ctx)
-            return factory.rexSpread(args, type)
+            return factory.spread(args, type)
         }
 
         override fun visitRexOpSelect(node: IRex.Op.Select, ctx: PType): Any {
             val input = visitRel(node.rel, ctx)
             val constructor = visitRex(node.constructor, ctx)
-            return factory.rexSelect(input, constructor)
+            return factory.select(input, constructor)
         }
 
         /**
@@ -118,20 +118,20 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             val input = visitRel(node.rel, ctx)
             val constructor = visitRex(node.constructor, ctx)
             val isScalar = node.coercion == IRex.Op.Subquery.Coercion.SCALAR
-            return factory.rexSubquery(input, constructor, isScalar)
+            return factory.subquery(input, constructor, isScalar)
         }
 
         override fun visitRexOpPivot(node: IRex.Op.Pivot, ctx: PType): Any {
             val input = visitRel(node.rel, ctx)
             val key = visitRex(node.key, ctx)
             val value = visitRex(node.value, ctx)
-            return factory.rexPivot(input, key, value)
+            return factory.pivot(input, key, value)
         }
 
         override fun visitRexOpStruct(node: IRex.Op.Struct, ctx: PType): Any {
             val fields = node.fields.map { field(it) }
             val type = RexType(ctx)
-            return factory.rexStruct(fields, type)
+            return factory.struct(fields, type)
         }
 
         override fun visitRexOpCollection(node: IRex.Op.Collection, ctx: PType): Any {
@@ -147,20 +147,20 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         override fun visitRexOpCoalesce(node: IRex.Op.Coalesce, ctx: PType): Any {
             val args = node.args.map { visitRex(it, ctx) }
             val type = RexType(ctx)
-            return factory.rexCoalesce(args, type)
+            return factory.coalesce(args, type)
         }
 
         override fun visitRexOpNullif(node: IRex.Op.Nullif, ctx: PType): Any {
             val value = visitRex(node.value, ctx)
             val nullifier = visitRex(node.nullifier, ctx)
-            return factory.rexNullIf(value, nullifier)
+            return factory.nullIf(value, nullifier)
         }
 
         override fun visitRexOpCase(node: IRex.Op.Case, ctx: PType): Any {
             val branches = node.branches.map { branch(it) }
             val default = visitRex(node.default, ctx)
             val type = RexType(ctx)
-            return factory.rexCase(branches, default, type)
+            return factory.caseWhen(branches, default, type)
         }
 
         override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
@@ -174,7 +174,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
             val fn = node.fn
             val args = node.args.map { visitRex(it, ctx) }
-            return factory.rexCall(fn, args)
+            return factory.call(fn, args)
         }
 
         override fun visitRexOpCallUnresolved(node: IRex.Op.Call.Unresolved, ctx: PType): Any {
@@ -188,32 +188,32 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         override fun visitRexOpCastResolved(node: IRex.Op.Cast.Resolved, ctx: PType): Any {
             val operand = visitRex(node.arg, ctx)
             val target = node.cast.target
-            return factory.rexCast(operand, target)
+            return factory.cast(operand, target)
         }
 
         override fun visitRexOpPathSymbol(node: IRex.Op.Path.Symbol, ctx: PType): Any {
             val operand = visitRex(node.root, ctx)
             val symbol = node.key
             val type = RexType(ctx)
-            return factory.rexPathSymbol(operand, symbol, type)
+            return factory.pathSymbol(operand, symbol, type)
         }
 
         override fun visitRexOpPathKey(node: IRex.Op.Path.Key, ctx: PType): Any {
             val operand = visitRex(node.root, ctx)
             val key = visitRex(node.key, ctx)
             val type = RexType(ctx)
-            return factory.rexPathKey(operand, key, type)
+            return factory.pathKey(operand, key, type)
         }
 
         override fun visitRexOpPathIndex(node: IRex.Op.Path.Index, ctx: PType): Any {
             val operand = visitRex(node.root, ctx)
             val index = visitRex(node.key, ctx)
             val type = RexType(ctx)
-            return factory.rexPathIndex(operand, index, type)
+            return factory.pathIndex(operand, index, type)
         }
 
         override fun visitRexOpVarGlobal(node: IRex.Op.Var.Global, ctx: PType): Any {
-            return factory.rexTable(node.ref.table)
+            return factory.table(node.ref.table)
         }
 
         override fun visitRexOpVarUnresolved(node: IRex.Op.Var.Unresolved, ctx: PType): Any {
@@ -221,7 +221,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         }
 
         override fun visitRexOpVarLocal(node: IRex.Op.Var.Local, ctx: PType): Any {
-            return factory.rexVar(
+            return factory.variable(
                 depth = node.depth,
                 offset = node.ref,
                 type = RexType(ctx),
@@ -235,11 +235,11 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             //  PartiQLValue.
             if (value is DecimalValue && ctx.code() == PType.DECIMAL) {
                 return when (val dec = value.value) {
-                    null -> factory.rexLit(Datum.nullValue(ctx))
-                    else -> factory.rexLit(Datum.decimal(dec, ctx.precision, ctx.scale))
+                    null -> factory.lit(Datum.nullValue(ctx))
+                    else -> factory.lit(Datum.decimal(dec, ctx.precision, ctx.scale))
                 }
             }
-            return factory.rexLit(Datum.of(node.value))
+            return factory.lit(Datum.of(node.value))
         }
 
         // RELATION OPERATORS

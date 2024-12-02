@@ -141,10 +141,6 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rex, ctx);
     }
 
-    default R visitCallDynamic(@NotNull RexDispatch rex, C ctx) {
-        return defaultVisit(rex, ctx);
-    }
-
     default R visitCase(@NotNull RexCase rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
@@ -154,6 +150,10 @@ public interface OperatorVisitor<R, C> {
     }
 
     default R visitCoalesce(@NotNull RexCoalesce rex, C ctx) {
+        return defaultVisit(rex, ctx);
+    }
+
+    default R visitDispatch(@NotNull RexDispatch rex, C ctx) {
         return defaultVisit(rex, ctx);
     }
 
