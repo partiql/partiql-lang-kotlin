@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Any option that consists of a key value pair where the key is a string and value is an StringValue.
+ * Any option that consists of a key value pair where the key is a string and value is a string.
  * <p>
  * TODO: equals, hashcode
  */

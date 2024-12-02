@@ -103,8 +103,8 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitPartitionBy(PartitionBy partitionBy, C ctx) {
-        return defaultVisit(partitionBy, ctx);
+    public R visitPartitionBy(PartitionBy node, C ctx) {
+        return defaultVisit(node, ctx);
     }
 
     public R visitUnique(AttributeConstraint.Unique node, C ctx) {
@@ -500,7 +500,7 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitStructField(DataType.StructField structField, C ctx) {
-        return defaultVisit(structField, ctx);
+    public R visitStructField(DataType.StructField node, C ctx) {
+        return defaultVisit(node, ctx);
     }
 }
