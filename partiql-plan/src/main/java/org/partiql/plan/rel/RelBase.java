@@ -33,6 +33,11 @@ public abstract class RelBase implements Rel {
         return type;
     }
 
+    @Override
+    public void setType(@NotNull RelType type) {
+        this.type = type;
+    }
+
     @NotNull
     @Override
     public final Operator getOperand(int index) {

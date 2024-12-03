@@ -28,7 +28,7 @@ public abstract class RexSpread extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return new RexType(PType.struct());
+        return RexType.of(PType.struct());
     }
 
     @NotNull

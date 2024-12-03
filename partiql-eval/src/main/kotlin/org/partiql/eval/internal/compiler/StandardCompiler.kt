@@ -302,7 +302,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             val collations = rel.getCollations().map {
                 val expr = compile(it.column, ctx)
                 val desc = it.order.code() == Collation.Order.DESC
-                val last = it.order.code() == Collation.Nulls.LAST
+                val last = it.nulls.code() == Collation.Nulls.LAST
                 RelOpSort.Collation(expr, desc, last)
             }
             return RelOpSort(input, collations)
@@ -494,9 +494,9 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitVar(rex: RexVar, ctx: Unit): ExprValue {
-            val depth = rex.getScope()
+            val scope = rex.scope
             val offset = rex.getOffset()
-            return ExprVar(depth, offset)
+            return ExprVar(scope, offset)
         }
 
         /**

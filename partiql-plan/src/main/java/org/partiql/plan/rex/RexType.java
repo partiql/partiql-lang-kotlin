@@ -1,5 +1,6 @@
 package org.partiql.plan.rex;
 
+import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
 
 /**
@@ -12,10 +13,19 @@ public class RexType {
 
     private final PType type;
 
-    public RexType(PType type) {
+    private RexType(PType type) {
         this.type = type;
     }
 
+    /**
+     * @return a RexType from a PType.
+     */
+    @NotNull
+    public static RexType of(@NotNull PType type) {
+        return new RexType(type);
+    }
+
+    @NotNull
     public PType getPType() {
         return type;
     }
@@ -42,12 +52,5 @@ public class RexType {
     @Override
     public String toString() {
         return type.toString();
-    }
-
-    /**
-     * A [RexType] for an "untyped" logical plan node.
-     */
-    public static RexType dynamic() {
-        return new RexType(PType.dynamic());
     }
 }

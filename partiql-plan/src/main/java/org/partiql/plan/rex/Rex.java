@@ -9,13 +9,13 @@ import org.partiql.plan.Operator;
 public interface Rex extends Operator {
 
     /**
-     * @return the type of the value produced by this [Rex].
+     * @return the type of the value produced by this rex.
      */
     @NotNull
     public RexType getType();
 
     /**
-     * @param type the new type of the value produced by this [Rex].
+     * @param type the new type of the value produced by this rex.
      */
     public void setType(RexType type);
 }

@@ -26,7 +26,7 @@ public abstract class RexLit extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return new RexType(getDatum().getType());
+        return RexType.of(getDatum().getType());
     }
 
     @Override

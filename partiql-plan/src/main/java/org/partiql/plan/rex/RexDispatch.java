@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operator;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.spi.function.Function;
+import org.partiql.types.PType;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ public abstract class RexDispatch extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return RexType.dynamic();
+        return RexType.of(PType.dynamic());
     }
 
     @Override

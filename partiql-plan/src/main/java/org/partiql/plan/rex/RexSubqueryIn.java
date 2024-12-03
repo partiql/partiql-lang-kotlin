@@ -35,7 +35,7 @@ public abstract class RexSubqueryIn extends RexBase {
 
     @Override
     protected final RexType type() {
-        return new RexType(PType.bool());
+        return RexType.of(PType.bool());
     }
 
     @Override

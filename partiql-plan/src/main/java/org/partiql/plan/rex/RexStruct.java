@@ -37,7 +37,7 @@ public abstract class RexStruct extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return new RexType(PType.struct());
+        return RexType.of(PType.struct());
     }
 
     @Override

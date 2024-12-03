@@ -42,7 +42,7 @@ public abstract class RexPivot extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return new RexType(PType.struct());
+        return RexType.of(PType.struct());
     }
 
     @Override

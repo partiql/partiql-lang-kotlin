@@ -31,7 +31,7 @@ public abstract class RexCall extends RexBase {
 
     @Override
     protected RexType type() {
-        return new RexType(getFunction().returns);
+        return RexType.of(getFunction().returns);
     }
 
     @Override

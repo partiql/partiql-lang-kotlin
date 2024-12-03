@@ -29,7 +29,7 @@ public abstract class RexArray extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return new RexType(PType.array());
+        return RexType.of(PType.array());
     }
 
     @NotNull

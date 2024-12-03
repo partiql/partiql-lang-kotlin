@@ -34,7 +34,7 @@ public abstract class RexCast extends RexBase {
 
     @NotNull
     protected final RexType type() {
-        return new RexType(getTarget());
+        return RexType.of(getTarget());
     }
 
     @Override

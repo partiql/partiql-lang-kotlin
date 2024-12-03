@@ -28,7 +28,7 @@ public abstract class RexTable extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return new RexType(getTable().getSchema());
+        return RexType.of(getTable().getSchema());
     }
 
     @Override

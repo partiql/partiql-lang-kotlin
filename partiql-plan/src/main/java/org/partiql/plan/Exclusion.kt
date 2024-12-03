@@ -34,17 +34,20 @@ public class Exclusion(variable: RexVar, items: List<Item>) {
      */
     public fun getItems(): List<Item> = _items
 
-    // generated
+    /**
+     * UNSTABLE AND WILL BE DELETED (this only exists for unit tests)
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Exclusion) return false
         if (_variable.scope != other._variable.scope || _variable.offset != other._variable.offset) return false
         if (_items != other._items) return false
-
         return true
     }
 
-    // generated
+    /**
+     * UNSTABLE AND WILL BE DELETED (this only exists for unit tests)
+     */
     override fun hashCode(): Int {
         var result = _variable.hashCode()
         result = 31 * result + _items.hashCode()

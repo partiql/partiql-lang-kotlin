@@ -54,7 +54,7 @@ public abstract class RexVar extends RexBase {
 
         @Override
         protected RexType type() {
-            return new RexType(type);
+            return RexType.of(type);
         }
 
         @Override

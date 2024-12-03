@@ -30,7 +30,7 @@ public abstract class RexBag extends RexBase {
     @NotNull
     @Override
     protected final RexType type() {
-        return new RexType(PType.bag());
+        return RexType.of(PType.bag());
     }
 
     @NotNull
