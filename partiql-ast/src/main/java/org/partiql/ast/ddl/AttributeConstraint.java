@@ -1,44 +1,50 @@
 package org.partiql.ast.ddl;
 
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
+import org.partiql.ast.IdentifierChain;
 import org.partiql.ast.expr.Expr;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * TODO docs, equals, hashcode
  */
 public abstract class AttributeConstraint extends AstNode {
 
+    @Nullable
+    public final IdentifierChain name;
+
+    protected AttributeConstraint(@Nullable IdentifierChain name) {
+        this.name = name;
+    }
+
+    @NotNull
+    @Override
+    public Collection<AstNode> children() {
+        List<AstNode> kids = new ArrayList<>();
+        kids.add(name);
+        return kids;
+    }
+
     // NULL & NOT NULL
 
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Null extends AttributeConstraint {
-        @Nullable
-        public final String name;
 
-        @NotNull
-        public final Boolean isNullable;
+        public final boolean isNullable;
 
-        public Null(@Nullable String name, @NotNull Boolean isNullable) {
-            this.name = name;
+        public Null(@Nullable IdentifierChain name, boolean isNullable) {
+            super(name);
             this.isNullable = isNullable;
-        }
-
-        @NotNull
-        @Override
-        public Collection<AstNode> children() {
-            return Collections.emptyList();
         }
 
         @Override
@@ -52,24 +58,14 @@ public abstract class AttributeConstraint extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends AttributeConstraint {
-        @Nullable
-        public final String name;
 
-        @NotNull
-        public final Boolean isPrimary;
+        public final boolean isPrimaryKey;
 
-        public Unique(@Nullable String name, @NotNull Boolean isPrimary) {
-            this.name = name;
-            this.isPrimary = isPrimary;
-        }
-
-        @NotNull
-        @Override
-        public Collection<AstNode> children() {
-            return Collections.emptyList();
+        public Unique(@Nullable IdentifierChain name, boolean isPrimary) {
+            super(name);
+            this.isPrimaryKey = isPrimary;
         }
 
         @Override
@@ -81,24 +77,24 @@ public abstract class AttributeConstraint extends AstNode {
     /**
      * TODO docs, equals, hashcode
      */
-    @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Check extends AttributeConstraint {
-        @Nullable
-        public final String name;
 
         @NotNull
         public final Expr searchCondition;
 
-        public Check(@Nullable String name, @NotNull Expr searchCondition) {
-            this.name = name;
+        public Check(@Nullable IdentifierChain name, @NotNull Expr searchCondition) {
+            super(name);
             this.searchCondition = searchCondition;
         }
 
         @NotNull
         @Override
         public Collection<AstNode> children() {
-            return Collections.emptyList();
+            List<AstNode> kids = new ArrayList<>();
+            kids.add(name);
+            kids.add(searchCondition);
+            return kids;
         }
 
         @Override

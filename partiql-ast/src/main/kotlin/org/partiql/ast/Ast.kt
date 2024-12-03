@@ -533,36 +533,25 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun tableConstraintUnique(name: String?, columns: List<Identifier>): TableConstraint.Unique {
-        return TableConstraint.Unique(name, columns)
+    public fun tableConstraintUnique(name: IdentifierChain?, columns: List<Identifier>, isPrimaryKey: Boolean): TableConstraint.Unique {
+        return TableConstraint.Unique(name, columns, isPrimaryKey)
     }
 
     @JvmStatic
-    public fun tableConstraintPrimaryKey(name: String?, columns: List<Identifier>): TableConstraint.PrimaryKey {
-        return TableConstraint.PrimaryKey(name, columns)
-    }
-
-    @JvmStatic
-    public fun tableConstraintCheck(name: String?, searchCondition: Expr): TableConstraint.Check {
-        return TableConstraint.Check(name, searchCondition)
-    }
-
-    @JvmStatic
-    public fun columnConstraintNullable(name: String?, isNullable: Boolean): AttributeConstraint.Null {
+    public fun columnConstraintNullable(name: IdentifierChain?, isNullable: Boolean): AttributeConstraint.Null {
         return AttributeConstraint.Null(name, isNullable)
     }
 
     @JvmStatic
-    public fun columnConstraintUnique(name: String?, isPrimaryKey: Boolean): AttributeConstraint.Unique {
+    public fun columnConstraintUnique(name: IdentifierChain?, isPrimaryKey: Boolean): AttributeConstraint.Unique {
         return AttributeConstraint.Unique(name, isPrimaryKey)
     }
 
     @JvmStatic
-    public fun columnConstraintCheck(name: String?, searchCondition: Expr): AttributeConstraint.Check {
+    public fun columnConstraintCheck(name: IdentifierChain?, searchCondition: Expr): AttributeConstraint.Check {
         return AttributeConstraint.Check(name, searchCondition)
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     @JvmStatic
     public fun keyValue(key: String, value: String): KeyValue {
         return KeyValue(key, value)

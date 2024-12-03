@@ -119,8 +119,6 @@ import org.partiql.ast.Ast.selectStar
 import org.partiql.ast.Ast.selectValue
 import org.partiql.ast.Ast.setOp
 import org.partiql.ast.Ast.sort
-import org.partiql.ast.Ast.tableConstraintCheck
-import org.partiql.ast.Ast.tableConstraintPrimaryKey
 import org.partiql.ast.Ast.tableConstraintUnique
 import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
@@ -633,10 +631,10 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnConstraintDef(ctx: GeneratedParser.ColumnConstraintDefContext) = translate(ctx) {
-            val constrName = ctx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
+            val constrName = ctx.constraintName()?.let { visitQualifiedName(it.qualifiedName()) }
             val body = visitAs<AttributeConstraint>(ctx.columnConstraint())
             when (body) {
-                is AttributeConstraint.Unique -> columnConstraintUnique(constrName, body.isPrimary)
+                is AttributeConstraint.Unique -> columnConstraintUnique(constrName, body.isPrimaryKey)
                 is AttributeConstraint.Null -> columnConstraintNullable(constrName, body.isNullable)
                 is AttributeConstraint.Check -> columnConstraintCheck(constrName, body.searchCondition)
                 else -> throw error(ctx, "Unexpected Table Constraint Definition")
@@ -665,12 +663,10 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitTableConstrDefinition(ctx: GeneratedParser.TableConstrDefinitionContext) = translate(ctx) {
-            val constraintName = ctx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
+            val constraintName = ctx.constraintName()?.let { visitQualifiedName(it.qualifiedName()) }
             val body = visitAs<TableConstraint>(ctx.tableConstraint())
             when (body) {
-                is TableConstraint.Unique -> tableConstraintUnique(constraintName, body.columns)
-                is TableConstraint.PrimaryKey -> tableConstraintPrimaryKey(constraintName, body.columns)
-                is TableConstraint.Check -> tableConstraintCheck(constraintName, body.searchCondition)
+                is TableConstraint.Unique -> tableConstraintUnique(constraintName, body.columns, body.isPrimaryKey)
                 else -> throw error(ctx, "Unexpected Table Constraint Definition")
             }
         }
@@ -678,8 +674,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitTableConstrUnique(ctx: GeneratedParser.TableConstrUniqueContext) = translate(ctx) {
             val columns = ctx.columnName().map { visitSymbolPrimitive(it.symbolPrimitive()) }
             when (ctx.uniqueSpec()) {
-                is GeneratedParser.PrimaryKeyContext -> tableConstraintPrimaryKey(null, columns)
-                is GeneratedParser.UniqueContext -> tableConstraintUnique(null, columns)
+                is GeneratedParser.PrimaryKeyContext -> tableConstraintUnique(null, columns, true)
+                is GeneratedParser.UniqueContext -> tableConstraintUnique(null, columns, false)
                 else -> throw error(ctx, "Expect UNIQUE or PRIMARY KEY")
             }
         }

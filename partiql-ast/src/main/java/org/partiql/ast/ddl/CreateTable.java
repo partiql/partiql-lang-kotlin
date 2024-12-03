@@ -22,24 +22,24 @@ public class CreateTable extends Ddl {
     @NotNull
     public final IdentifierChain name;
 
-    @Nullable
+    @NotNull
     public final List<ColumnDefinition> columns;
 
-    @Nullable
+    @NotNull
     public final List<TableConstraint> constraints;
 
     @Nullable
     public final PartitionBy partitionBy;
 
-    @Nullable
+    @NotNull
     public final List<KeyValue> tableProperties;
 
     public CreateTable(
             @NotNull IdentifierChain name,
-            @Nullable List<ColumnDefinition> columns,
-            @Nullable List<TableConstraint> constraints,
+            @NotNull List<ColumnDefinition> columns,
+            @NotNull List<TableConstraint> constraints,
             @Nullable PartitionBy partitionBy,
-            @Nullable List<KeyValue> tableProperties) {
+            @NotNull List<KeyValue> tableProperties) {
         this.name = name;
         this.columns = columns;
         this.constraints = constraints;
@@ -52,10 +52,10 @@ public class CreateTable extends Ddl {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(name);
-        if (columns != null) kids.addAll(columns);
-        if (constraints != null) kids.addAll(constraints);
+        kids.addAll(columns);
+        kids.addAll(constraints);
         if (partitionBy != null) kids.add(partitionBy);
-        if (tableProperties != null) kids.addAll(tableProperties);
+        kids.addAll(tableProperties);
         return kids;
     }
 

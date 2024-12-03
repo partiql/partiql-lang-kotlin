@@ -17,7 +17,6 @@ import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.Ast.keyValue
 import org.partiql.ast.Ast.partitionBy
-import org.partiql.ast.Ast.tableConstraintPrimaryKey
 import org.partiql.ast.Ast.tableConstraintUnique
 import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
@@ -273,7 +272,8 @@ class PartiQLParserDDLTests {
                             listOf(
                                 identifier("a", false),
                                 identifier("b", false)
-                            )
+                            ),
+                            false,
                         )
                     ),
                     null,
@@ -295,12 +295,13 @@ class PartiQLParserDDLTests {
                     ),
                     listOf(),
                     listOf(
-                        tableConstraintPrimaryKey(
+                        tableConstraintUnique(
                             null,
                             listOf(
                                 identifier("a", false),
                                 identifier("b", false)
-                            )
+                            ),
+                            true,
                         )
                     ),
                     null,

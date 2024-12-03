@@ -4,6 +4,7 @@ import org.partiql.ast.Ast.explain
 import org.partiql.ast.Ast.exprQuerySet
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.query
+import org.partiql.ast.ddl.Ddl
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
@@ -750,5 +751,10 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val setOpType = node.setOpType
         val setq = node.setq
         return node
+    }
+
+    // TODO: DDL
+    override fun visitDdl(node: Ddl, ctx: C): AstNode {
+        throw UnsupportedOperationException("DDL has not been supported yet in AstRewriter")
     }
 }

@@ -87,14 +87,6 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitPrimaryKey(TableConstraint.PrimaryKey node, C ctx) {
-        return defaultVisit(node, ctx);
-    }
-
-    public R visitCheck(TableConstraint.Check node, C ctx) {
-        return defaultVisit(node, ctx);
-    }
-
     public R visitNullable(AttributeConstraint.Null node, C ctx) {
         return defaultVisit(node, ctx);
     }

@@ -236,7 +236,7 @@ conflictTarget
     | ON CONSTRAINT constraintName;
 
 constraintName
-    : symbolPrimitive;
+    : qualifiedName;
 
 conflictAction
     : DO NOTHING

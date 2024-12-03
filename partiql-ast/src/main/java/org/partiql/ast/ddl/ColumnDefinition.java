@@ -28,7 +28,7 @@ public class ColumnDefinition extends AstNode {
 
     public final boolean isOptional;
 
-    @Nullable
+    @NotNull
     public final List<AttributeConstraint> constraints;
 
     @Nullable
@@ -38,7 +38,7 @@ public class ColumnDefinition extends AstNode {
             @NotNull Identifier name,
             @NotNull DataType dataType,
             boolean isOptional,
-            @Nullable List<AttributeConstraint> constraints,
+            @NotNull List<AttributeConstraint> constraints,
             @Nullable String comment) {
         this.name = name;
         this.dataType = dataType;
@@ -53,7 +53,7 @@ public class ColumnDefinition extends AstNode {
         List<AstNode> kids = new ArrayList<>();
         kids.add(name);
         kids.add(dataType);
-        if (constraints != null) kids.addAll(constraints);
+        kids.addAll(constraints);
         return kids;
     }
 
