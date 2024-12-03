@@ -8,8 +8,8 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Exclusion
 import org.partiql.plan.Action
+import org.partiql.plan.Exclusion
 import org.partiql.plan.Operators
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelProject
