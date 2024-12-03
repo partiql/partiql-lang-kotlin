@@ -333,7 +333,7 @@ public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, 
     @Override
     public Operator visitBag(@NotNull RexBag rex, C ctx) {
         // rewrite values (necessarily ascribes order)
-        List<Rex> values = rex.getValues().stream().toList();
+        List<Rex> values = List.copyOf(rex.getValues());
         List<Rex> values_new = visitAll(values, ctx, this::visitRex);
         // rewrite bag
         if (values != values_new) {

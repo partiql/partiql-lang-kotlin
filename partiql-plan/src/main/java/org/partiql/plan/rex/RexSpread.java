@@ -34,7 +34,7 @@ public abstract class RexSpread extends RexBase {
     @NotNull
     @Override
     protected final List<Operator> operands() {
-        List<Rex> varargs = getArgs().stream().toList();
+        List<? extends Operator> varargs = getArgs();
         return List.copyOf(varargs);
     }
 

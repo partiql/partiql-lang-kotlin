@@ -36,7 +36,7 @@ public abstract class RexBag extends RexBase {
     @NotNull
     @Override
     protected final List<Operator> operands() {
-        List<Rex> varargs = getValues().stream().toList();
+        Collection<? extends Operator> varargs = getValues();
         return List.copyOf(varargs);
     }
 
