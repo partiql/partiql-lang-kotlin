@@ -33,6 +33,11 @@ public abstract class RexBase implements Rex {
         return type;
     }
 
+    @Override
+    public final void setType(RexType type) {
+        this.type = type;
+    }
+
     @NotNull
     @Override
     public final Operator getOperand(int index) {

@@ -1,11 +1,9 @@
-@file:Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-
 package org.partiql.planner
 
 import org.partiql.plan.Action
 import org.partiql.plan.Operator
-import org.partiql.plan.Plan
 import org.partiql.plan.OperatorVisitor
+import org.partiql.plan.Plan
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelCorrelate
 import org.partiql.plan.rel.RelDistinct
@@ -25,10 +23,10 @@ import org.partiql.plan.rel.RelUnpivot
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
+import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexNullIf
@@ -61,7 +59,7 @@ object PlanEquivalenceOperatorVisitor : OperatorVisitor<Boolean, Any> {
             return false
         }
         val op1 = plan.actions[0]
-        val op2 = other.actions[1]
+        val op2 = other.actions[0]
         return visitOperation(op1, op2)
     }
 

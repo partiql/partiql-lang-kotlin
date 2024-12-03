@@ -1,12 +1,11 @@
 package org.partiql.planner.internal.transforms
 
+import org.partiql.plan.Action
 import org.partiql.plan.Collation
 import org.partiql.plan.Exclusion
 import org.partiql.plan.JoinType
-import org.partiql.plan.Action
 import org.partiql.plan.Operators
 import org.partiql.plan.Plan
-import org.partiql.plan.Version
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexCase
@@ -88,22 +87,30 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             return operators.scan(operators.error(ctx))
         }
 
+        /**
+         * Attach a PType to a rex.
+         */
+        private fun typed(type: PType, f: () -> Rex): Rex {
+            val o = f()
+            o.type = RexType(type)
+            return o
+        }
+
         // EXPRESSIONS
 
         override fun visitRex(node: IRex, ctx: PType): Rex = super.visitRexOp(node.op, node.type) as Rex
 
         override fun visitRexOp(node: IRex.Op, ctx: PType): Rex = super.visitRexOp(node, ctx) as Rex
 
-        override fun visitRexOpTupleUnion(node: IRex.Op.TupleUnion, ctx: PType): Any {
+        override fun visitRexOpTupleUnion(node: IRex.Op.TupleUnion, ctx: PType) = typed(ctx) {
             val args = node.args.map { visitRex(it, ctx) }
-            val type = RexType(ctx)
-            return operators.spread(args)
+            operators.spread(args)
         }
 
-        override fun visitRexOpSelect(node: IRex.Op.Select, ctx: PType): Any {
+        override fun visitRexOpSelect(node: IRex.Op.Select, ctx: PType) = typed(ctx) {
             val input = visitRel(node.rel, ctx)
             val constructor = visitRex(node.constructor, ctx)
-            return operators.select(input, constructor)
+            operators.select(input, constructor)
         }
 
         /**
@@ -113,27 +120,26 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
          * @param ctx
          * @return
          */
-        override fun visitRexOpSubquery(node: IRex.Op.Subquery, ctx: PType): Any {
+        override fun visitRexOpSubquery(node: IRex.Op.Subquery, ctx: PType) = typed(ctx) {
             val input = visitRel(node.rel, ctx)
             val constructor = visitRex(node.constructor, ctx)
             val isScalar = node.coercion == IRex.Op.Subquery.Coercion.SCALAR
-            return operators.subquery(input, constructor, isScalar)
+            operators.subquery(input, constructor, isScalar)
         }
 
-        override fun visitRexOpPivot(node: IRex.Op.Pivot, ctx: PType): Any {
+        override fun visitRexOpPivot(node: IRex.Op.Pivot, ctx: PType) = typed(ctx) {
             val input = visitRel(node.rel, ctx)
             val key = visitRex(node.key, ctx)
             val value = visitRex(node.value, ctx)
-            return operators.pivot(input, key, value)
+            operators.pivot(input, key, value)
         }
 
-        override fun visitRexOpStruct(node: IRex.Op.Struct, ctx: PType): Any {
+        override fun visitRexOpStruct(node: IRex.Op.Struct, ctx: PType) = typed(ctx) {
             val fields = node.fields.map { field(it) }
-            val type = RexType(ctx)
-            return operators.struct(fields)
+            operators.struct(fields)
         }
 
-        override fun visitRexOpCollection(node: IRex.Op.Collection, ctx: PType): Any {
+        override fun visitRexOpCollection(node: IRex.Op.Collection, ctx: PType) = typed(ctx) {
             val values = node.values.map { visitRex(it, ctx) }
             val type = RexType(ctx)
             return when (ctx.code()) {
@@ -143,26 +149,24 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             }
         }
 
-        override fun visitRexOpCoalesce(node: IRex.Op.Coalesce, ctx: PType): Any {
+        override fun visitRexOpCoalesce(node: IRex.Op.Coalesce, ctx: PType) = typed(ctx) {
             val args = node.args.map { visitRex(it, ctx) }
-            val type = RexType(ctx)
-            return operators.coalesce(args)
+            operators.coalesce(args)
         }
 
-        override fun visitRexOpNullif(node: IRex.Op.Nullif, ctx: PType): Any {
+        override fun visitRexOpNullif(node: IRex.Op.Nullif, ctx: PType) = typed(ctx) {
             val value = visitRex(node.value, ctx)
             val nullifier = visitRex(node.nullifier, ctx)
-            return operators.nullIf(value, nullifier)
+            operators.nullIf(value, nullifier)
         }
 
-        override fun visitRexOpCase(node: IRex.Op.Case, ctx: PType): Any {
+        override fun visitRexOpCase(node: IRex.Op.Case, ctx: PType) = typed(ctx) {
             val branches = node.branches.map { branch(it) }
             val default = visitRex(node.default, ctx)
-            val type = RexType(ctx)
-            return operators.caseWhen(null, branches, default)
+            operators.caseWhen(null, branches, default)
         }
 
-        override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
+        override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType) = typed(ctx) {
             // TODO assert on function name in plan typer .. here is not the place.
             val args = node.args.map { visitRex(it, ctx) }
             val fns = node.candidates.map { it.fn.signature }
@@ -170,64 +174,60 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             return factory.rexCallDynamic(name, fns, args)
         }
 
-        override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
+        override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType) = typed(ctx) {
             val fn = node.fn
             val args = node.args.map { visitRex(it, ctx) }
-            return operators.call(fn, args)
+            operators.call(fn, args)
         }
 
-        override fun visitRexOpCallUnresolved(node: IRex.Op.Call.Unresolved, ctx: PType): Any {
+        override fun visitRexOpCallUnresolved(node: IRex.Op.Call.Unresolved, ctx: PType) = typed(ctx) {
             error("The Internal Node Rex.Op.Call.Unresolved should be converted to an Err Node during type resolution if resolution failed")
         }
 
-        override fun visitRexOpCastUnresolved(node: IRex.Op.Cast.Unresolved, ctx: PType): Any {
+        override fun visitRexOpCastUnresolved(node: IRex.Op.Cast.Unresolved, ctx: PType) = typed(ctx) {
             error("This should have been converted to an error node.")
         }
 
-        override fun visitRexOpCastResolved(node: IRex.Op.Cast.Resolved, ctx: PType): Any {
+        override fun visitRexOpCastResolved(node: IRex.Op.Cast.Resolved, ctx: PType) = typed(ctx) {
             val operand = visitRex(node.arg, ctx)
             val target = node.cast.target
-            return operators.cast(operand, target)
+            operators.cast(operand, target)
         }
 
-        override fun visitRexOpPathSymbol(node: IRex.Op.Path.Symbol, ctx: PType): Any {
+        override fun visitRexOpPathSymbol(node: IRex.Op.Path.Symbol, ctx: PType) = typed(ctx) {
             val operand = visitRex(node.root, ctx)
             val symbol = node.key
-            val type = RexType(ctx)
-            return operators.pathSymbol(operand, symbol)
+            operators.pathSymbol(operand, symbol)
         }
 
-        override fun visitRexOpPathKey(node: IRex.Op.Path.Key, ctx: PType): Any {
+        override fun visitRexOpPathKey(node: IRex.Op.Path.Key, ctx: PType) = typed(ctx) {
             val operand = visitRex(node.root, ctx)
             val key = visitRex(node.key, ctx)
-            val type = RexType(ctx)
-            return operators.pathKey(operand, key)
+            operators.pathKey(operand, key)
         }
 
-        override fun visitRexOpPathIndex(node: IRex.Op.Path.Index, ctx: PType): Any {
+        override fun visitRexOpPathIndex(node: IRex.Op.Path.Index, ctx: PType) = typed(ctx) {
             val operand = visitRex(node.root, ctx)
             val index = visitRex(node.key, ctx)
-            val type = RexType(ctx)
-            return operators.pathIndex(operand, index)
+            operators.pathIndex(operand, index)
         }
 
-        override fun visitRexOpVarGlobal(node: IRex.Op.Var.Global, ctx: PType): Any {
-            return operators.table(node.ref.table)
+        override fun visitRexOpVarGlobal(node: IRex.Op.Var.Global, ctx: PType) = typed(ctx) {
+            operators.table(node.ref.table)
         }
 
-        override fun visitRexOpVarUnresolved(node: IRex.Op.Var.Unresolved, ctx: PType): Any {
+        override fun visitRexOpVarUnresolved(node: IRex.Op.Var.Unresolved, ctx: PType) = typed(ctx) {
             error("The Internal Plan Node Rex.Op.Var.Unresolved should be converted to an MISSING Node during type resolution if resolution failed")
         }
 
-        override fun visitRexOpVarLocal(node: IRex.Op.Var.Local, ctx: PType): Any {
+        override fun visitRexOpVarLocal(node: IRex.Op.Var.Local, ctx: PType) = typed(ctx) {
             val depth = node.depth
             val offset = node.ref
-            val type = ctx
-            return operators.variable(depth, offset, type)
+            operators.variable(depth, offset, ctx)
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        override fun visitRexOpLit(node: IRex.Op.Lit, ctx: PType): Any {
+        override fun visitRexOpLit(node: IRex.Op.Lit, ctx: PType) = typed(ctx) {
             val value = node.value
             // TODO: PartiQLValue doesn't have a finite decimal type, so we need to specially handle this until we remove
             //  PartiQLValue.
@@ -237,14 +237,16 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
                     else -> operators.lit(Datum.decimal(dec, ctx.precision, ctx.scale))
                 }
             }
-            return operators.lit(Datum.of(node.value))
+            operators.lit(Datum.of(node.value))
         }
 
         // RELATION OPERATORS
 
-        override fun visitRel(node: IRel, ctx: PType): org.partiql.plan.rel.Rel = super.visitRelOp(node.op, ctx) as org.partiql.plan.rel.Rel
+        override fun visitRel(node: IRel, ctx: PType): org.partiql.plan.rel.Rel =
+            super.visitRelOp(node.op, ctx) as org.partiql.plan.rel.Rel
 
-        override fun visitRelOp(node: IRel.Op, ctx: PType): org.partiql.plan.rel.Rel = super.visitRelOp(node, ctx) as org.partiql.plan.rel.Rel
+        override fun visitRelOp(node: IRel.Op, ctx: PType): org.partiql.plan.rel.Rel =
+            super.visitRelOp(node, ctx) as org.partiql.plan.rel.Rel
 
         override fun visitRelOpAggregate(node: IRel.Op.Aggregate, ctx: PType): Any {
             val input = visitRel(node.input, ctx)

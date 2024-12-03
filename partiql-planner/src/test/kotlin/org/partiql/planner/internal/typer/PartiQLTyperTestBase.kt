@@ -111,10 +111,16 @@ abstract class PartiQLTyperTestBase {
                         val pc = PErrorCollector()
                         if (key is TestResult.Success) {
                             val result = testingPipeline(statement, testName, metadata, pc)
+<<<<<<< HEAD
                             val query = result.plan.getOperation() as Action.Query
                             val actualType = query.getType().getPType()
                             // TODO: The tests need parameter checks
                             assert(actualType.code() == key.expectedType.code()) {
+=======
+                            val query = result.plan.actions[0] as Action.Query
+                            val actualType = query.rex.type.pType
+                            assert(actualType == key.expectedType) {
+>>>>>>> 1b1aad09 (Attach ptype to rex)
                                 buildString {
                                     this.appendLine("expected Type is : ${key.expectedType}")
                                     this.appendLine("actual Type is : $actualType")

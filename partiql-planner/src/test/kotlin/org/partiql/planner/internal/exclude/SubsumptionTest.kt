@@ -18,6 +18,7 @@ import org.partiql.plan.rex.RexVar
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
+import org.partiql.types.PType
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -43,7 +44,7 @@ class SubsumptionTest {
         val statement = parseResult.statements[0]
         val session = Session.builder().catalog("default").catalogs(catalog).build()
         val plan = planner.plan(statement, session).plan
-        val excludeClause = getExcludeClause(plan.getOperation()).getExclusions()
+        val excludeClause = getExcludeClause(plan.actions[0]).getExclusions()
         assertEquals(tc.expectedExcludeExprs, excludeClause)
     }
 
@@ -61,7 +62,7 @@ class SubsumptionTest {
 
         private val factory = Operators.STANDARD
 
-        private fun rexOpVar(depth: Int, offset: Int): RexVar = factory.variable(depth, offset)
+        private fun rexOpVar(depth: Int, offset: Int): RexVar = factory.variable(depth, offset, PType.unknown())
 
         private val parameters = listOf(
             SubsumptionTC(

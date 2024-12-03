@@ -3840,7 +3840,7 @@ internal class PlanTyperTestsPorted {
 
         val collector = PErrorCollector()
         val plan = infer(input, session, collector)
-        when (val statement = plan.getOperation()) {
+        when (val statement = plan.actions[0]) {
             is Action.Query -> {
                 assert(collector.problems.isEmpty()) {
                     // Throw internal error for debugging
@@ -3853,7 +3853,7 @@ internal class PlanTyperTestsPorted {
                         PlanPrinter.append(this, plan)
                     }
                 }
-                val actual = statement.getType().getPType()
+                val actual = statement.rex.type.pType
                 assert(tc.expected == actual) {
                     buildString {
                         appendLine()
@@ -3882,7 +3882,7 @@ internal class PlanTyperTestsPorted {
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
         val plan = infer(input, session, collector)
 
-        when (val operation = plan.getOperation()) {
+        when (val operation = plan.actions[0]) {
             is Action.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {
@@ -3892,7 +3892,7 @@ internal class PlanTyperTestsPorted {
                     }
                 }
                 if (tc.expected != null) {
-                    val actual = operation.getType().getPType()
+                    val actual = operation.rex.type.pType
                     assert(tc.expected == actual) {
                         buildString {
                             appendLine()

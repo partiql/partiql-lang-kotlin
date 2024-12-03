@@ -31,9 +31,13 @@ public abstract class RexNullIf extends RexBase {
     @NotNull
     public abstract Rex getV2();
 
+    /**
+     * @return minimal common supertype of (NULL, typeof(v1))
+     */
     @NotNull
     @Override
     protected final RexType type() {
+
         return getV1().getType();
     }
 
