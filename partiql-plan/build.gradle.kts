@@ -31,8 +31,12 @@ tasks.shadowJar {
     configurations = listOf(project.configurations.shadow.get())
 }
 
-tasks.javadoc {
+tasks.withType<Javadoc> {
     enabled = false
+}
+
+tasks.withType<Jar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 // Workaround for https://github.com/johnrengelman/shadow/issues/651

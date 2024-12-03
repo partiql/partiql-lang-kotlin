@@ -141,10 +141,9 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
         override fun visitRexOpCollection(node: IRex.Op.Collection, ctx: PType) = typed(ctx) {
             val values = node.values.map { visitRex(it, ctx) }
-            val type = RexType(ctx)
-            return when (ctx.code()) {
-                PType.ARRAY -> factory.rexArray(values, type)
-                PType.BAG -> factory.rexBag(values, type)
+            when (ctx.code()) {
+                PType.ARRAY -> operators.array(values)
+                PType.BAG -> operators.bag(values)
                 else -> error("Expected bag or array, found ${ctx.name().lowercase()}")
             }
         }
@@ -171,7 +170,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             val args = node.args.map { visitRex(it, ctx) }
             val fns = node.candidates.map { it.fn.signature }
             val name = node.candidates.first().fn.name.getName()
-            return factory.rexCallDynamic(name, fns, args)
+            operators.dispatch(name, fns, args)
         }
 
         override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType) = typed(ctx) {
@@ -232,12 +231,13 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             // TODO: PartiQLValue doesn't have a finite decimal type, so we need to specially handle this until we remove
             //  PartiQLValue.
             if (value is DecimalValue && ctx.code() == PType.DECIMAL) {
-                return when (val dec = value.value) {
+                when (val dec = value.value) {
                     null -> operators.lit(Datum.nullValue(ctx))
                     else -> operators.lit(Datum.decimal(dec, ctx.precision, ctx.scale))
                 }
+            } else {
+                operators.lit(Datum.of(node.value))
             }
-            operators.lit(Datum.of(node.value))
         }
 
         // RELATION OPERATORS

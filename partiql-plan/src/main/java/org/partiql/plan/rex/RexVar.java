@@ -16,14 +16,14 @@ public abstract class RexVar extends RexBase {
      * @return new variable reference expression.
      */
     @NotNull
-    public static RexVar create(int depth, int offset, PType type) {
-        return new Impl(depth, offset, type);
+    public static RexVar create(int scope, int offset, PType type) {
+        return new Impl(scope, offset, type);
     }
 
     /**
      * @return 0-indexed scope offset.
      */
-    public abstract int getDepth();
+    public abstract int getScope();
 
     /**
      * @return 0-index tuple offset.
@@ -42,12 +42,12 @@ public abstract class RexVar extends RexBase {
 
     private static class Impl extends RexVar {
 
-        private final int depth;
+        private final int scope;
         private final int offset;
         private final PType type;
 
-        private Impl(int depth, int offset, PType type) {
-            this.depth = depth;
+        private Impl(int scope, int offset, PType type) {
+            this.scope = scope;
             this.offset = offset;
             this.type = type;
         }
@@ -58,8 +58,8 @@ public abstract class RexVar extends RexBase {
         }
 
         @Override
-        public int getDepth() {
-            return depth;
+        public int getScope() {
+            return scope;
         }
 
         @Override

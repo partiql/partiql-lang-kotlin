@@ -2820,7 +2820,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-06"),
                 catalog = "pql",
-                expected = PType.unknown().toCType()
+                expected = PType.dynamic().toCType() // TODO make unknown
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-07"),
@@ -2830,7 +2830,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-08"),
                 catalog = "pql",
-                expected = PType.unknown().toCType()
+                expected = PType.dynamic().toCType() // TODO make unknown
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-09"),

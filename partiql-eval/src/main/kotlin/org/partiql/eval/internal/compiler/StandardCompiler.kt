@@ -494,7 +494,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitVar(rex: RexVar, ctx: Unit): ExprValue {
-            val depth = rex.getDepth()
+            val depth = rex.getScope()
             val offset = rex.getOffset()
             return ExprVar(depth, offset)
         }
