@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Action
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.TestCatalog
@@ -3840,7 +3841,7 @@ internal class PlanTyperTestsPorted {
         val collector = PErrorCollector()
         val plan = infer(input, session, collector)
         when (val statement = plan.getOperation()) {
-            is org.partiql.plan.Operation.Query -> {
+            is Action.Query -> {
                 assert(collector.problems.isEmpty()) {
                     // Throw internal error for debugging
                     collector.problems.firstOrNull { it.code() == PError.INTERNAL_ERROR }?.let { pError ->
@@ -3882,7 +3883,7 @@ internal class PlanTyperTestsPorted {
         val plan = infer(input, session, collector)
 
         when (val operation = plan.getOperation()) {
-            is org.partiql.plan.Operation.Query -> {
+            is Action.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {
                         appendLine("Expected to find problems, but none were found.")

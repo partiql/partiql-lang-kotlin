@@ -1,13 +1,29 @@
 package org.partiql.plan;
 
-/**
- * Marker interface for some version structure.
- */
-public interface Version {
+import org.partiql.spi.Enum;
 
-    /**
-     * The only required method is toString.
-     */
+/**
+ * A plan version.
+ */
+public class Version extends Enum {
+
+    private Version(int code) {
+        super(code);
+    }
+
+    public static final int UNKNOWN = 0;
+
+    public static Version UNKNOWN() {
+        return new Version(UNKNOWN);
+    }
+
     @Override
-    public String toString();
+    public String toString() {
+       int code = code();
+       switch (code) {
+           case UNKNOWN:
+           default:
+               return "UNKNOWN(" + code + ")";
+       }
+    }
 }

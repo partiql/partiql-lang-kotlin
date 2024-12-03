@@ -9,7 +9,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Exclusion
-import org.partiql.plan.Operation
+import org.partiql.plan.Action
 import org.partiql.plan.Operators
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelProject
@@ -30,8 +30,8 @@ class SubsumptionTest {
         private val catalog = Catalog.builder().name("default").build()
     }
 
-    private fun getExcludeClause(statement: Operation): RelExclude {
-        val queryExpr = (statement as Operation.Query).getRex()
+    private fun getExcludeClause(statement: Action): RelExclude {
+        val queryExpr = (statement as Action.Query).getRex()
         val relProject = (queryExpr as RexSelect).getInput() as RelProject
         return (relProject.getInput()) as RelExclude
     }

@@ -382,7 +382,7 @@ public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, 
         Rex result_new = visit(result, ctx, Rex.class);
         // rewrite branch
         if (condition != condition_new || result != result_new) {
-            return new Branch(condition_new, result_new);
+            return RexCase.branch(condition_new, result_new);
         }
         return branch;
     }

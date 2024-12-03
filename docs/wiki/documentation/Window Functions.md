@@ -186,7 +186,7 @@ LEAD(expr [, offset [, default]])
 Purpose:
 Returns the value from a binding tuple at a given offset *after* the current binding tuple position in the window partition.
 
-Note that `Lag` and `Lead` perform similar operation and have similar semantics, except for the fact that `Lag` looks for `x` rows prior to the current row and `Lead` looks for `x` rows after.
+Note that `Lag` and `Lead` perform similar action and have similar semantics, except for the fact that `Lag` looks for `x` rows prior to the current row and `Lead` looks for `x` rows after.
 
 Arguments:
 * expr:

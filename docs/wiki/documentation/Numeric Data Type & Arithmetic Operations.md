@@ -17,13 +17,13 @@ PartiQL also support `Positive Infinity, Negative Infinity, and NaN` as `FLOAT` 
 
 Unless otherwise specified, a mathematical operator: 
 1) takes a field name or expression of a numeric data type as operand
-2) For Unary operation, the result type will be the same as the operand
-3) For Binary operation, and the two operands are of the same type, the result will be the same as the type of operands.
-4) For Binary operation, and the two operands are not of the same type, PartiQL will attempt to automatically coerce the operand.
+2) For Unary action, the result type will be the same as the operand
+3) For Binary action, and the two operands are of the same type, the result will be the same as the type of operands.
+4) For Binary action, and the two operands are not of the same type, PartiQL will attempt to automatically coerce the operand.
 5) If one or more operands are MISSING, then the result will be missing. else if one or more operands are null, then the result will be null.
 
 ### Overflow
-With Type Inferencer and runtime type check enabled, Integer constraint will be honored and we check if the result of the mathematical operation exceeds the range that can be represented with the result type. 
+With Type Inferencer and runtime type check enabled, Integer constraint will be honored and we check if the result of the mathematical action exceeds the range that can be represented with the result type. 
 
 Without type inferencer and runtime type check, the default runtime integer representation is `INT8`, and overflow can still happen if the result exceed the range that can be represented with the `INT8` type.
 
@@ -32,16 +32,16 @@ When Permissive mode is enabled, overflowed values will be shown as `MISSING` in
 ### Conversion Map
 Operators involving multiple argument data types, such as Integer + Float, the conversion map determines the datatype PartiQL uses. Decimal has the highest numeric precedence, followed by float, and finally by INT.
 
-If either operand has type of Decimal, then PartiQL will attempt to convert the operands implicitly to Decimal before performing the operation.
-If none of the operand has Decimal type but any of the operands is Float, then PartiQL will attempt to convert the operands implicitly to Float before performing the operation.
+If either operand has type of Decimal, then PartiQL will attempt to convert the operands implicitly to Decimal before performing the action.
+If none of the operand has Decimal type but any of the operands is Float, then PartiQL will attempt to convert the operands implicitly to Float before performing the action.
 
 ### HonorParameter
-If precision and scale matter, i.e. doing operation on monetary value, make sure to turn on the honorTypedOpParameters() option in Compile Option. 
+If precision and scale matter, i.e. doing action on monetary value, make sure to turn on the honorTypedOpParameters() option in Compile Option. 
 
 The honorTypedOpParameters() determines how CAST and other typed operations behave. The default CompileOptions uses LEGACY which ignores the additional type arguments. Using the HONOR_PARAMETERS mode will take into account type parameters.
 
 ### Unary Plus:
-Returns the operand without operation.
+Returns the operand without action.
 
 Syntax
 : ` + expression`
@@ -209,7 +209,7 @@ Example
 ```
 
 ### Bitwise And
-Performs a bitwise logical AND operation between two integer values.
+Performs a bitwise logical AND action between two integer values.
 
 Syntax
 : `expression & expression`

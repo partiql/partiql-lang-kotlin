@@ -17,6 +17,11 @@ public abstract class RexCase extends RexBase {
         return new Impl(match, branches, def);
     }
 
+    @NotNull
+    public static Branch branch(@NotNull Rex condition, @NotNull Rex result) {
+        return new Branch(condition, result);
+    }
+
     /**
      * @return the match expression, or {@code null} if none (operand 0)
      */
@@ -64,7 +69,7 @@ public abstract class RexCase extends RexBase {
         @NotNull
         private final Rex result;
 
-        public Branch(@NotNull Rex condition, @NotNull Rex result) {
+        private Branch(@NotNull Rex condition, @NotNull Rex result) {
             this.condition = condition;
             this.result = result;
         }

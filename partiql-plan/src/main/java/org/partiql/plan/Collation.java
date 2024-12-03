@@ -79,13 +79,13 @@ public interface Collation {
         public static final int LAST = 2;
 
         @NotNull
-        public static Order FIRST() {
-            return new Order(FIRST);
+        public static Nulls FIRST() {
+            return new Nulls(FIRST);
         }
 
         @NotNull
-        public static Order LAST() {
-            return new Order(LAST);
+        public static Nulls LAST() {
+            return new Nulls(LAST);
         }
 
         @Override

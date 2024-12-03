@@ -1,11 +1,11 @@
 package org.partiql.planner.internal
 
 import org.partiql.ast.Statement
-import org.partiql.plan.Operation
-import org.partiql.plan.Plan
+import org.partiql.plan.Action
 import org.partiql.plan.Operators
-import org.partiql.plan.rex.Rex
+import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PartiQLPlanner.Result
 import org.partiql.planner.PartiQLPlannerPass
 import org.partiql.planner.internal.normalize.normalize
 import org.partiql.planner.internal.transforms.AstToPlan
@@ -26,11 +26,10 @@ internal class SqlPlanner(
     private var flags: Set<PlannerFlag>,
 ) : PartiQLPlanner {
 
-    public override fun plan(
-        statement: Statement,
-        session: Session,
-        ctx: Context,
-    ): PartiQLPlanner.Result {
+    /**
+     * Then default planner logic.
+     */
+    override fun plan(statement: Statement, session: Session, ctx: Context): Result {
         try {
             // 0. Initialize the planning environment
             val env = Env(session)
@@ -47,28 +46,33 @@ internal class SqlPlanner(
             val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
 
             // 4. Assert plan has been resolved — translating to public API
-            var plan = PlanTransform(flags).transform(internal, ctx.getErrorListener())
+            var plan = PlanTransform(flags).transform(internal, ctx.errorListener)
 
             // 5. Apply all passes
             for (pass in passes) {
                 plan = pass.apply(plan, ctx)
             }
-            return PartiQLPlanner.Result(plan)
+            return Result(plan)
         } catch (e: PErrorListenerException) {
             throw e
         } catch (t: Throwable) {
-            val error = PError.INTERNAL_ERROR(PErrorKind.SEMANTIC(), null, t)
-            ctx.errorListener.report(error)
-            val plan = object : Plan {
-                override fun getOperation(): Operation {
-                    return object : Operation.Query {
-                        override fun getRex(): Rex {
-                            return Operators.STANDARD.error(PType.dynamic())
-                        }
-                    }
-                }
-            }
-            return PartiQLPlanner.Result(plan)
+            return catchAll(ctx, t)
         }
+    }
+
+    /**
+     * Create a plan with a query action and error node.
+     *
+     * @param t
+     * @return
+     */
+    private fun catchAll(ctx: Context, t: Throwable): Result {
+        val error = PError.INTERNAL_ERROR(PErrorKind.SEMANTIC(), null, t)
+        ctx.errorListener.report(error)
+        val query = Action.Query { Operators.STANDARD.error(PType.dynamic()) }
+        val plan = object : Plan {
+            override fun getActions(): MutableList<Action> = mutableListOf(query)
+        }
+        return Result(plan)
     }
 }

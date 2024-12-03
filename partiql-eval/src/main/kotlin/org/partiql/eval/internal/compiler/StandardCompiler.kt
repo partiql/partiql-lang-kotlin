@@ -61,7 +61,7 @@ import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
-import org.partiql.plan.Operation
+import org.partiql.plan.Action
 import org.partiql.plan.Operator
 import org.partiql.plan.Plan
 import org.partiql.plan.OperatorVisitor
@@ -126,7 +126,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             val visitor = _Operator_Visitor(mode)
             val operation = plan.getOperation()
             val statement: Statement = when {
-                operation is Operation.Query -> visitor.compile(operation)
+                operation is Action.Query -> visitor.compile(operation)
                 else -> throw IllegalArgumentException("Only query statements are supported")
             }
             return statement
@@ -151,10 +151,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         /**
          * Compile a query operation to a query statement.
          */
-        fun compile(operation: Operation.Query) = object : Statement {
+        fun compile(action: Action.Query) = object : Statement {
 
             // compile the query root
-            private val root = compile(operation.getRex(), Unit).catch()
+            private val root = compile(action.getRex(), Unit).catch()
 
             // execute with no parameters
             override fun execute(): Datum = root.eval(Environment())

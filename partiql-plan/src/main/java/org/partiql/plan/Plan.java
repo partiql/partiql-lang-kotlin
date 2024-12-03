@@ -13,11 +13,13 @@ public interface Plan {
      * @return version for serialization and debugging.
      */
     @NotNull
-    public Version getVersion();
+    default public Version getVersion() {
+        return Version.UNKNOWN();
+    }
 
     /**
-     * @return operations to execute.
+     * @return statement actions to execute.
      */
     @NotNull
-    public List<Operation> getOperations();
+    public List<Action> getActions();
 }

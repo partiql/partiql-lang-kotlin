@@ -4,14 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.rex.Rex;
 
 /**
- * TODO DOCUMENTATION
+ * A PartiQL statement action within a plan.
  */
-public interface Operation {
+public interface Action {
 
     /**
      * PartiQL Query Statement — i.e. SELECT-FROM
      */
-    public interface Query extends Operation {
+    public interface Query extends Action {
 
         /**
          * Returns the root expression of the query.

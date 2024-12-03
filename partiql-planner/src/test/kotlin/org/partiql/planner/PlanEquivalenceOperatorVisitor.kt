@@ -2,7 +2,7 @@
 
 package org.partiql.planner
 
-import org.partiql.plan.Operation
+import org.partiql.plan.Action
 import org.partiql.plan.Operator
 import org.partiql.plan.Plan
 import org.partiql.plan.OperatorVisitor
@@ -60,16 +60,16 @@ object PlanEquivalenceOperatorVisitor : OperatorVisitor<Boolean, Any> {
         if (other !is Plan) {
             return false
         }
-        val op1 = plan.getOperation()
-        val op2 = other.getOperation()
+        val op1 = plan.actions[0]
+        val op2 = other.actions[1]
         return visitOperation(op1, op2)
     }
 
-    public fun visitOperation(operation: Operation, other: Any): Boolean {
-        if (other !is Operation) {
+    public fun visitOperation(action: Action, other: Any): Boolean {
+        if (other !is Action) {
             return false
         }
-        if (operation is Operation.Query && other is Operation.Query) {
+        if (action is Action.Query && other is Action.Query) {
             // TODO
             return true
         }
