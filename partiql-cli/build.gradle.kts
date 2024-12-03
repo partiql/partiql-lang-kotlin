@@ -26,6 +26,7 @@ dependencies {
     implementation(project(":partiql-planner"))
     implementation(project(":partiql-types"))
     implementation(project(":partiql-spi"))
+    implementation(project(":partiql-system"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)

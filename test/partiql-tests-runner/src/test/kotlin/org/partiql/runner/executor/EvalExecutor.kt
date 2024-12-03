@@ -26,6 +26,7 @@ import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.value.Datum
+import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -152,7 +153,7 @@ class EvalExecutor(
         override fun create(env: IonStruct, options: CompileType): TestExecutor<Statement, Datum> {
             // infer catalog from conformance test `env`
             val catalog = infer(env.toIonElement() as StructElement)
-            val session = Session.builder()
+            val session = PartiQLSessionBuilder()
                 .catalog("default")
                 .catalogs(catalog)
                 .build()
@@ -185,7 +186,7 @@ class EvalExecutor(
          */
         private fun inferEnv(env: AnyElement): PType {
             val catalog = Catalog.builder().name("default").build()
-            val session = Session.builder()
+            val session = PartiQLSessionBuilder()
                 .catalog("default")
                 .catalogs(catalog)
                 .build()

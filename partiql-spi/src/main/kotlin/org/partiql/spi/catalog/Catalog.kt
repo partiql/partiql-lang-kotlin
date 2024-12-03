@@ -2,7 +2,6 @@ package org.partiql.spi.catalog
 
 import org.partiql.spi.catalog.impl.StandardCatalog
 import org.partiql.spi.function.Aggregation
-import org.partiql.spi.function.Builtins
 import org.partiql.spi.function.Function
 
 /**
@@ -22,7 +21,9 @@ public interface Catalog {
     /**
      * Get a table by name.
      */
-    public fun getTable(session: Session, name: Name): Table? = null
+    public fun getTable(session: Session, name: Name): Table? {
+        return null
+    }
 
     /**
      * Get a table by identifier.
@@ -41,17 +42,23 @@ public interface Catalog {
      *  2. Invoke getTable("a"."b"."c"."Example"."x")
      *  3. The implementation MUST match "a"."b"."c"."Example" to a.b.c.Example (note "x" does not match a table)
      */
-    public fun getTable(session: Session, identifier: Identifier): Table? = null
+    public fun getTable(session: Session, identifier: Identifier): Table? {
+        return null
+    }
 
     /**
      * Returns a collection of scalar functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getFunctions(session: Session, name: String): Collection<Function> = Builtins.getFunctions(name)
+    public fun getFunctions(session: Session, name: String): Collection<Function> {
+        return emptyList()
+    }
 
     /**
      * Returns a collection of aggregation functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getAggregations(session: Session, name: String): Collection<Aggregation> = Builtins.getAggregations(name)
+    public fun getAggregations(session: Session, name: String): Collection<Aggregation> {
+        return emptyList()
+    }
 
     public companion object {
 

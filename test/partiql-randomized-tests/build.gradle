@@ -23,6 +23,7 @@ dependencies {
     testImplementation project(':partiql-parser')
     testImplementation project(':partiql-plan')
     testImplementation project(':partiql-planner')
+    testImplementation project(':partiql-system')
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
     testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'

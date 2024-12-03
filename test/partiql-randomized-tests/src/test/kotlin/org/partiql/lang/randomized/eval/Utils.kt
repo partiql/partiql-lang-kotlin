@@ -4,8 +4,8 @@ import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
-import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.Datum
+import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import kotlin.test.assertEquals
@@ -27,7 +27,7 @@ private fun execute(query: String): PartiQLValue {
     val catalog = object : Catalog {
         override fun getName(): String = "default"
     }
-    val session = Session.builder().catalog("default").catalogs(catalog).build()
+    val session = PartiQLSessionBuilder().catalog("default").catalogs(catalog).build()
     val engine = PartiQLCompiler.builder().build()
 
     // Execute

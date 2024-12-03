@@ -37,6 +37,7 @@ dependencies {
     annotationProcessor(Deps.lombok)
     // Test
     testImplementation(project(":partiql-parser"))
+    testImplementation(project(":partiql-system"))
     testImplementation(testFixtures(project(":partiql-types"))) // TODO: Remove use of StaticType
     testImplementation(Deps.kotlinReflect)
     // Test Fixtures
