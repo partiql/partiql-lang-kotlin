@@ -59,12 +59,12 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.plan.Action
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
-import org.partiql.plan.Action
 import org.partiql.plan.Operator
-import org.partiql.plan.Plan
 import org.partiql.plan.OperatorVisitor
+import org.partiql.plan.Plan
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelDistinct
@@ -85,10 +85,10 @@ import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
+import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexNullIf
@@ -124,7 +124,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
     override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {
         try {
             val visitor = _Operator_Visitor(mode)
-            val operation = plan.getOperation()
+            if (plan.actions.size != 1) {
+                throw IllegalArgumentException("Only single actions are supported")
+            }
+            val operation = plan.actions[0]
             val statement: Statement = when {
                 operation is Action.Query -> visitor.compile(operation)
                 else -> throw IllegalArgumentException("Only query statements are supported")
@@ -143,8 +146,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
      * Transforms plan relation operators into the internal physical operators.
      */
     @Suppress("ClassName")
-    private inner class _Operator_Visitor(mode: Mode) :
-        OperatorVisitor<Expr, Unit> {
+    private inner class _Operator_Visitor(mode: Mode) : OperatorVisitor<Expr, Unit> {
 
         private val mode = mode.code()
 
@@ -172,7 +174,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             // if strategy matches root, compile children to form a match.
             for (strategy in strategies) {
                 // first match
-                if (strategy.getPattern().matches(operator)) {
+                if (strategy.pattern.matches(operator)) {
                     // compile children
                     val children = operator.getOperands().map { compileWithStrategies(it, ctx) }
                     val match = Match(operator, children)
@@ -251,19 +253,20 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitJoin(rel: RelJoin, ctx: Unit): ExprRelation {
-            val lhs = compile(rel.getLeft(), ctx)
-            val rhs = compile(rel.getRight(), ctx)
-            val condition = rel.getCondition()?.let { compile(it, ctx) } ?: ExprLit(Datum.bool(true))
-
-            // TODO JOIN SCHEMAS
-            val lhsType = rel.getLeftSchema()
-            val rhsType = rel.getRightSchema()
-
-            return when (rel.getJoinType()) {
+            val lrel = rel.left
+            val rrel = rel.right
+            val lhs = compile(lrel, ctx)
+            val rhs = compile(rrel, ctx)
+            val condition = compile(rel.getCondition(), ctx)
+            // use schema for null padding
+            val lhsType = lrel.type
+            val rhsType = rrel.type
+            return when (rel.joinType.code()) {
                 JoinType.INNER -> RelOpJoinInner(lhs, rhs, condition)
-                JoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType!!)
-                JoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType!!)
-                JoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType!!, rhsType!!)
+                JoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType)
+                JoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType)
+                JoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType, rhsType)
+                else -> error("Unsupported join type: ${rel.joinType}")
             }
         }
 
@@ -286,7 +289,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitScan(rel: RelScan, ctx: Unit): ExprRelation {
-            val input = compile(rel.getInput(), ctx)
+            val input = compile(rel.rex, ctx)
             return when (mode) {
                 Mode.PERMISSIVE -> RelOpScanPermissive(input)
                 Mode.STRICT -> RelOpScan(input)
@@ -297,9 +300,9 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitSort(rel: RelSort, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             val collations = rel.getCollations().map {
-                val expr = compile(it.getRex(), ctx)
-                val desc = it.getOrder() == Collation.Order.DESC
-                val last = it.getNulls() == Collation.Nulls.LAST
+                val expr = compile(it.column, ctx)
+                val desc = it.order.code() == Collation.Order.DESC
+                val last = it.order.code() == Collation.Nulls.LAST
                 RelOpSort.Collation(expr, desc, last)
             }
             return RelOpSort(input, collations)
@@ -315,7 +318,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitUnpivot(rel: RelUnpivot, ctx: Unit): ExprRelation {
-            val input = compile(rel.getInput(), ctx)
+            val input = compile(rel.rex, ctx)
             return when (mode) {
                 Mode.PERMISSIVE -> RelOpUnpivot.Permissive(input)
                 Mode.STRICT -> RelOpUnpivot.Strict(input)
@@ -443,14 +446,14 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         override fun visitSelect(rex: RexSelect, ctx: Unit): ExprValue {
             val input = compile(rex.getInput(), ctx)
             val constructor = compile(rex.getConstructor(), ctx).catch()
-            val ordered = rex.getInput().isOrdered()
+            val ordered = rex.getInput().type.isOrdered
             return ExprSelect(input, constructor, ordered)
         }
 
         override fun visitStruct(rex: RexStruct, ctx: Unit): ExprValue {
             val fields = rex.getFields().map {
-                val k = compile(it.getKey(), ctx)
-                val v = compile(it.getValue(), ctx).catch()
+                val k = compile(it.key, ctx)
+                val v = compile(it.value, ctx).catch()
                 ExprStructField(k, v)
             }
             return when (mode) {
