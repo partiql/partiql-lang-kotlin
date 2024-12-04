@@ -17,7 +17,7 @@ We can illustrate this technique with a simple integer evaluator.  Consider the 
 
 ```java
 interface Operation {
-  /** Evaluates the action against the given variables. */
+  /** Evaluates the operation against the given variables. */
   int eval(Map<String, Integer> env);
 }
 ```
@@ -73,7 +73,7 @@ interface IntValue {
 }
 
 interface Operation {
-    /** Evaluates the action against the given variables. */
+    /** Evaluates the operation against the given variables. */
     IntValue eval(Map<String, IntValue> env);
 }
 ```

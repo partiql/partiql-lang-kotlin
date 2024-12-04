@@ -526,7 +526,7 @@ Header
 
 Purpose
 : Given a string, `s`, alter every upper case character in `s` to lower case. Any non-upper cased characters 
-remain unchanged. This action does rely on the locale specified by the runtime configuration. 
+remain unchanged. This operation does rely on the locale specified by the runtime configuration. 
 The implementation, currently, relies on Java's 
 [String.toLowerCase()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#toLowerCase()) documentation.
 
@@ -889,7 +889,7 @@ TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')  -- "1969-07-20T2
     
 ### TO_TIMESTAMP -- since v0.1.0
 
-Given a string convert it to a timestamp. This is the inverse action of [`TO_STRING`](#to_string)
+Given a string convert it to a timestamp. This is the inverse operation of [`TO_STRING`](#to_string)
 
 
 Signature 
@@ -995,7 +995,7 @@ Header
 
 Purpose
 : Given a string, `str`, alter every upper case character is `str` to lower case. Any non-lower cases characters remain 
-unchanged.  This action does rely on the locale specified by the runtime configuration. 
+unchanged.  This operation does rely on the locale specified by the runtime configuration. 
 The implementation, currently, relies on Java's 
 [String.toLowerCase()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#toLowerCase()) documentation.
 

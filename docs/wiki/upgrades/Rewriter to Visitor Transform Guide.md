@@ -129,7 +129,7 @@ It's also worth noting that `innerRewriteDataManipulation` and the visitor trans
 fun transformDataManipulationEvaluationOrder(node: PartiqlAst.Statement.Dml): PartiqlAst.Statement {
     val from = node.from?.let { transformFromSource(it) }
     val where = node.where?.let { transformStatementDml_where(node) }
-    val dmlOperation = transformDmlOp(node.action)
+    val dmlOperation = transformDmlOp(node.operation)
     val metas = transformMetas(node.metas)
 
     return PartiqlAst.build {

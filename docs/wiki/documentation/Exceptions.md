@@ -26,5 +26,5 @@ This is ​**not** a complete list. Also look at `org.partiql.lang.eval.Evaluati
 | Expected 1 argument for `functionName` instead of `n of args` | -- | 1 argument function is called with wrong arity |
 | Internal error, For input string: `string` | NumberFormatException | `CAST` from String is unsuccessful  |
 | / by zero | ArithmeticException | Division by zero | 
-| `Not enough or Too many` arguments | -- | Wrong action arity, e.g.: `1+1+` |
+| `Not enough or Too many` arguments | -- | Wrong operation arity, e.g.: `1+1+` |
 

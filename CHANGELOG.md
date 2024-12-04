@@ -821,7 +821,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
   `PlannerPipe.Builder.plannerEventCallback` for details.
 - Adds the following optimization passes, none of which are enabled by default:
   - `FilterScanToKeyLookupPass` which performs a simple optimization common to most databases: it converts a filter
-    predicate covering a table's complete primary key into a single get-by-key action, thereby avoiding a full table
+    predicate covering a table's complete primary key into a single get-by-key operation, thereby avoiding a full table
     scan.  This may pass leave behind some useless `and` expressions if more `and` operands exist in the filter predicate
     other than primary key field equality expressions.
   - `RemoveUselessAndsPass`, which removes any useless `and` expressions introduced by the previous pass or by the
