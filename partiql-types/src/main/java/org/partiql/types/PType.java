@@ -478,6 +478,21 @@ public abstract class PType extends Enum {
     public static final int VARIANT = 25;
 
     /**
+     * The SQL year-month interval type.
+     */
+    public static final int INTERVAL_YM = 26;
+
+    /**
+     * The SQL day-time interval type.
+     * <br>
+     * <br>
+     * <b>Type Syntax</b>: <code>INTERVAL DAY TO SECOND</code>, <code>INTERVAL DAY TO SECOND(&lt;precision&gt;)</code>
+     * <br>
+     * <b>Applicable methods</b>: {@link PType#getPrecision()}
+     */
+    public static final int INTERVAL_DT = 27;
+
+    /**
      * @return a PartiQL dynamic type
      */
     @NotNull
