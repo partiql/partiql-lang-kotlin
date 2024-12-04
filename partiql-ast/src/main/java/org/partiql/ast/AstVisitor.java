@@ -1,5 +1,12 @@
 package org.partiql.ast;
 
+import org.partiql.ast.ddl.AttributeConstraint;
+import org.partiql.ast.ddl.ColumnDefinition;
+import org.partiql.ast.ddl.CreateTable;
+import org.partiql.ast.ddl.Ddl;
+import org.partiql.ast.ddl.KeyValue;
+import org.partiql.ast.ddl.PartitionBy;
+import org.partiql.ast.ddl.TableConstraint;
 import org.partiql.ast.expr.Expr;
 import org.partiql.ast.expr.ExprAnd;
 import org.partiql.ast.expr.ExprArray;
@@ -60,6 +67,50 @@ public abstract class AstVisitor<R, C> {
     public R visitStatement(Statement node, C ctx) {
         return node.accept(this, ctx);
     }
+
+    //
+    // DDL
+    //
+    public R visitDdl(Ddl node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitCreateTable(CreateTable node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitColumnDefinition(ColumnDefinition node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitUnique(TableConstraint.Unique node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitNullable(AttributeConstraint.Null node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitKeyValue(KeyValue node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitPartitionBy(PartitionBy node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitUnique(AttributeConstraint.Unique node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitCheck(AttributeConstraint.Check node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+
+    //
+    // END OF DDL
+    //
 
     public R visitQuery(Query node, C ctx) {
         return defaultVisit(node, ctx);
@@ -438,6 +489,10 @@ public abstract class AstVisitor<R, C> {
     }
 
     public R visitDataType(DataType node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitStructField(DataType.StructField node, C ctx) {
         return defaultVisit(node, ctx);
     }
 }

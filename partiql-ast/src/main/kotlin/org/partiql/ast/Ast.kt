@@ -1,5 +1,11 @@
 package org.partiql.ast
 
+import org.partiql.ast.ddl.AttributeConstraint
+import org.partiql.ast.ddl.ColumnDefinition
+import org.partiql.ast.ddl.CreateTable
+import org.partiql.ast.ddl.KeyValue
+import org.partiql.ast.ddl.PartitionBy
+import org.partiql.ast.ddl.TableConstraint
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
@@ -505,5 +511,54 @@ public object Ast {
     @JvmStatic
     public fun sort(expr: Expr, order: Order?, nulls: Nulls?): Sort {
         return Sort(expr, order, nulls)
+    }
+
+    //
+    // DDL
+    //
+    @JvmStatic
+    public fun createTable(name: IdentifierChain, columns: List<ColumnDefinition>, constraints: List<TableConstraint>, partitionBy: PartitionBy?, tableProperties: List<KeyValue>): CreateTable {
+        return CreateTable(
+            name,
+            columns,
+            constraints,
+            partitionBy,
+            tableProperties
+        )
+    }
+
+    @JvmStatic
+    public fun columnDefinition(name: Identifier, type: DataType, isOptional: Boolean, constraints: List<AttributeConstraint>, comment: String?): ColumnDefinition {
+        return ColumnDefinition(name, type, isOptional, constraints, comment)
+    }
+
+    @JvmStatic
+    public fun tableConstraintUnique(name: IdentifierChain?, columns: List<Identifier>, isPrimaryKey: Boolean): TableConstraint.Unique {
+        return TableConstraint.Unique(name, columns, isPrimaryKey)
+    }
+
+    @JvmStatic
+    public fun columnConstraintNullable(name: IdentifierChain?, isNullable: Boolean): AttributeConstraint.Null {
+        return AttributeConstraint.Null(name, isNullable)
+    }
+
+    @JvmStatic
+    public fun columnConstraintUnique(name: IdentifierChain?, isPrimaryKey: Boolean): AttributeConstraint.Unique {
+        return AttributeConstraint.Unique(name, isPrimaryKey)
+    }
+
+    @JvmStatic
+    public fun columnConstraintCheck(name: IdentifierChain?, searchCondition: Expr): AttributeConstraint.Check {
+        return AttributeConstraint.Check(name, searchCondition)
+    }
+
+    @JvmStatic
+    public fun keyValue(key: String, value: String): KeyValue {
+        return KeyValue(key, value)
+    }
+
+    @JvmStatic
+    public fun partitionBy(columns: List<Identifier>): PartitionBy {
+        return PartitionBy(columns)
     }
 }

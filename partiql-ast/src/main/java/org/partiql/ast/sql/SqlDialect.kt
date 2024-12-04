@@ -45,6 +45,7 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
+import org.partiql.ast.ddl.Ddl
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
@@ -767,6 +768,11 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             else -> throw UnsupportedOperationException("Cannot print $node")
         }
         return t
+    }
+
+    // TODO: DDL
+    override fun visitDdl(node: Ddl, ctx: SqlBlock): SqlBlock {
+        throw UnsupportedOperationException("DDL has not been supported yet in SqlDialect")
     }
 
     // --- Block Constructor Helpers
