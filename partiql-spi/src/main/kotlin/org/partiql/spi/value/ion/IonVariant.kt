@@ -26,6 +26,11 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.OffsetTime
 
 /**
  * A [Datum] implemented over Ion's [AnyElement].
@@ -88,36 +93,34 @@ internal class IonVariant(private var value: AnyElement) : Datum {
     //     return super.getByte()
     // }
 
-    override fun getDate(): Date {
+    override fun getLocalDate(): LocalDate {
         return when (value.type) {
             TIMESTAMP -> {
                 val ts = value.timestampValue
-                DateTimeValue.date(ts.year, ts.month, ts.day)
+                LocalDate.of(ts.year, ts.month, ts.day)
             }
-            else -> super.getDate()
+            else -> super.getLocalDate()
         }
     }
 
-    override fun getTime(): Time {
-        return when (value.type) {
-            TIMESTAMP -> {
-                val ts = value.timestampValue
-                val tz = when (ts.localOffset) {
-                    null -> TimeZone.UnknownTimeZone
-                    else -> TimeZone.UtcOffset.of(ts.zHour, ts.zMinute)
-                }
-                DateTimeValue.time(ts.hour, ts.minute, ts.second, tz)
-            }
-            else -> super.getTime()
-        }
+    // TODO
+    override fun getLocalTime(): LocalTime {
+        return super.getLocalTime()
     }
 
-    // TODO: Handle struct notation
-    override fun getTimestamp(): Timestamp {
-        return when (value.type) {
-            TIMESTAMP -> DateTimeValue.timestamp(value.timestampValue)
-            else -> super.getTimestamp()
-        }
+    // TODO
+    override fun getOffsetTime(): OffsetTime {
+        return super.getOffsetTime()
+    }
+
+    // TODO
+    override fun getLocalDateTime(): LocalDateTime {
+        return super.getLocalDateTime()
+    }
+
+    // TODO
+    override fun getOffsetDateTime(): OffsetDateTime {
+        return super.getOffsetDateTime()
     }
 
     override fun getBigInteger(): BigInteger = when (value.type) {

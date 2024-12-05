@@ -165,6 +165,10 @@ public abstract class PType extends Enum {
                 return "TIMESTAMP";
             case PType.TIMESTAMPZ:
                 return "TIMESTAMPZ";
+            case PType.INTERVAL_DT:
+                return "INTERVAL_DT";
+            case PType.INTERVAL_YM:
+                return "INTERVAL_YM";
             case PType.ARRAY:
                 return "ARRAY";
             case PType.BAG:
@@ -658,6 +662,25 @@ public abstract class PType extends Enum {
     @SuppressWarnings("unused")
     public static PType timestampz(int precision) {
         return new PTypeWithPrecisionOnly(TIMESTAMPZ, precision);
+    }
+
+    /**
+     * @return a PartiQL interval year-month type
+     */
+    @NotNull
+    @SuppressWarnings("unused")
+    public static PType intervalYM() {
+        return new PTypePrimitive(INTERVAL_YM);
+    }
+
+    /**
+     * @param precision fractional seconds precision
+     * @return a PartiQL interval day-time type
+     */
+    @NotNull
+    @SuppressWarnings("unused")
+    public static PType intervalDT(int precision) {
+        return new PTypeWithPrecisionOnly(INTERVAL_DT, precision);
     }
 
     /**

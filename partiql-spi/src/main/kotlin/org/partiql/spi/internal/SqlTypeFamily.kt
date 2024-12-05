@@ -71,5 +71,17 @@ internal class SqlTypeFamily private constructor(
                 PType.DECIMAL,
             )
         )
+
+        @JvmStatic
+        val DATETIME = SqlTypeFamily(
+            preferred = PType.timestamp(6),
+            members = setOf(
+                PType.DATE,
+                PType.TIME,
+                PType.TIMEZ,
+                PType.TIMESTAMP,
+                PType.TIMESTAMPZ,
+            )
+        )
     }
 }

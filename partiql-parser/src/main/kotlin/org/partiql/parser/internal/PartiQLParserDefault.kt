@@ -1734,14 +1734,13 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (ex: IllegalArgumentException) {
                 throw error(ctx.dt, "Expected one of: ${DatetimeField.codes().joinToString()}", ex)
             }
+            val part = exprLit(stringValue(ctx.dt.text.lowercase()))
             val lhs = visitExpr(ctx.expr(0))
             val rhs = visitExpr(ctx.expr(1))
-            // TODO change to not use PartiQLValue -- https://github.com/partiql/partiql-lang-kotlin/issues/1589
-            val fieldLit = ctx.dt.text.lowercase()
             // TODO error on invalid datetime fields like TIMEZONE_HOUR and TIMEZONE_MINUTE
             when {
-                ctx.DATE_ADD() != null -> exprCall(identifierChain(identifier("date_add_$fieldLit", false), null), listOf(lhs, rhs), null)
-                ctx.DATE_DIFF() != null -> exprCall(identifierChain(identifier("date_diff_$fieldLit", false), null), listOf(lhs, rhs), null)
+                ctx.DATE_ADD() != null -> exprCall(identifierChain(identifier("date_add", false), null), listOf(part, lhs, rhs), null)
+                ctx.DATE_DIFF() != null -> exprCall(identifierChain(identifier("date_diff", false), null), listOf(part, lhs, rhs), null)
                 else -> throw error(ctx, "Expected DATE_ADD or DATE_DIFF")
             }
         }
