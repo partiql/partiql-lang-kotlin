@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rel.Rel;
 import org.partiql.types.PType;
@@ -46,11 +46,9 @@ public abstract class RexPivot extends RexBase {
     }
 
     @Override
-    protected final List<Operator> operands() {
-        Rel c0 = getInput();
-        Rex c1 = getKey();
-        Rex c2 = getValue();
-        return List.of(c0, c1, c2);
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getInput());
+        return List.of(c0);
     }
 
     @Override

@@ -2,7 +2,7 @@ package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
@@ -35,7 +35,7 @@ public abstract class RexCase extends RexBase {
     public abstract List<Branch> getBranches();
 
     /**
-     * @return the default expression, or {@code null} if none (operand 1)
+     * @return the default expression, or {@code null} if none (not an operand)
      */
     @Nullable
     public abstract Rex getDefault();
@@ -47,10 +47,13 @@ public abstract class RexCase extends RexBase {
     }
 
     @Override
-    protected List<Operator> operands() {
-        Rex c0 = getMatch();
-        Rex c1 = getDefault();
-        return List.of(c0, c1);
+    protected List<Operand> operands() {
+        Rex match = getMatch();
+        if (match == null) {
+            return List.of();
+        }
+        Operand c0 = Operand.single(match);
+        return List.of(c0);
     }
 
     @Override

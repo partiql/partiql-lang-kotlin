@@ -124,9 +124,24 @@ public class org/partiql/plan/JoinType : org/partiql/spi/Enum {
 	public static fun RIGHT ()Lorg/partiql/plan/JoinType;
 }
 
+public abstract interface class org/partiql/plan/Operand : java/lang/Iterable {
+	public static fun single (Lorg/partiql/plan/Operator;)Lorg/partiql/plan/Operand;
+	public static fun vararg (Ljava/util/List;)Lorg/partiql/plan/Operand;
+}
+
+public class org/partiql/plan/Operand$Single : org/partiql/plan/Operand {
+	public final field operator Lorg/partiql/plan/Operator;
+	public fun iterator ()Ljava/util/Iterator;
+}
+
+public class org/partiql/plan/Operand$Variadic : org/partiql/plan/Operand {
+	public final field operators Ljava/util/List;
+	public fun iterator ()Ljava/util/Iterator;
+}
+
 public abstract interface class org/partiql/plan/Operator {
 	public abstract fun accept (Lorg/partiql/plan/OperatorVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun getOperand (I)Lorg/partiql/plan/Operator;
+	public abstract fun getOperand (I)Lorg/partiql/plan/Operand;
 	public abstract fun getOperands ()Ljava/util/List;
 	public abstract fun getTag ()I
 	public abstract fun setTag (I)V
@@ -408,7 +423,7 @@ public class org/partiql/plan/rel/RelAggregate$Measure {
 
 public abstract class org/partiql/plan/rel/RelBase : org/partiql/plan/rel/Rel {
 	public fun <init> ()V
-	public final fun getOperand (I)Lorg/partiql/plan/Operator;
+	public final fun getOperand (I)Lorg/partiql/plan/Operand;
 	public final fun getOperands ()Ljava/util/List;
 	public fun getTag ()I
 	public final fun getType ()Lorg/partiql/plan/rel/RelType;
@@ -573,7 +588,7 @@ public abstract class org/partiql/plan/rel/RelSort : org/partiql/plan/rel/RelBas
 	protected final fun type ()Lorg/partiql/plan/rel/RelType;
 }
 
-public class org/partiql/plan/rel/RelType {
+public final class org/partiql/plan/rel/RelType {
 	public static final field ORDERED I
 	public fun getDegree ()I
 	public fun getField (I)Lorg/partiql/types/Field;
@@ -632,7 +647,7 @@ public abstract class org/partiql/plan/rex/RexBag : org/partiql/plan/rex/RexBase
 
 public abstract class org/partiql/plan/rex/RexBase : org/partiql/plan/rex/Rex {
 	public fun <init> ()V
-	public final fun getOperand (I)Lorg/partiql/plan/Operator;
+	public final fun getOperand (I)Lorg/partiql/plan/Operand;
 	public final fun getOperands ()Ljava/util/List;
 	public fun getTag ()I
 	public final fun getType ()Lorg/partiql/plan/rex/RexType;
@@ -887,7 +902,7 @@ public abstract class org/partiql/plan/rex/RexTable : org/partiql/plan/rex/RexBa
 	protected final fun type ()Lorg/partiql/plan/rex/RexType;
 }
 
-public class org/partiql/plan/rex/RexType {
+public final class org/partiql/plan/rex/RexType {
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getPType ()Lorg/partiql/types/PType;
 	public fun hashCode ()I

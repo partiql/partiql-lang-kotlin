@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.spi.function.Function;
 
@@ -35,9 +35,9 @@ public abstract class RexCall extends RexBase {
     }
 
     @Override
-    protected List<Operator> operands() {
-        List<Rex> varargs = getArgs();
-        return List.copyOf(varargs);
+    protected List<Operand> operands() {
+        Operand c0 = Operand.vararg(getArgs());
+        return List.of(c0);
     }
 
     @Override

@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rel.Rel;
 import org.partiql.spi.Enum;
@@ -46,8 +46,8 @@ public abstract class RexSubqueryTest extends RexBase {
     }
 
     @Override
-    protected List<Operator> operands() {
-        Rel c0 = getInput();
+    protected List<Operand> operands() {
+        Operand c0 = Operand.single(getInput());
         return List.of(c0);
     }
 

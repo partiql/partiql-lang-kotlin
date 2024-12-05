@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
 public abstract class RexBase implements Rex {
 
     private int tag = 0;
-    private List<Operator> operands;
+    private List<Operand> operands;
     private RexType type;
 
     @Override
@@ -40,13 +40,16 @@ public abstract class RexBase implements Rex {
 
     @NotNull
     @Override
-    public final Operator getOperand(int index) {
+    public final Operand getOperand(int index) {
+        if (operands == null) {
+            operands = operands();
+        }
         return operands.get(index);
     }
 
     @NotNull
     @Override
-    public final List<Operator> getOperands() {
+    public final List<Operand> getOperands() {
         if (operands == null) {
             operands = operands();
         }
@@ -65,5 +68,5 @@ public abstract class RexBase implements Rex {
      *
      * @return computed operands.
      */
-    protected abstract List<Operator> operands();
+    protected abstract List<Operand> operands();
 }

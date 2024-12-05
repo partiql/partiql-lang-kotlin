@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rel.Rel;
 import org.partiql.types.PType;
@@ -28,7 +28,7 @@ public abstract class RexSelect extends RexBase {
     public abstract Rel getInput();
 
     /**
-     * @return constructor rex (operand 1)
+     * @return constructor rex.
      */
     public abstract Rex getConstructor();
 
@@ -40,10 +40,9 @@ public abstract class RexSelect extends RexBase {
 
     @NotNull
     @Override
-    protected final List<Operator> operands() {
-        Rel c0 = getInput();
-        Rex c1 = getConstructor();
-        return List.of(c0, c1);
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getInput());
+        return List.of(c0);
     }
 
     @Override

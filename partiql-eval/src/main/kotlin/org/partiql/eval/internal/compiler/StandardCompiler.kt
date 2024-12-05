@@ -62,6 +62,7 @@ import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.plan.Action
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
+import org.partiql.plan.Operand
 import org.partiql.plan.Operator
 import org.partiql.plan.OperatorVisitor
 import org.partiql.plan.Plan
@@ -170,25 +171,25 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
          * @param operator
          * @return
          */
-        private fun compileWithStrategies(operator: Operator, ctx: Unit): Expr {
+        private fun compileWithStrategies(operator: Operator): Expr {
             // if strategy matches root, compile children to form a match.
             for (strategy in strategies) {
                 // first match
                 if (strategy.pattern.matches(operator)) {
-                    // compile children
-                    val children = operator.getOperands().map { compileWithStrategies(it, ctx) }
-                    val match = Match(operator, children)
-                    return strategy.apply(match)
+                    // assume single match
+                    val operand = Operand.single(operator)
+                    val match = Match(operand)
+                    return strategy.apply(match, ::compileWithStrategies)
                 }
             }
             return operator.accept(this, Unit)
         }
 
         // TODO REMOVE ME
-        private fun compile(rel: Rel, ctx: Unit): ExprRelation = compileWithStrategies(rel, ctx) as ExprRelation
+        private fun compile(rel: Rel, ctx: Unit): ExprRelation = compileWithStrategies(rel) as ExprRelation
 
         // TODO REMOVE ME
-        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex, ctx) as ExprValue
+        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex) as ExprValue
 
         override fun defaultReturn(operator: Operator, ctx: Unit): Expr {
             error("No compiler strategy matches the operator: ${operator::class.java.simpleName}")

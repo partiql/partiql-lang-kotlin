@@ -6,7 +6,7 @@ import org.partiql.types.Field;
 /**
  * Analogous to a ROW type, consider cardinality estimates or other hint mechanisms.
  */
-public class RelType {
+public final class RelType {
 
     public static final int ORDERED = 0x01;
 

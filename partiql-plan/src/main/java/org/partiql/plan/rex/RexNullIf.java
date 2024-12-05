@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
@@ -42,9 +42,9 @@ public abstract class RexNullIf extends RexBase {
     }
 
     @Override
-    protected final List<Operator> operands() {
-        Rex c0 = getV1();
-        Rex c1 = getV2();
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getV1());
+        Operand c1 = Operand.single(getV2());
         return List.of(c0, c1);
     }
 

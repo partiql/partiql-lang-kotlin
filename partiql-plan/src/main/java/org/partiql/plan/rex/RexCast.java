@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.types.PType;
 
@@ -38,8 +38,9 @@ public abstract class RexCast extends RexBase {
     }
 
     @Override
-    protected List<Operator> operands() {
-        return List.of();
+    protected List<Operand> operands() {
+        Operand c0 = Operand.single(getOperand());
+        return List.of(c0);
     }
 
     @Override

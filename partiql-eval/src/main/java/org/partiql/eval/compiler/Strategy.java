@@ -34,8 +34,20 @@ public abstract class Strategy {
      * Applies the strategy to a logical plan operator and returns the physical operation (expr).
      *
      * @param match holds the matched operators
+     * @param callback for compiling arguments of matched operators
      * @return the physical operation
      */
     @NotNull
-    public abstract Expr apply(@NotNull Match match);
+    public abstract Expr apply(@NotNull Match match, @NotNull Callback callback);
+
+    /**
+     * A compilation callback for strategies to compile arguments of matched operators.
+     */
+    public interface Callback {
+
+        /**
+         * @return a physical operator (expr) for the logical operator.
+         */
+        Expr apply(Operator operator);
+    }
 }

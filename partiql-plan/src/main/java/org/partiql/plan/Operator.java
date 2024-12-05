@@ -33,17 +33,13 @@ public interface Operator {
     public abstract <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx);
 
     /**
-     * Get i-th child (input) operator.
-     *
-     * @param index child index
-     * @return child operator
+     * @return the i-th operand
      */
-    @NotNull
-    public abstract Operator getOperand(int index);
+    public abstract Operand getOperand(int index);
 
     /**
-     * @return all child (input) operators.
+     * @return all input operands.
      */
     @NotNull
-    public abstract List<Operator> getOperands();
+    public abstract List<Operand> getOperands();
 }

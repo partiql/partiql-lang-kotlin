@@ -1,6 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.plan.Operand;
 import org.partiql.plan.Operator;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.types.PType;
@@ -34,9 +35,9 @@ public abstract class RexArray extends RexBase {
 
     @NotNull
     @Override
-    protected final List<Operator> operands() {
-        List<Rex> varargs = getValues();
-        return List.copyOf(varargs);
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.vararg(getValues());
+        return List.of(c0);
     }
 
     @Override

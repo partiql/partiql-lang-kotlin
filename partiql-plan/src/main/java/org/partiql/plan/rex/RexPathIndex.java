@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public abstract class RexPathIndex extends RexBase {
     public abstract Rex getOperand();
 
     /**
-     * @return index rex (operand 1)
+     * @return index rex
      */
     public abstract Rex getIndex();
 
@@ -37,10 +37,9 @@ public abstract class RexPathIndex extends RexBase {
     }
 
     @Override
-    protected final List<Operator> operands() {
-        Rex c0 = getOperand();
-        Rex c1 = getIndex();
-        return List.of(c0, c1);
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getOperand());
+        return List.of(c0);
     }
 
     @Override

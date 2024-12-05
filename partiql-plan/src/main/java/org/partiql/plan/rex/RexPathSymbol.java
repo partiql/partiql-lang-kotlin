@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
@@ -38,8 +38,8 @@ public abstract class RexPathSymbol extends RexBase {
     }
 
     @Override
-    protected final List<Operator> operands() {
-        Rex c0 = getOperand();
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getOperand());
         return List.of(c0);
     }
 

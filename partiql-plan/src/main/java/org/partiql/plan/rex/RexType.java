@@ -9,7 +9,7 @@ import org.partiql.types.PType;
  * <p>
  * Developer Note: In later releases, a [RexType] may hold metadata to aid custom planner implementations.
  */
-public class RexType {
+public final class RexType {
 
     private final PType type;
 

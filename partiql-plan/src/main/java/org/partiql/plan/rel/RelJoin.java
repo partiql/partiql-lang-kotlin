@@ -2,7 +2,7 @@ package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.JoinType;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
 
@@ -40,7 +40,7 @@ public abstract class RelJoin extends RelBase {
     public abstract JoinType getJoinType();
 
     /**
-     * @return the join condition (operand 2), or null if there is no condition.
+     * @return the join condition.
      */
     @NotNull
     public abstract Rex getCondition();
@@ -52,11 +52,10 @@ public abstract class RelJoin extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> operands() {
-        Rel c0 = getLeft();
-        Rel c1 = getRight();
-        Rex c2 = getCondition(); // can be null!
-        return List.of(c0, c1, c2);
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getLeft());
+        Operand c1 = Operand.single(getRight());
+        return List.of(c0, c1);
     }
 
     @Override

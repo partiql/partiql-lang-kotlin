@@ -1,7 +1,7 @@
 package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 
 import java.util.List;
@@ -44,9 +44,9 @@ public abstract class RelExcept extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> operands() {
-        Rel c0 = getLeft();
-        Rel c1 = getRight();
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getLeft());
+        Operand c1 = Operand.single(getRight());
         return List.of(c0, c1);
     }
 

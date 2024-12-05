@@ -1,7 +1,7 @@
 package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
 
@@ -27,7 +27,7 @@ public abstract class RelFilter extends RelBase {
     public abstract Rel getInput();
 
     /**
-     * @return predicate rex (operand 1)
+     * @return predicate rex.
      */
     @NotNull
     public abstract Rex getPredicate();
@@ -40,10 +40,9 @@ public abstract class RelFilter extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> operands() {
-        Rel c0 = getInput();
-        Rex c1 = getPredicate();
-        return List.of(c0, c1);
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getInput());
+        return List.of(c0);
     }
 
     @Override

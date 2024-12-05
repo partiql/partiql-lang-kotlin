@@ -60,8 +60,8 @@ I have labelled these children in the illustration so that you can see where the
   RelLimit
   /       \
 x:<Value>  RelOffset
-        /      \
-   y:<Value>   z:<Rel>
+          /         \
+        y:<Value>   z:<Rel>
 ``` 
 
 The compiler will look for this pattern in the operator tree, and produce a match like so,

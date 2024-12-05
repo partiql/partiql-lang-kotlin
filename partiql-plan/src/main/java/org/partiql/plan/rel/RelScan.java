@@ -1,7 +1,7 @@
 package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
 
@@ -34,8 +34,8 @@ public abstract class RelScan extends RelBase {
 
     @NotNull
     @Override
-    protected final List<Operator> operands() {
-        Rex c0 = getRex();
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getRex());
         return List.of(c0);
     }
 

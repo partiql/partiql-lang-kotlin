@@ -50,8 +50,10 @@ import org.partiql.plan.rex.RexVar;
 public interface OperatorVisitor<R, C> {
 
     default R defaultVisit(Operator operator, C ctx) {
-        for (Operator child : operator.getOperands()) {
-            child.accept(this, ctx);
+        for (Operand o : operator.getOperands()) {
+            for (Operator op : o) {
+                op.accept(this, ctx);
+            }
         }
         return defaultReturn(operator, ctx);
     }

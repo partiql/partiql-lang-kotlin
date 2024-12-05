@@ -1,7 +1,7 @@
 package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ public abstract class RelBase implements Rel {
 
     private int tag = 0;
     private RelType type;
-    private List<Operator> operands;
+    private List<Operand> operands;
 
     @Override
     public int getTag() {
@@ -40,13 +40,16 @@ public abstract class RelBase implements Rel {
 
     @NotNull
     @Override
-    public final Operator getOperand(int index) {
+    public final Operand getOperand(int index) {
+        if (operands == null) {
+            operands = operands();
+        }
         return operands.get(index);
     }
 
     @NotNull
     @Override
-    public final List<Operator> getOperands() {
+    public final List<Operand> getOperands() {
         if (operands == null) {
             operands = operands();
         }
@@ -65,5 +68,5 @@ public abstract class RelBase implements Rel {
      *
      * @return computed operands.
      */
-    protected abstract List<Operator> operands();
+    protected abstract List<Operand> operands();
 }

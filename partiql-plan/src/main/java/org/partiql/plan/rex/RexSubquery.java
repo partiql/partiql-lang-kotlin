@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rel.Rel;
 
@@ -40,8 +40,8 @@ public abstract class RexSubquery extends RexBase {
     }
 
     @Override
-    protected final List<Operator> operands() {
-        Rel c0 = getInput();
+    protected final List<Operand> operands() {
+        Operand c0 = Operand.single(getInput());
         return List.of(c0);
     }
 

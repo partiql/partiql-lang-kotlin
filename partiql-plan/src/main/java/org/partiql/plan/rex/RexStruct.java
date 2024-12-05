@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.plan.Operator;
+import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.types.PType;
 
@@ -41,7 +41,7 @@ public abstract class RexStruct extends RexBase {
     }
 
     @Override
-    protected List<Operator> operands() {
+    protected List<Operand> operands() {
         return List.of();
     }
 
