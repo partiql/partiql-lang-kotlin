@@ -81,7 +81,6 @@ public class Namespace private constructor(
 
         private val EMPTY = Namespace(emptyArray())
 
-        @JvmStatic
         public fun empty(): Namespace = EMPTY
 
         @JvmStatic

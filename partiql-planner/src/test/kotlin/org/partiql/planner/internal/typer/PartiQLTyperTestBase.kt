@@ -16,7 +16,6 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
@@ -43,7 +42,7 @@ abstract class PartiQLTyperTestBase {
         public val planner = PartiQLPlanner.standard()
 
         internal val session: ((String, Catalog) -> Session) = { catalog, metadata ->
-            PartiQLSessionBuilder()
+            Session.builder()
                 .catalog(catalog)
                 .catalogs(metadata)
                 .build()

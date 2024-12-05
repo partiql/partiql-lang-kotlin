@@ -12,8 +12,8 @@ import org.partiql.planner.util.PErrorCollector
 import org.partiql.planner.util.PlanPrinter
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
-import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.types.BagType
 import org.partiql.types.Field
 import org.partiql.types.PType
@@ -38,7 +38,7 @@ internal class PlannerPErrorReportingTests {
         .define(Table.empty("struct_with_missing", PType.row(listOf(Field.of("f1", PType.smallint())))))
         .build()
 
-    private val session = PartiQLSessionBuilder()
+    private val session = Session.builder()
         .catalog(catalogName)
         .catalogs(catalog)
         .build()

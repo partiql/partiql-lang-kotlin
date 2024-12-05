@@ -10,7 +10,7 @@ import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
-import org.partiql.system.PartiQLSessionBuilder
+import org.partiql.spi.catalog.Session
 import org.partiql.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -36,7 +36,7 @@ internal class ScopeTest {
         @JvmStatic
         val locals = TypeEnv(
             Env(
-                PartiQLSessionBuilder()
+                Session.builder()
                     .catalog("currentCatalog")
                     .catalogs(catalog)
                     .build()

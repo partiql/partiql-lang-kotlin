@@ -32,7 +32,6 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
 import org.partiql.types.Field
@@ -3825,7 +3824,7 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: SuccessTestCase) {
-        val session = PartiQLSessionBuilder()
+        val session = Session.builder()
             .catalog(tc.catalog)
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)
@@ -3868,7 +3867,7 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: ErrorTestCase) {
-        val session = PartiQLSessionBuilder()
+        val session = Session.builder()
             .catalog(tc.catalog)
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)
@@ -3912,7 +3911,7 @@ internal class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: ThrowingExceptionTestCase) {
-        val session = PartiQLSessionBuilder()
+        val session = Session.builder()
             .catalog(tc.catalog)
             .catalogs(*catalogs.toTypedArray())
             .namespace(tc.catalogPath)

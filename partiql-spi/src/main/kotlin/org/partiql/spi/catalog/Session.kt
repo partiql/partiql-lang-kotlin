@@ -64,6 +64,8 @@ public interface Session {
 
         private var identity: String = "unknown"
         private var catalog: String? = null
+        private var systemCatalogName: String = "\$pql_system"
+        private var systemCatalog: Catalog = PartiQLSystemCatalog(systemCatalogName)
         private var catalogs: Catalogs.Builder = Catalogs.builder()
         private var namespace: Namespace = Namespace.empty()
         private var properties: MutableMap<String, String> = mutableMapOf()
@@ -99,6 +101,16 @@ public interface Session {
         }
 
         /**
+         * Adds and designates a catalog to always be on the SQL-Path. This [catalog] provides all built-in functions
+         * to the system at hand.
+         * If this is never invoked, a default system catalog is provided.
+         */
+        public fun systemCatalog(catalog: Catalog): Builder {
+            this.systemCatalogName = catalog.getName()
+            return this
+        }
+
+        /**
          * Adds catalogs to this session.
          */
         public fun catalogs(vararg catalogs: Catalog): Builder {
@@ -110,16 +122,24 @@ public interface Session {
 
         public fun build(): Session = object : Session {
 
-            private val _catalogs = catalogs.build()
+            private val _catalogs: Catalogs
+            private val systemCatalogNamespace: Namespace = Namespace.of(systemCatalogName)
 
             init {
                 require(catalog != null) { "Session catalog must be set" }
+                catalogs.add(systemCatalog)
+                _catalogs = catalogs.build()
             }
 
             override fun getIdentity(): String = identity
             override fun getCatalog(): String = catalog!!
             override fun getCatalogs(): Catalogs = _catalogs
             override fun getNamespace(): Namespace = namespace
+
+            override fun getPath(): Path {
+                val currentNamespace = getNamespace()
+                return Path.of(currentNamespace, systemCatalogNamespace)
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ import org.partiql.eval.Statement
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.rel.RelLimit
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.system.PartiQLSession
+import org.partiql.spi.catalog.Session
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -20,7 +20,7 @@ public class StrategyTest {
 
     private val parser = PartiQLParser.standard()
     private val planner = PartiQLPlanner.standard()
-    private val session = PartiQLSession.empty()
+    private val session = Session.empty()
 
     private class MyLimit : ExprRelation {
         override fun open(env: Environment) = error("open")

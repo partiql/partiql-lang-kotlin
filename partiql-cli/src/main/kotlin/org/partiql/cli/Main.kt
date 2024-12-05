@@ -20,10 +20,10 @@ import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
-import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
 import picocli.CommandLine
@@ -210,7 +210,7 @@ internal class MainCommand : Runnable {
         println()
     }
 
-    private fun session() = PartiQLSessionBuilder()
+    private fun session() = Session.builder()
         .identity(System.getProperty("user.name"))
         .namespace(emptyList())
         .catalog("default")

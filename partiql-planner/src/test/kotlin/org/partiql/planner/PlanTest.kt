@@ -11,7 +11,7 @@ import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.spi.catalog.Name
-import org.partiql.system.PartiQLSessionBuilder
+import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -66,7 +66,7 @@ class PlanTest {
     )
 
     private val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
-        val session = PartiQLSessionBuilder()
+        val session = Session.builder()
             .catalog("default")
             .catalogs(
                 TestCatalog.builder()

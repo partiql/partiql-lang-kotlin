@@ -202,7 +202,6 @@ public final class org/partiql/spi/catalog/Namespace : java/lang/Iterable, kotli
 	public synthetic fun <init> ([Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun append ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Namespace;
 	public final fun asIdentifier ()Lorg/partiql/spi/catalog/Identifier;
-	public static final fun empty ()Lorg/partiql/spi/catalog/Namespace;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun forEach (Ljava/util/function/Consumer;)V
 	public final fun get (I)Ljava/lang/String;
@@ -262,6 +261,7 @@ public final class org/partiql/spi/catalog/Session$Builder {
 	public final fun namespace (Lorg/partiql/spi/catalog/Namespace;)Lorg/partiql/spi/catalog/Session$Builder;
 	public final fun namespace ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Session$Builder;
 	public final fun property (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/spi/catalog/Session$Builder;
+	public final fun systemCatalog (Lorg/partiql/spi/catalog/Catalog;)Lorg/partiql/spi/catalog/Session$Builder;
 }
 
 public final class org/partiql/spi/catalog/Session$Companion {

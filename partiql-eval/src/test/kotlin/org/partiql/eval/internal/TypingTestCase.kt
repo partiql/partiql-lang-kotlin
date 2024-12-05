@@ -7,8 +7,8 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.Datum
-import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -62,7 +62,7 @@ public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
         assertEquals(1, parseResult.statements.size)
         val statement = parseResult.statements[0]
         val catalog = Catalog.builder().name("memory").build()
-        val session = PartiQLSessionBuilder()
+        val session = Session.builder()
             .catalog("memory")
             .catalogs(catalog)
             .build()

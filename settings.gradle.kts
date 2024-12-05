@@ -1,6 +1,3 @@
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
-}
 /*
  * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
@@ -28,7 +25,6 @@ include(
     "partiql-plan",
     "partiql-planner",
     "partiql-spi",
-    "partiql-system",
     "partiql-types",
     "lib:sprout",
     "test:coverage-tests",

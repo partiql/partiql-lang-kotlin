@@ -21,8 +21,8 @@ import org.partiql.planner.util.PErrorCollector
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
-import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
@@ -120,7 +120,7 @@ class PlanTyperTest {
         private fun getTyper(): PlanTyperWrapper {
             val config = Context.of(PErrorCollector())
             val env = Env(
-                PartiQLSessionBuilder()
+                Session.builder()
                     .catalog("pql")
                     .namespace("main")
                     .catalogs(

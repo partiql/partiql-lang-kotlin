@@ -8,10 +8,10 @@ import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
-import org.partiql.system.PartiQLSessionBuilder
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
 import org.partiql.value.PartiQLValue
@@ -64,7 +64,7 @@ public class SuccessTestCase(
                 }
             }
             .build()
-        val session = PartiQLSessionBuilder()
+        val session = Session.builder()
             .catalog("memory")
             .catalogs(catalog)
             .build()

@@ -102,25 +102,8 @@ internal class Env(private val session: Session) {
             error("Qualified functions are not supported.")
         }
 
-        // Search in SQL Path
-        session.getPath().forEach { catalogName ->
-            // TODO: Allow for referencing schemas within a catalog. For now, only allow top-level functions in a catalog.
-            if (catalogName.getLength() != 1) {
-                return@forEach
-            }
-            val catalog = catalogs.getCatalog(catalogName.first()) ?: return@forEach
-            val candidates = getCandidates(catalog, identifier, args)
-            if (candidates.isNotEmpty()) {
-                return candidates
-            }
-        }
-        return emptyList()
-    }
-
-    /**
-     * Given a [catalog], searches for candidate functions.
-     */
-    private fun getCandidates(catalog: Catalog, identifier: Identifier, args: List<Rex>): List<Function> {
+        // 1. Search in the current catalog and namespace.
+        val catalog = default
         val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
         val variants = catalog.getFunctions(session, name).toList()
         val candidates = variants.filter { it.getParameters().size == args.size }
@@ -135,35 +118,14 @@ internal class Env(private val session: Session) {
      * @return
      */
     fun resolveFn(identifier: Identifier, args: List<Rex>): Rex? {
+
         // Reject qualified routine names.
         if (identifier.hasQualifier()) {
             error("Qualified functions are not supported.")
         }
 
-        // Search in SQL Path
-        session.getPath().forEach { catalogName ->
-            // TODO: Allow for referencing schemas within a catalog. For now, only allow top-level functions in a catalog.
-            if (catalogName.getLength() != 1) {
-                return@forEach
-            }
-            val catalog = catalogs.getCatalog(catalogName.first()) ?: return@forEach
-            val candidates = resolveFn(catalog, identifier, args)
-            if (candidates != null) {
-                return candidates
-            }
-        }
-        return null
-    }
-
-    /**
-     * TODO leverage session PATH.
-     *
-     * @param identifier
-     * @param args
-     * @return
-     */
-    private fun resolveFn(catalog: Catalog, identifier: Identifier, args: List<Rex>): Rex? {
         // 1. Search in the current catalog and namespace.
+        val catalog = default
         val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
         val variants = catalog.getFunctions(session, name).toList()
         if (variants.isEmpty()) {
@@ -208,25 +170,10 @@ internal class Env(private val session: Session) {
     }
 
     fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
-        // Search in SQL Path
-        session.getPath().forEach { catalogName ->
-            // TODO: Allow for referencing schemas within a catalog. For now, only allow top-level functions in a catalog.
-            if (catalogName.getLength() != 1) {
-                return@forEach
-            }
-            val catalog = catalogs.getCatalog(catalogName.first()) ?: return@forEach
-            val agg = resolveAgg(catalog, path, setQuantifier, args)
-            if (agg != null) {
-                return agg
-            }
-        }
-        return null
-    }
-
-    private fun resolveAgg(catalog: Catalog, path: String, setQuantifier: SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
 
         // 1. Search in the current catalog and namespace.
+        val catalog = default
         val name = path.lowercase()
         val candidates = catalog.getAggregations(session, name).toList()
         if (candidates.isEmpty()) {

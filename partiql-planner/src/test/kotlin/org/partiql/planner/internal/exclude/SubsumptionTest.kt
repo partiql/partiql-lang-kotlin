@@ -17,7 +17,7 @@ import org.partiql.plan.rex.RexSelect
 import org.partiql.plan.rex.RexVar
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
-import org.partiql.system.PartiQLSessionBuilder
+import org.partiql.spi.catalog.Session
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -41,7 +41,7 @@ class SubsumptionTest {
         val parseResult = parser.parse(text)
         assertEquals(1, parseResult.statements.size)
         val statement = parseResult.statements[0]
-        val session = PartiQLSessionBuilder().catalog("default").catalogs(catalog).build()
+        val session = Session.builder().catalog("default").catalogs(catalog).build()
         val plan = planner.plan(statement, session).plan
         val excludeClause = getExcludeClause(plan.getOperation()).getExclusions()
         assertEquals(tc.expectedExcludeExprs, excludeClause)
