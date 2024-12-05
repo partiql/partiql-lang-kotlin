@@ -43,13 +43,27 @@ public interface Session {
     public companion object {
 
         /**
-         * Returns a [Session] with only the "empty" catalog implementation.
+         * Returns a [Session] with only the "empty" catalog implementation. Note that this does NOT add the
+         * PartiQL System Catalog.
          */
         @JvmStatic
         public fun empty(): Session = object : Session {
             override fun getIdentity(): String = "unknown"
             override fun getCatalog(): String = "empty"
             override fun getCatalogs(): Catalogs = Catalogs.empty()
+            override fun getNamespace(): Namespace = Namespace.empty()
+        }
+
+        /**
+         * Returns a [Session] with only the PartiQL System Catalog. Therefore, this provides PartiQL's built-in functions
+         * and aggregations.
+         * @param systemCatalogName the name to assign the system catalog
+         */
+        @JvmStatic
+        public fun bare(systemCatalogName: String): Session = object : Session {
+            override fun getIdentity(): String = "unknown"
+            override fun getCatalog(): String = systemCatalogName
+            override fun getCatalogs(): Catalogs = Catalogs.builder().add(PartiQLSystemCatalog(systemCatalogName)).build()
             override fun getNamespace(): Namespace = Namespace.empty()
         }
 
