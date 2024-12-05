@@ -45,6 +45,7 @@ public abstract class RexPivot extends RexBase {
         return RexType.of(PType.struct());
     }
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         Operand c0 = Operand.single(getInput());

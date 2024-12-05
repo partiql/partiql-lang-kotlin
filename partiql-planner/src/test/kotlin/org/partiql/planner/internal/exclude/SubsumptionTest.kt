@@ -44,7 +44,7 @@ class SubsumptionTest {
         val statement = parseResult.statements[0]
         val session = Session.builder().catalog("default").catalogs(catalog).build()
         val plan = planner.plan(statement, session).plan
-        val excludeClause = getExcludeClause(plan.actions[0]).getExclusions()
+        val excludeClause = getExcludeClause(plan.action).getExclusions()
         assertEquals(tc.expectedExcludeExprs, excludeClause)
     }
 

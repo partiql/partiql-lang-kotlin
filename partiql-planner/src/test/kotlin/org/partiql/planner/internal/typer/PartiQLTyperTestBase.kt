@@ -111,7 +111,7 @@ abstract class PartiQLTyperTestBase {
                         val pc = PErrorCollector()
                         if (key is TestResult.Success) {
                             val result = testingPipeline(statement, testName, metadata, pc)
-                            val query = result.plan.actions[0] as Action.Query
+                            val query = result.plan.action as Action.Query
                             val actualType = query.rex.type.pType
                             // TODO: The tests need parameter checks
                             assert(actualType.code() == key.expectedType.code()) {
@@ -142,7 +142,7 @@ abstract class PartiQLTyperTestBase {
                             }
                         } else {
                             val result = testingPipeline(statement, testName, metadata, pc)
-                            val query = result.plan.actions[0] as Action.Query
+                            val query = result.plan.action as Action.Query
                             val actualType = query.rex.type.pType
                             assert(actualType.code() == PType.DYNAMIC) {
                                 buildString {

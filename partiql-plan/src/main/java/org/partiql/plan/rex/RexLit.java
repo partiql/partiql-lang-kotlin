@@ -29,6 +29,7 @@ public abstract class RexLit extends RexBase {
         return RexType.of(getDatum().getType());
     }
 
+    @NotNull
     @Override
     protected List<Operand> operands() {
         return List.of();

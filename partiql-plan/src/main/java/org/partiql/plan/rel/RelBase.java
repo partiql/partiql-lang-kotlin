@@ -61,6 +61,7 @@ public abstract class RelBase implements Rel {
      *
      * @return computed type.
      */
+    @NotNull
     protected abstract RelType type();
 
     /**
@@ -68,5 +69,6 @@ public abstract class RelBase implements Rel {
      *
      * @return computed operands.
      */
+    @NotNull
     protected abstract List<Operand> operands();
 }

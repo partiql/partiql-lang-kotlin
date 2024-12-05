@@ -124,11 +124,8 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
     override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {
         try {
-            val visitor = _Operator_Visitor(mode)
-            if (plan.actions.size != 1) {
-                throw IllegalArgumentException("Only single actions are supported")
-            }
-            val operation = plan.actions[0]
+            val visitor = Visitor(mode)
+            val operation = plan.action
             val statement: Statement = when {
                 operation is Action.Query -> visitor.compile(operation)
                 else -> throw IllegalArgumentException("Only query statements are supported")
@@ -146,10 +143,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
     /**
      * Transforms plan relation operators into the internal physical operators.
      */
-    @Suppress("ClassName")
-    private inner class _Operator_Visitor(mode: Mode) : OperatorVisitor<Expr, Unit> {
+    private inner class Visitor(mode: Mode) : OperatorVisitor<Expr, Unit> {
 
-        private val mode = mode.code()
+        private val mode = mode
+        private val MODE = mode.code()
 
         /**
          * Compile a query operation to a query statement.
@@ -179,7 +176,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                     // assume single match
                     val operand = Operand.single(operator)
                     val match = Match(operand)
-                    return strategy.apply(match, ::compileWithStrategies)
+                    return strategy.apply(match, mode, ::compileWithStrategies)
                 }
             }
             return operator.accept(this, Unit)
@@ -246,10 +243,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitIterate(rel: RelIterate, ctx: Unit): ExprRelation {
             val input = compile(rel.getRex(), ctx)
-            return when (mode) {
+            return when (MODE) {
                 Mode.PERMISSIVE -> RelOpIteratePermissive(input)
                 Mode.STRICT -> RelOpIterate(input)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
@@ -291,10 +288,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitScan(rel: RelScan, ctx: Unit): ExprRelation {
             val input = compile(rel.rex, ctx)
-            return when (mode) {
+            return when (MODE) {
                 Mode.PERMISSIVE -> RelOpScanPermissive(input)
                 Mode.STRICT -> RelOpScan(input)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
@@ -320,10 +317,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitUnpivot(rel: RelUnpivot, ctx: Unit): ExprRelation {
             val input = compile(rel.rex, ctx)
-            return when (mode) {
+            return when (MODE) {
                 Mode.PERMISSIVE -> RelOpUnpivot.Permissive(input)
                 Mode.STRICT -> RelOpUnpivot.Strict(input)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
@@ -437,10 +434,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             val input = compile(rex.getInput(), ctx)
             val key = compile(rex.getKey(), ctx)
             val value = compile(rex.getValue(), ctx)
-            return when (mode) {
+            return when (MODE) {
                 Mode.PERMISSIVE -> ExprPivotPermissive(input, key, value)
                 Mode.STRICT -> ExprPivot(input, key, value)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
@@ -457,10 +454,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 val v = compile(it.value, ctx).catch()
                 ExprStructField(k, v)
             }
-            return when (mode) {
+            return when (MODE) {
                 Mode.PERMISSIVE -> ExprStructPermissive(fields)
                 Mode.STRICT -> ExprStructStrict(fields)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
@@ -503,10 +500,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         /**
          * Some places "catch" an error and return the MISSING value.
          */
-        private fun ExprValue.catch(): ExprValue = when (mode) {
+        private fun ExprValue.catch(): ExprValue = when (MODE) {
             Mode.PERMISSIVE -> ExprPermissive(this)
             Mode.STRICT -> this
-            else -> throw IllegalStateException("Unsupported execution mode: $mode")
+            else -> throw IllegalStateException("Unsupported execution mode: $MODE")
         }
     }
 }

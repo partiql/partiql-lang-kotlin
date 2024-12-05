@@ -181,7 +181,7 @@ public interface Operators {
     public fun limit(input: Rel, limit: Rex): RelLimit = RelLimit.create(input, limit)
 
     /**
-     * Create a [RelLimit] instance.
+     * Create a [RelOffset] instance.
      *
      * @param input
      * @param offset

@@ -385,7 +385,7 @@ public final class org/partiql/plan/Operators$DefaultImpls {
 }
 
 public abstract interface class org/partiql/plan/Plan {
-	public abstract fun getActions ()Ljava/util/List;
+	public abstract fun getAction ()Lorg/partiql/plan/Action;
 	public fun getVersion ()Lorg/partiql/plan/Version;
 }
 
@@ -409,7 +409,7 @@ public abstract class org/partiql/plan/rel/RelAggregate : org/partiql/plan/rel/R
 	public abstract fun getGroups ()Ljava/util/List;
 	public abstract fun getInput ()Lorg/partiql/plan/rel/Rel;
 	public abstract fun getMeasures ()Ljava/util/List;
-	public static fun measure (Lorg/partiql/spi/function/Aggregation;Ljava/util/List;Ljava/lang/Boolean;)Lorg/partiql/plan/rel/RelAggregate$Measure;
+	public static fun measure (Lorg/partiql/spi/function/Aggregation;Ljava/util/List;Z)Lorg/partiql/plan/rel/RelAggregate$Measure;
 	protected final fun operands ()Ljava/util/List;
 	protected final fun type ()Lorg/partiql/plan/rel/RelType;
 }
@@ -418,7 +418,7 @@ public class org/partiql/plan/rel/RelAggregate$Measure {
 	public fun copy (Ljava/util/List;)Lorg/partiql/plan/rel/RelAggregate$Measure;
 	public fun getAgg ()Lorg/partiql/spi/function/Aggregation;
 	public fun getArgs ()Ljava/util/List;
-	public fun isDistinct ()Ljava/lang/Boolean;
+	public fun isDistinct ()Z
 }
 
 public abstract class org/partiql/plan/rel/RelBase : org/partiql/plan/rel/Rel {

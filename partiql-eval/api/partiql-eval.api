@@ -69,7 +69,7 @@ public class org/partiql/eval/compiler/Pattern {
 
 public abstract class org/partiql/eval/compiler/Strategy {
 	public fun <init> (Lorg/partiql/eval/compiler/Pattern;)V
-	public abstract fun apply (Lorg/partiql/eval/compiler/Match;Lorg/partiql/eval/compiler/Strategy$Callback;)Lorg/partiql/eval/Expr;
+	public abstract fun apply (Lorg/partiql/eval/compiler/Match;Lorg/partiql/eval/Mode;Lorg/partiql/eval/compiler/Strategy$Callback;)Lorg/partiql/eval/Expr;
 	public fun getPattern ()Lorg/partiql/eval/compiler/Pattern;
 }
 

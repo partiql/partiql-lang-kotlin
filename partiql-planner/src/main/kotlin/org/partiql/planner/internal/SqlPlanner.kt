@@ -70,9 +70,7 @@ internal class SqlPlanner(
         val error = PError.INTERNAL_ERROR(PErrorKind.SEMANTIC(), null, t)
         ctx.errorListener.report(error)
         val query = Action.Query { Operators.STANDARD.error(PType.dynamic()) }
-        val plan = object : Plan {
-            override fun getActions(): MutableList<Action> = mutableListOf(query)
-        }
+        val plan = Plan { query }
         return Result(plan)
     }
 }

@@ -29,11 +29,13 @@ public abstract class RexCall extends RexBase {
     @NotNull
     public abstract List<Rex> getArgs();
 
+    @NotNull
     @Override
     protected RexType type() {
         return RexType.of(getFunction().returns);
     }
 
+    @NotNull
     @Override
     protected List<Operand> operands() {
         Operand c0 = Operand.vararg(getArgs());

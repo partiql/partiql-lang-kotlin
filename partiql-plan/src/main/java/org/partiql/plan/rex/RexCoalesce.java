@@ -25,11 +25,13 @@ public abstract class RexCoalesce extends RexBase {
     @NotNull
     public abstract List<Rex> getArgs();
 
+    @NotNull
     @Override
     protected final RexType type() {
         throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         Operand c0 = Operand.vararg(getArgs());

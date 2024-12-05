@@ -36,6 +36,7 @@ public abstract class RexPathIndex extends RexBase {
         throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         Operand c0 = Operand.single(getOperand());

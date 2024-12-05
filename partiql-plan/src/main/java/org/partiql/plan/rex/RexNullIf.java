@@ -41,6 +41,7 @@ public abstract class RexNullIf extends RexBase {
         return getV1().getType();
     }
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         Operand c0 = Operand.single(getV1());

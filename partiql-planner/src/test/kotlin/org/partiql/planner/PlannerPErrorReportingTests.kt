@@ -404,7 +404,7 @@ internal class PlannerPErrorReportingTests {
             plan, pc,
             tc.assertion
         )
-        val statement = plan.actions[0] as Action.Query
+        val statement = plan.action as Action.Query
         val actualType = statement.rex.type.pType
         assertEquals(tc.expectedType, actualType)
     }

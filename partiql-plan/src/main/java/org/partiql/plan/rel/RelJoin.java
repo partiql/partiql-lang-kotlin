@@ -45,6 +45,7 @@ public abstract class RelJoin extends RelBase {
     @NotNull
     public abstract Rex getCondition();
 
+    @NotNull
     @Override
     protected RelType type() {
         throw new UnsupportedOperationException("compute join type");

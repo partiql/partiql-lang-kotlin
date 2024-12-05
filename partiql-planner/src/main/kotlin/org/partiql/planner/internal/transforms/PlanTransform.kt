@@ -50,9 +50,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
         val root = visitor.visitRex(query.root, query.root.type)
         val action = Action.Query { root }
         // TODO replace with standard implementations (or just remove plan transform altogether when possible).
-        return object : Plan {
-            override fun getActions(): MutableList<Action> = mutableListOf(action)
-        }
+        return Plan { action }
     }
 
     private class Visitor(

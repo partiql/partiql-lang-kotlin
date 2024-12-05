@@ -2,8 +2,6 @@ package org.partiql.plan;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 /**
  * A plan holds operations that can be executed.
  */
@@ -18,8 +16,8 @@ public interface Plan {
     }
 
     /**
-     * @return statement actions to execute.
+     * @return statement action to execute.
      */
     @NotNull
-    public List<Action> getActions();
+    public Action getAction();
 }

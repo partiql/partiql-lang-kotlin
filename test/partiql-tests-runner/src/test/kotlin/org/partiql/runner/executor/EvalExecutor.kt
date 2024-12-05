@@ -193,7 +193,7 @@ class EvalExecutor(
             assertEquals(1, parseResult.statements.size)
             val stmt = parseResult.statements[0]
             val plan = planner.plan(stmt, session).plan
-            return (plan.actions[0] as Query).getRex().getType().getPType()
+            return (plan.action as Query).getRex().getType().getPType()
         }
 
         /**

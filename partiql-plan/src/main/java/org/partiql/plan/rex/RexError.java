@@ -21,12 +21,14 @@ public abstract class RexError extends RexBase {
         return new Impl();
     }
 
+    @NotNull
     @Override
     protected RexType type() {
         // TODO SHOULD BE UNKNOWN
         return RexType.of(PType.dynamic());
     }
 
+    @NotNull
     @Override
     protected List<Operand> operands() {
         return List.of();

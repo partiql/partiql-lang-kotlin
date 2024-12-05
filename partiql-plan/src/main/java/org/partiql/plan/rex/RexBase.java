@@ -61,6 +61,7 @@ public abstract class RexBase implements Rex {
      *
      * @return computed type.
      */
+    @NotNull
     protected abstract RexType type();
 
     /**
@@ -68,5 +69,6 @@ public abstract class RexBase implements Rex {
      *
      * @return computed operands.
      */
+    @NotNull
     protected abstract List<Operand> operands();
 }

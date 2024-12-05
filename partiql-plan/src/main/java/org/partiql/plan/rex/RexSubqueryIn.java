@@ -33,11 +33,13 @@ public abstract class RexSubqueryIn extends RexBase {
     @NotNull
     public abstract List<Rex> getArgs();
 
+    @NotNull
     @Override
     protected final RexType type() {
         return RexType.of(PType.bool());
     }
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         Operand c0 = Operand.single(getInput());

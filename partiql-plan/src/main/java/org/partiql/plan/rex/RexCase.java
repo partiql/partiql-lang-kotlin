@@ -46,6 +46,7 @@ public abstract class RexCase extends RexBase {
         throw new UnsupportedOperationException("Derive type is not implemented");
     }
 
+    @NotNull
     @Override
     protected List<Operand> operands() {
         Rex match = getMatch();

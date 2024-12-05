@@ -31,6 +31,7 @@ public abstract class RexTable extends RexBase {
         return RexType.of(getTable().getSchema());
     }
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         return List.of();

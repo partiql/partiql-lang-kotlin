@@ -59,6 +59,7 @@ public abstract class RexSubqueryComp extends RexBase {
         return RexType.of(PType.bool());
     }
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         Operand c0 = Operand.single(getInput());

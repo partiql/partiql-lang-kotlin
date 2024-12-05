@@ -58,8 +58,8 @@ object PlanEquivalenceOperatorVisitor : OperatorVisitor<Boolean, Any> {
         if (other !is Plan) {
             return false
         }
-        val op1 = plan.actions[0]
-        val op2 = other.actions[0]
+        val op1 = plan.action
+        val op2 = other.action
         return visitOperation(op1, op2)
     }
 

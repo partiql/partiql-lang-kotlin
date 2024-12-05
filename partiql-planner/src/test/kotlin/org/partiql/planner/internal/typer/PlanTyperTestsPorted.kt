@@ -3840,7 +3840,7 @@ internal class PlanTyperTestsPorted {
 
         val collector = PErrorCollector()
         val plan = infer(input, session, collector)
-        when (val statement = plan.actions[0]) {
+        when (val statement = plan.action) {
             is Action.Query -> {
                 assert(collector.problems.isEmpty()) {
                     // Throw internal error for debugging
@@ -3882,7 +3882,7 @@ internal class PlanTyperTestsPorted {
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
         val plan = infer(input, session, collector)
 
-        when (val operation = plan.actions[0]) {
+        when (val operation = plan.action) {
             is Action.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {

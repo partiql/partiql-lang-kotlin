@@ -37,6 +37,7 @@ public abstract class RexCast extends RexBase {
         return RexType.of(getTarget());
     }
 
+    @NotNull
     @Override
     protected List<Operand> operands() {
         Operand c0 = Operand.single(getOperand());

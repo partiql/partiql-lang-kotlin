@@ -30,6 +30,7 @@ public abstract class RexVar extends RexBase {
      */
     public abstract int getOffset();
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         return List.of();
@@ -52,6 +53,7 @@ public abstract class RexVar extends RexBase {
             this.type = type;
         }
 
+        @NotNull
         @Override
         protected RexType type() {
             return RexType.of(type);

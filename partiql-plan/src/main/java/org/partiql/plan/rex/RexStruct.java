@@ -40,6 +40,7 @@ public abstract class RexStruct extends RexBase {
         return RexType.of(PType.struct());
     }
 
+    @NotNull
     @Override
     protected List<Operand> operands() {
         return List.of();

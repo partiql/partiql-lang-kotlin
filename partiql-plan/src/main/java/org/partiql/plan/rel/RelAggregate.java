@@ -27,7 +27,7 @@ public abstract class RelAggregate extends RelBase {
      * @return new  {@link Measure} instance
      */
     @NotNull
-    public static Measure measure(@NotNull Aggregation agg, @NotNull List<Rex> args, @NotNull  Boolean distinct) {
+    public static Measure measure(@NotNull Aggregation agg, @NotNull List<Rex> args, @NotNull  boolean distinct) {
         return new Measure(agg, args, distinct);
     }
 
@@ -88,9 +88,9 @@ public abstract class RelAggregate extends RelBase {
 
         private final Aggregation agg;
         private final List<Rex> args;
-        private final Boolean distinct;
+        private final boolean distinct;
 
-        private Measure(Aggregation agg, List<Rex> args, Boolean distinct) {
+        private Measure(Aggregation agg, List<Rex> args, boolean distinct) {
             this.agg = agg;
             this.args = args;
             this.distinct = distinct;
@@ -106,8 +106,7 @@ public abstract class RelAggregate extends RelBase {
             return args;
         }
 
-        @NotNull
-        public Boolean isDistinct() {
+        public boolean isDistinct() {
             return distinct;
         }
 

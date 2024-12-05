@@ -42,6 +42,7 @@ public abstract class RexDispatch extends RexBase {
         return RexType.of(PType.dynamic());
     }
 
+    @NotNull
     @Override
     protected final List<Operand> operands() {
         Operand c0 = Operand.vararg(getArgs());
