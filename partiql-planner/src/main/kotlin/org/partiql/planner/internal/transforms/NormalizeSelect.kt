@@ -37,6 +37,7 @@ import org.partiql.ast.FromExpr
 import org.partiql.ast.FromJoin
 import org.partiql.ast.FromTableRef
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Literal.string
 import org.partiql.ast.QueryBody
 import org.partiql.ast.SelectItem
 import org.partiql.ast.SelectList
@@ -48,7 +49,6 @@ import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprStruct
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.Scope
-import org.partiql.ast.literal.Literal.litString
 import org.partiql.planner.internal.helpers.toBinder
 
 /**
@@ -317,7 +317,7 @@ internal object NormalizeSelect {
             val structFields = node.items.map { item ->
                 val itemExpr = item as? SelectItem.Expr ?: error("Expected the projection to be an expression.")
                 exprStructField(
-                    name = exprLit(litString(itemExpr.asAlias?.symbol!!)),
+                    name = exprLit(string(itemExpr.asAlias?.symbol!!)),
                     value = item.expr
                 )
             }
@@ -343,14 +343,14 @@ internal object NormalizeSelect {
         private fun buildSimpleStruct(expr: Expr, name: String): ExprStruct = exprStruct(
             fields = listOf(
                 exprStructField(
-                    name = exprLit(litString(name)),
+                    name = exprLit(string(name)),
                     value = expr
                 )
             )
         )
 
         private fun structField(name: String, expr: Expr): ExprStruct.Field = exprStructField(
-            name = exprLit(litString(name)),
+            name = exprLit(string(name)),
             value = expr
         )
 

@@ -4,7 +4,7 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.literal.Literal;
+import org.partiql.ast.Literal;
 
 import java.util.ArrayList;
 import java.util.Collection;

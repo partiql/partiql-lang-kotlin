@@ -15,11 +15,11 @@ import org.partiql.ast.Ast.selectItemExpr
 import org.partiql.ast.Ast.selectList
 import org.partiql.ast.Ast.selectValue
 import org.partiql.ast.FromType
+import org.partiql.ast.Literal.intNum
+import org.partiql.ast.Literal.string
 import org.partiql.ast.SelectItem
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.Scope
-import org.partiql.ast.literal.Literal.litInt
-import org.partiql.ast.literal.Literal.litString
 import kotlin.test.assertEquals
 
 class NormalizeSelectTest {
@@ -172,7 +172,7 @@ class NormalizeSelectTest {
                     constructor = exprStruct(
                         items.map {
                             exprStructField(
-                                name = exprLit(litString(it.first)),
+                                name = exprLit(string(it.first)),
                                 value = it.second
                             )
                         }
@@ -219,5 +219,5 @@ class NormalizeSelectTest {
         asAlias = asAlias?.let { identifier(asAlias, isDelimited = false) }
     )
 
-    private fun lit(value: Int) = exprLit(litInt(value))
+    private fun lit(value: Int) = exprLit(intNum(value))
 }

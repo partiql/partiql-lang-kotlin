@@ -15,12 +15,12 @@ import org.partiql.ast.Ast.selectStar
 import org.partiql.ast.Ast.setOp
 import org.partiql.ast.AstNode
 import org.partiql.ast.FromType
+import org.partiql.ast.Literal.intNum
+import org.partiql.ast.Literal.string
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprQuerySet
-import org.partiql.ast.literal.Literal.litInt
-import org.partiql.ast.literal.Literal.litString
 import kotlin.test.assertEquals
 
 class PartiQLParserBagOpTests {
@@ -41,8 +41,8 @@ class PartiQLParserBagOpTests {
                                     exprStruct(
                                         fields = mutableListOf(
                                             exprStructField(
-                                                name = exprLit(litString("a")),
-                                                value = exprLit(litInt(i))
+                                                name = exprLit(string("a")),
+                                                value = exprLit(intNum(i))
                                             )
                                         )
                                     )
@@ -65,7 +65,7 @@ class PartiQLParserBagOpTests {
             offset = null
         )
 
-    private fun createLit(i: Int) = exprLit(litInt(i))
+    private fun createLit(i: Int) = exprLit(intNum(i))
 
     // SQL Union
     @Test

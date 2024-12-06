@@ -47,7 +47,6 @@ import org.partiql.ast.graph.GraphPart;
 import org.partiql.ast.graph.GraphPattern;
 import org.partiql.ast.graph.GraphQuantifier;
 import org.partiql.ast.graph.GraphSelector;
-import org.partiql.ast.literal.Literal;
 
 // TODO docs
 //  Also include docs on how a library user could create a new variant for sum types and which methods to override

@@ -33,6 +33,7 @@ import org.partiql.ast.Identifier
 import org.partiql.ast.IdentifierChain
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
+import org.partiql.ast.Literal
 import org.partiql.ast.Nulls
 import org.partiql.ast.Order
 import org.partiql.ast.OrderBy
@@ -81,7 +82,6 @@ import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
-import org.partiql.ast.literal.LiteralKind
 
 /**
  * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
@@ -227,19 +227,17 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprLit(node: ExprLit, tail: SqlBlock): SqlBlock {
         val lit = node.lit
         var t = tail
-        val litText = when (lit.kind().code()) {
-            LiteralKind.NULL -> "NULL"
-            LiteralKind.MISSING -> "MISSING"
-            LiteralKind.BOOLEAN -> lit.booleanValue().toString()
-            LiteralKind.NUM_APPROX -> lit.numberValue()
-            LiteralKind.NUM_EXACT -> lit.numberValue()
-            LiteralKind.NUM_INT -> lit.numberValue()
-            LiteralKind.STRING -> String.format("'%s'", lit.stringValue())
-            LiteralKind.TYPED_STRING -> {
+        val litText = when (lit.code()) {
+            Literal.NULL -> "NULL"
+            Literal.MISSING -> "MISSING"
+            Literal.BOOL -> lit.booleanValue().toString()
+            Literal.APPROX_NUM, Literal.EXACT_NUM, Literal.INT_NUM -> lit.numberValue()
+            Literal.STRING -> String.format("'%s'", lit.stringValue())
+            Literal.TYPED_STRING -> {
                 t = visitDataType(lit.dataType(), t)
                 String.format(" '%s'", lit.stringValue())
             }
-            else -> error("Unsupported literal kind ${lit.kind()}")
+            else -> error("Unsupported literal type $lit")
         }
         return t concat litText
     }

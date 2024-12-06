@@ -5,8 +5,8 @@ import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
+import org.partiql.ast.Literal.intNum
 import org.partiql.ast.expr.Expr
-import org.partiql.ast.literal.Literal.litInt
 import kotlin.test.assertEquals
 
 class PartiQLParserOperatorTests {
@@ -22,7 +22,7 @@ class PartiQLParserOperatorTests {
             exprOperator(
                 symbol = "-",
                 lhs = null,
-                rhs = exprLit(litInt(2))
+                rhs = exprLit(intNum(2))
             )
         }
     )
@@ -33,8 +33,8 @@ class PartiQLParserOperatorTests {
         queryBody {
             exprOperator(
                 symbol = "<=",
-                lhs = exprLit(litInt(1)),
-                rhs = exprLit(litInt(2))
+                lhs = exprLit(intNum(1)),
+                rhs = exprLit(intNum(2))
             )
         }
     )
@@ -46,7 +46,7 @@ class PartiQLParserOperatorTests {
             exprOperator(
                 symbol = "==!",
                 lhs = null,
-                rhs = exprLit(litInt(2))
+                rhs = exprLit(intNum(2))
             )
         }
     )
@@ -57,8 +57,8 @@ class PartiQLParserOperatorTests {
         queryBody {
             exprOperator(
                 symbol = "==!",
-                lhs = exprLit(litInt(1)),
-                rhs = exprLit(litInt(2))
+                lhs = exprLit(intNum(1)),
+                rhs = exprLit(intNum(2))
             )
         }
     )

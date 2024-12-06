@@ -43,7 +43,6 @@ import org.partiql.ast.graph.GraphMatch
 import org.partiql.ast.graph.GraphPattern
 import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphSelector
-import org.partiql.ast.literal.Literal
 
 // TODO docs
 public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {

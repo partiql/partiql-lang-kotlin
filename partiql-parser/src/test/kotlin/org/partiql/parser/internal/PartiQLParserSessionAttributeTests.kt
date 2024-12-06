@@ -6,9 +6,9 @@ import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.exprSessionAttribute
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
+import org.partiql.ast.Literal.intNum
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.SessionAttribute
-import org.partiql.ast.literal.Literal.litInt
 import kotlin.test.assertEquals
 
 class PartiQLParserSessionAttributeTests {
@@ -47,7 +47,7 @@ class PartiQLParserSessionAttributeTests {
         queryBody {
             exprOperator(
                 symbol = "=",
-                lhs = exprLit(litInt(1)),
+                lhs = exprLit(intNum(1)),
                 rhs = exprSessionAttribute(SessionAttribute.CURRENT_USER())
             )
         }

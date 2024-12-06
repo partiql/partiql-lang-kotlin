@@ -134,6 +134,14 @@ import org.partiql.ast.Identifier
 import org.partiql.ast.IdentifierChain
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
+import org.partiql.ast.Literal.approxNum
+import org.partiql.ast.Literal.bool
+import org.partiql.ast.Literal.exactNum
+import org.partiql.ast.Literal.intNum
+import org.partiql.ast.Literal.missing
+import org.partiql.ast.Literal.nul
+import org.partiql.ast.Literal.string
+import org.partiql.ast.Literal.typedString
 import org.partiql.ast.Nulls
 import org.partiql.ast.Order
 import org.partiql.ast.Select
@@ -164,14 +172,6 @@ import org.partiql.ast.graph.GraphPattern
 import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphRestrictor
 import org.partiql.ast.graph.GraphSelector
-import org.partiql.ast.literal.Literal.litApprox
-import org.partiql.ast.literal.Literal.litBool
-import org.partiql.ast.literal.Literal.litExact
-import org.partiql.ast.literal.Literal.litInt
-import org.partiql.ast.literal.Literal.litMissing
-import org.partiql.ast.literal.Literal.litNull
-import org.partiql.ast.literal.Literal.litString
-import org.partiql.ast.literal.Literal.litTypedString
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
@@ -218,7 +218,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             ctx.errorListener.report(error)
             val locations = SourceLocations()
             return PartiQLParser.Result(
-                mutableListOf(org.partiql.ast.Query(exprLit(litNull()))) as List<Statement>,
+                mutableListOf(org.partiql.ast.Query(exprLit(nul()))) as List<Statement>,
                 locations
             )
         }
@@ -412,6 +412,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             internal val DATE_PATTERN_REGEX = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
 
             internal val GENERIC_TIME_REGEX = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
+
+            internal val GENERIC_TIMESTAMP_REGEX = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d\\s\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
         }
 
         /**
@@ -461,8 +463,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
             explain(
                 options = mapOf(
-                    "type" to (type?.let { litString(it) } ?: litNull()),
-                    "format" to (format?.let { litString(it) } ?: litNull())
+                    "type" to (type?.let { string(it) } ?: nul()),
+                    "format" to (format?.let { string(it) } ?: nul())
                 ),
                 statement = visit(ctx.statement()) as Statement,
             )
@@ -1862,11 +1864,11 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralDecimal(ctx: GeneratedParser.LiteralDecimalContext) = translate(ctx) {
-            exprLit(litExact(ctx.text))
+            exprLit(exactNum(ctx.text))
         }
 
         override fun visitLiteralFloat(ctx: GeneratedParser.LiteralFloatContext) = translate(ctx) {
-            exprLit(litApprox(ctx.text))
+            exprLit(approxNum(ctx.text))
         }
 
         override fun visitArray(ctx: GeneratedParser.ArrayContext) = translate(ctx) {
@@ -1875,19 +1877,19 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralNull(ctx: GeneratedParser.LiteralNullContext) = translate(ctx) {
-            exprLit(litNull())
+            exprLit(nul())
         }
 
         override fun visitLiteralMissing(ctx: GeneratedParser.LiteralMissingContext) = translate(ctx) {
-            exprLit(litMissing())
+            exprLit(missing())
         }
 
         override fun visitLiteralTrue(ctx: GeneratedParser.LiteralTrueContext) = translate(ctx) {
-            exprLit(litBool(true))
+            exprLit(bool(true))
         }
 
         override fun visitLiteralFalse(ctx: GeneratedParser.LiteralFalseContext) = translate(ctx) {
-            exprLit(litBool(false))
+            exprLit(bool(false))
         }
 
         override fun visitLiteralIon(ctx: GeneratedParser.LiteralIonContext) = translate(ctx) {
@@ -1898,12 +1900,12 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralString(ctx: GeneratedParser.LiteralStringContext) = translate(ctx) {
             val value = ctx.LITERAL_STRING().getStringValue()
-            exprLit(litString(value))
+            exprLit(string(value))
         }
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
             val n = ctx.LITERAL_INTEGER().text
-            exprLit(litInt(n))
+            exprLit(intNum(n))
         }
 
         override fun visitLiteralDate(ctx: GeneratedParser.LiteralDateContext) = translate(ctx) {
@@ -1912,11 +1914,20 @@ internal class PartiQLParserDefault : PartiQLParser {
             if (DATE_PATTERN_REGEX.matches(dateString).not()) {
                 throw error(pattern, "Expected DATE string to be of the format yyyy-MM-dd")
             }
-            exprLit(litTypedString(DataType.DATE(), dateString))
+            exprLit(typedString(DataType.DATE(), dateString))
         }
 
         override fun visitLiteralTime(ctx: GeneratedParser.LiteralTimeContext) = translate(ctx) {
-            val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
+            val pattern = ctx.LITERAL_STRING().symbol
+            val timeString = ctx.LITERAL_STRING().getStringValue()
+            if (GENERIC_TIME_REGEX.matches(timeString).not()) {
+                throw error(pattern, "Expected TIME string to be of the format HH:mm:ss[.SSS]")
+            }
+            val precision = ctx.LITERAL_INTEGER()?.let {
+                val p = it.text.toBigInteger().toInt()
+                if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds")
+                p
+            }
             val type = when (ctx.ZONE()) {
                 null -> {
                     if (precision == null) {
@@ -1933,11 +1944,20 @@ internal class PartiQLParserDefault : PartiQLParser {
                     }
                 }
             }
-            exprLit(litTypedString(type, timeString))
+            exprLit(typedString(type, timeString))
         }
 
         override fun visitLiteralTimestamp(ctx: GeneratedParser.LiteralTimestampContext) = translate(ctx) {
-            val (timestampString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
+            val pattern = ctx.LITERAL_STRING().symbol
+            val timestampString = ctx.LITERAL_STRING().getStringValue()
+            if (GENERIC_TIMESTAMP_REGEX.matches(timestampString).not()) {
+                throw error(pattern, "Expected TIMESTAMP string to be of the format yyyy-MM-dd HH:mm:ss[.SSS]")
+            }
+            val precision = ctx.LITERAL_INTEGER()?.let {
+                val p = it.text.toBigInteger().toInt()
+                if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds")
+                p
+            }
             val type = when (ctx.ZONE()) {
                 null -> {
                     if (precision == null) {
@@ -1954,7 +1974,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                     }
                 }
             }
-            exprLit(litTypedString(type, timestampString))
+            exprLit(typedString(type, timestampString))
         }
 
         override fun visitTuple(ctx: GeneratedParser.TupleContext) = translate(ctx) {
@@ -2170,41 +2190,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             ctx.ALL() != null -> SetQuantifier.ALL()
             ctx.DISTINCT() != null -> SetQuantifier.DISTINCT()
             else -> throw error(ctx, "Expected set quantifier ALL or DISTINCT")
-        }
-
-        /**
-         * With the <string> and <int> nodes of a literal time expression, returns the parsed string and precision.
-         * TIME (<int>)? (WITH TIME ZONE)? <string>
-         */
-        private fun getTimeStringAndPrecision(
-            stringNode: TerminalNode,
-            integerNode: TerminalNode?,
-        ): Pair<String, Int> {
-            val timeString = stringNode.getStringValue()
-            val precision = when (integerNode) {
-                null -> {
-                    try {
-                        getPrecisionFromTimeString(timeString)
-                    } catch (e: Exception) {
-                        throw error(stringNode.symbol, "Unable to parse precision.", e)
-                    }
-                }
-                else -> {
-                    val p = integerNode.text.toBigInteger().toInt()
-                    if (p < 0 || 9 < p) throw error(integerNode.symbol, "Precision out of bounds")
-                    p
-                }
-            }
-            return timeString to precision
-        }
-
-        private fun getPrecisionFromTimeString(timeString: String): Int {
-            val matcher = GENERIC_TIME_REGEX.toPattern().matcher(timeString)
-            if (!matcher.find()) {
-                throw IllegalArgumentException("Time string does not match the format 'HH:MM:SS[.ddd....][+|-HH:MM]'")
-            }
-            val fraction = matcher.group(1)?.removePrefix(".")
-            return fraction?.length ?: 0
         }
 
         /**

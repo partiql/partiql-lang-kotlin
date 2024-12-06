@@ -3,6 +3,7 @@ package org.partiql.planner.internal.helpers
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Identifier
 import org.partiql.ast.IdentifierChain
+import org.partiql.ast.Literal
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCast
 import org.partiql.ast.expr.ExprLit
@@ -10,7 +11,6 @@ import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprSessionAttribute
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.PathStep
-import org.partiql.ast.literal.LiteralKind
 
 private val col = { index: () -> Int -> "_${index()}" }
 
@@ -69,7 +69,7 @@ private fun ExprPath.toBinder(index: () -> Int): Identifier {
         is PathStep.Field -> prev.field.toBinder()
         is PathStep.Element -> {
             val k = prev.element
-            if (k is ExprLit && k.lit.kind().code() == LiteralKind.STRING) {
+            if (k is ExprLit && k.lit.code() == Literal.STRING) {
                 k.lit.stringValue().toBinder()
             } else {
                 col(index).toBinder()

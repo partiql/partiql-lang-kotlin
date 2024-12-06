@@ -33,6 +33,7 @@ import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.IdentifierChain
 import org.partiql.ast.JoinType
+import org.partiql.ast.Literal.intNum
 import org.partiql.ast.Nulls
 import org.partiql.ast.Order
 import org.partiql.ast.OrderBy
@@ -48,7 +49,6 @@ import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.Scope
-import org.partiql.ast.literal.Literal.litInt
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.helpers.toBinder
 import org.partiql.planner.internal.ir.Rel
@@ -439,7 +439,7 @@ internal object RelConverter {
                     relOpAggregateCallUnresolved(
                         name,
                         org.partiql.planner.internal.ir.SetQuantifier.ALL,
-                        args = listOf(exprLit(litInt(1)).toRex(env))
+                        args = listOf(exprLit(intNum(1)).toRex(env))
                     )
                 } else {
                     val setq = when (expr.setq?.code()) {

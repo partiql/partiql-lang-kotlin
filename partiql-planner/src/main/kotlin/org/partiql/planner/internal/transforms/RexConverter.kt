@@ -20,6 +20,7 @@ import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstVisitor
 import org.partiql.ast.DataType
+import org.partiql.ast.Literal
 import org.partiql.ast.QueryBody
 import org.partiql.ast.SelectList
 import org.partiql.ast.SelectStar
@@ -54,8 +55,6 @@ import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
-import org.partiql.ast.literal.Literal
-import org.partiql.ast.literal.LiteralKind
 import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
@@ -107,6 +106,8 @@ import org.partiql.value.stringValue
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
 import java.math.BigInteger
+import java.math.MathContext
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import org.partiql.ast.SetQuantifier as AstSetQuantifier
@@ -153,8 +154,8 @@ internal object RexConverter {
             }
             val cType = CompilerType(
                 _delegate = type,
-                isNullValue = node.lit.kind().code() == LiteralKind.NULL,
-                isMissingValue = node.lit.kind().code() == LiteralKind.MISSING
+                isNullValue = node.lit.code() == Literal.NULL,
+                isMissingValue = node.lit.code() == Literal.MISSING
             )
             val op = rexOpLit(pValue)
             return rex(cType, op)
@@ -162,23 +163,23 @@ internal object RexConverter {
 
         private fun Literal.toPartiQLValue(): PartiQLValue {
             val lit = this
-            return when (lit.kind().code()) {
-                LiteralKind.NULL -> nullValue()
-                LiteralKind.MISSING -> missingValue()
-                LiteralKind.STRING -> stringValue(lit.stringValue())
-                LiteralKind.BOOLEAN -> boolValue(lit.booleanValue())
-                LiteralKind.NUM_EXACT -> {
+            return when (lit.code()) {
+                Literal.NULL -> nullValue()
+                Literal.MISSING -> missingValue()
+                Literal.STRING -> stringValue(lit.stringValue())
+                Literal.BOOL -> boolValue(lit.booleanValue())
+                Literal.EXACT_NUM -> {
                     // TODO previous behavior inferred decimals with scale = 0 to be a PartiQLValue.IntValue with
                     //  PType of numeric. Since we're keeping numeric and decimal, need to take another look at
                     //  whether the literal should have type decimal or numeric.
-                    val dec = lit.bigDecimalValue()
+                    val dec = lit.bigDecimalValue().round(MathContext(38, RoundingMode.HALF_EVEN))
                     if (dec.scale() == 0) {
                         intValue(dec.toBigInteger())
                     } else {
                         decimalValue(dec)
                     }
                 }
-                LiteralKind.NUM_INT -> {
+                Literal.INT_NUM -> {
                     val n = lit.numberValue()
                     // 1st, try parse as int
                     try {
@@ -204,10 +205,10 @@ internal object RexConverter {
                         throw ex
                     }
                 }
-                LiteralKind.NUM_APPROX -> {
+                Literal.APPROX_NUM -> {
                     float64Value(lit.numberValue().toDouble())
                 }
-                LiteralKind.TYPED_STRING -> {
+                Literal.TYPED_STRING -> {
                     val type = this.dataType()
                     val typedString = this.stringValue()
                     when (type.code()) {
@@ -232,10 +233,6 @@ internal object RexConverter {
                 }
                 else -> error("Unsupported literal: $this")
             }
-        }
-
-        private fun PartiQLValue.toPType(): PType {
-            return this.type.toPType()
         }
 
         /**
@@ -478,8 +475,8 @@ internal object RexConverter {
                     is PathStep.Element -> {
                         val key = visitExprCoerce(curStep.element, context)
                         val op = when (val astKey = curStep.element) {
-                            is ExprLit -> when (astKey.lit.kind().code()) {
-                                LiteralKind.STRING -> rexOpPathKey(curPathNavi, key)
+                            is ExprLit -> when (astKey.lit.code()) {
+                                Literal.STRING -> rexOpPathKey(curPathNavi, key)
                                 else -> rexOpPathIndex(curPathNavi, key)
                             }
                             is ExprCast -> when (astKey.asType.code() == DataType.STRING) {

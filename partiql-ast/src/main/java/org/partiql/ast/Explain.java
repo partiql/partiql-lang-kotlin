@@ -3,7 +3,6 @@ package org.partiql.ast;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
-import org.partiql.ast.literal.Literal;
 
 import java.util.ArrayList;
 import java.util.Collection;
