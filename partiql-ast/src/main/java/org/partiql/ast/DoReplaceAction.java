@@ -21,8 +21,6 @@ public abstract class DoReplaceAction extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Excluded extends DoReplaceAction {
-        // TODO: Equals and hashcode
-
         @NotNull
         @Override
         public Collection<AstNode> children() {

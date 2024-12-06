@@ -86,7 +86,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun identifierChain (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/IdentifierChain;
 	public static final fun insert (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/InsertSource;Lorg/partiql/ast/OnConflict;)Lorg/partiql/ast/Insert;
 	public static final fun insertSourceDefault ()Lorg/partiql/ast/InsertSource$FromDefault;
-	public static final fun insertSourceExpr (Ljava/util/List;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/InsertSource$FromSubquery;
+	public static final fun insertSourceExpr (Ljava/util/List;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/InsertSource$FromExpr;
 	public static final fun keyValue (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/ddl/KeyValue;
 	public static final fun let (Ljava/util/List;)Lorg/partiql/ast/Let;
 	public static final fun letBinding (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/Let$Binding;
@@ -103,7 +103,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun selectPivot (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/SelectPivot;
 	public static final fun selectStar (Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SelectStar;
 	public static final fun selectValue (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SelectValue;
-	public static final fun setClause (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/SetClause;
+	public static final fun setClause (Lorg/partiql/ast/UpdateTarget;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/SetClause;
 	public static final fun setOp (Lorg/partiql/ast/SetOpType;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SetOp;
 	public static final fun sort (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Order;Lorg/partiql/ast/Nulls;)Lorg/partiql/ast/Sort;
 	public static final fun tableConstraintUnique (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Z)Lorg/partiql/ast/ddl/TableConstraint$Unique;
@@ -379,10 +379,9 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsert (Lorg/partiql/ast/Insert;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitInsertColumnList (Lorg/partiql/ast/InsertColumnList;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsertSource (Lorg/partiql/ast/InsertSource;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsertSourceFromDefault (Lorg/partiql/ast/InsertSource$FromDefault;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitInsertSourceFromSubquery (Lorg/partiql/ast/InsertSource$FromSubquery;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsertSourceFromExpr (Lorg/partiql/ast/InsertSource$FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitKeyValue (Lorg/partiql/ast/ddl/KeyValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
@@ -1072,22 +1071,6 @@ public class org/partiql/ast/Insert$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/InsertColumnList : org/partiql/ast/Statement {
-	public final field columns Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/InsertColumnList$Builder;
-	public fun children ()Ljava/util/Collection;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-}
-
-public class org/partiql/ast/InsertColumnList$Builder {
-	public fun build ()Lorg/partiql/ast/InsertColumnList;
-	public fun columns (Ljava/util/List;)Lorg/partiql/ast/InsertColumnList$Builder;
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract class org/partiql/ast/InsertSource : org/partiql/ast/AstNode {
 	public fun <init> ()V
 }
@@ -1105,21 +1088,21 @@ public class org/partiql/ast/InsertSource$FromDefault$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/InsertSource$FromSubquery : org/partiql/ast/InsertSource {
+public final class org/partiql/ast/InsertSource$FromExpr : org/partiql/ast/InsertSource {
 	public final field columns Ljava/util/List;
 	public final field expr Lorg/partiql/ast/expr/Expr;
 	public fun <init> (Ljava/util/List;Lorg/partiql/ast/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static fun builder ()Lorg/partiql/ast/InsertSource$FromSubquery$Builder;
+	public static fun builder ()Lorg/partiql/ast/InsertSource$FromExpr$Builder;
 	public fun children ()Ljava/util/Collection;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 }
 
-public class org/partiql/ast/InsertSource$FromSubquery$Builder {
-	public fun build ()Lorg/partiql/ast/InsertSource$FromSubquery;
-	public fun columns (Ljava/util/List;)Lorg/partiql/ast/InsertSource$FromSubquery$Builder;
-	public fun expr (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/InsertSource$FromSubquery$Builder;
+public class org/partiql/ast/InsertSource$FromExpr$Builder {
+	public fun build ()Lorg/partiql/ast/InsertSource$FromExpr;
+	public fun columns (Ljava/util/List;)Lorg/partiql/ast/InsertSource$FromExpr$Builder;
+	public fun expr (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/InsertSource$FromExpr$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -1472,8 +1455,8 @@ public class org/partiql/ast/SelectValue$Builder {
 
 public final class org/partiql/ast/SetClause : org/partiql/ast/AstNode {
 	public final field expr Lorg/partiql/ast/expr/Expr;
-	public final field target Lorg/partiql/ast/AstNode;
-	public fun <init> (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/expr/Expr;)V
+	public final field target Lorg/partiql/ast/UpdateTarget;
+	public fun <init> (Lorg/partiql/ast/UpdateTarget;Lorg/partiql/ast/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/SetClause$Builder;
 	public fun children ()Ljava/util/Collection;
@@ -1484,7 +1467,7 @@ public final class org/partiql/ast/SetClause : org/partiql/ast/AstNode {
 public class org/partiql/ast/SetClause$Builder {
 	public fun build ()Lorg/partiql/ast/SetClause;
 	public fun expr (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/SetClause$Builder;
-	public fun target (Lorg/partiql/ast/AstNode;)Lorg/partiql/ast/SetClause$Builder;
+	public fun target (Lorg/partiql/ast/UpdateTarget;)Lorg/partiql/ast/SetClause$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 

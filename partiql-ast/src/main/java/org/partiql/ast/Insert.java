@@ -11,14 +11,11 @@ import java.util.List;
 
 /**
  * This is the insert statement.
- * @see InsertColumnList
  * @see InsertSource
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Insert extends Statement {
-    // TODO: Equals and hashcode
-
     /**
      * TODO
      */

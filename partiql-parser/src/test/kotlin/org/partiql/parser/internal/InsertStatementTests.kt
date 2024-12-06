@@ -23,6 +23,8 @@ class InsertStatementTests {
                 "Simplest insert of a row" to "INSERT INTO tbl VALUES (1, 2, 3)",
                 "Column definitions" to "INSERT INTO tbl (a, b, c) VALUES (1, 2, 3)",
                 "Multiple rows" to "INSERT INTO tbl VALUES (1, 2, 3), (4, 5, 6), (7, 8, 8)",
+                "Multiple explicit rows" to "INSERT INTO tbl VALUES ROW (1, 2, 3), (4, 5, 6), ROW (7, 8, 8)",
+                "Multiple explicit rows to disambiguate a single parenthesized expression" to "INSERT INTO tbl VALUES ROW (1), 2, ROW (3)",
                 "Multiple non-row values" to "INSERT INTO tbl VALUES 1, 2, 3",
                 "Using DEFAULT VALUES" to "INSERT INTO tbl DEFAULT VALUES",
                 "Explicit bag" to "INSERT INTO tbl << 1, 2, 3 >>",

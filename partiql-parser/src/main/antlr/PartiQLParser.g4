@@ -248,16 +248,19 @@ setClauseList: setClause ( COMMA setClause )*;
 
 /**
  * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#set%20clause
- * TODO: The above reference set clause doesn't exactly allow for the flexibility provided by pathSimple.
+ * The above referenced set clause doesn't exactly allow for the flexibility provided by updateTarget (previously
+ * named pathSimple). The SQL:1999 EBNF states that <update target> can either be a column name or a column name
+ * followed by square brackets and a literal (or other simple value). Since PartiQL allows for setting a nested attribute
+ * the updateTarget here provides for a superset of SQL's <update target>
  */
 setClause: updateTarget EQ expr;
 
 updateTarget: symbolPrimitive updateTargetStep*;
 
+// TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1671
 updateTargetStep
     : updateTargetStepElement
     | updateTargetStepField
-    // TODO: Do we need this? Seems wrong. | BRACKET_LEFT key=symbolPrimitive BRACKET_RIGHT     # PathSimpleSymbol
     ;
 
 updateTargetStepElement: BRACKET_LEFT key=literal BRACKET_RIGHT;

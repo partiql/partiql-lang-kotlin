@@ -156,15 +156,11 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitInsertColumnList(InsertColumnList node, C ctx) {
-        return defaultVisit(node, ctx);
-    }
-
     public R visitInsertSource(InsertSource node, C ctx) {
         return node.accept(this, ctx);
     }
 
-    public R visitInsertSourceFromSubquery(InsertSource.FromSubquery node, C ctx) {
+    public R visitInsertSourceFromExpr(InsertSource.FromExpr node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

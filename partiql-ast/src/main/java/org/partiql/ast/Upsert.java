@@ -16,8 +16,6 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Upsert extends Statement {
-    // TODO: Equals and hashcode
-
     /**
      * TODO
      */

@@ -16,13 +16,11 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class SetClause extends AstNode {
-    // TODO: Equals and hashcode
-
     /**
      * TODO
      */
     @NotNull
-    public final AstNode target;
+    public final UpdateTarget target;
 
     /**
      * TODO
@@ -35,7 +33,7 @@ public final class SetClause extends AstNode {
      * @param target TODO
      * @param expr TODO
      */
-    public SetClause(@NotNull AstNode target, @NotNull Expr expr) {
+    public SetClause(@NotNull UpdateTarget target, @NotNull Expr expr) {
         this.target = target;
         this.expr = expr;
     }

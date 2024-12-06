@@ -26,7 +26,6 @@ public abstract class UpdateTargetStep extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Element extends UpdateTargetStep {
-        // TODO: Equals and hashcode
         // TODO: Should we explicitly have an ElementInt and ElementString? Especially once PartiQLValue is removed.
 
         /**
@@ -82,8 +81,6 @@ public abstract class UpdateTargetStep extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Field extends UpdateTargetStep {
-        // TODO: Equals and hashcode
-
         /**
          * TODO
          */

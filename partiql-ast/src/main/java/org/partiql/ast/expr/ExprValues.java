@@ -19,7 +19,6 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public class ExprValues extends Expr {
-    // TODO: Equals and hashcode
     // TODO: May not be an expr?
     // TODO: Tracking issue for VALUES and subqueries -- https://github.com/partiql/partiql-lang-kotlin/issues/1641.
 

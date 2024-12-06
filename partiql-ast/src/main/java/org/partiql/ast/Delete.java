@@ -11,15 +11,11 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * This is the update searched statement.
- * @see InsertColumnList
- * @see InsertSource
+ * This is the delete searched statement.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Delete extends Statement {
-    // TODO: Equals and hashcode
-
     /**
      * TODO
      */
@@ -47,6 +43,9 @@ public final class Delete extends Statement {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(tableName);
+        if (condition != null) {
+            kids.add(condition);
+        }
         return kids;
     }
 

@@ -486,15 +486,14 @@ public object Ast {
         return Delete(tableName, condition)
     }
 
-    // TODO: Target
     @JvmStatic
-    public fun setClause(target: AstNode, value: Expr): SetClause {
+    public fun setClause(target: UpdateTarget, value: Expr): SetClause {
         return SetClause(target, value)
     }
 
     @JvmStatic
-    public fun insertSourceExpr(columns: List<Identifier>?, expr: Expr): InsertSource.FromSubquery {
-        return InsertSource.FromSubquery(columns, expr)
+    public fun insertSourceExpr(columns: List<Identifier>?, expr: Expr): InsertSource.FromExpr {
+        return InsertSource.FromExpr(columns, expr)
     }
 
     @JvmStatic

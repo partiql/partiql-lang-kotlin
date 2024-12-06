@@ -23,9 +23,6 @@ public abstract class ConflictTarget extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Index extends ConflictTarget {
-        // TODO: Do we like this name?
-        // TODO: Equals and hashcode
-
         /**
          * TODO
          */
@@ -61,8 +58,6 @@ public abstract class ConflictTarget extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Constraint extends ConflictTarget {
-        // TODO: Equals and hashcode
-
         /**
          * TODO
          */

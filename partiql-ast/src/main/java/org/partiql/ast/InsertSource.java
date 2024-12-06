@@ -17,15 +17,14 @@ import java.util.List;
 public abstract class InsertSource extends AstNode {
 
     /**
-     * This specifies the data to be inserted from a subquery or expression.
+     * This specifies the data to be inserted from a subquery or expression. This represents (and generalizes)
+     * SQL:1999's &lt;from subquery&gt; EBNF rule.
      * @see Insert
      * @see InsertSource
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
-    public static final class FromSubquery extends InsertSource {
-        // TODO: Equals and hashcode
-
+    public static final class FromExpr extends InsertSource {
         /**
          * TODO
          */
@@ -43,7 +42,7 @@ public abstract class InsertSource extends AstNode {
          * @param columns TODO
          * @param expr TODO
          */
-        public FromSubquery(@Nullable List<Identifier> columns, @NotNull Expr expr) {
+        public FromExpr(@Nullable List<Identifier> columns, @NotNull Expr expr) {
             this.columns = columns;
             this.expr = expr;
         }
@@ -61,7 +60,7 @@ public abstract class InsertSource extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitInsertSourceFromSubquery(this, ctx);
+            return visitor.visitInsertSourceFromExpr(this, ctx);
         }
     }
 
@@ -73,8 +72,6 @@ public abstract class InsertSource extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class FromDefault extends InsertSource {
-        // TODO: Equals and hashcode
-
         @NotNull
         @Override
         public Collection<AstNode> children() {

@@ -18,8 +18,6 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class UpdateTarget extends AstNode {
-    // TODO: Equals and hashcode
-
     /**
      * TODO
      */

@@ -26,8 +26,6 @@ public abstract class ConflictAction extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoNothing extends ConflictAction {
-        // TODO: Equals and hashcode
-
         @NotNull
         @Override
         public Collection<AstNode> children() {
@@ -49,8 +47,6 @@ public abstract class ConflictAction extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoReplace extends ConflictAction {
-        // TODO: Equals and hashcode
-
         /**
          * TODO
          */
@@ -99,8 +95,6 @@ public abstract class ConflictAction extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoUpdate extends ConflictAction {
-        // TODO: Equals and hashcode
-
         /**
          * TODO
          */

@@ -12,14 +12,11 @@ import java.util.List;
 
 /**
  * This is the update searched statement.
- * @see InsertColumnList
- * @see InsertSource
+ * @see SetClause
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Update extends Statement {
-    // TODO: Equals and hashcode
-
     /**
      * TODO
      */
@@ -55,6 +52,10 @@ public final class Update extends Statement {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(tableName);
+        kids.addAll(setClauses);
+        if (condition != null) {
+            kids.add(condition);
+        }
         return kids;
     }
 
