@@ -136,7 +136,7 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitUpdateTargetStep(UpdateTarget node, C ctx) {
+    public R visitUpdateTargetStep(UpdateTargetStep node, C ctx) {
         return node.accept(this, ctx);
     }
 

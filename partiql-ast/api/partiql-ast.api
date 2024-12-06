@@ -132,8 +132,24 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun <init> ()V
 	public synthetic fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictActionDoNothing (Lorg/partiql/ast/ConflictAction$DoNothing;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoNothing (Lorg/partiql/ast/ConflictAction$DoNothing;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictActionDoReplace (Lorg/partiql/ast/ConflictAction$DoReplace;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoReplace (Lorg/partiql/ast/ConflictAction$DoReplace;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictActionDoUpdate (Lorg/partiql/ast/ConflictAction$DoUpdate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoUpdate (Lorg/partiql/ast/ConflictAction$DoUpdate;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictTargetConstraint (Lorg/partiql/ast/ConflictTarget$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictTargetConstraint (Lorg/partiql/ast/ConflictTarget$Constraint;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictTargetIndex (Lorg/partiql/ast/ConflictTarget$Index;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictTargetIndex (Lorg/partiql/ast/ConflictTarget$Index;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDelete (Lorg/partiql/ast/Delete;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDelete (Lorg/partiql/ast/Delete;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDoReplaceActionExcluded (Lorg/partiql/ast/DoReplaceAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDoReplaceActionExcluded (Lorg/partiql/ast/DoReplaceAction$Excluded;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDoUpdateActionExcluded (Lorg/partiql/ast/DoUpdateAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDoUpdateActionExcluded (Lorg/partiql/ast/DoUpdateAction$Excluded;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExcludePath (Lorg/partiql/ast/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
@@ -250,10 +266,18 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitInsert (Lorg/partiql/ast/Insert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsert (Lorg/partiql/ast/Insert;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitInsertSourceFromDefault (Lorg/partiql/ast/InsertSource$FromDefault;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsertSourceFromDefault (Lorg/partiql/ast/InsertSource$FromDefault;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitInsertSourceFromExpr (Lorg/partiql/ast/InsertSource$FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsertSourceFromExpr (Lorg/partiql/ast/InsertSource$FromExpr;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitOnConflict (Lorg/partiql/ast/OnConflict;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitOnConflict (Lorg/partiql/ast/OnConflict;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPathStepAllElements (Lorg/partiql/ast/expr/PathStep$AllElements;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepAllElements (Lorg/partiql/ast/expr/PathStep$AllElements;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPathStepAllFields (Lorg/partiql/ast/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
@@ -268,6 +292,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitQueryBodySFW (Lorg/partiql/ast/QueryBody$SFW;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitReplace (Lorg/partiql/ast/Replace;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReplace (Lorg/partiql/ast/Replace;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSelectItemStar (Lorg/partiql/ast/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
@@ -280,8 +306,20 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitSelectStar (Lorg/partiql/ast/SelectStar;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSelectValue (Lorg/partiql/ast/SelectValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectValue (Lorg/partiql/ast/SelectValue;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitSetClause (Lorg/partiql/ast/SetClause;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSetClause (Lorg/partiql/ast/SetClause;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpdate (Lorg/partiql/ast/Update;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdate (Lorg/partiql/ast/Update;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpdateTarget (Lorg/partiql/ast/UpdateTarget;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTarget (Lorg/partiql/ast/UpdateTarget;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpdateTargetStepElement (Lorg/partiql/ast/UpdateTargetStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTargetStepElement (Lorg/partiql/ast/UpdateTargetStep$Element;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpdateTargetStepField (Lorg/partiql/ast/UpdateTargetStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTargetStepField (Lorg/partiql/ast/UpdateTargetStep$Field;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpsert (Lorg/partiql/ast/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpsert (Lorg/partiql/ast/Upsert;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 }
 
 public abstract class org/partiql/ast/AstVisitor {
@@ -416,7 +454,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitUnique (Lorg/partiql/ast/ddl/TableConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdate (Lorg/partiql/ast/Update;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdateTarget (Lorg/partiql/ast/UpdateTarget;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitUpdateTargetStep (Lorg/partiql/ast/UpdateTarget;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTargetStep (Lorg/partiql/ast/UpdateTargetStep;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdateTargetStepElement (Lorg/partiql/ast/UpdateTargetStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdateTargetStepField (Lorg/partiql/ast/UpdateTargetStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpsert (Lorg/partiql/ast/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
