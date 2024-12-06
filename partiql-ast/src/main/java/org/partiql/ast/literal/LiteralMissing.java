@@ -3,21 +3,11 @@ package org.partiql.ast.literal;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * TODO docs
- */
 @EqualsAndHashCode(callSuper = false)
-public class LiteralMissing extends Literal {
-    private LiteralMissing() {}
-
-    @NotNull
-    public static LiteralMissing litMissing() {
-        return new LiteralMissing();
-    }
-
+class LiteralMissing extends Literal {
     @NotNull
     @Override
-    public String getText() {
-        return "MISSING";
+    public LiteralKind kind() {
+        return LiteralKind.MISSING();
     }
 }

@@ -48,7 +48,7 @@ import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.Scope
-import org.partiql.ast.literal.LiteralInteger.litInt
+import org.partiql.ast.literal.Literal.litInt
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.helpers.toBinder
 import org.partiql.planner.internal.ir.Rel

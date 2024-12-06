@@ -6,7 +6,7 @@ import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
 import org.partiql.ast.expr.Expr
-import org.partiql.ast.literal.LiteralInteger.litInt
+import org.partiql.ast.literal.Literal.litInt
 import kotlin.test.assertEquals
 
 class PartiQLParserOperatorTests {

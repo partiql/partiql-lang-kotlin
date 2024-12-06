@@ -164,14 +164,14 @@ import org.partiql.ast.graph.GraphPattern
 import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphRestrictor
 import org.partiql.ast.graph.GraphSelector
-import org.partiql.ast.literal.LiteralApprox.litApprox
-import org.partiql.ast.literal.LiteralBool.litBool
-import org.partiql.ast.literal.LiteralExact.litExact
-import org.partiql.ast.literal.LiteralInteger.litInt
-import org.partiql.ast.literal.LiteralMissing.litMissing
-import org.partiql.ast.literal.LiteralNull.litNull
-import org.partiql.ast.literal.LiteralString.litString
-import org.partiql.ast.literal.LiteralTypedString.litTypedString
+import org.partiql.ast.literal.Literal.litApprox
+import org.partiql.ast.literal.Literal.litBool
+import org.partiql.ast.literal.Literal.litExact
+import org.partiql.ast.literal.Literal.litInt
+import org.partiql.ast.literal.Literal.litMissing
+import org.partiql.ast.literal.Literal.litNull
+import org.partiql.ast.literal.Literal.litString
+import org.partiql.ast.literal.Literal.litTypedString
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
@@ -183,10 +183,7 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.PErrorListenerException
-import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.MathContext
-import java.math.RoundingMode
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
 import org.partiql.parser.internal.antlr.PartiQLParser as GeneratedParser
@@ -1865,22 +1862,11 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralDecimal(ctx: GeneratedParser.LiteralDecimalContext) = translate(ctx) {
-            val decimal = try {
-                val v = ctx.LITERAL_DECIMAL().text.trim()
-                BigDecimal(v, MathContext(38, RoundingMode.HALF_EVEN))
-            } catch (e: NumberFormatException) {
-                throw error(ctx, "Invalid decimal literal", e)
-            }
-            exprLit(litExact(decimal))
+            exprLit(litExact(ctx.text))
         }
 
         override fun visitLiteralFloat(ctx: GeneratedParser.LiteralFloatContext) = translate(ctx) {
-            val v = ctx.LITERAL_FLOAT().text.trim()
-            val parts = v.split(Regex("[eE]"))
-            assert(parts.size == 2)
-            val mantissa = parts[0].trim()
-            val exponent = parts[1].trim()
-            exprLit(litApprox(BigDecimal(mantissa, MathContext(38, RoundingMode.HALF_EVEN)), exponent.toInt()))
+            exprLit(litApprox(ctx.text))
         }
 
         override fun visitArray(ctx: GeneratedParser.ArrayContext) = translate(ctx) {
@@ -1917,21 +1903,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
             val n = ctx.LITERAL_INTEGER().text
-            // 1st, try parse as int64
-            try {
-                val v = n.toLong(10)
-                return@translate exprLit(litInt(v))
-            } catch (ex: NumberFormatException) {
-                // ignore
-            }
-
-            // 2nd, try parse as numeric (decimal)
-            try {
-                val dec = BigDecimal(n, MathContext(38, RoundingMode.HALF_EVEN))
-                return@translate exprLit(litExact(dec))
-            } catch (ex: NumberFormatException) {
-                throw ex
-            }
+            exprLit(litInt(n))
         }
 
         override fun visitLiteralDate(ctx: GeneratedParser.LiteralDateContext) = translate(ctx) {

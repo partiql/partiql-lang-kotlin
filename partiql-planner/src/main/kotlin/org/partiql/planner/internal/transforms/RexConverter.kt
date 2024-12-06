@@ -55,14 +55,7 @@ import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.literal.Literal
-import org.partiql.ast.literal.LiteralApprox
-import org.partiql.ast.literal.LiteralBool
-import org.partiql.ast.literal.LiteralExact
-import org.partiql.ast.literal.LiteralInteger
-import org.partiql.ast.literal.LiteralMissing
-import org.partiql.ast.literal.LiteralNull
-import org.partiql.ast.literal.LiteralString
-import org.partiql.ast.literal.LiteralTypedString
+import org.partiql.ast.literal.LiteralKind
 import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
@@ -113,6 +106,7 @@ import org.partiql.value.nullValue
 import org.partiql.value.stringValue
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
+import java.math.BigInteger
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import org.partiql.ast.SetQuantifier as AstSetQuantifier
@@ -159,47 +153,63 @@ internal object RexConverter {
             }
             val cType = CompilerType(
                 _delegate = type,
-                isNullValue = node.lit is LiteralNull,
-                isMissingValue = node.lit is LiteralMissing
+                isNullValue = node.lit.kind().code() == LiteralKind.NULL,
+                isMissingValue = node.lit.kind().code() == LiteralKind.MISSING
             )
             val op = rexOpLit(pValue)
             return rex(cType, op)
         }
 
         private fun Literal.toPartiQLValue(): PartiQLValue {
-            return when (this) {
-                is LiteralNull -> nullValue()
-                is LiteralMissing -> missingValue()
-                is LiteralString -> stringValue(value)
-                is LiteralBool -> boolValue(value)
-                is LiteralExact -> {
+            val lit = this
+            return when (lit.kind().code()) {
+                LiteralKind.NULL -> nullValue()
+                LiteralKind.MISSING -> missingValue()
+                LiteralKind.STRING -> stringValue(lit.stringValue())
+                LiteralKind.BOOLEAN -> boolValue(lit.booleanValue())
+                LiteralKind.NUM_EXACT -> {
                     // TODO previous behavior inferred decimals with scale = 0 to be a PartiQLValue.IntValue with
                     //  PType of numeric. Since we're keeping numeric and decimal, need to take another look at
                     //  whether the literal should have type decimal or numeric.
-                    val dec = this.decimal
+                    val dec = lit.bigDecimalValue()
                     if (dec.scale() == 0) {
                         intValue(dec.toBigInteger())
                     } else {
                         decimalValue(dec)
                     }
                 }
-                is LiteralInteger -> {
-                    val n = this.integer
-                    // try parsing as an int32 to preserve previous behavior.
-                    // we could add always remove or add further narrowing
-                    if (n in Int.MIN_VALUE..Int.MAX_VALUE) {
-                        int32Value(n.toInt())
-                    } else {
-                        // keep as an int64
-                        int64Value(n)
+                LiteralKind.NUM_INT -> {
+                    val n = lit.numberValue()
+                    // 1st, try parse as int
+                    try {
+                        val v = n.toInt(10)
+                        return int32Value(v)
+                    } catch (ex: NumberFormatException) {
+                        // ignore
+                    }
+
+                    // 2nd, try parse as long
+                    try {
+                        val v = n.toLong(10)
+                        return int64Value(v)
+                    } catch (ex: NumberFormatException) {
+                        // ignore
+                    }
+
+                    // 3rd, try parse as BigInteger
+                    try {
+                        val v = BigInteger(n)
+                        return intValue(v)
+                    } catch (ex: NumberFormatException) {
+                        throw ex
                     }
                 }
-                is LiteralApprox -> {
-                    float64Value(this.double)
+                LiteralKind.NUM_APPROX -> {
+                    float64Value(lit.numberValue().toDouble())
                 }
-                is LiteralTypedString -> {
-                    val type = this.type
-                    val typedString = this.value
+                LiteralKind.TYPED_STRING -> {
+                    val type = this.dataType()
+                    val typedString = this.stringValue()
                     when (type.code()) {
                         DataType.DATE -> {
                             val value = LocalDate.parse(typedString, DateTimeFormatter.ISO_LOCAL_DATE)
@@ -468,8 +478,8 @@ internal object RexConverter {
                     is PathStep.Element -> {
                         val key = visitExprCoerce(curStep.element, context)
                         val op = when (val astKey = curStep.element) {
-                            is ExprLit -> when (astKey.lit) {
-                                is LiteralString -> rexOpPathKey(curPathNavi, key)
+                            is ExprLit -> when (astKey.lit.kind().code()) {
+                                LiteralKind.STRING -> rexOpPathKey(curPathNavi, key)
                                 else -> rexOpPathIndex(curPathNavi, key)
                             }
                             is ExprCast -> when (astKey.asType.code() == DataType.STRING) {

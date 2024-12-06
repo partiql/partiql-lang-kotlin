@@ -43,6 +43,7 @@ import org.partiql.ast.graph.GraphMatch
 import org.partiql.ast.graph.GraphPattern
 import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphSelector
+import org.partiql.ast.literal.Literal
 
 // TODO docs
 public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
@@ -408,6 +409,10 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         } else {
             node
         }
+    }
+
+    override fun visitLiteral(node: Literal, ctx: C): AstNode {
+        return node
     }
 
     override fun visitPathStepField(node: PathStep.Field, ctx: C): AstNode {

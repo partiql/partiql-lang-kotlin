@@ -18,8 +18,8 @@ import org.partiql.ast.FromType
 import org.partiql.ast.SelectItem
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.Scope
-import org.partiql.ast.literal.LiteralInteger.litInt
-import org.partiql.ast.literal.LiteralString.litString
+import org.partiql.ast.literal.Literal.litInt
+import org.partiql.ast.literal.Literal.litString
 import kotlin.test.assertEquals
 
 class NormalizeSelectTest {

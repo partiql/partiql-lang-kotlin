@@ -6,8 +6,9 @@ import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.literal.Literal;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * TODO docs, equals, hashcode
@@ -24,7 +25,9 @@ public class ExprLit extends Expr {
     @NotNull
     @Override
     public Collection<AstNode> children() {
-        return Collections.emptyList();
+        List<AstNode> kids = new ArrayList<>();
+        kids.add(lit);
+        return kids;
     }
 
     @Override

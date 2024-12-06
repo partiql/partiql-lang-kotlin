@@ -3,25 +3,22 @@ package org.partiql.ast.literal;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * TODO docs
- */
 @EqualsAndHashCode(callSuper = false)
-public class LiteralBool extends Literal {
-    public boolean value;
+class LiteralBool extends Literal {
+    private final boolean value;
 
-    private LiteralBool(boolean value) {
+    LiteralBool(boolean value) {
         this.value = value;
     }
 
-    @NotNull
-    public static LiteralBool litBool(boolean value) {
-        return new LiteralBool(value);
+    @Override
+    public boolean booleanValue() {
+        return value;
     }
 
     @NotNull
     @Override
-    public String getText() {
-        return Boolean.toString(value);
+    public LiteralKind kind() {
+        return LiteralKind.BOOLEAN();
     }
 }

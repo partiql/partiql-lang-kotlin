@@ -21,8 +21,8 @@ import org.partiql.ast.Ast.tableConstraintUnique
 import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
 import org.partiql.ast.expr.Scope
+import org.partiql.ast.literal.Literal.litInt
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int32Value
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -238,7 +238,7 @@ class PartiQLParserDDLTests {
                                             Scope.DEFAULT()
                                         ),
                                         exprLit(
-                                            int32Value(0)
+                                            litInt(0)
                                         )
                                     )
                                 )

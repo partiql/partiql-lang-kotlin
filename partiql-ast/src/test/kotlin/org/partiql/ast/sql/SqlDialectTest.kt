@@ -94,14 +94,14 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
-import org.partiql.ast.literal.LiteralApprox.litApprox
-import org.partiql.ast.literal.LiteralBool.litBool
-import org.partiql.ast.literal.LiteralExact.litExact
-import org.partiql.ast.literal.LiteralInteger.litInt
-import org.partiql.ast.literal.LiteralMissing.litMissing
-import org.partiql.ast.literal.LiteralNull.litNull
-import org.partiql.ast.literal.LiteralString.litString
-import org.partiql.ast.literal.LiteralTypedString.litTypedString
+import org.partiql.ast.literal.Literal.litApprox
+import org.partiql.ast.literal.Literal.litBool
+import org.partiql.ast.literal.Literal.litExact
+import org.partiql.ast.literal.Literal.litInt
+import org.partiql.ast.literal.Literal.litMissing
+import org.partiql.ast.literal.Literal.litNull
+import org.partiql.ast.literal.Literal.litString
+import org.partiql.ast.literal.Literal.litTypedString
 import java.math.BigDecimal
 import kotlin.test.assertFails
 
@@ -426,11 +426,11 @@ class SqlDialectTest {
                 "4", exprLit(litInt(4))
             ),
             expect(
-                "5", exprLit(litExact(BigDecimal.valueOf(5)))
+                "5.", exprLit(litExact("5."))
             ),
-            expect("1.1E0", exprLit(litApprox(1.1))),
-            expect("1.2E0", exprLit(litApprox(1.2))),
-            expect("1.2345E-5", exprLit(litApprox(BigDecimal.valueOf(1.2345), -5))),
+            expect("1.1e0", exprLit(litApprox("1.1e0"))),
+            expect("1.2E0", exprLit(litApprox("1.2E0"))),
+            expect("1.2345E-5", exprLit(litApprox("1.2345E-5"))),
             expect(
                 "1.3", exprLit(litExact(BigDecimal.valueOf(1.3)))
             ),

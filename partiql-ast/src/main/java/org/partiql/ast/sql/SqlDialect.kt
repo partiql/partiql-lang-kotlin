@@ -81,7 +81,7 @@ import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
-import org.partiql.ast.literal.LiteralString
+import org.partiql.ast.literal.LiteralKind
 
 /**
  * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
@@ -225,7 +225,23 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     // Expressions
 
     override fun visitExprLit(node: ExprLit, tail: SqlBlock): SqlBlock {
-        return tail concat node.lit.text
+        val lit = node.lit
+        var t = tail
+        val litText = when (lit.kind().code()) {
+            LiteralKind.NULL -> "NULL"
+            LiteralKind.MISSING -> "MISSING"
+            LiteralKind.BOOLEAN -> lit.booleanValue().toString()
+            LiteralKind.NUM_APPROX -> lit.numberValue()
+            LiteralKind.NUM_EXACT -> lit.numberValue()
+            LiteralKind.NUM_INT -> lit.numberValue()
+            LiteralKind.STRING -> String.format("'%s'", lit.stringValue())
+            LiteralKind.TYPED_STRING -> {
+                t = visitDataType(lit.dataType(), t)
+                String.format(" '%s'", lit.stringValue())
+            }
+            else -> error("Unsupported literal kind ${lit.kind()}")
+        }
+        return t concat litText
     }
 
     override fun visitExprVariant(node: ExprVariant, tail: SqlBlock): SqlBlock {
@@ -330,7 +346,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             (f.root.symbol.uppercase() == "DATE_ADD" || f.root.symbol.uppercase() == "DATE_DIFF") &&
             node.args.size == 3
         ) {
-            val dtField = ((node.args[0] as ExprLit).lit as LiteralString).value
+            val dtField = (node.args[0] as ExprLit).lit.stringValue()
             // Represent as an `ExprVarRef` to mimic a literal symbol.
             // TODO consider some other representation for unquoted strings
             val newArgs = listOf(exprVarRef(identifierChain(identifier(dtField, isDelimited = false), next = null), scope = Scope.DEFAULT())) + node.args.drop(1)

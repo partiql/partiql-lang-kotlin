@@ -48,7 +48,7 @@ import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprStruct
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.Scope
-import org.partiql.ast.literal.LiteralString.litString
+import org.partiql.ast.literal.Literal.litString
 import org.partiql.planner.internal.helpers.toBinder
 
 /**

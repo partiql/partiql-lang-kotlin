@@ -4,31 +4,34 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.DataType;
 
-/**
- * TODO docs
- * Represent type + 'some string value'
- */
 @EqualsAndHashCode(callSuper = false)
-public class LiteralTypedString extends Literal {
+class LiteralTypedString extends Literal {
     @NotNull
-    public DataType type;
+    private final DataType type;
 
     @NotNull
-    public String value;
+    private final String value;
 
-    private LiteralTypedString(@NotNull DataType type, @NotNull String value) {
+    LiteralTypedString(@NotNull DataType type, @NotNull String value) {
         this.type = type;
         this.value = value;
     }
 
     @NotNull
-    public static LiteralTypedString litTypedString(@NotNull DataType type, @NotNull String value) {
-        return new LiteralTypedString(type, value);
+    @Override
+    public DataType dataType() {
+        return type;
     }
 
     @NotNull
     @Override
-    public String getText() {
-        return String.format("%s '%s'", type.name(), value);
+    public String stringValue() {
+        return value;
+    }
+
+    @NotNull
+    @Override
+    public LiteralKind kind() {
+        return LiteralKind.TYPED_STRING();
     }
 }

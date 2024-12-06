@@ -4,38 +4,37 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 
 /**
- * TODO DOCS
+ * TODO docs
+ * Differs from LiteralInt in that it will always include a decimal point.
  */
 @EqualsAndHashCode(callSuper = false)
-public class LiteralExact extends Literal {
+class LiteralExact extends Literal {
     @NotNull
-    private final BigDecimal value;
+    String value;
 
-    private LiteralExact(@NotNull BigDecimal value) {
+    LiteralExact(@NotNull String value) {
         this.value = value;
     }
 
     @NotNull
-    public static LiteralExact litExact(BigDecimal value) {
-        return new LiteralExact(value);
-    }
-
-    @NotNull
-    public static LiteralExact litExact(BigInteger value) {
-        return new LiteralExact(new BigDecimal(value));
-    }
-
-    @NotNull
-    public BigDecimal getDecimal() {
+    @Override
+    public String numberValue() {
         return value;
     }
 
     @NotNull
     @Override
-    public String getText() {
-        return value.toString();
+    public BigDecimal bigDecimalValue() {
+        return new BigDecimal(value, new MathContext(38, RoundingMode.HALF_EVEN));
+    }
+
+    @NotNull
+    @Override
+    public LiteralKind kind() {
+        return LiteralKind.NUM_EXACT();
     }
 }
