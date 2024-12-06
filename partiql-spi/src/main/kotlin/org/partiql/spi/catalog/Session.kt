@@ -62,8 +62,7 @@ public interface Session {
 
         private var identity: String = "unknown"
         private var catalog: String? = null
-        private var systemCatalogName: String = "\$system"
-        private var systemCatalog: Catalog = PartiQLSystemCatalog(systemCatalogName)
+        private var systemCatalog: Catalog = PartiQLSystemCatalog("\$system")
         private var catalogs: Catalogs.Builder = Catalogs.builder()
         private var namespace: Namespace = Namespace.empty()
         private var properties: MutableMap<String, String> = mutableMapOf()
@@ -104,7 +103,7 @@ public interface Session {
          * If this is never invoked, a default system catalog is provided.
          */
         public fun system(catalog: Catalog): Builder {
-            this.systemCatalogName = catalog.getName()
+            this.systemCatalog = catalog
             return this
         }
 
@@ -121,7 +120,7 @@ public interface Session {
         public fun build(): Session = object : Session {
 
             private val _catalogs: Catalogs
-            private val systemCatalogNamespace: Namespace = Namespace.of(systemCatalogName)
+            private val systemCatalogNamespace: Namespace = Namespace.of(systemCatalog.getName())
 
             init {
                 require(catalog != null) { "Session catalog must be set" }
