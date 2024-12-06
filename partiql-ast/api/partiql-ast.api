@@ -4,7 +4,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun columnConstraintNullable (Lorg/partiql/ast/IdentifierChain;Z)Lorg/partiql/ast/ddl/AttributeConstraint$Null;
 	public static final fun columnConstraintUnique (Lorg/partiql/ast/IdentifierChain;Z)Lorg/partiql/ast/ddl/AttributeConstraint$Unique;
 	public static final fun columnDefinition (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/DataType;ZLjava/util/List;Ljava/lang/String;)Lorg/partiql/ast/ddl/ColumnDefinition;
-	public static final fun conflictTargetConstraint (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/dml/ConflictTarget$Constraint;
+	public static final fun conflictTargetConstraint (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/ConflictTarget$Constraint;
 	public static final fun conflictTargetIndex (Ljava/util/List;)Lorg/partiql/ast/dml/ConflictTarget$Index;
 	public static final fun createTable (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Ljava/util/List;Lorg/partiql/ast/ddl/PartitionBy;Ljava/util/List;)Lorg/partiql/ast/ddl/CreateTable;
 	public static final fun delete (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/Delete;
@@ -1538,8 +1538,8 @@ public abstract class org/partiql/ast/dml/ConflictTarget : org/partiql/ast/AstNo
 }
 
 public final class org/partiql/ast/dml/ConflictTarget$Constraint : org/partiql/ast/dml/ConflictTarget {
-	public final field constraintName Lorg/partiql/ast/Identifier;
-	public fun <init> (Lorg/partiql/ast/Identifier;)V
+	public final field constraintName Lorg/partiql/ast/IdentifierChain;
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/dml/ConflictTarget$Constraint$Builder;
 	public fun children ()Ljava/util/Collection;
@@ -1549,7 +1549,7 @@ public final class org/partiql/ast/dml/ConflictTarget$Constraint : org/partiql/a
 
 public class org/partiql/ast/dml/ConflictTarget$Constraint$Builder {
 	public fun build ()Lorg/partiql/ast/dml/ConflictTarget$Constraint;
-	public fun constraintName (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/dml/ConflictTarget$Constraint$Builder;
+	public fun constraintName (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/ConflictTarget$Constraint$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 

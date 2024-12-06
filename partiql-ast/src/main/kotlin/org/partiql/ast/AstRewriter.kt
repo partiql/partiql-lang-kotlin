@@ -828,7 +828,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitConflictTargetConstraint(node: ConflictTarget.Constraint, ctx: C): AstNode {
-        val constraint = visitIdentifier(node.constraintName, ctx) as Identifier
+        val constraint = visitIdentifierChain(node.constraintName, ctx) as IdentifierChain
         if (constraint !== node.constraintName) {
             return ConflictTarget.Constraint(constraint)
         }

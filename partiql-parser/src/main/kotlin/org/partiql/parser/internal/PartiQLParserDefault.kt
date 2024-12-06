@@ -763,14 +763,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitConflictTargetConstraint(ctx: GeneratedParser.ConflictTargetConstraintContext) = translate(ctx) {
             val constraint = visitQualifiedName(ctx.constraintName().qualifiedName())
-            // TODO: Should constraint have a single name?
-            var last = constraint
-            var next = last.next
-            while (next != null) {
-                last = next
-                next = last.next
-            }
-            conflictTargetConstraint(last.root)
+            conflictTargetConstraint(constraint)
         }
 
         override fun visitConflictAction(ctx: GeneratedParser.ConflictActionContext): ConflictAction = translate(ctx) {

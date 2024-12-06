@@ -526,7 +526,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun conflictTargetConstraint(constraint: Identifier): ConflictTarget.Constraint {
+    public fun conflictTargetConstraint(constraint: IdentifierChain): ConflictTarget.Constraint {
         return ConflictTarget.Constraint(constraint)
     }
 

@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
+import org.partiql.ast.IdentifierChain;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,13 +67,13 @@ public abstract class ConflictTarget extends AstNode {
          */
         // TODO: Should this be a qualified identifier?
         @NotNull
-        public final Identifier constraintName;
+        public final IdentifierChain constraintName;
 
         /**
          * TODO
          * @param constraintName TODO
          */
-        public Constraint(@NotNull Identifier constraintName) {
+        public Constraint(@NotNull IdentifierChain constraintName) {
             this.constraintName = constraintName;
         }
 
