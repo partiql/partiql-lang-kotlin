@@ -62,7 +62,7 @@ public interface Session {
 
         private var identity: String = "unknown"
         private var catalog: String? = null
-        private var systemCatalogName: String = "\$pql_system"
+        private var systemCatalogName: String = "\$system"
         private var systemCatalog: Catalog = PartiQLSystemCatalog(systemCatalogName)
         private var catalogs: Catalogs.Builder = Catalogs.builder()
         private var namespace: Namespace = Namespace.empty()
@@ -103,7 +103,7 @@ public interface Session {
          * to the system at hand.
          * If this is never invoked, a default system catalog is provided.
          */
-        public fun systemCatalog(catalog: Catalog): Builder {
+        public fun system(catalog: Catalog): Builder {
             this.systemCatalogName = catalog.getName()
             return this
         }
