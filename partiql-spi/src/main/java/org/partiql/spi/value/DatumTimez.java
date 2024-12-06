@@ -3,6 +3,7 @@ package org.partiql.spi.value;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
 
+import java.time.LocalTime;
 import java.time.OffsetTime;
 
 /**
@@ -25,6 +26,12 @@ final class DatumTimez implements Datum {
     @Override
     public PType getType() {
         return type;
+    }
+
+    @NotNull
+    @Override
+    public LocalTime getLocalTime() {
+        return value.toLocalTime();
     }
 
     @NotNull

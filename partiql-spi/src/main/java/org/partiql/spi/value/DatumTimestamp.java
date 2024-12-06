@@ -4,9 +4,7 @@ package org.partiql.spi.value;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 
 /**
  * Today we wrap a {@link LocalDateTime}, in the future we do a 7-byte array to avoid double references.
@@ -44,7 +42,19 @@ final class DatumTimestamp implements Datum {
 
     @NotNull
     @Override
+    public OffsetTime getOffsetTime() {
+        return value.atOffset(ZoneOffset.UTC).toOffsetTime();
+    }
+
+    @NotNull
+    @Override
     public LocalDateTime getLocalDateTime() {
         return value;
+    }
+
+    @NotNull
+    @Override
+    public OffsetDateTime getOffsetDateTime() {
+        return value.atOffset(ZoneOffset.UTC);
     }
 }

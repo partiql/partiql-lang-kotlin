@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.lang.randomized.eval.assertExpression
 import org.partiql.spi.value.Datum
-import org.partiql.value.datetime.DateTimeValue
+import java.time.LocalDate
 import java.util.Random
 
 class PartiQLParserDateTimeRandomizedTests {
@@ -60,7 +60,7 @@ class PartiQLParserDateTimeRandomizedTests {
             val monthStr = date.month.toString().padStart(2, '0')
             val dayStr = date.day.toString().padStart(2, '0')
             assertExpression("DATE '$yearStr-$monthStr-$dayStr'") {
-                Datum.date(DateTimeValue.date(date.year, date.month, date.day))
+                Datum.date(LocalDate.of(date.year, date.month, date.day))
             }
         }
     }

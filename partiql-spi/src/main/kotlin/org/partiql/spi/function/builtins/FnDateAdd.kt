@@ -29,25 +29,18 @@ internal object FnDateAdd : Function {
         val dt = args[2]
         return when (dt.code()) {
             PType.TIMESTAMP -> PType.timestamp(dt.precision)
-            PType.TIMESTAMPZ -> PType.timestamp(dt.precision)
+            PType.TIMESTAMPZ -> PType.timestampz(dt.precision)
             else -> throw IllegalArgumentException("Expected timestamp type, but received $dt.")
         }
     }
 
     override fun getInstance(args: Array<PType>): Function.Instance? {
-        if (args.size != 3) {
-            throw IllegalArgumentException("Expected 3 arguments, but received ${args.size}.")
-        }
-        val dt = args[2]
-        if (dt.code() != PType.TIMESTAMP && dt.code() != PType.TIMESTAMPZ) {
-            throw IllegalArgumentException("Expected timestamp type, but received $dt.")
+        if (args.size != parameters.size) {
+            return null // should be unreachable
         }
         return instance
     }
 
-    /**
-     * Single implementation switching on first arg like days of yore.
-     */
     private val instance = Function.instance(NAME, parameters, PType.timestamp(6)) { args ->
         val part = args[0].string
         val quantity = args[1].int.toLong()

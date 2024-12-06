@@ -4,6 +4,8 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
 
 import java.time.LocalTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
 
 /**
  * Today we wrap a {@link LocalTime}, in the future we do a 4-byte array to avoid double references.
@@ -31,5 +33,11 @@ final class DatumTime implements Datum {
     @Override
     public LocalTime getLocalTime() {
         return value;
+    }
+
+    @NotNull
+    @Override
+    public OffsetTime getOffsetTime() {
+        return value.atOffset(ZoneOffset.UTC);
     }
 }

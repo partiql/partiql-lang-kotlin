@@ -113,6 +113,8 @@ public abstract class PType extends Enum {
                 PType.TIMEZ,
                 PType.TIMESTAMP,
                 PType.TIMESTAMPZ,
+                PType.INTERVAL_YM,
+                PType.INTERVAL_DT,
                 PType.ARRAY,
                 PType.BAG,
                 PType.ROW,

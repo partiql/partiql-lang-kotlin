@@ -483,14 +483,12 @@ internal object CastTable {
 
     private fun registerIntervalYM() {
         register(INTERVAL_YM, STRING) { x, _ -> Datum.string(x.period.toString()) }
-        register(INTERVAL_YM, CLOB) { x, t -> Datum.clob(x.toString().toByteArray(), t.length) }
-        register(INTERVAL_YM, STRING) { x, _ -> Datum.string(x.toString()) }
+        register(INTERVAL_YM, INTERVAL_YM) { x, t -> Datum.interval(x.period, t.precision) }
     }
 
     private fun registerIntervalDT() {
         register(INTERVAL_DT, STRING) { x, _ -> Datum.string(x.duration.toString()) }
-        register(INTERVAL_DT, CLOB) { x, t -> Datum.clob(x.toString().toByteArray(), t.length) }
-        register(INTERVAL_DT, STRING) { x, _ -> Datum.string(x.toString()) }
+        register(INTERVAL_DT, INTERVAL_DT) { x, t -> Datum.interval(x.duration, t.precision) }
     }
 
     private fun register(source: Int, target: Int, cast: (Datum, PType) -> Datum) {
