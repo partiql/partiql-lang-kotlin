@@ -1,8 +1,10 @@
-package org.partiql.ast;
+package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.AstNode;
+import org.partiql.ast.AstVisitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +23,11 @@ public abstract class DoUpdateAction extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Excluded extends DoUpdateAction {
+        /**
+         * TODO
+         */
+        public Excluded() {}
+
         @NotNull
         @Override
         public Collection<AstNode> children() {

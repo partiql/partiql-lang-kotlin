@@ -1,8 +1,10 @@
-package org.partiql.ast;
+package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
+import org.partiql.ast.AstNode;
+import org.partiql.ast.AstVisitor;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;

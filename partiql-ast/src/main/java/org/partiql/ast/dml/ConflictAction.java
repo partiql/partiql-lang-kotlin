@@ -1,9 +1,11 @@
-package org.partiql.ast;
+package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.partiql.ast.AstNode;
+import org.partiql.ast.AstVisitor;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
@@ -26,6 +28,12 @@ public abstract class ConflictAction extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoNothing extends ConflictAction {
+
+        /**
+         * TODO
+         */
+        public DoNothing() {}
+
         @NotNull
         @Override
         public Collection<AstNode> children() {
@@ -64,7 +72,7 @@ public abstract class ConflictAction extends AstNode {
          * @param action TODO
          * @param condition TODO
          */
-        DoReplace(@NotNull DoReplaceAction action, @Nullable Expr condition) {
+        public DoReplace(@NotNull DoReplaceAction action, @Nullable Expr condition) {
             this.action = action;
             this.condition = condition;
         }
@@ -112,7 +120,7 @@ public abstract class ConflictAction extends AstNode {
          * @param action TODO
          * @param condition TODO
          */
-        DoUpdate(@NotNull DoUpdateAction action, @Nullable Expr condition) {
+        public DoUpdate(@NotNull DoUpdateAction action, @Nullable Expr condition) {
             this.action = action;
             this.condition = condition;
         }

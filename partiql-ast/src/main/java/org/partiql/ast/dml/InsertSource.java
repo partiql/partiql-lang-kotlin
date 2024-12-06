@@ -1,9 +1,12 @@
-package org.partiql.ast;
+package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.partiql.ast.AstNode;
+import org.partiql.ast.AstVisitor;
+import org.partiql.ast.Identifier;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
@@ -72,6 +75,12 @@ public abstract class InsertSource extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class FromDefault extends InsertSource {
+
+        /**
+         * TODO
+         */
+        public FromDefault() {}
+
         @NotNull
         @Override
         public Collection<AstNode> children() {

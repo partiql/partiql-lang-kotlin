@@ -140,8 +140,6 @@ import org.partiql.ast.Ast.update
 import org.partiql.ast.Ast.updateTarget
 import org.partiql.ast.Ast.upsert
 import org.partiql.ast.AstNode
-import org.partiql.ast.ConflictAction
-import org.partiql.ast.ConflictTarget
 import org.partiql.ast.DataType
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Exclude
@@ -153,11 +151,9 @@ import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.Identifier
 import org.partiql.ast.IdentifierChain
-import org.partiql.ast.InsertSource
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Nulls
-import org.partiql.ast.OnConflict
 import org.partiql.ast.Order
 import org.partiql.ast.Select
 import org.partiql.ast.SelectItem
@@ -165,11 +161,15 @@ import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
-import org.partiql.ast.UpdateTargetStep
 import org.partiql.ast.ddl.AttributeConstraint
 import org.partiql.ast.ddl.ColumnDefinition
 import org.partiql.ast.ddl.PartitionBy
 import org.partiql.ast.ddl.TableConstraint
+import org.partiql.ast.dml.ConflictAction
+import org.partiql.ast.dml.ConflictTarget
+import org.partiql.ast.dml.InsertSource
+import org.partiql.ast.dml.OnConflict
+import org.partiql.ast.dml.UpdateTargetStep
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag

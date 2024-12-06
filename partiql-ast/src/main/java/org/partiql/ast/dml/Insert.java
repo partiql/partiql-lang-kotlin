@@ -1,22 +1,26 @@
-package org.partiql.ast;
+package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.ast.expr.Expr;
+import org.partiql.ast.AstNode;
+import org.partiql.ast.AstVisitor;
+import org.partiql.ast.Identifier;
+import org.partiql.ast.IdentifierChain;
+import org.partiql.ast.Statement;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 /**
- * This is the update searched statement.
- * @see SetClause
+ * This is the insert statement.
+ * @see InsertSource
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public final class Update extends Statement {
+public final class Insert extends Statement {
     /**
      * TODO
      */
@@ -26,25 +30,33 @@ public final class Update extends Statement {
     /**
      * TODO
      */
+    @Nullable
+    public final Identifier asAlias;
+
+    /**
+     * TODO
+     */
     @NotNull
-    public final List<SetClause> setClauses;
+    public final InsertSource source;
 
     /**
      * TODO
      */
     @Nullable
-    public final Expr condition;
+    public final OnConflict onConflict;
 
     /**
      * TODO
      * @param tableName TODO
-     * @param setClauses TODO
-     * @param condition TODO
+     * @param asAlias TODO
+     * @param source TODO
+     * @param onConflict TODO
      */
-    public Update(@NotNull IdentifierChain tableName, @NotNull List<SetClause> setClauses, @Nullable Expr condition) {
+    public Insert(@NotNull IdentifierChain tableName, @Nullable Identifier asAlias, @NotNull InsertSource source, @Nullable OnConflict onConflict) {
         this.tableName = tableName;
-        this.setClauses = setClauses;
-        this.condition = condition;
+        this.asAlias = asAlias;
+        this.source = source;
+        this.onConflict = onConflict;
     }
 
     @NotNull
@@ -52,15 +64,11 @@ public final class Update extends Statement {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(tableName);
-        kids.addAll(setClauses);
-        if (condition != null) {
-            kids.add(condition);
-        }
         return kids;
     }
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitUpdate(this, ctx);
+        return visitor.visitInsert(this, ctx);
     }
 }
