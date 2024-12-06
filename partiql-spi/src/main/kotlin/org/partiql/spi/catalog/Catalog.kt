@@ -57,6 +57,19 @@ public interface Catalog {
 
         @JvmStatic
         public fun builder(): Builder = Builder()
+
+        /**
+         * @return an empty catalog with the given name
+         * @param name the catalog name
+         */
+        @JvmStatic
+        public fun empty(name: String): Catalog {
+            return object : Catalog {
+                override fun getName(): String = name
+                override fun getTable(session: Session, name: Name): Table? = null
+                override fun getTable(session: Session, identifier: Identifier): Table? = null
+            }
+        }
     }
 
     /**
