@@ -62,7 +62,7 @@ public interface Session {
 
         private var identity: String = "unknown"
         private var catalog: String? = null
-        private var systemCatalog: Catalog = PartiQLSystemCatalog("\$system")
+        private var systemCatalog: Catalog = PartiQLSystemCatalog.INSTANCE
         private var catalogs: Catalogs.Builder = Catalogs.builder()
         private var namespace: Namespace = Namespace.empty()
         private var properties: MutableMap<String, String> = mutableMapOf()

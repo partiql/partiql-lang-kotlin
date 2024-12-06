@@ -10,7 +10,7 @@ import java.util.Collection;
 
 /**
  * <p>
- * This implements the PartiQL System Catalog.
+ * This package-private class implements the PartiQL System Catalog.
  * </p>
  * <p>
  * It provides the implementation for the PartiQL System Catalog, which is a built-in catalog
@@ -20,24 +20,18 @@ import java.util.Collection;
  */
 final class PartiQLSystemCatalog implements Catalog {
 
-    /**
-     * TODO
-     */
     @NotNull
-    private final String name;
+    private static final String NAME = "$system";
 
     /**
-     * Creates a new PartiQL System Catalog with the given name.
-     * @param name the name of the PartiQL System Catalog
+     * This is a package-private singleton.
      */
-    PartiQLSystemCatalog(@NotNull String name) {
-        this.name = name;
-    }
+    static PartiQLSystemCatalog INSTANCE = new PartiQLSystemCatalog();
 
     @NotNull
     @Override
     public String getName() {
-        return this.name;
+        return NAME;
     }
 
     @Nullable
