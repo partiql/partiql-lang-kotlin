@@ -58,6 +58,17 @@ internal class SqlTypeFamily private constructor(
         )
 
         @JvmStatic
+        val INTEGRAL = SqlTypeFamily(
+            preferred = PType.bigint(),
+            members = setOf(
+                PType.TINYINT,
+                PType.SMALLINT,
+                PType.INTEGER,
+                PType.BIGINT,
+            )
+        )
+
+        @JvmStatic
         val NUMBER = SqlTypeFamily(
             preferred = PType.decimal(38, 19),
             members = setOf(
@@ -69,6 +80,18 @@ internal class SqlTypeFamily private constructor(
                 PType.REAL,
                 PType.DOUBLE,
                 PType.DECIMAL,
+            )
+        )
+
+        @JvmStatic
+        val DATETIME = SqlTypeFamily(
+            preferred = PType.timestamp(6),
+            members = setOf(
+                PType.DATE,
+                PType.TIME,
+                PType.TIMEZ,
+                PType.TIMESTAMP,
+                PType.TIMESTAMPZ,
             )
         )
     }

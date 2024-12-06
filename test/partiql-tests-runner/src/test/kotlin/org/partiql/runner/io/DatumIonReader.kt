@@ -8,12 +8,14 @@ import com.amazon.ionelement.api.IonElement
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
-import org.partiql.value.datetime.DateTimeValue
-import org.partiql.value.datetime.TimeZone
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneOffset
 
 /**
  * Make an arbitrary call on partiql value read
@@ -106,8 +108,21 @@ class DatumIonReader(
                 Datum.decimal(d, d.precision(), d.scale())
             }
             IonType.TIMESTAMP -> {
-                val ts = DateTimeValue.timestamp(reader.timestampValue())
-                Datum.timestamp(ts)
+                val ts = reader.timestampValue()
+                val year = ts.year
+                val month = ts.month
+                val day = ts.day
+                val hour = ts.hour
+                val minute = ts.minute
+                val ds = ts.decimalSecond
+                val seconds = ds.toInt() // possible precision loss
+                val nanos = ds.remainder(BigDecimal.ONE).movePointRight(10).toLong()
+                // if (ts.localOffset != 0) {
+                //     Datum.timestampz()
+                // } else {
+                //     Datum.timestamp()
+                // }
+                TODO("DatumIon timestamp")
             }
             IonType.STRING, IonType.SYMBOL -> Datum.string(reader.stringValue())
             IonType.CLOB -> Datum.clob(reader.newBytes())
@@ -225,26 +240,28 @@ class DatumIonReader(
                             throw IllegalArgumentException("excess field in struct")
                         }
                         reader.stepOut()
-                        Datum.date(DateTimeValue.date(year.int, month.int, day.int))
+                        Datum.date(LocalDate.of(year.int, month.int, day.int))
                     }
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> {
                         reader.stepIn()
                         val map = mutableMapOf<String, Any?>()
                         val hour = getRequiredFieldName(reader, "hour")
                         val minute = getRequiredFieldName(reader, "minute")
-                        val second = getRequiredFieldName(reader, "second")
+                        val second = getRequiredFieldName(reader, "second").bigDecimal
+                        val seconds = second.toInt() // possible precision loss
+                        val nanos = second.remainder(BigDecimal.ONE).movePointRight(10).toInt()
                         val offset: Datum? = getOptionalFieldName(reader, "offset")
                         // check remaining
                         if (reader.next() != null) {
                             throw IllegalArgumentException("excess field in struct")
                         }
                         reader.stepOut()
-                        val offsetTz = when {
-                            offset == null -> null
-                            offset.isNull -> TimeZone.UnknownTimeZone
-                            else -> TimeZone.UtcOffset.of(offset.int)
+                        val time = LocalTime.of(hour.int, minute.int, seconds, nanos)
+                        when {
+                            offset == null ||
+                                offset.isNull -> Datum.time(time, second.precision())
+                            else -> Datum.timez(time.atOffset(ZoneOffset.ofHours(offset.int)), second.precision())
                         }
-                        Datum.time(DateTimeValue.time(hour.int, minute.int, second.bigDecimal, offsetTz))
                     }
                     PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> {
                         reader.stepIn()
@@ -260,13 +277,7 @@ class DatumIonReader(
                             throw IllegalArgumentException("excess field in struct")
                         }
                         reader.stepOut()
-                        Datum.timestamp(
-                            DateTimeValue.timestamp(
-                                year.int, month.int, day.int,
-                                hour.int, minute.int, second.bigDecimal,
-                                null
-                            )
-                        )
+                        TODO("timestamp parsing")
                     }
                     null -> fromIonGeneric(reader)
                     else -> error("Unsupported annotation.")

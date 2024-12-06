@@ -9,15 +9,13 @@ import org.partiql.types.PType;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
-import org.partiql.value.datetime.Date;
-import org.partiql.value.datetime.Time;
-import org.partiql.value.datetime.Timestamp;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
+import java.time.*;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -129,6 +127,7 @@ public interface Datum extends Iterable<Datum> {
      * <p>
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * </p>
+     *
      * @return the underlying value applicable to the types:
      * {@link PType#BLOB},
      * {@link PType#CLOB}
@@ -137,7 +136,7 @@ public interface Datum extends Iterable<Datum> {
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     *                                       Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      * @deprecated BINARY doesn't exist in SQL or Ion. This is subject to deletion. BLOB and CLOB are typically represented
      * in a fashion that can support much larger values -- this may be modified at any time.
      */
@@ -148,6 +147,7 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     *
      * @return the underlying value applicable to the types:
      * {@link PType#TINYINT}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
@@ -155,7 +155,7 @@ public interface Datum extends Iterable<Datum> {
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     *                                       Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      * @deprecated BYTE is not present in SQL or Ion. This is subject to deletion.
      */
     @Deprecated
@@ -164,61 +164,72 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     * @return the underlying value applicable to the types:
-     * {@link PType#DATE}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     * @return a {@link LocalDate} for DATE, TIMESTAMP, and TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not in (DATE, TIMESTAMP, TIMESTAMPZ)
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
      */
     @NotNull
-    default org.partiql.value.datetime.Date getDate() {
+    default LocalDate getLocalDate() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the types:
-     * {@link PType#TIME}
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     * @return an {@link OffsetTime} for TIME, TIMEZ, TIMESTAMP, TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not in (TIME, TIMEZ, TIMESTAMP, TIMESTAMPZ)
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
      */
     @NotNull
-    default Time getTime() {
+    default LocalTime getLocalTime() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the types:
-     * {@link PType#TIMESTAMP}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     * @return an {@link OffsetTime} for TIMEZ and TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not in (TIMEZ, TIMESTAMPZ)
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
      */
     @NotNull
-    default Timestamp getTimestamp() {
+    default OffsetTime getOffsetTime() {
+        throw new UnsupportedOperationException("Cannot call getOffsetTime ");
+    }
+
+    /**
+     * @return a {@link LocalDateTime} for TIMESTAMP, TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not in (TIMESTAMP, TIMESTAMPZ)
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default LocalDateTime getLocalDateTime() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
-     * @return the underlying value applicable to the types:
-     * TODO
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
-     * @deprecated This implementation is likely wrong and is not recommended for use.
+     * @return a {@link OffsetDateTime} for TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not TIMESTAMPZ
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
      */
-    @Deprecated
-    default long getInterval() {
+    @NotNull
+    default OffsetDateTime getOffsetDateTime() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return a {@link Period} for the INTERVAL_YM type.
+     * @throws UnsupportedOperationException if type not INTERVAL_YM
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default Period getPeriod() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return a {@link Duration} for the INTERVAL_DT type.
+     * @throws UnsupportedOperationException if type not in INTERVAL_DT
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default Duration getDuration() {
         throw new UnsupportedOperationException();
     }
 
@@ -435,13 +446,13 @@ public interface Datum extends Iterable<Datum> {
             case CLOB:
                 return this.isNull() ? PartiQL.clobValue(null) : PartiQL.clobValue(this.getBytes());
             case DATE:
-                return this.isNull() ? PartiQL.dateValue(null) : PartiQL.dateValue(this.getDate());
+                throw new UnsupportedOperationException("Datum date to PartiQLValue is not supported");
             case TIMEZ:
-            case TIME: // TODO
-                return this.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(this.getTime());
+            case TIME:
+                throw new UnsupportedOperationException("Datum time/timez to PartiQLValue is not supported");
             case TIMESTAMPZ:
             case TIMESTAMP:
-                return this.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(this.getTimestamp());
+                throw new UnsupportedOperationException("Datum timestamp/timestampz to PartiQLValue is not supported");
             case BAG:
                 return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(this));
             case ARRAY:
@@ -513,17 +524,34 @@ public interface Datum extends Iterable<Datum> {
             case BINARY:
                 throw new UnsupportedOperationException();
             case DATE:
-                org.partiql.value.DateValue DATEValue = (org.partiql.value.DateValue) value;
-                return new DatumDate(Objects.requireNonNull(DATEValue.getValue()));
+                org.partiql.value.datetime.Date DATEValue = ((org.partiql.value.DateValue) value).getValue();
+                Objects.requireNonNull(DATEValue);
+                LocalDate date = LocalDate.of(DATEValue.getYear(), DATEValue.getMonth(), DATEValue.getDay());
+                return new DatumDate(date);
             case INTERVAL:
-                org.partiql.value.IntervalValue INTERVALValue = (org.partiql.value.IntervalValue) value;
-                return new DatumInterval(Objects.requireNonNull(INTERVALValue.getValue()));
+                throw new UnsupportedOperationException("INTERVAL not implemented");
             case TIMESTAMP:
-                org.partiql.value.TimestampValue TIMESTAMPValue = (org.partiql.value.TimestampValue) value;
-                return new DatumTimestamp(Objects.requireNonNull(TIMESTAMPValue.getValue()));
+                org.partiql.value.datetime.Timestamp TIMESTAMPValue = ((org.partiql.value.TimestampValue) value).getValue();
+                Objects.requireNonNull(TIMESTAMPValue);
+                // calculate seconds precision
+                BigDecimal tsds = TIMESTAMPValue.getDecimalSecond();
+                int tsprec = tsds.scale();
+                int tssecs = tsds.intValue();
+                int tsnano = tsds.remainder(BigDecimal.ONE).movePointRight(tsds.scale()).abs().intValue();
+                // make datum
+                LocalDateTime timestamp = LocalDateTime.of(TIMESTAMPValue.getYear(), TIMESTAMPValue.getMonth(), TIMESTAMPValue.getDay(), TIMESTAMPValue.getHour(), TIMESTAMPValue.getMinute(), tssecs, tsnano);
+                return new DatumTimestamp(timestamp, tsprec);
             case TIME:
-                org.partiql.value.TimeValue TIMEValue = (org.partiql.value.TimeValue) value;
-                return new DatumTime(Objects.requireNonNull(TIMEValue.getValue()));
+                org.partiql.value.datetime.Timestamp TIMEValue = ((org.partiql.value.TimestampValue) value).getValue();
+                Objects.requireNonNull(TIMEValue);
+                // calculate seconds precision
+                BigDecimal tds = TIMEValue.getDecimalSecond();
+                int tprec = tds.scale();
+                int tsecs = tds.intValue();
+                int tnano = tds.remainder(BigDecimal.ONE).movePointRight(tds.scale()).abs().intValue();
+                // make datum
+                LocalTime time = LocalTime.of(TIMEValue.getHour(), TIMEValue.getMinute(), tsecs, tnano);
+                return new DatumTime(time, tprec);
             case FLOAT32:
                 org.partiql.value.Float32Value FLOAT32Value = (org.partiql.value.Float32Value) value;
                 return new DatumFloat(Objects.requireNonNull(FLOAT32Value.getValue()));
@@ -573,6 +601,7 @@ public interface Datum extends Iterable<Datum> {
     /**
      * Returns a typed missing value
      * ! EXPERIMENTAL ! This is subject to breaking changes and/or removal without prior notice.
+     *
      * @param type the type of the value
      * @return a typed missing value
      * @deprecated this may not be required. This is subject to removal.
@@ -649,7 +678,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     *
      * @param value the string to place in the varchar
      * @return a varchar value with a default length of 255
      */
@@ -659,7 +687,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     *
      * @param value the string to place in the varchar
      * @return a varchar value
      * TODO: Error or coerce here? Right now coerce, though I think this should likely error.
@@ -681,7 +708,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     *
      * @param value the string to place in the char
      * @return a char value with a default length of 255
      */
@@ -691,7 +717,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     *
      * @param value the string to place in the char
      * @return a char value
      */
@@ -733,21 +758,41 @@ public interface Datum extends Iterable<Datum> {
         return new DatumBytes(value, PType.blob(length));
     }
 
-    // DATE/TIME
+    // DATE/TIME & INTERVAL
 
     @NotNull
-    static Datum date(@NotNull Date value) {
+    static Datum date(@NotNull LocalDate value) {
         return new DatumDate(value);
     }
 
     @NotNull
-    static Datum time(@NotNull Time value) {
-        return new DatumTime(value);
+    static Datum time(@NotNull LocalTime value, int precision) {
+        return new DatumTime(value, precision);
     }
 
     @NotNull
-    static Datum timestamp(@NotNull Timestamp value) {
-        return new DatumTimestamp(value);
+    static Datum timez(@NotNull OffsetTime value, int precision) {
+        return new DatumTimez(value, precision);
+    }
+
+    @NotNull
+    static Datum timestamp(@NotNull LocalDateTime value, int precision) {
+        return new DatumTimestamp(value, precision);
+    }
+
+    @NotNull
+    static Datum timestampz(@NotNull OffsetDateTime value, int precision) {
+        return new DatumTimestampz(value, precision);
+    }
+
+    @NotNull
+    static Datum interval(@NotNull Period value, int precision) {
+        return new DatumIntervalYM(value, precision);
+    }
+
+    @NotNull
+    static Datum interval(@NotNull Duration value, int precision) {
+        return new DatumIntervalDT(value, precision);
     }
 
     // COLLECTIONS
@@ -784,6 +829,7 @@ public interface Datum extends Iterable<Datum> {
      * {@link java.util.TreeSet} in combination with this {@link Comparator} to implement the before-mentioned
      * operations.
      * </p>
+     *
      * @return the default comparator for {@link Datum}. The comparator orders null values first.
      * @see Datum
      * @see java.util.TreeSet
@@ -804,6 +850,7 @@ public interface Datum extends Iterable<Datum> {
      * {@link java.util.TreeSet} in combination with this {@link Comparator} to implement the before-mentioned
      * operations.
      * </p>
+     *
      * @param nullsFirst if true, nulls are ordered before non-null values, otherwise after.
      * @return the default comparator for {@link Datum}.
      * @see Datum

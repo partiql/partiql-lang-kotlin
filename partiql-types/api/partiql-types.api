@@ -25,6 +25,8 @@ public abstract class org/partiql/types/PType : org/partiql/types/Enum {
 	public static final field DOUBLE I
 	public static final field DYNAMIC I
 	public static final field INTEGER I
+	public static final field INTERVAL_DT I
+	public static final field INTERVAL_YM I
 	public static final field NUMERIC I
 	public static final field REAL I
 	public static final field ROW I
@@ -60,6 +62,8 @@ public abstract class org/partiql/types/PType : org/partiql/types/Enum {
 	public fun getScale ()I
 	public fun getTypeParameter ()Lorg/partiql/types/PType;
 	public static fun integer ()Lorg/partiql/types/PType;
+	public static fun intervalDT (I)Lorg/partiql/types/PType;
+	public static fun intervalYM ()Lorg/partiql/types/PType;
 	public fun name ()Ljava/lang/String;
 	public static fun numeric (II)Lorg/partiql/types/PType;
 	public static fun real ()Lorg/partiql/types/PType;

@@ -104,6 +104,12 @@ public class Parameter private constructor(
         public fun number(name: String): Parameter = Parameter(name, SqlTypeFamily.NUMBER, false)
 
         /**
+         * Create a datetime [Parameter].
+         */
+        @JvmStatic
+        public fun datetime(name: String): Parameter = Parameter(name, SqlTypeFamily.DATETIME, false)
+
+        /**
          * Create a collection [Parameter].
          */
         @JvmStatic

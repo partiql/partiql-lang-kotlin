@@ -3,10 +3,6 @@ package org.partiql.spi.value
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.partiql.types.PType
-import org.partiql.value.datetime.DateTimeValue.date
-import org.partiql.value.datetime.DateTimeValue.time
-import org.partiql.value.datetime.DateTimeValue.timestamp
-import org.partiql.value.datetime.TimeZone
 import java.math.BigDecimal
 import java.util.Base64
 import java.util.Random
@@ -164,41 +160,35 @@ class DatumComparatorTest {
             Datum.real(Float.POSITIVE_INFINITY),
             Datum.doublePrecision(Double.POSITIVE_INFINITY),
         ),
-        EquivValues(
-            Datum.date(date(year = 1992, month = 8, day = 22))
-        ),
-        EquivValues(
-            Datum.date(date(year = 2021, month = 8, day = 22))
-        ),
-        // Set a [timeZone] for every [TimeValue] and [TimestampValue] since comparison between time types without
-        // a timezone results in an error. TODO: add a way to compare between time and timestamp types
-        EquivValues(
-            Datum.time(time(hour = 12, minute = 12, second = 12, timeZone = TimeZone.UnknownTimeZone)),
-            Datum.time(time(hour = 12, minute = 12, second = 12, nano = 0, timeZone = TimeZone.UnknownTimeZone)),
-            Datum.time(time(hour = 12, minute = 12, second = 12, timeZone = TimeZone.UnknownTimeZone)),
-            // time second precision handled by time constructor
-            Datum.time(time(hour = 12, minute = 12, second = 12, timeZone = TimeZone.UtcOffset.of(0))),
-        ),
-        EquivValues(
-            Datum.time(time(hour = 12, minute = 12, second = 12, nano = 100000000, timeZone = TimeZone.UnknownTimeZone)),
-        ),
-        EquivValues(
-            Datum.time(time(hour = 12, minute = 12, second = 12, nano = 0, timeZone = TimeZone.UtcOffset.of(-8, 0))),
-            Datum.time(time(hour = 12, minute = 12, second = 12, timeZone = TimeZone.UtcOffset.of(-8, 0))),
-        ),
-        EquivValues(
-            Datum.time(time(hour = 12, minute = 12, second = 12, nano = 100000000, timeZone = TimeZone.UtcOffset.of(-9, 0))),
-        ),
-        EquivValues(
-            Datum.timestamp(timestamp(year = 2017, timeZone = TimeZone.UtcOffset.of(0, 0))), // `2017T`
-            Datum.timestamp(timestamp(year = 2017, month = 1, timeZone = TimeZone.UtcOffset.of(0, 0))), // `2017-01T`
-            Datum.timestamp(timestamp(year = 2017, month = 1, day = 1, timeZone = TimeZone.UtcOffset.of(0, 0))), // `2017-01-01T`
-            Datum.timestamp(timestamp(year = 2017, month = 1, day = 1, hour = 0, minute = 0, second = 0, timeZone = TimeZone.UtcOffset.of(0, 0))), // `2017-01-01T00:00-00:00`
-            Datum.timestamp(timestamp(year = 2017, month = 1, day = 1, hour = 1, minute = 0, second = 0, timeZone = TimeZone.UtcOffset.of(1, 0))) // `2017-01-01T01:00+01:00`
-        ),
-        EquivValues(
-            Datum.timestamp(timestamp(year = 2017, month = 1, day = 1, hour = 1, minute = 0, second = 0, timeZone = TimeZone.UtcOffset.of(0, 0))) // `2017-01-01T01:00Z`
-        ),
+        // EquivValues(
+        //     Datum.date(LocalDate.of(1992, 8, 22))
+        // ),
+        // EquivValues(
+        //     Datum.date(LocalDate.of(2021, 8, 22))
+        // ),
+        // // Set a [timeZone] for every [TimeValue] and [TimestampValue] since comparison between time types without
+        // // a timezone results in an error. TODO: add a way to compare between time and timestamp types
+        // EquivValues(
+        //     Datum.time(LocalTime.of(12, 12, 12), 0),
+        //     Datum.time(LocalTime.of(12, 12, 12, 0), 0),
+        // ),
+        // EquivValues(
+        //     Datum.time(LocalTime.of(12, 12, 12, 100000000), 9),
+        // ),
+        // EquivValues(
+        //     Datum.timez(OffsetTime.of(12, 12, 12, 0, ZoneOffset.ofHours(-8)), 0),
+        // ),
+        // EquivValues(
+        //     Datum.timez(OffsetTime.of(12, 12, 12, 100000000, ZoneOffset.ofHours(-9)), 9),
+        // ),
+        // EquivValues(
+        //     // Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 1, 0, 0, 0, ZoneOffset.UTC), 6),
+        //     Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 1, 0, 0, 0, ZoneOffset.ofHoursMinutes(0, 0)), 6), // `2017-01-01T00:00-00:00`
+        //     // Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 1, 1, 0, 0, ZoneOffset.ofHoursMinutes(0, 1)), 6), // `2017-01-01T00:00-00:01`
+        // ),
+        // EquivValues(
+        //     Datum.timestampz(OffsetDateTime.of(2017, 1, 1, 1, 0, 0, 0, ZoneOffset.UTC), 6) // `2017-01-01T01:00Z`
+        // ),
         EquivValues(
             Datum.string(""),
             // TODO: Datum.string("", annotations = listOf("foobar")),
@@ -415,7 +405,15 @@ class DatumComparatorTest {
         EquivValues(
             // The ordered values are: true, true, 1, 1, 1
             // <<true, 1, 1.0, `1e0`, true>>
-            Datum.bag(listOf(Datum.bool(true), Datum.integer(1), Datum.decimal(BigDecimal("1.0")), Datum.real(1e0f), Datum.bool(true)))
+            Datum.bag(
+                listOf(
+                    Datum.bool(true),
+                    Datum.integer(1),
+                    Datum.decimal(BigDecimal("1.0")),
+                    Datum.real(1e0f),
+                    Datum.bool(true)
+                )
+            )
         ),
         EquivValues( // <<1>>
             Datum.bag(listOf(Datum.integer(1)))

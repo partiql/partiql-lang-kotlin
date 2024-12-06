@@ -8,6 +8,7 @@ import org.partiql.value.datetime.Timestamp;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.*;
 import java.util.Iterator;
 
 /**
@@ -112,16 +113,6 @@ class DatumNull implements Datum {
         }
     }
 
-    @NotNull
-    @Override
-    public Date getDate() {
-        if (_type.code() == PType.DATE) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
     @Override
     public double getDouble() {
         if (_type.code() == PType.DOUBLE) {
@@ -172,8 +163,59 @@ class DatumNull implements Datum {
 
     @NotNull
     @Override
-    public Time getTime() {
-        if (_type.code() == PType.TIMEZ || _type.code() == PType.TIME) {
+    public LocalDate getLocalDate() {
+        switch (_type.code()) {
+            case PType.DATE:
+            case PType.TIMESTAMP:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
+    public LocalTime getLocalTime() {
+        switch (_type.code()) {
+            case PType.TIME:
+            case PType.TIMEZ:
+            case PType.TIMESTAMP:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
+    public OffsetTime getOffsetTime() {
+        switch (_type.code()) {
+            case PType.TIMEZ:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
+    public LocalDateTime getLocalDateTime() {
+        switch (_type.code()) {
+            case PType.TIMESTAMP:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
+    public OffsetDateTime getOffsetDateTime() {
+        if (_type.code() == PType.TIMESTAMPZ) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -182,16 +224,25 @@ class DatumNull implements Datum {
 
     @NotNull
     @Override
-    public Timestamp getTimestamp() {
-        if (_type.code() == PType.TIMESTAMPZ || _type.code() == PType.TIMESTAMP) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
+    public Duration getDuration() {
+        switch (_type.code()) {
+            // TODO INTERVAL_DT
+            // case INTERVAL_DT:
+            //    throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
         }
     }
 
+    @NotNull
     @Override
-    public long getInterval() {
-        throw new UnsupportedOperationException();
+    public Period getPeriod() {
+        switch (_type.code()) {
+            // TODO INTERVAL_YM
+            // case INTERVAL_YM:
+            //    throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
+        }
     }
 }

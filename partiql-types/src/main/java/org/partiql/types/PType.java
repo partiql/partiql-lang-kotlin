@@ -113,6 +113,8 @@ public abstract class PType extends Enum {
                 PType.TIMEZ,
                 PType.TIMESTAMP,
                 PType.TIMESTAMPZ,
+                PType.INTERVAL_YM,
+                PType.INTERVAL_DT,
                 PType.ARRAY,
                 PType.BAG,
                 PType.ROW,
@@ -165,6 +167,10 @@ public abstract class PType extends Enum {
                 return "TIMESTAMP";
             case PType.TIMESTAMPZ:
                 return "TIMESTAMPZ";
+            case PType.INTERVAL_DT:
+                return "INTERVAL_DT";
+            case PType.INTERVAL_YM:
+                return "INTERVAL_YM";
             case PType.ARRAY:
                 return "ARRAY";
             case PType.BAG:
@@ -478,6 +484,21 @@ public abstract class PType extends Enum {
     public static final int VARIANT = 25;
 
     /**
+     * The SQL year-month interval type.
+     */
+    public static final int INTERVAL_YM = 26;
+
+    /**
+     * The SQL day-time interval type.
+     * <br>
+     * <br>
+     * <b>Type Syntax</b>: <code>INTERVAL DAY TO SECOND</code>, <code>INTERVAL DAY TO SECOND(&lt;precision&gt;)</code>
+     * <br>
+     * <b>Applicable methods</b>: {@link PType#getPrecision()}
+     */
+    public static final int INTERVAL_DT = 27;
+
+    /**
      * @return a PartiQL dynamic type
      */
     @NotNull
@@ -643,6 +664,25 @@ public abstract class PType extends Enum {
     @SuppressWarnings("unused")
     public static PType timestampz(int precision) {
         return new PTypeWithPrecisionOnly(TIMESTAMPZ, precision);
+    }
+
+    /**
+     * @return a PartiQL interval year-month type
+     */
+    @NotNull
+    @SuppressWarnings("unused")
+    public static PType intervalYM() {
+        return new PTypePrimitive(INTERVAL_YM);
+    }
+
+    /**
+     * @param precision fractional seconds precision
+     * @return a PartiQL interval day-time type
+     */
+    @NotNull
+    @SuppressWarnings("unused")
+    public static PType intervalDT(int precision) {
+        return new PTypeWithPrecisionOnly(INTERVAL_DT, precision);
     }
 
     /**

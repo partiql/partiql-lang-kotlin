@@ -31,6 +31,7 @@ internal object SqlTypes {
             areAssignableDateTimeTypes(input, target) ||
             areAssignableCollectionTypes(input, target) ||
             areAssignableStructuralTypes(input, target) ||
+            areAssignableIntervalTypes(input, target) ||
             areAssignableDynamicTypes(target)
     }
 
@@ -161,6 +162,29 @@ internal object SqlTypes {
             i == PType.DATE && t == PType.DATE -> true
             (i == PType.TIMEZ || i == PType.TIME) && (t == PType.TIMEZ || t == PType.TIME) -> true
             (i == PType.TIMESTAMPZ || i == PType.TIMESTAMP) && (t == PType.TIMESTAMPZ || t == PType.TIMESTAMP) -> true
+            else -> false
+        }
+    }
+
+    /**
+     * FROM SQL:1999:
+     * ```
+     * Year-month intervals are mutually comparable only with other year-month intervals.
+     * Day-time intervals are mutually comparable only with other day-time intervals.
+     * ```
+     *
+     * Any missing field-precision is assumed to be 0.
+     *
+     * @param input
+     * @param target
+     * @return
+     */
+    private fun areAssignableIntervalTypes(input: PType, target: PType): Boolean {
+        val i = input.code()
+        val t = target.code()
+        return when {
+            i == PType.INTERVAL_YM && t == PType.INTERVAL_YM -> true
+            i == PType.INTERVAL_DT && t == PType.INTERVAL_DT -> true
             else -> false
         }
     }
