@@ -59,12 +59,13 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprSubqueryRow
 import org.partiql.eval.internal.operator.rex.ExprTable
 import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.plan.Action
 import org.partiql.plan.Collation
 import org.partiql.plan.JoinType
-import org.partiql.plan.Operation
+import org.partiql.plan.Operand
 import org.partiql.plan.Operator
+import org.partiql.plan.OperatorVisitor
 import org.partiql.plan.Plan
-import org.partiql.plan.Visitor
 import org.partiql.plan.rel.Rel
 import org.partiql.plan.rel.RelAggregate
 import org.partiql.plan.rel.RelDistinct
@@ -85,10 +86,10 @@ import org.partiql.plan.rex.Rex
 import org.partiql.plan.rex.RexArray
 import org.partiql.plan.rex.RexBag
 import org.partiql.plan.rex.RexCall
-import org.partiql.plan.rex.RexCallDynamic
 import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexCast
 import org.partiql.plan.rex.RexCoalesce
+import org.partiql.plan.rex.RexDispatch
 import org.partiql.plan.rex.RexError
 import org.partiql.plan.rex.RexLit
 import org.partiql.plan.rex.RexNullIf
@@ -123,10 +124,10 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
     override fun prepare(plan: Plan, mode: Mode, ctx: Context): Statement {
         try {
-            val visitor = _Visitor(mode)
-            val operation = plan.getOperation()
+            val visitor = Visitor(mode)
+            val operation = plan.action
             val statement: Statement = when {
-                operation is Operation.Query -> visitor.compile(operation)
+                operation is Action.Query -> visitor.compile(operation)
                 else -> throw IllegalArgumentException("Only query statements are supported")
             }
             return statement
@@ -142,18 +143,18 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
     /**
      * Transforms plan relation operators into the internal physical operators.
      */
-    @Suppress("ClassName")
-    private inner class _Visitor(mode: Mode) : Visitor<Expr, Unit> {
+    private inner class Visitor(mode: Mode) : OperatorVisitor<Expr, Unit> {
 
-        private val mode = mode.code()
+        private val mode = mode
+        private val MODE = mode.code()
 
         /**
          * Compile a query operation to a query statement.
          */
-        fun compile(operation: Operation.Query) = object : Statement {
+        fun compile(action: Action.Query) = object : Statement {
 
             // compile the query root
-            private val root = compile(operation.getRex(), Unit).catch()
+            private val root = compile(action.getRex(), Unit).catch()
 
             // execute with no parameters
             override fun execute(): Datum = root.eval(Environment())
@@ -167,25 +168,25 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
          * @param operator
          * @return
          */
-        private fun compileWithStrategies(operator: Operator, ctx: Unit): Expr {
+        private fun compileWithStrategies(operator: Operator): Expr {
             // if strategy matches root, compile children to form a match.
             for (strategy in strategies) {
                 // first match
-                if (strategy.getPattern().matches(operator)) {
-                    // compile children
-                    val children = operator.getChildren().map { compileWithStrategies(it, ctx) }
-                    val match = Match(operator, children)
-                    return strategy.apply(match)
+                if (strategy.pattern.matches(operator)) {
+                    // assume single match
+                    val operand = Operand.single(operator)
+                    val match = Match(operand)
+                    return strategy.apply(match, mode, ::compileWithStrategies)
                 }
             }
             return operator.accept(this, Unit)
         }
 
         // TODO REMOVE ME
-        private fun compile(rel: Rel, ctx: Unit): ExprRelation = compileWithStrategies(rel, ctx) as ExprRelation
+        private fun compile(rel: Rel, ctx: Unit): ExprRelation = compileWithStrategies(rel) as ExprRelation
 
         // TODO REMOVE ME
-        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex, ctx) as ExprValue
+        private fun compile(rex: Rex, ctx: Unit): ExprValue = compileWithStrategies(rex) as ExprValue
 
         override fun defaultReturn(operator: Operator, ctx: Unit): Expr {
             error("No compiler strategy matches the operator: ${operator::class.java.simpleName}")
@@ -195,7 +196,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
 
         override fun visitAggregate(rel: RelAggregate, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
-            val aggs = rel.getCalls().map { call ->
+            val aggs = rel.getMeasures().map { call ->
                 val agg = call.getAgg()
                 val args = call.getArgs().map { compile(it, ctx).catch() }
                 val distinct = call.isDistinct()
@@ -241,28 +242,29 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitIterate(rel: RelIterate, ctx: Unit): ExprRelation {
-            val input = compile(rel.getInput(), ctx)
-            return when (mode) {
+            val input = compile(rel.getRex(), ctx)
+            return when (MODE) {
                 Mode.PERMISSIVE -> RelOpIteratePermissive(input)
                 Mode.STRICT -> RelOpIterate(input)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
         override fun visitJoin(rel: RelJoin, ctx: Unit): ExprRelation {
-            val lhs = compile(rel.getLeft(), ctx)
-            val rhs = compile(rel.getRight(), ctx)
-            val condition = rel.getCondition()?.let { compile(it, ctx) } ?: ExprLit(Datum.bool(true))
-
-            // TODO JOIN SCHEMAS
-            val lhsType = rel.getLeftSchema()
-            val rhsType = rel.getRightSchema()
-
-            return when (rel.getJoinType()) {
+            val lrel = rel.left
+            val rrel = rel.right
+            val lhs = compile(lrel, ctx)
+            val rhs = compile(rrel, ctx)
+            val condition = compile(rel.getCondition(), ctx)
+            // use schema for null padding
+            val lhsType = lrel.type
+            val rhsType = rrel.type
+            return when (rel.joinType.code()) {
                 JoinType.INNER -> RelOpJoinInner(lhs, rhs, condition)
-                JoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType!!)
-                JoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType!!)
-                JoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType!!, rhsType!!)
+                JoinType.LEFT -> RelOpJoinOuterLeft(lhs, rhs, condition, rhsType)
+                JoinType.RIGHT -> RelOpJoinOuterRight(lhs, rhs, condition, lhsType)
+                JoinType.FULL -> RelOpJoinOuterFull(lhs, rhs, condition, lhsType, rhsType)
+                else -> error("Unsupported join type: ${rel.joinType}")
             }
         }
 
@@ -285,20 +287,20 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitScan(rel: RelScan, ctx: Unit): ExprRelation {
-            val input = compile(rel.getInput(), ctx)
-            return when (mode) {
+            val input = compile(rel.rex, ctx)
+            return when (MODE) {
                 Mode.PERMISSIVE -> RelOpScanPermissive(input)
                 Mode.STRICT -> RelOpScan(input)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
         override fun visitSort(rel: RelSort, ctx: Unit): ExprRelation {
             val input = compile(rel.getInput(), ctx)
             val collations = rel.getCollations().map {
-                val expr = compile(it.getRex(), ctx)
-                val desc = it.getOrder() == Collation.Order.DESC
-                val last = it.getNulls() == Collation.Nulls.LAST
+                val expr = compile(it.column, ctx)
+                val desc = it.order.code() == Collation.Order.DESC
+                val last = it.nulls.code() == Collation.Nulls.LAST
                 RelOpSort.Collation(expr, desc, last)
             }
             return RelOpSort(input, collations)
@@ -314,11 +316,11 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitUnpivot(rel: RelUnpivot, ctx: Unit): ExprRelation {
-            val input = compile(rel.getInput(), ctx)
-            return when (mode) {
+            val input = compile(rel.rex, ctx)
+            return when (MODE) {
                 Mode.PERMISSIVE -> RelOpUnpivot.Permissive(input)
                 Mode.STRICT -> RelOpUnpivot.Strict(input)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
@@ -338,7 +340,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             return ExprBag(values)
         }
 
-        override fun visitCallDynamic(rex: RexCallDynamic, ctx: Unit): ExprValue {
+        override fun visitDispatch(rex: RexDispatch, ctx: Unit): ExprValue {
             // Check candidate arity for uniformity
             var arity: Int = -1
             val name = rex.getName()
@@ -401,7 +403,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitLit(rex: RexLit, ctx: Unit): ExprValue {
-            return ExprLit(rex.getValue())
+            return ExprLit(rex.getDatum())
         }
 
         override fun visitNullIf(rex: RexNullIf, ctx: Unit): ExprValue {
@@ -432,37 +434,37 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             val input = compile(rex.getInput(), ctx)
             val key = compile(rex.getKey(), ctx)
             val value = compile(rex.getValue(), ctx)
-            return when (mode) {
+            return when (MODE) {
                 Mode.PERMISSIVE -> ExprPivotPermissive(input, key, value)
                 Mode.STRICT -> ExprPivot(input, key, value)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
         override fun visitSelect(rex: RexSelect, ctx: Unit): ExprValue {
             val input = compile(rex.getInput(), ctx)
             val constructor = compile(rex.getConstructor(), ctx).catch()
-            val ordered = rex.getInput().isOrdered()
+            val ordered = rex.getInput().type.isOrdered
             return ExprSelect(input, constructor, ordered)
         }
 
         override fun visitStruct(rex: RexStruct, ctx: Unit): ExprValue {
             val fields = rex.getFields().map {
-                val k = compile(it.getKey(), ctx)
-                val v = compile(it.getValue(), ctx).catch()
+                val k = compile(it.key, ctx)
+                val v = compile(it.value, ctx).catch()
                 ExprStructField(k, v)
             }
-            return when (mode) {
+            return when (MODE) {
                 Mode.PERMISSIVE -> ExprStructPermissive(fields)
                 Mode.STRICT -> ExprStructStrict(fields)
-                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+                else -> throw IllegalStateException("Unsupported execution mode: $MODE")
             }
         }
 
         override fun visitSubquery(rex: RexSubquery, ctx: Unit): ExprValue {
-            val rel = compile(rex.getRel(), ctx)
+            val rel = compile(rex.getInput(), ctx)
             val constructor = compile(rex.getConstructor(), ctx)
-            return when (rex.asScalar()) {
+            return when (rex.isScalar()) {
                 true -> ExprSubquery(rel, constructor)
                 else -> ExprSubqueryRow(rel, constructor)
             }
@@ -490,18 +492,18 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitVar(rex: RexVar, ctx: Unit): ExprValue {
-            val depth = rex.getDepth()
+            val scope = rex.scope
             val offset = rex.getOffset()
-            return ExprVar(depth, offset)
+            return ExprVar(scope, offset)
         }
 
         /**
          * Some places "catch" an error and return the MISSING value.
          */
-        private fun ExprValue.catch(): ExprValue = when (mode) {
+        private fun ExprValue.catch(): ExprValue = when (MODE) {
             Mode.PERMISSIVE -> ExprPermissive(this)
             Mode.STRICT -> this
-            else -> throw IllegalStateException("Unsupported execution mode: $mode")
+            else -> throw IllegalStateException("Unsupported execution mode: $MODE")
         }
     }
 }

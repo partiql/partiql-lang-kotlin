@@ -4,7 +4,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ast.Statement
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Operation
+import org.partiql.plan.Action
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.util.PErrorAlwaysMissingCollector
@@ -404,8 +404,8 @@ internal class PlannerPErrorReportingTests {
             plan, pc,
             tc.assertion
         )
-        val statement = plan.getOperation() as Operation.Query
-        val actualType = statement.getType().getPType()
+        val statement = plan.action as Action.Query
+        val actualType = statement.rex.type.pType
         assertEquals(tc.expectedType, actualType)
     }
 

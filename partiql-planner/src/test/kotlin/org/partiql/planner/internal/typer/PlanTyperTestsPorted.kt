@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Action
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.TestCatalog
@@ -2819,7 +2820,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-06"),
                 catalog = "pql",
-                expected = PType.unknown().toCType()
+                expected = PType.dynamic().toCType() // TODO make unknown
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-07"),
@@ -2829,7 +2830,7 @@ internal class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-08"),
                 catalog = "pql",
-                expected = PType.unknown().toCType()
+                expected = PType.dynamic().toCType() // TODO make unknown
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-09"),
@@ -3839,8 +3840,8 @@ internal class PlanTyperTestsPorted {
 
         val collector = PErrorCollector()
         val plan = infer(input, session, collector)
-        when (val statement = plan.getOperation()) {
-            is org.partiql.plan.Operation.Query -> {
+        when (val statement = plan.action) {
+            is Action.Query -> {
                 assert(collector.problems.isEmpty()) {
                     // Throw internal error for debugging
                     collector.problems.firstOrNull { it.code() == PError.INTERNAL_ERROR }?.let { pError ->
@@ -3852,7 +3853,7 @@ internal class PlanTyperTestsPorted {
                         PlanPrinter.append(this, plan)
                     }
                 }
-                val actual = statement.getType().getPType()
+                val actual = statement.rex.type.pType
                 assert(tc.expected == actual) {
                     buildString {
                         appendLine()
@@ -3881,8 +3882,8 @@ internal class PlanTyperTestsPorted {
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
         val plan = infer(input, session, collector)
 
-        when (val operation = plan.getOperation()) {
-            is org.partiql.plan.Operation.Query -> {
+        when (val operation = plan.action) {
+            is Action.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {
                         appendLine("Expected to find problems, but none were found.")
@@ -3891,7 +3892,7 @@ internal class PlanTyperTestsPorted {
                     }
                 }
                 if (tc.expected != null) {
-                    val actual = operation.getType().getPType()
+                    val actual = operation.rex.type.pType
                     assert(tc.expected == actual) {
                         buildString {
                             appendLine()

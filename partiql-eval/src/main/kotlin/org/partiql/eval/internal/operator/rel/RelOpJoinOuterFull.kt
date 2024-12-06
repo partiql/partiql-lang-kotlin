@@ -24,8 +24,8 @@ internal class RelOpJoinOuterFull(
 ) : RelOpPeeking() {
 
     // TODO BETTER MECHANISM FOR NULL PADDING
-    private val r = rhsType.getFields().toTypedArray()
-    private val l = lhsType.getFields().toTypedArray()
+    private val r = rhsType.getFields()
+    private val l = lhsType.getFields()
     private val lhsPadded: Row =
         Row(l.indices.map { Datum.nullValue(l[it].type) }.toTypedArray())
     private val rhsPadded: Row =

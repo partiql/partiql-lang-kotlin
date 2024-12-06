@@ -34,7 +34,7 @@ public class StrategyTest {
         var trigged = false
         val pattern = Pattern(RelLimit::class.java)
         val strategy = object : Strategy(pattern) {
-            override fun apply(match: Match): Expr {
+            override fun apply(match: Match, mode: Mode, callback: Callback): Expr {
                 trigged = true
                 return MyLimit()
             }

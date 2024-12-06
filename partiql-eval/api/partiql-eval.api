@@ -45,9 +45,8 @@ public abstract interface class org/partiql/eval/Statement {
 }
 
 public class org/partiql/eval/compiler/Match {
-	public fun <init> (Lorg/partiql/plan/Operator;Ljava/util/List;)V
-	public fun children (I)Ljava/util/List;
-	public fun operator (I)Lorg/partiql/plan/Operator;
+	public fun <init> (Lorg/partiql/plan/Operand;)V
+	public fun getOperand ()Lorg/partiql/plan/Operand;
 }
 
 public abstract interface class org/partiql/eval/compiler/PartiQLCompiler {
@@ -70,7 +69,11 @@ public class org/partiql/eval/compiler/Pattern {
 
 public abstract class org/partiql/eval/compiler/Strategy {
 	public fun <init> (Lorg/partiql/eval/compiler/Pattern;)V
-	public abstract fun apply (Lorg/partiql/eval/compiler/Match;)Lorg/partiql/eval/Expr;
+	public abstract fun apply (Lorg/partiql/eval/compiler/Match;Lorg/partiql/eval/Mode;Lorg/partiql/eval/compiler/Strategy$Callback;)Lorg/partiql/eval/Expr;
 	public fun getPattern ()Lorg/partiql/eval/compiler/Pattern;
+}
+
+public abstract interface class org/partiql/eval/compiler/Strategy$Callback {
+	public abstract fun apply (Lorg/partiql/plan/Operator;)Lorg/partiql/eval/Expr;
 }
 

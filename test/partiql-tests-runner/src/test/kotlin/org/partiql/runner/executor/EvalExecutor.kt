@@ -11,7 +11,7 @@ import org.partiql.eval.Mode
 import org.partiql.eval.Statement
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Operation.Query
+import org.partiql.plan.Action.Query
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.runner.CompileType
 import org.partiql.runner.ION
@@ -193,7 +193,7 @@ class EvalExecutor(
             assertEquals(1, parseResult.statements.size)
             val stmt = parseResult.statements[0]
             val plan = planner.plan(stmt, session).plan
-            return (plan.getOperation() as Query).getRex().getType().getPType()
+            return (plan.action as Query).getRex().getType().getPType()
         }
 
         /**

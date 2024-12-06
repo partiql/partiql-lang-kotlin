@@ -3,7 +3,7 @@ package org.partiql.planner.internal.typer
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicTest
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Operation
+import org.partiql.plan.Action
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
@@ -111,8 +111,8 @@ abstract class PartiQLTyperTestBase {
                         val pc = PErrorCollector()
                         if (key is TestResult.Success) {
                             val result = testingPipeline(statement, testName, metadata, pc)
-                            val query = result.plan.getOperation() as Operation.Query
-                            val actualType = query.getType().getPType()
+                            val query = result.plan.action as Action.Query
+                            val actualType = query.rex.type.pType
                             // TODO: The tests need parameter checks
                             assert(actualType.code() == key.expectedType.code()) {
                                 buildString {
@@ -142,8 +142,8 @@ abstract class PartiQLTyperTestBase {
                             }
                         } else {
                             val result = testingPipeline(statement, testName, metadata, pc)
-                            val query = result.plan.getOperation() as Operation.Query
-                            val actualType = query.getType().getPType()
+                            val query = result.plan.action as Action.Query
+                            val actualType = query.rex.type.pType
                             assert(actualType.code() == PType.DYNAMIC) {
                                 buildString {
                                     this.appendLine("expected Type is : DYNAMIC")

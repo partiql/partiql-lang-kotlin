@@ -8,9 +8,9 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Action
 import org.partiql.plan.Exclusion
-import org.partiql.plan.Operation
-import org.partiql.plan.builder.PlanFactory
+import org.partiql.plan.Operators
 import org.partiql.plan.rel.RelExclude
 import org.partiql.plan.rel.RelProject
 import org.partiql.plan.rex.RexSelect
@@ -18,6 +18,7 @@ import org.partiql.plan.rex.RexVar
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
+import org.partiql.types.PType
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -30,8 +31,8 @@ class SubsumptionTest {
         private val catalog = Catalog.builder().name("default").build()
     }
 
-    private fun getExcludeClause(statement: Operation): RelExclude {
-        val queryExpr = (statement as Operation.Query).getRex()
+    private fun getExcludeClause(statement: Action): RelExclude {
+        val queryExpr = (statement as Action.Query).getRex()
         val relProject = (queryExpr as RexSelect).getInput() as RelProject
         return (relProject.getInput()) as RelExclude
     }
@@ -43,7 +44,7 @@ class SubsumptionTest {
         val statement = parseResult.statements[0]
         val session = Session.builder().catalog("default").catalogs(catalog).build()
         val plan = planner.plan(statement, session).plan
-        val excludeClause = getExcludeClause(plan.getOperation()).getExclusions()
+        val excludeClause = getExcludeClause(plan.action).getExclusions()
         assertEquals(tc.expectedExcludeExprs, excludeClause)
     }
 
@@ -59,9 +60,9 @@ class SubsumptionTest {
             return parameters.map { Arguments.of(it) }.stream()
         }
 
-        private val factory = PlanFactory.STANDARD
+        private val factory = Operators.STANDARD
 
-        private fun rexOpVar(depth: Int, offset: Int): RexVar = factory.rexVar(depth, offset)
+        private fun rexOpVar(depth: Int, offset: Int): RexVar = factory.variable(depth, offset, PType.unknown())
 
         private val parameters = listOf(
             SubsumptionTC(

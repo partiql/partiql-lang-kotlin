@@ -1,50 +1,31 @@
 package org.partiql.eval.compiler;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.eval.Expr;
-import org.partiql.plan.Operator;
-
-import java.util.Collections;
-import java.util.List;
+import org.partiql.plan.Operand;
 
 /**
  * Match represents a subtree match to be sent to the
  */
 public class Match {
 
-    private final Operator[] operators;
-    private final List<List<Expr>> children;
+    private final Operand[] operands;
 
     /**
-     * Single operator match with zero-or-more inputs.
+     * Single operand match with zero-or-more inputs.
      *
-     * @param operator  matched logical operator.
-     * @param children  compiled child operators.
+     * @param operand matched logical operand.
      */
-    public Match(@NotNull Operator operator, @NotNull List<Expr> children) {
-        this.operators = new Operator[]{operator};
-        this.children = Collections.singletonList(children);
+    public Match(@NotNull Operand operand) {
+        this.operands = new Operand[]{operand};
     }
 
     /**
-     * Get the i-th operator (pre-order) matched by the pattern.
+     * Get the first (or only) operand
      *
-     * @param i 0-indexed
-     * @return Operator
+     * @return Operand
      */
     @NotNull
-    public Operator operator(int i) {
-        return operators[i];
-    }
-
-    /**
-     * Get the i-th input to this pattern.
-     *
-     * @param i 0-indexed
-     * @return Expr
-     */
-    @NotNull
-    public List<Expr> children(int i) {
-        return children.get(i);
+    public Operand getOperand() {
+        return operands[0];
     }
 }
