@@ -209,13 +209,19 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun exprValues(rows: List<ExprRowValue>): ExprValues {
+    public fun exprValues(rows: List<Expr>): ExprValues {
+        // TODO: Is exprTable the right name here? IMO, ExprValues should really just be called TableValueConstructor to match the EBNF
         return ExprValues(rows)
     }
 
     @JvmStatic
     public fun exprRowValue(values: List<Expr>): ExprRowValue {
         return ExprRowValue(values)
+    }
+
+    @JvmStatic
+    public fun exprRowValue(values: List<Expr>, isExplicit: Boolean): ExprRowValue {
+        return ExprRowValue(isExplicit, values)
     }
 
     @JvmStatic
@@ -453,6 +459,107 @@ public object Ast {
     @JvmStatic
     public fun query(expr: Expr): Query {
         return Query(expr)
+    }
+
+    @JvmStatic
+    public fun insert(tableName: IdentifierChain, asAlias: Identifier?, source: InsertSource, onConflict: OnConflict?): Insert {
+        return Insert(tableName, asAlias, source, onConflict)
+    }
+
+    @JvmStatic
+    public fun upsert(tableName: IdentifierChain, asAlias: Identifier?, source: InsertSource): Upsert {
+        return Upsert(tableName, asAlias, source)
+    }
+
+    @JvmStatic
+    public fun replace(tableName: IdentifierChain, asAlias: Identifier?, source: InsertSource): Replace {
+        return Replace(tableName, asAlias, source)
+    }
+
+    @JvmStatic
+    public fun update(tableName: IdentifierChain, setClauses: List<SetClause>, condition: Expr?): Update {
+        return Update(tableName, setClauses, condition)
+    }
+
+    @JvmStatic
+    public fun delete(tableName: IdentifierChain, condition: Expr?): Delete {
+        return Delete(tableName, condition)
+    }
+
+    // TODO: Target
+    @JvmStatic
+    public fun setClause(target: AstNode, value: Expr): SetClause {
+        return SetClause(target, value)
+    }
+
+    @JvmStatic
+    public fun insertSourceExpr(columns: List<Identifier>?, expr: Expr): InsertSource.FromSubquery {
+        return InsertSource.FromSubquery(columns, expr)
+    }
+
+    @JvmStatic
+    public fun insertSourceDefault(): InsertSource.FromDefault {
+        return InsertSource.FromDefault()
+    }
+
+    @JvmStatic
+    public fun onConflict(action: ConflictAction, target: ConflictTarget?): OnConflict {
+        return OnConflict(action, target)
+    }
+
+    @JvmStatic
+    public fun conflictTargetIndex(indexes: List<Identifier>): ConflictTarget.Index {
+        return ConflictTarget.Index(indexes)
+    }
+
+    @JvmStatic
+    public fun conflictTargetConstraint(constraint: Identifier): ConflictTarget.Constraint {
+        return ConflictTarget.Constraint(constraint)
+    }
+
+    @JvmStatic
+    public fun doNothing(): ConflictAction.DoNothing {
+        return ConflictAction.DoNothing()
+    }
+
+    @JvmStatic
+    public fun doReplace(action: DoReplaceAction, condition: Expr?): ConflictAction.DoReplace {
+        return ConflictAction.DoReplace(action, condition)
+    }
+
+    @JvmStatic
+    public fun doUpdate(action: DoUpdateAction, condition: Expr?): ConflictAction.DoUpdate {
+        return ConflictAction.DoUpdate(action, condition)
+    }
+
+    @JvmStatic
+    public fun doReplaceActionExcluded(): DoReplaceAction.Excluded {
+        return DoReplaceAction.Excluded()
+    }
+
+    @JvmStatic
+    public fun doUpdateActionExcluded(): DoUpdateAction.Excluded {
+        return DoUpdateAction.Excluded()
+    }
+
+    @JvmStatic
+    public fun updateTarget(root: Identifier, steps: List<UpdateTargetStep>): UpdateTarget {
+        return UpdateTarget(root, steps)
+    }
+
+    @JvmStatic
+    public fun updateTargetStepElement(key: Int): UpdateTargetStep.Element {
+        return UpdateTargetStep.Element(key)
+    }
+
+    @JvmStatic
+    public fun updateTargetStepElement(key: String): UpdateTargetStep.Element {
+        return UpdateTargetStep.Element(key)
+    }
+
+    @JvmStatic
+    public fun updateTargetStepField(key: Identifier): UpdateTargetStep.Field {
+        return UpdateTargetStep.Field(key)
     }
 
     @JvmStatic

@@ -116,6 +116,110 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
+    public R visitInsert(Insert node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitUpsert(Upsert node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitReplace(Replace node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitUpdate(Update node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitUpdateTarget(UpdateTarget node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitUpdateTargetStep(UpdateTarget node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    public R visitUpdateTargetStepElement(UpdateTargetStep.Element node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitUpdateTargetStepField(UpdateTargetStep.Field node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitDelete(Delete node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitSetClause(SetClause node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitInsertColumnList(InsertColumnList node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitInsertSource(InsertSource node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    public R visitInsertSourceFromSubquery(InsertSource.FromSubquery node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitInsertSourceFromDefault(InsertSource.FromDefault node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitOnConflict(OnConflict node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitConflictTarget(ConflictTarget node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    public R visitConflictTargetIndex(ConflictTarget.Index node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitConflictTargetConstraint(ConflictTarget.Constraint node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitConflictAction(ConflictAction node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    public R visitConflictActionDoNothing(ConflictAction.DoNothing node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitConflictActionDoReplace(ConflictAction.DoReplace node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitConflictActionDoUpdate(ConflictAction.DoUpdate node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitDoReplaceAction(DoReplaceAction node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    public R visitDoReplaceActionExcluded(DoReplaceAction.Excluded node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitDoUpdateAction(DoUpdateAction node, C ctx) {
+        return node.accept(this, ctx);
+    }
+
+    public R visitDoUpdateActionExcluded(DoUpdateAction.Excluded node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
     public R visitExplain(Explain node, C ctx) {
         return defaultVisit(node, ctx);
     }

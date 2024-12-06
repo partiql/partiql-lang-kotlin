@@ -355,7 +355,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitExprValues(node: ExprValues, ctx: C): AstNode {
-        val values = _visitList(node.rows, ctx, ::visitExprRowValue)
+        val values = _visitList(node.rows, ctx, ::visitExpr)
         return if (values !== node.rows) {
             ExprValues(values)
         } else {
