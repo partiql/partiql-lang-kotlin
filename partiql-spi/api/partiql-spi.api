@@ -241,7 +241,6 @@ public final class org/partiql/spi/catalog/Path$Companion {
 
 public abstract interface class org/partiql/spi/catalog/Session {
 	public static final field Companion Lorg/partiql/spi/catalog/Session$Companion;
-	public static fun bare (Ljava/lang/String;)Lorg/partiql/spi/catalog/Session;
 	public static fun builder ()Lorg/partiql/spi/catalog/Session$Builder;
 	public static fun empty ()Lorg/partiql/spi/catalog/Session;
 	public abstract fun getCatalog ()Ljava/lang/String;
@@ -266,7 +265,6 @@ public final class org/partiql/spi/catalog/Session$Builder {
 }
 
 public final class org/partiql/spi/catalog/Session$Companion {
-	public final fun bare (Ljava/lang/String;)Lorg/partiql/spi/catalog/Session;
 	public final fun builder ()Lorg/partiql/spi/catalog/Session$Builder;
 	public final fun empty ()Lorg/partiql/spi/catalog/Session;
 }
