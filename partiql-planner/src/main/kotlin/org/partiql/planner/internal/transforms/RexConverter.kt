@@ -50,6 +50,7 @@ import org.partiql.ast.expr.ExprSessionAttribute
 import org.partiql.ast.expr.ExprStruct
 import org.partiql.ast.expr.ExprSubstring
 import org.partiql.ast.expr.ExprTrim
+import org.partiql.ast.expr.ExprValues
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
@@ -492,6 +493,11 @@ internal object RexConverter {
             }
             val op = rexOpSelect(constructor, fromNode)
             return rex(ANY, op)
+        }
+
+        override fun visitExprValues(node: ExprValues, ctx: Env): Rex {
+            val rows = node.rows.map { visitExprCoerce(it, ctx) }
+            return rex(BAG, rexOpCollection(rows))
         }
 
         /**

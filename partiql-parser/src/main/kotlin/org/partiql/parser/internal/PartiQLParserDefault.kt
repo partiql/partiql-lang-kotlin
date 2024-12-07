@@ -177,6 +177,7 @@ import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprLit
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
+import org.partiql.ast.expr.ExprRowValue
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.SessionAttribute
@@ -1616,7 +1617,12 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitTableValueConstructor(ctx: GeneratedParser.TableValueConstructorContext) = translate(ctx) {
-            val rows = visitOrEmpty<Expr>(ctx.rowValueExpressionList().expr())
+            val rows = ctx.rowValueExpressionList().expr().map {
+                when (val row = visitAs<Expr>(it)) {
+                    is ExprRowValue -> row
+                    else -> exprRowValue(listOf(row), false)
+                }
+            }
             exprValues(rows)
         }
 
