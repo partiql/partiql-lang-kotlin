@@ -3,6 +3,7 @@ package org.partiql.planner.internal.helpers
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Identifier
 import org.partiql.ast.IdentifierChain
+import org.partiql.ast.Literal
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCast
 import org.partiql.ast.expr.ExprLit
@@ -10,8 +11,6 @@ import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprSessionAttribute
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.PathStep
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StringValue
 
 private val col = { index: () -> Int -> "_${index()}" }
 
@@ -58,7 +57,6 @@ private fun IdentifierChain.toBinder(): Identifier {
 
 private fun Identifier.toBinder(): Identifier = symbol.toBinder()
 
-@OptIn(PartiQLValueExperimental::class)
 private fun ExprPath.toBinder(index: () -> Int): Identifier {
     if (next == null) return root.toBinder(index)
     var cur = next
@@ -71,8 +69,8 @@ private fun ExprPath.toBinder(index: () -> Int): Identifier {
         is PathStep.Field -> prev.field.toBinder()
         is PathStep.Element -> {
             val k = prev.element
-            if (k is ExprLit && k.value is StringValue) {
-                (k.value as StringValue).value!!.toBinder()
+            if (k is ExprLit && k.lit.code() == Literal.STRING) {
+                k.lit.stringValue().toBinder()
             } else {
                 col(index).toBinder()
             }

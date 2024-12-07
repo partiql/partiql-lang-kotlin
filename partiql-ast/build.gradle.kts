@@ -20,10 +20,6 @@ plugins {
 
 dependencies {
     api(Deps.ionElement)
-    api(project(":partiql-types"))
-    // TODO REMOVE ME ONCE PartiQLValue IS REMOVED
-    // THE AST NEEDS ITS OWN "VALUE" REPRESENTATION
-    api(project(":partiql-spi"))
     compileOnly(Deps.lombok)
     annotationProcessor(Deps.lombok)
 }

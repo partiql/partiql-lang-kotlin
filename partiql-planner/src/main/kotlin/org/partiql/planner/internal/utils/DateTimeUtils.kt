@@ -1,4 +1,4 @@
-package org.partiql.parser.internal.util
+package org.partiql.planner.internal.utils
 
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException

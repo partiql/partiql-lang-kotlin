@@ -15,12 +15,11 @@ import org.partiql.ast.Ast.selectItemExpr
 import org.partiql.ast.Ast.selectList
 import org.partiql.ast.Ast.selectValue
 import org.partiql.ast.FromType
+import org.partiql.ast.Literal.intNum
+import org.partiql.ast.Literal.string
 import org.partiql.ast.SelectItem
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.Scope
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int32Value
-import org.partiql.value.stringValue
 import kotlin.test.assertEquals
 
 class NormalizeSelectTest {
@@ -166,7 +165,6 @@ class NormalizeSelectTest {
             orderBy = null
         )
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun selectValue(vararg items: Pair<String, Expr>) =
         exprQuerySet(
             body = queryBodySFW(
@@ -174,7 +172,7 @@ class NormalizeSelectTest {
                     constructor = exprStruct(
                         items.map {
                             exprStructField(
-                                name = exprLit(stringValue(it.first)),
+                                name = exprLit(string(it.first)),
                                 value = it.second
                             )
                         }
@@ -221,6 +219,5 @@ class NormalizeSelectTest {
         asAlias = asAlias?.let { identifier(asAlias, isDelimited = false) }
     )
 
-    @OptIn(PartiQLValueExperimental::class)
-    private fun lit(value: Int) = exprLit(int32Value(value))
+    private fun lit(value: Int) = exprLit(intNum(value))
 }

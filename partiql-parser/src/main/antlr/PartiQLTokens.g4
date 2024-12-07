@@ -391,12 +391,16 @@ LITERAL_STRING
     : '\'' ( ('\'\'') | ~('\'') )* '\'';
 
 LITERAL_INTEGER
-    : DIGIT DIGIT*;
+    : DIGIT+;
 
-LITERAL_DECIMAL:
-    DIGIT+ '.' DIGIT* ([e] [+-]? DIGIT+)?
-    | '.' DIGIT DIGIT* ([e] [+-]? DIGIT+)?
-    | DIGIT DIGIT* ([e] [+-]? DIGIT+)?
+LITERAL_DECIMAL
+    : DIGIT+ '.' DIGIT*
+    | '.' DIGIT+
+    ;
+
+LITERAL_FLOAT
+    : DIGIT+ ('.' DIGIT*)? 'E' [+-]? DIGIT+
+    | '.' DIGIT+ 'E' [+-]? DIGIT+
     ;
 
 IDENTIFIER

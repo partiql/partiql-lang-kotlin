@@ -6,13 +6,11 @@ import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.exprSessionAttribute
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
+import org.partiql.ast.Literal.intNum
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.SessionAttribute
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int32Value
 import kotlin.test.assertEquals
 
-@OptIn(PartiQLValueExperimental::class)
 class PartiQLParserSessionAttributeTests {
 
     private val parser = PartiQLParserDefault()
@@ -49,7 +47,7 @@ class PartiQLParserSessionAttributeTests {
         queryBody {
             exprOperator(
                 symbol = "=",
-                lhs = exprLit(int32Value(1)),
+                lhs = exprLit(intNum(1)),
                 rhs = exprSessionAttribute(SessionAttribute.CURRENT_USER())
             )
         }

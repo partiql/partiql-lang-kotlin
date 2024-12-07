@@ -43,7 +43,6 @@ import org.partiql.ast.graph.GraphMatch
 import org.partiql.ast.graph.GraphPattern
 import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphSelector
-import org.partiql.value.PartiQLValueExperimental
 
 // TODO docs
 public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
@@ -201,9 +200,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun visitExprLit(node: ExprLit, ctx: C): AstNode {
-        val value = node.value
         return node
     }
 
@@ -413,6 +410,10 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
+    override fun visitLiteral(node: Literal, ctx: C): AstNode {
+        return node
+    }
+
     override fun visitPathStepField(node: PathStep.Field, ctx: C): AstNode {
         val field = visitIdentifier(node.field, ctx) as Identifier
         val next = node.next?.let { visitPathStep(it, ctx) as PathStep? }
@@ -552,7 +553,6 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         return node
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun visitExplain(node: Explain, ctx: C): AstNode {
         val statement = visitStatement(node.statement, ctx) as Statement
         return if (statement !== node.statement) {
