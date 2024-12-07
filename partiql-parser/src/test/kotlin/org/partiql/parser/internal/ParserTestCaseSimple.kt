@@ -28,4 +28,8 @@ class ParserTestCaseSimple(
             }
         }
     }
+
+    override fun toString(): String {
+        return name
+    }
 }

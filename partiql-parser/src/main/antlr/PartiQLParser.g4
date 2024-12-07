@@ -17,11 +17,23 @@ statements
     ;
 
 statement
-    : dql           # QueryDql
-    | dml           # QueryDml
-    | ddl           # QueryDdl
-    | execCommand   # QueryExec  // TODO delete in `v1` release
-    | EXPLAIN (PAREN_LEFT explainOption (COMMA explainOption)* PAREN_RIGHT)? statement # Explain
+    // DQL
+    : dql
+
+    // DML
+    | insertStatement
+    | updateStatementSearched
+    | deleteStatementSearched
+    | upsertStatement
+    | replaceStatement
+
+    // DDL
+    | createCommand
+    | dropCommand
+
+    // OTHER
+    | explainStatement
+    // TODO: SQL's <execute statement>: | execCommand
     ;
 
 /**
@@ -29,9 +41,6 @@ statement
  * COMMON STRUCTURES
  *
  */
-
-explainOption
-    : param=IDENTIFIER value=IDENTIFIER;
 
 asIdent
     : AS symbolPrimitive;
@@ -48,6 +57,14 @@ symbolPrimitive
     | nonReserved           # IdentifierUnquoted
     ;
 
+// <qualified name> ::= [ <schema name> <period> ] <qualified identifier>
+qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
+
+tableName : symbolPrimitive;
+tableConstraintName : symbolPrimitive;
+columnName : symbolPrimitive;
+columnConstraintName : symbolPrimitive;
+
 /**
  *
  * DATA QUERY LANGUAGE (DQL)
@@ -56,6 +73,20 @@ symbolPrimitive
 
 dql
     : expr;
+    
+//
+//
+// EXPLAIN
+//
+//
+
+explainStatement
+    : EXPLAIN (PAREN_LEFT explainOption (COMMA explainOption)* PAREN_RIGHT)? statement # Explain
+    ;
+
+explainOption
+    : param=IDENTIFIER value=IDENTIFIER
+    ;
 
 /**
  *
@@ -76,12 +107,6 @@ execCommand
  * Currently, this is a small subset of SQL DDL that is likely to make sense for PartiQL as well.
  */
 
-// <qualified name> ::= [ <schema name> <period> ] <qualified identifier>
-qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
-
-tableName : symbolPrimitive;
-tableConstraintName : symbolPrimitive;
-columnName : symbolPrimitive;
 comment : COMMENT LITERAL_STRING;
 
 ddl
@@ -91,7 +116,7 @@ ddl
 
 createCommand
     : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )? tableExtension*               # CreateTable
-    | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT       # CreateIndex
+    // TODO: Do we need this? | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
     ;
 
 dropCommand
@@ -153,139 +178,135 @@ keyValuePair : key=LITERAL_STRING EQ value=LITERAL_STRING;
 partitionBy
     : PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT                   #PartitionColList
     ;
+
 /**
  *
  * DATA MANIPULATION LANGUAGE (DML)
- *
+ * TODO: Determine future of REMOVE DML statement: https://github.com/partiql/partiql-lang-kotlin/issues/1668
+ * TODO: Determine future of FROM (INSERT, SET, REMOVE) statements: https://github.com/partiql/partiql-lang-kotlin/issues/1669
+ * TODO: Implement the RETURNING clause for INSERT/UPDATE. See https://github.com/partiql/partiql-lang-kotlin/issues/1667
  */
-// TODO delete / rewrite rules ahead of `v1` release. Legacy DML rules can be deleted. Spec'd rules (e.g. PartiQL RFC
-//  and SQL spec) should be easier to rewrite once the legacy DML rules are deleted.
-dml
-    : updateClause dmlBaseCommand+ whereClause? returningClause?  # DmlBaseWrapper
-    | fromClause whereClause? dmlBaseCommand+ returningClause?    # DmlBaseWrapper
-    | deleteCommand                                               # DmlDelete
-    | insertCommandReturning                                      # DmlInsertReturning
-    | dmlBaseCommand                                              # DmlBase
-    ;
-
-dmlBaseCommand
-    : insertStatement
-    | insertStatementLegacy
-    | setCommand
-    | replaceCommand
-    | removeCommand
-    | upsertCommand
-    ;
-
-pathSimple
-    : symbolPrimitive pathSimpleSteps*;
-
-pathSimpleSteps
-    : BRACKET_LEFT key=literal BRACKET_RIGHT             # PathSimpleLiteral
-    | BRACKET_LEFT key=symbolPrimitive BRACKET_RIGHT     # PathSimpleSymbol
-    | PERIOD key=symbolPrimitive                         # PathSimpleDotSymbol
-    ;
-
-// Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
-// TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
-replaceCommand
-    : REPLACE INTO symbolPrimitive asIdent? value=expr;
-
-// Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
-// TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
-upsertCommand
-    : UPSERT INTO symbolPrimitive asIdent? value=expr;
-
-removeCommand
-    : REMOVE pathSimple;
-
-// FIXME #001
-//  There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
-//  ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
-//  See GH Issue: https://github.com/partiql/partiql-lang-kotlin/issues/698
-//  We essentially use the returning clause, because we currently support this with the SqlParser.
-//  See https://github.com/partiql/partiql-lang-kotlin/issues/708
-insertCommandReturning
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictLegacy? returningClause?;
-
-// See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
-insertStatement
-    : INSERT INTO symbolPrimitive asIdent? value=expr onConflict?
-    ;
-
-onConflict
-    : ON CONFLICT conflictTarget? conflictAction
-    ;
-
-insertStatementLegacy
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictLegacy?
-    ;
-
-onConflictLegacy
-    : ON CONFLICT WHERE expr DO NOTHING
-    ;
+ 
+//
+//
+// DML Statements
+// 
+//
 
 /**
-    <conflict target> ::=
-        ( <index target> [, <index target>]... )
-        | ( { <primary key> | <composite primary key> } )
-        | ON CONSTRAINT <constraint name>
-*/
-conflictTarget
-    : PAREN_LEFT symbolPrimitive (COMMA symbolPrimitive)* PAREN_RIGHT
-    | ON CONSTRAINT constraintName;
+ * @see https://github.com/partiql/partiql-lang/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
+ */
+insertStatement: INSERT INTO tblName=qualifiedName asIdent? insertSource onConflict?;
 
-constraintName
-    : qualifiedName;
+/**
+ * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#update%20statement:%20searched
+ */
+updateStatementSearched:  UPDATE targetTable=qualifiedName SET setClauseList ( WHERE searchCond=expr )?;
 
-conflictAction
-    : DO NOTHING
-    | DO REPLACE doReplace
-    | DO UPDATE doUpdate;
+/**
+ * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#delete%20statement:%20searched
+ */
+deleteStatementSearched: DELETE FROM targetTable=qualifiedName ( WHERE searchCond=expr )?;
 
-/*
-<do replace> ::= EXCLUDED
-    | SET <attr values> [, <attr values>]...
-    | VALUE <tuple value>
-   [ WHERE <condition> ]
-*/
-doReplace
-    : EXCLUDED ( WHERE condition=expr )?;
-    // :TODO add the rest of the grammar
+/**
+ * @see https://github.com/partiql/partiql-lang/blob/main/RFCs/0030-partiql-upsert-replace.md
+ */
+upsertStatement: UPSERT INTO tblName=qualifiedName asIdent? insertSource;
 
-/*
-<do update> ::= EXCLUDED
-    | SET <attr values> [, <attr values>]...
-    | VALUE <tuple value>
-   [ WHERE <condition> ]
-*/
-doUpdate
-    : EXCLUDED ( WHERE condition=expr )?;
-    // :TODO add the rest of the grammar
+/**
+ * @see https://github.com/partiql/partiql-lang/blob/main/RFCs/0030-partiql-upsert-replace.md
+ */
+replaceStatement: REPLACE INTO tblName=qualifiedName asIdent? insertSource;
 
-updateClause
-    : UPDATE tableBaseReference;
+//
+//
+// INSERT STATEMENT STRUCTURES
+//
+//
 
-setCommand
-    : SET setAssignment ( COMMA setAssignment )*;
-
-setAssignment
-    : pathSimple EQ expr;
-
-deleteCommand
-    : DELETE fromClauseSimple whereClause? returningClause?;
-
-returningClause
-    : RETURNING returningColumn ( COMMA returningColumn )*;
-
-returningColumn
-    : status=(MODIFIED|ALL) age=(OLD|NEW) ASTERISK
-    | status=(MODIFIED|ALL) age=(OLD|NEW) col=expr
+insertSource
+    : insertFromSubquery
+    | insertFromDefault
     ;
 
-fromClauseSimple
-    : FROM pathSimple asIdent? atIdent? byIdent?   # FromClauseSimpleExplicit
-    | FROM pathSimple symbolPrimitive              # FromClauseSimpleImplicit
+insertFromSubquery: insertColumnList? expr;
+
+insertFromDefault: DEFAULT VALUES;
+
+insertColumnList: PAREN_LEFT names+=symbolPrimitive ( COMMA names+=symbolPrimitive )* PAREN_RIGHT;
+
+//
+//
+// UPDATE STATEMENT STRUCTURES
+//
+//
+
+/**
+ * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#set%20clause%20list
+ */
+setClauseList: setClause ( COMMA setClause )*;
+
+/**
+ * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#set%20clause
+ * The above referenced set clause doesn't exactly allow for the flexibility provided by updateTarget (previously
+ * named pathSimple). The SQL:1999 EBNF states that <update target> can either be a column name or a column name
+ * followed by square brackets and a literal (or other simple value). Since PartiQL allows for setting a nested attribute
+ * the updateTarget here provides for a superset of SQL's <update target>
+ */
+setClause: updateTarget EQ expr;
+
+updateTarget: symbolPrimitive updateTargetStep*;
+
+// TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1671
+updateTargetStep
+    : updateTargetStepElement
+    | updateTargetStepField
+    ;
+
+updateTargetStepElement: BRACKET_LEFT key=literal BRACKET_RIGHT;
+
+updateTargetStepField: PERIOD key=symbolPrimitive;
+
+//
+//
+// ON CONFLICT CLAUSE
+// @see https://github.com/partiql/partiql-lang/blob/main/RFCs/0030-partiql-upsert-replace.md
+// TODO: Add the rest of the grammar
+//
+
+onConflict: ON CONFLICT conflictTarget? conflictAction;
+
+conflictTarget
+    : conflictTargetIndex
+    | conflictTargetConstraint
+    ;
+
+conflictTargetIndex: PAREN_LEFT symbolPrimitive (COMMA symbolPrimitive)* PAREN_RIGHT;
+
+conflictTargetConstraint: ON CONSTRAINT constraintName ;
+
+constraintName: qualifiedName;
+
+conflictAction
+    : doNothing
+    | doReplace
+    | doUpdate
+    ;
+
+doNothing: DO NOTHING;
+
+doReplace: DO REPLACE doReplaceAction ( WHERE condition=expr )?;
+
+doUpdate: DO UPDATE doUpdateAction ( WHERE condition=expr )?;
+
+doReplaceAction
+    : EXCLUDED
+    // ...
+    ;
+
+doUpdateAction
+    : EXCLUDED
+    // ...
     ;
 
 whereClause
@@ -675,9 +696,9 @@ exprPrimary
     | exprPrimary pathStep+      # ExprPrimaryPath
     | exprGraphMatchMany         # ExprPrimaryBase
     | caseExpr                   # ExprPrimaryBase
-    | valueList                  # ExprPrimaryBase
-    | values                     # ExprPrimaryBase
     | windowFunction             # ExprPrimaryBase
+    | rowValueConstructor        # ExprPrimaryBase
+    | tableValueConstructor      # ExprPrimaryBase
     ;
 
 /**
@@ -685,6 +706,40 @@ exprPrimary
  * PRIMARY EXPRESSIONS
  *
  */
+ 
+/**
+ * From SQL:1999:
+ * <contextually typed table value constructor> ::= VALUES <contextually typed row value expression list>
+ * Or:
+ * <table value constructor> ::= VALUES <row value expression list>
+ *
+ * Since this can be used as a <query specification> (top-level value), we are making this an [expr].
+ */
+tableValueConstructor
+    : VALUES rowValueExpressionList
+    ;
+
+/**
+ * From SQL:1999:
+ * <contextually typed row value expression list>    ::=
+ *     <contextually typed row value expression> [ { <comma> <contextually typed row value expression> }... ]
+ */
+rowValueExpressionList
+    : expr ( COMMA expr )*
+    ;
+
+/**
+ * From SQL:1999:
+ * <row value constructor>    ::=
+ *     <row value constructor element>
+ *     |     [ ROW ] <left paren> <row value constructor element list> <right paren>
+ *     |     <row subquery>
+ *
+ * Since the other variants are covered by [expr], this ANTLR rule specifically targets the second variant.
+ */
+rowValueConstructor
+    : ROW? PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT
+    ;
 
 exprTerm
     : PAREN_LEFT expr PAREN_RIGHT    # ExprTermWrappedQuery
@@ -705,15 +760,6 @@ coalesce
 
 caseExpr
     : CASE case=expr? (WHEN whens+=expr THEN thens+=expr)+ (ELSE else=expr)? END;
-
-values
-    : VALUES valueRow ( COMMA valueRow )*;
-
-valueRow
-    : PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT;
-
-valueList
-    : PAREN_LEFT expr ( COMMA expr )+ PAREN_RIGHT;
 
 sequenceConstructor
     : datatype=(LIST|SEXP) PAREN_LEFT (expr ( COMMA expr )* )? PAREN_RIGHT;
