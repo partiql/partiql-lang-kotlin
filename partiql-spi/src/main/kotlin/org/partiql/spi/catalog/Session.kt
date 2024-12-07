@@ -46,11 +46,9 @@ public interface Session {
          * Returns a [Session] with only the "empty" catalog implementation.
          */
         @JvmStatic
-        public fun empty(): Session = object : Session {
-            override fun getIdentity(): String = "unknown"
-            override fun getCatalog(): String = "empty"
-            override fun getCatalogs(): Catalogs = Catalogs.empty()
-            override fun getNamespace(): Namespace = Namespace.empty()
+        public fun empty(): Session {
+            val catalog = Catalog.empty("empty")
+            return builder().catalog(catalog.getName()).catalogs(catalog).build()
         }
 
         @JvmStatic
@@ -64,6 +62,7 @@ public interface Session {
 
         private var identity: String = "unknown"
         private var catalog: String? = null
+        private var systemCatalog: Catalog = PartiQLSystemCatalog.INSTANCE
         private var catalogs: Catalogs.Builder = Catalogs.builder()
         private var namespace: Namespace = Namespace.empty()
         private var properties: MutableMap<String, String> = mutableMapOf()
@@ -99,6 +98,16 @@ public interface Session {
         }
 
         /**
+         * Adds and designates a catalog to always be on the SQL-Path. This [catalog] provides all built-in functions
+         * to the system at hand.
+         * If this is never invoked, a default system catalog is provided.
+         */
+        public fun system(catalog: Catalog): Builder {
+            this.systemCatalog = catalog
+            return this
+        }
+
+        /**
          * Adds catalogs to this session.
          */
         public fun catalogs(vararg catalogs: Catalog): Builder {
@@ -110,16 +119,24 @@ public interface Session {
 
         public fun build(): Session = object : Session {
 
-            private val _catalogs = catalogs.build()
+            private val _catalogs: Catalogs
+            private val systemCatalogNamespace: Namespace = Namespace.of(systemCatalog.getName())
 
             init {
                 require(catalog != null) { "Session catalog must be set" }
+                catalogs.add(systemCatalog)
+                _catalogs = catalogs.build()
             }
 
             override fun getIdentity(): String = identity
             override fun getCatalog(): String = catalog!!
             override fun getCatalogs(): Catalogs = _catalogs
             override fun getNamespace(): Namespace = namespace
+
+            override fun getPath(): Path {
+                val currentNamespace = getNamespace()
+                return Path.of(currentNamespace, systemCatalogNamespace)
+            }
         }
     }
 }
