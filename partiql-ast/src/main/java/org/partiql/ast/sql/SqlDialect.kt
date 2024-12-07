@@ -46,6 +46,11 @@ import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.ddl.Ddl
+import org.partiql.ast.dml.Delete
+import org.partiql.ast.dml.Insert
+import org.partiql.ast.dml.Replace
+import org.partiql.ast.dml.Update
+import org.partiql.ast.dml.Upsert
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
@@ -773,6 +778,26 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     // TODO: DDL
     override fun visitDdl(node: Ddl, ctx: SqlBlock): SqlBlock {
         throw UnsupportedOperationException("DDL has not been supported yet in SqlDialect")
+    }
+
+    override fun visitInsert(node: Insert?, ctx: SqlBlock?): SqlBlock {
+        throw UnsupportedOperationException("INSERT has not been supported yet in SqlDialect")
+    }
+
+    override fun visitDelete(node: Delete?, ctx: SqlBlock?): SqlBlock {
+        throw UnsupportedOperationException("DELETE has not been supported yet in SqlDialect")
+    }
+
+    override fun visitUpsert(node: Upsert?, ctx: SqlBlock?): SqlBlock {
+        throw UnsupportedOperationException("UPSERT has not been supported yet in SqlDialect")
+    }
+
+    override fun visitReplace(node: Replace?, ctx: SqlBlock?): SqlBlock {
+        throw UnsupportedOperationException("REPLACE has not been supported yet in SqlDialect")
+    }
+
+    override fun visitUpdate(node: Update?, ctx: SqlBlock?): SqlBlock {
+        throw UnsupportedOperationException("UPDATE has not been supported yet in SqlDialect")
     }
 
     // --- Block Constructor Helpers

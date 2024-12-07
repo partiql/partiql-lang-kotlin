@@ -46,6 +46,9 @@ public final class OnConflict extends AstNode {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(action);
+        if (target != null) {
+            kids.add(target);
+        }
         return kids;
     }
 

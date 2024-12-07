@@ -56,6 +56,10 @@ public final class Replace extends Statement {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(tableName);
+        if (asAlias != null) {
+            kids.add(asAlias);
+        }
+        kids.add(source);
         return kids;
     }
 

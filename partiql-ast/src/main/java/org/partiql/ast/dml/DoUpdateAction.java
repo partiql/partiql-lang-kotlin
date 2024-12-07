@@ -10,11 +10,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * This represents the potential actions after the DO UPDATE clause.
- * @see ConflictAction.DoReplace
+ * This represents the potential actions after the DO UPDATE clause. While there are more variants beyond EXCLUDED,
+ * only EXCLUDED is currently implemented.
+ * @see ConflictAction.DoUpdate
  * @see OnConflict#action
  */
 public abstract class DoUpdateAction extends AstNode {
+    // TODO: There are more variants than just EXCLUDED. See the Javadoc above.
 
     /**
      * This is the EXCLUDED variant of the DO UPDATE clause.

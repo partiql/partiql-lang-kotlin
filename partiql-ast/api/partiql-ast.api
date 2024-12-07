@@ -1538,7 +1538,7 @@ public abstract class org/partiql/ast/dml/ConflictTarget : org/partiql/ast/AstNo
 }
 
 public final class org/partiql/ast/dml/ConflictTarget$Constraint : org/partiql/ast/dml/ConflictTarget {
-	public final field constraintName Lorg/partiql/ast/IdentifierChain;
+	public final field name Lorg/partiql/ast/IdentifierChain;
 	public fun <init> (Lorg/partiql/ast/IdentifierChain;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/dml/ConflictTarget$Constraint$Builder;
@@ -1549,7 +1549,7 @@ public final class org/partiql/ast/dml/ConflictTarget$Constraint : org/partiql/a
 
 public class org/partiql/ast/dml/ConflictTarget$Constraint$Builder {
 	public fun build ()Lorg/partiql/ast/dml/ConflictTarget$Constraint;
-	public fun constraintName (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/ConflictTarget$Constraint$Builder;
+	public fun name (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/ConflictTarget$Constraint$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -3053,6 +3053,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitDataType (Lorg/partiql/ast/DataType;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDelete (Lorg/partiql/ast/dml/Delete;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExcludePath (Lorg/partiql/ast/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
@@ -3144,6 +3146,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsert (Lorg/partiql/ast/dml/Insert;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
@@ -3164,6 +3168,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitQueryBodySFW (Lorg/partiql/ast/QueryBody$SFW;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitReplace (Lorg/partiql/ast/dml/Replace;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReplace (Lorg/partiql/ast/dml/Replace;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitSelectItemStar (Lorg/partiql/ast/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
@@ -3180,6 +3186,10 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitSetOp (Lorg/partiql/ast/SetOp;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSort (Lorg/partiql/ast/Sort;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitUpdate (Lorg/partiql/ast/dml/Update;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdate (Lorg/partiql/ast/dml/Update;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 }
 
 public final class org/partiql/ast/sql/SqlDialect$Companion {

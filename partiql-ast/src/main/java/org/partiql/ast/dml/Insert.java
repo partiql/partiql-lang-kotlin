@@ -64,6 +64,13 @@ public final class Insert extends Statement {
     public Collection<AstNode> children() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(tableName);
+        if (asAlias != null) {
+            kids.add(asAlias);
+        }
+        kids.add(source);
+        if (onConflict != null) {
+            kids.add(onConflict);
+        }
         return kids;
     }
 

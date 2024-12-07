@@ -65,23 +65,22 @@ public abstract class ConflictTarget extends AstNode {
         /**
          * TODO
          */
-        // TODO: Should this be a qualified identifier?
         @NotNull
-        public final IdentifierChain constraintName;
+        public final IdentifierChain name;
 
         /**
          * TODO
-         * @param constraintName TODO
+         * @param name TODO
          */
-        public Constraint(@NotNull IdentifierChain constraintName) {
-            this.constraintName = constraintName;
+        public Constraint(@NotNull IdentifierChain name) {
+            this.name = name;
         }
 
         @NotNull
         @Override
         public Collection<AstNode> children() {
             List<AstNode> children = new ArrayList<>();
-            children.add(constraintName);
+            children.add(name);
             return children;
         }
 
