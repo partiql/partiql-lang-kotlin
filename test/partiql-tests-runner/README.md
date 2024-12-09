@@ -12,22 +12,18 @@ This package enables:
 
 ```shell
 # default, test data from partiql-tests submodule will be used
-./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestReport" -PconformanceReport
+./gradlew :test:partiql-tests-runner:ConformanceTestReport
 
 # override test data location
 PARTIQL_TESTS_DATA=/path/to/partiql-tests/data \
-./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestReport" -PconformanceReport
+./gradlew :test:partiql-tests-runner:ConformanceTestReport
 ```
-The report is written into file `test/partiql-tests-runner/conformance_test_results.ion`.
-
-## Run Conformance Tests in UI
-
-The above project property `-PconformanceReport` is checked in `test/partiql-tests-runner/build.gradle.kts`,
-to exclude the conformance test suite from executing during a normal project-build test run. 
-Unfortunately, this also disables running `ConformanceTestReport` in a UI runner. 
-To make that possible locally, temporarily comment out the check in `test/partiql-tests-runner/build.gradle.kts`.
+The report is written into folder `test/partiql-tests-runner/build/conformance_test_results`.
 
 ## Compare Conformance Reports locally
+The report contains two type of comparison: 
+1. Cross Commit: Comparing using the same engine based on the pull request commit and head of target branch commit. 
+2. Cross Engine: Comparing using different engine based on the pull request commit. 
 
 ```shell
 ./gradlew :test:partiql-tests-runner:run --args="pathToFirstConformanceTestResults pathToSecondConformanceTestResults firstCommitId secondCommitId pathToComparisonReport"

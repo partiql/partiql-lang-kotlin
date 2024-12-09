@@ -17,11 +17,13 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.dokka)
     id(Plugins.library)
-    id(Plugins.publish)
+    // TODO: Once code coverage is supported with the new evaluator, we can publish a new version.
+    // id(Plugins.publish)
 }
 
 dependencies {
-    api(project(":partiql-lang"))
+    // TODO: Once code coverage is published again, we can re-add the HEAD of the PartiQL Library.
+    api("org.partiql:partiql-lang-kotlin:0.14.8")
     implementation(Deps.junitApi)
     implementation(Deps.junitParams)
     implementation(Deps.junitPlatformLauncher)
@@ -34,8 +36,22 @@ tasks.withType<Javadoc>() {
     enabled = false
 }
 
-publish {
-    artifactId = "partiql-coverage"
-    name = "PartiQL Code Coverage"
-    description = "Code Coverage APIs for testing PartiQL source."
-}
+// START OF COMMENTED OUT CODE
+// TODO: This has all be commented out due to the *temporary* removal of the publish API
+
+// tasks.shadowJar {
+//     configurations = listOf(project.configurations.shadow.get())
+// }
+
+// Workaround for https://github.com/johnrengelman/shadow/issues/651
+// components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
+//     c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
+//         skip()
+//     }
+// }
+// publish {
+//     artifactId = "partiql-coverage"
+//     name = "PartiQL Code Coverage"
+//     description = "Code Coverage APIs for testing PartiQL source."
+// }
+//  END OF COMMENTED OUT CODE

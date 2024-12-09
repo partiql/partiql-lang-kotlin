@@ -1,4 +1,6 @@
-import org.jetbrains.dokka.utilities.relativeTo
+import org.jetbrains.dokka.gradle.DokkaTask
+import kotlin.io.path.relativeTo
+import kotlin.io.path.toPath
 
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -21,6 +23,7 @@ plugins {
     id(Plugins.library)
     id(Plugins.testFixtures)
     id(Plugins.publish)
+    id(Plugins.kotlinLombok) version Versions.kotlinLombok
 }
 
 dependencies {
@@ -30,12 +33,25 @@ dependencies {
     implementation(project(":partiql-spi"))
     implementation(Deps.dotlin)
     implementation(Deps.ionElement)
+    compileOnly(Deps.lombok)
+    annotationProcessor(Deps.lombok)
     // Test
     testImplementation(project(":partiql-parser"))
-    testImplementation(project(":plugins:partiql-local"))
-    testImplementation(project(":plugins:partiql-memory"))
+    testImplementation(testFixtures(project(":partiql-types"))) // TODO: Remove use of StaticType
+    testImplementation(Deps.kotlinReflect)
     // Test Fixtures
     testFixturesImplementation(project(":partiql-spi"))
+}
+
+tasks.shadowJar {
+    configurations = listOf(project.configurations.shadow.get())
+}
+
+// Workaround for https://github.com/johnrengelman/shadow/issues/651
+components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
+    c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
+        skip()
+    }
 }
 
 tasks.register("generateResourcePath") {
@@ -51,7 +67,7 @@ tasks.register("generateResourcePath") {
         resourceDir.walk().forEach { file ->
             if (!file.isDirectory) {
                 if (file.extension == "ion" || file.extension == "sql") {
-                    val toAppend = file.toURI().relativeTo(resourceDir.toURI())
+                    val toAppend = file.toURI().toPath().relativeTo(resourceDir.toURI().toPath())
                     pathFile.appendText("$toAppend\n")
                 }
             }
@@ -70,6 +86,12 @@ tasks.register("generateResourcePath") {
 tasks.processTestResources {
     dependsOn("generateResourcePath")
     from("src/testFixtures/resources")
+}
+
+tasks.compileTestFixturesKotlin {
+    kotlinOptions.jvmTarget = Versions.jvmTarget
+    kotlinOptions.apiVersion = Versions.kotlinApi
+    kotlinOptions.languageVersion = Versions.kotlinLanguage
 }
 
 publish {
@@ -146,7 +168,7 @@ tasks.detekt {
     dependsOn(tasks.withType<Copy>())
 }
 
-tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+tasks.withType<DokkaTask>().configureEach {
     dependsOn(tasks.withType<Copy>())
 }
 

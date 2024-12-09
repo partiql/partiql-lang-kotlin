@@ -17,15 +17,15 @@
 package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.AstNode
-import org.partiql.ast.Expr
-import org.partiql.ast.visitor.AstBaseVisitor
+import org.partiql.ast.AstVisitor
+import org.partiql.ast.Query
+import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.ir.identifierQualified
-import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.statementQuery
+import org.partiql.spi.catalog.Identifier
 import org.partiql.ast.Identifier as AstIdentifier
+import org.partiql.ast.IdentifierChain as AstIdentifierChain
 import org.partiql.ast.Statement as AstStatement
-import org.partiql.planner.internal.ir.Identifier as PlanIdentifier
 import org.partiql.planner.internal.ir.Statement as PlanStatement
 
 /**
@@ -38,13 +38,13 @@ internal object AstToPlan {
     fun apply(statement: AstStatement, env: Env): PlanStatement = statement.accept(ToPlanStatement, env)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    private object ToPlanStatement : AstBaseVisitor<PlanStatement, Env>() {
+    private object ToPlanStatement : AstVisitor<PlanStatement, Env>() {
 
         override fun defaultReturn(node: AstNode, env: Env) = throw IllegalArgumentException("Unsupported statement")
 
-        override fun visitStatementQuery(node: AstStatement.Query, env: Env): PlanStatement {
+        override fun visitQuery(node: Query, env: Env): PlanStatement {
             val rex = when (val expr = node.expr) {
-                is Expr.SFW -> RelConverter.apply(expr, env)
+                is ExprQuerySet -> RelConverter.apply(expr, env)
                 else -> RexConverter.apply(expr, env)
             }
             return statementQuery(rex)
@@ -53,23 +53,23 @@ internal object AstToPlan {
 
     // --- Helpers --------------------
 
-    fun convert(identifier: AstIdentifier): PlanIdentifier = when (identifier) {
-        is AstIdentifier.Qualified -> convert(identifier)
-        is AstIdentifier.Symbol -> convert(identifier)
-    }
-
-    fun convert(identifier: AstIdentifier.Qualified): PlanIdentifier.Qualified {
-        val root = convert(identifier.root)
-        val steps = identifier.steps.map { convert(it) }
-        return identifierQualified(root, steps)
-    }
-
-    fun convert(identifier: AstIdentifier.Symbol): PlanIdentifier.Symbol {
-        val symbol = identifier.symbol
-        val case = when (identifier.caseSensitivity) {
-            AstIdentifier.CaseSensitivity.SENSITIVE -> PlanIdentifier.CaseSensitivity.SENSITIVE
-            AstIdentifier.CaseSensitivity.INSENSITIVE -> PlanIdentifier.CaseSensitivity.INSENSITIVE
+    fun convert(identifier: AstIdentifierChain): Identifier {
+        val parts = mutableListOf<Identifier.Part>()
+        parts.add(part(identifier.root))
+        var curStep = identifier.next
+        while (curStep != null) {
+            parts.add(part(curStep.root))
+            curStep = curStep.next
         }
-        return identifierSymbol(symbol, case)
+        return Identifier.of(parts)
+    }
+
+    fun convert(identifier: AstIdentifier): Identifier {
+        return Identifier.of(part(identifier))
+    }
+
+    fun part(identifier: AstIdentifier): Identifier.Part = when (identifier.isDelimited) {
+        true -> Identifier.Part.delimited(identifier.symbol)
+        false -> Identifier.Part.regular(identifier.symbol)
     }
 }

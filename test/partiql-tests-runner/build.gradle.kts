@@ -20,31 +20,56 @@ plugins {
 }
 
 application {
-    mainClass.set("org.partiql.runner.ConformanceComparisonKt")
+    mainClass.set("org.partiql.runner.PartiQLTestsRunner")
 }
 
 dependencies {
     implementation(Deps.ionElement)
-    testImplementation(project(":partiql-lang"))
+    implementation(Deps.picoCli)
+    testImplementation(project(":partiql-eval"))
+    testImplementation(project(":partiql-parser", configuration = "shadow"))
+    testImplementation(project(":partiql-planner"))
 }
 
 val tests = System.getenv()["PARTIQL_TESTS_DATA"] ?: "../partiql-tests/partiql-tests-data"
+val reportDir = file("$buildDir/conformance-test-report").absolutePath
 
 object Env {
     const val PARTIQL_EVAL = "PARTIQL_EVAL_TESTS_DATA"
     const val PARTIQL_EQUIV = "PARTIQL_EVAL_EQUIV_TESTS_DATA"
 }
 
+fun setEnvironmentDataDirectories(test: Test) {
+    // Set PartiQL Evaluation Test Directory
+    val conformanceDataEval = file("$tests/eval/").absolutePath
+    test.environment(Env.PARTIQL_EVAL, conformanceDataEval)
+    // Set PartiQL Evaluation Equivalence Test Directory
+    val conformanceDataEquiv = file("$tests/eval-equiv/").absolutePath
+    test.environment(Env.PARTIQL_EQUIV, conformanceDataEquiv)
+}
+
 tasks.test {
     useJUnitPlatform()
-    environment(Env.PARTIQL_EVAL, file("$tests/eval/").absolutePath)
-    environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
+    setEnvironmentDataDirectories(this)
 
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
-    if (!project.hasProperty("conformanceReport")) {
-        exclude("org/partiql/runner/ConformanceTestReport.class")
-    }
+    exclude("org/partiql/runner/ConformanceTestEval.class")
 
     // May 2023: Disabled conformance testing during regular project build, because fail lists are out of date.
     exclude("org/partiql/runner/ConformanceTest.class")
+}
+
+val createReportDir by tasks.registering {
+    if (File(reportDir).exists()) {
+        delete(File(reportDir))
+    }
+    mkdir(reportDir)
+}
+
+val generateTestReport by tasks.registering(Test::class) {
+    dependsOn(createReportDir)
+    useJUnitPlatform()
+    setEnvironmentDataDirectories(this)
+    environment("conformanceReportDir", reportDir)
+    include("org/partiql/runner/ConformanceTestEval.class")
 }

@@ -11,10 +11,6 @@
       {
         name: "breed",
         type: "string",
-      },
-      {
-        name: "tag",
-        type: "int16",
       }
     ]
   }

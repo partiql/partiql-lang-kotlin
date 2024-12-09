@@ -1,0 +1,35 @@
+public abstract interface class org/partiql/planner/PartiQLPlanner {
+	public static final field Companion Lorg/partiql/planner/PartiQLPlanner$Companion;
+	public static fun builder ()Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/Context;)Lorg/partiql/planner/PartiQLPlanner$Result;
+	public static fun standard ()Lorg/partiql/planner/PartiQLPlanner;
+}
+
+public final class org/partiql/planner/PartiQLPlanner$Companion {
+	public final fun builder ()Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public final fun standard ()Lorg/partiql/planner/PartiQLPlanner;
+}
+
+public final class org/partiql/planner/PartiQLPlanner$DefaultImpls {
+	public static fun plan (Lorg/partiql/planner/PartiQLPlanner;Lorg/partiql/ast/Statement;Lorg/partiql/spi/catalog/Session;)Lorg/partiql/planner/PartiQLPlanner$Result;
+}
+
+public final class org/partiql/planner/PartiQLPlanner$Result {
+	public fun <init> (Lorg/partiql/plan/Plan;)V
+	public final fun getPlan ()Lorg/partiql/plan/Plan;
+}
+
+public abstract interface class org/partiql/planner/PartiQLPlannerPass {
+	public abstract fun apply (Lorg/partiql/plan/Plan;Lorg/partiql/spi/Context;)Lorg/partiql/plan/Plan;
+}
+
+public final class org/partiql/planner/builder/PartiQLPlannerBuilder {
+	public fun <init> ()V
+	public final fun addPass (Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public final fun addPasses ([Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
+	public final fun signal (Z)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+	public static synthetic fun signal$default (Lorg/partiql/planner/builder/PartiQLPlannerBuilder;ZILjava/lang/Object;)Lorg/partiql/planner/builder/PartiQLPlannerBuilder;
+}
+

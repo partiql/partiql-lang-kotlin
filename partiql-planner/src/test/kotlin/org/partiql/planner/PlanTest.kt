@@ -6,38 +6,38 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.PlanNode
-import org.partiql.plan.debug.PlanPrinter
+import org.partiql.plan.Plan
+import org.partiql.planner.internal.TestCatalog
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.planner.util.PlanNodeEquivalentVisitor
-import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.fromStaticType
 import java.io.File
 import java.nio.file.Path
-import java.time.Instant
 import java.util.stream.Stream
 import kotlin.io.path.toPath
+import kotlin.test.assertEquals
 
-// Prevent Unintentional break of the plan
-// We currently don't have a good way to assert on the result plan
-// so we assert on having the partiql text.
-// The input text and the normalized partiql text should produce identical plan.
-// I.e.,
-// if the input text is `SELECT a,b,c FROM T`
-// the produced plan will be identical as the normalized query:
-// `SELECT "T"['a'] AS "a", "T"['b'] AS "b", "T"['c'] AS "c" FROM "default"."T" AS "T";`
+/**
+ * This class test asserts a normalized query produces the same plans as the original input query.
+ *
+ * assert(plan(normalize(query)) == plan(query))
+ */
 class PlanTest {
-    val root: Path = this::class.java.getResource("/outputs")!!.toURI().toPath()
 
-    val input = PartiQLTestProvider().apply { load() }
+    private val root: Path = this::class.java.getResource("/outputs")!!.toURI().toPath()
+    private val input = PartiQLTestProvider().apply { load() }
 
-    val metadata = MemoryConnector.Metadata.of(
-        "default.t" to BagType(
+    /**
+     * Table schema
+     */
+    private val schema = fromStaticType(
+        BagType(
             StructType(
                 listOf(
                     StructType.Field("a", StaticType.BOOL),
@@ -65,23 +65,22 @@ class PlanTest {
         )
     )
 
-    val session: (PartiQLTest.Key) -> PartiQLPlanner.Session = { key ->
-        PartiQLPlanner.Session(
-            queryId = key.toString(),
-            userId = "user_id",
-            currentCatalog = "default",
-            currentDirectory = listOf(),
-            catalogs = mapOf("default" to metadata),
-            instant = Instant.now(),
-        )
-    }
-
-    val pipeline: (PartiQLTest) -> PartiQLPlanner.Result = { test ->
-        val problemCollector = ProblemCollector()
-        val ast = PartiQLParser.default().parse(test.statement).root
-        val planner = PartiQLPlannerBuilder()
+    private val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
+        val session = Session.builder()
+            .catalog("default")
+            .catalogs(
+                TestCatalog.builder()
+                    .name("default")
+                    .createTable(Name.of("SCHEMA", "T"), schema)
+                    .build()
+            )
+            .namespace("SCHEMA")
             .build()
-        planner.plan(ast, session(test.key), problemCollector)
+        val parseResult = PartiQLParser.standard().parse(test.statement)
+        assertEquals(1, parseResult.statements.size)
+        val ast = parseResult.statements[0]
+        val planner = PartiQLPlanner.builder().signal(isSignalMode).build()
+        planner.plan(ast, session)
     }
 
     @TestFactory
@@ -109,26 +108,32 @@ class PlanTest {
         val group = parent.name
         val tests = parse(group, file)
 
-        val children = tests.map {
+        val children = tests.map { test ->
             // Prepare
-            val displayName = it.key.toString()
+            val displayName = test.key.toString()
 
             // Assert
             DynamicTest.dynamicTest(displayName) {
-                val input = input[it.key] ?: error("no test cases")
-
-                val inputPlan = pipeline.invoke(input).plan
-                val outputPlan = pipeline.invoke(it).plan
-                assert(inputPlan.isEquaivalentTo(outputPlan)) {
-                    buildString {
-                        this.appendLine("expect plan equivalence")
-                        PlanPrinter.append(this, inputPlan)
-                        PlanPrinter.append(this, outputPlan)
-                    }
+                val input = input[test.key] ?: error("no test cases")
+                val originalQuery = input
+                val normalizedQuery = test
+                listOf(true, false).forEach { isSignal ->
+                    val inputPlan = pipeline.invoke(originalQuery, isSignal).plan
+                    val outputPlan = pipeline.invoke(normalizedQuery, isSignal).plan
+                    assertPlanEqual(inputPlan, outputPlan)
                 }
             }
         }
         return dynamicContainer(file.nameWithoutExtension, children)
+    }
+
+    private fun assertPlanEqual(actual: Plan, expected: Plan) {
+        assert(PlanEquivalenceOperatorVisitor.equals(actual, expected)) {
+            buildString {
+                appendLine("plans were not equivalent")
+                // TODO print diff
+            }
+        }
     }
 
     private fun parse(group: String, file: File): List<PartiQLTest> {
@@ -158,7 +163,4 @@ class PlanTest {
         }
         return tests
     }
-
-    private fun PlanNode.isEquaivalentTo(other: PlanNode): Boolean =
-        PlanNodeEquivalentVisitor().visit(this, other)
 }

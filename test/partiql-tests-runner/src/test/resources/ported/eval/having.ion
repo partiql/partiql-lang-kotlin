@@ -1,0 +1,293 @@
+
+envs::{
+  repeating_things:[
+    {
+      thingId:1,
+      attributeId:10
+    },
+    {
+      thingId:2,
+      attributeId:20
+    },
+    {
+      thingId:3,
+      attributeId:20
+    },
+    {
+      thingId:4,
+      attributeId:30
+    },
+    {
+      thingId:5,
+      attributeId:30
+    },
+    {
+      thingId:6,
+      attributeId:30
+    },
+    {
+      thingId:7,
+      attributeId:40
+    },
+    {
+      thingId:8,
+      attributeId:40
+    },
+    {
+      thingId:9,
+      attributeId:40
+    },
+    {
+      thingId:10,
+      attributeId:40
+    },
+    {
+      thingId:11,
+      attributeId:50
+    },
+    {
+      thingId:12,
+      attributeId:50
+    },
+    {
+      thingId:13,
+      attributeId:50
+    },
+    {
+      thingId:14,
+      attributeId:50
+    },
+    {
+      thingId:15,
+      attributeId:50
+    },
+    {
+      thingId:16,
+      attributeId:null
+    },
+    {
+      thingId:17,
+      attributeId:null
+    },
+    {
+      thingId:18,
+      attributeId:null
+    },
+    {
+      thingId:19,
+      attributeId:null
+    },
+    {
+      thingId:20,
+      attributeId:null
+    },
+    {
+      thingId:21,
+      attributeId:null
+    }
+  ]
+}
+{
+  name:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId GROUP AS g HAVING 1 = 1 ",
+  statement:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId GROUP AS g HAVING 1 = 1 ",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        attributeId:10,
+        the_count:1
+      },
+      {
+        attributeId:20,
+        the_count:2
+      },
+      {
+        attributeId:30,
+        the_count:3
+      },
+      {
+        attributeId:40,
+        the_count:4
+      },
+      {
+        attributeId:50,
+        the_count:5
+      },
+      {
+        attributeId:null,
+        the_count:6
+      }
+    ]
+  }
+}
+{
+  name:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things WHERE thingId >= 9 GROUP BY attributeId GROUP AS g HAVING 1 = 1 ",
+  statement:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things WHERE thingId >= 9 GROUP BY attributeId GROUP AS g HAVING 1 = 1 ",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        attributeId:40,
+        the_count:2
+      },
+      {
+        attributeId:50,
+        the_count:5
+      },
+      {
+        attributeId:null,
+        the_count:6
+      }
+    ]
+  }
+}
+{
+  name:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId GROUP AS g HAVING 1 = 0 ",
+  statement:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId GROUP AS g HAVING 1 = 0 ",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId HAVING attributeId > 30 ",
+  statement:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId HAVING attributeId > 30 ",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        attributeId:40,
+        the_count:4
+      },
+      {
+        attributeId:50,
+        the_count:5
+      }
+    ]
+  }
+}
+{
+  name:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things WHERE thingId >= 9 GROUP BY attributeId HAVING attributeId > 30 ",
+  statement:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things WHERE thingId >= 9 GROUP BY attributeId HAVING attributeId > 30 ",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        attributeId:40,
+        the_count:2
+      },
+      {
+        attributeId:50,
+        the_count:5
+      }
+    ]
+  }
+}
+{
+  name:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId HAVING COUNT(*) >= 3 ",
+  statement:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId HAVING COUNT(*) >= 3 ",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        attributeId:30,
+        the_count:3
+      },
+      {
+        attributeId:40,
+        the_count:4
+      },
+      {
+        attributeId:50,
+        the_count:5
+      },
+      {
+        attributeId:null,
+        the_count:6
+      }
+    ]
+  }
+}
+{
+  name:"SELECT attributeId, SUM(attributeId) as the_sum FROM repeating_things GROUP BY attributeId HAVING SUM(attributeId) >= 160",
+  statement:"SELECT attributeId, SUM(attributeId) as the_sum FROM repeating_things GROUP BY attributeId HAVING SUM(attributeId) >= 160",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        attributeId:40,
+        the_sum:160
+      },
+      {
+        attributeId:50,
+        the_sum:250
+      }
+    ]
+  }
+}
+{
+  name:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId GROUP AS g HAVING g IS NOT MISSING AND g IS NOT NULL ",
+  statement:" SELECT attributeId, COUNT(*) as the_count FROM repeating_things GROUP BY attributeId GROUP AS g HAVING g IS NOT MISSING AND g IS NOT NULL ",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        attributeId:10,
+        the_count:1
+      },
+      {
+        attributeId:20,
+        the_count:2
+      },
+      {
+        attributeId:30,
+        the_count:3
+      },
+      {
+        attributeId:40,
+        the_count:4
+      },
+      {
+        attributeId:50,
+        the_count:5
+      },
+      {
+        attributeId:null,
+        the_count:6
+      }
+    ]
+  }
+}

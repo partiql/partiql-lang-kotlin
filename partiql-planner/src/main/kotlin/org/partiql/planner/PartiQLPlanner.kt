@@ -1,11 +1,12 @@
 package org.partiql.planner
 
 import org.partiql.ast.Statement
-import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
-import org.partiql.plan.PartiQLPlan
-import org.partiql.spi.connector.ConnectorMetadata
-import java.time.Instant
+import org.partiql.plan.Plan
+import org.partiql.planner.builder.PartiQLPlannerBuilder
+import org.partiql.spi.Context
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PErrorListenerException
+import kotlin.jvm.Throws
 
 /**
  * PartiQLPlanner is responsible for transforming an AST into PartiQL's logical query plan.
@@ -13,41 +14,35 @@ import java.time.Instant
 public interface PartiQLPlanner {
 
     /**
-     * Transform an AST to a [PartiQLPlan].
+     * Transform an AST to a [Plan].
      *
      * @param statement
      * @param session
-     * @param onProblem
+     * @param ctx a configuration object
      * @return
      */
-    public fun plan(statement: Statement, session: Session, onProblem: ProblemCallback = {}): Result
+    @Throws(PErrorListenerException::class)
+    public fun plan(statement: Statement, session: Session, ctx: Context): Result
 
     /**
-     * Planner result along with any warnings.
+     * Transform an AST to a [Plan].
+     *
+     * @param statement
+     * @param session
+     * @return
+     */
+    @Throws(PErrorListenerException::class)
+    public fun plan(statement: Statement, session: Session): Result {
+        return plan(statement, session, Context.standard())
+    }
+
+    /**
+     * Planner result.
      *
      * @property plan
      */
     public class Result(
-        public val plan: PartiQLPlan,
-        public val problems: List<Problem>,
-    )
-
-    /**
-     * From [org.partiql.lang.planner.transforms]
-     *
-     * @property queryId
-     * @property userId
-     * @property currentCatalog
-     * @property currentDirectory
-     * @property instant
-     */
-    public class Session(
-        public val queryId: String,
-        public val userId: String,
-        public val currentCatalog: String? = null,
-        public val currentDirectory: List<String> = emptyList(),
-        public val catalogs: Map<String, ConnectorMetadata> = emptyMap(),
-        public val instant: Instant = Instant.now(),
+        public val plan: Plan,
     )
 
     public companion object {
@@ -56,6 +51,6 @@ public interface PartiQLPlanner {
         public fun builder(): PartiQLPlannerBuilder = PartiQLPlannerBuilder()
 
         @JvmStatic
-        public fun default(): PartiQLPlanner = PartiQLPlannerBuilder().build()
+        public fun standard(): PartiQLPlanner = PartiQLPlannerBuilder().build()
     }
 }

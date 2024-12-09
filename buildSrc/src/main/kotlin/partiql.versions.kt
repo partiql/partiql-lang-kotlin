@@ -18,9 +18,9 @@
 
 object Versions {
     // Language
-    const val kotlin = "1.6.20"
-    const val kotlinLanguage = "1.6"
-    const val kotlinApi = "1.6"
+    const val kotlin = "1.9.20"
+    const val kotlinLanguage = "1.9"
+    const val kotlinApi = "1.9"
     const val jvmTarget = "1.8"
 
     // Dependencies
@@ -28,27 +28,22 @@ object Versions {
     const val awsSdk = "1.12.344"
     const val csv = "1.8"
     const val dotlin = "1.0.2"
-    const val gson = "2.10.1"
     const val guava = "31.1-jre"
     const val ionElement = "1.0.0"
-    const val ionJava = "1.11.1"
     const val ionSchema = "1.2.1"
     const val jansi = "2.4.0"
     const val jgenhtml = "1.6"
     const val jline = "3.21.0"
-    const val jmhGradlePlugin = "0.7.2"
-    const val jmhCore = "1.37"
-    const val jmhGeneratorAnnprocess = "1.37"
-    const val jmhGeneratorBytecode = "1.37"
     const val joda = "2.12.1"
     const val kotlinPoet = "1.11.0"
     const val kotlinxCollections = "0.3.5"
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
-    const val pig = "0.6.2"
-    const val kotlinxCoroutines = "1.6.0"
-    const val kotlinxCoroutinesJdk8 = "1.6.0"
+    const val kotlinLombok = "1.9.20"
+    const val kotlinxCoroutines = "1.8.1"
+    const val kotlinxCoroutinesJdk8 = "1.8.1"
     const val ktlint = "0.42.1" // we're on an old version of ktlint. TODO upgrade https://github.com/partiql/partiql-lang-kotlin/issues/1418
+    const val lombok = "1.18.34"
 
     // Testing
     const val assertj = "3.11.0"
@@ -58,8 +53,6 @@ object Versions {
     const val junit4 = "4.12"
     const val junit4Params = "1.1.1"
     const val mockito = "4.5.0"
-    const val mockk = "1.11.0"
-    const val kotlinxCoroutinesTest = "1.6.0"
 }
 
 object Deps {
@@ -75,9 +68,7 @@ object Deps {
     const val awsSdkS3 = "com.amazonaws:aws-java-sdk-s3:${Versions.awsSdk}"
     const val csv = "org.apache.commons:commons-csv:${Versions.csv}"
     const val dotlin = "io.github.rchowell:dotlin:${Versions.dotlin}"
-    const val gson = "com.google.code.gson:gson:${Versions.gson}"
     const val guava = "com.google.guava:guava:${Versions.guava}"
-    const val ionJava = "com.amazon.ion:ion-java:${Versions.ionJava}"
     const val ionElement = "com.amazon.ion:ion-element:${Versions.ionElement}"
     const val ionSchema = "com.amazon.ion:ion-schema-kotlin:${Versions.ionSchema}"
     const val jansi = "org.fusesource.jansi:jansi:${Versions.jansi}"
@@ -88,11 +79,10 @@ object Deps {
     const val kotlinPoet = "com.squareup:kotlinpoet:${Versions.kotlinPoet}"
     const val kotlinxCollections = "org.jetbrains.kotlinx:kotlinx-collections-immutable:${Versions.kotlinxCollections}"
     const val picoCli = "info.picocli:picocli:${Versions.picoCli}"
-    const val pig = "org.partiql:partiql-ir-generator:${Versions.pig}"
-    const val pigRuntime = "org.partiql:partiql-ir-generator-runtime:${Versions.pig}"
     const val kotlinxCoroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}"
     const val kotlinxCoroutinesJdk8 = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${Versions.kotlinxCoroutinesJdk8}"
     const val ktlint = "com.pinterest.ktlint:ktlint-core:${Versions.ktlint}"
+    const val lombok = "org.projectlombok:lombok:${Versions.lombok}"
 
     // Testing
     const val assertj = "org.assertj:assertj-core:${Versions.assertj}"
@@ -105,8 +95,6 @@ object Deps {
     const val kotlinTest = "org.jetbrains.kotlin:kotlin-test:${Versions.kotlin}"
     const val kotlinTestJunit = "org.jetbrains.kotlin:kotlin-test-junit5:${Versions.kotlin}"
     const val mockito = "org.mockito:mockito-junit-jupiter:${Versions.mockito}"
-    const val mockk = "io.mockk:mockk:${Versions.mockk}"
-    const val kotlinxCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.kotlinxCoroutinesTest}"
     const val ktlintTest = "com.pinterest.ktlint:ktlint-test:${Versions.ktlint}"
 }
 
@@ -121,7 +109,7 @@ object Plugins {
     const val application = "org.gradle.application"
     const val detekt = "io.gitlab.arturbosch.detekt"
     const val dokka = "org.jetbrains.dokka"
-    const val jmh = "me.champeau.jmh"
     const val library = "org.gradle.java-library"
+    const val kotlinLombok = "org.jetbrains.kotlin.plugin.lombok"
     const val testFixtures = "org.gradle.java-test-fixtures"
 }

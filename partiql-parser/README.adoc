@@ -3,6 +3,9 @@
 The PartiQL Parser can be used to parse PartiQL queries into an AST (`org.partiql.ast`).
 This interface expands the legacy `org.partiql.syntax.Parser` interface allowing for a richer return type as well as the latest AST.
 
+ANTLR-generated code is under the `internal` package namespace. It is not intended to be used outside of code within
+this library.
+
 == Interfaces
 
 [source,kotlin]

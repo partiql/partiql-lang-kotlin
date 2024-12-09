@@ -13,50 +13,39 @@
  */
 package org.partiql.cli.shell
 
-import org.antlr.v4.runtime.BaseErrorListener
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.RecognitionException
-import org.antlr.v4.runtime.Recognizer
 import org.jline.reader.Highlighter
 import org.jline.reader.LineReader
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
-import org.partiql.parser.antlr.PartiQLParser
-import org.partiql.parser.antlr.PartiQLTokens
+import org.partiql.parser.internal.antlr.PartiQLParser
+import org.partiql.parser.internal.antlr.PartiQLTokens
+import org.partiql.parser.thirdparty.antlr.v4.runtime.BaseErrorListener
+import org.partiql.parser.thirdparty.antlr.v4.runtime.CharStreams
+import org.partiql.parser.thirdparty.antlr.v4.runtime.CommonTokenStream
+import org.partiql.parser.thirdparty.antlr.v4.runtime.RecognitionException
+import org.partiql.parser.thirdparty.antlr.v4.runtime.Recognizer
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 
-internal class ShellHighlighter : Highlighter {
+internal object ShellHighlighter : Highlighter {
 
-    companion object {
-        private const val ADD_TO_GLOBAL_ENV_STR = "!add_to_global_env"
-        private val ALLOWED_SUFFIXES = setOf("!!")
+    private val ALLOWED_SUFFIXES = setOf<String>()
 
-        private val STYLE_COMMAND = AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN)
-        private val STYLE_KEYWORD = AttributedStyle.BOLD.foreground(AttributedStyle.CYAN).bold()
-        private val STYLE_DATATYPE = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
-        private val STYLE_IDENTIFIER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT)
-        private val STYLE_STRING = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
-        private val STYLE_NUMBER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BLUE)
-        private val STYLE_COMMENT = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT).italic()
-        private val STYLE_ERROR = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
-    }
+    private val STYLE_COMMAND = AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN)
+    private val STYLE_KEYWORD = AttributedStyle.BOLD.foreground(AttributedStyle.CYAN).bold()
+    private val STYLE_DATATYPE = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
+    private val STYLE_IDENTIFIER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT)
+    private val STYLE_STRING = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
+    private val STYLE_NUMBER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BLUE)
+    private val STYLE_COMMENT = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT).italic()
+    private val STYLE_ERROR = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
 
     override fun highlight(reader: LineReader, line: String): AttributedString {
-
-        val hasAddToGlobalEnv = line.lowercase().startsWith(ADD_TO_GLOBAL_ENV_STR)
-        val input = when (hasAddToGlobalEnv) {
-            true -> line.substring(ADD_TO_GLOBAL_ENV_STR.length, line.length)
-            false -> line
-        }
-
-        if (input.isBlank()) {
-            return when (hasAddToGlobalEnv) {
-                true -> AttributedString(line, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
-                false -> AttributedString(line)
-            }
+        val input = line
+        if (input.isBlank() || input.startsWith(".")) {
+            // short-circuit for command
+            return AttributedString(line)
         }
 
         // Temporarily Remove Allowed Suffix from Input
@@ -100,7 +89,7 @@ internal class ShellHighlighter : Highlighter {
 
         // Parse and Replace Token Style if Failures
         try {
-            parser.root()
+            parser.statements()
         } catch (e: RethrowErrorListener.OffendingSymbolException) {
             val offending = e.offendingSymbol
             val prefix = builder.substring(0, offending.startIndex)
@@ -113,15 +102,7 @@ internal class ShellHighlighter : Highlighter {
             builder = replacementBuilder
         }
 
-        return if (hasAddToGlobalEnv) {
-            with(AttributedStringBuilder()) {
-                append(AttributedString(ADD_TO_GLOBAL_ENV_STR, STYLE_COMMAND))
-                append(builder.toAttributedString())
-                toAttributedString()
-            }
-        } else {
-            builder.toAttributedString()
-        }
+        return builder.toAttributedString()
     }
 
     override fun setErrorPattern(errorPattern: Pattern?) {}
@@ -141,12 +122,12 @@ internal class ShellHighlighter : Highlighter {
             msg: String?,
             e: RecognitionException?
         ) {
-            if (offendingSymbol != null && offendingSymbol is org.antlr.v4.runtime.Token && offendingSymbol.type != PartiQLParser.EOF) {
+            if (offendingSymbol != null && offendingSymbol is org.partiql.parser.thirdparty.antlr.v4.runtime.Token && offendingSymbol.type != PartiQLParser.EOF) {
                 throw OffendingSymbolException(offendingSymbol)
             }
         }
 
-        class OffendingSymbolException(val offendingSymbol: org.antlr.v4.runtime.Token) : Exception()
+        class OffendingSymbolException(val offendingSymbol: org.partiql.parser.thirdparty.antlr.v4.runtime.Token) : Exception()
     }
 
     private fun getTokenStream(input: String): CommonTokenStream {

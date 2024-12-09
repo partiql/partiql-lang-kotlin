@@ -56,36 +56,30 @@ t1 IS FLOAT;
 t1 IS BOOL;
 
 --#[expr-19]
-t1 IS SYMBOL;
-
---#[expr-20]
 t1 IS DATE;
 
---#[expr-21]
+--#[expr-20]
 t1 IS TIME;
 
---#[expr-22]
+--#[expr-21]
 t1 IS TIMESTAMP;
 
---#[expr-23]
+--#[expr-22]
 t1 IS STRING;
 
---#[expr-24]
+--#[expr-23]
 t1 IS CLOB;
 
---#[expr-25]
+--#[expr-24]
 t1 IS BLOB;
 
---#[expr-26]
+--#[expr-25]
 t1 IS LIST;
 
---#[expr-27]
-t1 IS SEXP;
-
---#[expr-28]
+--#[expr-26]
 t1 IS STRUCT;
 
---#[expr-29]
+--#[expr-27]
 t1 IS BAG;
 
 --#[expr-30]

@@ -1,7 +1,6 @@
 name: "Build and Report Generation"
 on: 
   push:
-    branches : [main]
     paths:
       - '**'
       - '!docs/**'

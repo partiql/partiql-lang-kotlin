@@ -14,9 +14,10 @@
 
 package org.partiql.cli.format
 
-import org.partiql.pig.runtime.DomainNode
-import kotlin.reflect.full.memberProperties
-
-internal fun DomainNode.properties() = this.javaClass.kotlin.memberProperties.filter { property ->
-    property.name.lowercase() != "metas" && property.name.lowercase() != "myhashcode"
-}
+// TODO: Add this for the v1 APIs
+// import org.partiql.pig.runtime.DomainNode
+// import kotlin.reflect.full.memberProperties
+// 
+// internal fun DomainNode.properties() = this.javaClass.kotlin.memberProperties.filter { property ->
+//     property.name.lowercase() != "metas" && property.name.lowercase() != "myhashcode"
+// }

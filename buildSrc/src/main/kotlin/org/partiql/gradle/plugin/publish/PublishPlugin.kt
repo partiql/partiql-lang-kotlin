@@ -29,13 +29,13 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
-import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
 import org.jetbrains.dokka.gradle.DokkaPlugin
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import kotlinx.validation.BinaryCompatibilityValidatorPlugin
 import java.io.File
 
 /**
@@ -53,6 +53,12 @@ abstract class PublishPlugin : Plugin<Project> {
         pluginManager.apply(MavenPublishPlugin::class.java)
         pluginManager.apply(SigningPlugin::class.java)
         pluginManager.apply(DokkaPlugin::class.java)
+        // Use https://github.com/Kotlin/binary-compatibility-validator to maintain list of public binary APIs (defaults
+        // to <project dir>/api/<project dir>.api). When changes are made to public APIs (e.g. modifying a public class,
+        // adding a public function, etc.), the gradle `apiCheck` task will fail. To fix this error, run the `apiDump` task
+        // to update these .api files and commit the changes.
+        // See https://github.com/Kotlin/binary-compatibility-validator#optional-parameters for additional configuration.
+        pluginManager.apply(BinaryCompatibilityValidatorPlugin::class.java)
         pluginManager.apply(ShadowPlugin::class.java)
         extensions.getByType(KotlinJvmProjectExtension::class.java).explicitApi = ExplicitApiMode.Strict
         val ext = extensions.create("publish", PublishExtension::class.java)
@@ -122,7 +128,7 @@ abstract class PublishPlugin : Plugin<Project> {
                             licenses {
                                 license {
                                     name.set("The Apache License, Version 2.0")
-                                    url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                                    url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
                                 }
                             }
                             developers {
@@ -157,17 +163,6 @@ abstract class PublishPlugin : Plugin<Project> {
                                     dependencyNode.appendNode("scope", "runtime")
                                 }
                             }
-                        }
-                    }
-                }
-                repositories {
-                    maven {
-                        url = uri("https://aws.oss.sonatype.org/service/local/staging/deploy/maven2")
-                        credentials {
-                            val ossrhUsername: String by rootProject
-                            val ossrhPassword: String by rootProject
-                            username = ossrhUsername
-                            password = ossrhPassword
                         }
                     }
                 }

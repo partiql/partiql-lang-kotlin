@@ -1,10 +1,9 @@
 package org.partiql.runner.skip
 
-import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.TypingMode
+import org.partiql.runner.CompileType
 
-private val COERCE_EVAL_MODE_COMPILE_OPTIONS = CompileOptions.build { typingMode(TypingMode.PERMISSIVE) }
-private val ERROR_EVAL_MODE_COMPILE_OPTIONS = CompileOptions.build { typingMode(TypingMode.LEGACY) }
+private val COERCE_EVAL_MODE_COMPILE_OPTIONS = CompileType.PERMISSIVE
+private val ERROR_EVAL_MODE_COMPILE_OPTIONS = CompileType.STRICT
 
 /*
 The fail lists defined in this file show how the current Kotlin implementation diverges from the PartiQL spec. Most of
@@ -19,7 +18,7 @@ aggregation functions) and due to not supporting coercions.
 The remaining divergent behavior causing certain conformance tests to fail are likely bugs. Tracking issue:
 https://github.com/partiql/partiql-lang-kotlin/issues/804.
  */
-val LANG_KOTLIN_EVAL_FAIL_LIST = listOf(
+val LANG_KOTLIN_EVAL_FAIL_LIST = setOf(
     // from the spec: no explicit CAST to string means the query is "treated as an array navigation with wrongly typed
     // data" and will return `MISSING`
     Pair("tuple navigation with array notation without explicit CAST to string", COERCE_EVAL_MODE_COMPILE_OPTIONS),
@@ -215,7 +214,7 @@ val LANG_KOTLIN_EVAL_FAIL_LIST = listOf(
     Pair("""OCTET_LENGTH special character""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 )
 
-val LANG_KOTLIN_EVAL_EQUIV_FAIL_LIST = listOf(
+val LANG_KOTLIN_EVAL_EQUIV_FAIL_LIST = setOf(
     // partiql-lang-kotlin gives a parser error for tuple path navigation in which the path expression is a string
     // literal
     // e.g. { 'a': 1, 'b': 2}.'a' -> 1 (see section 4 of spec)

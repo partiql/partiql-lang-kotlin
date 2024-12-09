@@ -14,12 +14,13 @@
 
 package org.partiql.cli.format
 
-import com.amazon.ion.system.IonTextWriterBuilder
-import org.partiql.pig.runtime.DomainNode
-
-internal object SexpFormatter : NodeFormatter {
-    override fun format(input: DomainNode): String = buildString {
-        val writer = IonTextWriterBuilder.pretty().build(this)
-        input.toIonElement().writeTo(writer)
-    }
-}
+// TODO: Add this for the v1 APIs
+// import com.amazon.ion.system.IonTextWriterBuilder
+// import org.partiql.pig.runtime.DomainNode
+// 
+// internal object SexpFormatter : NodeFormatter {
+//     override fun format(input: DomainNode): String = buildString {
+//         val writer = IonTextWriterBuilder.pretty().build(this)
+//         input.toIonElement().writeTo(writer)
+//     }
+// }

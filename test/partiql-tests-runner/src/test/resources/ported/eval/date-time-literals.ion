@@ -1,0 +1,349 @@
+
+{
+  name:"TIME '00:00:00.000' = TIME '00:00:00.000'",
+  statement:"TIME '00:00:00.000' = TIME '00:00:00.000'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '23:59:59.99999999' = TIME '23:59:59.99999999'",
+  statement:"TIME '23:59:59.99999999' = TIME '23:59:59.99999999'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) '23:59:59.99999999' = TIME '00:00:00.00'",
+  statement:"TIME (2) '23:59:59.99999999' = TIME '00:00:00.00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) '12:24:12.123' = TIME '12:24:12.12'",
+  statement:"TIME (2) '12:24:12.123' = TIME '12:24:12.12'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '00:45:13.840800524' = TIME '00:45:13.840800524'",
+  statement:"TIME '00:45:13.840800524' = TIME '00:45:13.840800524'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '05:20:52.015779149' = TIME '05:20:52.015779149'",
+  statement:"TIME '05:20:52.015779149' = TIME '05:20:52.015779149'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '23:59:59' = TIME '23:59:59'",
+  statement:"TIME '23:59:59' = TIME '23:59:59'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (9) '12:24:12.123' = TIME '12:24:12.123000000'",
+  statement:"TIME (9) '12:24:12.123' = TIME '12:24:12.123000000'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME '12:24:12.12300' = TIME '12:24:12.12300'",
+  statement:"TIME '12:24:12.12300' = TIME '12:24:12.12300'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (3) '12:24:12.12300' = TIME '12:24:12.123'",
+  statement:"TIME (3) '12:24:12.12300' = TIME '12:24:12.123'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (4) '12:24:12.12300' = TIME '12:24:12.1230'",
+  statement:"TIME (4) '12:24:12.12300' = TIME '12:24:12.1230'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (4) '12:24:12.123' = TIME '12:24:12.1230'",
+  statement:"TIME (4) '12:24:12.123' = TIME '12:24:12.1230'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (0) '12:59:59.9' = TIME '13:00:00'",
+  statement:"TIME (0) '12:59:59.9' = TIME '13:00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00+00:00'",
+  statement:"TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.12+00:00'",
+  statement:"TIME (2) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.12+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.12300+00:00'",
+  statement:"TIME WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.12300+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (3) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.123+00:00'",
+  statement:"TIME (3) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.123+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (4) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.1230+00:00'",
+  statement:"TIME (4) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.1230+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (4) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.1230+00:00'",
+  statement:"TIME (4) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.1230+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) WITH TIME ZONE '12:24:12.123-00:00' = TIME WITH TIME ZONE '12:24:12.12+00:00'",
+  statement:"TIME (2) WITH TIME ZONE '12:24:12.123-00:00' = TIME WITH TIME ZONE '12:24:12.12+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) WITH TIME ZONE '12:24:12.123+00:00' = TIME WITH TIME ZONE '12:24:12.12+00:00'",
+  statement:"TIME (2) WITH TIME ZONE '12:24:12.123+00:00' = TIME WITH TIME ZONE '12:24:12.12+00:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) WITH TIME ZONE '12:24:12.123+05:30' = TIME WITH TIME ZONE '12:24:12.12+05:30'",
+  statement:"TIME (2) WITH TIME ZONE '12:24:12.123+05:30' = TIME WITH TIME ZONE '12:24:12.12+05:30'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (5) WITH TIME ZONE '12:24:12.123678+05:30' = TIME WITH TIME ZONE '12:24:12.12368+05:30'",
+  statement:"TIME (5) WITH TIME ZONE '12:24:12.123678+05:30' = TIME WITH TIME ZONE '12:24:12.12368+05:30'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) WITH TIME ZONE '12:59:59.135-05:30' = TIME WITH TIME ZONE '12:59:59.14-05:30'",
+  statement:"TIME (2) WITH TIME ZONE '12:59:59.135-05:30' = TIME WITH TIME ZONE '12:59:59.14-05:30'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) WITH TIME ZONE '12:59:59.134-05:30' = TIME WITH TIME ZONE '12:59:59.13-05:30'",
+  statement:"TIME (2) WITH TIME ZONE '12:59:59.134-05:30' = TIME WITH TIME ZONE '12:59:59.13-05:30'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00-01:00'",
+  statement:"TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00-01:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '11:23:45.678' = TIME WITH TIME ZONE '11:23:45.678+06:00'",
+  statement:"TIME WITH TIME ZONE '11:23:45.678' = TIME WITH TIME ZONE '11:23:45.678+06:00'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME WITH TIME ZONE '11:23:45.678-05:30' = TIME WITH TIME ZONE '11:23:45.678-05:30'",
+  statement:"TIME WITH TIME ZONE '11:23:45.678-05:30' = TIME WITH TIME ZONE '11:23:45.678-05:30'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"TIME (2) WITH TIME ZONE '12:59:59.13456' = TIME WITH TIME ZONE '12:59:59.13-05:30'",
+  statement:"TIME (2) WITH TIME ZONE '12:59:59.13456' = TIME WITH TIME ZONE '12:59:59.13-05:30'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}

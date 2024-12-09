@@ -1,44 +1,38 @@
-@file:OptIn(PartiQLValueExperimental::class)
-
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.types.StaticType
+import org.partiql.planner.internal.typer.PlanTyper.Companion.anyOf
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.types.PType
 import org.partiql.value.MissingValue
-import org.partiql.value.NullValue
+import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BAG
-import org.partiql.value.PartiQLValueType.BINARY
-import org.partiql.value.PartiQLValueType.BLOB
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.BYTE
-import org.partiql.value.PartiQLValueType.CHAR
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
-import org.partiql.value.PartiQLValueType.FLOAT32
-import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT16
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.INTERVAL
-import org.partiql.value.PartiQLValueType.LIST
-import org.partiql.value.PartiQLValueType.SEXP
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.STRUCT
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.PartiQLValueType.TIME
-import org.partiql.value.PartiQLValueType.TIMESTAMP
+import org.partiql.value.bagValue
+import org.partiql.value.blobValue
+import org.partiql.value.boolValue
+import org.partiql.value.charValue
+import org.partiql.value.clobValue
+import org.partiql.value.dateValue
+import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.float64Value
+import org.partiql.value.int16Value
+import org.partiql.value.int32Value
+import org.partiql.value.int64Value
+import org.partiql.value.int8Value
+import org.partiql.value.intValue
+import org.partiql.value.listValue
+import org.partiql.value.missingValue
+import org.partiql.value.nullValue
+import org.partiql.value.stringValue
+import org.partiql.value.structValue
+import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
 
 /**
  * Graph of super types for quick lookup because we don't have a tree.
  */
-internal typealias SuperGraph = Array<Array<PartiQLValueType?>>
+internal typealias SuperGraph = Array<Array<Int?>>
 
 /**
  * For lack of a better name, this is the "dynamic typer" which implements the typing rules of SQL-99 9.3.
@@ -50,30 +44,38 @@ internal typealias SuperGraph = Array<Array<PartiQLValueType?>>
  *  To calculate the type of an "aggregation" create a new instance and "accumulate" each possible type.
  *  This is a pain with StaticType...
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class DynamicTyper {
 
-    private var supertype: PartiQLValueType? = null
-    private var args = mutableListOf<PartiQLValueType>()
-
-    private val types = mutableSetOf<StaticType>()
+    private var supertype: CompilerType? = null
+    private var args = mutableListOf<Rex>()
+    private val types = mutableListOf<CompilerType>()
 
     /**
      * Adds the [rex]'s [Rex.type] to the typing accumulator (if the [rex] is not a literal NULL/MISSING).
      */
     fun accumulate(rex: Rex) {
-        when (rex.isLiteralAbsent()) {
-            true -> accumulateUnknown()
-            false -> accumulate(rex.type)
+        when {
+            rex.isLiteralNull() || rex.isLiteralMissing() -> accumulateUnknown(rex)
+            else -> accumulateConcrete(rex)
         }
     }
 
     /**
-     * Checks for literal NULL or MISSING.
+     * Checks for literal NULL
      */
-    private fun Rex.isLiteralAbsent(): Boolean {
+    @OptIn(PartiQLValueExperimental::class)
+    private fun Rex.isLiteralNull(): Boolean {
         val op = this.op
-        return op is Rex.Op.Lit && (op.value is MissingValue || op.value is NullValue)
+        return op is Rex.Op.Lit && op.value.isNull
+    }
+
+    /**
+     * Checks for literal MISSING
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    private fun Rex.isLiteralMissing(): Boolean {
+        val op = this.op
+        return op is Rex.Op.Lit && op.value is MissingValue
     }
 
     /**
@@ -81,69 +83,114 @@ internal class DynamicTyper {
      * inferred. This function ignores literal null/missing values, yet adds their indices to know how to return the
      * mapping.
      */
-    private fun accumulateUnknown() {
-        args.add(ANY)
+    private fun accumulateUnknown(rex: Rex) {
+        args.add(rex)
     }
 
     /**
      * This adds non-absent types (aka not NULL / MISSING literals) to the typing accumulator.
      * @param type
      */
-    private fun accumulate(type: StaticType) {
-        val flatType = type.flatten()
-        if (flatType == StaticType.ANY) {
-            types.add(flatType)
-            args.add(ANY)
-            calculate(ANY)
-            return
-        }
-        val allTypes = flatType.allTypes
-        when (allTypes.size) {
-            0 -> {
-                error("This should not have happened.")
-            }
-            1 -> {
-                // Had single type
-                val single = allTypes.first()
-                val singleRuntime = single.toRuntimeType()
-                types.add(single)
-                args.add(singleRuntime)
-                calculate(singleRuntime)
-            }
-            else -> {
-                // Had a union; use ANY runtime
-                types.addAll(allTypes)
-                args.add(ANY)
-                calculate(ANY)
-            }
-        }
+    private fun accumulateConcrete(rex: Rex) {
+        types.add(rex.type)
+        args.add(rex)
+        calculate(rex.type)
     }
 
     /**
-     * Returns a pair of the return StaticType and the coercion.
+     * Returns a pair of the return type and the coercions.
      *
      * If the list is null, then no mapping is required.
      *
      * @return
      */
-    fun mapping(): Pair<StaticType, List<Pair<PartiQLValueType, PartiQLValueType>>?> {
+    @OptIn(PartiQLValueExperimental::class)
+    fun mapping(): Pair<CompilerType, List<Mapping?>?> {
+        var s = supertype ?: return CompilerType(PType.dynamic()) to null
+        val superTypeBase = s.code()
         // If at top supertype, then return union of all accumulated types
-        if (supertype == ANY) {
-            return StaticType.unionOf(types).flatten() to null
+        if (superTypeBase == PType.DYNAMIC) {
+            return anyOf(types)!!.toCType() to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
-        if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {
-            return StaticType.unionOf(types) to null
+        if (superTypeBase in setOf(PType.ROW, PType.STRUCT, PType.BAG, PType.ARRAY)) {
+            return anyOf(types)!!.toCType() to null
+        }
+        // Decimal
+        if (superTypeBase == PType.DECIMAL) {
+            val type = computeDecimal()
+            if (type != null) {
+                s = type
+            }
+        }
+        // Text
+        if (superTypeBase in setOf(PType.CHAR, PType.VARCHAR, PType.STRING)) {
+            val type = computeText()
+            if (type != null) {
+                s = type
+            }
         }
         // If not initialized, then return null, missing, or null|missing.
-        val s = supertype ?: return StaticType.ANY to null
         // Otherwise, return the supertype along with the coercion mapping
-        val type = s.toStaticType()
-        val mapping = args.map { it to s }
-        return type to mapping
+        val mapping = args.map {
+            when {
+                it.isLiteralNull() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(nullValue(s.code()))))
+                it.isLiteralMissing() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(missingValue())))
+                it.type == s -> Mapping.Coercion(s)
+                else -> null
+            }
+        }
+        return s to mapping
     }
 
-    private fun calculate(type: PartiQLValueType) {
+    // TODO: Fix the computation of the supertype: https://github.com/partiql/partiql-lang-kotlin/issues/1566
+    private fun computeDecimal(): CompilerType? {
+        val (precision, scale) = types.fold((0 to 0)) { acc, type ->
+            if (type.code() != PType.DECIMAL) {
+                return null
+            }
+            val precision = Math.max(type.precision, acc.first)
+            val scale = Math.max(type.scale, acc.second)
+            precision to scale
+        }
+        return PType.decimal(precision, scale).toCType()
+    }
+
+    private fun computeText(): CompilerType? {
+        var containsString = false
+        var containsVarChar = false
+        val length = types.fold(0) { acc, type ->
+            if (type.code() !in setOf(PType.VARCHAR, PType.CHAR, PType.STRING)) {
+                return null
+            }
+            when (type.code()) {
+                PType.STRING -> {
+                    containsString = true
+                    Int.MAX_VALUE
+                }
+                PType.VARCHAR -> {
+                    containsVarChar = true
+                    Math.max(acc, type.length)
+                }
+                PType.CHAR -> {
+                    Math.max(acc, type.length)
+                }
+                else -> error("Received type: $type")
+            }
+        }
+        return when {
+            containsString -> PType.string()
+            containsVarChar -> PType.varchar(length)
+            else -> PType.character(length)
+        }.toCType()
+    }
+
+    internal sealed interface Mapping {
+        class Replacement(val replacement: Rex) : Mapping
+        class Coercion(val target: CompilerType) : Mapping
+    }
+
+    private fun calculate(type: CompilerType) {
         val s = supertype
         // Initialize
         if (s == null) {
@@ -151,16 +198,14 @@ internal class DynamicTyper {
             return
         }
         // Don't bother calculating the new supertype, we've already hit `dynamic`.
-        if (s == ANY) return
+        if (s.code() == PType.DYNAMIC) return
         // Lookup and set the new minimum common supertype
         supertype = when {
-            type == ANY -> type
+            type.code() == PType.DYNAMIC -> type
             s == type -> return // skip
-            else -> graph[s][type] ?: ANY // lookup, if missing then go to top.
+            else -> graph[s.code()][type.code()]?.toPType() ?: CompilerType(PType.dynamic()) // lookup, if missing then go to top.
         }
     }
-
-    private operator fun <T> Array<T>.get(t: PartiQLValueType): T = get(t.ordinal)
 
     /**
      * !! IMPORTANT !!
@@ -170,14 +215,12 @@ internal class DynamicTyper {
      */
     companion object {
 
-        private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
+        @JvmStatic
+        private val N = PType.codes().size
 
         @JvmStatic
-        private val N = PartiQLValueType.values().size
-
-        @JvmStatic
-        private fun edges(vararg edges: Pair<PartiQLValueType, PartiQLValueType>): Array<PartiQLValueType?> {
-            val arr = arrayOfNulls<PartiQLValueType?>(N)
+        private fun edges(vararg edges: Pair<Int, Int>): Array<Int?> {
+            val arr = arrayOfNulls<Int?>(N)
             for (type in edges) {
                 arr[type.first] = type.second
             }
@@ -192,180 +235,221 @@ internal class DynamicTyper {
          */
         @JvmStatic
         internal val graph: SuperGraph = run {
-            val graph = arrayOfNulls<Array<PartiQLValueType?>>(N)
-            for (type in PartiQLValueType.values()) {
+            val graph = arrayOfNulls<Array<Int?>>(N)
+            for (type in PType.codes()) {
                 // initialize all with empty edges
                 graph[type] = arrayOfNulls(N)
             }
-            graph[ANY] = edges()
-            graph[BOOL] = edges(
-                BOOL to BOOL
+            graph[PType.DYNAMIC] = edges()
+            graph[PType.BOOL] = edges(
+                PType.BOOL to PType.BOOL
             )
-            graph[INT8] = edges(
-                INT8 to INT8,
-                INT16 to INT16,
-                INT32 to INT32,
-                INT64 to INT64,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[PType.TINYINT] = edges(
+                PType.TINYINT to PType.TINYINT,
+                PType.SMALLINT to PType.SMALLINT,
+                PType.INTEGER to PType.INTEGER,
+                PType.BIGINT to PType.BIGINT,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[INT16] = edges(
-                INT8 to INT16,
-                INT16 to INT16,
-                INT32 to INT32,
-                INT64 to INT64,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[PType.SMALLINT] = edges(
+                PType.TINYINT to PType.SMALLINT,
+                PType.SMALLINT to PType.SMALLINT,
+                PType.INTEGER to PType.INTEGER,
+                PType.BIGINT to PType.BIGINT,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[INT32] = edges(
-                INT8 to INT32,
-                INT16 to INT32,
-                INT32 to INT32,
-                INT64 to INT64,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[PType.INTEGER] = edges(
+                PType.TINYINT to PType.INTEGER,
+                PType.SMALLINT to PType.INTEGER,
+                PType.INTEGER to PType.INTEGER,
+                PType.BIGINT to PType.BIGINT,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[INT64] = edges(
-                INT8 to INT64,
-                INT16 to INT64,
-                INT32 to INT64,
-                INT64 to INT64,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[PType.BIGINT] = edges(
+                PType.TINYINT to PType.BIGINT,
+                PType.SMALLINT to PType.BIGINT,
+                PType.INTEGER to PType.BIGINT,
+                PType.BIGINT to PType.BIGINT,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[INT] = edges(
-                INT8 to INT,
-                INT16 to INT,
-                INT32 to INT,
-                INT64 to INT,
-                INT to INT,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[PType.NUMERIC] = edges(
+                PType.TINYINT to PType.NUMERIC,
+                PType.SMALLINT to PType.NUMERIC,
+                PType.INTEGER to PType.NUMERIC,
+                PType.BIGINT to PType.NUMERIC,
+                PType.NUMERIC to PType.NUMERIC,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[DECIMAL] = edges(
-                INT8 to DECIMAL,
-                INT16 to DECIMAL,
-                INT32 to DECIMAL,
-                INT64 to DECIMAL,
-                INT to DECIMAL,
-                DECIMAL to DECIMAL,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[PType.DECIMAL] = edges(
+                PType.TINYINT to PType.DECIMAL,
+                PType.SMALLINT to PType.DECIMAL,
+                PType.INTEGER to PType.DECIMAL,
+                PType.BIGINT to PType.DECIMAL,
+                PType.NUMERIC to PType.DECIMAL,
+                PType.DECIMAL to PType.DECIMAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[DECIMAL_ARBITRARY] = edges(
-                INT8 to DECIMAL_ARBITRARY,
-                INT16 to DECIMAL_ARBITRARY,
-                INT32 to DECIMAL_ARBITRARY,
-                INT64 to DECIMAL_ARBITRARY,
-                INT to DECIMAL_ARBITRARY,
-                DECIMAL to DECIMAL_ARBITRARY,
-                DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[PType.REAL] = edges(
+                PType.TINYINT to PType.REAL,
+                PType.SMALLINT to PType.REAL,
+                PType.INTEGER to PType.REAL,
+                PType.BIGINT to PType.REAL,
+                PType.NUMERIC to PType.REAL,
+                PType.DECIMAL to PType.REAL,
+                PType.REAL to PType.REAL,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[FLOAT32] = edges(
-                INT8 to FLOAT32,
-                INT16 to FLOAT32,
-                INT32 to FLOAT32,
-                INT64 to FLOAT32,
-                INT to FLOAT32,
-                DECIMAL to FLOAT32,
-                DECIMAL_ARBITRARY to FLOAT32,
-                FLOAT32 to FLOAT32,
-                FLOAT64 to FLOAT64,
+            graph[PType.DOUBLE] = edges(
+                PType.TINYINT to PType.DOUBLE,
+                PType.SMALLINT to PType.DOUBLE,
+                PType.INTEGER to PType.DOUBLE,
+                PType.BIGINT to PType.DOUBLE,
+                PType.NUMERIC to PType.DOUBLE,
+                PType.DECIMAL to PType.DOUBLE,
+                PType.REAL to PType.DOUBLE,
+                PType.DOUBLE to PType.DOUBLE,
             )
-            graph[FLOAT64] = edges(
-                INT8 to FLOAT64,
-                INT16 to FLOAT64,
-                INT32 to FLOAT64,
-                INT64 to FLOAT64,
-                INT to FLOAT64,
-                DECIMAL to FLOAT64,
-                DECIMAL_ARBITRARY to FLOAT64,
-                FLOAT32 to FLOAT64,
-                FLOAT64 to FLOAT64,
+            graph[PType.CHAR] = edges(
+                PType.CHAR to PType.CHAR,
+                PType.STRING to PType.STRING,
+                PType.VARCHAR to PType.STRING,
+                PType.CLOB to PType.CLOB,
             )
-            graph[CHAR] = edges(
-                CHAR to CHAR,
-                STRING to STRING,
-                SYMBOL to STRING,
-                CLOB to CLOB,
+            graph[PType.STRING] = edges(
+                PType.CHAR to PType.STRING,
+                PType.STRING to PType.STRING,
+                PType.VARCHAR to PType.STRING,
+                PType.CLOB to PType.CLOB,
             )
-            graph[STRING] = edges(
-                CHAR to STRING,
-                STRING to STRING,
-                SYMBOL to STRING,
-                CLOB to CLOB,
+            graph[PType.VARCHAR] = edges(
+                PType.CHAR to PType.VARCHAR,
+                PType.STRING to PType.STRING,
+                PType.VARCHAR to PType.VARCHAR,
+                PType.CLOB to PType.CLOB,
             )
-            graph[SYMBOL] = edges(
-                CHAR to SYMBOL,
-                STRING to STRING,
-                SYMBOL to SYMBOL,
-                CLOB to CLOB,
+            graph[PType.BLOB] = edges(
+                PType.BLOB to PType.BLOB,
             )
-            graph[BINARY] = edges(
-                BINARY to BINARY,
+            graph[PType.DATE] = edges(
+                PType.DATE to PType.DATE,
             )
-            graph[BYTE] = edges(
-                BYTE to BYTE,
-                BLOB to BLOB,
+            graph[PType.CLOB] = edges(
+                PType.CHAR to PType.CLOB,
+                PType.STRING to PType.CLOB,
+                PType.VARCHAR to PType.CLOB,
+                PType.CLOB to PType.CLOB,
             )
-            graph[BLOB] = edges(
-                BYTE to BLOB,
-                BLOB to BLOB,
+            graph[PType.TIME] = edges(
+                PType.TIME to PType.TIME,
             )
-            graph[DATE] = edges(
-                DATE to DATE,
+            graph[PType.TIMEZ] = edges(
+                PType.TIMEZ to PType.TIMEZ,
             )
-            graph[CLOB] = edges(
-                CHAR to CLOB,
-                STRING to CLOB,
-                SYMBOL to CLOB,
-                CLOB to CLOB,
+            graph[PType.TIMESTAMP] = edges(
+                PType.TIMESTAMP to PType.TIMESTAMP,
             )
-            graph[TIME] = edges(
-                TIME to TIME,
+            graph[PType.TIMESTAMPZ] = edges(
+                PType.TIMESTAMPZ to PType.TIMESTAMPZ,
             )
-            graph[TIMESTAMP] = edges(
-                TIMESTAMP to TIMESTAMP,
+            graph[PType.ARRAY] = edges(
+                PType.ARRAY to PType.ARRAY,
+                PType.BAG to PType.BAG,
             )
-            graph[INTERVAL] = edges(
-                INTERVAL to INTERVAL,
+            graph[PType.BAG] = edges(
+                PType.ARRAY to PType.BAG,
+                PType.BAG to PType.BAG,
             )
-            graph[LIST] = edges(
-                LIST to LIST,
-                SEXP to SEXP,
-                BAG to BAG,
+            graph[PType.STRUCT] = edges(
+                PType.STRUCT to PType.STRUCT,
             )
-            graph[SEXP] = edges(
-                LIST to SEXP,
-                SEXP to SEXP,
-                BAG to BAG,
-            )
-            graph[BAG] = edges(
-                LIST to BAG,
-                SEXP to BAG,
-                BAG to BAG,
-            )
-            graph[STRUCT] = edges(
-                STRUCT to STRUCT,
+            graph[PType.ROW] = edges(
+                PType.ROW to PType.ROW,
             )
             graph.requireNoNulls()
+        }
+
+        /**
+         * TODO: We need to update the logic of this whole file. We are currently limited by not using parameters
+         *  of types.
+         */
+        private fun Int.toPType(): CompilerType = when (this) {
+            PType.BOOL -> PType.bool()
+            PType.DYNAMIC -> PType.dynamic()
+            PType.TINYINT -> PType.tinyint()
+            PType.SMALLINT -> PType.smallint()
+            PType.INTEGER -> PType.integer()
+            PType.BIGINT -> PType.bigint()
+            PType.NUMERIC -> PType.numeric(38, 0) // TODO: To be updated
+            PType.DECIMAL -> PType.decimal(38, 0) // TODO: To be updated.
+            PType.REAL -> PType.real()
+            PType.DOUBLE -> PType.doublePrecision()
+            PType.CHAR -> PType.character(255) // TODO: To be updated
+            PType.VARCHAR -> PType.varchar(255) // TODO: To be updated
+            PType.STRING -> PType.string()
+            PType.BLOB -> PType.blob(Int.MAX_VALUE) // TODO: To be updated
+            PType.CLOB -> PType.clob(Int.MAX_VALUE) // TODO: To be updated
+            PType.DATE -> PType.date()
+            PType.TIMEZ -> PType.timez(6) // TODO: To be updated
+            PType.TIME -> PType.time(6) // TODO: To be updated
+            PType.TIMESTAMPZ -> PType.timestampz(6) // TODO: To be updated
+            PType.TIMESTAMP -> PType.timestamp(6) // TODO: To be updated
+            PType.BAG -> PType.bag() // TODO: To be updated
+            PType.ARRAY -> PType.array() // TODO: To be updated
+            PType.ROW -> PType.row(emptyList()) // TODO: To be updated
+            PType.STRUCT -> PType.struct() // TODO: To be updated
+            PType.UNKNOWN -> PType.unknown() // TODO: To be updated
+            PType.VARIANT -> TODO("variant in dynamic typer")
+            else -> error("Unknown type: $this")
+        }.toCType()
+
+        @OptIn(PartiQLValueExperimental::class)
+        private fun nullValue(kind: Int): PartiQLValue {
+            return when (kind) {
+                PType.DYNAMIC -> nullValue()
+                PType.BOOL -> boolValue(null)
+                PType.TINYINT -> int8Value(null)
+                PType.SMALLINT -> int16Value(null)
+                PType.INTEGER -> int32Value(null)
+                PType.BIGINT -> int64Value(null)
+                PType.NUMERIC -> intValue(null)
+                PType.DECIMAL -> decimalValue(null)
+                PType.REAL -> float32Value(null)
+                PType.DOUBLE -> float64Value(null)
+                PType.CHAR -> charValue(null)
+                PType.VARCHAR -> TODO("No implementation of VAR CHAR")
+                PType.STRING -> stringValue(null)
+                PType.BLOB -> blobValue(null)
+                PType.CLOB -> clobValue(null)
+                PType.DATE -> dateValue(null)
+                PType.TIMEZ,
+                PType.TIME -> timeValue(null)
+
+                PType.TIMESTAMPZ,
+                PType.TIMESTAMP -> timestampValue(null)
+
+                PType.BAG -> bagValue<PartiQLValue>(null)
+                PType.ARRAY -> listValue<PartiQLValue>(null)
+                PType.ROW -> structValue<PartiQLValue>(null)
+                PType.STRUCT -> structValue<PartiQLValue>()
+                PType.UNKNOWN -> nullValue()
+                PType.VARIANT -> TODO("variant in dynamic typer")
+                else -> error("Unknown type: $kind")
+            }
         }
     }
 }

@@ -3,12 +3,13 @@ package org.partiql.planner.internal.typer.operator
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
+import org.partiql.planner.internal.typer.accumulateSuccess
 import org.partiql.planner.util.CastType
-import org.partiql.planner.util.allNumberType
-import org.partiql.planner.util.allSupportedType
+import org.partiql.planner.util.allNumberPType
+import org.partiql.planner.util.allSupportedPType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.planner.util.castTable
-import org.partiql.types.StaticType
+import org.partiql.planner.util.castTablePType
+import org.partiql.types.PType
 import java.util.stream.Stream
 
 class OpArithmeticTest : PartiQLTyperTestBase() {
@@ -22,37 +23,32 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
             "expr-41",
         ).map { inputs.get("basics", it)!! }
 
-        val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
-            val successArgs = allNumberType.let { cartesianProduct(it, it) }
+        val argsMap: Map<TestResult, Set<List<PType>>> = buildMap {
+            val successArgs = allNumberPType.let { cartesianProduct(it, it) }
             val failureArgs = cartesianProduct(
-                allSupportedType,
-                allSupportedType
+                allSupportedPType,
+                allSupportedPType
             ).filterNot {
                 successArgs.contains(it)
             }.toSet()
 
-            successArgs.forEach { args: List<StaticType> ->
+            successArgs.forEach { args: List<PType> ->
                 val arg0 = args.first()
                 val arg1 = args[1]
-                if (arg0 == arg1) {
-                    (this[TestResult.Success(arg1)] ?: setOf(args)).let {
-                        put(TestResult.Success(arg1), it + setOf(args))
-                    }
-                } else if (castTable(arg1, arg0) == CastType.COERCION) {
-                    (this[TestResult.Success(arg0)] ?: setOf(args)).let {
-                        put(TestResult.Success(arg0), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(arg1)] ?: setOf(args)).let {
-                        put(TestResult.Success(arg1), it + setOf(args))
-                    }
+                val output = when {
+                    arg0 == arg1 -> arg1
+                    // TODO arg0 == StaticType.DECIMAL && arg1 == StaticType.FLOAT -> arg1 // TODO: The cast table is wrong. Honestly, it should be deleted.
+                    // TODO arg1 == StaticType.DECIMAL && arg0 == StaticType.FLOAT -> arg0 // TODO: The cast table is wrong
+                    castTablePType(arg1, arg0) == CastType.COERCION -> arg0
+                    castTablePType(arg0, arg1) == CastType.COERCION -> arg1
+                    else -> error("Arguments do not conform to parameters. Args: $args")
                 }
-                Unit
+                accumulateSuccess(output, args)
             }
 
             put(TestResult.Failure, failureArgs)
         }
 
-        return super.testGen("arithmetic", tests, argsMap)
+        return super.testGenPType("arithmetic", tests, argsMap)
     }
 }

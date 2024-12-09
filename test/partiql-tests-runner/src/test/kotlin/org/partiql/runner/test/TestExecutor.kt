@@ -2,25 +2,25 @@ package org.partiql.runner.test
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
-import org.partiql.lang.eval.CompileOptions
+import org.partiql.runner.CompileType
 
 interface TestExecutor<T, V> {
 
     /**
      * Compile the given statement.
      *
-     * @param statement
+     * @param input
      * @return
      */
-    fun prepare(statement: String): T
+    fun prepare(input: String): T
 
     /**
      * Execute the statement, returning a value we can assert on.
      *
-     * @param statement
+     * @param input
      * @return
      */
-    fun execute(statement: T): V
+    fun execute(input: T): V
 
     /**
      * Compare the equality of two values.
@@ -54,6 +54,6 @@ interface TestExecutor<T, V> {
      */
     interface Factory<T, V> {
 
-        fun create(env: IonStruct, options: CompileOptions): TestExecutor<T, V>
+        fun create(env: IonStruct, options: CompileType): TestExecutor<T, V>
     }
 }

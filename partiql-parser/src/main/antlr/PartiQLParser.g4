@@ -11,14 +11,29 @@ options {
  *
  */
 
-root
-    : (EXPLAIN (PAREN_LEFT explainOption (COMMA explainOption)* PAREN_RIGHT)? )? statement;
+statements
+    : statement EOF
+    | statement COLON_SEMI (statement COLON_SEMI)* EOF
+    ;
 
 statement
-    : dql COLON_SEMI? EOF          # QueryDql
-    | dml COLON_SEMI? EOF          # QueryDml
-    | ddl COLON_SEMI? EOF          # QueryDdl
-    | execCommand COLON_SEMI? EOF  # QueryExec
+    // DQL
+    : dql
+
+    // DML
+    | insertStatement
+    | updateStatementSearched
+    | deleteStatementSearched
+    | upsertStatement
+    | replaceStatement
+
+    // DDL
+    | createCommand
+    | dropCommand
+
+    // OTHER
+    | explainStatement
+    // TODO: SQL's <execute statement>: | execCommand
     ;
 
 /**
@@ -26,9 +41,6 @@ statement
  * COMMON STRUCTURES
  *
  */
-
-explainOption
-    : param=IDENTIFIER value=IDENTIFIER;
 
 asIdent
     : AS symbolPrimitive;
@@ -40,8 +52,18 @@ byIdent
     : BY symbolPrimitive;
 
 symbolPrimitive
-    : ident=( IDENTIFIER | IDENTIFIER_QUOTED )
+    : IDENTIFIER            # IdentifierUnquoted
+    | IDENTIFIER_QUOTED     # IdentifierQuoted
+    | nonReserved           # IdentifierUnquoted
     ;
+
+// <qualified name> ::= [ <schema name> <period> ] <qualified identifier>
+qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
+
+tableName : symbolPrimitive;
+tableConstraintName : symbolPrimitive;
+columnName : symbolPrimitive;
+columnConstraintName : symbolPrimitive;
 
 /**
  *
@@ -51,6 +73,20 @@ symbolPrimitive
 
 dql
     : expr;
+    
+//
+//
+// EXPLAIN
+//
+//
+
+explainStatement
+    : EXPLAIN (PAREN_LEFT explainOption (COMMA explainOption)* PAREN_RIGHT)? statement # Explain
+    ;
+
+explainOption
+    : param=IDENTIFIER value=IDENTIFIER
+    ;
 
 /**
  *
@@ -71,13 +107,7 @@ execCommand
  * Currently, this is a small subset of SQL DDL that is likely to make sense for PartiQL as well.
  */
 
-// <qualified name> ::= [ <schema name> <period> ] <qualified identifier>
-qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
-
-tableName : symbolPrimitive;
-tableConstraintName : symbolPrimitive;
-columnName : symbolPrimitive;
-columnConstraintName : symbolPrimitive;
+comment : COMMENT LITERAL_STRING;
 
 ddl
     : createCommand
@@ -85,8 +115,8 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )?                           # CreateTable
-    | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
+    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )? tableExtension*               # CreateTable
+    // TODO: Do we need this? | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
     ;
 
 dropCommand
@@ -95,154 +125,188 @@ dropCommand
     ;
 
 tableDef
-    : tableDefPart ( COMMA tableDefPart )*
+    : tableElement ( COMMA tableElement)*
     ;
 
-tableDefPart
-    : columnName type columnConstraint*                             # ColumnDeclaration
+tableElement
+    : columnName OPTIONAL? type columnConstraintDef* comment?          # ColumnDefinition
+    | ( CONSTRAINT constraintName )?  tableConstraint                  # TableConstrDefinition
     ;
 
-columnConstraint
-    : ( CONSTRAINT columnConstraintName )?  columnConstraintDef
+// TODO: For now, we just support table-level Unique/Primary Key constraint
+//  Other table-level constraint defined in SQL-99 includes referencial constraint and check constraint
+tableConstraint
+    : uniqueSpec PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT     # TableConstrUnique
     ;
 
 columnConstraintDef
+    : ( CONSTRAINT constraintName )?  columnConstraint
+    ;
+
+columnConstraint
     : NOT NULL                                  # ColConstrNotNull
     | NULL                                      # ColConstrNull
+    | uniqueSpec                                   # ColConstrUnique
+    | checkConstraintDef                           # ColConstrCheck
+    ;
+
+checkConstraintDef
+    : CHECK PAREN_LEFT searchCondition PAREN_RIGHT
+    ;
+
+uniqueSpec
+    : PRIMARY KEY                                # PrimaryKey
+    | UNIQUE                                     # Unique
+    ;
+
+// <search condition>    ::= <boolean term> | <search condition> OR <boolean term>
+// we cannot do exactly that for the way expression precedence is structured in the grammar file.
+// but we at least can eliminate SFW query here.
+searchCondition : exprOr;
+
+// SQL/HIVE DDL Extension, Support additional table metadatas such as partition by, tblProperties, etc.
+tableExtension
+    : PARTITION BY partitionBy                                                             # TblExtensionPartition
+    | TBLPROPERTIES PAREN_LEFT keyValuePair (COMMA keyValuePair)* PAREN_RIGHT              # TblExtensionTblProperties
+    ;
+
+// Limiting the scope to only allow String as valid value for now
+keyValuePair : key=LITERAL_STRING EQ value=LITERAL_STRING;
+
+// For now: just support a list of columns name
+// In the future, we might support common partition expression such as Hash(), Range(), etc.
+partitionBy
+    : PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT                   #PartitionColList
     ;
 
 /**
  *
  * DATA MANIPULATION LANGUAGE (DML)
- *
+ * TODO: Determine future of REMOVE DML statement: https://github.com/partiql/partiql-lang-kotlin/issues/1668
+ * TODO: Determine future of FROM (INSERT, SET, REMOVE) statements: https://github.com/partiql/partiql-lang-kotlin/issues/1669
+ * TODO: Implement the RETURNING clause for INSERT/UPDATE. See https://github.com/partiql/partiql-lang-kotlin/issues/1667
  */
-
-dml
-    : updateClause dmlBaseCommand+ whereClause? returningClause?  # DmlBaseWrapper
-    | fromClause whereClause? dmlBaseCommand+ returningClause?    # DmlBaseWrapper
-    | deleteCommand                                               # DmlDelete
-    | insertCommandReturning                                      # DmlInsertReturning
-    | dmlBaseCommand                                              # DmlBase
-    ;
-
-dmlBaseCommand
-    : insertStatement
-    | insertStatementLegacy
-    | setCommand
-    | replaceCommand
-    | removeCommand
-    | upsertCommand
-    ;
-
-pathSimple
-    : symbolPrimitive pathSimpleSteps*;
-
-pathSimpleSteps
-    : BRACKET_LEFT key=literal BRACKET_RIGHT             # PathSimpleLiteral
-    | BRACKET_LEFT key=symbolPrimitive BRACKET_RIGHT     # PathSimpleSymbol
-    | PERIOD key=symbolPrimitive                         # PathSimpleDotSymbol
-    ;
-
-// Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
-// TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
-replaceCommand
-    : REPLACE INTO symbolPrimitive asIdent? value=expr;
-
-// Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
-// TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
-upsertCommand
-    : UPSERT INTO symbolPrimitive asIdent? value=expr;
-
-removeCommand
-    : REMOVE pathSimple;
-
-// FIXME #001
-//  There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
-//  ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
-//  See GH Issue: https://github.com/partiql/partiql-lang-kotlin/issues/698
-//  We essentially use the returning clause, because we currently support this with the SqlParser.
-//  See https://github.com/partiql/partiql-lang-kotlin/issues/708
-insertCommandReturning
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictLegacy? returningClause?;
-
-// See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
-insertStatement
-    : INSERT INTO symbolPrimitive asIdent? value=expr onConflict?
-    ;
-
-onConflict
-    : ON CONFLICT conflictTarget? conflictAction
-    ;
-
-insertStatementLegacy
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictLegacy?
-    ;
-
-onConflictLegacy
-    : ON CONFLICT WHERE expr DO NOTHING
-    ;
+ 
+//
+//
+// DML Statements
+// 
+//
 
 /**
-    <conflict target> ::=
-        ( <index target> [, <index target>]... )
-        | ( { <primary key> | <composite primary key> } )
-        | ON CONSTRAINT <constraint name>
-*/
-conflictTarget
-    : PAREN_LEFT symbolPrimitive (COMMA symbolPrimitive)* PAREN_RIGHT
-    | ON CONSTRAINT constraintName;
+ * @see https://github.com/partiql/partiql-lang/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
+ */
+insertStatement: INSERT INTO tblName=qualifiedName asIdent? insertSource onConflict?;
 
-constraintName
-    : symbolPrimitive;
+/**
+ * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#update%20statement:%20searched
+ */
+updateStatementSearched:  UPDATE targetTable=qualifiedName SET setClauseList ( WHERE searchCond=expr )?;
 
-conflictAction
-    : DO NOTHING
-    | DO REPLACE doReplace
-    | DO UPDATE doUpdate;
+/**
+ * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#delete%20statement:%20searched
+ */
+deleteStatementSearched: DELETE FROM targetTable=qualifiedName ( WHERE searchCond=expr )?;
 
-/*
-<do replace> ::= EXCLUDED
-    | SET <attr values> [, <attr values>]...
-    | VALUE <tuple value>
-   [ WHERE <condition> ]
-*/
-doReplace
-    : EXCLUDED ( WHERE condition=expr )?;
-    // :TODO add the rest of the grammar
+/**
+ * @see https://github.com/partiql/partiql-lang/blob/main/RFCs/0030-partiql-upsert-replace.md
+ */
+upsertStatement: UPSERT INTO tblName=qualifiedName asIdent? insertSource;
 
-/*
-<do update> ::= EXCLUDED
-    | SET <attr values> [, <attr values>]...
-    | VALUE <tuple value>
-   [ WHERE <condition> ]
-*/
-doUpdate
-    : EXCLUDED ( WHERE condition=expr )?;
-    // :TODO add the rest of the grammar
+/**
+ * @see https://github.com/partiql/partiql-lang/blob/main/RFCs/0030-partiql-upsert-replace.md
+ */
+replaceStatement: REPLACE INTO tblName=qualifiedName asIdent? insertSource;
 
-updateClause
-    : UPDATE tableBaseReference;
+//
+//
+// INSERT STATEMENT STRUCTURES
+//
+//
 
-setCommand
-    : SET setAssignment ( COMMA setAssignment )*;
-
-setAssignment
-    : pathSimple EQ expr;
-
-deleteCommand
-    : DELETE fromClauseSimple whereClause? returningClause?;
-
-returningClause
-    : RETURNING returningColumn ( COMMA returningColumn )*;
-
-returningColumn
-    : status=(MODIFIED|ALL) age=(OLD|NEW) ASTERISK
-    | status=(MODIFIED|ALL) age=(OLD|NEW) col=expr
+insertSource
+    : insertFromSubquery
+    | insertFromDefault
     ;
 
-fromClauseSimple
-    : FROM pathSimple asIdent? atIdent? byIdent?   # FromClauseSimpleExplicit
-    | FROM pathSimple symbolPrimitive              # FromClauseSimpleImplicit
+insertFromSubquery: insertColumnList? expr;
+
+insertFromDefault: DEFAULT VALUES;
+
+insertColumnList: PAREN_LEFT names+=symbolPrimitive ( COMMA names+=symbolPrimitive )* PAREN_RIGHT;
+
+//
+//
+// UPDATE STATEMENT STRUCTURES
+//
+//
+
+/**
+ * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#set%20clause%20list
+ */
+setClauseList: setClause ( COMMA setClause )*;
+
+/**
+ * @see https://ronsavage.github.io/SQL/sql-99.bnf.html#set%20clause
+ * The above referenced set clause doesn't exactly allow for the flexibility provided by updateTarget (previously
+ * named pathSimple). The SQL:1999 EBNF states that <update target> can either be a column name or a column name
+ * followed by square brackets and a literal (or other simple value). Since PartiQL allows for setting a nested attribute
+ * the updateTarget here provides for a superset of SQL's <update target>
+ */
+setClause: updateTarget EQ expr;
+
+updateTarget: symbolPrimitive updateTargetStep*;
+
+// TODO: https://github.com/partiql/partiql-lang-kotlin/issues/1671
+updateTargetStep
+    : updateTargetStepElement
+    | updateTargetStepField
+    ;
+
+updateTargetStepElement: BRACKET_LEFT key=literal BRACKET_RIGHT;
+
+updateTargetStepField: PERIOD key=symbolPrimitive;
+
+//
+//
+// ON CONFLICT CLAUSE
+// @see https://github.com/partiql/partiql-lang/blob/main/RFCs/0030-partiql-upsert-replace.md
+// TODO: Add the rest of the grammar
+//
+
+onConflict: ON CONFLICT conflictTarget? conflictAction;
+
+conflictTarget
+    : conflictTargetIndex
+    | conflictTargetConstraint
+    ;
+
+conflictTargetIndex: PAREN_LEFT symbolPrimitive (COMMA symbolPrimitive)* PAREN_RIGHT;
+
+conflictTargetConstraint: ON CONSTRAINT constraintName ;
+
+constraintName: qualifiedName;
+
+conflictAction
+    : doNothing
+    | doReplace
+    | doUpdate
+    ;
+
+doNothing: DO NOTHING;
+
+doReplace: DO REPLACE doReplaceAction ( WHERE condition=expr )?;
+
+doUpdate: DO UPDATE doUpdateAction ( WHERE condition=expr )?;
+
+doReplaceAction
+    : EXCLUDED
+    // ...
+    ;
+
+doUpdateAction
+    : EXCLUDED
+    // ...
     ;
 
 whereClause
@@ -355,7 +419,7 @@ excludeExprSteps
     ;
 
 fromClause
-    : FROM tableReference;
+    : FROM ( tableReference ( COMMA tableReference)* );
 
 whereClauseSelect
     : WHERE arg=exprSelect;
@@ -465,16 +529,16 @@ edgeAbbrev
  */
 
 tableReference
-    : lhs=tableReference joinType? CROSS JOIN rhs=joinRhs     # TableCrossJoin
-    | lhs=tableReference COMMA rhs=joinRhs                    # TableCrossJoin
-    | lhs=tableReference joinType? JOIN rhs=joinRhs joinSpec  # TableQualifiedJoin
-    | tableNonJoin                                            # TableRefBase
-    | PAREN_LEFT tableReference PAREN_RIGHT                   # TableWrapped
+    : tablePrimary # TableRefPrimary
+    | lhs=tableReference LEFT CROSS JOIN rhs=tablePrimary # TableLeftCrossJoin // PartiQL spec defines LEFT CROSS JOIN; other variants are not defined yet
+    | lhs=tableReference CROSS JOIN rhs=tablePrimary # TableCrossJoin // SQL99 defines just CROSS JOIN
+    | lhs=tableReference joinType? JOIN rhs=tableReference joinSpec  # TableQualifiedJoin
     ;
 
-tableNonJoin
+tablePrimary
     : tableBaseReference
     | tableUnpivot
+    | tableWrapped
     ;
 
 tableBaseReference
@@ -484,15 +548,11 @@ tableBaseReference
     ;
 
 tableUnpivot
-    : UNPIVOT expr asIdent? atIdent? byIdent?;
-
-joinRhs
-    : tableNonJoin                           # JoinRhsBase
-    | PAREN_LEFT tableReference PAREN_RIGHT  # JoinRhsTableJoined
+    : UNPIVOT expr asIdent? atIdent? byIdent?
     ;
 
-joinSpec
-    : ON expr;
+tableWrapped
+    : PAREN_LEFT tableReference PAREN_RIGHT;
 
 joinType
     : mod=INNER
@@ -501,6 +561,9 @@ joinType
     | mod=FULL OUTER?
     | mod=OUTER
     ;
+
+joinSpec
+    : ON expr;
 
 /**
  *
@@ -525,10 +588,11 @@ expr
     ;
 
 exprBagOp
-    : lhs=exprBagOp OUTER? EXCEPT (DISTINCT|ALL)? rhs=exprSelect           # Except
-    | lhs=exprBagOp OUTER? UNION (DISTINCT|ALL)? rhs=exprSelect            # Union
-    | lhs=exprBagOp OUTER? INTERSECT (DISTINCT|ALL)? rhs=exprSelect        # Intersect
-    | exprSelect                                                           # QueryBase
+    : lhs=exprBagOp OUTER? op=(UNION | EXCEPT | INTERSECT) (DISTINCT|ALL)? rhs=exprSelect
+      order=orderByClause?
+      limit=limitClause?
+      offset=offsetByClause?  # BagOp
+    | exprSelect                                                                                    # QueryBase
     ;
 
 exprSelect
@@ -539,9 +603,9 @@ exprSelect
         where=whereClauseSelect?
         group=groupClause?
         having=havingClause?
-        order=orderByClause?
-        limit=limitClause?
-        offset=offsetByClause? # SfwQuery
+        order=orderByClause??
+        limit=limitClause??
+        offset=offsetByClause?? # SfwQuery
     | exprOr            # SfwBase
     ;
 
@@ -561,7 +625,7 @@ exprNot
     ;
 
 exprPredicate
-    : lhs=exprPredicate op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT|NEQ|EQ) rhs=mathOp00  # PredicateComparison
+    : lhs=exprPredicate op=comparisonOp rhs=mathOp00  # PredicateComparison
     | lhs=exprPredicate IS NOT? type                                                 # PredicateIs
     | lhs=exprPredicate NOT? IN PAREN_LEFT expr PAREN_RIGHT                          # PredicateIn
     | lhs=exprPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
@@ -570,20 +634,42 @@ exprPredicate
     | parent=mathOp00                                                                # PredicateBase
     ;
 
-// TODO : Opreator precedence of BITWISE_AND (&) may change in the future.
+comparisonOp
+    : LT_EQ
+    | GT_EQ
+    | ANGLE_LEFT
+    | ANGLE_RIGHT
+    | EQ
+    | ANGLE_LEFT ANGLE_RIGHT
+    | BANG EQ
+    ;
+
+otherOp
+    : OPERATOR
+    | AMPERSAND
+    // TODO introduce a separate lexical mode for GPML MATCH expressions (https://github.com/partiql/partiql-lang-kotlin/issues/1512)
+    //  This will eliminiate the need for this `AMPERSAND` parse branch.
+    ;
+
+// TODO : Opreator precedence of `otherOp` may change in the future.
 //  SEE: https://github.com/partiql/partiql-docs/issues/50
 mathOp00
-    : lhs=mathOp00 op=(AMPERSAND|CONCAT) rhs=mathOp01
+    : lhs=mathOp00 op=otherOp rhs=mathOp01
     | parent=mathOp01
     ;
 
 mathOp01
-    : lhs=mathOp01 op=(PLUS|MINUS) rhs=mathOp02
+    : op=otherOp rhs=mathOp02
     | parent=mathOp02
     ;
 
 mathOp02
-    : lhs=mathOp02 op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=valueExpr
+    : lhs=mathOp02 op=(PLUS|MINUS) rhs=mathOp03
+    | parent=mathOp03
+    ;
+
+mathOp03
+    : lhs=mathOp03 op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=valueExpr
     | parent=valueExpr
     ;
 
@@ -599,21 +685,20 @@ exprPrimary
     | substring                  # ExprPrimaryBase
     | position                   # ExprPrimaryBase
     | overlay                    # ExprPrimaryBase
-    | canCast                    # ExprPrimaryBase
-    | canLosslessCast            # ExprPrimaryBase
+    | canCast                    # ExprPrimaryBase  // TODO remove ahead of `v1` release
+    | canLosslessCast            # ExprPrimaryBase  // TODO remove ahead of `v1` release
     | extract                    # ExprPrimaryBase
     | coalesce                   # ExprPrimaryBase
     | dateFunction               # ExprPrimaryBase
-    | aggregate                  # ExprPrimaryBase
     | trimFunction               # ExprPrimaryBase
-    | functionCall               # ExprPrimaryBase
     | nullIf                     # ExprPrimaryBase
+    | functionCall               # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
     | exprGraphMatchMany         # ExprPrimaryBase
     | caseExpr                   # ExprPrimaryBase
-    | valueList                  # ExprPrimaryBase
-    | values                     # ExprPrimaryBase
     | windowFunction             # ExprPrimaryBase
+    | rowValueConstructor        # ExprPrimaryBase
+    | tableValueConstructor      # ExprPrimaryBase
     ;
 
 /**
@@ -621,6 +706,40 @@ exprPrimary
  * PRIMARY EXPRESSIONS
  *
  */
+ 
+/**
+ * From SQL:1999:
+ * <contextually typed table value constructor> ::= VALUES <contextually typed row value expression list>
+ * Or:
+ * <table value constructor> ::= VALUES <row value expression list>
+ *
+ * Since this can be used as a <query specification> (top-level value), we are making this an [expr].
+ */
+tableValueConstructor
+    : VALUES rowValueExpressionList
+    ;
+
+/**
+ * From SQL:1999:
+ * <contextually typed row value expression list>    ::=
+ *     <contextually typed row value expression> [ { <comma> <contextually typed row value expression> }... ]
+ */
+rowValueExpressionList
+    : expr ( COMMA expr )*
+    ;
+
+/**
+ * From SQL:1999:
+ * <row value constructor>    ::=
+ *     <row value constructor element>
+ *     |     [ ROW ] <left paren> <row value constructor element list> <right paren>
+ *     |     <row subquery>
+ *
+ * Since the other variants are covered by [expr], this ANTLR rule specifically targets the second variant.
+ */
+rowValueConstructor
+    : ROW? PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT
+    ;
 
 exprTerm
     : PAREN_LEFT expr PAREN_RIGHT    # ExprTermWrappedQuery
@@ -641,15 +760,6 @@ coalesce
 
 caseExpr
     : CASE case=expr? (WHEN whens+=expr THEN thens+=expr)+ (ELSE else=expr)? END;
-
-values
-    : VALUES valueRow ( COMMA valueRow )*;
-
-valueRow
-    : PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT;
-
-valueList
-    : PAREN_LEFT expr ( COMMA expr )+ PAREN_RIGHT;
 
 sequenceConstructor
     : datatype=(LIST|SEXP) PAREN_LEFT (expr ( COMMA expr )* )? PAREN_RIGHT;
@@ -677,11 +787,6 @@ overlay
     | OVERLAY PAREN_LEFT expr PLACING expr FROM expr (FOR expr)? PAREN_RIGHT
     ;
 
-aggregate
-    : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                        # CountAll
-    | func=(COUNT|MAX|MIN|SUM|AVG|EVERY|ANY|SOME) PAREN_LEFT setQuantifierStrategy? expr PAREN_RIGHT   # AggregateBase
-    ;
-
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 /**
 *
@@ -697,9 +802,11 @@ windowFunction
 cast
     : CAST PAREN_LEFT expr AS type PAREN_RIGHT;
 
+// TODO remove these ahead of `v1` release
 canLosslessCast
     : CAN_LOSSLESS_CAST PAREN_LEFT expr AS type PAREN_RIGHT;
 
+// TODO remove these ahead of `v1` release
 canCast
     : CAN_CAST PAREN_LEFT expr AS type PAREN_RIGHT;
 
@@ -714,13 +821,8 @@ dateFunction
 
 // SQL-99 10.4 — <routine invocation> ::= <routine name> <SQL argument list>
 functionCall
-    : functionName PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT
-    ;
-
-// SQL-99 10.4 — <routine name> ::= [ <schema name> <period> ] <qualified identifier>
-functionName
-    : (qualifier+=symbolPrimitive PERIOD)* name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )  # FunctionNameReserved
-    | (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive                                                                                         # FunctionNameSymbol
+    : qualifiedName PAREN_LEFT ASTERISK PAREN_RIGHT
+    | qualifiedName PAREN_LEFT ( setQuantifierStrategy? expr ( COMMA expr )* )? PAREN_RIGHT
     ;
 
 pathStep
@@ -742,11 +844,54 @@ parameter
 
 varRefExpr
     : qualifier=AT_SIGN? ident=(IDENTIFIER|IDENTIFIER_QUOTED)   # VariableIdentifier
-    | qualifier=AT_SIGN? key=nonReservedKeywords                # VariableKeyword
+    | qualifier=AT_SIGN? key=nonReserved                # VariableKeyword
     ;
 
-nonReservedKeywords
-    : EXCLUDED
+nonReserved
+    : /* From SQL99 <non-reserved word> https://ronsavage.github.io/SQL/sql-99.bnf.html#non-reserved%20word */
+    ABS | ADA | ADMIN | ASENSITIVE | ASSIGNMENT | ASYMMETRIC | ATOMIC
+    | ATTRIBUTE | AVG
+    | BIT_LENGTH
+    | C | CALLED | CARDINALITY | CATALOG_NAME | CHAIN | CHAR_LENGTH
+    | CHARACTERISTICS | CHARACTER_LENGTH | CHARACTER_SET_CATALOG
+    | CHARACTER_SET_NAME | CHARACTER_SET_SCHEMA | CHECKED | CLASS_ORIGIN
+    | COALESCE | COBOL | COLLATION_CATALOG | COLLATION_NAME | COLLATION_SCHEMA
+    | COLUMN_NAME | COMMAND_FUNCTION | COMMAND_FUNCTION_CODE | COMMITTED
+    | CONDITION_IDENTIFIER | CONDITION_NUMBER | CONNECTION_NAME
+    | CONSTRAINT_CATALOG | CONSTRAINT_NAME | CONSTRAINT_SCHEMA | CONTAINS
+    | CONVERT | COUNT | CURSOR_NAME
+    | DATETIME_INTERVAL_CODE | DATETIME_INTERVAL_PRECISION | DEFINED
+    | DEFINER | DEGREE | DERIVED | DISPATCH
+    | EVERY | EXTRACT
+    | FINAL | FORTRAN
+    | G | GENERATED | GRANTED
+    | HIERARCHY
+    | IMPLEMENTATION | INSENSITIVE | INSTANCE | INSTANTIABLE | INVOKER
+    | K | KEY_MEMBER | KEY_TYPE
+    | LENGTH | LOWER
+    | M | MAX | MIN | MESSAGE_LENGTH | MESSAGE_OCTET_LENGTH | MESSAGE_TEXT
+    | MOD | MORE | MUMPS
+    | NAME | NULLABLE | NUMBER | NULLIF
+    | OCTET_LENGTH | ORDERING | OPTIONS | OVERLAY | OVERRIDING
+    | PASCAL | PARAMETER_MODE | PARAMETER_NAME
+    | PARAMETER_ORDINAL_POSITION | PARAMETER_SPECIFIC_CATALOG
+    | PARAMETER_SPECIFIC_NAME | PARAMETER_SPECIFIC_SCHEMA | PLI | POSITION
+    | REPEATABLE | RETURNED_CARDINALITY | RETURNED_LENGTH
+    | RETURNED_OCTET_LENGTH | RETURNED_SQLSTATE | ROUTINE_CATALOG
+    | ROUTINE_NAME | ROUTINE_SCHEMA | ROW_COUNT
+    | SCALE | SCHEMA_NAME | SCOPE | SECURITY | SELF | SENSITIVE | SERIALIZABLE
+    | SERVER_NAME | SIMPLE | SOURCE | SPECIFIC_NAME | STATEMENT | STRUCTURE
+    | STYLE | SUBCLASS_ORIGIN | SUBSTRING | SUM | SYMMETRIC | SYSTEM
+    | TABLE_NAME | TOP_LEVEL_COUNT | TRANSACTIONS_COMMITTED
+    | TRANSACTIONS_ROLLED_BACK | TRANSACTION_ACTIVE | TRANSFORM
+    | TRANSFORMS | TRANSLATE | TRIGGER_CATALOG | TRIGGER_SCHEMA
+    | TRIGGER_NAME | TRIM | TYPE
+    | UNCOMMITTED | UNNAMED | UPPER
+    /* PartiQL */
+    | EXCLUDED | EXISTS
+    | SIZE
+    /* Other words not in above */
+    | ANY | SOME
     ;
 
 /**
@@ -764,7 +909,7 @@ array
     : BRACKET_LEFT ( expr ( COMMA expr )* )? BRACKET_RIGHT;
 
 bag
-    : ANGLE_DOUBLE_LEFT ( expr ( COMMA expr )* )? ANGLE_DOUBLE_RIGHT;
+    : ANGLE_LEFT ANGLE_LEFT ( expr ( COMMA expr )* )? ANGLE_RIGHT ANGLE_RIGHT;
 
 tuple
     : BRACE_LEFT ( pair ( COMMA pair )* )? BRACE_RIGHT;
@@ -780,6 +925,7 @@ literal
     | LITERAL_STRING                                                                      # LiteralString
     | LITERAL_INTEGER                                                                     # LiteralInteger
     | LITERAL_DECIMAL                                                                     # LiteralDecimal
+    | LITERAL_FLOAT                                                                       # LiteralFloat
     | ION_CLOSURE                                                                         # LiteralIon
     | DATE LITERAL_STRING                                                                 # LiteralDate
     | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING   # LiteralTime
@@ -790,12 +936,19 @@ type
     : datatype=(
         NULL | BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
         | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER | MISSING
-        | STRING | SYMBOL | BLOB | CLOB | DATE | STRUCT | TUPLE | LIST | SEXP | BAG | ANY
+        | STRING | SYMBOL | BLOB | CLOB | DATE | ANY
       )                                                                                                                # TypeAtomic
+    | datatype=( STRUCT | TUPLE | LIST | ARRAY | SEXP | BAG )                                                          # TypeComplexAtomic
     | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
     | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
     | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
     | datatype=(TIME|TIMESTAMP) ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                # TypeTimeZone
+    | datatype=(STRUCT|TUPLE) (ANGLE_LEFT structField ( COMMA structField )* ANGLE_RIGHT)                              # TypeStruct
+    | datatype=(LIST|ARRAY) ANGLE_LEFT type ANGLE_RIGHT                                                                # TypeList
     | symbolPrimitive                                                                                                  # TypeCustom
+    ;
+
+structField
+    : columnName OPTIONAL? COLON type columnConstraintDef* comment?
     ;

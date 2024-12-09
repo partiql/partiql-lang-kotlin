@@ -6,7 +6,7 @@ build
 ~$*
 .gradle
 out/
-
+partiql-parser/src/main/gen
 
 # Created by https://www.toptal.com/developers/gitignore/api/vim,git,java,emacs,kotlin,eclipse,intellij+all,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=vim,git,java,emacs,kotlin,eclipse,intellij+all,macos

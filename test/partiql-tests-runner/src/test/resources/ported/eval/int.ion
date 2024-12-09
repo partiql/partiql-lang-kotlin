@@ -1,0 +1,181 @@
+
+{
+  name:"9223372036854775806",
+  statement:"9223372036854775806",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:9223372036854775806
+  }
+}
+{
+  name:"-9223372036854775807",
+  statement:"-9223372036854775807",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:-9223372036854775807
+  }
+}
+{
+  name:"`0x00ffFFffFFffFFff`",
+  statement:"`0x00ffFFffFFffFFff`",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:72057594037927935
+  }
+}
+{
+  name:"1 & 2",
+  statement:"1 & 2",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:0
+  }
+}
+{
+  name:"3 & 5",
+  statement:"3 & 5",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}
+{
+  name:"5 & 7",
+  statement:"5 & 7",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:5
+  }
+}
+{
+  name:"31 & 15 & 7 & 3 & 1",
+  statement:"31 & 15 & 7 & 3 & 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}
+{
+  name:"1 + 5 & 5",
+  statement:"1 + 5 & 5",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:4
+  }
+}
+{
+  name:"(1 + 5) & 5",
+  statement:"(1 + 5) & 5",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:4
+  }
+}
+{
+  name:"1 + (5 & 5)",
+  statement:"1 + (5 & 5)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:6
+  }
+}
+{
+  name:"5 & 5 + 1",
+  statement:"5 & 5 + 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:4
+  }
+}
+{
+  name:"(5 & 5) + 1",
+  statement:"(5 & 5) + 1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:6
+  }
+}
+{
+  name:"5 & (5 + 1)",
+  statement:"5 & (5 + 1)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:4
+  }
+}
+{
+  name:"9223372036854775807 * -1",
+  statement:"9223372036854775807 * -1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:-9223372036854775807
+  }
+}
+{
+  name:"9223372036854775807 / -1",
+  statement:"9223372036854775807 / -1",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:-9223372036854775807
+  }
+}
