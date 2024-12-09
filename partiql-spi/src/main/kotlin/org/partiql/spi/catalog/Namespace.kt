@@ -92,7 +92,7 @@ public class Namespace private constructor(
         }
 
         @JvmStatic
-        public fun of(levels: Collection<String>): Namespace {
+        public fun of(levels: List<String>): Namespace {
             if (levels.isEmpty()) {
                 return empty()
             }

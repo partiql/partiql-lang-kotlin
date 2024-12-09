@@ -58,12 +58,12 @@ internal class Env(private val session: Session) {
         // 1. Search in current catalog and namespace
         var catalog = default
         var path = resolve(identifier)
-        var table = catalog.getTable(session, path)
+        var table = catalog.resolveTable(session, path)?.let { catalog.getTable(session, it) }
 
         // 2. Lookup as a schema-qualified identifier.
         if (table == null && identifier.hasQualifier()) {
             path = identifier
-            table = catalog.getTable(session, path)
+            table = catalog.resolveTable(session, path)?.let { catalog.getTable(session, it) }
         }
 
         // 3. Lookup as a catalog-qualified identifier
@@ -73,7 +73,7 @@ internal class Env(private val session: Session) {
             val tail = parts.drop(1)
             catalog = catalogs.getCatalog(head.getText(), ignoreCase = head.isRegular()) ?: return null
             path = Identifier.of(tail)
-            table = catalog.getTable(session, path)
+            table = catalog.resolveTable(session, path)?.let { catalog.getTable(session, it) }
         }
 
         // !! NOT FOUND !!

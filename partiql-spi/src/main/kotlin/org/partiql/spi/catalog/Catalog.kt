@@ -41,7 +41,7 @@ public interface Catalog {
      *  2. Invoke getTable("a"."b"."c"."Example"."x")
      *  3. The implementation MUST match "a"."b"."c"."Example" to a.b.c.Example (note "x" does not match a table)
      */
-    public fun getTable(session: Session, identifier: Identifier): Table? = null
+    public fun resolveTable(session: Session, identifier: Identifier): Name? = null
 
     /**
      * Returns a collection of scalar functions in this catalog with the given name, or an empty list if none.

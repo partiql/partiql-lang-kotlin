@@ -30,7 +30,7 @@ public class Identifier private constructor(
     public fun hasQualifier(): Boolean = qualifier.isNotEmpty()
 
     /**
-     * Returns a collection of the identifier parts.
+     * Returns an ordered collection of the identifier parts.
      */
     public fun getParts(): List<Part> {
         return listOf(*qualifier) + identifier
@@ -195,7 +195,7 @@ public class Identifier private constructor(
         public fun regular(vararg parts: String): Identifier = regular(parts.toList())
 
         @JvmStatic
-        public fun regular(parts: Collection<String>): Identifier {
+        public fun regular(parts: List<String>): Identifier {
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }
@@ -211,7 +211,7 @@ public class Identifier private constructor(
         public fun delimited(vararg parts: String): Identifier = delimited(parts.toList())
 
         @JvmStatic
-        public fun delimited(parts: Collection<String>): Identifier {
+        public fun delimited(parts: List<String>): Identifier {
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }
@@ -224,7 +224,7 @@ public class Identifier private constructor(
         public fun of(vararg parts: Part): Identifier = of(parts.toList())
 
         @JvmStatic
-        public fun of(parts: Collection<Part>): Identifier {
+        public fun of(parts: List<Part>): Identifier {
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }

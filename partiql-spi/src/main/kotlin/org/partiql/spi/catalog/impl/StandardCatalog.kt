@@ -26,14 +26,14 @@ internal class StandardCatalog(
     /**
      * TODO implement "longest match" on identifier searching.
      */
-    override fun getTable(session: Session, identifier: Identifier): Table? {
+    override fun resolveTable(session: Session, identifier: Identifier): Name? {
         // TODO memory connector does not handle qualified identifiers and longest match
         val first = identifier.first()
-        for ((name, table) in tables) {
+        for ((name, _) in tables) {
             val str = name.getName() // only use single identifiers for now
             if (first.matches(str)) {
                 // TODO emit errors on ambiguous table names
-                return table
+                return name
             }
         }
         return null

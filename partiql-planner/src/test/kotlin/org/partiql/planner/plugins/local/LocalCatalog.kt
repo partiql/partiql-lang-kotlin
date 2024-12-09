@@ -38,7 +38,7 @@ public class LocalCatalog internal constructor(
     /**
      * TODO this doesn't handle ambiguous binding errors or back-tracking for longest prefix searching.
      */
-    override fun getTable(session: Session, identifier: Identifier): Table? {
+    override fun resolveTable(session: Session, identifier: Identifier): Name? {
         val matched = mutableListOf<String>()
         var curr = root
         for (part in identifier) {
@@ -62,8 +62,7 @@ public class LocalCatalog internal constructor(
             return null
         }
         // Remove the extension
-        val name = Name.of(matched)
-        return LocalTable(name, path)
+        return Name.of(matched)
     }
 
     // TODO preserving this logic if catalog regains the listing APIs.

@@ -7,10 +7,8 @@
 
 name: JMH Benchmarks (Main)
 
-on:
-  push:
-    branches:
-      - main
+# TODO: Make this run on pushes to main once appropriate benchmarks have been written.
+on: [workflow_dispatch]
 
 env:
   JMH_RESULTS_PATH_FROM_ROOT: partiql-lang/build/reports/jmh/results.json
