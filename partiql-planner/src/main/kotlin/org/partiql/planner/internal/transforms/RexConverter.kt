@@ -20,6 +20,7 @@ import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstVisitor
 import org.partiql.ast.DataType
+import org.partiql.ast.Literal
 import org.partiql.ast.QueryBody
 import org.partiql.ast.SelectList
 import org.partiql.ast.SelectStar
@@ -86,19 +87,31 @@ import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.planner.internal.utils.DateTimeUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.value.DecimalValue
-import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StringValue
 import org.partiql.value.boolValue
+import org.partiql.value.dateValue
+import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.decimalValue
+import org.partiql.value.float64Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
+import org.partiql.value.intValue
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
+import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
+import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
+import java.math.BigInteger
+import java.math.MathContext
+import java.math.RoundingMode
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import org.partiql.ast.SetQuantifier as AstSetQuantifier
 
 /**
@@ -135,28 +148,99 @@ internal object RexConverter {
         }
 
         override fun visitExprLit(node: ExprLit, context: Env): Rex {
-            val type = when (val value = node.value) {
+            val pValue = node.lit.toPartiQLValue()
+            val type = when (pValue) {
                 // Specifically handle the lack of an infinite precision/scale
                 // TODO: PartiQLValue won't be in AST soon
                 is DecimalValue -> {
-                    when (val decimal = value.value) {
+                    when (val decimal = pValue.value) {
                         null -> PType.decimal(38, 19)
                         else -> PType.decimal(decimal.precision(), decimal.scale())
                     }
                 }
-                else -> value.type.toPType()
+                else -> pValue.type.toPType()
             }
             val cType = CompilerType(
                 _delegate = type,
-                isNullValue = node.value.isNull,
-                isMissingValue = node.value is MissingValue
+                isNullValue = node.lit.code() == Literal.NULL,
+                isMissingValue = node.lit.code() == Literal.MISSING
             )
-            val op = rexOpLit(node.value)
+            val op = rexOpLit(pValue)
             return rex(cType, op)
         }
 
-        private fun PartiQLValue.toPType(): PType {
-            return this.type.toPType()
+        private fun Literal.toPartiQLValue(): PartiQLValue {
+            val lit = this
+            return when (lit.code()) {
+                Literal.NULL -> nullValue()
+                Literal.MISSING -> missingValue()
+                Literal.STRING -> stringValue(lit.stringValue())
+                Literal.BOOL -> boolValue(lit.booleanValue())
+                Literal.EXACT_NUM -> {
+                    // TODO previous behavior inferred decimals with scale = 0 to be a PartiQLValue.IntValue with
+                    //  PType of numeric. Since we're keeping numeric and decimal, need to take another look at
+                    //  whether the literal should have type decimal or numeric.
+                    val dec = lit.bigDecimalValue().round(MathContext(38, RoundingMode.HALF_EVEN))
+                    if (dec.scale() == 0) {
+                        intValue(dec.toBigInteger())
+                    } else {
+                        decimalValue(dec)
+                    }
+                }
+                Literal.INT_NUM -> {
+                    val n = lit.numberValue()
+                    // 1st, try parse as int
+                    try {
+                        val v = n.toInt(10)
+                        return int32Value(v)
+                    } catch (ex: NumberFormatException) {
+                        // ignore
+                    }
+
+                    // 2nd, try parse as long
+                    try {
+                        val v = n.toLong(10)
+                        return int64Value(v)
+                    } catch (ex: NumberFormatException) {
+                        // ignore
+                    }
+
+                    // 3rd, try parse as BigInteger
+                    try {
+                        val v = BigInteger(n)
+                        return intValue(v)
+                    } catch (ex: NumberFormatException) {
+                        throw ex
+                    }
+                }
+                Literal.APPROX_NUM -> {
+                    float64Value(lit.numberValue().toDouble())
+                }
+                Literal.TYPED_STRING -> {
+                    val type = this.dataType()
+                    val typedString = this.stringValue()
+                    when (type.code()) {
+                        DataType.DATE -> {
+                            val value = LocalDate.parse(typedString, DateTimeFormatter.ISO_LOCAL_DATE)
+                            val date = DateTimeValue.date(value.year, value.monthValue, value.dayOfMonth)
+                            dateValue(date)
+                        }
+                        DataType.TIME, DataType.TIME_WITH_TIME_ZONE -> {
+                            val time = DateTimeUtils.parseTimeLiteral(typedString)
+                            val precision = type.precision ?: 6
+                            timeValue(time.toPrecision(precision))
+                        }
+                        DataType.TIMESTAMP, DataType.TIMESTAMP_WITH_TIME_ZONE -> {
+                            val timestamp = DateTimeUtils.parseTimestamp(typedString)
+                            val precision = type.precision ?: 6
+                            val value = timestamp.toPrecision(precision)
+                            timestampValue(value)
+                        }
+                        else -> error("Unsupported typed literal string: $this")
+                    }
+                }
+                else -> error("Unsupported literal: $this")
+            }
         }
 
         /**
@@ -399,8 +483,8 @@ internal object RexConverter {
                     is PathStep.Element -> {
                         val key = visitExprCoerce(curStep.element, context)
                         val op = when (val astKey = curStep.element) {
-                            is ExprLit -> when (astKey.value) {
-                                is StringValue -> rexOpPathKey(curPathNavi, key)
+                            is ExprLit -> when (astKey.lit.code()) {
+                                Literal.STRING -> rexOpPathKey(curPathNavi, key)
                                 else -> rexOpPathIndex(curPathNavi, key)
                             }
                             is ExprCast -> when (astKey.asType.code() == DataType.STRING) {

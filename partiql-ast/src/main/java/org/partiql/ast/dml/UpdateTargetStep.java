@@ -6,8 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
+import org.partiql.ast.Literal;
 import org.partiql.ast.expr.ExprLit;
-import org.partiql.value.PartiQL;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,7 +51,7 @@ public abstract class UpdateTargetStep extends AstNode {
          * @param key TODO
          */
         public Element(int key) {
-            this.key = new ExprLit(PartiQL.int32Value(key));
+            this.key = new ExprLit(Literal.intNum(key));
         }
 
         /**
@@ -59,7 +59,7 @@ public abstract class UpdateTargetStep extends AstNode {
          * @param key TODO
          */
         public Element(@NotNull String key) {
-            this.key = new ExprLit(PartiQL.stringValue(key));
+            this.key = new ExprLit(Literal.string(key));
         }
 
         @NotNull

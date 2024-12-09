@@ -406,6 +406,10 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
+    public R visitLiteral(Literal node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
     public R visitQueryBody(QueryBody node, C ctx) {
         return node.accept(this, ctx);
     }

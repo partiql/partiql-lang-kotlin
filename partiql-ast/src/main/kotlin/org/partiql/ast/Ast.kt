@@ -67,8 +67,6 @@ import org.partiql.ast.graph.GraphPattern
 import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphRestrictor
 import org.partiql.ast.graph.GraphSelector
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 
 // TODO docs for all factory methods
 //  Also consider defaults for nullable. Need to look more into backwards compatibility.
@@ -140,10 +138,8 @@ public object Ast {
         return ExprLike(value, pattern, escape, not)
     }
 
-    // This representation will be changed in https://github.com/partiql/partiql-lang-kotlin/issues/1589
-    @OptIn(PartiQLValueExperimental::class)
     @JvmStatic
-    public fun exprLit(value: PartiQLValue): ExprLit {
+    public fun exprLit(value: Literal): ExprLit {
         return ExprLit(value)
     }
 
@@ -413,10 +409,8 @@ public object Ast {
         return ExcludeStep.CollWildcard()
     }
 
-    // This representation will be changed in https://github.com/partiql/partiql-lang-kotlin/issues/1589
-    @OptIn(PartiQLValueExperimental::class)
     @JvmStatic
-    public fun explain(options: Map<String, PartiQLValue>, statement: Statement): Explain {
+    public fun explain(options: Map<String, Literal>, statement: Statement): Explain {
         return Explain(options, statement)
     }
 

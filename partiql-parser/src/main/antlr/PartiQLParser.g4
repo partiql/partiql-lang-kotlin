@@ -925,6 +925,7 @@ literal
     | LITERAL_STRING                                                                      # LiteralString
     | LITERAL_INTEGER                                                                     # LiteralInteger
     | LITERAL_DECIMAL                                                                     # LiteralDecimal
+    | LITERAL_FLOAT                                                                       # LiteralFloat
     | ION_CLOSURE                                                                         # LiteralIon
     | DATE LITERAL_STRING                                                                 # LiteralDate
     | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING   # LiteralTime

@@ -15,13 +15,12 @@ import org.partiql.ast.Ast.selectStar
 import org.partiql.ast.Ast.setOp
 import org.partiql.ast.AstNode
 import org.partiql.ast.FromType
+import org.partiql.ast.Literal.intNum
+import org.partiql.ast.Literal.string
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprQuerySet
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int32Value
-import org.partiql.value.stringValue
 import kotlin.test.assertEquals
 
 class PartiQLParserBagOpTests {
@@ -30,7 +29,6 @@ class PartiQLParserBagOpTests {
 
     private fun queryBody(body: () -> Expr) = query(body())
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun createSFW(i: Int): ExprQuerySet =
         exprQuerySet(
             body = queryBodySFW(
@@ -43,8 +41,8 @@ class PartiQLParserBagOpTests {
                                     exprStruct(
                                         fields = mutableListOf(
                                             exprStructField(
-                                                name = exprLit(value = stringValue("a")),
-                                                value = exprLit(value = int32Value(i))
+                                                name = exprLit(string("a")),
+                                                value = exprLit(intNum(i))
                                             )
                                         )
                                     )
@@ -67,8 +65,7 @@ class PartiQLParserBagOpTests {
             offset = null
         )
 
-    @OptIn(PartiQLValueExperimental::class)
-    private fun createLit(i: Int) = exprLit(int32Value(i))
+    private fun createLit(i: Int) = exprLit(intNum(i))
 
     // SQL Union
     @Test

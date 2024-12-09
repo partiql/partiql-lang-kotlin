@@ -1,32 +1,33 @@
 package org.partiql.ast.expr;
 
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.value.PartiQLValue;
+import org.partiql.ast.Literal;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * TODO docs, equals, hashcode
  */
-@Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public class ExprLit extends Expr {
     @NotNull
-    public final PartiQLValue value; // This representation be changed in https://github.com/partiql/partiql-lang-kotlin/issues/1589
+    public Literal lit;
 
-    public ExprLit(@NotNull PartiQLValue value) {
-        this.value = value;
+    public ExprLit(@NotNull Literal lit) {
+        this.lit = lit;
     }
 
-    @Override
     @NotNull
+    @Override
     public Collection<AstNode> children() {
-        return Collections.emptyList();
+        List<AstNode> kids = new ArrayList<>();
+        kids.add(lit);
+        return kids;
     }
 
     @Override
