@@ -46,10 +46,12 @@ import org.partiql.ast.expr.ExprOverlay
 import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprPosition
 import org.partiql.ast.expr.ExprQuerySet
+import org.partiql.ast.expr.ExprRowValue
 import org.partiql.ast.expr.ExprSessionAttribute
 import org.partiql.ast.expr.ExprStruct
 import org.partiql.ast.expr.ExprSubstring
 import org.partiql.ast.expr.ExprTrim
+import org.partiql.ast.expr.ExprValues
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
@@ -138,6 +140,12 @@ internal object RexConverter {
 
         override fun defaultReturn(node: AstNode, context: Env): Rex =
             throw IllegalArgumentException("unsupported rex $node")
+
+        override fun visitExprRowValue(node: ExprRowValue, ctx: Env): Rex {
+            val values = node.values.map { visitExprCoerce(it, ctx) }
+            val op = rexOpCollection(values)
+            return rex(LIST, op) // TODO: We only do this for legacy reasons. This should return a rexOpRow!
+        }
 
         override fun visitExprLit(node: ExprLit, context: Env): Rex {
             val pValue = node.lit.toPartiQLValue()
@@ -569,6 +577,11 @@ internal object RexConverter {
             }
             val op = rexOpSelect(constructor, fromNode)
             return rex(ANY, op)
+        }
+
+        override fun visitExprValues(node: ExprValues, ctx: Env): Rex {
+            val rows = node.rows.map { visitExprCoerce(it, ctx) }
+            return rex(BAG, rexOpCollection(rows))
         }
 
         /**

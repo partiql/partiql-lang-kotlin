@@ -4,7 +4,15 @@ public final class org/partiql/ast/Ast {
 	public static final fun columnConstraintNullable (Lorg/partiql/ast/IdentifierChain;Z)Lorg/partiql/ast/ddl/AttributeConstraint$Null;
 	public static final fun columnConstraintUnique (Lorg/partiql/ast/IdentifierChain;Z)Lorg/partiql/ast/ddl/AttributeConstraint$Unique;
 	public static final fun columnDefinition (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/DataType;ZLjava/util/List;Ljava/lang/String;)Lorg/partiql/ast/ddl/ColumnDefinition;
+	public static final fun conflictTargetConstraint (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/ConflictTarget$Constraint;
+	public static final fun conflictTargetIndex (Ljava/util/List;)Lorg/partiql/ast/dml/ConflictTarget$Index;
 	public static final fun createTable (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Ljava/util/List;Lorg/partiql/ast/ddl/PartitionBy;Ljava/util/List;)Lorg/partiql/ast/ddl/CreateTable;
+	public static final fun delete (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/Delete;
+	public static final fun doNothing ()Lorg/partiql/ast/dml/ConflictAction$DoNothing;
+	public static final fun doReplace (Lorg/partiql/ast/dml/DoReplaceAction;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/ConflictAction$DoReplace;
+	public static final fun doReplaceActionExcluded ()Lorg/partiql/ast/dml/DoReplaceAction$Excluded;
+	public static final fun doUpdate (Lorg/partiql/ast/dml/DoUpdateAction;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/ConflictAction$DoUpdate;
+	public static final fun doUpdateActionExcluded ()Lorg/partiql/ast/dml/DoUpdateAction$Excluded;
 	public static final fun exclude (Ljava/util/List;)Lorg/partiql/ast/Exclude;
 	public static final fun excludePath (Lorg/partiql/ast/expr/ExprVarRef;Ljava/util/List;)Lorg/partiql/ast/ExcludePath;
 	public static final fun excludeStepCollIndex (I)Lorg/partiql/ast/ExcludeStep$CollIndex;
@@ -41,6 +49,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprPosition (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprPosition;
 	public static final fun exprQuerySet (Lorg/partiql/ast/QueryBody;Lorg/partiql/ast/OrderBy;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprQuerySet;
 	public static final fun exprRowValue (Ljava/util/List;)Lorg/partiql/ast/expr/ExprRowValue;
+	public static final fun exprRowValue (Ljava/util/List;Z)Lorg/partiql/ast/expr/ExprRowValue;
 	public static final fun exprSessionAttribute (Lorg/partiql/ast/expr/SessionAttribute;)Lorg/partiql/ast/expr/ExprSessionAttribute;
 	public static final fun exprStruct (Ljava/util/List;)Lorg/partiql/ast/expr/ExprStruct;
 	public static final fun exprStructField (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprStruct$Field;
@@ -75,23 +84,35 @@ public final class org/partiql/ast/Ast {
 	public static final fun groupByKey (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/GroupBy$Key;
 	public static final fun identifier (Ljava/lang/String;Z)Lorg/partiql/ast/Identifier;
 	public static final fun identifierChain (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/IdentifierChain;
+	public static final fun insert (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;Lorg/partiql/ast/dml/OnConflict;)Lorg/partiql/ast/dml/Insert;
+	public static final fun insertSourceDefault ()Lorg/partiql/ast/dml/InsertSource$FromDefault;
+	public static final fun insertSourceExpr (Ljava/util/List;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/InsertSource$FromExpr;
 	public static final fun keyValue (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/ddl/KeyValue;
 	public static final fun let (Ljava/util/List;)Lorg/partiql/ast/Let;
 	public static final fun letBinding (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/Let$Binding;
+	public static final fun onConflict (Lorg/partiql/ast/dml/ConflictAction;Lorg/partiql/ast/dml/ConflictTarget;)Lorg/partiql/ast/dml/OnConflict;
 	public static final fun orderBy (Ljava/util/List;)Lorg/partiql/ast/OrderBy;
 	public static final fun partitionBy (Ljava/util/List;)Lorg/partiql/ast/ddl/PartitionBy;
 	public static final fun query (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/Query;
 	public static final fun queryBodySFW (Lorg/partiql/ast/Select;Lorg/partiql/ast/Exclude;Lorg/partiql/ast/From;Lorg/partiql/ast/Let;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/GroupBy;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/QueryBody$SFW;
 	public static final fun queryBodySetOp (Lorg/partiql/ast/SetOp;ZLorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/QueryBody$SetOp;
+	public static final fun replace (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Replace;
 	public static final fun selectItemExpr (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/SelectItem$Expr;
 	public static final fun selectItemStar (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/SelectItem$Star;
 	public static final fun selectList (Ljava/util/List;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SelectList;
 	public static final fun selectPivot (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/SelectPivot;
 	public static final fun selectStar (Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SelectStar;
 	public static final fun selectValue (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SelectValue;
+	public static final fun setClause (Lorg/partiql/ast/dml/UpdateTarget;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/SetClause;
 	public static final fun setOp (Lorg/partiql/ast/SetOpType;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SetOp;
 	public static final fun sort (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Order;Lorg/partiql/ast/Nulls;)Lorg/partiql/ast/Sort;
 	public static final fun tableConstraintUnique (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Z)Lorg/partiql/ast/ddl/TableConstraint$Unique;
+	public static final fun update (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/Update;
+	public static final fun updateTarget (Lorg/partiql/ast/Identifier;Ljava/util/List;)Lorg/partiql/ast/dml/UpdateTarget;
+	public static final fun updateTargetStepElement (I)Lorg/partiql/ast/dml/UpdateTargetStep$Element;
+	public static final fun updateTargetStepElement (Ljava/lang/String;)Lorg/partiql/ast/dml/UpdateTargetStep$Element;
+	public static final fun updateTargetStepField (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/dml/UpdateTargetStep$Field;
+	public static final fun upsert (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Upsert;
 }
 
 public abstract class org/partiql/ast/AstEnum : org/partiql/ast/AstNode {
@@ -111,8 +132,24 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun <init> ()V
 	public synthetic fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictActionDoNothing (Lorg/partiql/ast/dml/ConflictAction$DoNothing;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoNothing (Lorg/partiql/ast/dml/ConflictAction$DoNothing;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictActionDoReplace (Lorg/partiql/ast/dml/ConflictAction$DoReplace;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoReplace (Lorg/partiql/ast/dml/ConflictAction$DoReplace;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictActionDoUpdate (Lorg/partiql/ast/dml/ConflictAction$DoUpdate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoUpdate (Lorg/partiql/ast/dml/ConflictAction$DoUpdate;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictTargetConstraint (Lorg/partiql/ast/dml/ConflictTarget$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictTargetConstraint (Lorg/partiql/ast/dml/ConflictTarget$Constraint;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConflictTargetIndex (Lorg/partiql/ast/dml/ConflictTarget$Index;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictTargetIndex (Lorg/partiql/ast/dml/ConflictTarget$Index;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDoReplaceActionExcluded (Lorg/partiql/ast/dml/DoReplaceAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDoReplaceActionExcluded (Lorg/partiql/ast/dml/DoReplaceAction$Excluded;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDoUpdateActionExcluded (Lorg/partiql/ast/dml/DoUpdateAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDoUpdateActionExcluded (Lorg/partiql/ast/dml/DoUpdateAction$Excluded;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExcludePath (Lorg/partiql/ast/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
@@ -229,12 +266,20 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitInsertSourceFromDefault (Lorg/partiql/ast/dml/InsertSource$FromDefault;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsertSourceFromDefault (Lorg/partiql/ast/dml/InsertSource$FromDefault;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitInsertSourceFromExpr (Lorg/partiql/ast/dml/InsertSource$FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsertSourceFromExpr (Lorg/partiql/ast/dml/InsertSource$FromExpr;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitLiteral (Lorg/partiql/ast/Literal;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLiteral (Lorg/partiql/ast/Literal;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitOnConflict (Lorg/partiql/ast/dml/OnConflict;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitOnConflict (Lorg/partiql/ast/dml/OnConflict;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPathStepAllElements (Lorg/partiql/ast/expr/PathStep$AllElements;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepAllElements (Lorg/partiql/ast/expr/PathStep$AllElements;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPathStepAllFields (Lorg/partiql/ast/expr/PathStep$AllFields;Ljava/lang/Object;)Ljava/lang/Object;
@@ -249,6 +294,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitQueryBodySFW (Lorg/partiql/ast/QueryBody$SFW;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitReplace (Lorg/partiql/ast/dml/Replace;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReplace (Lorg/partiql/ast/dml/Replace;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSelectItemStar (Lorg/partiql/ast/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
@@ -261,8 +308,20 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitSelectStar (Lorg/partiql/ast/SelectStar;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSelectValue (Lorg/partiql/ast/SelectValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectValue (Lorg/partiql/ast/SelectValue;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitSetClause (Lorg/partiql/ast/dml/SetClause;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSetClause (Lorg/partiql/ast/dml/SetClause;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpdate (Lorg/partiql/ast/dml/Update;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdate (Lorg/partiql/ast/dml/Update;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpdateTarget (Lorg/partiql/ast/dml/UpdateTarget;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTarget (Lorg/partiql/ast/dml/UpdateTarget;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpdateTargetStepElement (Lorg/partiql/ast/dml/UpdateTargetStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTargetStepElement (Lorg/partiql/ast/dml/UpdateTargetStep$Element;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpdateTargetStepField (Lorg/partiql/ast/dml/UpdateTargetStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTargetStepField (Lorg/partiql/ast/dml/UpdateTargetStep$Field;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 }
 
 public abstract class org/partiql/ast/AstVisitor {
@@ -272,9 +331,21 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visit (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCheck (Lorg/partiql/ast/ddl/AttributeConstraint$Check;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitColumnDefinition (Lorg/partiql/ast/ddl/ColumnDefinition;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictAction (Lorg/partiql/ast/dml/ConflictAction;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoNothing (Lorg/partiql/ast/dml/ConflictAction$DoNothing;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoReplace (Lorg/partiql/ast/dml/ConflictAction$DoReplace;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictActionDoUpdate (Lorg/partiql/ast/dml/ConflictAction$DoUpdate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictTarget (Lorg/partiql/ast/dml/ConflictTarget;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictTargetConstraint (Lorg/partiql/ast/dml/ConflictTarget$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConflictTargetIndex (Lorg/partiql/ast/dml/ConflictTarget$Index;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDataType (Lorg/partiql/ast/DataType;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDoReplaceAction (Lorg/partiql/ast/dml/DoReplaceAction;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDoReplaceActionExcluded (Lorg/partiql/ast/dml/DoReplaceAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDoUpdateAction (Lorg/partiql/ast/dml/DoUpdateAction;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDoUpdateActionExcluded (Lorg/partiql/ast/dml/DoUpdateAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludePath (Lorg/partiql/ast/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludeStep (Lorg/partiql/ast/ExcludeStep;Ljava/lang/Object;)Ljava/lang/Object;
@@ -347,11 +418,16 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitGroupByKey (Lorg/partiql/ast/GroupBy$Key;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsertSource (Lorg/partiql/ast/dml/InsertSource;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsertSourceFromDefault (Lorg/partiql/ast/dml/InsertSource$FromDefault;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsertSourceFromExpr (Lorg/partiql/ast/dml/InsertSource$FromExpr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitKeyValue (Lorg/partiql/ast/ddl/KeyValue;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLiteral (Lorg/partiql/ast/Literal;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitNullable (Lorg/partiql/ast/ddl/AttributeConstraint$Null;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitOnConflict (Lorg/partiql/ast/dml/OnConflict;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPartitionBy (Lorg/partiql/ast/ddl/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStep (Lorg/partiql/ast/expr/PathStep;Ljava/lang/Object;)Ljava/lang/Object;
@@ -363,6 +439,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitQueryBody (Lorg/partiql/ast/QueryBody;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQueryBodySFW (Lorg/partiql/ast/QueryBody$SFW;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReplace (Lorg/partiql/ast/dml/Replace;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelect (Lorg/partiql/ast/Select;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectItem (Lorg/partiql/ast/SelectItem;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
@@ -371,12 +448,19 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitSelectPivot (Lorg/partiql/ast/SelectPivot;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectStar (Lorg/partiql/ast/SelectStar;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectValue (Lorg/partiql/ast/SelectValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSetClause (Lorg/partiql/ast/dml/SetClause;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatement (Lorg/partiql/ast/Statement;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStructField (Lorg/partiql/ast/DataType$StructField;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUnique (Lorg/partiql/ast/ddl/AttributeConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUnique (Lorg/partiql/ast/ddl/TableConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdate (Lorg/partiql/ast/dml/Update;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTarget (Lorg/partiql/ast/dml/UpdateTarget;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTargetStep (Lorg/partiql/ast/dml/UpdateTargetStep;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTargetStepElement (Lorg/partiql/ast/dml/UpdateTargetStep$Element;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdateTargetStepField (Lorg/partiql/ast/dml/UpdateTargetStep$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
@@ -1434,6 +1518,360 @@ public class org/partiql/ast/ddl/TableConstraint$Unique : org/partiql/ast/ddl/Ta
 	public fun hashCode ()I
 }
 
+public abstract class org/partiql/ast/dml/ConflictAction : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public final class org/partiql/ast/dml/ConflictAction$DoNothing : org/partiql/ast/dml/ConflictAction {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/ConflictAction$DoNothing$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/ConflictAction$DoNothing$Builder {
+	public fun build ()Lorg/partiql/ast/dml/ConflictAction$DoNothing;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/ConflictAction$DoReplace : org/partiql/ast/dml/ConflictAction {
+	public final field action Lorg/partiql/ast/dml/DoReplaceAction;
+	public final field condition Lorg/partiql/ast/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/dml/DoReplaceAction;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/ConflictAction$DoReplace$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/ConflictAction$DoReplace$Builder {
+	public fun action (Lorg/partiql/ast/dml/DoReplaceAction;)Lorg/partiql/ast/dml/ConflictAction$DoReplace$Builder;
+	public fun build ()Lorg/partiql/ast/dml/ConflictAction$DoReplace;
+	public fun condition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/ConflictAction$DoReplace$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/ConflictAction$DoUpdate : org/partiql/ast/dml/ConflictAction {
+	public final field action Lorg/partiql/ast/dml/DoUpdateAction;
+	public final field condition Lorg/partiql/ast/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/dml/DoUpdateAction;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/ConflictAction$DoUpdate$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/ConflictAction$DoUpdate$Builder {
+	public fun action (Lorg/partiql/ast/dml/DoUpdateAction;)Lorg/partiql/ast/dml/ConflictAction$DoUpdate$Builder;
+	public fun build ()Lorg/partiql/ast/dml/ConflictAction$DoUpdate;
+	public fun condition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/ConflictAction$DoUpdate$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/ast/dml/ConflictTarget : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public final class org/partiql/ast/dml/ConflictTarget$Constraint : org/partiql/ast/dml/ConflictTarget {
+	public final field name Lorg/partiql/ast/IdentifierChain;
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/ConflictTarget$Constraint$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/ConflictTarget$Constraint$Builder {
+	public fun build ()Lorg/partiql/ast/dml/ConflictTarget$Constraint;
+	public fun name (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/ConflictTarget$Constraint$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/ConflictTarget$Index : org/partiql/ast/dml/ConflictTarget {
+	public final field indexes Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/ConflictTarget$Index$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/ConflictTarget$Index$Builder {
+	public fun build ()Lorg/partiql/ast/dml/ConflictTarget$Index;
+	public fun indexes (Ljava/util/List;)Lorg/partiql/ast/dml/ConflictTarget$Index$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/Delete : org/partiql/ast/Statement {
+	public final field condition Lorg/partiql/ast/expr/Expr;
+	public final field tableName Lorg/partiql/ast/IdentifierChain;
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/Delete$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/Delete$Builder {
+	public fun build ()Lorg/partiql/ast/dml/Delete;
+	public fun condition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/Delete$Builder;
+	public fun tableName (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/Delete$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/ast/dml/DoReplaceAction : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public final class org/partiql/ast/dml/DoReplaceAction$Excluded : org/partiql/ast/dml/DoReplaceAction {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/DoReplaceAction$Excluded$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/DoReplaceAction$Excluded$Builder {
+	public fun build ()Lorg/partiql/ast/dml/DoReplaceAction$Excluded;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/ast/dml/DoUpdateAction : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public final class org/partiql/ast/dml/DoUpdateAction$Excluded : org/partiql/ast/dml/DoUpdateAction {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/DoUpdateAction$Excluded$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/DoUpdateAction$Excluded$Builder {
+	public fun build ()Lorg/partiql/ast/dml/DoUpdateAction$Excluded;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/Insert : org/partiql/ast/Statement {
+	public final field asAlias Lorg/partiql/ast/Identifier;
+	public final field onConflict Lorg/partiql/ast/dml/OnConflict;
+	public final field source Lorg/partiql/ast/dml/InsertSource;
+	public final field tableName Lorg/partiql/ast/IdentifierChain;
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;Lorg/partiql/ast/dml/OnConflict;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/Insert$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/Insert$Builder {
+	public fun asAlias (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/dml/Insert$Builder;
+	public fun build ()Lorg/partiql/ast/dml/Insert;
+	public fun onConflict (Lorg/partiql/ast/dml/OnConflict;)Lorg/partiql/ast/dml/Insert$Builder;
+	public fun source (Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Insert$Builder;
+	public fun tableName (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/Insert$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/ast/dml/InsertSource : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public final class org/partiql/ast/dml/InsertSource$FromDefault : org/partiql/ast/dml/InsertSource {
+	public fun <init> ()V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/InsertSource$FromDefault$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/InsertSource$FromDefault$Builder {
+	public fun build ()Lorg/partiql/ast/dml/InsertSource$FromDefault;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/InsertSource$FromExpr : org/partiql/ast/dml/InsertSource {
+	public final field columns Ljava/util/List;
+	public final field expr Lorg/partiql/ast/expr/Expr;
+	public fun <init> (Ljava/util/List;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/InsertSource$FromExpr$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/InsertSource$FromExpr$Builder {
+	public fun build ()Lorg/partiql/ast/dml/InsertSource$FromExpr;
+	public fun columns (Ljava/util/List;)Lorg/partiql/ast/dml/InsertSource$FromExpr$Builder;
+	public fun expr (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/InsertSource$FromExpr$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/OnConflict : org/partiql/ast/AstNode {
+	public final field action Lorg/partiql/ast/dml/ConflictAction;
+	public final field target Lorg/partiql/ast/dml/ConflictTarget;
+	public fun <init> (Lorg/partiql/ast/dml/ConflictAction;Lorg/partiql/ast/dml/ConflictTarget;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/OnConflict$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/OnConflict$Builder {
+	public fun action (Lorg/partiql/ast/dml/ConflictAction;)Lorg/partiql/ast/dml/OnConflict$Builder;
+	public fun build ()Lorg/partiql/ast/dml/OnConflict;
+	public fun target (Lorg/partiql/ast/dml/ConflictTarget;)Lorg/partiql/ast/dml/OnConflict$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/Replace : org/partiql/ast/Statement {
+	public final field asAlias Lorg/partiql/ast/Identifier;
+	public final field source Lorg/partiql/ast/dml/InsertSource;
+	public final field tableName Lorg/partiql/ast/IdentifierChain;
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/Replace$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/Replace$Builder {
+	public fun asAlias (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/dml/Replace$Builder;
+	public fun build ()Lorg/partiql/ast/dml/Replace;
+	public fun source (Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Replace$Builder;
+	public fun tableName (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/Replace$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/SetClause : org/partiql/ast/AstNode {
+	public final field expr Lorg/partiql/ast/expr/Expr;
+	public final field target Lorg/partiql/ast/dml/UpdateTarget;
+	public fun <init> (Lorg/partiql/ast/dml/UpdateTarget;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/SetClause$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/SetClause$Builder {
+	public fun build ()Lorg/partiql/ast/dml/SetClause;
+	public fun expr (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/SetClause$Builder;
+	public fun target (Lorg/partiql/ast/dml/UpdateTarget;)Lorg/partiql/ast/dml/SetClause$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/Update : org/partiql/ast/Statement {
+	public final field condition Lorg/partiql/ast/expr/Expr;
+	public final field setClauses Ljava/util/List;
+	public final field tableName Lorg/partiql/ast/IdentifierChain;
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Lorg/partiql/ast/expr/Expr;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/Update$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/Update$Builder {
+	public fun build ()Lorg/partiql/ast/dml/Update;
+	public fun condition (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/dml/Update$Builder;
+	public fun setClauses (Ljava/util/List;)Lorg/partiql/ast/dml/Update$Builder;
+	public fun tableName (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/Update$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/UpdateTarget : org/partiql/ast/AstNode {
+	public final field root Lorg/partiql/ast/Identifier;
+	public final field steps Ljava/util/List;
+	public fun <init> (Lorg/partiql/ast/Identifier;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/UpdateTarget$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/UpdateTarget$Builder {
+	public fun build ()Lorg/partiql/ast/dml/UpdateTarget;
+	public fun root (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/dml/UpdateTarget$Builder;
+	public fun steps (Ljava/util/List;)Lorg/partiql/ast/dml/UpdateTarget$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/ast/dml/UpdateTargetStep : org/partiql/ast/AstNode {
+	public fun <init> ()V
+}
+
+public final class org/partiql/ast/dml/UpdateTargetStep$Element : org/partiql/ast/dml/UpdateTargetStep {
+	public final field key Lorg/partiql/ast/Literal;
+	public fun <init> (I)V
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Lorg/partiql/ast/Literal;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/UpdateTargetStep$Element$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/UpdateTargetStep$Element$Builder {
+	public fun build ()Lorg/partiql/ast/dml/UpdateTargetStep$Element;
+	public fun key (Lorg/partiql/ast/Literal;)Lorg/partiql/ast/dml/UpdateTargetStep$Element$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/UpdateTargetStep$Field : org/partiql/ast/dml/UpdateTargetStep {
+	public final field key Lorg/partiql/ast/Identifier;
+	public fun <init> (Lorg/partiql/ast/Identifier;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/UpdateTargetStep$Field$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/UpdateTargetStep$Field$Builder {
+	public fun build ()Lorg/partiql/ast/dml/UpdateTargetStep$Field;
+	public fun key (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/dml/UpdateTargetStep$Field$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/dml/Upsert : org/partiql/ast/Statement {
+	public final field asAlias Lorg/partiql/ast/Identifier;
+	public final field source Lorg/partiql/ast/dml/InsertSource;
+	public final field tableName Lorg/partiql/ast/IdentifierChain;
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/dml/InsertSource;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/dml/Upsert$Builder;
+	public fun children ()Ljava/util/Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/dml/Upsert$Builder {
+	public fun asAlias (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/dml/Upsert$Builder;
+	public fun build ()Lorg/partiql/ast/dml/Upsert;
+	public fun source (Lorg/partiql/ast/dml/InsertSource;)Lorg/partiql/ast/dml/Upsert$Builder;
+	public fun tableName (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/dml/Upsert$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract class org/partiql/ast/expr/Expr : org/partiql/ast/AstNode {
 	public fun <init> ()V
 }
@@ -1902,8 +2340,10 @@ public class org/partiql/ast/expr/ExprQuerySet$Builder {
 }
 
 public class org/partiql/ast/expr/ExprRowValue : org/partiql/ast/expr/Expr {
+	public field isExplicit Z
 	public final field values Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
+	public fun <init> (ZLjava/util/List;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/expr/ExprRowValue$Builder;
 	protected fun canEqual (Ljava/lang/Object;)Z
@@ -1914,6 +2354,7 @@ public class org/partiql/ast/expr/ExprRowValue : org/partiql/ast/expr/Expr {
 
 public class org/partiql/ast/expr/ExprRowValue$Builder {
 	public fun build ()Lorg/partiql/ast/expr/ExprRowValue;
+	public fun isExplicit (Z)Lorg/partiql/ast/expr/ExprRowValue$Builder;
 	public fun toString ()Ljava/lang/String;
 	public fun values (Ljava/util/List;)Lorg/partiql/ast/expr/ExprRowValue$Builder;
 }
@@ -2644,6 +3085,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitDataType (Lorg/partiql/ast/DataType;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDelete (Lorg/partiql/ast/dml/Delete;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExcludePath (Lorg/partiql/ast/ExcludePath;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2735,6 +3178,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierChain (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInsert (Lorg/partiql/ast/dml/Insert;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLet (Lorg/partiql/ast/Let;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2755,6 +3200,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitQueryBodySFW (Lorg/partiql/ast/QueryBody$SFW;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitQueryBodySetOp (Lorg/partiql/ast/QueryBody$SetOp;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitReplace (Lorg/partiql/ast/dml/Replace;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitReplace (Lorg/partiql/ast/dml/Replace;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSelectItemExpr (Lorg/partiql/ast/SelectItem$Expr;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitSelectItemStar (Lorg/partiql/ast/SelectItem$Star;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2771,6 +3218,10 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitSetOp (Lorg/partiql/ast/SetOp;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSort (Lorg/partiql/ast/Sort;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitUpdate (Lorg/partiql/ast/dml/Update;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpdate (Lorg/partiql/ast/dml/Update;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitUpsert (Lorg/partiql/ast/dml/Upsert;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 }
 
 public final class org/partiql/ast/sql/SqlDialect$Companion {

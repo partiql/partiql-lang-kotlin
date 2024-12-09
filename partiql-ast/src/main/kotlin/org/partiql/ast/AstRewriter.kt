@@ -5,6 +5,20 @@ import org.partiql.ast.Ast.exprQuerySet
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.query
 import org.partiql.ast.ddl.Ddl
+import org.partiql.ast.dml.ConflictAction
+import org.partiql.ast.dml.ConflictTarget
+import org.partiql.ast.dml.Delete
+import org.partiql.ast.dml.DoReplaceAction
+import org.partiql.ast.dml.DoUpdateAction
+import org.partiql.ast.dml.Insert
+import org.partiql.ast.dml.InsertSource
+import org.partiql.ast.dml.OnConflict
+import org.partiql.ast.dml.Replace
+import org.partiql.ast.dml.SetClause
+import org.partiql.ast.dml.Update
+import org.partiql.ast.dml.UpdateTarget
+import org.partiql.ast.dml.UpdateTargetStep
+import org.partiql.ast.dml.Upsert
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
@@ -352,7 +366,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitExprValues(node: ExprValues, ctx: C): AstNode {
-        val values = _visitList(node.rows, ctx, ::visitExprRowValue)
+        val values = _visitList(node.rows, ctx, ::visitExpr)
         return if (values !== node.rows) {
             ExprValues(values)
         } else {
@@ -756,5 +770,157 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     // TODO: DDL
     override fun visitDdl(node: Ddl, ctx: C): AstNode {
         throw UnsupportedOperationException("DDL has not been supported yet in AstRewriter")
+    }
+
+    override fun visitInsert(node: Insert, ctx: C): AstNode {
+        val source = visitInsertSource(node.source, ctx) as InsertSource
+        val target = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier }
+        val onConflict = node.onConflict?.let { visitOnConflict(it, ctx) as OnConflict }
+        if (source !== node.source || target !== node.tableName || asAlias !== node.asAlias || onConflict !== node.onConflict) {
+            return Insert(target, asAlias, source, onConflict)
+        }
+        return node
+    }
+
+    override fun visitInsertSourceFromExpr(node: InsertSource.FromExpr, ctx: C): AstNode {
+        val expr = visitExpr(node.expr, ctx) as Expr
+        val columns = node.columns?.let { _visitList(it, ctx, ::visitIdentifier) }
+        if (expr !== node.expr || columns != node.columns) {
+            return InsertSource.FromExpr(columns, expr)
+        }
+        return node
+    }
+
+    override fun visitInsertSourceFromDefault(node: InsertSource.FromDefault, ctx: C): AstNode {
+        return node
+    }
+
+    override fun visitOnConflict(node: OnConflict, ctx: C): AstNode {
+        val action = visitConflictAction(node.action, ctx) as ConflictAction
+        val target = visitConflictTarget(node.target, ctx) as ConflictTarget
+        if (action !== node.action || target !== node.target) {
+            return OnConflict(action, target)
+        }
+        return node
+    }
+
+    override fun visitConflictActionDoNothing(node: ConflictAction.DoNothing, ctx: C): AstNode {
+        return node
+    }
+
+    override fun visitConflictActionDoReplace(node: ConflictAction.DoReplace, ctx: C): AstNode {
+        val action = visitDoReplaceAction(node.action, ctx) as DoReplaceAction
+        val condition = node.condition?.let { visitExpr(it, ctx) as Expr }
+        if (action !== node.action || condition !== node.condition) {
+            return ConflictAction.DoReplace(action, condition)
+        }
+        return node
+    }
+
+    override fun visitConflictActionDoUpdate(node: ConflictAction.DoUpdate, ctx: C): AstNode {
+        val action = visitDoUpdateAction(node.action, ctx) as DoUpdateAction
+        val condition = node.condition?.let { visitExpr(it, ctx) as Expr }
+        if (action !== node.action || condition !== node.condition) {
+            return ConflictAction.DoUpdate(action, condition)
+        }
+        return node
+    }
+
+    override fun visitConflictTargetConstraint(node: ConflictTarget.Constraint, ctx: C): AstNode {
+        val constraint = visitIdentifierChain(node.name, ctx) as IdentifierChain
+        if (constraint !== node.name) {
+            return ConflictTarget.Constraint(constraint)
+        }
+        return node
+    }
+
+    override fun visitConflictTargetIndex(node: ConflictTarget.Index, ctx: C): AstNode {
+        val indexes = _visitList(node.indexes, ctx, ::visitIdentifier)
+        if (indexes !== node.indexes) {
+            return ConflictTarget.Index(indexes)
+        }
+        return node
+    }
+
+    override fun visitDoReplaceActionExcluded(node: DoReplaceAction.Excluded, ctx: C): AstNode {
+        return node
+    }
+
+    override fun visitDoUpdateActionExcluded(node: DoUpdateAction.Excluded, ctx: C): AstNode {
+        return node
+    }
+
+    override fun visitDelete(node: Delete, ctx: C): AstNode {
+        val tableName = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val condition = node.condition?.let { visitExpr(it, ctx) as Expr }
+        if (tableName !== node.tableName || condition !== node.condition) {
+            return Delete(tableName, condition)
+        }
+        return node
+    }
+
+    override fun visitUpsert(node: Upsert, ctx: C): AstNode {
+        val tableName = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val source = visitInsertSource(node.source, ctx) as InsertSource
+        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier }
+        if (tableName !== node.tableName || source !== node.source || asAlias !== node.asAlias) {
+            return Upsert(tableName, asAlias, source)
+        }
+        return node
+    }
+
+    override fun visitReplace(node: Replace, ctx: C): AstNode {
+        val tableName = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val source = visitInsertSource(node.source, ctx) as InsertSource
+        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier }
+        if (tableName !== node.tableName || source !== node.source || asAlias !== node.asAlias) {
+            return Replace(tableName, asAlias, source)
+        }
+        return node
+    }
+
+    override fun visitSetClause(node: SetClause, ctx: C): AstNode {
+        val target = visitUpdateTarget(node.target, ctx) as UpdateTarget
+        val expr = visitExpr(node.expr, ctx) as Expr
+        if (target !== node.target || expr !== node.expr) {
+            return SetClause(target, expr)
+        }
+        return node
+    }
+
+    override fun visitUpdate(node: Update, ctx: C): AstNode {
+        val tableName = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val setClauses = _visitList(node.setClauses, ctx, ::visitSetClause)
+        val condition = node.condition?.let { visitExpr(it, ctx) as Expr }
+        if (tableName !== node.tableName || setClauses !== node.setClauses || condition !== node.condition) {
+            return Update(tableName, setClauses, condition)
+        }
+        return node
+    }
+
+    override fun visitUpdateTarget(node: UpdateTarget, ctx: C): AstNode {
+        val root = visitIdentifier(node.root, ctx) as Identifier
+        val steps = _visitList(node.steps, ctx, ::visitUpdateTargetStep)
+        if (root !== node.root || steps !== node.steps) {
+            return UpdateTarget(root, steps)
+        }
+        return node
+    }
+
+    override fun visitUpdateTargetStepElement(node: UpdateTargetStep.Element, ctx: C): AstNode {
+        val exprLit = visitLiteral(node.key, ctx) as Literal
+        if (exprLit !== node.key) {
+            return UpdateTargetStep.Element(exprLit)
+        }
+        return node
+    }
+
+    override fun visitUpdateTargetStepField(node: UpdateTargetStep.Field, ctx: C): AstNode {
+        val key = visitIdentifier(node.key, ctx) as Identifier
+        if (key !== node.key) {
+            return UpdateTargetStep.Field(key)
+        }
+        return node
     }
 }

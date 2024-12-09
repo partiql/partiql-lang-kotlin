@@ -11,17 +11,28 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
- *  Also may not be an [Expr]?
- *  Tracking issue for VALUES and subqueries -- https://github.com/partiql/partiql-lang-kotlin/issues/1641.
+ * This represents SQL:1999's table value constructor.
+ * <code>
+ *     &lt;table value constructor&gt; ::= VALUES &lt;row value expression list&gt;
+ * </code>
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public class ExprValues extends Expr {
-    @NotNull
-    public final List<ExprRowValue> rows;
+    // TODO: May not be an expr?
+    // TODO: Tracking issue for VALUES and subqueries -- https://github.com/partiql/partiql-lang-kotlin/issues/1641.
 
-    public ExprValues(@NotNull List<ExprRowValue> rows) {
+    /**
+     * TODO
+     */
+    @NotNull
+    public final List<Expr> rows;
+
+    /**
+     * TODO
+     * @param rows TODO
+     */
+    public ExprValues(@NotNull List<Expr> rows) {
         this.rows = rows;
     }
 
