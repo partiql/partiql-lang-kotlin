@@ -3,8 +3,8 @@ package org.partiql.ast;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
 public class Order extends AstEnum {
@@ -67,7 +67,7 @@ public class Order extends AstEnum {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         return Collections.emptyList();
     }
 

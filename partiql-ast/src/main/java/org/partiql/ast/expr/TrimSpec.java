@@ -6,8 +6,8 @@ import org.partiql.ast.AstEnum;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
 public class TrimSpec extends AstEnum {
@@ -78,7 +78,7 @@ public class TrimSpec extends AstEnum {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         return Collections.emptyList();
     }
 

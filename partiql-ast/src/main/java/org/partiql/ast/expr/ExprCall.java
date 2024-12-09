@@ -10,7 +10,6 @@ import org.partiql.ast.IdentifierChain;
 import org.partiql.ast.SetQuantifier;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -36,7 +35,7 @@ public class ExprCall extends Expr {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(function);
         kids.addAll(args);

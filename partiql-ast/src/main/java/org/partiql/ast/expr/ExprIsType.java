@@ -8,7 +8,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.DataType;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -34,7 +33,7 @@ public class ExprIsType extends Expr {
 
     @Override
     @NotNull
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(value);
         kids.add(type);

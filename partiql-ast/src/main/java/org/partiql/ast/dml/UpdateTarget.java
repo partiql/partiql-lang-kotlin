@@ -8,7 +8,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,7 +42,7 @@ public final class UpdateTarget extends AstNode {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(root);
         kids.addAll(steps);

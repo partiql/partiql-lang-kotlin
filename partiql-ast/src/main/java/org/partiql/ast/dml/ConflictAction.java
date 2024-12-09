@@ -9,7 +9,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -36,7 +35,7 @@ public abstract class ConflictAction extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             return new ArrayList<>();
         }
 
@@ -79,7 +78,7 @@ public abstract class ConflictAction extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> children = new ArrayList<>();
             children.add(action);
             if (condition != null) {
@@ -127,7 +126,7 @@ public abstract class ConflictAction extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> children = new ArrayList<>();
             children.add(action);
             if (condition != null) {

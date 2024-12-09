@@ -7,7 +7,6 @@ import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -29,7 +28,7 @@ public abstract class GraphLabel extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             return new ArrayList<>();
         }
 
@@ -49,7 +48,7 @@ public abstract class GraphLabel extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             return new ArrayList<>();
         }
 
@@ -74,7 +73,7 @@ public abstract class GraphLabel extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(arg);
             return kids;
@@ -105,7 +104,7 @@ public abstract class GraphLabel extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(lhs);
             kids.add(rhs);
@@ -137,7 +136,7 @@ public abstract class GraphLabel extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(lhs);
             kids.add(rhs);

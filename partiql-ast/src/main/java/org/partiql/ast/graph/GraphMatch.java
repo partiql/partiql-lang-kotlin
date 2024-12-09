@@ -8,7 +8,6 @@ import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ public class GraphMatch extends AstNode {
 
     @Override
     @NotNull
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>(patterns);
         if (selector != null) {
             kids.add(selector);
