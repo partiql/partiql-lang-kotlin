@@ -86,7 +86,7 @@ public interface Session {
             return this
         }
 
-        public fun namespace(levels: Collection<String>): Builder {
+        public fun namespace(levels: List<String>): Builder {
             this.namespace = Namespace.of(levels)
             return this
         }

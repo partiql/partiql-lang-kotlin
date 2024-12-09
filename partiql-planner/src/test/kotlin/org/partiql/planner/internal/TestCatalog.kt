@@ -24,7 +24,7 @@ public class TestCatalog private constructor(
         for (part in name) {
             curr = curr.get(Identifier.delimited(part).first()) ?: break
         }
-        return null
+        return curr.table
     }
 
     override fun resolveTable(session: Session, identifier: Identifier): Name? {

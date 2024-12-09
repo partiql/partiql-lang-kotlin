@@ -124,7 +124,7 @@ public final class org/partiql/spi/catalog/Identifier : java/lang/Iterable, kotl
 	public final fun append (Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun append ([Lorg/partiql/spi/catalog/Identifier$Part;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun delimited (Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
-	public static final fun delimited (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public static final fun delimited (Ljava/util/List;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun delimited ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun forEach (Ljava/util/function/Consumer;)V
@@ -136,10 +136,10 @@ public final class org/partiql/spi/catalog/Identifier : java/lang/Iterable, kotl
 	public fun iterator ()Ljava/util/Iterator;
 	public final fun matches (Ljava/lang/String;Z)Z
 	public static synthetic fun matches$default (Lorg/partiql/spi/catalog/Identifier;Ljava/lang/String;ZILjava/lang/Object;)Z
-	public static final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public static final fun of (Ljava/util/List;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun of ([Lorg/partiql/spi/catalog/Identifier$Part;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun regular (Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
-	public static final fun regular (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public static final fun regular (Ljava/util/List;)Lorg/partiql/spi/catalog/Identifier;
 	public static final fun regular ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
 	public fun spliterator ()Ljava/util/Spliterator;
 	public fun toString ()Ljava/lang/String;
@@ -147,12 +147,12 @@ public final class org/partiql/spi/catalog/Identifier : java/lang/Iterable, kotl
 
 public final class org/partiql/spi/catalog/Identifier$Companion {
 	public final fun delimited (Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
-	public final fun delimited (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public final fun delimited (Ljava/util/List;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun delimited ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
-	public final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public final fun of (Ljava/util/List;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun of ([Lorg/partiql/spi/catalog/Identifier$Part;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun regular (Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
-	public final fun regular (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Identifier;
+	public final fun regular (Ljava/util/List;)Lorg/partiql/spi/catalog/Identifier;
 	public final fun regular ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Identifier;
 }
 
@@ -184,14 +184,14 @@ public final class org/partiql/spi/catalog/Name : java/lang/Iterable, kotlin/jvm
 	public final fun hasNamespace ()Z
 	public fun hashCode ()I
 	public fun iterator ()Ljava/util/Iterator;
-	public static final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Name;
+	public static final fun of (Ljava/util/List;)Lorg/partiql/spi/catalog/Name;
 	public static final fun of ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Name;
 	public fun spliterator ()Ljava/util/Spliterator;
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/spi/catalog/Name$Companion {
-	public final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Name;
+	public final fun of (Ljava/util/List;)Lorg/partiql/spi/catalog/Name;
 	public final fun of ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Name;
 }
 
@@ -208,7 +208,7 @@ public final class org/partiql/spi/catalog/Namespace : java/lang/Iterable, kotli
 	public fun hashCode ()I
 	public final fun isEmpty ()Z
 	public fun iterator ()Ljava/util/Iterator;
-	public static final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Namespace;
+	public static final fun of (Ljava/util/List;)Lorg/partiql/spi/catalog/Namespace;
 	public static final fun of ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Namespace;
 	public fun spliterator ()Ljava/util/Spliterator;
 	public fun toString ()Ljava/lang/String;
@@ -216,7 +216,7 @@ public final class org/partiql/spi/catalog/Namespace : java/lang/Iterable, kotli
 
 public final class org/partiql/spi/catalog/Namespace$Companion {
 	public final fun empty ()Lorg/partiql/spi/catalog/Namespace;
-	public final fun of (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Namespace;
+	public final fun of (Ljava/util/List;)Lorg/partiql/spi/catalog/Namespace;
 	public final fun of ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Namespace;
 }
 
@@ -255,7 +255,7 @@ public final class org/partiql/spi/catalog/Session$Builder {
 	public final fun catalog (Ljava/lang/String;)Lorg/partiql/spi/catalog/Session$Builder;
 	public final fun catalogs ([Lorg/partiql/spi/catalog/Catalog;)Lorg/partiql/spi/catalog/Session$Builder;
 	public final fun identity (Ljava/lang/String;)Lorg/partiql/spi/catalog/Session$Builder;
-	public final fun namespace (Ljava/util/Collection;)Lorg/partiql/spi/catalog/Session$Builder;
+	public final fun namespace (Ljava/util/List;)Lorg/partiql/spi/catalog/Session$Builder;
 	public final fun namespace (Lorg/partiql/spi/catalog/Namespace;)Lorg/partiql/spi/catalog/Session$Builder;
 	public final fun namespace ([Ljava/lang/String;)Lorg/partiql/spi/catalog/Session$Builder;
 	public final fun property (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/spi/catalog/Session$Builder;

@@ -88,10 +88,10 @@ public class Name(
         public fun of(vararg names: String): Name = of(names.toList())
 
         /**
-         * Construct a name from a collection of strings.
+         * Construct a name from an ordered collection of strings.
          */
         @JvmStatic
-        public fun of(names: Collection<String>): Name {
+        public fun of(names: List<String>): Name {
             assert(names.size > 0) { "Cannot create an empty name" }
             val namespace = Namespace.of(names.take(names.size - 1))
             val name = names.last()

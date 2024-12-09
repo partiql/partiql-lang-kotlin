@@ -28,9 +28,6 @@ internal class StandardCatalog(
      */
     override fun resolveTable(session: Session, identifier: Identifier): Name? {
         // TODO memory connector does not handle qualified identifiers and longest match
-        if (identifier.hasQualifier()) {
-            return null
-        }
         val first = identifier.first()
         for ((name, _) in tables) {
             val str = name.getName() // only use single identifiers for now
