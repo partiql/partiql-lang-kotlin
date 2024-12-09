@@ -7,7 +7,6 @@ import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
 import org.partiql.ast.Literal;
-import org.partiql.ast.expr.ExprLit;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,15 +33,14 @@ public abstract class UpdateTargetStep extends AstNode {
         /**
          * TODO
          */
-        // TODO: Change this to a literal, not an ExprLit
         @NotNull
-        public final ExprLit key;
+        public final Literal key;
 
         /**
          * TODO
          * @param key TODO
          */
-        public Element(@NotNull ExprLit key) {
+        public Element(@NotNull Literal key) {
             this.key = key;
         }
 
@@ -51,7 +49,7 @@ public abstract class UpdateTargetStep extends AstNode {
          * @param key TODO
          */
         public Element(int key) {
-            this.key = new ExprLit(Literal.intNum(key));
+            this.key = Literal.intNum(key);
         }
 
         /**
@@ -59,7 +57,7 @@ public abstract class UpdateTargetStep extends AstNode {
          * @param key TODO
          */
         public Element(@NotNull String key) {
-            this.key = new ExprLit(Literal.string(key));
+            this.key = Literal.string(key);
         }
 
         @NotNull
@@ -87,7 +85,6 @@ public abstract class UpdateTargetStep extends AstNode {
         /**
          * TODO
          */
-        // TODO: Change this to a literal, not an ExprLit
         @NotNull
         public final Identifier key;
 

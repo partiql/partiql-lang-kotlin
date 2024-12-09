@@ -1819,10 +1819,10 @@ public abstract class org/partiql/ast/dml/UpdateTargetStep : org/partiql/ast/Ast
 }
 
 public final class org/partiql/ast/dml/UpdateTargetStep$Element : org/partiql/ast/dml/UpdateTargetStep {
-	public final field key Lorg/partiql/ast/expr/ExprLit;
+	public final field key Lorg/partiql/ast/Literal;
 	public fun <init> (I)V
 	public fun <init> (Ljava/lang/String;)V
-	public fun <init> (Lorg/partiql/ast/expr/ExprLit;)V
+	public fun <init> (Lorg/partiql/ast/Literal;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/dml/UpdateTargetStep$Element$Builder;
 	public fun children ()Ljava/util/Collection;
@@ -1832,7 +1832,7 @@ public final class org/partiql/ast/dml/UpdateTargetStep$Element : org/partiql/as
 
 public class org/partiql/ast/dml/UpdateTargetStep$Element$Builder {
 	public fun build ()Lorg/partiql/ast/dml/UpdateTargetStep$Element;
-	public fun key (Lorg/partiql/ast/expr/ExprLit;)Lorg/partiql/ast/dml/UpdateTargetStep$Element$Builder;
+	public fun key (Lorg/partiql/ast/Literal;)Lorg/partiql/ast/dml/UpdateTargetStep$Element$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 

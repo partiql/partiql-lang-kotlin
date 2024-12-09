@@ -909,7 +909,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitUpdateTargetStepElement(node: UpdateTargetStep.Element, ctx: C): AstNode {
-        val exprLit = visitExprLit(node.key, ctx) as ExprLit
+        val exprLit = visitLiteral(node.key, ctx) as Literal
         if (exprLit !== node.key) {
             return UpdateTargetStep.Element(exprLit)
         }

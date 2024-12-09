@@ -792,7 +792,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitUpdateTargetStepElement(ctx: GeneratedParser.UpdateTargetStepElementContext) = translate(ctx) {
-            val literal = visit(ctx.literal()) as ExprLit // TODO: Literals should have their own base in the G4 to allow for overriding the visitLiteral to get type safety.
+            val exprLit = visit(ctx.literal()) as ExprLit // TODO: Literals should have their own base in the G4 to allow for overriding the visitLiteral to get type safety.
+            val literal = exprLit.lit
             UpdateTargetStep.Element(literal)
         }
 
