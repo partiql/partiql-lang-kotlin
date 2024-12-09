@@ -11,7 +11,6 @@ import org.partiql.ast.Statement;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -44,7 +43,7 @@ public final class Delete extends Statement {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(tableName);
         if (condition != null) {

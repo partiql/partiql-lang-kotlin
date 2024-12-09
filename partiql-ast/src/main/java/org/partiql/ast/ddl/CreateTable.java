@@ -9,7 +9,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.IdentifierChain;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -49,7 +48,7 @@ public class CreateTable extends Ddl {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(name);
         kids.addAll(columns);

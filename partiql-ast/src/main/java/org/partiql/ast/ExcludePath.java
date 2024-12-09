@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.expr.ExprVarRef;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -28,7 +27,7 @@ public class ExcludePath extends AstNode {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(root);
         kids.addAll(excludeSteps);

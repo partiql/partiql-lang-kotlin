@@ -24,7 +24,7 @@ public class ExprVariant extends Expr {
 
     @NotNull
     @Override
-    public List<AstNode> children() {
+    public List<AstNode> getChildren() {
         return Collections.emptyList();
     }
 

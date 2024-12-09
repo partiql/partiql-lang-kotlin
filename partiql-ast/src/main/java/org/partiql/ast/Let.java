@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -24,7 +23,7 @@ public class Let extends AstNode {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         return new ArrayList<>(bindings);
     }
 
@@ -51,7 +50,7 @@ public class Let extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(expr);
             kids.add(asAlias);

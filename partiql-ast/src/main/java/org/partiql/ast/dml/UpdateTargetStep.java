@@ -9,7 +9,6 @@ import org.partiql.ast.Identifier;
 import org.partiql.ast.Literal;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -62,7 +61,7 @@ public abstract class UpdateTargetStep extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(key);
             return kids;
@@ -98,7 +97,7 @@ public abstract class UpdateTargetStep extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(key);
             return kids;

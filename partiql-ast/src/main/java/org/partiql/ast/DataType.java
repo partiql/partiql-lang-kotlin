@@ -6,7 +6,6 @@ import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.ddl.AttributeConstraint;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
@@ -56,7 +55,7 @@ public class DataType extends AstEnum {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             ArrayList<AstNode> kids = new ArrayList<>();
             kids.add(name);
             kids.add(type);
@@ -722,7 +721,7 @@ public class DataType extends AstEnum {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         if (name != null) {
             kids.add(name);

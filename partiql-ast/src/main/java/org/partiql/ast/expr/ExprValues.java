@@ -7,7 +7,6 @@ import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -38,7 +37,7 @@ public class ExprValues extends Expr {
 
     @Override
     @NotNull
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         return new ArrayList<>(rows);
     }
 

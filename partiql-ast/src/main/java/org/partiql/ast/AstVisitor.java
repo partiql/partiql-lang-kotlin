@@ -66,7 +66,7 @@ import org.partiql.ast.graph.GraphSelector;
 //  Also include docs on how a library user could create a new variant for sum types and which methods to override
 public abstract class AstVisitor<R, C> {
     public R defaultVisit(AstNode node, C ctx) {
-        for (AstNode child : node.children()) {
+        for (AstNode child : node.getChildren()) {
             child.accept(this, ctx);
         }
         return defaultReturn(node, ctx);

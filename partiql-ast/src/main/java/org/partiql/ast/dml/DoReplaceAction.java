@@ -7,7 +7,7 @@ import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * This represents the potential actions after the DO REPLACE clause. While there are more variants beyond EXCLUDED,
@@ -32,7 +32,7 @@ public abstract class DoReplaceAction extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             return new ArrayList<>();
         }
 

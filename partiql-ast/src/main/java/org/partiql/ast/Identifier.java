@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * TODO docs, equals, hashcode
@@ -25,7 +25,7 @@ public class Identifier extends AstNode {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         return new ArrayList<>();
     }
 

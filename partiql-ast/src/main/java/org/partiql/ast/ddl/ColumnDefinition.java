@@ -10,7 +10,6 @@ import org.partiql.ast.DataType;
 import org.partiql.ast.Identifier;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -49,7 +48,7 @@ public class ColumnDefinition extends AstNode {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(name);
         kids.add(dataType);

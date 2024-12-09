@@ -8,7 +8,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -37,7 +36,7 @@ public abstract class PathStep extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             if (next != null) {
                 kids.add(next);
@@ -66,7 +65,7 @@ public abstract class PathStep extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(element);
             if (next != null) {
@@ -92,7 +91,7 @@ public abstract class PathStep extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             if (next != null) {
                 kids.add(next);
@@ -117,7 +116,7 @@ public abstract class PathStep extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             if (next != null) {
                 kids.add(next);

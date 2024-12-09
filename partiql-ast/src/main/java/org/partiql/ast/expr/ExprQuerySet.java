@@ -10,7 +10,6 @@ import org.partiql.ast.OrderBy;
 import org.partiql.ast.QueryBody;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -40,7 +39,7 @@ public class ExprQuerySet extends Expr {
 
     @Override
     @NotNull
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(body);
         if (orderBy != null) {

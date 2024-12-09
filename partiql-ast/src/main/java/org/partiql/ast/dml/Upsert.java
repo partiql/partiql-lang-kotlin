@@ -11,7 +11,6 @@ import org.partiql.ast.IdentifierChain;
 import org.partiql.ast.Statement;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -53,7 +52,7 @@ public final class Upsert extends Statement {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(tableName);
         if (asAlias != null) {

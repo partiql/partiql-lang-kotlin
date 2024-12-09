@@ -9,7 +9,6 @@ import org.partiql.ast.Identifier;
 import org.partiql.ast.IdentifierChain;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -44,7 +43,7 @@ public abstract class ConflictTarget extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             return new ArrayList<>(indexes);
         }
 
@@ -78,7 +77,7 @@ public abstract class ConflictTarget extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> children = new ArrayList<>();
             children.add(name);
             return children;

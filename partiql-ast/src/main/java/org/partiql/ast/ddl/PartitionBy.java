@@ -8,7 +8,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Builder(builderClassName = "Builder")
@@ -23,7 +22,7 @@ public class PartitionBy extends AstNode {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         return new ArrayList<>(columns);
     }
 

@@ -6,8 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * TODO docs, equals, hashcode
@@ -23,7 +23,7 @@ public class ExprParameter extends Expr {
 
     @Override
     @NotNull
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         return Collections.emptyList();
     }
 
