@@ -1,0 +1,5097 @@
+
+{
+  name:"SELECT i.x + i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:6
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x + i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x + i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x + i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x + i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x + i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x + i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x + i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x + i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x + i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x - i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x - i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:8
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x * i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x * i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x / i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x / i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:0
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x % i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x % i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x = i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x = i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <> i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x <> i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x > i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x > i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x >= i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x >= i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x < i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x < i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {'x': 4, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {'x': 4, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {'x': null, 'y': 2} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {'x': 4} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {'x': 4} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {'y': 2} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {'y': 2} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x <= i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x <= i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': true, 'y': true} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': true, 'y': true} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': true, 'y': false} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': true, 'y': false} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': false, 'y': false} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': false, 'y': false} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': false, 'y': true} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': false, 'y': true} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': true, 'y': true} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': true, 'y': true} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': true, 'y': false} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': true, 'y': false} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': false, 'y': false} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': false, 'y': false} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': false, 'y': true} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': false, 'y': true} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': true, 'y': null} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': true, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': true, 'y': null} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': true, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': false, 'y': null} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': false, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': false, 'y': null} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': false, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': null, 'y': false} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': null, 'y': false} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': null, 'y': false} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': null, 'y': false} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': null, 'y': true} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': null, 'y': true} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': null, 'y': true} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': null, 'y': true} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': true} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': true} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': true} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': true} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': false} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': false} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': false} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': false} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'y': true} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'y': true} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'y': true} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'y': true} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'y': false} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'y': false} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'y': false} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'y': false} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x AND i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x AND i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x OR i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x OR i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT NOT i.b AS result FROM << { 'b': true } >> AS i",
+  statement:"SELECT NOT i.b AS result FROM << { 'b': true } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT NOT i.b AS result FROM << { 'b': false } >> AS i",
+  statement:"SELECT NOT i.b AS result FROM << { 'b': false } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT NOT i.b AS result FROM << { 'b': NULL } >> AS i",
+  statement:"SELECT NOT i.b AS result FROM << { 'b': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT NOT i.b AS result FROM << {  } >> AS i",
+  statement:"SELECT NOT i.b AS result FROM << {  } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {'x': 'a', 'y': 'b'} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {'x': 'a', 'y': 'b'} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:"ab"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {'x': 'a', 'y': null} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {'x': 'a', 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {'x': null, 'y': 'b'} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {'x': null, 'y': 'b'} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {'x': null, 'y': null} >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {'x': 'a'} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {'x': 'a'} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {'y': 'b'} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {'y': 'b'} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {'x': null} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {'x': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {'y': null} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {'y': null} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x || i.y AS result FROM << {} >> AS i",
+  statement:"SELECT i.x || i.y AS result FROM << {} >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': 3 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 5, 'y': 1, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 5, 'y': 1, 'z': 3 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': 1, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': 1, 'z': 3 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': 3 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': NULL } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': 3 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': NULL } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': NULL } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': 1, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': 1, 'z': 3 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': 3 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': MISSING } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': MISSING } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': 3 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': MISSING } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': MISSING } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': MISSING } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': MISSING } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': 3 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': 3 } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': 3 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': MISSING } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': MISSING } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': NULL } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': MISSING } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': MISSING } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': MISSING } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': MISSING } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': MISSING } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': MISSING } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i",
+  statement:"SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT +i.n AS result FROM << { 'n': -1 } >> AS i",
+  statement:"SELECT +i.n AS result FROM << { 'n': -1 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:-1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT -i.n AS result FROM << { 'n': -1 } >> AS i",
+  statement:"SELECT -i.n AS result FROM << { 'n': -1 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT +i.n AS result FROM << { 'n': 1 } >> AS i",
+  statement:"SELECT +i.n AS result FROM << { 'n': 1 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT -i.n AS result FROM << { 'n': 1 } >> AS i",
+  statement:"SELECT -i.n AS result FROM << { 'n': 1 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:-1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT +i.n AS result FROM << { 'n': NULL } >> AS i",
+  statement:"SELECT +i.n AS result FROM << { 'n': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT -i.n AS result FROM << { 'n': NULL } >> AS i",
+  statement:"SELECT -i.n AS result FROM << { 'n': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT +i.n AS result FROM << { } >> AS i",
+  statement:"SELECT +i.n AS result FROM << { } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT -i.n AS result FROM << { } >> AS i",
+  statement:"SELECT -i.n AS result FROM << { } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': 2, 'y': [1, 2, 3] } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': 2, 'y': [1, 2, 3] } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, 2, 3] } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, 2, 3] } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': 2, 'y': [1, null, 2, 3] } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': 2, 'y': [1, null, 2, 3] } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': 2, 'y': [1, missing, 2, 3] } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': 2, 'y': [1, missing, 2, 3] } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, null, 2, 3] } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, null, 2, 3] } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, missing, 2, 3] } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, missing, 2, 3] } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': [1, 2, 3] } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': [1, 2, 3] } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': 2, 'y': null } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': 2, 'y': null } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': 2 } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': 2 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'y': [1, 2, 3] } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'y': [1, 2, 3] } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': NULL } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': MISSING } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': MISSING } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { 'x': MISSING, 'y': NULL } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { 'x': MISSING, 'y': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x IN i.y AS result FROM << { } >> AS i",
+  statement:"SELECT i.x IN i.y AS result FROM << { } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.x IN (1, 2, 3)  AS result FROM << { 'x': 1 } >> AS i",
+  statement:"SELECT i.x IN (1, 2, 3)  AS result FROM << { 'x': 1 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN (1, 2, 3)  AS result FROM << { 'x': 4 } >> AS i",
+  statement:"SELECT i.x IN (1, 2, 3)  AS result FROM << { 'x': 4 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN (1, 2, 3)  AS result FROM << { 'x': NULL } >> AS i",
+  statement:"SELECT i.x IN (1, 2, 3)  AS result FROM << { 'x': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.x IN (1, 2, 3)  AS result FROM << { } >> AS i",
+  statement:"SELECT i.x IN (1, 2, 3)  AS result FROM << { } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE 'a%' AS result FROM << { 'a': 'ab' } >> AS i",
+  statement:"SELECT i.a LIKE 'a%' AS result FROM << { 'a': 'ab' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE 'a%' AS result FROM << { 'a': 'ba' } >> AS i",
+  statement:"SELECT i.a LIKE 'a%' AS result FROM << { 'a': 'ba' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE 'a%' AS result FROM << { 'a': NULL } >> AS i",
+  statement:"SELECT i.a LIKE 'a%' AS result FROM << { 'a': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE 'a%' AS result FROM << {  } >> AS i",
+  statement:"SELECT i.a LIKE 'a%' AS result FROM << {  } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab', 'b': 'ba' } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab', 'b': 'ba' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'a': NULL, 'b': 'ba' } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'a': NULL, 'b': 'ba' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab', 'b': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab', 'b': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'a': NULL, 'b': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'a': NULL, 'b': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'b': 'ab' } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'b': 'ab' } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab' } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab' } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'a': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'a': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b AS result FROM << { 'b': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b AS result FROM << { 'b': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab', 'c': 'n' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab', 'c': 'n' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ba', 'c': 'n' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ba', 'c': 'n' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:false
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': 'ab', 'c': 'n' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': 'ab', 'c': 'n' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': NULL, 'c': 'n' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': NULL, 'c': 'n' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab', 'c': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab', 'c': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL, 'c': 'n' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL, 'c': 'n' } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': NULL, 'c': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': NULL, 'c': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL, 'c': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL, 'c': NULL } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': 'ab', 'c': 'n' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': 'ab', 'c': 'n' } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab',  'c': 'n' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab',  'c': 'n' } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': 'n' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': 'n' } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab' } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab' } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL, 'c': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL, 'c': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'c': NULL } >> AS i",
+  statement:"SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'c': NULL } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': 4 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:9
+      }
+    ]
+  }
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': null } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': 4 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': null } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': 4 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': null } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': 4 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': null } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': 4 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': null } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': 4 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': null } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': 4 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': null } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': 4 } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': null } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': 4 } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': 4 } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': missing } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': missing } >> AS i",
+  assert:[
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeError,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+        {
+          result:null
+        }
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': null } >> AS i",
+  statement:"SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': null } >> AS i",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        result:null
+      }
+    ]
+  }
+}

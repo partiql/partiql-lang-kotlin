@@ -1,0 +1,55 @@
+//
+// Negative Tests
+//
+// +========================================+
+// | field | type   | description           |
+// +----------------------------------------+
+// | value | ion    | ion encoded pvalue    |
+// | cause | string | hint for why failure  |
+// +========================================+
+
+//
+// numeric
+//
+
+{
+  value: tinyint::128,
+  cause: "tinyint too big (i8 max + 1)",
+}
+{
+  value: tinyint::-129,
+  cause: "tinyint too small (i8 min - 1)",
+}
+{
+  value: smallint::32768,
+  cause: "smallint too big (i16 max + 1)",
+}
+{
+  value: smallint::-32769,
+  cause: "smallint too small (i16 min - 1)",
+}
+{
+  value: int::2147483648,
+  cause: "int too big (i32 max + 1)",
+}
+{
+  value: int::-2147483649,
+  cause: "int too small (i32 min - 1)",
+}
+{
+  value: bigint::9223372036854775808,
+  cause: "bigint too big (i64 max + 1)",
+}
+{
+  value: bigint::-9223372036854775809,
+  cause: "bigint too small (i64 min - 1)",
+}
+
+//
+// homogeneous collection typing
+//
+
+{
+  value: ((array char 3) ["a", "b", 2]),
+  cause: "found int in homogeneous char array",
+}

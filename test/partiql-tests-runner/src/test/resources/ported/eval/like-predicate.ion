@@ -1,0 +1,3686 @@
+
+envs::{
+  animals:[
+    {
+      name:"Kumo",
+      type:"dog"
+    },
+    {
+      name:"Mochi",
+      type:"dog"
+    },
+    {
+      name:"Lilikoi",
+      type:"unicorn"
+    }
+  ],
+  animalsWithNulls:[
+    {
+      name:null,
+      type:"dog"
+    },
+    {
+      name:null,
+      type:"dog"
+    },
+    {
+      name:null,
+      type:"unicorn"
+    }
+  ],
+  Object:$bag::[
+    {
+      num:1,
+      str:"string",
+      esc:"\\"
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo'",
+  statement:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"'😍' LIKE '😍'",
+  statement:"'😍' LIKE '😍'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '%' LIKE '[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '%' LIKE '[%' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['",
+  statement:"SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:" SELECT * FROM animals WHERE 'Kumo' LIKE ''",
+  statement:" SELECT * FROM animals WHERE 'Kumo' LIKE ''",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%m%'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%m%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1__[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1__[%' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum%'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo'",
+  statement:"SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE 1 LIKE 'a' ESCAPE '['",
+  statement:"SELECT * FROM <<>> AS a WHERE 1 LIKE 'a' ESCAPE '['",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum_'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum_'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE null LIKE 'A'",
+  statement:"SELECT * FROM animals as a WHERE null LIKE 'A'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o'",
+  statement:"SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '_[_%[_%[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '_[_%[_%[%' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '____'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '____'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE null",
+  statement:"Select * From Object a Where null LIKE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE null ESCAPE null",
+  statement:"Select * From Object a Where null LIKE null ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE null ESCAPE a._null_",
+  statement:"Select * From Object a Where null LIKE null ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE null ESCAPE 123",
+  statement:"Select * From Object a Where null LIKE null ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE null ESCAPE a.num",
+  statement:"Select * From Object a Where null LIKE null ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE null ESCAPE '\\'",
+  statement:"Select * From Object a Where null LIKE null ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE null ESCAPE a.esc",
+  statement:"Select * From Object a Where null LIKE null ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a._null_",
+  statement:"Select * From Object a Where null LIKE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a._null_ ESCAPE null",
+  statement:"Select * From Object a Where null LIKE a._null_ ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a._null_ ESCAPE a._null_",
+  statement:"Select * From Object a Where null LIKE a._null_ ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a._null_ ESCAPE 123",
+  statement:"Select * From Object a Where null LIKE a._null_ ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a._null_ ESCAPE a.num",
+  statement:"Select * From Object a Where null LIKE a._null_ ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a._null_ ESCAPE '\\'",
+  statement:"Select * From Object a Where null LIKE a._null_ ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a._null_ ESCAPE a.esc",
+  statement:"Select * From Object a Where null LIKE a._null_ ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 123",
+  statement:"Select * From Object a Where null LIKE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 123 ESCAPE null",
+  statement:"Select * From Object a Where null LIKE 123 ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 123 ESCAPE a._null_",
+  statement:"Select * From Object a Where null LIKE 123 ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 123 ESCAPE 123",
+  statement:"Select * From Object a Where null LIKE 123 ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 123 ESCAPE a.num",
+  statement:"Select * From Object a Where null LIKE 123 ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 123 ESCAPE '\\'",
+  statement:"Select * From Object a Where null LIKE 123 ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 123 ESCAPE a.esc",
+  statement:"Select * From Object a Where null LIKE 123 ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.num",
+  statement:"Select * From Object a Where null LIKE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.num ESCAPE null",
+  statement:"Select * From Object a Where null LIKE a.num ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.num ESCAPE a._null_",
+  statement:"Select * From Object a Where null LIKE a.num ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.num ESCAPE 123",
+  statement:"Select * From Object a Where null LIKE a.num ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.num ESCAPE a.num",
+  statement:"Select * From Object a Where null LIKE a.num ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.num ESCAPE '\\'",
+  statement:"Select * From Object a Where null LIKE a.num ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.num ESCAPE a.esc",
+  statement:"Select * From Object a Where null LIKE a.num ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 'string'",
+  statement:"Select * From Object a Where null LIKE 'string'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 'string' ESCAPE null",
+  statement:"Select * From Object a Where null LIKE 'string' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 'string' ESCAPE a._null_",
+  statement:"Select * From Object a Where null LIKE 'string' ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 'string' ESCAPE 123",
+  statement:"Select * From Object a Where null LIKE 'string' ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 'string' ESCAPE a.num",
+  statement:"Select * From Object a Where null LIKE 'string' ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 'string' ESCAPE '\\'",
+  statement:"Select * From Object a Where null LIKE 'string' ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE 'string' ESCAPE a.esc",
+  statement:"Select * From Object a Where null LIKE 'string' ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.str",
+  statement:"Select * From Object a Where null LIKE a.str",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.str ESCAPE null",
+  statement:"Select * From Object a Where null LIKE a.str ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.str ESCAPE a._null_",
+  statement:"Select * From Object a Where null LIKE a.str ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.str ESCAPE 123",
+  statement:"Select * From Object a Where null LIKE a.str ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.str ESCAPE a.num",
+  statement:"Select * From Object a Where null LIKE a.str ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.str ESCAPE '\\'",
+  statement:"Select * From Object a Where null LIKE a.str ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where null LIKE a.str ESCAPE a.esc",
+  statement:"Select * From Object a Where null LIKE a.str ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE null",
+  statement:"Select * From Object a Where a._null_ LIKE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE null ESCAPE null",
+  statement:"Select * From Object a Where a._null_ LIKE null ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE null ESCAPE a._null_",
+  statement:"Select * From Object a Where a._null_ LIKE null ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE null ESCAPE 123",
+  statement:"Select * From Object a Where a._null_ LIKE null ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE null ESCAPE a.num",
+  statement:"Select * From Object a Where a._null_ LIKE null ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE null ESCAPE '\\'",
+  statement:"Select * From Object a Where a._null_ LIKE null ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE null ESCAPE a.esc",
+  statement:"Select * From Object a Where a._null_ LIKE null ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a._null_",
+  statement:"Select * From Object a Where a._null_ LIKE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE null",
+  statement:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a._null_",
+  statement:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE 123",
+  statement:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a.num",
+  statement:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE '\\'",
+  statement:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a.esc",
+  statement:"Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 123",
+  statement:"Select * From Object a Where a._null_ LIKE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 123 ESCAPE null",
+  statement:"Select * From Object a Where a._null_ LIKE 123 ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 123 ESCAPE a._null_",
+  statement:"Select * From Object a Where a._null_ LIKE 123 ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 123 ESCAPE 123",
+  statement:"Select * From Object a Where a._null_ LIKE 123 ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 123 ESCAPE a.num",
+  statement:"Select * From Object a Where a._null_ LIKE 123 ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 123 ESCAPE '\\'",
+  statement:"Select * From Object a Where a._null_ LIKE 123 ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 123 ESCAPE a.esc",
+  statement:"Select * From Object a Where a._null_ LIKE 123 ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.num",
+  statement:"Select * From Object a Where a._null_ LIKE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.num ESCAPE null",
+  statement:"Select * From Object a Where a._null_ LIKE a.num ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.num ESCAPE a._null_",
+  statement:"Select * From Object a Where a._null_ LIKE a.num ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.num ESCAPE 123",
+  statement:"Select * From Object a Where a._null_ LIKE a.num ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.num ESCAPE a.num",
+  statement:"Select * From Object a Where a._null_ LIKE a.num ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.num ESCAPE '\\'",
+  statement:"Select * From Object a Where a._null_ LIKE a.num ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.num ESCAPE a.esc",
+  statement:"Select * From Object a Where a._null_ LIKE a.num ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 'string'",
+  statement:"Select * From Object a Where a._null_ LIKE 'string'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE null",
+  statement:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE a._null_",
+  statement:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE 123",
+  statement:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE a.num",
+  statement:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE '\\'",
+  statement:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE a.esc",
+  statement:"Select * From Object a Where a._null_ LIKE 'string' ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.str",
+  statement:"Select * From Object a Where a._null_ LIKE a.str",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.str ESCAPE null",
+  statement:"Select * From Object a Where a._null_ LIKE a.str ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.str ESCAPE a._null_",
+  statement:"Select * From Object a Where a._null_ LIKE a.str ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.str ESCAPE 123",
+  statement:"Select * From Object a Where a._null_ LIKE a.str ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.str ESCAPE a.num",
+  statement:"Select * From Object a Where a._null_ LIKE a.str ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.str ESCAPE '\\'",
+  statement:"Select * From Object a Where a._null_ LIKE a.str ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a._null_ LIKE a.str ESCAPE a.esc",
+  statement:"Select * From Object a Where a._null_ LIKE a.str ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE null",
+  statement:"Select * From Object a Where 123 LIKE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE null ESCAPE null",
+  statement:"Select * From Object a Where 123 LIKE null ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE null ESCAPE a._null_",
+  statement:"Select * From Object a Where 123 LIKE null ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE null ESCAPE 123",
+  statement:"Select * From Object a Where 123 LIKE null ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE null ESCAPE a.num",
+  statement:"Select * From Object a Where 123 LIKE null ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE null ESCAPE '\\'",
+  statement:"Select * From Object a Where 123 LIKE null ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE null ESCAPE a.esc",
+  statement:"Select * From Object a Where 123 LIKE null ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a._null_",
+  statement:"Select * From Object a Where 123 LIKE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a._null_ ESCAPE null",
+  statement:"Select * From Object a Where 123 LIKE a._null_ ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a._null_ ESCAPE a._null_",
+  statement:"Select * From Object a Where 123 LIKE a._null_ ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a._null_ ESCAPE 123",
+  statement:"Select * From Object a Where 123 LIKE a._null_ ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a._null_ ESCAPE a.num",
+  statement:"Select * From Object a Where 123 LIKE a._null_ ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a._null_ ESCAPE '\\'",
+  statement:"Select * From Object a Where 123 LIKE a._null_ ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a._null_ ESCAPE a.esc",
+  statement:"Select * From Object a Where 123 LIKE a._null_ ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE 123 ESCAPE null",
+  statement:"Select * From Object a Where 123 LIKE 123 ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE 123 ESCAPE a._null_",
+  statement:"Select * From Object a Where 123 LIKE 123 ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a.num ESCAPE null",
+  statement:"Select * From Object a Where 123 LIKE a.num ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a.num ESCAPE a._null_",
+  statement:"Select * From Object a Where 123 LIKE a.num ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE 'string' ESCAPE null",
+  statement:"Select * From Object a Where 123 LIKE 'string' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE 'string' ESCAPE a._null_",
+  statement:"Select * From Object a Where 123 LIKE 'string' ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a.str ESCAPE null",
+  statement:"Select * From Object a Where 123 LIKE a.str ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 123 LIKE a.str ESCAPE a._null_",
+  statement:"Select * From Object a Where 123 LIKE a.str ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE null",
+  statement:"Select * From Object a Where a.num LIKE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE null ESCAPE null",
+  statement:"Select * From Object a Where a.num LIKE null ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE null ESCAPE a._null_",
+  statement:"Select * From Object a Where a.num LIKE null ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE null ESCAPE 123",
+  statement:"Select * From Object a Where a.num LIKE null ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE null ESCAPE a.num",
+  statement:"Select * From Object a Where a.num LIKE null ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE null ESCAPE '\\'",
+  statement:"Select * From Object a Where a.num LIKE null ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE null ESCAPE a.esc",
+  statement:"Select * From Object a Where a.num LIKE null ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a._null_",
+  statement:"Select * From Object a Where a.num LIKE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a._null_ ESCAPE null",
+  statement:"Select * From Object a Where a.num LIKE a._null_ ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a._null_ ESCAPE a._null_",
+  statement:"Select * From Object a Where a.num LIKE a._null_ ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a._null_ ESCAPE 123",
+  statement:"Select * From Object a Where a.num LIKE a._null_ ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a._null_ ESCAPE a.num",
+  statement:"Select * From Object a Where a.num LIKE a._null_ ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a._null_ ESCAPE '\\'",
+  statement:"Select * From Object a Where a.num LIKE a._null_ ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a._null_ ESCAPE a.esc",
+  statement:"Select * From Object a Where a.num LIKE a._null_ ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE 123 ESCAPE null",
+  statement:"Select * From Object a Where a.num LIKE 123 ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE 123 ESCAPE a._null_",
+  statement:"Select * From Object a Where a.num LIKE 123 ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a.num ESCAPE null",
+  statement:"Select * From Object a Where a.num LIKE a.num ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a.num ESCAPE a._null_",
+  statement:"Select * From Object a Where a.num LIKE a.num ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE 'string' ESCAPE null",
+  statement:"Select * From Object a Where a.num LIKE 'string' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE 'string' ESCAPE a._null_",
+  statement:"Select * From Object a Where a.num LIKE 'string' ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a.str ESCAPE null",
+  statement:"Select * From Object a Where a.num LIKE a.str ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.num LIKE a.str ESCAPE a._null_",
+  statement:"Select * From Object a Where a.num LIKE a.str ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE null",
+  statement:"Select * From Object a Where 'string' LIKE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE null ESCAPE null",
+  statement:"Select * From Object a Where 'string' LIKE null ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE null ESCAPE a._null_",
+  statement:"Select * From Object a Where 'string' LIKE null ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE null ESCAPE 123",
+  statement:"Select * From Object a Where 'string' LIKE null ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE null ESCAPE a.num",
+  statement:"Select * From Object a Where 'string' LIKE null ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE null ESCAPE '\\'",
+  statement:"Select * From Object a Where 'string' LIKE null ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE null ESCAPE a.esc",
+  statement:"Select * From Object a Where 'string' LIKE null ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a._null_",
+  statement:"Select * From Object a Where 'string' LIKE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE null",
+  statement:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE a._null_",
+  statement:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE 123",
+  statement:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE a.num",
+  statement:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE '\\'",
+  statement:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE a.esc",
+  statement:"Select * From Object a Where 'string' LIKE a._null_ ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE 123 ESCAPE null",
+  statement:"Select * From Object a Where 'string' LIKE 123 ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE 123 ESCAPE a._null_",
+  statement:"Select * From Object a Where 'string' LIKE 123 ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a.num ESCAPE null",
+  statement:"Select * From Object a Where 'string' LIKE a.num ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a.num ESCAPE a._null_",
+  statement:"Select * From Object a Where 'string' LIKE a.num ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE 'string'",
+  statement:"Select * From Object a Where 'string' LIKE 'string'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE 'string' ESCAPE null",
+  statement:"Select * From Object a Where 'string' LIKE 'string' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE 'string' ESCAPE a._null_",
+  statement:"Select * From Object a Where 'string' LIKE 'string' ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE 'string' ESCAPE '\\'",
+  statement:"Select * From Object a Where 'string' LIKE 'string' ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE 'string' ESCAPE a.esc",
+  statement:"Select * From Object a Where 'string' LIKE 'string' ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a.str",
+  statement:"Select * From Object a Where 'string' LIKE a.str",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a.str ESCAPE null",
+  statement:"Select * From Object a Where 'string' LIKE a.str ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a.str ESCAPE a._null_",
+  statement:"Select * From Object a Where 'string' LIKE a.str ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a.str ESCAPE '\\'",
+  statement:"Select * From Object a Where 'string' LIKE a.str ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where 'string' LIKE a.str ESCAPE a.esc",
+  statement:"Select * From Object a Where 'string' LIKE a.str ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE null",
+  statement:"Select * From Object a Where a.str LIKE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE null ESCAPE null",
+  statement:"Select * From Object a Where a.str LIKE null ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE null ESCAPE a._null_",
+  statement:"Select * From Object a Where a.str LIKE null ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE null ESCAPE 123",
+  statement:"Select * From Object a Where a.str LIKE null ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE null ESCAPE a.num",
+  statement:"Select * From Object a Where a.str LIKE null ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE null ESCAPE '\\'",
+  statement:"Select * From Object a Where a.str LIKE null ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE null ESCAPE a.esc",
+  statement:"Select * From Object a Where a.str LIKE null ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a._null_",
+  statement:"Select * From Object a Where a.str LIKE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a._null_ ESCAPE null",
+  statement:"Select * From Object a Where a.str LIKE a._null_ ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a._null_ ESCAPE a._null_",
+  statement:"Select * From Object a Where a.str LIKE a._null_ ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a._null_ ESCAPE 123",
+  statement:"Select * From Object a Where a.str LIKE a._null_ ESCAPE 123",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a._null_ ESCAPE a.num",
+  statement:"Select * From Object a Where a.str LIKE a._null_ ESCAPE a.num",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a._null_ ESCAPE '\\'",
+  statement:"Select * From Object a Where a.str LIKE a._null_ ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a._null_ ESCAPE a.esc",
+  statement:"Select * From Object a Where a.str LIKE a._null_ ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE 123 ESCAPE null",
+  statement:"Select * From Object a Where a.str LIKE 123 ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE 123 ESCAPE a._null_",
+  statement:"Select * From Object a Where a.str LIKE 123 ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a.num ESCAPE null",
+  statement:"Select * From Object a Where a.str LIKE a.num ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a.num ESCAPE a._null_",
+  statement:"Select * From Object a Where a.str LIKE a.num ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE 'string'",
+  statement:"Select * From Object a Where a.str LIKE 'string'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE 'string' ESCAPE null",
+  statement:"Select * From Object a Where a.str LIKE 'string' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE 'string' ESCAPE a._null_",
+  statement:"Select * From Object a Where a.str LIKE 'string' ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE 'string' ESCAPE '\\'",
+  statement:"Select * From Object a Where a.str LIKE 'string' ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE 'string' ESCAPE a.esc",
+  statement:"Select * From Object a Where a.str LIKE 'string' ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a.str",
+  statement:"Select * From Object a Where a.str LIKE a.str",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a.str ESCAPE null",
+  statement:"Select * From Object a Where a.str LIKE a.str ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a.str ESCAPE a._null_",
+  statement:"Select * From Object a Where a.str LIKE a.str ESCAPE a._null_",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a.str ESCAPE '\\'",
+  statement:"Select * From Object a Where a.str LIKE a.str ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"Select * From Object a Where a.str LIKE a.str ESCAPE a.esc",
+  statement:"Select * From Object a Where a.str LIKE a.str ESCAPE a.esc",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        num:1,
+        str:"string",
+        esc:"\\"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100\",  pattern:\"1%0\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern",
+  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100\",  pattern:\"1%0\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Abcd"
+      },
+      {
+        name:"100"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1%\\%' ESCAPE '\\'",
+  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1%\\%' ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM `[true]` as a WHERE '' LIKE '_'",
+  statement:"SELECT * FROM `[true]` as a WHERE '' LIKE '_'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '_u_o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '_u_o'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE null LIKE 'A' ESCAPE null",
+  statement:"SELECT * FROM animals as a WHERE null LIKE 'A' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE a.name LIKE a.xxx",
+  statement:"SELECT * FROM animals as a WHERE a.name LIKE a.xxx",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:" SELECT * FROM animals WHERE '' LIKE ''",
+  statement:" SELECT * FROM animals WHERE '' LIKE ''",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'A' LIKE null",
+  statement:"SELECT * FROM animals as a WHERE 'A' LIKE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '100%' LIKE '1%[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '100%' LIKE '1%[%' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '' LIKE '%'",
+  statement:"SELECT * FROM animals as a WHERE '' LIKE '%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['",
+  statement:"SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%umo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%umo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_%mo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_%mo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animalsWithNulls as a WHERE a.name LIKE '%'",
+  statement:"SELECT * FROM animalsWithNulls as a WHERE a.name LIKE '%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''",
+  statement:"SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K__o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K__o'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_m%'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_m%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE '%' ESCAPE a.name",
+  statement:"SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE '%' ESCAPE a.name",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE '%100' LIKE '[%%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '%100' LIKE '[%%' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_mo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_mo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" , escapeChar:'['},\n                   { name:\"100%\",  pattern:\"1%0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE a.escapeChar",
+  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" , escapeChar:'['},\n                   { name:\"100%\",  pattern:\"1%0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE a.escapeChar",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Abcd"
+      },
+      {
+        name:"100%"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '%100' LIKE '[%_00' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '%100' LIKE '[%_00' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE a.name || 'xx' LIKE '%xx'",
+  statement:"SELECT * FROM animals as a WHERE a.name || 'xx' LIKE '%xx'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'A' LIKE 'B' ESCAPE null",
+  statement:"SELECT * FROM animals as a WHERE 'A' LIKE 'B' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1",
+  statement:"SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%%o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%%o'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE a.name LIKE 'Kumo'",
+  statement:"SELECT * FROM animals as a WHERE a.name LIKE 'Kumo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM `[true]` as a WHERE '' LIKE '%'",
+  statement:"SELECT * FROM `[true]` as a WHERE '' LIKE '%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:true
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Ku%o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Ku%o'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['",
+  statement:"SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE null LIKE null ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE null LIKE null ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE null LIKE null ESCAPE null",
+  statement:"SELECT * FROM animals as a WHERE null LIKE null ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A__\" , escapeChar:'['},\n                   { name:\"1000%\",  pattern:\"1_0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name NOT LIKE a.pattern ESCAPE a.escapeChar",
+  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A__\" , escapeChar:'['},\n                   { name:\"1000%\",  pattern:\"1_0[%\", escapeChar: '['}\n                  ]` as a\n               WHERE a.name NOT LIKE a.pattern ESCAPE a.escapeChar",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Abcd"
+      },
+      {
+        name:"1000%"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[____[_%[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[____[_%[%' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animalsWithNulls as a WHERE a.type LIKE '%' ESCAPE a.name",
+  statement:"SELECT * FROM animalsWithNulls as a WHERE a.type LIKE '%' ESCAPE a.name",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE a.name LIKE '%' ESCAPE a.xxx",
+  statement:"SELECT * FROM animals as a WHERE a.name LIKE '%' ESCAPE a.xxx",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'A' LIKE null ESCAPE null",
+  statement:"SELECT * FROM animals as a WHERE 'A' LIKE null ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animalsWithNulls as a WHERE a.type LIKE a.name",
+  statement:"SELECT * FROM animalsWithNulls as a WHERE a.type LIKE a.name",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['",
+  statement:"SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[_000[_000[%' ESCAPE '['",
+  statement:"SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[_000[_000[%' ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE '%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Kumo",
+        type:"dog"
+      },
+      {
+        name:"Mochi",
+        type:"dog"
+      },
+      {
+        name:"Lilikoi",
+        type:"unicorn"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE a.xxx LIKE '%'",
+  statement:"SELECT * FROM animals as a WHERE a.xxx LIKE '%'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type",
+  statement:"SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.name LIKE a.type",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100%\",  pattern:\"1%0\\\\%\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE '\\'",
+  statement:"SELECT a.name FROM\n                  `[\n                   { name:\"Abcd\", pattern:\"A___\" },\n                   { name:\"100%\",  pattern:\"1%0\\\\%\" }\n                  ]` as a\n               WHERE a.name LIKE a.pattern ESCAPE '\\'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        name:"Abcd"
+      },
+      {
+        name:"100%"
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE null",
+  statement:"SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE null",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE a.name",
+  statement:"SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE a.name",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}
+{
+  name:"SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o'",
+  statement:"SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o'",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE 'a' LIKE null ESCAPE '['",
+  statement:"SELECT * FROM <<>> AS a WHERE 'a' LIKE null ESCAPE '['",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'",
+  statement:"SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    }
+  ]
+}

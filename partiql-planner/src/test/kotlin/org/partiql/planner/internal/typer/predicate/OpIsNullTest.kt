@@ -3,8 +3,8 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.util.allSupportedType
-import org.partiql.types.StaticType
+import org.partiql.planner.util.allSupportedPType
+import org.partiql.types.PType
 import java.util.stream.Stream
 
 // TODO: Finalize the semantics for IS NULL operator when operand is MISSING.
@@ -17,14 +17,14 @@ class OpIsNullTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs = allSupportedType.flatMap { t ->
+            val successArgs = allSupportedPType.flatMap { t ->
                 setOf(listOf(t))
             }.toSet()
 
-            put(TestResult.Success(StaticType.BOOL), successArgs)
-            put(TestResult.Failure, emptySet<List<StaticType>>())
+            put(TestResult.Success(PType.bool()), successArgs)
+            put(TestResult.Failure, emptySet<List<PType>>())
         }
 
-        return super.testGen("isNull", tests, argsMap)
+        return super.testGenPType("isNull", tests, argsMap)
     }
 }

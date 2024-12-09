@@ -3,9 +3,9 @@ package org.partiql.planner.internal.typer.functions
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.util.allSupportedType
+import org.partiql.planner.util.allSupportedPType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.StaticType
+import org.partiql.types.PType
 import java.util.stream.Stream
 
 /**
@@ -26,10 +26,10 @@ class NullIfTest : PartiQLTyperTestBase() {
     fun nullIf(): Stream<DynamicContainer> {
 
         val tests = listOf("func-00").map { inputs.get("basics", it)!! }
-        val argsMap = mutableMapOf<TestResult, Set<List<StaticType>>>()
+        val argsMap = mutableMapOf<TestResult, Set<List<PType>>>()
 
         // Generate all success cases
-        cartesianProduct(allSupportedType, allSupportedType).forEach { args ->
+        cartesianProduct(allSupportedPType, allSupportedPType).forEach { args ->
             val expected = args[0]
             val result = TestResult.Success(expected)
             argsMap[result] = setOf(args)
@@ -37,6 +37,6 @@ class NullIfTest : PartiQLTyperTestBase() {
         // No failure case
         argsMap[TestResult.Failure] = emptySet()
 
-        return super.testGen("nullIf", tests, argsMap)
+        return super.testGenPType("nullIf", tests, argsMap)
     }
 }

@@ -1,0 +1,18 @@
+public abstract interface class org/partiql/parser/PartiQLParser {
+	public static fun builder ()Lorg/partiql/parser/PartiQLParser$Builder;
+	public fun parse (Ljava/lang/String;)Lorg/partiql/parser/PartiQLParser$Result;
+	public abstract fun parse (Ljava/lang/String;Lorg/partiql/spi/Context;)Lorg/partiql/parser/PartiQLParser$Result;
+	public static fun standard ()Lorg/partiql/parser/PartiQLParser;
+}
+
+public class org/partiql/parser/PartiQLParser$Builder {
+	public fun <init> ()V
+	public fun build ()Lorg/partiql/parser/PartiQLParser;
+}
+
+public final class org/partiql/parser/PartiQLParser$Result {
+	public field locations Lorg/partiql/spi/SourceLocations;
+	public field statements Ljava/util/List;
+	public fun <init> (Ljava/util/List;Lorg/partiql/spi/SourceLocations;)V
+}
+

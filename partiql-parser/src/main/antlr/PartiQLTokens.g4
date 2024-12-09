@@ -156,6 +156,7 @@ LOWER: 'LOWER';
 MATCH: 'MATCH';
 MAX: 'MAX';
 MIN: 'MIN';
+MOD: 'MOD';
 MODULE: 'MODULE';
 NAMES: 'NAMES';
 NATIONAL: 'NATIONAL';
@@ -201,6 +202,7 @@ RESTRICT: 'RESTRICT';
 REVOKE: 'REVOKE';
 RIGHT: 'RIGHT';
 ROLLBACK: 'ROLLBACK';
+ROW: 'ROW';
 ROWS: 'ROWS';
 SCHEMA: 'SCHEMA';
 SCROLL: 'SCROLL';
@@ -264,13 +266,13 @@ LAG: 'LAG';
 LEAD: 'LEAD';
 OVER: 'OVER';
 PARTITION: 'PARTITION';
-
+TBLPROPERTIES: 'TBLPROPERTIES';
 
 /**
  * OTHER
  */
-CAN_CAST: 'CAN_CAST';
-CAN_LOSSLESS_CAST: 'CAN_LOSSLESS_CAST';
+CAN_CAST: 'CAN_CAST'; // TODO ahead of `v1` release
+CAN_LOSSLESS_CAST: 'CAN_LOSSLESS_CAST'; // TODO remove ahead of `v1` release
 MISSING: 'MISSING';
 PIVOT: 'PIVOT';
 UNPIVOT: 'UNPIVOT';
@@ -286,13 +288,16 @@ MODIFIED: 'MODIFIED';
 NEW: 'NEW';
 OLD: 'OLD';
 NOTHING: 'NOTHING';
+OPTIONAL: 'OPTIONAL';
+COMMENT: 'COMMENT';
+
 
 /**
  *
  * DATA TYPES
  *
  */
-
+ARRAY: 'ARRAY';
 TUPLE: 'TUPLE';
 INTEGER2: 'INTEGER2';
 INT2: 'INT2';
@@ -333,12 +338,8 @@ BANG: '!';
 LT_EQ: '<=';
 GT_EQ: '>=';
 EQ: '=';
-NEQ: '<>' | '!=';
-CONCAT: '||';
 ANGLE_LEFT: '<';
 ANGLE_RIGHT: '>';
-ANGLE_DOUBLE_LEFT: '<<';
-ANGLE_DOUBLE_RIGHT: '>>';
 BRACKET_LEFT: '[';
 BRACKET_RIGHT: ']';
 BRACE_LEFT: '{';
@@ -350,6 +351,36 @@ COLON: ':';
 COLON_SEMI: ';';
 QUESTION_MARK: '?';
 PERIOD: '.';
+HASH: '#';
+
+// Operators w/ special characters
+// Similar to postgresql's supported operator creation -- https://www.postgresql.org/docs/16/sql-createoperator.html
+OPERATOR
+    // may not end with + or -
+    : OpBasic+ OpBasicEnd
+    // must include at least one of OpSpecial to end w/ anything
+    | (OpBasic | OpSpecial)* OpSpecial (OpBasic | OpSpecial)*
+    ;
+
+fragment OpBasic
+    : [+*=] // TODO support `<` and `>`?
+    // comments are not matched
+    | '-' {_input.LA(1) != '-'}?
+    | '/' {_input.LA(1) != '*'}?
+    ;
+
+fragment OpBasicEnd
+    : [*/=] // TODO support `<` and `>`?
+    ;
+fragment OpSpecial
+    : [~@#%^?]  // TODO support backtick (`)?
+    // graph patterns are not matched
+    // TODO make GPML MATCH patterns a separate lexical mode (https://github.com/partiql/partiql-lang-kotlin/issues/1512)
+    //  Creating a separate lexical mode will allow us to get rid of the following semantic predicates.
+    | '|' {_input.LA(1) != '!'}?
+    | '!' {_input.LA(1) != '%'}?
+    | '&' {_input.LA(1) != '%'}?
+    ;
 
 /**
  *
@@ -361,12 +392,16 @@ LITERAL_STRING
     : '\'' ( ('\'\'') | ~('\'') )* '\'';
 
 LITERAL_INTEGER
-    : DIGIT DIGIT*;
+    : DIGIT+;
 
-LITERAL_DECIMAL:
-    DIGIT+ '.' DIGIT* ([e] [+-]? DIGIT+)?
-    | '.' DIGIT DIGIT* ([e] [+-]? DIGIT+)?
-    | DIGIT DIGIT* ([e] [+-]? DIGIT+)?
+LITERAL_DECIMAL
+    : DIGIT+ '.' DIGIT*
+    | '.' DIGIT+
+    ;
+
+LITERAL_FLOAT
+    : DIGIT+ ('.' DIGIT*)? 'E' [+-]? DIGIT+
+    | '.' DIGIT+ 'E' [+-]? DIGIT+
     ;
 
 IDENTIFIER

@@ -1,289 +1,298 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.ir.Agg
-import org.partiql.planner.internal.ir.Catalog
-import org.partiql.planner.internal.ir.Fn
+import org.partiql.planner.internal.casts.CastTable
+import org.partiql.planner.internal.ir.Ref
+import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.catalogSymbolRef
+import org.partiql.planner.internal.ir.SetQuantifier
+import org.partiql.planner.internal.ir.refAgg
+import org.partiql.planner.internal.ir.refFn
+import org.partiql.planner.internal.ir.relOpAggregateCallResolved
 import org.partiql.planner.internal.ir.rex
-import org.partiql.planner.internal.ir.rexOpGlobal
-import org.partiql.planner.internal.ir.rexOpLit
-import org.partiql.planner.internal.ir.rexOpPathKey
-import org.partiql.planner.internal.ir.rexOpPathSymbol
-import org.partiql.planner.internal.typer.FnResolver
-import org.partiql.planner.internal.typer.TypeEnv
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingName
-import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorObjectHandle
-import org.partiql.spi.connector.ConnectorObjectPath
-import org.partiql.spi.connector.ConnectorSession
-import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.stringValue
+import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
+import org.partiql.planner.internal.ir.rexOpCastResolved
+import org.partiql.planner.internal.ir.rexOpVarGlobal
+import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.planner.internal.typer.Scope.Companion.toPath
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Catalogs
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.function.Aggregation
+import org.partiql.spi.function.Function
+import org.partiql.types.PType
 
 /**
- * Handle for associating a catalog name with catalog related metadata objects.
- */
-internal typealias Handle<T> = Pair<String, T>
-
-/**
- * Metadata for a resolved global variable
+ * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
+ * database binding values and scoped functions.
  *
- * @property type       Resolved StaticType
- * @property ordinal    The relevant catalog's index offset in the [Env.catalogs] list
- * @property depth      The depth/level of the path match.
- * @property position   The relevant value's index offset in the [Catalog.values] list
- */
-internal class ResolvedVar(
-    val type: StaticType,
-    val ordinal: Int,
-    val depth: Int,
-    val position: Int,
-)
-
-/**
- * Variable resolution strategies — https://partiql.org/assets/PartiQL-Specification.pdf#page=35
+ * See TypeEnv for the variables type environment.
  *
- * | Value      | Strategy              | Scoping Rules |
- * |------------+-----------------------+---------------|
- * | LOCAL      | local-first lookup    | Rules 1, 2    |
- * | GLOBAL     | global-first lookup   | Rule 3        |
- */
-internal enum class ResolutionStrategy {
-    LOCAL,
-    GLOBAL,
-}
-
-/**
- * PartiQL Planner Global Environment of Catalogs backed by given plugins.
+ * TODO: function resolution between scalar functions and aggregations.
  *
- * @property session        Session details
+ * @property session
  */
-internal class Env(
-    private val session: PartiQLPlanner.Session,
-) {
+internal class Env(private val session: Session) {
 
     /**
-     * Collect the list of all referenced globals during planning.
+     * Catalogs provider.
      */
-    public val catalogs = mutableListOf<Catalog>()
+    private val catalogs: Catalogs = session.getCatalogs()
 
     /**
-     * Catalog Metadata for this query session.
+     * Current [Catalog] implementation; error if missing from the [Catalogs] provider.
      */
-    private val connectors = session.catalogs
+    private val default: Catalog = catalogs.getCatalog(session.getCatalog()) ?: error("Default catalog does not exist")
 
     /**
-     * Encapsulate all function resolving logic within [FnResolver].
+     * Catalog lookup needs to search (3x) to table schema-qualified and catalog-qualified use-cases.
      *
-     * TODO we should be using a search_path for resolving functions. This is not possible at the moment, so we flatten
-     *      all builtin functions to live at the top-level. At the moment, we could technically use this to have
-     *      single-level `catalog`.`function`() syntax but that is out-of-scope for this commit.
+     *  1. Lookup in current catalog and namespace.
+     *  2. Lookup as a schema-qualified identifier.
+     *  3. Lookup as a catalog-qualified identifier.
      */
-    public val fnResolver = FnResolver(object : Header() {
+    fun resolveTable(identifier: Identifier): Rex? {
 
-        override val namespace: String = "builtins"
+        // 1. Search in current catalog and namespace
+        var catalog = default
+        var path = resolve(identifier)
+        var table = catalog.getTable(session, path)
 
-        override val functions: List<FunctionSignature.Scalar> =
-            PartiQLHeader.functions + connectors.values.flatMap { it.functions }
-
-        override val operators: List<FunctionSignature.Scalar> =
-            PartiQLHeader.operators + connectors.values.flatMap { it.operators }
-
-        override val aggregations: List<FunctionSignature.Aggregation> =
-            PartiQLHeader.aggregations + connectors.values.flatMap { it.aggregations }
-    })
-
-    private val connectorSession = object : ConnectorSession {
-        override fun getQueryId(): String = session.queryId
-        override fun getUserId(): String = session.userId
-    }
-
-    /**
-     * Leverages a [FnResolver] to find a matching function defined in the [Header] scalar function catalog.
-     */
-    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>) = fnResolver.resolveFn(fn, args)
-
-    /**
-     * Leverages a [FnResolver] to find a matching function defined in the [Header] aggregation function catalog.
-     */
-    internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>) = fnResolver.resolveAgg(agg, args)
-
-    /**
-     * Fetch global object metadata from the given [BindingPath].
-     *
-     * @param catalog   Current catalog
-     * @param path      Global identifier path
-     * @return
-     */
-    internal fun getObjectHandle(catalog: BindingName, path: BindingPath): Handle<ConnectorObjectHandle>? {
-        val metadata = getMetadata(catalog) ?: return null
-        return metadata.second.getObjectHandle(connectorSession, path)?.let {
-            metadata.first to it
+        // 2. Lookup as a schema-qualified identifier.
+        if (table == null && identifier.hasQualifier()) {
+            path = identifier
+            table = catalog.getTable(session, path)
         }
-    }
 
-    /**
-     * Fetch a global variable's StaticType given its handle.
-     *
-     * @param handle
-     * @return
-     */
-    internal fun getObjectDescriptor(handle: Handle<ConnectorObjectHandle>): StaticType {
-        val metadata = getMetadata(BindingName(handle.first, BindingCase.SENSITIVE))?.second
-            ?: error("Unable to fetch connector metadata based on handle $handle")
-        return metadata.getObjectType(connectorSession, handle.second) ?: error("Unable to produce Static Type")
-    }
-
-    /**
-     * Fetch [ConnectorMetadata] given a catalog name.
-     *
-     * @param catalogName
-     * @return
-     */
-    private fun getMetadata(catalogName: BindingName): Handle<ConnectorMetadata>? {
-        val catalogKey = connectors.keys.firstOrNull { catalogName.isEquivalentTo(it) } ?: return null
-        val metadata = connectors[catalogKey] ?: return null
-        return catalogKey to metadata
-    }
-
-    /**
-     * TODO optimization, check known globals before calling out to connector again
-     *
-     * @param catalog
-     * @param originalPath
-     * @param catalogPath
-     * @return
-     */
-    private fun getGlobalType(
-        catalog: BindingName?,
-        originalPath: BindingPath,
-        catalogPath: BindingPath,
-    ): ResolvedVar? {
-        return catalog?.let { cat ->
-            getObjectHandle(cat, catalogPath)?.let { handle ->
-                getObjectDescriptor(handle).let { type ->
-                    val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
-                    val (catalogIndex, valueIndex) = getOrAddCatalogValue(
-                        handle.first,
-                        handle.second.absolutePath.steps,
-                        type
-                    )
-                    // Return resolution metadata
-                    ResolvedVar(type, catalogIndex, depth, valueIndex)
-                }
-            }
+        // 3. Lookup as a catalog-qualified identifier
+        if (table == null && identifier.hasQualifier()) {
+            val parts = identifier.getParts()
+            val head = parts.first()
+            val tail = parts.drop(1)
+            catalog = catalogs.getCatalog(head.getText(), ignoreCase = head.isRegular()) ?: return null
+            path = Identifier.of(tail)
+            table = catalog.getTable(session, path)
         }
-    }
 
-    /**
-     * @return a [Pair] where [Pair.first] is the catalog index and [Pair.second] is the value index within that catalog
-     */
-    private fun getOrAddCatalogValue(
-        catalogName: String,
-        valuePath: List<String>,
-        valueType: StaticType,
-    ): Pair<Int, Int> {
-        val catalogIndex = getOrAddCatalog(catalogName)
-        val symbols = catalogs[catalogIndex].symbols
-        return symbols.indexOfFirst { value ->
-            value.path == valuePath
-        }.let { index ->
-            when (index) {
-                -1 -> {
-                    catalogs[catalogIndex] = catalogs[catalogIndex].copy(
-                        symbols = symbols + listOf(Catalog.Symbol(valuePath, valueType))
-                    )
-                    catalogIndex to catalogs[catalogIndex].symbols.lastIndex
-                }
-                else -> {
-                    catalogIndex to index
-                }
-            }
+        // !! NOT FOUND !!
+        if (table == null) {
+            return null
         }
-    }
 
-    private fun getOrAddCatalog(catalogName: String): Int {
-        return catalogs.indexOfFirst { catalog ->
-            catalog.name == catalogName
-        }.let {
-            when (it) {
-                -1 -> {
-                    catalogs.add(Catalog(catalogName, emptyList()))
-                    catalogs.lastIndex
-                }
-                else -> it
-            }
-        }
-    }
+        // Make a reference and return a global variable expression.
+        val refCatalog = catalog.getName()
+        val refName = table.getName()
+        val refType = CompilerType(table.getSchema())
+        val ref = Ref.Obj(refCatalog, refName, refType, table)
 
-    /**
-     * Attempt to resolve a [BindingPath] in the global + local type environments.
-     */
-    fun resolve(path: BindingPath, locals: TypeEnv, strategy: ResolutionStrategy): Rex? {
-        return when (strategy) {
-            ResolutionStrategy.LOCAL -> locals.resolve(path) ?: resolveGlobalBind(path)
-            ResolutionStrategy.GLOBAL -> resolveGlobalBind(path) ?: locals.resolve(path)
-        }
-    }
-
-    /**
-     * Logic is as follows:
-     * 1. If Current Catalog and Schema are set, create a Path to the object and attempt to grab handle and schema.
-     *   a. If not found, just try to find the object in the catalog.
-     * 2. If Current Catalog is not set:
-     *   a. Loop through all catalogs and try to find the object.
-     *
-     * TODO: Add global bindings
-     * TODO: Replace paths with global variable references if found
-     */
-    private fun resolveGlobalBind(path: BindingPath): Rex? {
-        val currentCatalog = session.currentCatalog?.let { BindingName(it, BindingCase.SENSITIVE) }
-        val currentCatalogPath = BindingPath(session.currentDirectory.map { BindingName(it, BindingCase.SENSITIVE) })
-        val absoluteCatalogPath = BindingPath(currentCatalogPath.steps + path.steps)
-        val resolvedVar = when (path.steps.size) {
-            0 -> null
-            1 -> getGlobalType(currentCatalog, path, absoluteCatalogPath)
-            2 -> getGlobalType(currentCatalog, path, path) ?: getGlobalType(currentCatalog, path, absoluteCatalogPath)
-            else -> {
-                val inferredCatalog = path.steps[0]
-                val newPath = BindingPath(path.steps.subList(1, path.steps.size))
-                getGlobalType(inferredCatalog, path, newPath)
-                    ?: getGlobalType(currentCatalog, path, path)
-                    ?: getGlobalType(currentCatalog, path, absoluteCatalogPath)
-            }
-        } ?: return null
-        // rewrite as path expression for any remaining steps.
-        val root = rex(resolvedVar.type, rexOpGlobal(catalogSymbolRef(resolvedVar.ordinal, resolvedVar.position)))
-        val tail = path.steps.drop(resolvedVar.depth)
+        // Convert any remaining identifier parts to a path expression
+        val root = Rex(ref.type, rexOpVarGlobal(ref))
+        val tail = calculateMatched(path, refName)
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
 
     /**
-     * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
-     * 1. Matched = RelativePath - Not Found
-     * 2. Not Found = Input CatalogPath - Output CatalogPath
-     * 3. Matched = RelativePath - (Input CatalogPath - Output CatalogPath)
-     * 4. Matched = RelativePath + Output CatalogPath - Input CatalogPath
+     * @return a list of candidate functions that match the [identifier] and number of [args].
      */
-    private fun calculateMatched(
-        originalPath: BindingPath,
-        inputCatalogPath: BindingPath,
-        outputCatalogPath: ConnectorObjectPath,
-    ): Int {
-        return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
+    fun getCandidates(identifier: Identifier, args: List<Rex>): List<Function> {
+        // Reject qualified routine names.
+        if (identifier.hasQualifier()) {
+            error("Qualified functions are not supported.")
+        }
+
+        // 1. Search in the current catalog and namespace.
+        val catalog = default
+        val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
+        val variants = catalog.getFunctions(session, name).toList()
+        val candidates = variants.filter { it.getParameters().size == args.size }
+        return candidates
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    private fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
-        val op = when (step.bindingCase) {
-            BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(StaticType.STRING, rexOpLit(stringValue(step.name))))
-            BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
+    /**
+     * TODO leverage session PATH.
+     *
+     * @param identifier
+     * @param args
+     * @return
+     */
+    fun resolveFn(identifier: Identifier, args: List<Rex>): Rex? {
+
+        // Reject qualified routine names.
+        if (identifier.hasQualifier()) {
+            error("Qualified functions are not supported.")
         }
-        rex(StaticType.ANY, op)
+
+        // 1. Search in the current catalog and namespace.
+        val catalog = default
+        val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
+        val variants = catalog.getFunctions(session, name).toList()
+        if (variants.isEmpty()) {
+            return null
+        }
+
+        // 2. Search along the PATH.
+        // TODO
+        val match = FnResolver.resolve(variants, args.map { it.type })
+        // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
+        if (match == null) {
+            return null
+        }
+        return when (match) {
+            is FnMatch.Dynamic -> {
+                val candidates = match.candidates.map {
+                    // Create an internal typed reference for every candidate
+                    rexOpCallDynamicCandidate(
+                        fn = refFn(
+                            catalog = catalog.getName(),
+                            name = Name.of(name),
+                            signature = it,
+                        ),
+                        coercions = emptyList(), // TODO: Remove this from the plan
+                    )
+                }
+                // Rewrite as a dynamic call to be typed by PlanTyper
+                Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Dynamic(args, candidates))
+            }
+            is FnMatch.Static -> {
+                // Apply the coercions as explicit casts
+                val coercions: List<Rex> = args.mapIndexed { i, arg ->
+                    when (val cast = match.mapping[i]) {
+                        null -> arg
+                        else -> Rex(cast.target, Rex.Op.Cast.Resolved(cast, arg))
+                    }
+                }
+                // Rewrite as a static call to be typed by PlanTyper
+                Rex(CompilerType(PType.dynamic()), Rex.Op.Call.Static(match.function, coercions))
+            }
+        }
+    }
+
+    fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+        // TODO: Eventually, do we want to support sensitive lookup? With a path?
+
+        // 1. Search in the current catalog and namespace.
+        val catalog = default
+        val name = path.lowercase()
+        val candidates = catalog.getAggregations(session, name).toList()
+        if (candidates.isEmpty()) {
+            return null
+        }
+
+        // 2. Search along the PATH.
+        // TODO
+
+        // Invoke existing function resolution logic
+        val parameters = args.map { it.type }
+        val match = match(candidates, parameters) ?: return null
+        val agg = match.first
+        val mapping = match.second
+        // Create an internal typed reference
+        val ref = refAgg(catalog.getName(), Name.of(name), agg)
+        // Apply the coercions as explicit casts
+        val coercions: List<Rex> = args.mapIndexed { i, arg ->
+            when (val cast = mapping[i]) {
+                null -> arg
+                else -> rex(cast.target, rexOpCastResolved(cast, arg))
+            }
+        }
+        return relOpAggregateCallResolved(ref, setQuantifier, coercions)
+    }
+
+    fun resolveCast(input: Rex, target: CompilerType): Rex.Op.Cast.Resolved? {
+        val operand = input.type
+        val cast = CastTable.partiql.get(operand, target) ?: return null
+        return rexOpCastResolved(cast, input)
+    }
+
+    // -----------------------
+    //  Helpers
+    // -----------------------
+
+    // Helpers
+
+    /**
+     * Prepends the current session namespace to the identifier; named like Path.resolve() from java io.
+     */
+    private fun resolve(identifier: Identifier): Identifier {
+        val namespace = session.getNamespace()
+        return if (namespace.isEmpty()) {
+            // no need to create another object
+            identifier
+        } else {
+            // prepend the namespace
+            namespace.asIdentifier().append(identifier)
+        }
+    }
+
+    /**
+     * Returns a list of the unmatched parts of the identifier given the matched name.
+     */
+    private fun calculateMatched(path: Identifier, name: Name): List<Identifier.Part> {
+        val lhs = name.toList()
+        val rhs = path.toList()
+        return rhs.takeLast(rhs.size - lhs.size)
+    }
+
+    private fun match(candidates: List<Aggregation>, args: List<PType>): Pair<Aggregation, Array<Ref.Cast?>>? {
+        // 1. Check for an exact match
+        for (candidate in candidates) {
+            if (candidate.matches(args)) {
+                return candidate to arrayOfNulls(args.size)
+            }
+        }
+        // 2. Look for best match.
+        var match: Pair<Aggregation, Array<Ref.Cast?>>? = null
+        for (candidate in candidates) {
+            val m = candidate.match(args) ?: continue
+            // TODO AggMatch comparison
+            // if (match != null && m.exact < match.exact) {
+            //     // already had a better match.
+            //     continue
+            // }
+            match = m
+        }
+        // 3. Return best match or null
+        return match
+    }
+
+    /**
+     * Check if this function accepts the exact input argument types. Assume same arity.
+     */
+    private fun Aggregation.matches(args: List<PType>): Boolean {
+        val parameters = getParameters()
+        for (i in args.indices) {
+            val a = args[i]
+            val p = parameters[i]
+            if (p.getMatch(a) != a) return false
+        }
+        return true
+    }
+
+    /**
+     * Attempt to match arguments to the parameters; return the implicit casts if necessary.
+     *
+     * @param args
+     * @return
+     */
+    private fun Aggregation.match(args: List<PType>): Pair<Aggregation, Array<Ref.Cast?>>? {
+        val parameters = getParameters()
+        val mapping = arrayOfNulls<Ref.Cast?>(args.size)
+        for (i in args.indices) {
+            val a = args[i]
+            val p = parameters[i]
+            val m = p.getMatch(a)
+            when {
+                m == null -> return null
+                m == a -> continue
+                else -> mapping[i] = coercion(a, m)
+            }
+        }
+        return this to mapping
+    }
+
+    private fun coercion(arg: PType, target: PType): Ref.Cast {
+        return Ref.Cast(arg.toCType(), target.toCType(), Ref.Cast.Safety.COERCION, true)
     }
 }

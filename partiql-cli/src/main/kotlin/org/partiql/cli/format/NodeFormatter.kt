@@ -14,8 +14,9 @@
 
 package org.partiql.cli.format
 
-import org.partiql.pig.runtime.DomainNode
-
-internal interface NodeFormatter {
-    fun format(input: DomainNode): String
-}
+// TODO: Add this for the v1 APIs
+// import org.partiql.pig.runtime.DomainNode
+// 
+// internal interface NodeFormatter {
+//     fun format(input: DomainNode): String
+// }

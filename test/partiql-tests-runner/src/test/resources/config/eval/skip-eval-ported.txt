@@ -1,0 +1,2409 @@
+// These are failing ported tests. Though, these currently aren't tested.
+// TODO: These are remaining tests to be fixed before releasing V1. Many of these were ported from
+//  partiql-lang before it was deleted.
+STRICT:::tuple navigation with array notation without explicit CAST to string
+STRICT:::path on string
+STRICT:::tuple navigation missing attribute dot notation
+STRICT:::tuple navigation missing attribute array notation
+PERMISSIVE:::coll_count without group by
+STRICT:::coll_count without group by
+PERMISSIVE:::windowing simplified with grouping
+STRICT:::windowing simplified with grouping
+PERMISSIVE:::1.000 is DECIMAL(3,3)
+STRICT:::1.000 is DECIMAL(3,3)
+PERMISSIVE:::123.456 is DECIMAL(7,3)
+STRICT:::123.456 is DECIMAL(7,3)
+STRICT:::pathMissingDotName
+STRICT:::pathIndexBagLiteral
+STRICT:::pathIndexStructLiteral
+STRICT:::pathIndexStructOutOfBoundsLowLiteral
+STRICT:::pathIndexStructOutOfBoundsHighLiteral
+STRICT:::pathUnpivotWildCardOverStructMultiple
+STRICT:::subscript with variable in lowercase
+STRICT:::subscript with variable in uppercase
+STRICT:::subscript with variable in mixed case
+PERMISSIVE:::Example 2.1 — Union of Compatible Relations; Mismatch Column Names; Without CORRESPONDING Clause
+STRICT:::Example 2.1 — Union of Compatible Relations; Mismatch Column Names; Without CORRESPONDING Clause
+PERMISSIVE:::Example 2.2 — Union of Compatible Relations; Mismatch Column Names; With CORRESPONDING Clause
+STRICT:::Example 2.2 — Union of Compatible Relations; Mismatch Column Names; With CORRESPONDING Clause
+PERMISSIVE:::offset <str>
+PERMISSIVE:::offset <decimal>>
+PERMISSIVE:::should order data types by the specifications (NULLS LAST default for asc)
+STRICT:::should order data types by the specifications (NULLS LAST default for asc)
+PERMISSIVE:::should order data types by the specifications (NULLS FIRST default for desc)
+STRICT:::should order data types by the specifications (NULLS FIRST default for desc)
+PERMISSIVE:::should order data types by the specifications (nulls should be first due to nulls spec)
+STRICT:::should order data types by the specifications (nulls should be first due to nulls spec)
+PERMISSIVE:::should order data types by the specifications (nulls should be last due to nulls spec)
+STRICT:::should order data types by the specifications (nulls should be last due to nulls spec)
+PERMISSIVE:::text types compared by lexicographical ordering of Unicode scalar (ASC)
+STRICT:::text types compared by lexicographical ordering of Unicode scalar (ASC)
+PERMISSIVE:::text types compared by lexicographical ordering of Unicode scalar (DESC)
+STRICT:::text types compared by lexicographical ordering of Unicode scalar (DESC)
+PERMISSIVE:::Empty Projection item (ordered) -- Output (unordered)
+STRICT:::Empty Projection item (ordered) -- Output (unordered)
+PERMISSIVE:::Empty Projection item (unordered) -- Output (ordered)
+STRICT:::Empty Projection item (unordered) -- Output (ordered)
+PERMISSIVE:::Empty Projection item (ordered) -- Output (ordered)
+STRICT:::Empty Projection item (ordered) -- Output (ordered)
+PERMISSIVE:::Empty Projection item (unordered) -- Output (unordered)
+STRICT:::Empty Projection item (unordered) -- Output (unordered)
+STRICT:::projectionIterationBehaviorUnfiltered_select_star
+STRICT:::selectIndexStruct
+PERMISSIVE:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00+00:00'
+STRICT:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00+00:00'
+PERMISSIVE:::TIME (2) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.12+00:00'
+STRICT:::TIME (2) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.12+00:00'
+PERMISSIVE:::TIME WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.12300+00:00'
+STRICT:::TIME WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.12300+00:00'
+PERMISSIVE:::TIME (3) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.123+00:00'
+STRICT:::TIME (3) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.123+00:00'
+PERMISSIVE:::TIME (4) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.1230+00:00'
+STRICT:::TIME (4) WITH TIME ZONE '12:24:12.12300' = TIME WITH TIME ZONE '12:24:12.1230+00:00'
+PERMISSIVE:::TIME (4) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.1230+00:00'
+STRICT:::TIME (4) WITH TIME ZONE '12:24:12.123' = TIME WITH TIME ZONE '12:24:12.1230+00:00'
+PERMISSIVE:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00-01:00'
+STRICT:::TIME WITH TIME ZONE '00:00:00' = TIME WITH TIME ZONE '00:00:00-01:00'
+PERMISSIVE:::TIME WITH TIME ZONE '11:23:45.678' = TIME WITH TIME ZONE '11:23:45.678+06:00'
+STRICT:::TIME WITH TIME ZONE '11:23:45.678' = TIME WITH TIME ZONE '11:23:45.678+06:00'
+PERMISSIVE:::TIME (2) WITH TIME ZONE '12:59:59.13456' = TIME WITH TIME ZONE '12:59:59.13-05:30'
+STRICT:::TIME (2) WITH TIME ZONE '12:59:59.13456' = TIME WITH TIME ZONE '12:59:59.13-05:30'
+PERMISSIVE:::"stores"[0]."books"[2]."title"
+STRICT:::"stores"[0]."books"[2]."title"
+PERMISSIVE:::SELECT s.abc FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s
+STRICT:::SELECT s.abc FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s
+STRICT:::"s".*
+STRICT:::"n".z IS MISSING
+PERMISSIVE:::"stores"[*]."books"[*]."title"
+STRICT:::"stores"[*]."books"[*]."title"
+PERMISSIVE:::abc
+STRICT:::abc
+PERMISSIVE:::"friends"."kumo"."likes".*."type"
+STRICT:::"friends"."kumo"."likes".*."type"
+PERMISSIVE:::"stores"[0]."books"[*]."title"
+STRICT:::"stores"[0]."books"[*]."title"
+PERMISSIVE:::"friends".*."likes".*."type"
+STRICT:::"friends".*."likes".*."type"
+STRICT:::n."z" IS MISSING
+STRICT:::"s"[*]
+STRICT:::"n"."z" IS MISSING
+STRICT:::SELECT attributeId, SUM(attributeId) as the_sum FROM repeating_things GROUP BY attributeId HAVING SUM(attributeId) >= 160
+STRICT:::SELECT * FROM <<>> AS a WHERE 1 LIKE 'a' ESCAPE '['
+STRICT:::Select * From Object a Where null LIKE null ESCAPE a._null_
+STRICT:::Select * From Object a Where null LIKE null ESCAPE a.num
+STRICT:::Select * From Object a Where null LIKE a._null_
+STRICT:::Select * From Object a Where null LIKE a._null_ ESCAPE null
+STRICT:::Select * From Object a Where null LIKE a._null_ ESCAPE a._null_
+STRICT:::Select * From Object a Where null LIKE a._null_ ESCAPE a.num
+STRICT:::Select * From Object a Where null LIKE a._null_ ESCAPE '\'
+STRICT:::Select * From Object a Where null LIKE a._null_ ESCAPE a.esc
+STRICT:::Select * From Object a Where null LIKE a.num
+STRICT:::Select * From Object a Where null LIKE a.num ESCAPE null
+STRICT:::Select * From Object a Where null LIKE a.num ESCAPE a._null_
+STRICT:::Select * From Object a Where null LIKE a.num ESCAPE a.num
+STRICT:::Select * From Object a Where null LIKE a.num ESCAPE '\'
+STRICT:::Select * From Object a Where null LIKE a.num ESCAPE a.esc
+STRICT:::Select * From Object a Where null LIKE 'string' ESCAPE a._null_
+STRICT:::Select * From Object a Where null LIKE 'string' ESCAPE a.num
+STRICT:::Select * From Object a Where null LIKE a.str ESCAPE a._null_
+STRICT:::Select * From Object a Where null LIKE a.str ESCAPE a.num
+STRICT:::Select * From Object a Where a._null_ LIKE null
+STRICT:::Select * From Object a Where a._null_ LIKE null ESCAPE null
+STRICT:::Select * From Object a Where a._null_ LIKE null ESCAPE a._null_
+STRICT:::Select * From Object a Where a._null_ LIKE null ESCAPE a.num
+STRICT:::Select * From Object a Where a._null_ LIKE null ESCAPE '\'
+STRICT:::Select * From Object a Where a._null_ LIKE null ESCAPE a.esc
+STRICT:::Select * From Object a Where a._null_ LIKE a._null_
+STRICT:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE null
+STRICT:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a._null_
+STRICT:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a.num
+STRICT:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE '\'
+STRICT:::Select * From Object a Where a._null_ LIKE a._null_ ESCAPE a.esc
+STRICT:::Select * From Object a Where a._null_ LIKE a.num
+STRICT:::Select * From Object a Where a._null_ LIKE a.num ESCAPE null
+STRICT:::Select * From Object a Where a._null_ LIKE a.num ESCAPE a._null_
+STRICT:::Select * From Object a Where a._null_ LIKE a.num ESCAPE a.num
+STRICT:::Select * From Object a Where a._null_ LIKE a.num ESCAPE '\'
+STRICT:::Select * From Object a Where a._null_ LIKE a.num ESCAPE a.esc
+STRICT:::Select * From Object a Where a._null_ LIKE 'string'
+STRICT:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE null
+STRICT:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE a._null_
+STRICT:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE a.num
+STRICT:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE '\'
+STRICT:::Select * From Object a Where a._null_ LIKE 'string' ESCAPE a.esc
+STRICT:::Select * From Object a Where a._null_ LIKE a.str
+STRICT:::Select * From Object a Where a._null_ LIKE a.str ESCAPE null
+STRICT:::Select * From Object a Where a._null_ LIKE a.str ESCAPE a._null_
+STRICT:::Select * From Object a Where a._null_ LIKE a.str ESCAPE a.num
+STRICT:::Select * From Object a Where a._null_ LIKE a.str ESCAPE '\'
+STRICT:::Select * From Object a Where a._null_ LIKE a.str ESCAPE a.esc
+STRICT:::Select * From Object a Where a.num LIKE null
+STRICT:::Select * From Object a Where a.num LIKE null ESCAPE null
+STRICT:::Select * From Object a Where a.num LIKE null ESCAPE a._null_
+STRICT:::Select * From Object a Where a.num LIKE null ESCAPE a.num
+STRICT:::Select * From Object a Where a.num LIKE null ESCAPE '\'
+STRICT:::Select * From Object a Where a.num LIKE null ESCAPE a.esc
+STRICT:::Select * From Object a Where a.num LIKE a._null_
+STRICT:::Select * From Object a Where a.num LIKE a._null_ ESCAPE null
+STRICT:::Select * From Object a Where a.num LIKE a._null_ ESCAPE a._null_
+STRICT:::Select * From Object a Where a.num LIKE a._null_ ESCAPE a.num
+STRICT:::Select * From Object a Where a.num LIKE a._null_ ESCAPE '\'
+STRICT:::Select * From Object a Where a.num LIKE a._null_ ESCAPE a.esc
+STRICT:::Select * From Object a Where a.num LIKE a.num ESCAPE null
+STRICT:::Select * From Object a Where a.num LIKE a.num ESCAPE a._null_
+STRICT:::Select * From Object a Where a.num LIKE 'string' ESCAPE null
+STRICT:::Select * From Object a Where a.num LIKE 'string' ESCAPE a._null_
+STRICT:::Select * From Object a Where a.num LIKE a.str ESCAPE null
+STRICT:::Select * From Object a Where a.num LIKE a.str ESCAPE a._null_
+STRICT:::Select * From Object a Where 'string' LIKE null ESCAPE a._null_
+STRICT:::Select * From Object a Where 'string' LIKE null ESCAPE a.num
+STRICT:::Select * From Object a Where 'string' LIKE a._null_
+STRICT:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE null
+STRICT:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE a._null_
+STRICT:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE a.num
+STRICT:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE '\'
+STRICT:::Select * From Object a Where 'string' LIKE a._null_ ESCAPE a.esc
+STRICT:::Select * From Object a Where 'string' LIKE a.num ESCAPE null
+STRICT:::Select * From Object a Where 'string' LIKE a.num ESCAPE a._null_
+STRICT:::Select * From Object a Where 'string' LIKE 'string' ESCAPE a._null_
+STRICT:::Select * From Object a Where 'string' LIKE a.str ESCAPE a._null_
+STRICT:::Select * From Object a Where a.str LIKE null ESCAPE a._null_
+STRICT:::Select * From Object a Where a.str LIKE null ESCAPE a.num
+STRICT:::Select * From Object a Where a.str LIKE a._null_
+STRICT:::Select * From Object a Where a.str LIKE a._null_ ESCAPE null
+STRICT:::Select * From Object a Where a.str LIKE a._null_ ESCAPE a._null_
+STRICT:::Select * From Object a Where a.str LIKE a._null_ ESCAPE a.num
+STRICT:::Select * From Object a Where a.str LIKE a._null_ ESCAPE '\'
+STRICT:::Select * From Object a Where a.str LIKE a._null_ ESCAPE a.esc
+STRICT:::Select * From Object a Where a.str LIKE a.num ESCAPE null
+STRICT:::Select * From Object a Where a.str LIKE a.num ESCAPE a._null_
+STRICT:::Select * From Object a Where a.str LIKE 'string' ESCAPE a._null_
+STRICT:::Select * From Object a Where a.str LIKE a.str ESCAPE a._null_
+STRICT:::SELECT * FROM animals as a WHERE a.name LIKE a.xxx
+STRICT:::SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[a' ESCAPE '['
+STRICT:::SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE ''
+STRICT:::SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1
+STRICT:::SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['
+STRICT:::SELECT * FROM animals as a WHERE a.name LIKE '%' ESCAPE a.xxx
+STRICT:::SELECT * FROM <<>> AS a WHERE 'aaaaa' LIKE '[' ESCAPE '['
+STRICT:::SELECT * FROM animals as a WHERE a.xxx LIKE '%'
+STRICT:::SELECT * FROM <<>> AS a WHERE '%' LIKE '%' ESCAPE '[]'
+STRICT:::SELECT count(x.n) from missingAndNullSample as x
+STRICT:::SELECT avg(x.n) from missingAndNullSample as x
+STRICT:::SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x
+STRICT:::SELECT min(x.n) from missingSample as x
+STRICT:::SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x
+STRICT:::SELECT VALUE D.val from missingAndNullSample as D WHERE D.control
+STRICT:::SELECT min(x.i) from `[{}]` as x
+STRICT:::SELECT VALUE D.val from missingSample as D WHERE D.control
+STRICT:::SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x
+STRICT:::SELECT avg(x.i) from `[{}]` as x
+STRICT:::SELECT avg(x.n) from missingSample as x
+STRICT:::SELECT min(x.n) from missingAndNullSample as x
+STRICT:::SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x
+STRICT:::SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)
+STRICT:::SELECT count(x.n) from missingSample as x
+STRICT:::SELECT sum(x.n) from missingSample as x
+STRICT:::SELECT sum(x.i) from `[{}]` as x
+STRICT:::SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x
+STRICT:::SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x
+STRICT:::SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x
+STRICT:::SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)
+STRICT:::SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x
+STRICT:::SELECT max(x.i) from `[{}]` as x
+STRICT:::SELECT sum(x.n) from missingAndNullSample as x
+STRICT:::1 IN 'so long'
+PERMISSIVE:::1 IN 'so long'
+PERMISSIVE:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value
+STRICT:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value
+PERMISSIVE:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value DESC
+STRICT:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value DESC
+PERMISSIVE:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value NULLS FIRST
+STRICT:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value NULLS FIRST
+PERMISSIVE:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value NULLS LAST
+STRICT:::SELECT * FROM [ { 'data_value': {} }, { 'data_value': 5 }, { 'data_value': `2017-01-01T00:00-00:00` }, { 'data_value': [] }, { 'data_value': TIME '12:12:12.1' }, { 'data_value': 'a' }, { 'data_value': null }, { 'data_value': false }, { 'data_value': `{{YWFhYWFhYWFhYWFhYf8=}}` }, { 'data_value': DATE '2021-08-22' }, { 'data_value': <<>> }, { 'data_value': `{{"aaaaaaaaaaaaa\xFF"}}` } ] ORDER BY data_value NULLS LAST
+PERMISSIVE:::SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC
+STRICT:::SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC
+PERMISSIVE:::SELECT b AS "C" FROM (SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC) ORDER BY "C"
+STRICT:::SELECT b AS "C" FROM (SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC) ORDER BY "C"
+PERMISSIVE:::SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST) DESC NULLS FIRST
+STRICT:::SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST) DESC NULLS FIRST
+PERMISSIVE:::CAST(DATE '2007-10-10' AS date)
+STRICT:::CAST(DATE '2007-10-10' AS date)
+PERMISSIVE:::CAST(DATE '2007-10-10' AS symbol)
+STRICT:::CAST(DATE '2007-10-10' AS symbol)
+PERMISSIVE:::CAST(DATE '2007-10-10' AS string)
+STRICT:::CAST(DATE '2007-10-10' AS string)
+PERMISSIVE:::CAST(DATE '2007-10-10' AS varchar(20))
+STRICT:::CAST(DATE '2007-10-10' AS varchar(20))
+PERMISSIVE:::CAST(TIME '23:12:12.1267' AS TIME)
+STRICT:::CAST(TIME '23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+STRICT:::CAST(TIME '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME '23:12:12.1267+05:30' AS TIME (3))
+STRICT:::CAST(TIME '23:12:12.1267+05:30' AS TIME (3))
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS TIME (3) WITH TIME ZONE)
+STRICT:::CAST(TIME '23:12:12.1267-05:30' AS TIME (3) WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267' AS TIME)
+STRICT:::CAST(TIME (3) '23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS TIME)
+STRICT:::CAST(TIME (3) '23:12:12.1267-05:30' AS TIME)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267+05:30' AS TIME WITH TIME ZONE)
+STRICT:::CAST(TIME (3) '23:12:12.1267+05:30' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS TIME (9))
+STRICT:::CAST(TIME (3) '23:12:12.1267-05:30' AS TIME (9))
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS TIME)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS TIME (3) WITH TIME ZONE)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS TIME (3) WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS TIME)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS TIME)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS TIME)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS TIME (5))
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS TIME (5))
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS TIME (5) WITH TIME ZONE)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS TIME (5) WITH TIME ZONE)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS TIME)
+STRICT:::CAST(`2007-02-23T12:14:33.079Z` AS TIME)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME)
+STRICT:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS TIME WITH TIME ZONE)
+STRICT:::CAST(`2007-02-23T12:14:33.079Z` AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME (1))
+STRICT:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME (1))
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME (2) WITH TIME ZONE)
+STRICT:::CAST(`2007-02-23T12:14:33.079-08:00` AS TIME (2) WITH TIME ZONE)
+PERMISSIVE:::CAST('23:12:12.1267' AS TIME)
+STRICT:::CAST('23:12:12.1267' AS TIME)
+PERMISSIVE:::CAST('23:12:12.1267' AS TIME (2))
+STRICT:::CAST('23:12:12.1267' AS TIME (2))
+PERMISSIVE:::CAST('23:12:12.1267' AS TIME WITH TIME ZONE)
+STRICT:::CAST('23:12:12.1267' AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST('23:12:12.1267' AS TIME (2) WITH TIME ZONE)
+STRICT:::CAST('23:12:12.1267' AS TIME (2) WITH TIME ZONE)
+PERMISSIVE:::CAST(`"23:12:12.1267"` AS TIME)
+STRICT:::CAST(`"23:12:12.1267"` AS TIME)
+PERMISSIVE:::CAST(`"23:12:12.1267"` AS TIME (2))
+STRICT:::CAST(`"23:12:12.1267"` AS TIME (2))
+PERMISSIVE:::CAST(`"23:12:12.1267"` AS TIME WITH TIME ZONE)
+STRICT:::CAST(`"23:12:12.1267"` AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(`'23:12:12.1267'` AS TIME)
+STRICT:::CAST(`'23:12:12.1267'` AS TIME)
+PERMISSIVE:::CAST(`'23:12:12.1267'` AS TIME (2))
+STRICT:::CAST(`'23:12:12.1267'` AS TIME (2))
+PERMISSIVE:::CAST(`'23:12:12.1267'` AS TIME WITH TIME ZONE)
+STRICT:::CAST(`'23:12:12.1267'` AS TIME WITH TIME ZONE)
+PERMISSIVE:::CAST(`'23:12:12.1267'` AS TIME (2) WITH TIME ZONE)
+STRICT:::CAST(`'23:12:12.1267'` AS TIME (2) WITH TIME ZONE)
+STRICT:::CAST(`2007-02-23T` AS TIME WITH TIME ZONE)
+STRICT:::CAST(`2007-02-23T12:14:33.079-00:00` AS TIME WITH TIME ZONE)
+STRICT:::CAST('23:12:2.1267' AS TIME)
+STRICT:::CAST('2:12:2.1267' AS TIME (2))
+STRICT:::CAST('25:12:2.1267' AS TIME WITH TIME ZONE)
+STRICT:::CAST('24:60:2.1267' AS TIME (2) WITH TIME ZONE)
+STRICT:::CAST(`"12:60:12.1267"` AS TIME)
+STRICT:::CAST(`"23:1:12.1267"` AS TIME (2))
+STRICT:::CAST(`"30:12:12.1267"` AS TIME WITH TIME ZONE)
+STRICT:::CAST(`'23:12:60.1267'` AS TIME (2) WITH TIME ZONE)
+STRICT:::CAST(`'23:12:1.1267'` AS TIME)
+STRICT:::CAST(`'2:12:12.1267'` AS TIME (2))
+STRICT:::CAST(`'23:1:12.1267'` AS TIME WITH TIME ZONE)
+STRICT:::CAST(`'-23:41:12.1267'` AS TIME (2) WITH TIME ZONE)
+PERMISSIVE:::CAST(TIME '23:12:12.1267' AS symbol)
+STRICT:::CAST(TIME '23:12:12.1267' AS symbol)
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS symbol)
+STRICT:::CAST(TIME '23:12:12.1267-05:30' AS symbol)
+PERMISSIVE:::CAST(TIME '23:12:12.1267+05:30' AS symbol)
+STRICT:::CAST(TIME '23:12:12.1267+05:30' AS symbol)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267' AS symbol)
+STRICT:::CAST(TIME (3) '23:12:12.1267' AS symbol)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS symbol)
+STRICT:::CAST(TIME (3) '23:12:12.1267-05:30' AS symbol)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267+05:30' AS symbol)
+STRICT:::CAST(TIME (3) '23:12:12.1267+05:30' AS symbol)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS symbol)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS symbol)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS symbol)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS symbol)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS symbol)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS symbol)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS symbol)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS symbol)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS symbol)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS symbol)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS symbol)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS symbol)
+PERMISSIVE:::CAST(TIME '23:12:12.1267' AS string)
+STRICT:::CAST(TIME '23:12:12.1267' AS string)
+PERMISSIVE:::CAST(TIME '23:12:12.1267' AS varchar(40))
+STRICT:::CAST(TIME '23:12:12.1267' AS varchar(40))
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS string)
+STRICT:::CAST(TIME '23:12:12.1267-05:30' AS string)
+PERMISSIVE:::CAST(TIME '23:12:12.1267-05:30' AS varchar(40))
+STRICT:::CAST(TIME '23:12:12.1267-05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME '23:12:12.1267+05:30' AS string)
+STRICT:::CAST(TIME '23:12:12.1267+05:30' AS string)
+PERMISSIVE:::CAST(TIME '23:12:12.1267+05:30' AS varchar(40))
+STRICT:::CAST(TIME '23:12:12.1267+05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267' AS string)
+STRICT:::CAST(TIME (3) '23:12:12.1267' AS string)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267' AS varchar(40))
+STRICT:::CAST(TIME (3) '23:12:12.1267' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS string)
+STRICT:::CAST(TIME (3) '23:12:12.1267-05:30' AS string)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267-05:30' AS varchar(40))
+STRICT:::CAST(TIME (3) '23:12:12.1267-05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267+05:30' AS string)
+STRICT:::CAST(TIME (3) '23:12:12.1267+05:30' AS string)
+PERMISSIVE:::CAST(TIME (3) '23:12:12.1267+05:30' AS varchar(40))
+STRICT:::CAST(TIME (3) '23:12:12.1267+05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS string)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS string)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS varchar(40))
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267' AS varchar(40))
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS string)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS string)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS varchar(40))
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267-05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS string)
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS string)
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS varchar(40))
+STRICT:::CAST(TIME WITH TIME ZONE '23:12:12.1267+05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS string)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS string)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS varchar(40))
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS string)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS string)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS varchar(40))
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267-05:30' AS varchar(40))
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS string)
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS string)
+PERMISSIVE:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS varchar(40))
+STRICT:::CAST(TIME (3) WITH TIME ZONE '23:12:12.1267+05:30' AS varchar(40))
+STRICT:::CAST(DATE '2007-10-10' AS bool)
+STRICT:::CAST(DATE '2007-10-10' AS boolean)
+STRICT:::CAST(DATE '2007-10-10' AS int)
+STRICT:::CAST(DATE '2007-10-10' AS smallint)
+STRICT:::CAST(DATE '2007-10-10' AS integer2)
+STRICT:::CAST(DATE '2007-10-10' AS int2)
+STRICT:::CAST(DATE '2007-10-10' AS integer)
+STRICT:::CAST(DATE '2007-10-10' AS integer4)
+STRICT:::CAST(DATE '2007-10-10' AS int4)
+STRICT:::CAST(DATE '2007-10-10' AS integer8)
+STRICT:::CAST(DATE '2007-10-10' AS int8)
+STRICT:::CAST(DATE '2007-10-10' AS bigint)
+STRICT:::CAST(DATE '2007-10-10' AS float)
+STRICT:::CAST(DATE '2007-10-10' AS real)
+STRICT:::CAST(DATE '2007-10-10' AS double precision)
+STRICT:::CAST(DATE '2007-10-10' AS dec)
+STRICT:::CAST(DATE '2007-10-10' AS decimal)
+STRICT:::CAST(DATE '2007-10-10' AS numeric)
+STRICT:::CAST(DATE '2007-10-10' AS timestamp)
+STRICT:::CAST(DATE '2007-10-10' AS clob)
+STRICT:::CAST(DATE '2007-10-10' AS blob)
+STRICT:::CAST(DATE '2007-10-10' AS list)
+STRICT:::CAST(DATE '2007-10-10' AS sexp)
+STRICT:::CAST(DATE '2007-10-10' AS struct)
+STRICT:::CAST(DATE '2007-10-10' AS tuple)
+STRICT:::CAST(DATE '2007-10-10' AS bag)
+PERMISSIVE:::CAST(NULL AS varchar)
+STRICT:::CAST(NULL AS varchar)
+PERMISSIVE:::CAST(NULL AS character varying)
+STRICT:::CAST(NULL AS character varying)
+PERMISSIVE:::CAST(MISSING AS varchar)
+STRICT:::CAST(MISSING AS varchar)
+PERMISSIVE:::CAST(MISSING AS character varying)
+STRICT:::CAST(MISSING AS character varying)
+STRICT:::CAST(`2007-10-10T` AS bool)
+STRICT:::CAST(`2007-10-10T` AS boolean)
+PERMISSIVE:::CAST('TrUe' AS bool)
+STRICT:::CAST('TrUe' AS bool)
+PERMISSIVE:::CAST('TrUe' AS boolean)
+STRICT:::CAST('TrUe' AS boolean)
+PERMISSIVE:::CAST(`'true'` AS bool)
+STRICT:::CAST(`'true'` AS bool)
+PERMISSIVE:::CAST(`'true'` AS boolean)
+STRICT:::CAST(`'true'` AS boolean)
+STRICT:::CAST(`{{""}}` AS bool)
+STRICT:::CAST(`{{""}}` AS boolean)
+STRICT:::CAST(`{{"goodbye"}}` AS bool)
+STRICT:::CAST(`{{"goodbye"}}` AS boolean)
+STRICT:::CAST(`{{"false"}}` AS bool)
+STRICT:::CAST(`{{"false"}}` AS boolean)
+STRICT:::CAST(`{{"true"}}` AS bool)
+STRICT:::CAST(`{{"true"}}` AS boolean)
+STRICT:::CAST(`{{}}` AS bool)
+STRICT:::CAST(`{{}}` AS boolean)
+STRICT:::CAST(`{{Z29vZGJ5ZQ==}}` AS bool)
+STRICT:::CAST(`{{Z29vZGJ5ZQ==}}` AS boolean)
+STRICT:::CAST(`{{ZmFsc2U=}}` AS bool)
+STRICT:::CAST(`{{ZmFsc2U=}}` AS boolean)
+STRICT:::CAST(`{{dHJ1ZQ==}}` AS bool)
+STRICT:::CAST(`{{dHJ1ZQ==}}` AS boolean)
+STRICT:::CAST(`[]` AS bool)
+STRICT:::CAST(`[]` AS boolean)
+STRICT:::CAST(`[true]` AS bool)
+STRICT:::CAST(`[true]` AS boolean)
+STRICT:::CAST(`[false]` AS bool)
+STRICT:::CAST(`[false]` AS boolean)
+STRICT:::CAST(`[true, false]` AS bool)
+STRICT:::CAST(`[true, false]` AS boolean)
+STRICT:::CAST(`()` AS bool)
+STRICT:::CAST(`()` AS boolean)
+STRICT:::CAST(`(true)` AS bool)
+STRICT:::CAST(`(true)` AS boolean)
+STRICT:::CAST(`(false)` AS bool)
+STRICT:::CAST(`(false)` AS boolean)
+STRICT:::CAST(`{}` AS bool)
+STRICT:::CAST(`{}` AS boolean)
+STRICT:::CAST({} AS bool)
+STRICT:::CAST({} AS boolean)
+STRICT:::CAST(`{a:true}` AS bool)
+STRICT:::CAST(`{a:true}` AS boolean)
+STRICT:::CAST({'b':true} AS bool)
+STRICT:::CAST({'b':true} AS boolean)
+STRICT:::CAST(<<>> AS bool)
+STRICT:::CAST(<<>> AS boolean)
+STRICT:::CAST(<<true>> AS bool)
+STRICT:::CAST(<<true>> AS boolean)
+STRICT:::CAST(<<false>> AS bool)
+STRICT:::CAST(<<false>> AS boolean)
+STRICT:::CAST(`2007-10-10T` AS int)
+STRICT:::CAST(`2007-10-10T` AS smallint)
+STRICT:::CAST(`2007-10-10T` AS integer2)
+STRICT:::CAST(`2007-10-10T` AS int2)
+STRICT:::CAST(`2007-10-10T` AS integer)
+STRICT:::CAST(`2007-10-10T` AS integer4)
+STRICT:::CAST(`2007-10-10T` AS int4)
+STRICT:::CAST(`2007-10-10T` AS integer8)
+STRICT:::CAST(`2007-10-10T` AS int8)
+STRICT:::CAST(`2007-10-10T` AS bigint)
+STRICT:::CAST(`'2e100'` AS int)
+STRICT:::CAST(`'2e100'` AS smallint)
+STRICT:::CAST(`'2e100'` AS integer2)
+STRICT:::CAST(`'2e100'` AS int2)
+STRICT:::CAST(`'2e100'` AS integer)
+STRICT:::CAST(`'2e100'` AS integer4)
+STRICT:::CAST(`'2e100'` AS int4)
+STRICT:::CAST(`'2e100'` AS integer8)
+STRICT:::CAST(`'2e100'` AS int8)
+STRICT:::CAST(`'2e100'` AS bigint)
+STRICT:::CAST(`'2d100'` AS int)
+STRICT:::CAST(`'2d100'` AS smallint)
+STRICT:::CAST(`'2d100'` AS integer2)
+STRICT:::CAST(`'2d100'` AS int2)
+STRICT:::CAST(`'2d100'` AS integer)
+STRICT:::CAST(`'2d100'` AS integer4)
+STRICT:::CAST(`'2d100'` AS int4)
+STRICT:::CAST(`'2d100'` AS integer8)
+STRICT:::CAST(`'2d100'` AS int8)
+STRICT:::CAST(`'2d100'` AS bigint)
+STRICT:::CAST(`{{""}}` AS int)
+STRICT:::CAST(`{{""}}` AS smallint)
+STRICT:::CAST(`{{""}}` AS integer2)
+STRICT:::CAST(`{{""}}` AS int2)
+STRICT:::CAST(`{{""}}` AS integer)
+STRICT:::CAST(`{{""}}` AS integer4)
+STRICT:::CAST(`{{""}}` AS int4)
+STRICT:::CAST(`{{""}}` AS integer8)
+STRICT:::CAST(`{{""}}` AS int8)
+STRICT:::CAST(`{{""}}` AS bigint)
+STRICT:::CAST(`{{"0"}}` AS int)
+STRICT:::CAST(`{{"0"}}` AS smallint)
+STRICT:::CAST(`{{"0"}}` AS integer2)
+STRICT:::CAST(`{{"0"}}` AS int2)
+STRICT:::CAST(`{{"0"}}` AS integer)
+STRICT:::CAST(`{{"0"}}` AS integer4)
+STRICT:::CAST(`{{"0"}}` AS int4)
+STRICT:::CAST(`{{"0"}}` AS integer8)
+STRICT:::CAST(`{{"0"}}` AS int8)
+STRICT:::CAST(`{{"0"}}` AS bigint)
+STRICT:::CAST(`{{"1.0"}}` AS int)
+STRICT:::CAST(`{{"1.0"}}` AS smallint)
+STRICT:::CAST(`{{"1.0"}}` AS integer2)
+STRICT:::CAST(`{{"1.0"}}` AS int2)
+STRICT:::CAST(`{{"1.0"}}` AS integer)
+STRICT:::CAST(`{{"1.0"}}` AS integer4)
+STRICT:::CAST(`{{"1.0"}}` AS int4)
+STRICT:::CAST(`{{"1.0"}}` AS integer8)
+STRICT:::CAST(`{{"1.0"}}` AS int8)
+STRICT:::CAST(`{{"1.0"}}` AS bigint)
+STRICT:::CAST(`{{"2e10"}}` AS int)
+STRICT:::CAST(`{{"2e10"}}` AS smallint)
+STRICT:::CAST(`{{"2e10"}}` AS integer2)
+STRICT:::CAST(`{{"2e10"}}` AS int2)
+STRICT:::CAST(`{{"2e10"}}` AS integer)
+STRICT:::CAST(`{{"2e10"}}` AS integer4)
+STRICT:::CAST(`{{"2e10"}}` AS int4)
+STRICT:::CAST(`{{"2e10"}}` AS integer8)
+STRICT:::CAST(`{{"2e10"}}` AS int8)
+STRICT:::CAST(`{{"2e10"}}` AS bigint)
+STRICT:::CAST(`{{}}` AS int)
+STRICT:::CAST(`{{}}` AS smallint)
+STRICT:::CAST(`{{}}` AS integer2)
+STRICT:::CAST(`{{}}` AS int2)
+STRICT:::CAST(`{{}}` AS integer)
+STRICT:::CAST(`{{}}` AS integer4)
+STRICT:::CAST(`{{}}` AS int4)
+STRICT:::CAST(`{{}}` AS integer8)
+STRICT:::CAST(`{{}}` AS int8)
+STRICT:::CAST(`{{}}` AS bigint)
+STRICT:::CAST(`{{MA==}}` AS int)
+STRICT:::CAST(`{{MA==}}` AS smallint)
+STRICT:::CAST(`{{MA==}}` AS integer2)
+STRICT:::CAST(`{{MA==}}` AS int2)
+STRICT:::CAST(`{{MA==}}` AS integer)
+STRICT:::CAST(`{{MA==}}` AS integer4)
+STRICT:::CAST(`{{MA==}}` AS int4)
+STRICT:::CAST(`{{MA==}}` AS integer8)
+STRICT:::CAST(`{{MA==}}` AS int8)
+STRICT:::CAST(`{{MA==}}` AS bigint)
+STRICT:::CAST(`{{MS4w}}` AS int)
+STRICT:::CAST(`{{MS4w}}` AS smallint)
+STRICT:::CAST(`{{MS4w}}` AS integer2)
+STRICT:::CAST(`{{MS4w}}` AS int2)
+STRICT:::CAST(`{{MS4w}}` AS integer)
+STRICT:::CAST(`{{MS4w}}` AS integer4)
+STRICT:::CAST(`{{MS4w}}` AS int4)
+STRICT:::CAST(`{{MS4w}}` AS integer8)
+STRICT:::CAST(`{{MS4w}}` AS int8)
+STRICT:::CAST(`{{MS4w}}` AS bigint)
+STRICT:::CAST(`{{MmUxMA==}}` AS int)
+STRICT:::CAST(`{{MmUxMA==}}` AS smallint)
+STRICT:::CAST(`{{MmUxMA==}}` AS integer2)
+STRICT:::CAST(`{{MmUxMA==}}` AS int2)
+STRICT:::CAST(`{{MmUxMA==}}` AS integer)
+STRICT:::CAST(`{{MmUxMA==}}` AS integer4)
+STRICT:::CAST(`{{MmUxMA==}}` AS int4)
+STRICT:::CAST(`{{MmUxMA==}}` AS integer8)
+STRICT:::CAST(`{{MmUxMA==}}` AS int8)
+STRICT:::CAST(`{{MmUxMA==}}` AS bigint)
+STRICT:::CAST(`[]` AS int)
+STRICT:::CAST(`[]` AS smallint)
+STRICT:::CAST(`[]` AS integer2)
+STRICT:::CAST(`[]` AS int2)
+STRICT:::CAST(`[]` AS integer)
+STRICT:::CAST(`[]` AS integer4)
+STRICT:::CAST(`[]` AS int4)
+STRICT:::CAST(`[]` AS integer8)
+STRICT:::CAST(`[]` AS int8)
+STRICT:::CAST(`[]` AS bigint)
+STRICT:::CAST(`[1]` AS int)
+STRICT:::CAST(`[1]` AS smallint)
+STRICT:::CAST(`[1]` AS integer2)
+STRICT:::CAST(`[1]` AS int2)
+STRICT:::CAST(`[1]` AS integer)
+STRICT:::CAST(`[1]` AS integer4)
+STRICT:::CAST(`[1]` AS int4)
+STRICT:::CAST(`[1]` AS integer8)
+STRICT:::CAST(`[1]` AS int8)
+STRICT:::CAST(`[1]` AS bigint)
+STRICT:::CAST(`[-2, 0]` AS int)
+STRICT:::CAST(`[-2, 0]` AS smallint)
+STRICT:::CAST(`[-2, 0]` AS integer2)
+STRICT:::CAST(`[-2, 0]` AS int2)
+STRICT:::CAST(`[-2, 0]` AS integer)
+STRICT:::CAST(`[-2, 0]` AS integer4)
+STRICT:::CAST(`[-2, 0]` AS int4)
+STRICT:::CAST(`[-2, 0]` AS integer8)
+STRICT:::CAST(`[-2, 0]` AS int8)
+STRICT:::CAST(`[-2, 0]` AS bigint)
+STRICT:::CAST(`()` AS int)
+STRICT:::CAST(`()` AS smallint)
+STRICT:::CAST(`()` AS integer2)
+STRICT:::CAST(`()` AS int2)
+STRICT:::CAST(`()` AS integer)
+STRICT:::CAST(`()` AS integer4)
+STRICT:::CAST(`()` AS int4)
+STRICT:::CAST(`()` AS integer8)
+STRICT:::CAST(`()` AS int8)
+STRICT:::CAST(`()` AS bigint)
+STRICT:::CAST(`(1)` AS int)
+STRICT:::CAST(`(1)` AS smallint)
+STRICT:::CAST(`(1)` AS integer2)
+STRICT:::CAST(`(1)` AS int2)
+STRICT:::CAST(`(1)` AS integer)
+STRICT:::CAST(`(1)` AS integer4)
+STRICT:::CAST(`(1)` AS int4)
+STRICT:::CAST(`(1)` AS integer8)
+STRICT:::CAST(`(1)` AS int8)
+STRICT:::CAST(`(1)` AS bigint)
+STRICT:::CAST(`(0)` AS int)
+STRICT:::CAST(`(0)` AS smallint)
+STRICT:::CAST(`(0)` AS integer2)
+STRICT:::CAST(`(0)` AS int2)
+STRICT:::CAST(`(0)` AS integer)
+STRICT:::CAST(`(0)` AS integer4)
+STRICT:::CAST(`(0)` AS int4)
+STRICT:::CAST(`(0)` AS integer8)
+STRICT:::CAST(`(0)` AS int8)
+STRICT:::CAST(`(0)` AS bigint)
+STRICT:::CAST(`{}` AS int)
+STRICT:::CAST(`{}` AS smallint)
+STRICT:::CAST(`{}` AS integer2)
+STRICT:::CAST(`{}` AS int2)
+STRICT:::CAST(`{}` AS integer)
+STRICT:::CAST(`{}` AS integer4)
+STRICT:::CAST(`{}` AS int4)
+STRICT:::CAST(`{}` AS integer8)
+STRICT:::CAST(`{}` AS int8)
+STRICT:::CAST(`{}` AS bigint)
+STRICT:::CAST({} AS int)
+STRICT:::CAST({} AS smallint)
+STRICT:::CAST({} AS integer2)
+STRICT:::CAST({} AS int2)
+STRICT:::CAST({} AS integer)
+STRICT:::CAST({} AS integer4)
+STRICT:::CAST({} AS int4)
+STRICT:::CAST({} AS integer8)
+STRICT:::CAST({} AS int8)
+STRICT:::CAST({} AS bigint)
+STRICT:::CAST(`{a:12}` AS int)
+STRICT:::CAST(`{a:12}` AS smallint)
+STRICT:::CAST(`{a:12}` AS integer2)
+STRICT:::CAST(`{a:12}` AS int2)
+STRICT:::CAST(`{a:12}` AS integer)
+STRICT:::CAST(`{a:12}` AS integer4)
+STRICT:::CAST(`{a:12}` AS int4)
+STRICT:::CAST(`{a:12}` AS integer8)
+STRICT:::CAST(`{a:12}` AS int8)
+STRICT:::CAST(`{a:12}` AS bigint)
+STRICT:::CAST({'b':-4} AS int)
+STRICT:::CAST({'b':-4} AS smallint)
+STRICT:::CAST({'b':-4} AS integer2)
+STRICT:::CAST({'b':-4} AS int2)
+STRICT:::CAST({'b':-4} AS integer)
+STRICT:::CAST({'b':-4} AS integer4)
+STRICT:::CAST({'b':-4} AS int4)
+STRICT:::CAST({'b':-4} AS integer8)
+STRICT:::CAST({'b':-4} AS int8)
+STRICT:::CAST({'b':-4} AS bigint)
+STRICT:::CAST(<<>> AS int)
+STRICT:::CAST(<<>> AS smallint)
+STRICT:::CAST(<<>> AS integer2)
+STRICT:::CAST(<<>> AS int2)
+STRICT:::CAST(<<>> AS integer)
+STRICT:::CAST(<<>> AS integer4)
+STRICT:::CAST(<<>> AS int4)
+STRICT:::CAST(<<>> AS integer8)
+STRICT:::CAST(<<>> AS int8)
+STRICT:::CAST(<<>> AS bigint)
+STRICT:::CAST(<<14>> AS int)
+STRICT:::CAST(<<14>> AS smallint)
+STRICT:::CAST(<<14>> AS integer2)
+STRICT:::CAST(<<14>> AS int2)
+STRICT:::CAST(<<14>> AS integer)
+STRICT:::CAST(<<14>> AS integer4)
+STRICT:::CAST(<<14>> AS int4)
+STRICT:::CAST(<<14>> AS integer8)
+STRICT:::CAST(<<14>> AS int8)
+STRICT:::CAST(<<14>> AS bigint)
+STRICT:::CAST(<<20>> AS int)
+STRICT:::CAST(<<20>> AS smallint)
+STRICT:::CAST(<<20>> AS integer2)
+STRICT:::CAST(<<20>> AS int2)
+STRICT:::CAST(<<20>> AS integer)
+STRICT:::CAST(<<20>> AS integer4)
+STRICT:::CAST(<<20>> AS int4)
+STRICT:::CAST(<<20>> AS integer8)
+STRICT:::CAST(<<20>> AS int8)
+STRICT:::CAST(<<20>> AS bigint)
+PERMISSIVE:::CAST(`0e0` AS real)
+STRICT:::CAST(`0e0` AS real)
+STRICT:::CAST(`2007-10-10T` AS float)
+STRICT:::CAST(`2007-10-10T` AS real)
+STRICT:::CAST(`2007-10-10T` AS double precision)
+STRICT:::CAST('hello' AS float)
+STRICT:::CAST('hello' AS real)
+STRICT:::CAST('hello' AS double precision)
+PERMISSIVE:::CAST('-20' AS float)
+STRICT:::CAST('-20' AS float)
+PERMISSIVE:::CAST('-20' AS real)
+STRICT:::CAST('-20' AS real)
+PERMISSIVE:::CAST('-20' AS double precision)
+STRICT:::CAST('-20' AS double precision)
+PERMISSIVE:::CAST(`"1000"` AS float)
+STRICT:::CAST(`"1000"` AS float)
+PERMISSIVE:::CAST(`"1000"` AS real)
+STRICT:::CAST(`"1000"` AS real)
+PERMISSIVE:::CAST(`"1000"` AS double precision)
+STRICT:::CAST(`"1000"` AS double precision)
+PERMISSIVE:::CAST(`'2e100'` AS float)
+STRICT:::CAST(`'2e100'` AS float)
+PERMISSIVE:::CAST(`'2e100'` AS real)
+STRICT:::CAST(`'2e100'` AS real)
+PERMISSIVE:::CAST(`'2e100'` AS double precision)
+STRICT:::CAST(`'2e100'` AS double precision)
+STRICT:::CAST(`'2d100'` AS float)
+STRICT:::CAST(`'2d100'` AS real)
+STRICT:::CAST(`'2d100'` AS double precision)
+STRICT:::CAST(`{{""}}` AS float)
+STRICT:::CAST(`{{""}}` AS real)
+STRICT:::CAST(`{{""}}` AS double precision)
+STRICT:::CAST(`{{"0"}}` AS float)
+STRICT:::CAST(`{{"0"}}` AS real)
+STRICT:::CAST(`{{"0"}}` AS double precision)
+STRICT:::CAST(`{{"1.0"}}` AS float)
+STRICT:::CAST(`{{"1.0"}}` AS real)
+STRICT:::CAST(`{{"1.0"}}` AS double precision)
+STRICT:::CAST(`{{"2e10"}}` AS float)
+STRICT:::CAST(`{{"2e10"}}` AS real)
+STRICT:::CAST(`{{"2e10"}}` AS double precision)
+STRICT:::CAST(`{{}}` AS float)
+STRICT:::CAST(`{{}}` AS real)
+STRICT:::CAST(`{{}}` AS double precision)
+STRICT:::CAST(`{{MA==}}` AS float)
+STRICT:::CAST(`{{MA==}}` AS real)
+STRICT:::CAST(`{{MA==}}` AS double precision)
+STRICT:::CAST(`{{MS4w}}` AS float)
+STRICT:::CAST(`{{MS4w}}` AS real)
+STRICT:::CAST(`{{MS4w}}` AS double precision)
+STRICT:::CAST(`{{MmUxMA==}}` AS float)
+STRICT:::CAST(`{{MmUxMA==}}` AS real)
+STRICT:::CAST(`{{MmUxMA==}}` AS double precision)
+STRICT:::CAST(`[]` AS float)
+STRICT:::CAST(`[]` AS real)
+STRICT:::CAST(`[]` AS double precision)
+STRICT:::CAST(`[1e0]` AS float)
+STRICT:::CAST(`[1e0]` AS real)
+STRICT:::CAST(`[1e0]` AS double precision)
+STRICT:::CAST(`[-2e0, 0e0]` AS float)
+STRICT:::CAST(`[-2e0, 0e0]` AS real)
+STRICT:::CAST(`[-2e0, 0e0]` AS double precision)
+STRICT:::CAST(`()` AS float)
+STRICT:::CAST(`()` AS real)
+STRICT:::CAST(`()` AS double precision)
+STRICT:::CAST(`(1e0)` AS float)
+STRICT:::CAST(`(1e0)` AS real)
+STRICT:::CAST(`(1e0)` AS double precision)
+STRICT:::CAST(`(0e0)` AS float)
+STRICT:::CAST(`(0e0)` AS real)
+STRICT:::CAST(`(0e0)` AS double precision)
+STRICT:::CAST(`{}` AS float)
+STRICT:::CAST(`{}` AS real)
+STRICT:::CAST(`{}` AS double precision)
+STRICT:::CAST({} AS float)
+STRICT:::CAST({} AS real)
+STRICT:::CAST({} AS double precision)
+STRICT:::CAST(`{a:12e0}` AS float)
+STRICT:::CAST(`{a:12e0}` AS real)
+STRICT:::CAST(`{a:12e0}` AS double precision)
+STRICT:::CAST({'b':`-4e0`} AS float)
+STRICT:::CAST({'b':`-4e0`} AS real)
+STRICT:::CAST({'b':`-4e0`} AS double precision)
+STRICT:::CAST(<<>> AS float)
+STRICT:::CAST(<<>> AS real)
+STRICT:::CAST(<<>> AS double precision)
+STRICT:::CAST(<<`14e0`>> AS float)
+STRICT:::CAST(<<`14e0`>> AS real)
+STRICT:::CAST(<<`14e0`>> AS double precision)
+STRICT:::CAST(<<`20e0`>> AS float)
+STRICT:::CAST(<<`20e0`>> AS real)
+STRICT:::CAST(<<`20e0`>> AS double precision)
+STRICT:::CAST(`2007-10-10T` AS dec)
+STRICT:::CAST(`2007-10-10T` AS decimal)
+STRICT:::CAST(`2007-10-10T` AS numeric)
+PERMISSIVE:::CAST(`'2e100'` AS dec)
+STRICT:::CAST(`'2e100'` AS dec)
+PERMISSIVE:::CAST(`'2e100'` AS decimal)
+STRICT:::CAST(`'2e100'` AS decimal)
+PERMISSIVE:::CAST(`'2e100'` AS numeric)
+STRICT:::CAST(`'2e100'` AS numeric)
+STRICT:::CAST(`'2d100'` AS dec)
+STRICT:::CAST(`'2d100'` AS decimal)
+STRICT:::CAST(`'2d100'` AS numeric)
+STRICT:::CAST(`{{""}}` AS dec)
+STRICT:::CAST(`{{""}}` AS decimal)
+STRICT:::CAST(`{{""}}` AS numeric)
+STRICT:::CAST(`{{"0"}}` AS dec)
+STRICT:::CAST(`{{"0"}}` AS decimal)
+STRICT:::CAST(`{{"0"}}` AS numeric)
+STRICT:::CAST(`{{"1.0"}}` AS dec)
+STRICT:::CAST(`{{"1.0"}}` AS decimal)
+STRICT:::CAST(`{{"1.0"}}` AS numeric)
+STRICT:::CAST(`{{"2e10"}}` AS dec)
+STRICT:::CAST(`{{"2e10"}}` AS decimal)
+STRICT:::CAST(`{{"2e10"}}` AS numeric)
+STRICT:::CAST(`{{}}` AS dec)
+STRICT:::CAST(`{{}}` AS decimal)
+STRICT:::CAST(`{{}}` AS numeric)
+STRICT:::CAST(`{{MA==}}` AS dec)
+STRICT:::CAST(`{{MA==}}` AS decimal)
+STRICT:::CAST(`{{MA==}}` AS numeric)
+STRICT:::CAST(`{{MS4w}}` AS dec)
+STRICT:::CAST(`{{MS4w}}` AS decimal)
+STRICT:::CAST(`{{MS4w}}` AS numeric)
+STRICT:::CAST(`{{MmUxMA==}}` AS dec)
+STRICT:::CAST(`{{MmUxMA==}}` AS decimal)
+STRICT:::CAST(`{{MmUxMA==}}` AS numeric)
+STRICT:::CAST(`[]` AS dec)
+STRICT:::CAST(`[]` AS decimal)
+STRICT:::CAST(`[]` AS numeric)
+STRICT:::CAST(`[1d0]` AS dec)
+STRICT:::CAST(`[1d0]` AS decimal)
+STRICT:::CAST(`[1d0]` AS numeric)
+STRICT:::CAST(`[-2d0, 0d0]` AS dec)
+STRICT:::CAST(`[-2d0, 0d0]` AS decimal)
+STRICT:::CAST(`[-2d0, 0d0]` AS numeric)
+STRICT:::CAST(`()` AS dec)
+STRICT:::CAST(`()` AS decimal)
+STRICT:::CAST(`()` AS numeric)
+STRICT:::CAST(`(1d0)` AS dec)
+STRICT:::CAST(`(1d0)` AS decimal)
+STRICT:::CAST(`(1d0)` AS numeric)
+STRICT:::CAST(`(0d0)` AS dec)
+STRICT:::CAST(`(0d0)` AS decimal)
+STRICT:::CAST(`(0d0)` AS numeric)
+STRICT:::CAST(`{}` AS dec)
+STRICT:::CAST(`{}` AS decimal)
+STRICT:::CAST(`{}` AS numeric)
+STRICT:::CAST({} AS dec)
+STRICT:::CAST({} AS decimal)
+STRICT:::CAST({} AS numeric)
+STRICT:::CAST(`{a:12d0}` AS dec)
+STRICT:::CAST(`{a:12d0}` AS decimal)
+STRICT:::CAST(`{a:12d0}` AS numeric)
+STRICT:::CAST({'b':`-4d0`} AS dec)
+STRICT:::CAST({'b':`-4d0`} AS decimal)
+STRICT:::CAST({'b':`-4d0`} AS numeric)
+STRICT:::CAST(<<>> AS dec)
+STRICT:::CAST(<<>> AS decimal)
+STRICT:::CAST(<<>> AS numeric)
+STRICT:::CAST(<<`14d0`>> AS dec)
+STRICT:::CAST(<<`14d0`>> AS decimal)
+STRICT:::CAST(<<`14d0`>> AS numeric)
+STRICT:::CAST(<<`20d0`>> AS dec)
+STRICT:::CAST(<<`20d0`>> AS decimal)
+STRICT:::CAST(<<`20d0`>> AS numeric)
+STRICT:::CAST(TRUE AND FALSE AS date)
+STRICT:::CAST(`true` AS date)
+STRICT:::CAST(5 AS date)
+STRICT:::CAST(`0e0` AS date)
+STRICT:::CAST(1.1 AS date)
+STRICT:::CAST(-20.1 AS date)
+PERMISSIVE:::CAST(`2007-10-10T` AS date)
+STRICT:::CAST(`2007-10-10T` AS date)
+PERMISSIVE:::CAST(`2007-02-23T12:14Z` AS date)
+STRICT:::CAST(`2007-02-23T12:14Z` AS date)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS date)
+STRICT:::CAST(`2007-02-23T12:14:33.079Z` AS date)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS date)
+STRICT:::CAST(`2007-02-23T12:14:33.079-08:00` AS date)
+PERMISSIVE:::CAST(`2007-02T` AS date)
+STRICT:::CAST(`2007-02T` AS date)
+PERMISSIVE:::CAST(`2007T` AS date)
+STRICT:::CAST(`2007T` AS date)
+STRICT:::CAST('hello' AS date)
+STRICT:::CAST('2016-03-01T01:12:12Z' AS date)
+PERMISSIVE:::CAST(`"2001-01-01"` AS date)
+STRICT:::CAST(`"2001-01-01"` AS date)
+STRICT:::CAST(`"+20212-02-01"` AS date)
+STRICT:::CAST(`"20212-02-01"` AS date)
+STRICT:::CAST(`'2000T'` AS date)
+STRICT:::CAST(`'1999-04T'` AS date)
+STRICT:::CAST(`{{""}}` AS date)
+STRICT:::CAST(`{{}}` AS date)
+STRICT:::CAST(`[]` AS date)
+STRICT:::CAST(`()` AS date)
+STRICT:::CAST(`{}` AS date)
+STRICT:::CAST(<<>> AS date)
+STRICT:::CAST(TRUE AND FALSE AS time)
+STRICT:::CAST(`true` AS time)
+STRICT:::CAST(5 AS time)
+STRICT:::CAST(`0e0` AS time)
+STRICT:::CAST(1.1 AS time)
+STRICT:::CAST(-20.1 AS time)
+PERMISSIVE:::CAST(`2007-10-10T` AS time)
+STRICT:::CAST(`2007-10-10T` AS time)
+PERMISSIVE:::CAST(`2007-02-23T12:14Z` AS time)
+STRICT:::CAST(`2007-02-23T12:14Z` AS time)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS time)
+STRICT:::CAST(`2007-02-23T12:14:33.079Z` AS time)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS time)
+STRICT:::CAST(`2007-02-23T12:14:33.079-08:00` AS time)
+PERMISSIVE:::CAST(`2007-02T` AS time)
+STRICT:::CAST(`2007-02T` AS time)
+PERMISSIVE:::CAST(`2007T` AS time)
+STRICT:::CAST(`2007T` AS time)
+STRICT:::CAST('hello' AS time)
+STRICT:::CAST('2016-03-01T01:12:12Z' AS time)
+STRICT:::CAST(`"23:2:12.12345"` AS time)
+STRICT:::CAST(`"+20212-02-01"` AS time)
+STRICT:::CAST(`"20212-02-01"` AS time)
+STRICT:::CAST(`'2000T'` AS time)
+STRICT:::CAST(`'1999-04T'` AS time)
+STRICT:::CAST(`{{""}}` AS time)
+STRICT:::CAST(`{{}}` AS time)
+STRICT:::CAST(`[]` AS time)
+STRICT:::CAST(`()` AS time)
+STRICT:::CAST(`{}` AS time)
+STRICT:::CAST(<<>> AS time)
+STRICT:::CAST(TRUE AND FALSE AS timestamp)
+STRICT:::CAST(`true` AS timestamp)
+STRICT:::CAST(5 AS timestamp)
+STRICT:::CAST(`0e0` AS timestamp)
+STRICT:::CAST(1.1 AS timestamp)
+STRICT:::CAST(-20.1 AS timestamp)
+PERMISSIVE:::CAST(`2007-10-10T` AS timestamp)
+STRICT:::CAST(`2007-10-10T` AS timestamp)
+STRICT:::CAST('hello' AS timestamp)
+PERMISSIVE:::CAST('2016-03-01T01:12:12Z' AS timestamp)
+STRICT:::CAST('2016-03-01T01:12:12Z' AS timestamp)
+PERMISSIVE:::CAST(`"2001-01-01"` AS timestamp)
+STRICT:::CAST(`"2001-01-01"` AS timestamp)
+PERMISSIVE:::CAST(`'2000T'` AS timestamp)
+STRICT:::CAST(`'2000T'` AS timestamp)
+PERMISSIVE:::CAST(`'1999-04T'` AS timestamp)
+STRICT:::CAST(`'1999-04T'` AS timestamp)
+STRICT:::CAST(`{{""}}` AS timestamp)
+STRICT:::CAST(`{{}}` AS timestamp)
+STRICT:::CAST(`[]` AS timestamp)
+STRICT:::CAST(`()` AS timestamp)
+STRICT:::CAST(`{}` AS timestamp)
+STRICT:::CAST(<<>> AS timestamp)
+PERMISSIVE:::CAST(`2007-10-10T` AS symbol)
+STRICT:::CAST(`2007-10-10T` AS symbol)
+STRICT:::CAST(`{{""}}` AS symbol)
+STRICT:::CAST(`{{"0"}}` AS symbol)
+STRICT:::CAST(`{{"1.0"}}` AS symbol)
+STRICT:::CAST(`{{"2e10"}}` AS symbol)
+STRICT:::CAST(`{{}}` AS symbol)
+STRICT:::CAST(`{{MA==}}` AS symbol)
+STRICT:::CAST(`{{MS4w}}` AS symbol)
+STRICT:::CAST(`{{MmUxMA==}}` AS symbol)
+STRICT:::CAST(`[]` AS symbol)
+STRICT:::CAST(['hello'] AS symbol)
+STRICT:::CAST(`[-2d0, 0d0]` AS symbol)
+STRICT:::CAST(`()` AS symbol)
+STRICT:::CAST(`(1d0)` AS symbol)
+STRICT:::CAST(`(0d0)` AS symbol)
+STRICT:::CAST(`{}` AS symbol)
+STRICT:::CAST({} AS symbol)
+STRICT:::CAST(`{a:12d0}` AS symbol)
+STRICT:::CAST({'b':`-4d0`} AS symbol)
+STRICT:::CAST(<<>> AS symbol)
+STRICT:::CAST(<<`14d0`>> AS symbol)
+STRICT:::CAST(<<`20d0`>> AS symbol)
+PERMISSIVE:::CAST(TRUE AND FALSE AS VARCHAR(30))
+STRICT:::CAST(TRUE AND FALSE AS VARCHAR(30))
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHARACTER VARYING(30))
+STRICT:::CAST(TRUE AND FALSE AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`true` AS VARCHAR(30))
+STRICT:::CAST(`true` AS VARCHAR(30))
+PERMISSIVE:::CAST(`true` AS CHARACTER VARYING(30))
+STRICT:::CAST(`true` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(5 AS VARCHAR(30))
+STRICT:::CAST(5 AS VARCHAR(30))
+PERMISSIVE:::CAST(5 AS CHARACTER VARYING(30))
+STRICT:::CAST(5 AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`0e0` AS VARCHAR(30))
+STRICT:::CAST(`0e0` AS VARCHAR(30))
+PERMISSIVE:::CAST(`0e0` AS CHARACTER VARYING(30))
+STRICT:::CAST(`0e0` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(1.1 AS VARCHAR(30))
+STRICT:::CAST(1.1 AS VARCHAR(30))
+PERMISSIVE:::CAST(1.1 AS CHARACTER VARYING(30))
+STRICT:::CAST(1.1 AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(-20.1 AS VARCHAR(30))
+STRICT:::CAST(-20.1 AS VARCHAR(30))
+PERMISSIVE:::CAST(-20.1 AS CHARACTER VARYING(30))
+STRICT:::CAST(-20.1 AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`2007-10-10T` AS STRING)
+STRICT:::CAST(`2007-10-10T` AS STRING)
+PERMISSIVE:::CAST(`2007-10-10T` AS VARCHAR(30))
+STRICT:::CAST(`2007-10-10T` AS VARCHAR(30))
+PERMISSIVE:::CAST(`2007-10-10T` AS CHARACTER VARYING(30))
+STRICT:::CAST(`2007-10-10T` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST('hello' AS VARCHAR(30))
+STRICT:::CAST('hello' AS VARCHAR(30))
+PERMISSIVE:::CAST('hello' AS CHARACTER VARYING(30))
+STRICT:::CAST('hello' AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST('-20' AS VARCHAR(30))
+STRICT:::CAST('-20' AS VARCHAR(30))
+PERMISSIVE:::CAST('-20' AS CHARACTER VARYING(30))
+STRICT:::CAST('-20' AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`"1000"` AS VARCHAR(30))
+STRICT:::CAST(`"1000"` AS VARCHAR(30))
+PERMISSIVE:::CAST(`"1000"` AS CHARACTER VARYING(30))
+STRICT:::CAST(`"1000"` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`'2e100'` AS VARCHAR(30))
+STRICT:::CAST(`'2e100'` AS VARCHAR(30))
+PERMISSIVE:::CAST(`'2e100'` AS CHARACTER VARYING(30))
+STRICT:::CAST(`'2e100'` AS CHARACTER VARYING(30))
+PERMISSIVE:::CAST(`'2d100'` AS VARCHAR(30))
+STRICT:::CAST(`'2d100'` AS VARCHAR(30))
+PERMISSIVE:::CAST(`'2d100'` AS CHARACTER VARYING(30))
+STRICT:::CAST(`'2d100'` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{{""}}` AS STRING)
+PERMISSIVE:::CAST(`{{""}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{""}}` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{{"0"}}` AS STRING)
+PERMISSIVE:::CAST(`{{"0"}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{"0"}}` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{{"1.0"}}` AS STRING)
+PERMISSIVE:::CAST(`{{"1.0"}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{"1.0"}}` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{{"2e10"}}` AS STRING)
+PERMISSIVE:::CAST(`{{"2e10"}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{"2e10"}}` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{{}}` AS STRING)
+PERMISSIVE:::CAST(`{{}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{}}` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{{MA==}}` AS STRING)
+PERMISSIVE:::CAST(`{{MA==}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{MA==}}` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{{MS4w}}` AS STRING)
+PERMISSIVE:::CAST(`{{MS4w}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{MS4w}}` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{{MmUxMA==}}` AS STRING)
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS CHARACTER VARYING(30))
+STRICT:::CAST(`[]` AS STRING)
+PERMISSIVE:::CAST(`[]` AS VARCHAR(30))
+PERMISSIVE:::CAST(`[]` AS CHARACTER VARYING(30))
+STRICT:::CAST(['hello'] AS STRING)
+PERMISSIVE:::CAST(['hello'] AS VARCHAR(30))
+PERMISSIVE:::CAST(['hello'] AS CHARACTER VARYING(30))
+STRICT:::CAST(`[-2d0, 0d0]` AS STRING)
+PERMISSIVE:::CAST(`[-2d0, 0d0]` AS VARCHAR(30))
+PERMISSIVE:::CAST(`[-2d0, 0d0]` AS CHARACTER VARYING(30))
+STRICT:::CAST(`()` AS STRING)
+PERMISSIVE:::CAST(`()` AS VARCHAR(30))
+PERMISSIVE:::CAST(`()` AS CHARACTER VARYING(30))
+STRICT:::CAST(`(1d0)` AS STRING)
+PERMISSIVE:::CAST(`(1d0)` AS VARCHAR(30))
+PERMISSIVE:::CAST(`(1d0)` AS CHARACTER VARYING(30))
+STRICT:::CAST(`(0d0)` AS STRING)
+PERMISSIVE:::CAST(`(0d0)` AS VARCHAR(30))
+PERMISSIVE:::CAST(`(0d0)` AS CHARACTER VARYING(30))
+STRICT:::CAST(`{}` AS STRING)
+PERMISSIVE:::CAST(`{}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{}` AS CHARACTER VARYING(30))
+STRICT:::CAST({} AS STRING)
+PERMISSIVE:::CAST({} AS VARCHAR(30))
+PERMISSIVE:::CAST({} AS CHARACTER VARYING(30))
+STRICT:::CAST(`{a:12d0}` AS STRING)
+PERMISSIVE:::CAST(`{a:12d0}` AS VARCHAR(30))
+PERMISSIVE:::CAST(`{a:12d0}` AS CHARACTER VARYING(30))
+STRICT:::CAST({'b':`-4d0`} AS STRING)
+PERMISSIVE:::CAST({'b':`-4d0`} AS VARCHAR(30))
+PERMISSIVE:::CAST({'b':`-4d0`} AS CHARACTER VARYING(30))
+STRICT:::CAST(<<>> AS STRING)
+PERMISSIVE:::CAST(<<>> AS VARCHAR(30))
+PERMISSIVE:::CAST(<<>> AS CHARACTER VARYING(30))
+STRICT:::CAST(<<`14d0`>> AS STRING)
+PERMISSIVE:::CAST(<<`14d0`>> AS VARCHAR(30))
+PERMISSIVE:::CAST(<<`14d0`>> AS CHARACTER VARYING(30))
+STRICT:::CAST(<<'a', <<'hello'>>>> AS STRING)
+PERMISSIVE:::CAST(<<'a', <<'hello'>>>> AS VARCHAR(30))
+PERMISSIVE:::CAST(<<'a', <<'hello'>>>> AS CHARACTER VARYING(30))
+STRICT:::CAST(<<`20d0`>> AS STRING)
+PERMISSIVE:::CAST(<<`20d0`>> AS VARCHAR(30))
+PERMISSIVE:::CAST(<<`20d0`>> AS CHARACTER VARYING(30))
+STRICT:::CAST(TRUE AND FALSE AS clob)
+STRICT:::CAST(`true` AS clob)
+STRICT:::CAST(5 AS clob)
+STRICT:::CAST(`0e0` AS clob)
+STRICT:::CAST(1.1 AS clob)
+STRICT:::CAST(-20.1 AS clob)
+STRICT:::CAST(`2007-10-10T` AS clob)
+PERMISSIVE:::CAST(`{{""}}` AS clob)
+STRICT:::CAST(`{{""}}` AS clob)
+PERMISSIVE:::CAST(`{{"0"}}` AS clob)
+STRICT:::CAST(`{{"0"}}` AS clob)
+PERMISSIVE:::CAST(`{{"1.0"}}` AS clob)
+STRICT:::CAST(`{{"1.0"}}` AS clob)
+PERMISSIVE:::CAST(`{{"2e10"}}` AS clob)
+STRICT:::CAST(`{{"2e10"}}` AS clob)
+PERMISSIVE:::CAST(`{{}}` AS clob)
+STRICT:::CAST(`{{}}` AS clob)
+PERMISSIVE:::CAST(`{{MA==}}` AS clob)
+STRICT:::CAST(`{{MA==}}` AS clob)
+PERMISSIVE:::CAST(`{{MS4w}}` AS clob)
+STRICT:::CAST(`{{MS4w}}` AS clob)
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS clob)
+STRICT:::CAST(`{{MmUxMA==}}` AS clob)
+STRICT:::CAST(`[]` AS clob)
+STRICT:::CAST(['hello'] AS clob)
+STRICT:::CAST(`[-2d0, 0d0]` AS clob)
+STRICT:::CAST(`()` AS clob)
+STRICT:::CAST(`(1d0)` AS clob)
+STRICT:::CAST(`(0d0)` AS clob)
+STRICT:::CAST(`{}` AS clob)
+STRICT:::CAST({} AS clob)
+STRICT:::CAST(`{a:12d0}` AS clob)
+STRICT:::CAST({'b':`-4d0`} AS clob)
+STRICT:::CAST(<<>> AS clob)
+STRICT:::CAST(<<`14d0`>> AS clob)
+STRICT:::CAST(<<`20d0`>> AS clob)
+STRICT:::CAST(TRUE AND FALSE AS blob)
+STRICT:::CAST(`true` AS blob)
+STRICT:::CAST(5 AS blob)
+STRICT:::CAST(`0e0` AS blob)
+STRICT:::CAST(1.1 AS blob)
+STRICT:::CAST(-20.1 AS blob)
+STRICT:::CAST(`2007-10-10T` AS blob)
+STRICT:::CAST('hello' AS blob)
+STRICT:::CAST('-20' AS blob)
+STRICT:::CAST(`"1000"` AS blob)
+STRICT:::CAST(`'2e100'` AS blob)
+STRICT:::CAST(`'2d100'` AS blob)
+PERMISSIVE:::CAST(`{{""}}` AS blob)
+STRICT:::CAST(`{{""}}` AS blob)
+PERMISSIVE:::CAST(`{{"0"}}` AS blob)
+STRICT:::CAST(`{{"0"}}` AS blob)
+PERMISSIVE:::CAST(`{{"1.0"}}` AS blob)
+STRICT:::CAST(`{{"1.0"}}` AS blob)
+PERMISSIVE:::CAST(`{{"2e10"}}` AS blob)
+STRICT:::CAST(`{{"2e10"}}` AS blob)
+PERMISSIVE:::CAST(`{{}}` AS blob)
+STRICT:::CAST(`{{}}` AS blob)
+PERMISSIVE:::CAST(`{{MA==}}` AS blob)
+STRICT:::CAST(`{{MA==}}` AS blob)
+PERMISSIVE:::CAST(`{{MS4w}}` AS blob)
+STRICT:::CAST(`{{MS4w}}` AS blob)
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS blob)
+STRICT:::CAST(`{{MmUxMA==}}` AS blob)
+STRICT:::CAST(`[]` AS blob)
+STRICT:::CAST(['hello'] AS blob)
+STRICT:::CAST(`[-2d0, 0d0]` AS blob)
+STRICT:::CAST(`()` AS blob)
+STRICT:::CAST(`(1d0)` AS blob)
+STRICT:::CAST(`(0d0)` AS blob)
+STRICT:::CAST(`{}` AS blob)
+STRICT:::CAST({} AS blob)
+STRICT:::CAST(`{a:12d0}` AS blob)
+STRICT:::CAST({'b':`-4d0`} AS blob)
+STRICT:::CAST(<<>> AS blob)
+STRICT:::CAST(<<`14d0`>> AS blob)
+STRICT:::CAST(<<`20d0`>> AS blob)
+STRICT:::CAST(TRUE AND FALSE AS list)
+STRICT:::CAST(`true` AS list)
+STRICT:::CAST(5 AS list)
+STRICT:::CAST(`0e0` AS list)
+STRICT:::CAST(1.1 AS list)
+STRICT:::CAST(-20.1 AS list)
+STRICT:::CAST(`2007-10-10T` AS list)
+STRICT:::CAST('hello' AS list)
+STRICT:::CAST('-20' AS list)
+STRICT:::CAST(`"1000"` AS list)
+STRICT:::CAST(`'2e100'` AS list)
+STRICT:::CAST(`'2d100'` AS list)
+STRICT:::CAST(`{{""}}` AS list)
+STRICT:::CAST(`{{"0"}}` AS list)
+STRICT:::CAST(`{{"1.0"}}` AS list)
+STRICT:::CAST(`{{"2e10"}}` AS list)
+STRICT:::CAST(`{{}}` AS list)
+STRICT:::CAST(`{{MA==}}` AS list)
+STRICT:::CAST(`{{MS4w}}` AS list)
+STRICT:::CAST(`{{MmUxMA==}}` AS list)
+STRICT:::CAST(`{}` AS list)
+STRICT:::CAST({} AS list)
+STRICT:::CAST(`{a:12d0}` AS list)
+STRICT:::CAST({'b':`-4d0`} AS list)
+PERMISSIVE:::CAST(<<>> AS list)
+STRICT:::CAST(<<>> AS list)
+PERMISSIVE:::CAST(<<`14d0`>> AS list)
+STRICT:::CAST(<<`14d0`>> AS list)
+PERMISSIVE:::CAST(<<`20d0`>> AS list)
+STRICT:::CAST(<<`20d0`>> AS list)
+STRICT:::CAST(TRUE AND FALSE AS sexp)
+STRICT:::CAST(`true` AS sexp)
+STRICT:::CAST(5 AS sexp)
+STRICT:::CAST(`0e0` AS sexp)
+STRICT:::CAST(1.1 AS sexp)
+STRICT:::CAST(-20.1 AS sexp)
+STRICT:::CAST(`2007-10-10T` AS sexp)
+STRICT:::CAST('hello' AS sexp)
+STRICT:::CAST('-20' AS sexp)
+STRICT:::CAST(`"1000"` AS sexp)
+STRICT:::CAST(`'2e100'` AS sexp)
+STRICT:::CAST(`'2d100'` AS sexp)
+STRICT:::CAST(`{{""}}` AS sexp)
+STRICT:::CAST(`{{"0"}}` AS sexp)
+STRICT:::CAST(`{{"1.0"}}` AS sexp)
+STRICT:::CAST(`{{"2e10"}}` AS sexp)
+STRICT:::CAST(`{{}}` AS sexp)
+STRICT:::CAST(`{{MA==}}` AS sexp)
+STRICT:::CAST(`{{MS4w}}` AS sexp)
+STRICT:::CAST(`{{MmUxMA==}}` AS sexp)
+STRICT:::CAST(`{}` AS sexp)
+STRICT:::CAST({} AS sexp)
+STRICT:::CAST(`{a:12d0}` AS sexp)
+STRICT:::CAST({'b':`-4d0`} AS sexp)
+PERMISSIVE:::CAST(<<>> AS sexp)
+STRICT:::CAST(<<>> AS sexp)
+PERMISSIVE:::CAST(<<`14d0`>> AS sexp)
+STRICT:::CAST(<<`14d0`>> AS sexp)
+PERMISSIVE:::CAST(<<`20d0`>> AS sexp)
+STRICT:::CAST(<<`20d0`>> AS sexp)
+STRICT:::CAST(TRUE AND FALSE AS struct)
+STRICT:::CAST(TRUE AND FALSE AS tuple)
+STRICT:::CAST(`true` AS struct)
+STRICT:::CAST(`true` AS tuple)
+STRICT:::CAST(5 AS struct)
+STRICT:::CAST(5 AS tuple)
+STRICT:::CAST(`0e0` AS struct)
+STRICT:::CAST(`0e0` AS tuple)
+STRICT:::CAST(1.1 AS struct)
+STRICT:::CAST(1.1 AS tuple)
+STRICT:::CAST(-20.1 AS struct)
+STRICT:::CAST(-20.1 AS tuple)
+STRICT:::CAST(`2007-10-10T` AS struct)
+STRICT:::CAST(`2007-10-10T` AS tuple)
+STRICT:::CAST('hello' AS struct)
+STRICT:::CAST('hello' AS tuple)
+STRICT:::CAST('-20' AS struct)
+STRICT:::CAST('-20' AS tuple)
+STRICT:::CAST(`"1000"` AS struct)
+STRICT:::CAST(`"1000"` AS tuple)
+STRICT:::CAST(`'2e100'` AS struct)
+STRICT:::CAST(`'2e100'` AS tuple)
+STRICT:::CAST(`'2d100'` AS struct)
+STRICT:::CAST(`'2d100'` AS tuple)
+STRICT:::CAST(`{{""}}` AS struct)
+STRICT:::CAST(`{{""}}` AS tuple)
+STRICT:::CAST(`{{"0"}}` AS struct)
+STRICT:::CAST(`{{"0"}}` AS tuple)
+STRICT:::CAST(`{{"1.0"}}` AS struct)
+STRICT:::CAST(`{{"1.0"}}` AS tuple)
+STRICT:::CAST(`{{"2e10"}}` AS struct)
+STRICT:::CAST(`{{"2e10"}}` AS tuple)
+STRICT:::CAST(`{{}}` AS struct)
+STRICT:::CAST(`{{}}` AS tuple)
+STRICT:::CAST(`{{MA==}}` AS struct)
+STRICT:::CAST(`{{MA==}}` AS tuple)
+STRICT:::CAST(`{{MS4w}}` AS struct)
+STRICT:::CAST(`{{MS4w}}` AS tuple)
+STRICT:::CAST(`{{MmUxMA==}}` AS struct)
+STRICT:::CAST(`{{MmUxMA==}}` AS tuple)
+STRICT:::CAST(`[]` AS struct)
+STRICT:::CAST(`[]` AS tuple)
+STRICT:::CAST(['hello'] AS struct)
+STRICT:::CAST(['hello'] AS tuple)
+STRICT:::CAST(`[-2d0, 0d0]` AS struct)
+STRICT:::CAST(`[-2d0, 0d0]` AS tuple)
+STRICT:::CAST(`()` AS struct)
+STRICT:::CAST(`()` AS tuple)
+STRICT:::CAST(`(1d0)` AS struct)
+STRICT:::CAST(`(1d0)` AS tuple)
+STRICT:::CAST(`(0d0)` AS struct)
+STRICT:::CAST(`(0d0)` AS tuple)
+PERMISSIVE:::CAST({} AS struct)
+STRICT:::CAST({} AS struct)
+PERMISSIVE:::CAST({} AS tuple)
+STRICT:::CAST({} AS tuple)
+PERMISSIVE:::CAST({'b':`-4d0`} AS struct)
+STRICT:::CAST({'b':`-4d0`} AS struct)
+PERMISSIVE:::CAST({'b':`-4d0`} AS tuple)
+STRICT:::CAST({'b':`-4d0`} AS tuple)
+STRICT:::CAST(<<>> AS struct)
+STRICT:::CAST(<<>> AS tuple)
+STRICT:::CAST(<<`14d0`>> AS struct)
+STRICT:::CAST(<<`14d0`>> AS tuple)
+STRICT:::CAST(<<`20d0`>> AS struct)
+STRICT:::CAST(<<`20d0`>> AS tuple)
+STRICT:::CAST(TRUE AND FALSE AS bag)
+STRICT:::CAST(`true` AS bag)
+STRICT:::CAST(5 AS bag)
+STRICT:::CAST(`0e0` AS bag)
+STRICT:::CAST(1.1 AS bag)
+STRICT:::CAST(-20.1 AS bag)
+STRICT:::CAST(`2007-10-10T` AS bag)
+STRICT:::CAST('hello' AS bag)
+STRICT:::CAST('-20' AS bag)
+STRICT:::CAST(`"1000"` AS bag)
+STRICT:::CAST(`'2e100'` AS bag)
+STRICT:::CAST(`'2d100'` AS bag)
+STRICT:::CAST(`{{""}}` AS bag)
+STRICT:::CAST(`{{"0"}}` AS bag)
+STRICT:::CAST(`{{"1.0"}}` AS bag)
+STRICT:::CAST(`{{"2e10"}}` AS bag)
+STRICT:::CAST(`{{}}` AS bag)
+STRICT:::CAST(`{{MA==}}` AS bag)
+STRICT:::CAST(`{{MS4w}}` AS bag)
+STRICT:::CAST(`{{MmUxMA==}}` AS bag)
+STRICT:::CAST(`{}` AS bag)
+STRICT:::CAST({} AS bag)
+STRICT:::CAST(`{a:12d0}` AS bag)
+STRICT:::CAST({'b':`-4d0`} AS bag)
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHAR)
+STRICT:::CAST(TRUE AND FALSE AS CHAR)
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHARACTER)
+STRICT:::CAST(TRUE AND FALSE AS CHARACTER)
+PERMISSIVE:::CAST(`true` AS CHAR)
+STRICT:::CAST(`true` AS CHAR)
+PERMISSIVE:::CAST(`true` AS CHARACTER)
+STRICT:::CAST(`true` AS CHARACTER)
+PERMISSIVE:::CAST(5 AS CHAR)
+STRICT:::CAST(5 AS CHAR)
+PERMISSIVE:::CAST(5 AS CHARACTER)
+STRICT:::CAST(5 AS CHARACTER)
+PERMISSIVE:::CAST(`0e0` AS CHAR)
+STRICT:::CAST(`0e0` AS CHAR)
+PERMISSIVE:::CAST(`0e0` AS CHARACTER)
+STRICT:::CAST(`0e0` AS CHARACTER)
+PERMISSIVE:::CAST(1.1 AS CHAR)
+STRICT:::CAST(1.1 AS CHAR)
+PERMISSIVE:::CAST(1.1 AS CHARACTER)
+STRICT:::CAST(1.1 AS CHARACTER)
+PERMISSIVE:::CAST(-20.1 AS CHAR)
+STRICT:::CAST(-20.1 AS CHAR)
+PERMISSIVE:::CAST(-20.1 AS CHARACTER)
+STRICT:::CAST(-20.1 AS CHARACTER)
+PERMISSIVE:::CAST(`+inf` AS CHAR)
+STRICT:::CAST(`+inf` AS CHAR)
+PERMISSIVE:::CAST(`+inf` AS CHARACTER)
+STRICT:::CAST(`+inf` AS CHARACTER)
+PERMISSIVE:::CAST(`-inf` AS CHAR)
+STRICT:::CAST(`-inf` AS CHAR)
+PERMISSIVE:::CAST(`-inf` AS CHARACTER)
+STRICT:::CAST(`-inf` AS CHARACTER)
+PERMISSIVE:::CAST(`nan` AS CHAR)
+STRICT:::CAST(`nan` AS CHAR)
+PERMISSIVE:::CAST(`nan` AS CHARACTER)
+STRICT:::CAST(`nan` AS CHARACTER)
+PERMISSIVE:::CAST(`2007-10-10T` AS CHAR)
+STRICT:::CAST(`2007-10-10T` AS CHAR)
+PERMISSIVE:::CAST(`2007-10-10T` AS CHARACTER)
+STRICT:::CAST(`2007-10-10T` AS CHARACTER)
+PERMISSIVE:::CAST('hello' AS CHAR)
+STRICT:::CAST('hello' AS CHAR)
+PERMISSIVE:::CAST('hello' AS CHARACTER)
+STRICT:::CAST('hello' AS CHARACTER)
+PERMISSIVE:::CAST('-20' AS CHAR)
+STRICT:::CAST('-20' AS CHAR)
+PERMISSIVE:::CAST('-20' AS CHARACTER)
+STRICT:::CAST('-20' AS CHARACTER)
+PERMISSIVE:::CAST(`"1000"` AS CHAR)
+STRICT:::CAST(`"1000"` AS CHAR)
+PERMISSIVE:::CAST(`"1000"` AS CHARACTER)
+STRICT:::CAST(`"1000"` AS CHARACTER)
+PERMISSIVE:::CAST(`'2e100'` AS CHAR)
+STRICT:::CAST(`'2e100'` AS CHAR)
+PERMISSIVE:::CAST(`'2e100'` AS CHARACTER)
+STRICT:::CAST(`'2e100'` AS CHARACTER)
+PERMISSIVE:::CAST(`'2d100'` AS CHAR)
+STRICT:::CAST(`'2d100'` AS CHAR)
+PERMISSIVE:::CAST(`'2d100'` AS CHARACTER)
+STRICT:::CAST(`'2d100'` AS CHARACTER)
+STRICT:::CAST(`{{""}}` AS CHAR)
+STRICT:::CAST(`{{""}}` AS CHARACTER)
+STRICT:::CAST(`{{"0"}}` AS CHAR)
+STRICT:::CAST(`{{"0"}}` AS CHARACTER)
+STRICT:::CAST(`{{"1.0"}}` AS CHAR)
+STRICT:::CAST(`{{"1.0"}}` AS CHARACTER)
+STRICT:::CAST(`{{"2e10"}}` AS CHAR)
+STRICT:::CAST(`{{"2e10"}}` AS CHARACTER)
+STRICT:::CAST(`{{}}` AS CHAR)
+STRICT:::CAST(`{{}}` AS CHARACTER)
+STRICT:::CAST(`{{MA==}}` AS CHAR)
+STRICT:::CAST(`{{MA==}}` AS CHARACTER)
+STRICT:::CAST(`{{MS4w}}` AS CHAR)
+STRICT:::CAST(`{{MS4w}}` AS CHARACTER)
+STRICT:::CAST(`{{MmUxMA==}}` AS CHAR)
+STRICT:::CAST(`{{MmUxMA==}}` AS CHARACTER)
+STRICT:::CAST(`[]` AS CHAR)
+STRICT:::CAST(`[]` AS CHARACTER)
+STRICT:::CAST(['hello'] AS CHAR)
+STRICT:::CAST(['hello'] AS CHARACTER)
+STRICT:::CAST(`[-2d0, 0d0]` AS CHAR)
+STRICT:::CAST(`[-2d0, 0d0]` AS CHARACTER)
+STRICT:::CAST(`()` AS CHAR)
+STRICT:::CAST(`()` AS CHARACTER)
+STRICT:::CAST(`(1d0)` AS CHAR)
+STRICT:::CAST(`(1d0)` AS CHARACTER)
+STRICT:::CAST(`(0d0)` AS CHAR)
+STRICT:::CAST(`(0d0)` AS CHARACTER)
+STRICT:::CAST(`{}` AS CHAR)
+STRICT:::CAST(`{}` AS CHARACTER)
+STRICT:::CAST({} AS CHAR)
+STRICT:::CAST({} AS CHARACTER)
+STRICT:::CAST(`{a:12d0}` AS CHAR)
+STRICT:::CAST(`{a:12d0}` AS CHARACTER)
+STRICT:::CAST({'b':`-4d0`} AS CHAR)
+STRICT:::CAST({'b':`-4d0`} AS CHARACTER)
+STRICT:::CAST(<<>> AS CHAR)
+STRICT:::CAST(<<>> AS CHARACTER)
+STRICT:::CAST(<<`14d0`>> AS CHAR)
+STRICT:::CAST(<<`14d0`>> AS CHARACTER)
+STRICT:::CAST(<<'a', <<'hello'>>>> AS CHAR)
+STRICT:::CAST(<<'a', <<'hello'>>>> AS CHARACTER)
+STRICT:::CAST(<<`20d0`>> AS CHAR)
+STRICT:::CAST(<<`20d0`>> AS CHARACTER)
+PERMISSIVE:::CAST(1.9 AS int)
+STRICT:::CAST(1.9 AS int)
+PERMISSIVE:::CAST(1.9 AS smallint)
+STRICT:::CAST(1.9 AS smallint)
+PERMISSIVE:::CAST(1.9 AS integer2)
+STRICT:::CAST(1.9 AS integer2)
+PERMISSIVE:::CAST(1.9 AS int2)
+STRICT:::CAST(1.9 AS int2)
+PERMISSIVE:::CAST(1.9 AS integer)
+STRICT:::CAST(1.9 AS integer)
+PERMISSIVE:::CAST(1.9 AS integer4)
+STRICT:::CAST(1.9 AS integer4)
+PERMISSIVE:::CAST(1.9 AS int4)
+STRICT:::CAST(1.9 AS int4)
+PERMISSIVE:::CAST(1.9 AS integer8)
+STRICT:::CAST(1.9 AS integer8)
+PERMISSIVE:::CAST(1.9 AS int8)
+STRICT:::CAST(1.9 AS int8)
+PERMISSIVE:::CAST(1.9 AS bigint)
+STRICT:::CAST(1.9 AS bigint)
+PERMISSIVE:::CAST(-20.9 AS int)
+STRICT:::CAST(-20.9 AS int)
+PERMISSIVE:::CAST(-20.9 AS smallint)
+STRICT:::CAST(-20.9 AS smallint)
+PERMISSIVE:::CAST(-20.9 AS integer2)
+STRICT:::CAST(-20.9 AS integer2)
+PERMISSIVE:::CAST(-20.9 AS int2)
+STRICT:::CAST(-20.9 AS int2)
+PERMISSIVE:::CAST(-20.9 AS integer)
+STRICT:::CAST(-20.9 AS integer)
+PERMISSIVE:::CAST(-20.9 AS integer4)
+STRICT:::CAST(-20.9 AS integer4)
+PERMISSIVE:::CAST(-20.9 AS int4)
+STRICT:::CAST(-20.9 AS int4)
+PERMISSIVE:::CAST(-20.9 AS integer8)
+STRICT:::CAST(-20.9 AS integer8)
+PERMISSIVE:::CAST(-20.9 AS int8)
+STRICT:::CAST(-20.9 AS int8)
+PERMISSIVE:::CAST(-20.9 AS bigint)
+STRICT:::CAST(-20.9 AS bigint)
+PERMISSIVE:::CAST(1.5 AS int)
+STRICT:::CAST(1.5 AS int)
+PERMISSIVE:::CAST(1.5 AS smallint)
+STRICT:::CAST(1.5 AS smallint)
+PERMISSIVE:::CAST(1.5 AS integer2)
+STRICT:::CAST(1.5 AS integer2)
+PERMISSIVE:::CAST(1.5 AS int2)
+STRICT:::CAST(1.5 AS int2)
+PERMISSIVE:::CAST(1.5 AS integer)
+STRICT:::CAST(1.5 AS integer)
+PERMISSIVE:::CAST(1.5 AS integer4)
+STRICT:::CAST(1.5 AS integer4)
+PERMISSIVE:::CAST(1.5 AS int4)
+STRICT:::CAST(1.5 AS int4)
+PERMISSIVE:::CAST(1.5 AS integer8)
+STRICT:::CAST(1.5 AS integer8)
+PERMISSIVE:::CAST(1.5 AS int8)
+STRICT:::CAST(1.5 AS int8)
+PERMISSIVE:::CAST(1.5 AS bigint)
+STRICT:::CAST(1.5 AS bigint)
+PERMISSIVE:::CAST(1.5 AS SMALLINT)
+STRICT:::CAST(1.5 AS SMALLINT)
+PERMISSIVE:::CAST(1.5 AS INT2)
+STRICT:::CAST(1.5 AS INT2)
+PERMISSIVE:::CAST(1.5 AS INTEGER2)
+STRICT:::CAST(1.5 AS INTEGER2)
+PERMISSIVE:::CAST(32767.5 AS SMALLINT)
+STRICT:::CAST(32767.5 AS SMALLINT)
+PERMISSIVE:::CAST(32767.5 AS INT2)
+STRICT:::CAST(32767.5 AS INT2)
+PERMISSIVE:::CAST(32767.5 AS INTEGER2)
+STRICT:::CAST(32767.5 AS INTEGER2)
+PERMISSIVE:::CAST(32767.8 AS SMALLINT)
+STRICT:::CAST(32767.8 AS SMALLINT)
+PERMISSIVE:::CAST(32767.8 AS INT2)
+STRICT:::CAST(32767.8 AS INT2)
+PERMISSIVE:::CAST(32767.8 AS INTEGER2)
+STRICT:::CAST(32767.8 AS INTEGER2)
+PERMISSIVE:::CAST(-32768.9 AS SMALLINT)
+STRICT:::CAST(-32768.9 AS SMALLINT)
+PERMISSIVE:::CAST(-32768.9 AS INT2)
+STRICT:::CAST(-32768.9 AS INT2)
+PERMISSIVE:::CAST(-32768.9 AS INTEGER2)
+STRICT:::CAST(-32768.9 AS INTEGER2)
+PERMISSIVE:::CAST(1.5 AS INT4)
+STRICT:::CAST(1.5 AS INT4)
+PERMISSIVE:::CAST(1.5 AS INTEGER4)
+STRICT:::CAST(1.5 AS INTEGER4)
+PERMISSIVE:::CAST(1.5 AS INT)
+STRICT:::CAST(1.5 AS INT)
+PERMISSIVE:::CAST(2147483647.5 AS INT4)
+STRICT:::CAST(2147483647.5 AS INT4)
+PERMISSIVE:::CAST(2147483647.5 AS INTEGER4)
+STRICT:::CAST(2147483647.5 AS INTEGER4)
+PERMISSIVE:::CAST(2147483647.5 AS INT)
+STRICT:::CAST(2147483647.5 AS INT)
+PERMISSIVE:::CAST(2147483647.8 AS INT4)
+STRICT:::CAST(2147483647.8 AS INT4)
+PERMISSIVE:::CAST(2147483647.8 AS INTEGER4)
+STRICT:::CAST(2147483647.8 AS INTEGER4)
+PERMISSIVE:::CAST(2147483647.8 AS INT)
+STRICT:::CAST(2147483647.8 AS INT)
+PERMISSIVE:::CAST(-2147483648.9 AS INT4)
+STRICT:::CAST(-2147483648.9 AS INT4)
+PERMISSIVE:::CAST(-2147483648.9 AS INTEGER4)
+STRICT:::CAST(-2147483648.9 AS INTEGER4)
+PERMISSIVE:::CAST(-2147483648.9 AS INT)
+STRICT:::CAST(-2147483648.9 AS INT)
+PERMISSIVE:::CAST(9223372036854775807.5 AS BIGINT)
+STRICT:::CAST(9223372036854775807.5 AS BIGINT)
+PERMISSIVE:::CAST(9223372036854775807.8 AS BIGINT)
+STRICT:::CAST(9223372036854775807.8 AS BIGINT)
+PERMISSIVE:::CAST(9223372036854775808 AS BIGINT)
+PERMISSIVE:::CAST(1234 AS dec(3))
+STRICT:::CAST(1234 AS dec(3))
+PERMISSIVE:::CAST(1234 AS decimal(3))
+STRICT:::CAST(1234 AS decimal(3))
+PERMISSIVE:::CAST(1234 AS numeric(3))
+STRICT:::CAST(1234 AS numeric(3))
+PERMISSIVE:::CAST(123.45 AS dec(3))
+STRICT:::CAST(123.45 AS dec(3))
+PERMISSIVE:::CAST(123.45 AS decimal(3))
+STRICT:::CAST(123.45 AS decimal(3))
+PERMISSIVE:::CAST(123.45 AS numeric(3))
+STRICT:::CAST(123.45 AS numeric(3))
+PERMISSIVE:::CAST('1234' AS dec(3))
+STRICT:::CAST('1234' AS dec(3))
+PERMISSIVE:::CAST('1234' AS decimal(3))
+STRICT:::CAST('1234' AS decimal(3))
+PERMISSIVE:::CAST('1234' AS numeric(3))
+STRICT:::CAST('1234' AS numeric(3))
+PERMISSIVE:::CAST('123.45' AS dec(3))
+STRICT:::CAST('123.45' AS dec(3))
+PERMISSIVE:::CAST('123.45' AS decimal(3))
+STRICT:::CAST('123.45' AS decimal(3))
+PERMISSIVE:::CAST('123.45' AS numeric(3))
+STRICT:::CAST('123.45' AS numeric(3))
+PERMISSIVE:::CAST(1234 AS dec(5, 2))
+STRICT:::CAST(1234 AS dec(5, 2))
+PERMISSIVE:::CAST(1234 AS decimal(5, 2))
+STRICT:::CAST(1234 AS decimal(5, 2))
+PERMISSIVE:::CAST(1234 AS numeric(5, 2))
+STRICT:::CAST(1234 AS numeric(5, 2))
+PERMISSIVE:::CAST(123.459 AS dec(5, 2))
+STRICT:::CAST(123.459 AS dec(5, 2))
+PERMISSIVE:::CAST(123.459 AS decimal(5, 2))
+STRICT:::CAST(123.459 AS decimal(5, 2))
+PERMISSIVE:::CAST(123.459 AS numeric(5, 2))
+STRICT:::CAST(123.459 AS numeric(5, 2))
+PERMISSIVE:::CAST('1234' AS dec(5, 2))
+STRICT:::CAST('1234' AS dec(5, 2))
+PERMISSIVE:::CAST('1234' AS decimal(5, 2))
+STRICT:::CAST('1234' AS decimal(5, 2))
+PERMISSIVE:::CAST('1234' AS numeric(5, 2))
+STRICT:::CAST('1234' AS numeric(5, 2))
+PERMISSIVE:::CAST('123.459' AS dec(5, 2))
+STRICT:::CAST('123.459' AS dec(5, 2))
+PERMISSIVE:::CAST('123.459' AS decimal(5, 2))
+STRICT:::CAST('123.459' AS decimal(5, 2))
+PERMISSIVE:::CAST('123.459' AS numeric(5, 2))
+STRICT:::CAST('123.459' AS numeric(5, 2))
+PERMISSIVE:::CAST(0.12345 AS dec(4,4))
+STRICT:::CAST(0.12345 AS dec(4,4))
+PERMISSIVE:::CAST(0.12345 AS decimal(4,4))
+STRICT:::CAST(0.12345 AS decimal(4,4))
+PERMISSIVE:::CAST(0.12345 AS numeric(4,4))
+STRICT:::CAST(0.12345 AS numeric(4,4))
+PERMISSIVE:::CAST(1 AS dec(2,4))
+STRICT:::CAST(1 AS dec(2,4))
+PERMISSIVE:::CAST(1 AS decimal(2,4))
+STRICT:::CAST(1 AS decimal(2,4))
+PERMISSIVE:::CAST(1 AS numeric(2,4))
+STRICT:::CAST(1 AS numeric(2,4))
+PERMISSIVE:::CAST(1 AS dec(0,0))
+STRICT:::CAST(1 AS dec(0,0))
+PERMISSIVE:::CAST(1 AS decimal(0,0))
+STRICT:::CAST(1 AS decimal(0,0))
+PERMISSIVE:::CAST(1 AS numeric(0,0))
+STRICT:::CAST(1 AS numeric(0,0))
+PERMISSIVE:::CAST('a' AS VARCHAR(4))
+STRICT:::CAST('a' AS VARCHAR(4))
+PERMISSIVE:::CAST('a' AS CHARACTER VARYING(4))
+STRICT:::CAST('a' AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST('a    ' AS VARCHAR(4))
+STRICT:::CAST('a    ' AS VARCHAR(4))
+PERMISSIVE:::CAST('a    ' AS CHARACTER VARYING(4))
+STRICT:::CAST('a    ' AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST('abcde' AS VARCHAR(4))
+STRICT:::CAST('abcde' AS VARCHAR(4))
+PERMISSIVE:::CAST('abcde' AS CHARACTER VARYING(4))
+STRICT:::CAST('abcde' AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST('💩💩💩💩💩' AS VARCHAR(4))
+STRICT:::CAST('💩💩💩💩💩' AS VARCHAR(4))
+PERMISSIVE:::CAST('💩💩💩💩💩' AS CHARACTER VARYING(4))
+STRICT:::CAST('💩💩💩💩💩' AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(TRUE AND FALSE AS VARCHAR(4))
+STRICT:::CAST(TRUE AND FALSE AS VARCHAR(4))
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHARACTER VARYING(4))
+STRICT:::CAST(TRUE AND FALSE AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(`true` AS VARCHAR(4))
+STRICT:::CAST(`true` AS VARCHAR(4))
+PERMISSIVE:::CAST(`true` AS CHARACTER VARYING(4))
+STRICT:::CAST(`true` AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(5 AS VARCHAR(4))
+STRICT:::CAST(5 AS VARCHAR(4))
+PERMISSIVE:::CAST(5 AS CHARACTER VARYING(4))
+STRICT:::CAST(5 AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(`0e0` AS VARCHAR(4))
+STRICT:::CAST(`0e0` AS VARCHAR(4))
+PERMISSIVE:::CAST(`0e0` AS CHARACTER VARYING(4))
+STRICT:::CAST(`0e0` AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(1.1 AS VARCHAR(4))
+STRICT:::CAST(1.1 AS VARCHAR(4))
+PERMISSIVE:::CAST(1.1 AS CHARACTER VARYING(4))
+STRICT:::CAST(1.1 AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST(-20.1 AS VARCHAR(4))
+STRICT:::CAST(-20.1 AS VARCHAR(4))
+PERMISSIVE:::CAST(-20.1 AS CHARACTER VARYING(4))
+STRICT:::CAST(-20.1 AS CHARACTER VARYING(4))
+PERMISSIVE:::CAST('a' AS CHAR(4))
+STRICT:::CAST('a' AS CHAR(4))
+PERMISSIVE:::CAST('a' AS CHARACTER(4))
+STRICT:::CAST('a' AS CHARACTER(4))
+PERMISSIVE:::CAST('abcde' AS CHAR(4))
+STRICT:::CAST('abcde' AS CHAR(4))
+PERMISSIVE:::CAST('abcde' AS CHARACTER(4))
+STRICT:::CAST('abcde' AS CHARACTER(4))
+PERMISSIVE:::CAST('💩💩💩💩💩' AS CHAR(4))
+STRICT:::CAST('💩💩💩💩💩' AS CHAR(4))
+PERMISSIVE:::CAST('💩💩💩💩💩' AS CHARACTER(4))
+STRICT:::CAST('💩💩💩💩💩' AS CHARACTER(4))
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHAR(4))
+STRICT:::CAST(TRUE AND FALSE AS CHAR(4))
+PERMISSIVE:::CAST(TRUE AND FALSE AS CHARACTER(4))
+STRICT:::CAST(TRUE AND FALSE AS CHARACTER(4))
+PERMISSIVE:::CAST(`true` AS CHAR(4))
+STRICT:::CAST(`true` AS CHAR(4))
+PERMISSIVE:::CAST(`true` AS CHARACTER(4))
+STRICT:::CAST(`true` AS CHARACTER(4))
+PERMISSIVE:::CAST(5 AS CHAR(4))
+STRICT:::CAST(5 AS CHAR(4))
+PERMISSIVE:::CAST(5 AS CHARACTER(4))
+STRICT:::CAST(5 AS CHARACTER(4))
+PERMISSIVE:::CAST(`0e0` AS CHAR(4))
+STRICT:::CAST(`0e0` AS CHAR(4))
+PERMISSIVE:::CAST(`0e0` AS CHARACTER(4))
+STRICT:::CAST(`0e0` AS CHARACTER(4))
+PERMISSIVE:::CAST(1.1 AS CHAR(4))
+STRICT:::CAST(1.1 AS CHAR(4))
+PERMISSIVE:::CAST(1.1 AS CHARACTER(4))
+STRICT:::CAST(1.1 AS CHARACTER(4))
+PERMISSIVE:::CAST(-20.1 AS CHAR(4))
+STRICT:::CAST(-20.1 AS CHAR(4))
+PERMISSIVE:::CAST(-20.1 AS CHARACTER(4))
+STRICT:::CAST(-20.1 AS CHARACTER(4))
+PERMISSIVE:::CAST(`+inf` AS smallint)
+STRICT:::CAST(`+inf` AS smallint)
+PERMISSIVE:::CAST(`+inf` AS integer2)
+STRICT:::CAST(`+inf` AS integer2)
+PERMISSIVE:::CAST(`+inf` AS int2)
+STRICT:::CAST(`+inf` AS int2)
+PERMISSIVE:::CAST(`-inf` AS smallint)
+STRICT:::CAST(`-inf` AS smallint)
+PERMISSIVE:::CAST(`-inf` AS integer2)
+STRICT:::CAST(`-inf` AS integer2)
+PERMISSIVE:::CAST(`-inf` AS int2)
+STRICT:::CAST(`-inf` AS int2)
+PERMISSIVE:::CAST(`nan` AS int)
+STRICT:::CAST(`nan` AS int)
+PERMISSIVE:::CAST(`nan` AS smallint)
+STRICT:::CAST(`nan` AS smallint)
+PERMISSIVE:::CAST(`nan` AS integer2)
+STRICT:::CAST(`nan` AS integer2)
+PERMISSIVE:::CAST(`nan` AS int2)
+STRICT:::CAST(`nan` AS int2)
+PERMISSIVE:::CAST(`nan` AS integer)
+STRICT:::CAST(`nan` AS integer)
+PERMISSIVE:::CAST(`nan` AS integer4)
+STRICT:::CAST(`nan` AS integer4)
+PERMISSIVE:::CAST(`nan` AS int4)
+STRICT:::CAST(`nan` AS int4)
+PERMISSIVE:::CAST(`nan` AS integer8)
+STRICT:::CAST(`nan` AS integer8)
+PERMISSIVE:::CAST(`nan` AS int8)
+STRICT:::CAST(`nan` AS int8)
+PERMISSIVE:::CAST(`nan` AS bigint)
+STRICT:::CAST(`nan` AS bigint)
+PERMISSIVE:::CAST(`+inf` AS real)
+STRICT:::CAST(`+inf` AS real)
+PERMISSIVE:::CAST(`-inf` AS real)
+STRICT:::CAST(`-inf` AS real)
+PERMISSIVE:::CAST(`+inf` AS VARCHAR(20))
+STRICT:::CAST(`+inf` AS VARCHAR(20))
+PERMISSIVE:::CAST(`+inf` AS CHARACTER VARYING(20))
+STRICT:::CAST(`+inf` AS CHARACTER VARYING(20))
+PERMISSIVE:::CAST(`-inf` AS VARCHAR(20))
+STRICT:::CAST(`-inf` AS VARCHAR(20))
+PERMISSIVE:::CAST(`-inf` AS CHARACTER VARYING(20))
+STRICT:::CAST(`-inf` AS CHARACTER VARYING(20))
+PERMISSIVE:::CAST(`nan` AS VARCHAR(20))
+STRICT:::CAST(`nan` AS VARCHAR(20))
+PERMISSIVE:::CAST(`nan` AS CHARACTER VARYING(20))
+STRICT:::CAST(`nan` AS CHARACTER VARYING(20))
+STRICT:::CAST(`+inf` AS date)
+STRICT:::CAST(`+inf` AS timestamp)
+STRICT:::CAST(`+inf` AS time)
+STRICT:::CAST(`+inf` AS clob)
+STRICT:::CAST(`+inf` AS blob)
+STRICT:::CAST(`+inf` AS list)
+STRICT:::CAST(`+inf` AS sexp)
+STRICT:::CAST(`+inf` AS struct)
+STRICT:::CAST(`+inf` AS tuple)
+STRICT:::CAST(`+inf` AS bag)
+STRICT:::CAST(`-inf` AS date)
+STRICT:::CAST(`-inf` AS timestamp)
+STRICT:::CAST(`-inf` AS time)
+STRICT:::CAST(`-inf` AS clob)
+STRICT:::CAST(`-inf` AS blob)
+STRICT:::CAST(`-inf` AS list)
+STRICT:::CAST(`-inf` AS sexp)
+STRICT:::CAST(`-inf` AS struct)
+STRICT:::CAST(`-inf` AS tuple)
+STRICT:::CAST(`-inf` AS bag)
+STRICT:::CAST(`nan` AS date)
+STRICT:::CAST(`nan` AS timestamp)
+STRICT:::CAST(`nan` AS time)
+STRICT:::CAST(`nan` AS clob)
+STRICT:::CAST(`nan` AS blob)
+STRICT:::CAST(`nan` AS list)
+STRICT:::CAST(`nan` AS sexp)
+STRICT:::CAST(`nan` AS struct)
+STRICT:::CAST(`nan` AS tuple)
+STRICT:::CAST(`nan` AS bag)
+PERMISSIVE:::CAST(TRUE AND FALSE AS ANY)
+STRICT:::CAST(TRUE AND FALSE AS ANY)
+PERMISSIVE:::CAST(`true` AS ANY)
+STRICT:::CAST(`true` AS ANY)
+PERMISSIVE:::CAST(5 AS ANY)
+STRICT:::CAST(5 AS ANY)
+PERMISSIVE:::CAST(`0e0` AS ANY)
+STRICT:::CAST(`0e0` AS ANY)
+PERMISSIVE:::CAST(1.1 AS ANY)
+STRICT:::CAST(1.1 AS ANY)
+PERMISSIVE:::CAST(`2007-10-10T` AS ANY)
+STRICT:::CAST(`2007-10-10T` AS ANY)
+PERMISSIVE:::CAST('hello' AS ANY)
+STRICT:::CAST('hello' AS ANY)
+PERMISSIVE:::CAST('TrUe' AS ANY)
+STRICT:::CAST('TrUe' AS ANY)
+PERMISSIVE:::CAST(`"FALSE"` AS ANY)
+STRICT:::CAST(`"FALSE"` AS ANY)
+PERMISSIVE:::CAST(`'true'` AS ANY)
+STRICT:::CAST(`'true'` AS ANY)
+PERMISSIVE:::CAST(`{{""}}` AS ANY)
+STRICT:::CAST(`{{""}}` AS ANY)
+PERMISSIVE:::CAST(`{{"goodbye"}}` AS ANY)
+STRICT:::CAST(`{{"goodbye"}}` AS ANY)
+PERMISSIVE:::CAST(`{{"false"}}` AS ANY)
+STRICT:::CAST(`{{"false"}}` AS ANY)
+PERMISSIVE:::CAST(`{{"true"}}` AS ANY)
+STRICT:::CAST(`{{"true"}}` AS ANY)
+PERMISSIVE:::CAST(`{{}}` AS ANY)
+STRICT:::CAST(`{{}}` AS ANY)
+PERMISSIVE:::CAST(`{{Z29vZGJ5ZQ==}}` AS ANY)
+STRICT:::CAST(`{{Z29vZGJ5ZQ==}}` AS ANY)
+PERMISSIVE:::CAST(`{{ZmFsc2U=}}` AS ANY)
+STRICT:::CAST(`{{ZmFsc2U=}}` AS ANY)
+PERMISSIVE:::CAST(`{{dHJ1ZQ==}}` AS ANY)
+STRICT:::CAST(`{{dHJ1ZQ==}}` AS ANY)
+PERMISSIVE:::CAST(`[]` AS ANY)
+STRICT:::CAST(`[]` AS ANY)
+PERMISSIVE:::CAST(`[true]` AS ANY)
+STRICT:::CAST(`[true]` AS ANY)
+PERMISSIVE:::CAST(`[false]` AS ANY)
+STRICT:::CAST(`[false]` AS ANY)
+PERMISSIVE:::CAST(`[true, false]` AS ANY)
+STRICT:::CAST(`[true, false]` AS ANY)
+PERMISSIVE:::CAST(`()` AS ANY)
+STRICT:::CAST(`()` AS ANY)
+PERMISSIVE:::CAST(`(true)` AS ANY)
+STRICT:::CAST(`(true)` AS ANY)
+PERMISSIVE:::CAST(`(false)` AS ANY)
+STRICT:::CAST(`(false)` AS ANY)
+PERMISSIVE:::CAST(`{}` AS ANY)
+STRICT:::CAST(`{}` AS ANY)
+PERMISSIVE:::CAST({} AS ANY)
+STRICT:::CAST({} AS ANY)
+PERMISSIVE:::CAST(`{a:true}` AS ANY)
+STRICT:::CAST(`{a:true}` AS ANY)
+PERMISSIVE:::CAST({'b':true} AS ANY)
+STRICT:::CAST({'b':true} AS ANY)
+PERMISSIVE:::CAST(<<>> AS ANY)
+STRICT:::CAST(<<>> AS ANY)
+PERMISSIVE:::CAST(<<true>> AS ANY)
+STRICT:::CAST(<<true>> AS ANY)
+PERMISSIVE:::CAST(<<false>> AS ANY)
+STRICT:::CAST(<<false>> AS ANY)
+PERMISSIVE:::CAST( 5  AS ANY)
+STRICT:::CAST( 5  AS ANY)
+PERMISSIVE:::CAST(-20.1 AS ANY)
+STRICT:::CAST(-20.1 AS ANY)
+PERMISSIVE:::CAST('1234A' AS ANY)
+STRICT:::CAST('1234A' AS ANY)
+PERMISSIVE:::CAST('20' AS ANY)
+STRICT:::CAST('20' AS ANY)
+PERMISSIVE:::CAST('020' AS ANY)
+STRICT:::CAST('020' AS ANY)
+PERMISSIVE:::CAST('+20' AS ANY)
+STRICT:::CAST('+20' AS ANY)
+PERMISSIVE:::CAST('+020' AS ANY)
+STRICT:::CAST('+020' AS ANY)
+PERMISSIVE:::CAST('-20' AS ANY)
+STRICT:::CAST('-20' AS ANY)
+PERMISSIVE:::CAST('-020' AS ANY)
+STRICT:::CAST('-020' AS ANY)
+PERMISSIVE:::CAST('0' AS ANY)
+STRICT:::CAST('0' AS ANY)
+PERMISSIVE:::CAST('00' AS ANY)
+STRICT:::CAST('00' AS ANY)
+PERMISSIVE:::CAST('+0' AS ANY)
+STRICT:::CAST('+0' AS ANY)
+PERMISSIVE:::CAST('+00' AS ANY)
+STRICT:::CAST('+00' AS ANY)
+PERMISSIVE:::CAST('-0' AS ANY)
+STRICT:::CAST('-0' AS ANY)
+PERMISSIVE:::CAST('-00' AS ANY)
+STRICT:::CAST('-00' AS ANY)
+PERMISSIVE:::CAST('0xA' AS ANY)
+STRICT:::CAST('0xA' AS ANY)
+PERMISSIVE:::CAST('0XA' AS ANY)
+STRICT:::CAST('0XA' AS ANY)
+PERMISSIVE:::CAST('0x0A' AS ANY)
+STRICT:::CAST('0x0A' AS ANY)
+PERMISSIVE:::CAST('+0xA' AS ANY)
+STRICT:::CAST('+0xA' AS ANY)
+PERMISSIVE:::CAST('+0x0A' AS ANY)
+STRICT:::CAST('+0x0A' AS ANY)
+PERMISSIVE:::CAST('-0xA' AS ANY)
+STRICT:::CAST('-0xA' AS ANY)
+PERMISSIVE:::CAST('-0x0A' AS ANY)
+STRICT:::CAST('-0x0A' AS ANY)
+PERMISSIVE:::CAST('0b10' AS ANY)
+STRICT:::CAST('0b10' AS ANY)
+PERMISSIVE:::CAST('0B10' AS ANY)
+STRICT:::CAST('0B10' AS ANY)
+PERMISSIVE:::CAST('0b010' AS ANY)
+STRICT:::CAST('0b010' AS ANY)
+PERMISSIVE:::CAST('+0b10' AS ANY)
+STRICT:::CAST('+0b10' AS ANY)
+PERMISSIVE:::CAST('+0b010' AS ANY)
+STRICT:::CAST('+0b010' AS ANY)
+PERMISSIVE:::CAST('-0b10' AS ANY)
+STRICT:::CAST('-0b10' AS ANY)
+PERMISSIVE:::CAST('-0b010' AS ANY)
+STRICT:::CAST('-0b010' AS ANY)
+PERMISSIVE:::CAST(`"1000"` AS ANY)
+STRICT:::CAST(`"1000"` AS ANY)
+PERMISSIVE:::CAST(`'2e100'` AS ANY)
+STRICT:::CAST(`'2e100'` AS ANY)
+PERMISSIVE:::CAST(`'2d100'` AS ANY)
+STRICT:::CAST(`'2d100'` AS ANY)
+PERMISSIVE:::CAST('00xA' AS ANY)
+STRICT:::CAST('00xA' AS ANY)
+PERMISSIVE:::CAST('00b10' AS ANY)
+STRICT:::CAST('00b10' AS ANY)
+PERMISSIVE:::CAST(`{{"0"}}` AS ANY)
+STRICT:::CAST(`{{"0"}}` AS ANY)
+PERMISSIVE:::CAST(`{{"1.0"}}` AS ANY)
+STRICT:::CAST(`{{"1.0"}}` AS ANY)
+PERMISSIVE:::CAST(`{{"2e10"}}` AS ANY)
+STRICT:::CAST(`{{"2e10"}}` AS ANY)
+PERMISSIVE:::CAST(`{{MA==}}` AS ANY)
+STRICT:::CAST(`{{MA==}}` AS ANY)
+PERMISSIVE:::CAST(`{{MS4w}}` AS ANY)
+STRICT:::CAST(`{{MS4w}}` AS ANY)
+PERMISSIVE:::CAST(`{{MmUxMA==}}` AS ANY)
+STRICT:::CAST(`{{MmUxMA==}}` AS ANY)
+PERMISSIVE:::CAST(`[1]` AS ANY)
+STRICT:::CAST(`[1]` AS ANY)
+PERMISSIVE:::CAST(`[-2, 0]` AS ANY)
+STRICT:::CAST(`[-2, 0]` AS ANY)
+PERMISSIVE:::CAST(`(1)` AS ANY)
+STRICT:::CAST(`(1)` AS ANY)
+PERMISSIVE:::CAST(`(0)` AS ANY)
+STRICT:::CAST(`(0)` AS ANY)
+PERMISSIVE:::CAST(`{a:12}` AS ANY)
+STRICT:::CAST(`{a:12}` AS ANY)
+PERMISSIVE:::CAST({'b':-4} AS ANY)
+STRICT:::CAST({'b':-4} AS ANY)
+PERMISSIVE:::CAST(<<14>> AS ANY)
+STRICT:::CAST(<<14>> AS ANY)
+PERMISSIVE:::CAST(<<20>> AS ANY)
+STRICT:::CAST(<<20>> AS ANY)
+PERMISSIVE:::CAST(`[1e0]` AS ANY)
+STRICT:::CAST(`[1e0]` AS ANY)
+PERMISSIVE:::CAST(`[-2e0, 0e0]` AS ANY)
+STRICT:::CAST(`[-2e0, 0e0]` AS ANY)
+PERMISSIVE:::CAST(`(1e0)` AS ANY)
+STRICT:::CAST(`(1e0)` AS ANY)
+PERMISSIVE:::CAST(`(0e0)` AS ANY)
+STRICT:::CAST(`(0e0)` AS ANY)
+PERMISSIVE:::CAST(`{a:12e0}` AS ANY)
+STRICT:::CAST(`{a:12e0}` AS ANY)
+PERMISSIVE:::CAST({'b':`-4e0`} AS ANY)
+STRICT:::CAST({'b':`-4e0`} AS ANY)
+PERMISSIVE:::CAST(<<`14e0`>> AS ANY)
+STRICT:::CAST(<<`14e0`>> AS ANY)
+PERMISSIVE:::CAST(<<`20e0`>> AS ANY)
+STRICT:::CAST(<<`20e0`>> AS ANY)
+PERMISSIVE:::CAST(5  AS ANY)
+STRICT:::CAST(5  AS ANY)
+PERMISSIVE:::CAST(`1e0` AS ANY)
+STRICT:::CAST(`1e0` AS ANY)
+PERMISSIVE:::CAST(`[1d0]` AS ANY)
+STRICT:::CAST(`[1d0]` AS ANY)
+PERMISSIVE:::CAST(`[-2d0, 0d0]` AS ANY)
+STRICT:::CAST(`[-2d0, 0d0]` AS ANY)
+PERMISSIVE:::CAST(`(1d0)` AS ANY)
+STRICT:::CAST(`(1d0)` AS ANY)
+PERMISSIVE:::CAST(`(0d0)` AS ANY)
+STRICT:::CAST(`(0d0)` AS ANY)
+PERMISSIVE:::CAST(`{a:12d0}` AS ANY)
+STRICT:::CAST(`{a:12d0}` AS ANY)
+PERMISSIVE:::CAST({'b':`-4d0`} AS ANY)
+STRICT:::CAST({'b':`-4d0`} AS ANY)
+PERMISSIVE:::CAST(<<`14d0`>> AS ANY)
+STRICT:::CAST(<<`14d0`>> AS ANY)
+PERMISSIVE:::CAST(<<`20d0`>> AS ANY)
+STRICT:::CAST(<<`20d0`>> AS ANY)
+PERMISSIVE:::CAST(`2007-02-23T12:14Z` AS ANY)
+STRICT:::CAST(`2007-02-23T12:14Z` AS ANY)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079Z` AS ANY)
+STRICT:::CAST(`2007-02-23T12:14:33.079Z` AS ANY)
+PERMISSIVE:::CAST(`2007-02-23T12:14:33.079-08:00` AS ANY)
+STRICT:::CAST(`2007-02-23T12:14:33.079-08:00` AS ANY)
+PERMISSIVE:::CAST(`2007-02T` AS ANY)
+STRICT:::CAST(`2007-02T` AS ANY)
+PERMISSIVE:::CAST(`2007T` AS ANY)
+STRICT:::CAST(`2007T` AS ANY)
+PERMISSIVE:::CAST('2016-03-01T01:12:12Z' AS ANY)
+STRICT:::CAST('2016-03-01T01:12:12Z' AS ANY)
+PERMISSIVE:::CAST(`"2001-01-01"` AS ANY)
+STRICT:::CAST(`"2001-01-01"` AS ANY)
+PERMISSIVE:::CAST(`"+20212-02-01"` AS ANY)
+STRICT:::CAST(`"+20212-02-01"` AS ANY)
+PERMISSIVE:::CAST(`"20212-02-01"` AS ANY)
+STRICT:::CAST(`"20212-02-01"` AS ANY)
+PERMISSIVE:::CAST(`'2000T'` AS ANY)
+STRICT:::CAST(`'2000T'` AS ANY)
+PERMISSIVE:::CAST(`'1999-04T'` AS ANY)
+STRICT:::CAST(`'1999-04T'` AS ANY)
+PERMISSIVE:::CAST(`"23:2:12.12345"` AS ANY)
+STRICT:::CAST(`"23:2:12.12345"` AS ANY)
+PERMISSIVE:::CAST(['hello'] AS ANY)
+STRICT:::CAST(['hello'] AS ANY)
+PERMISSIVE:::CAST(<<'a', <<'hello'>>>> AS ANY)
+STRICT:::CAST(<<'a', <<'hello'>>>> AS ANY)
+PERMISSIVE:::CAST(`+inf` AS ANY)
+STRICT:::CAST(`+inf` AS ANY)
+PERMISSIVE:::CAST(`-inf` AS ANY)
+STRICT:::CAST(`-inf` AS ANY)
+PERMISSIVE:::CAST(`nan` AS ANY)
+STRICT:::CAST(`nan` AS ANY)
+PERMISSIVE:::CAST(1.9 AS ANY)
+STRICT:::CAST(1.9 AS ANY)
+PERMISSIVE:::CAST(-20.9 AS ANY)
+STRICT:::CAST(-20.9 AS ANY)
+PERMISSIVE:::CAST(1.5 AS ANY)
+STRICT:::CAST(1.5 AS ANY)
+PERMISSIVE:::CAST(2.5 AS ANY)
+STRICT:::CAST(2.5 AS ANY)
+PERMISSIVE:::CAST(32768 AS ANY)
+STRICT:::CAST(32768 AS ANY)
+PERMISSIVE:::CAST(-32769 AS ANY)
+STRICT:::CAST(-32769 AS ANY)
+PERMISSIVE:::CAST(32767.3 AS ANY)
+STRICT:::CAST(32767.3 AS ANY)
+PERMISSIVE:::CAST(32767.5 AS ANY)
+STRICT:::CAST(32767.5 AS ANY)
+PERMISSIVE:::CAST(32767.8 AS ANY)
+STRICT:::CAST(32767.8 AS ANY)
+PERMISSIVE:::CAST(-32768.3 AS ANY)
+STRICT:::CAST(-32768.3 AS ANY)
+PERMISSIVE:::CAST(-32768.5 AS ANY)
+STRICT:::CAST(-32768.5 AS ANY)
+PERMISSIVE:::CAST(-32768.9 AS ANY)
+STRICT:::CAST(-32768.9 AS ANY)
+PERMISSIVE:::CAST(2147483648 AS ANY)
+STRICT:::CAST(2147483648 AS ANY)
+PERMISSIVE:::CAST(-2147483649 AS ANY)
+STRICT:::CAST(-2147483649 AS ANY)
+PERMISSIVE:::CAST(2147483647.3 AS ANY)
+STRICT:::CAST(2147483647.3 AS ANY)
+PERMISSIVE:::CAST(2147483647.5 AS ANY)
+STRICT:::CAST(2147483647.5 AS ANY)
+PERMISSIVE:::CAST(2147483647.8 AS ANY)
+STRICT:::CAST(2147483647.8 AS ANY)
+PERMISSIVE:::CAST(-2147483648.3 AS ANY)
+STRICT:::CAST(-2147483648.3 AS ANY)
+PERMISSIVE:::CAST(-2147483648.5 AS ANY)
+STRICT:::CAST(-2147483648.5 AS ANY)
+PERMISSIVE:::CAST(-2147483648.9 AS ANY)
+STRICT:::CAST(-2147483648.9 AS ANY)
+PERMISSIVE:::CAST(9223372036854775807 AS ANY)
+STRICT:::CAST(9223372036854775807 AS ANY)
+PERMISSIVE:::CAST(9223372036854775807.3 AS ANY)
+STRICT:::CAST(9223372036854775807.3 AS ANY)
+PERMISSIVE:::CAST(9223372036854775807.5 AS ANY)
+STRICT:::CAST(9223372036854775807.5 AS ANY)
+PERMISSIVE:::CAST(9223372036854775807.8 AS ANY)
+STRICT:::CAST(9223372036854775807.8 AS ANY)
+PERMISSIVE:::CAST(1e2147483609 AS ANY)
+STRICT:::CAST(1e2147483609 AS ANY)
+PERMISSIVE:::CAST(12 AS ANY)
+STRICT:::CAST(12 AS ANY)
+PERMISSIVE:::CAST(123 AS ANY)
+STRICT:::CAST(123 AS ANY)
+PERMISSIVE:::CAST(1234 AS ANY)
+STRICT:::CAST(1234 AS ANY)
+PERMISSIVE:::CAST(123.45 AS ANY)
+STRICT:::CAST(123.45 AS ANY)
+PERMISSIVE:::CAST('12' AS ANY)
+STRICT:::CAST('12' AS ANY)
+PERMISSIVE:::CAST('123' AS ANY)
+STRICT:::CAST('123' AS ANY)
+PERMISSIVE:::CAST('1234' AS ANY)
+STRICT:::CAST('1234' AS ANY)
+PERMISSIVE:::CAST('123.45' AS ANY)
+STRICT:::CAST('123.45' AS ANY)
+PERMISSIVE:::CAST(123.459 AS ANY)
+STRICT:::CAST(123.459 AS ANY)
+PERMISSIVE:::CAST('123.459' AS ANY)
+STRICT:::CAST('123.459' AS ANY)
+PERMISSIVE:::CAST(0.1 AS ANY)
+STRICT:::CAST(0.1 AS ANY)
+PERMISSIVE:::CAST(0.1234 AS ANY)
+STRICT:::CAST(0.1234 AS ANY)
+PERMISSIVE:::CAST(0.12345 AS ANY)
+STRICT:::CAST(0.12345 AS ANY)
+PERMISSIVE:::CAST('a' AS ANY)
+STRICT:::CAST('a' AS ANY)
+PERMISSIVE:::CAST('a    ' AS ANY)
+STRICT:::CAST('a    ' AS ANY)
+PERMISSIVE:::CAST('abcde' AS ANY)
+STRICT:::CAST('abcde' AS ANY)
+PERMISSIVE:::CAST('💩💩💩💩💩' AS ANY)
+STRICT:::CAST('💩💩💩💩💩' AS ANY)
+PERMISSIVE:::select * from <<1>> limit -1
+STRICT:::select * from <<1>> limit -1
+PERMISSIVE:::select * from foo OFFSET -1
+STRICT:::select * from foo OFFSET -1
+PERMISSIVE:::select * from foo OFFSET 1 - 2
+STRICT:::select * from foo OFFSET 1 - 2
+PERMISSIVE:::select * from foo OFFSET 92233720368547758070
+STRICT:::select * from foo OFFSET 92233720368547758070
+PERMISSIVE:::SELECT * FROM A LET 1 AS X WHERE X = 1
+STRICT:::SELECT * FROM A LET 1 AS X WHERE X = 1
+PERMISSIVE:::SELECT X FROM A LET 1 AS X
+STRICT:::SELECT X FROM A LET 1 AS X
+PERMISSIVE:::SELECT * FROM C LET region AS X GROUP BY X
+STRICT:::SELECT * FROM C LET region AS X GROUP BY X
+PERMISSIVE:::SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo
+STRICT:::SELECT foo FROM B LET 100 AS foo GROUP BY B.id, foo
+PERMISSIVE:::SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo
+STRICT:::SELECT B.id FROM B LET 100 AS foo GROUP BY B.id, foo HAVING B.id > foo
+PERMISSIVE:::SELECT X FROM A LET 1 AS X, 2 AS X
+STRICT:::SELECT X FROM A LET 1 AS X, 2 AS X
+PERMISSIVE:::SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y
+STRICT:::SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y
+PERMISSIVE:::SELECT X FROM A LET 1 AS X, X AS X
+STRICT:::SELECT X FROM A LET 1 AS X, X AS X
+PERMISSIVE:::SELECT X FROM A LET upper('foo') AS X
+STRICT:::SELECT X FROM A LET upper('foo') AS X
+PERMISSIVE:::SELECT nameLength FROM C LET char_length(C.name) AS nameLength
+STRICT:::SELECT nameLength FROM C LET char_length(C.name) AS nameLength
+PERMISSIVE:::SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region
+STRICT:::SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region
+PERMISSIVE:::SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X
+STRICT:::SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X
+PERMISSIVE:::SELECT X FROM A LET 1 AS X, Y AS Z, 3 AS Y
+PERMISSIVE:::SELECT B.id FROM B LET 100 AS foo GROUP BY B.id HAVING B.id > foo
+PERMISSIVE:::SELECT foo FROM B LET 100 AS foo GROUP BY B.id
+PERMISSIVE:::DATE '2012-02-29' = CAST('2012-02-29' AS DATE)
+STRICT:::DATE '2012-02-29' = CAST('2012-02-29' AS DATE)
+PERMISSIVE:::CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'
+STRICT:::CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'
+PERMISSIVE:::CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'
+STRICT:::CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'
+PERMISSIVE:::TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'
+STRICT:::TIME '12:12:13' < TIME WITH TIME ZONE '12:12:12.123'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'
+STRICT:::TIME WITH TIME ZONE '12:12:13' < TIME '12:12:12.123'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'
+STRICT:::TIME WITH TIME ZONE '12:12:13-08:00' < TIME '12:12:12.123-08:00'
+PERMISSIVE:::TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'
+STRICT:::TIME WITH TIME ZONE '12:12:13' > DATE '2012-02-29'
+STRICT:::SELECT i.x + i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x + i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x + i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x + i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x + i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x + i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x - i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x - i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x - i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x - i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x - i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x - i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x * i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x * i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x * i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x * i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x * i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x * i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x / i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x / i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x / i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x / i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x / i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x / i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x % i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x % i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x % i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x % i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x % i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x % i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x > i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x > i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x > i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x > i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x > i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x > i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x >= i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x >= i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x >= i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x >= i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x >= i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x >= i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x < i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x < i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x < i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x < i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x < i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x < i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x <= i.y AS result FROM << {'x': 4} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'x': 4} >> AS i
+STRICT:::SELECT i.x <= i.y AS result FROM << {'y': 2} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'y': 2} >> AS i
+STRICT:::SELECT i.x <= i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x <= i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x <= i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x <= i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x AND i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x OR i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': null, 'y': false} >> AS i
+STRICT:::SELECT i.x AND i.y AS result FROM << {'x': null, 'y': false} >> AS i
+STRICT:::SELECT i.x AND i.y AS result FROM << {'x': true} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': true} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'x': true} >> AS i
+STRICT:::SELECT i.x OR i.y AS result FROM << {'x': true} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': false} >> AS i
+STRICT:::SELECT i.x AND i.y AS result FROM << {'x': false} >> AS i
+STRICT:::SELECT i.x OR i.y AS result FROM << {'x': false} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'x': false} >> AS i
+STRICT:::SELECT i.x AND i.y AS result FROM << {'y': true} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'y': true} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'y': true} >> AS i
+STRICT:::SELECT i.x OR i.y AS result FROM << {'y': true} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'y': false} >> AS i
+STRICT:::SELECT i.x AND i.y AS result FROM << {'y': false} >> AS i
+STRICT:::SELECT i.x OR i.y AS result FROM << {'y': false} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'y': false} >> AS i
+STRICT:::SELECT i.x AND i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x OR i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x AND i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x AND i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x OR i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x OR i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT NOT i.b AS result FROM << {  } >> AS i
+PERMISSIVE:::SELECT NOT i.b AS result FROM << {  } >> AS i
+STRICT:::SELECT i.x || i.y AS result FROM << {'x': 'a'} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'x': 'a'} >> AS i
+STRICT:::SELECT i.x || i.y AS result FROM << {'y': 'b'} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'y': 'b'} >> AS i
+STRICT:::SELECT i.x || i.y AS result FROM << {'x': null} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'x': null} >> AS i
+STRICT:::SELECT i.x || i.y AS result FROM << {'y': null} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {'y': null} >> AS i
+STRICT:::SELECT i.x || i.y AS result FROM << {} >> AS i
+PERMISSIVE:::SELECT i.x || i.y AS result FROM << {} >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': 1, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': 1, 'z': 3 } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': 3 } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': 1, 'z': MISSING } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': 3 } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': MISSING } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': MISSING } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': 3 } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': 3 } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': 3 } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': NULL, 'z': MISSING } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': 2, 'y': MISSING, 'z': NULL } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': MISSING, 'z': MISSING } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': NULL, 'z': MISSING } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': NULL, 'y': NULL, 'z': MISSING } >> AS i
+STRICT:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+PERMISSIVE:::SELECT i.x BETWEEN i.y AND i.z AS result FROM << { 'x': MISSING, 'y': MISSING, 'z': NULL } >> AS i
+STRICT:::SELECT +i.n AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT +i.n AS result FROM << { } >> AS i
+STRICT:::SELECT -i.n AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT -i.n AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, null, 2, 3] } >> AS i
+STRICT:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, null, 2, 3] } >> AS i
+STRICT:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, missing, 2, 3] } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': 4, 'y': [1, missing, 2, 3] } >> AS i
+STRICT:::SELECT i.x IN i.y AS result FROM << { 'x': 2 } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': 2 } >> AS i
+STRICT:::SELECT i.x IN i.y AS result FROM << { 'y': [1, 2, 3] } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'y': [1, 2, 3] } >> AS i
+STRICT:::SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': MISSING } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': NULL, 'y': MISSING } >> AS i
+STRICT:::SELECT i.x IN i.y AS result FROM << { 'x': MISSING, 'y': NULL } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { 'x': MISSING, 'y': NULL } >> AS i
+STRICT:::SELECT i.x IN i.y AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.x IN i.y AS result FROM << { } >> AS i
+STRICT:::SELECT i.x IN (1, 2, 3)  AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.x IN (1, 2, 3)  AS result FROM << { } >> AS i
+STRICT:::SELECT i.a LIKE 'a%' AS result FROM << {  } >> AS i
+PERMISSIVE:::SELECT i.a LIKE 'a%' AS result FROM << {  } >> AS i
+STRICT:::SELECT i.a LIKE i.b AS result FROM << { 'b': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'b': 'ab' } >> AS i
+STRICT:::SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'a': 'ab' } >> AS i
+STRICT:::SELECT i.a LIKE i.b AS result FROM << { 'a': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'a': NULL } >> AS i
+STRICT:::SELECT i.a LIKE i.b AS result FROM << { 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b AS result FROM << { 'b': NULL } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': 'ab', 'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': 'ab', 'c': 'n' } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab',  'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab',  'c': 'n' } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab', 'b': 'ab' } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': 'n' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': 'n' } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab' } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': 'ab' } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'c': NULL } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'b': NULL } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL, 'c': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'b': NULL, 'c': NULL } >> AS i
+STRICT:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'c': NULL } >> AS i
+PERMISSIVE:::SELECT i.a LIKE i.b ESCAPE i.c AS result FROM << { 'a': NULL, 'c': NULL } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': 3, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': missing } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': 2, 'y': null, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': missing } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': 3, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': missing } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': missing, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': missing } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': missing, 'y': null, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': 3, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': 4 } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': missing } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': missing, 'z': null } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': 4 } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': missing } >> AS i
+PERMISSIVE:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': null } >> AS i
+STRICT:::SELECT simple_sum(i.x, i.y, i.z) AS result FROM << { 'x': null, 'y': null, 'z': null } >> AS i
+PERMISSIVE:::SELECT * EXCLUDE t.a[1] FROM << {'a': <<0, 1, 2>>} >> AS t
+STRICT:::SELECT * EXCLUDE t.a[1] FROM << {'a': <<0, 1, 2>>} >> AS t
+PERMISSIVE:::SELECT * EXCLUDE t.a[*].bar, t.a.bar, t.a.*.bar FROM << {'a': [{'foo': 0, 'bar': 1, 'baz': 2}, {'foo': 3, 'bar': 4, 'baz': 5}]}, {'a': {'foo': 6, 'bar': 7, 'baz': 8}}, {'a': {'a1': {'foo': 9, 'bar': 10, 'baz': 11}, 'a2': {'foo': 12, 'bar': 13, 'baz': 14}}} >> AS t
+STRICT:::SELECT * EXCLUDE t.a[*].bar, t.a.bar, t.a.*.bar FROM << {'a': [{'foo': 0, 'bar': 1, 'baz': 2}, {'foo': 3, 'bar': 4, 'baz': 5}]}, {'a': {'foo': 6, 'bar': 7, 'baz': 8}}, {'a': {'a1': {'foo': 9, 'bar': 10, 'baz': 11}, 'a2': {'foo': 12, 'bar': 13, 'baz': 14}}} >> AS t

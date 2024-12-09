@@ -1,0 +1,49 @@
+// This is manually ported from org.partiql.lang.eval.IonAnnotationTests.
+{
+  name:"annotation-scalar",
+  statement:"`annotation::1`",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output: 1
+  }
+}
+{
+  name:"annotation-struct",
+  statement:"`annotation::{a: 1}`",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output: { a: 1 }
+  }
+}
+{
+  name:"annotation-sfw",
+  statement:"SELECT t.a FROM [{'a': `annotation::1`}] AS t",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output: $bag::[{a: 1}]
+  }
+}
+{
+  name:"annotation-addition",
+  statement:"`value_1::1` + `value_2::2`",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output: 3
+  }
+}

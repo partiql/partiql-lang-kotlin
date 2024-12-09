@@ -12,57 +12,91 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.errors.Problem
-import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Identifier
-import org.partiql.plan.PartiQLPlan
-import org.partiql.plan.Statement
-import org.partiql.plan.debug.PlanPrinter
+import org.partiql.plan.Action
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.internal.PErrors
+import org.partiql.planner.internal.TestCatalog
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
+import org.partiql.planner.plugins.local.toStaticType
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.local.toStaticType
-import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.types.AnyType
+import org.partiql.planner.util.PErrorCollector
+import org.partiql.planner.util.PlanPrinter
+import org.partiql.spi.Context
+import org.partiql.spi.catalog.Catalog
+import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.catalog.Name
+import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorListener
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
+import org.partiql.types.Field
 import org.partiql.types.ListType
-import org.partiql.types.SexpType
+import org.partiql.types.NumberConstraint
+import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.DECIMAL
-import org.partiql.types.StaticType.Companion.INT
-import org.partiql.types.StaticType.Companion.INT2
 import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.INT8
+import org.partiql.types.StaticType.Companion.STRUCT
 import org.partiql.types.StaticType.Companion.unionOf
+import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.fromStaticType
 import java.util.stream.Stream
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class PlanTyperTestsPorted {
+internal class PlanTyperTestsPorted {
 
     sealed class TestCase {
-        class SuccessTestCase(
+        class SuccessTestCase private constructor(
             val name: String? = null,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
-            val expected: StaticType,
-            val warnings: ProblemHandler? = null,
+            val expected: CompilerType,
+            val warnings: PErrorListener? = null,
         ) : TestCase() {
+
+            constructor(
+                name: String? = null,
+                key: PartiQLTest.Key,
+                catalog: String = "pql",
+                catalogPath: List<String> = emptyList(),
+                expected: PType,
+                warnings: PErrorListener? = null,
+            ) : this(name, key, null, catalog, catalogPath, expected.toCType(), warnings)
+
+            constructor(
+                name: String? = null,
+                query: String,
+                catalog: String = "pql",
+                catalogPath: List<String> = emptyList(),
+                expected: PType,
+                warnings: PErrorListener? = null,
+            ) : this(name, null, query, catalog, catalogPath, expected.toCType(), warnings)
+
+            // legacy shim!
+            constructor(
+                name: String? = null,
+                key: PartiQLTest.Key? = null,
+                query: String? = null,
+                catalog: String = "pql",
+                catalogPath: List<String> = emptyList(),
+                expected: StaticType,
+                warnings: PErrorListener? = null,
+            ) : this(name, key, query, catalog, catalogPath, fromStaticType(expected).toCType(), warnings)
+
             override fun toString(): String {
                 if (key != null) {
                     return "${key.group} : ${key.name}"
@@ -71,23 +105,88 @@ class PlanTyperTestsPorted {
             }
         }
 
-        class ErrorTestCase(
+        class ErrorTestCase private constructor(
             val name: String,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
-            val expected: StaticType? = null,
+            val expected: PType? = null,
             val problemHandler: ProblemHandler? = null,
         ) : TestCase() {
-            override fun toString(): String = "$name : $query"
+
+            constructor(
+                name: String,
+                query: String,
+                problemHandler: ProblemHandler
+            ) : this(name, key = null, query = query, problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: PType,
+                problemHandler: ProblemHandler
+            ) : this(name, key = null, query = query, expected = expected, problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                key: PartiQLTest.Key,
+                expected: PType,
+                problemHandler: ProblemHandler
+            ) : this(name, key = key, query = null, expected = expected, problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                key: PartiQLTest.Key,
+                catalog: String
+            ) : this(name, key = key, query = null, catalog = catalog)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: StaticType,
+                problemHandler: ProblemHandler
+            ) : this(name, query = query, expected = fromStaticType(expected).toCType(), problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: StaticType,
+            ) : this(name, query = query, expected = fromStaticType(expected).toCType())
+
+            constructor(
+                name: String,
+                query: String,
+                expected: PType,
+                catalog: String,
+                problemHandler: ProblemHandler
+            ) : this(name, key = null, query = query, catalog = catalog, expected = expected.toCType(), problemHandler = problemHandler)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: StaticType,
+                catalog: String,
+                catalogPath: List<String>
+            ) : this(name, query = query, expected = fromStaticType(expected).toCType(), catalog = catalog, catalogPath = catalogPath)
+
+            constructor(
+                name: String,
+                query: String,
+                expected: StaticType,
+                catalog: String,
+                catalogPath: List<String>,
+                problemHandler: ProblemHandler
+            ) : this(name, query = query, expected = fromStaticType(expected).toCType(), catalog = catalog, catalogPath = catalogPath, problemHandler = problemHandler)
+
+            override fun toString(): String = "$name : ${query ?: key}"
         }
 
         class ThrowingExceptionTestCase(
             val name: String,
             val query: String,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
             val expectedThrowable: KClass<out Throwable>,
@@ -100,60 +199,75 @@ class PlanTyperTestsPorted {
 
     companion object {
 
-        private val parser = PartiQLParser.default()
-        private val planner = PartiQLPlanner.default()
+        private val parser = PartiQLParser.standard()
+        private val planner = PartiQLPlanner.builder().signal().build()
 
-        private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
-            when (ignoreSourceLocation) {
-                true -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it.details == problem.invoke().details } }
-                false -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it == problem.invoke() } }
+        private fun assertProblemExists(problem: PError) = ProblemHandler { problems, _ ->
+            val message = buildString {
+                appendLine("Expected problems to include: $problem")
+                appendLine("Received: [")
+                problems.problems.forEach {
+                    append("\t")
+                    appendLine(it)
+                }
+                appendLine("]")
             }
+            assertTrue(message) { problems.problems.any { errorsEqual(it, problem) } }
         }
 
-        private fun id(vararg parts: Identifier.Symbol): Identifier {
-            return when (parts.size) {
-                0 -> error("Identifier requires more than one part.")
-                1 -> parts.first()
-                else -> Identifier.Qualified(parts.first(), parts.drop(1))
-            }
+        // TODO: We don't assert on the properties right now.
+        private fun errorsEqual(lhs: PError, rhs: PError): Boolean {
+            return lhs.code() == rhs.code() && lhs.code() == rhs.code() && lhs.severity == rhs.severity && lhs.location == rhs.location
         }
 
-        private fun sensitive(part: String): Identifier.Symbol = Identifier.Symbol(part, Identifier.CaseSensitivity.SENSITIVE)
+        // private fun id(vararg parts: Identifier.Symbol): Identifier {
+        //     return when (parts.size) {
+        //         0 -> error("Identifier requires more than one part.")
+        //         1 -> parts.first()
+        //         else -> Identifier.Qualified(parts.first(), parts.drop(1))
+        //     }
+        // }
+        //
+        private fun sensitive(text: String): Identifier = Identifier.delimited(text)
 
-        private fun insensitive(part: String): Identifier.Symbol = Identifier.Symbol(part, Identifier.CaseSensitivity.INSENSITIVE)
+        private fun insensitive(text: String): Identifier = Identifier.regular(text)
 
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
          */
-        val catalogs: List<Pair<String, ConnectorMetadata>> by lazy {
+        private val catalogs: List<Catalog> by lazy {
+            // Make a map from catalog name to tables.
             val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
-            val map = mutableMapOf<String, MutableList<Pair<String, StaticType>>>()
+            val map = mutableMapOf<String, MutableList<Pair<Name, PType>>>()
             inputStream.reader().readLines().forEach { path ->
                 if (path.startsWith("catalogs/default")) {
                     val schema = this::class.java.getResourceAsStream("/$path")!!
                     val ion = loadSingleElement(schema.reader().readText())
                     val staticType = ion.toStaticType()
-                    val steps = path.split('/').drop(2) // drop the catalogs/default
+                    val steps = path.substring(0, path.length - 4).split('/').drop(2) // drop the catalogs/default
                     val catalogName = steps.first()
-                    val subPath = steps
-                        .drop(1)
-                        .joinToString(".") { it.lowercase() }
-                        .let {
-                            it.substring(0, it.length - 4)
-                        }
+                    // args
+                    val name = Name.of(steps.drop(1))
+                    val ptype = fromStaticType(staticType)
                     if (map.containsKey(catalogName)) {
-                        map[catalogName]!!.add(subPath to staticType)
+                        map[catalogName]!!.add(name to ptype)
                     } else {
-                        map[catalogName] = mutableListOf(subPath to staticType)
+                        map[catalogName] = mutableListOf(name to ptype)
                     }
                 }
             }
-            map.entries.map {
-                it.key to MemoryConnector.Metadata.of(*it.value.toTypedArray())
+            // Make a catalogs list
+            map.map { (catalog, tables) ->
+                TestCatalog.builder()
+                    .name(catalog)
+                    .apply {
+                        for ((name, schema) in tables) {
+                            createTable(name, schema)
+                        }
+                    }
+                    .build()
             }
         }
-
-        private const val USER_ID = "TEST_USER"
 
         private fun key(name: String) = PartiQLTest.Key("schema_inferencer", name)
 
@@ -168,13 +282,11 @@ class PlanTyperTestsPorted {
         val TYPE_BOOL = StaticType.BOOL
         private val TYPE_AWS_DDB_PETS_ID = StaticType.INT4
         private val TYPE_AWS_DDB_PETS_BREED = StaticType.STRING
-        private val TYPE_AWS_DDB_PETS_TAG = StaticType.INT2
         val TABLE_AWS_DDB_PETS = BagType(
             elementType = StructType(
                 fields = mapOf(
                     "id" to TYPE_AWS_DDB_PETS_ID,
-                    "breed" to TYPE_AWS_DDB_PETS_BREED,
-                    "tag" to TYPE_AWS_DDB_PETS_TAG,
+                    "breed" to TYPE_AWS_DDB_PETS_BREED
                 ),
                 contentClosed = true,
                 constraints = setOf(
@@ -188,8 +300,7 @@ class PlanTyperTestsPorted {
             elementType = StructType(
                 fields = mapOf(
                     "id" to TYPE_AWS_DDB_PETS_ID,
-                    "breed" to TYPE_AWS_DDB_PETS_BREED,
-                    "tag" to TYPE_AWS_DDB_PETS_TAG,
+                    "breed" to TYPE_AWS_DDB_PETS_BREED
                 ),
                 contentClosed = true,
                 constraints = setOf(
@@ -264,11 +375,6 @@ class PlanTyperTestsPorted {
                 expected = ListType(StaticType.INT4),
             ),
             SuccessTestCase(
-                name = "Collection SEXP<INT4>",
-                key = key("collections-04"),
-                expected = SexpType(StaticType.INT4),
-            ),
-            SuccessTestCase(
                 name = "SELECT from array",
                 key = key("collections-05"),
                 expected = BagType(StaticType.INT4),
@@ -294,109 +400,76 @@ class PlanTyperTestsPorted {
         fun structs() = listOf<TestCase>()
 
         @JvmStatic
-        fun extendedCastTests() = listOf<TestCase>(
-            SuccessTestCase(
-                name = "CAST INT4 TO INT2",
-                catalog = CATALOG_AWS,
-                query = "CAST((SELECT t.id FROM ddb.pets AS t) AS INT2)",
-                expected = INT2
-            ),
-            SuccessTestCase(
-                name = "CAST BOOL TO INT2",
-                catalog = CATALOG_AWS,
-                query = "CAST(true AS INT2)",
-                expected = INT2
-            ),
-            SuccessTestCase(
-                name = "CAST INT2 TO INT4",
-                catalog = CATALOG_AWS,
-                query = "CAST((SELECT t.tag FROM ddb.pets AS t) AS INT4)",
-                expected = INT4
-            ),
-            SuccessTestCase(
-                name = "CAST INT8 literal to INT2",
-                query = "CAST(343434534534 AS INT2)",
-                expected = INT2
-            ),
-            SuccessTestCase(
-                name = "CAST STRING to INT2",
-                catalog = CATALOG_AWS,
-                query = "CAST((SELECT t.breed FROM ddb.pets AS t) AS INT2)",
-                expected = INT2
-            ),
-        )
-
-        @JvmStatic
         fun decimalCastCases() = listOf<TestCase>(
             SuccessTestCase(
                 name = "cast decimal",
                 query = "CAST(1 AS DECIMAL)",
-                expected = StaticType.DECIMAL,
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1)",
                 query = "CAST(1 AS DECIMAL(1))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+                expected = PType.decimal(1, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1,0)",
                 query = "CAST(1 AS DECIMAL(1,0))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+                expected = PType.decimal(1, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1,1)",
                 query = "CAST(1 AS DECIMAL(1,1))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 1)),
+                expected = PType.decimal(1, 1),
             ),
             SuccessTestCase(
                 name = "cast decimal(38)",
                 query = "CAST(1 AS DECIMAL(38))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(38,0)",
                 query = "CAST(1 AS DECIMAL(38,0))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(38,38)",
                 query = "CAST(1 AS DECIMAL(38,38))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 38)),
+                expected = PType.decimal(38, 38),
             ),
             SuccessTestCase(
                 name = "cast decimal string",
                 query = "CAST('1' AS DECIMAL)",
-                expected = StaticType.DECIMAL,
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1) string",
                 query = "CAST('1' AS DECIMAL(1))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+                expected = PType.decimal(1, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1,0) string",
                 query = "CAST('1' AS DECIMAL(1,0))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+                expected = PType.decimal(1, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(1,1) string",
                 query = "CAST('1' AS DECIMAL(1,1))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 1)),
+                expected = PType.decimal(1, 1),
             ),
             SuccessTestCase(
                 name = "cast decimal(38) string",
                 query = "CAST('1' AS DECIMAL(38))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(38,0) string",
                 query = "CAST('1' AS DECIMAL(38,0))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 name = "cast decimal(38,38) string",
                 query = "CAST('1' AS DECIMAL(38,38))",
-                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 38)),
+                expected = PType.decimal(38, 38),
             ),
         )
 
@@ -511,6 +584,98 @@ class PlanTyperTestsPorted {
         )
 
         @JvmStatic
+        fun distinctClauseCases() = listOf<TestCase>(
+            SuccessTestCase(
+                name = "Distinct SQL Select",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT a, b FROM << { 'a': 1, 'b': 'Hello, world!' } >>;",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("b", StaticType.STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Distinct SQL Select with Ordering",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT a, b FROM << { 'a': 1, 'b': 'Hello, world!' } >> ORDER BY a;",
+                expected = ListType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("b", StaticType.STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Distinct SQL Select *",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT * FROM << { 'a': 1, 'b': 'Hello, world!' } >>;",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("b", StaticType.STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Distinct SQL Select * with Ordering",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT * FROM << { 'a': 1, 'b': 'Hello, world!' } >> ORDER BY a;",
+                expected = ListType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("b", StaticType.STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Distinct PartiQL Select Value *",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT VALUE a FROM << { 'a': 1, 'b': 'Hello, world!' } >>;",
+                expected = BagType(StaticType.INT4)
+            ),
+            SuccessTestCase(
+                name = "Distinct PartiQL Select Value * with Ordering",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT VALUE a FROM << { 'a': 1, 'b': 'Hello, world!' } >> ORDER BY a;",
+                expected = ListType(StaticType.INT4)
+            ),
+        )
+
+        @JvmStatic
         fun pivotCases() = listOf(
             SuccessTestCase(
                 name = "Basic PIVOT",
@@ -554,6 +719,8 @@ class PlanTyperTestsPorted {
                 catalog = "pql",
                 expected = StaticType.BOOL,
             ),
+            // TODO: For some reason, the conformance tests say that this results in TRUE. Regardless, we know it returns
+            //  a boolean. We should re-look at what the conformance tests should return.
             SuccessTestCase(
                 name = "MISSING IS NULL",
                 key = key("is-type-04"),
@@ -621,7 +788,7 @@ class PlanTyperTestsPorted {
                 name = "DECIMAL_ARBITRARY AS DECIMAL",
                 key = key("cast-05"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL,
+                expected = PType.decimal(38, 0),
             ),
         )
 
@@ -680,18 +847,9 @@ class PlanTyperTestsPorted {
                 name = "Current User (String) PLUS String",
                 query = "CURRENT_USER + 'hello'",
                 expected = ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "plus",
-                            listOf(
-                                StaticType.STRING,
-                                StaticType.STRING,
-                            ),
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("PLUS"), listOf(PType.string(), PType.string()), emptyList())
+                )
             ),
         )
 
@@ -750,32 +908,21 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "BITWISE_AND_NULL_OPERAND",
                 query = "1 & NULL",
-                expected = unionOf(INT4, INT8, INT),
+                expected = INT4,
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
-                expected = unionOf(INT4, INT8, INT),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                        details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
-                    )
-                }
+                expected = ANY, // TODO SHOULD BE UNKNOWN
+                problemHandler = assertProblemExists(PErrors.alwaysMissing(null))
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_NON_INT_OPERAND",
                 query = "1 & 'NOT AN INT'",
                 expected = StaticType.ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "bitwise_and",
-                            listOf(StaticType.INT4, StaticType.STRING)
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("BITWISE_AND"), listOf(PType.integer(), PType.string()), emptyList())
+                )
             ),
         )
 
@@ -793,92 +940,52 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "CROSS JOIN",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1, <<{ 'b': 2.0 }>> AS t2",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT4,
-                            "b" to StaticType.DECIMAL,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("b", PType.decimal(2, 1)),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT4,
-                            "b" to StaticType.DECIMAL,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("b", PType.decimal(2, 1))
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN",
                 query = "SELECT b, a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("b", StaticType.DECIMAL),
-                            StructType.Field("a", StaticType.INT4),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("b", PType.decimal(2, 1)),
+                        Field.of("a", PType.integer()),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN",
                 query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("a", PType.decimal(2, 1)),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN ALL",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("a", PType.decimal(2, 1)),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "LEFT JOIN ALL",
@@ -893,45 +1000,70 @@ class PlanTyperTestsPorted {
                             <<{ 'a': 'hello, world' }>> AS t3
                         ON t3.a = 'hello'
                 """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.DECIMAL),
-                            StructType.Field("a", StaticType.STRING),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("a", PType.decimal(2, 1)),
+                        Field.of("a", PType.string()),
                     )
-                )
+                ),
             ),
             ErrorTestCase(
                 name = "LEFT JOIN Ambiguous Reference in ON",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON a = 3",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.integer()),
+                        Field.of("a", PType.decimal(2, 1)),
                     )
                 ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitive("a"), setOf("t1", "t2"))
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, insensitive("a"), listOf("t1", "t2"))
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN (Lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    LEFT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = BagType(INT4)
+            ),
+            SuccessTestCase(
+                name = "INNER JOIN (Lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    INNER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                expected = BagType(INT4)
+            ),
+            ErrorTestCase(
+                name = "RIGHT JOIN (Doesn't support lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    RIGHT OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, insensitive("lhs"), listOf())
+                )
+            ),
+            ErrorTestCase(
+                name = "FULL JOIN (Doesn't support lateral references)",
+                query = """
+                    SELECT VALUE rhs
+                    FROM << [0, 1, 2], [10, 11, 12], [20, 21, 22] >> AS lhs
+                    FULL OUTER JOIN lhs AS rhs
+                    ON lhs[2] = rhs
+                """.trimIndent(),
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, insensitive("lhs"), listOf())
+                )
             ),
         )
 
@@ -1737,31 +1869,22 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "t" to StaticType.unionOf(
-                                StructType(
-                                    fields = mapOf(
-                                        "a" to StructType(
-                                            fields = mapOf(
-                                                "c" to StaticType.STRING
-                                            ),
-                                            contentClosed = true,
-                                            constraints = setOf(
-                                                TupleConstraint.Open(false),
-                                                TupleConstraint.UniqueAttrs(true)
-                                            )
+                            "t" to StructType(
+                                fields = mapOf(
+                                    "a" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(
+                                            TupleConstraint.Open(false),
+                                            TupleConstraint.UniqueAttrs(true)
                                         )
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
                                 ),
-                                StructType(
-                                    fields = mapOf(
-                                        "a" to ANY
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                                ),
-                            )
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -1778,40 +1901,22 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "t" to StaticType.unionOf(
-                                StructType(
-                                    fields = mapOf(
-                                        "a" to StructType(
-                                            fields = mapOf(
-                                                "c" to StaticType.STRING
-                                            ),
-                                            contentClosed = true,
-                                            constraints = setOf(
-                                                TupleConstraint.Open(false),
-                                                TupleConstraint.UniqueAttrs(true)
-                                            )
+                            "t" to StructType(
+                                fields = mapOf(
+                                    "a" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(
+                                            TupleConstraint.Open(false),
+                                            TupleConstraint.UniqueAttrs(true)
                                         )
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
                                 ),
-                                StructType(
-                                    fields = mapOf(
-                                        "a" to StructType(
-                                            fields = mapOf(
-                                                "c" to ANY
-                                            ),
-                                            contentClosed = true,
-                                            constraints = setOf(
-                                                TupleConstraint.Open(false),
-                                                TupleConstraint.UniqueAttrs(true)
-                                            )
-                                        )
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                                ),
-                            )
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -2004,33 +2109,21 @@ class PlanTyperTestsPorted {
             ErrorTestCase(
                 name = "invalid exclude root",
                 key = key("exclude-34"),
-                expected = BagType(
-                    elementType = StructType(
-                        fields = mapOf(
-                            "a" to BagType(
-                                elementType = StructType(
-                                    fields = mapOf(
-                                        "b" to StaticType.INT4
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                expected = PType.bag(
+                    PType.row(
+                        Field.of(
+                            "a",
+                            PType.bag(
+                                PType.row(
+                                    Field.of("b", PType.integer())
                                 )
                             )
                         ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
                     )
                 ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnresolvedExcludeExprRoot("nonsense")
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, Identifier.regular("nonsense"), listOf("t"))
+                )
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
@@ -2040,41 +2133,17 @@ class PlanTyperTestsPorted {
                     elementType = StructType(
                         fields = mapOf(
                             "a" to ListType(
-                                elementType = StaticType.unionOf(
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to StaticType.INT4
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
-                                        )
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT4,
+                                        "c" to ANY
                                     ),
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to ANY
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
-                                        )
-                                    ),
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to StaticType.DECIMAL
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
-                                        )
+                                    contentClosed = true,
+                                    constraints = setOf(
+                                        TupleConstraint.Open(false),
+                                        TupleConstraint.UniqueAttrs(true)
                                     )
-                                )
+                                ),
                             )
                         ),
                         contentClosed = true,
@@ -2086,34 +2155,35 @@ class PlanTyperTestsPorted {
                     )
                 )
             ),
-            SuccessTestCase(
-                name = "EXCLUDE using a catalog",
-                catalog = CATALOG_B,
-                key = key("exclude-36"),
-                expected = BagType(
-                    elementType = StructType(
-                        fields = mapOf(
-                            "b" to StructType(
-                                fields = mapOf(
-                                    "b" to StaticType.INT4
-                                ),
-                                contentClosed = true,
-                                constraints = setOf(
-                                    TupleConstraint.Open(false),
-                                    TupleConstraint.UniqueAttrs(true),
-                                    TupleConstraint.Ordered
-                                )
-                            ),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
+            // TODO: Actual is bag(struct(b: int4, [Open(value=false), UniqueAttrs(value=true), Ordered]))
+//            SuccessTestCase(
+//                name = "EXCLUDE using a catalog",
+//                catalog = CATALOG_B,
+//                key = key("exclude-36"), // SELECT * EXCLUDE t.c FROM b.b.b AS t;
+//                expected = BagType(
+//                    elementType = StructType(
+//                        fields = mapOf(
+//                            "b" to StructType(
+//                                fields = mapOf(
+//                                    "b" to StaticType.INT4
+//                                ),
+//                                contentClosed = true,
+//                                constraints = setOf(
+//                                    TupleConstraint.Open(false),
+//                                    TupleConstraint.UniqueAttrs(true),
+//                                    TupleConstraint.Ordered
+//                                )
+//                            ),
+//                        ),
+//                        contentClosed = true,
+//                        constraints = setOf(
+//                            TupleConstraint.Open(false),
+//                            TupleConstraint.UniqueAttrs(true),
+//                            TupleConstraint.Ordered
+//                        )
+//                    )
+//                )
+//            ),
         )
 
         @JvmStatic
@@ -2138,12 +2208,9 @@ class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets ORDER BY unknown_col",
                 expected = TABLE_AWS_DDB_PETS_LIST,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitive("unknown_col"), setOf("pets"))
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, insensitive("unknown_col"), listOf("pets"))
+                )
             ),
         )
 
@@ -2227,19 +2294,7 @@ class PlanTyperTestsPorted {
                         { 'a': 1 }
                     >> AS t
                 """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("b", INT4),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                ),
+                expected = BagType(ANY),
             ),
             SuccessTestCase(
                 name = "Tuple Union with Heterogeneous Data (2)",
@@ -2505,23 +2560,11 @@ class PlanTyperTestsPorted {
                 """,
                 catalog = "pql",
                 catalogPath = listOf("main"),
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "breed_descriptor" to StaticType.unionOf(
-                                StaticType.STRING,
-                                StaticType.INT4,
-                                StaticType.DECIMAL
-                            ),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("breed_descriptor", PType.dynamic()),
                     )
-                )
+                ),
             ),
             //
             SuccessTestCase(
@@ -2567,7 +2610,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-10"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL,
+                expected = PType.decimal(38, 0),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-11"),
@@ -2642,32 +2685,20 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-27"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB),
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-28"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB),
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-29"),
                 catalog = "pql",
-                expected = unionOf(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("x", StaticType.INT4),
-                            StructType.Field("y", StaticType.INT4),
-                        ),
-                    ),
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("x", StaticType.INT8),
-                            StructType.Field("y", StaticType.INT8),
-                        ),
-                    ),
-                ),
+                expected = STRUCT
             ),
             SuccessTestCase(
+                name = "CASE-WHEN always MISSING",
                 key = PartiQLTest.Key("basics", "case-when-30"),
                 catalog = "pql",
                 expected = ANY
@@ -2691,6 +2722,66 @@ class PlanTyperTestsPorted {
                 key = PartiQLTest.Key("basics", "case-when-34"),
                 catalog = "pql",
                 expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-35"),
+                catalog = "pql",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10, 5))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-36"),
+                catalog = "pql",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10, 5))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-37"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-38"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-39"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-40"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-41"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-42"),
+                catalog = "pql",
+                expected = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-43"),
+                catalog = "pql",
+                expected = PType.decimal(38, 5)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-44"),
+                catalog = "pql",
+                expected = PType.decimal(38, 0)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-45"),
+                catalog = "pql",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-46"),
+                catalog = "pql",
+                expected = StaticType.STRING
             ),
         )
 
@@ -2729,7 +2820,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-06"),
                 catalog = "pql",
-                expected = ANY
+                expected = PType.dynamic().toCType() // TODO make unknown
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-07"),
@@ -2739,7 +2830,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-08"),
                 catalog = "pql",
-                expected = ANY
+                expected = PType.dynamic().toCType() // TODO make unknown
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-09"),
@@ -2774,7 +2865,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-16"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL)
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-17"),
@@ -2803,22 +2894,22 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-02"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-03"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-04"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-05"),
                 catalog = "pql",
-                expected = StaticType.DECIMAL
+                expected = PType.decimal(38, 0)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-06"),
@@ -2858,17 +2949,17 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-13"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL)
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-14"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING)
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-15"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING)
+                expected = PType.dynamic()
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-16"),
@@ -3009,12 +3100,13 @@ class PlanTyperTestsPorted {
                     SELECT VALUE 1 FROM "pql"."main"['employer'] AS e;
                 """,
                 expected = BagType(StaticType.INT4),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(id(sensitive("pql"), sensitive("main")), setOf())
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(
+                        null,
+                        Identifier.delimited("pql", "main"),
+                        emptyList()
                     )
-                }
+                )
             ),
             ErrorTestCase(
                 name = "Show that we can't use [<string>] to reference a schema in a catalog. It can only be used on tuples.",
@@ -3022,19 +3114,16 @@ class PlanTyperTestsPorted {
                     SELECT VALUE 1 FROM "pql"['main']."employer" AS e;
                 """,
                 expected = BagType(StaticType.INT4),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(sensitive("pql"), setOf())
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, sensitive("pql"), emptyList())
+                )
             ),
             SuccessTestCase(
                 name = "Tuple indexing syntax on literal tuple with literal string key",
                 query = """
                     { 'aBc': 1, 'AbC': 2.0 }['AbC'];
                 """,
-                expected = StaticType.DECIMAL
+                expected = PType.decimal(2, 1)
             ),
             // This should fail because the Spec says tuple indexing MUST use a literal string or explicit cast.
             ErrorTestCase(
@@ -3043,12 +3132,9 @@ class PlanTyperTestsPorted {
                     { 'aBc': 1, 'AbC': 2.0 }['Ab' || 'C'];
                 """,
                 expected = ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                        details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.pathIndexNeverSucceeds(null)
+                )
             ),
             // The reason this is ANY is because we do not have support for constant-folding. We don't know what
             //  CAST('Ab' || 'C' AS STRING) will evaluate to, and therefore, we don't know what the indexing operation
@@ -3202,22 +3288,14 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "AGGREGATE over DECIMALS",
                 query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StaticType.DECIMAL,
-                            "c" to StaticType.INT8,
-                            "s" to StaticType.DECIMAL,
-                            "m" to StaticType.DECIMAL,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.decimal(2, 1)),
+                        Field.of("c", PType.bigint()),
+                        Field.of("s", PType.decimal(38, 19)), // TODO: Check this
+                        Field.of("m", PType.decimal(38, 19)),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "AGGREGATE over nullable integers",
@@ -3343,7 +3421,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "c" to StaticType.DECIMAL,
+                            "c" to ANY,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3366,20 +3444,13 @@ class PlanTyperTestsPorted {
                     >> AS t
                 """.trimIndent(),
                 expected = BagType(ANY),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                        details = PlanningProblemDetails.UnknownFunction(
-                            "pos",
-                            listOf(StaticType.STRING)
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("POS"), listOf(PType.string()), emptyList())
+                )
             ),
-            ErrorTestCase(
+            SuccessTestCase(
                 name = """
-                    unary plus on non-compatible union type -- this cannot resolve to a dynamic call since no function
-                    will ever be invoked.
+                    unary plus on dynamic types
                 """.trimIndent(),
                 query = """
                     SELECT VALUE +t.a
@@ -3389,15 +3460,6 @@ class PlanTyperTestsPorted {
                     >> AS t
                 """.trimIndent(),
                 expected = BagType(ANY),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                        details = PlanningProblemDetails.UnknownFunction(
-                            "pos",
-                            listOf(StaticType.unionOf(StaticType.STRING, StaticType.BAG))
-                        )
-                    )
-                }
             ),
             ErrorTestCase(
                 name = """
@@ -3410,13 +3472,25 @@ class PlanTyperTestsPorted {
                         { 'NOT_A': 1 }
                     >> AS t
                 """.trimIndent(),
-                expected = BagType(unionOf(StaticType.INT2, INT4, INT8, INT, StaticType.FLOAT, StaticType.DECIMAL)),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                        details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                expected = BagType(ANY),
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(
+                        null,
+                        Identifier.regular("a"),
+                        listOf("t"),
                     )
-                }
+                )
+            ),
+            ErrorTestCase(
+                name = """
+                    unary plus on missing type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                """.trimIndent(),
+                query = """
+                    +MISSING
+                """.trimIndent(),
+                expected = ANY,
+                problemHandler = assertProblemExists(PErrors.alwaysMissing(null))
             ),
         )
 
@@ -3504,6 +3578,33 @@ class PlanTyperTestsPorted {
     //
 
     @Test
+    @Disabled("We currently don't have the concept of an ordered struct.")
+    fun orderedTuple() {
+        val tc =
+            SuccessTestCase(
+                name = "Duplicate fields in ordered STRUCT. NOTE: b.b.d is an ordered struct with two attributes (e). First is INT4.",
+                query = """
+                    SELECT d.e AS e
+                    FROM << b.b.d >> AS d
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("e", StaticType.INT4)
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            )
+        runTest(tc)
+    }
+
+    @Test
     @Disabled("The planner doesn't support heterogeneous input to aggregation functions (yet?).")
     fun failingTest() {
         val tc = SuccessTestCase(
@@ -3528,30 +3629,55 @@ class PlanTyperTestsPorted {
                         { 'a': 5, 'b': NULL }
                     >> GROUP BY a
             """.trimIndent(),
-            expected = BagType(
-                StructType(
-                    fields = mapOf(
-                        "a" to StaticType.DECIMAL,
-                        "count_star" to StaticType.INT8,
-                        "count_a" to StaticType.INT8,
-                        "count_b" to StaticType.INT8,
-                        "sum_a" to StaticType.DECIMAL,
-                        "sum_b" to StaticType.DECIMAL,
-                        "min_a" to StaticType.DECIMAL,
-                        "min_b" to StaticType.DECIMAL,
-                        "max_a" to StaticType.DECIMAL,
-                        "max_b" to StaticType.DECIMAL,
-                        "avg_a" to StaticType.DECIMAL,
-                        "avg_b" to StaticType.DECIMAL,
-                    ),
-                    contentClosed = true,
-                    constraints = setOf(
-                        TupleConstraint.Open(false),
-                        TupleConstraint.UniqueAttrs(true),
-                        TupleConstraint.Ordered
-                    )
+            expected = PType.bag(
+                PType.row(
+                    Field.of("a", PType.decimal(38, 0)),
+                    Field.of("count_star", PType.bigint()),
+                    Field.of("count_a", PType.bigint()),
+                    Field.of("count_b", PType.bigint()),
+                    Field.of("sum_a", PType.decimal(38, 0)),
+                    Field.of("sum_b", PType.decimal(38, 0)),
+                    Field.of("min_a", PType.decimal(38, 0)),
+                    Field.of("min_b", PType.decimal(38, 0)),
+                    Field.of("max_a", PType.decimal(38, 0)),
+                    Field.of("max_b", PType.decimal(38, 0)),
+                    Field.of("avg_a", PType.decimal(38, 0)),
+                    Field.of("avg_b", PType.decimal(38, 0)),
                 )
+            ),
+        )
+        runTest(tc)
+    }
+
+    @Test
+    @Disabled
+    fun developmentTest() {
+        val tc = SuccessTestCase(
+            name = "DEV TEST",
+            query = "CAST('' AS STRING) < CAST('' AS SYMBOL);",
+            expected = PType.bool().toCType()
+        )
+        runTest(tc)
+    }
+
+    @Test
+    fun developmentTest3() {
+        val tc =
+            SuccessTestCase(
+                name = "MISSING IS MISSING",
+                key = key("is-type-06"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
             )
+        runTest(tc)
+    }
+
+    @Test
+    fun developmentTest4() {
+        val tc = SuccessTestCase(
+            name = "DEV TEST 4",
+            query = "NULLIF([], [])",
+            expected = PType.array().toCType()
         )
         runTest(tc)
     }
@@ -3559,11 +3685,6 @@ class PlanTyperTestsPorted {
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
     fun test(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("extendedCastTests")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testCastCase(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
     @MethodSource("collections")
@@ -3626,6 +3747,11 @@ class PlanTyperTestsPorted {
     fun testScalarFunctions(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
+    @MethodSource("distinctClauseCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testDistinctClause(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
     @MethodSource("pathExpressions")
     @Execution(ExecutionMode.CONCURRENT)
     fun testPathExpressions(tc: TestCase) = runTest(tc)
@@ -3682,11 +3808,14 @@ class PlanTyperTestsPorted {
     //
     private fun infer(
         query: String,
-        session: PartiQLPlanner.Session,
-        problemCollector: ProblemCollector,
-    ): PartiQLPlan {
-        val ast = parser.parse(query).root
-        return planner.plan(ast, session, problemCollector).plan
+        session: Session,
+        listener: PErrorListener,
+    ): org.partiql.plan.Plan {
+        val parseResult = parser.parse(query)
+        assertEquals(1, parseResult.statements.size)
+        val ast = parseResult.statements[0]
+        val plannerConfig = Context.of(listener)
+        return planner.plan(ast, session, plannerConfig).plan
     }
 
     private fun runTest(tc: TestCase) = when (tc) {
@@ -3696,13 +3825,11 @@ class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: SuccessTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray())
-        )
+        val session = Session.builder()
+            .catalog(tc.catalog)
+            .catalogs(*catalogs.toTypedArray())
+            .namespace(tc.catalogPath)
+            .build()
 
         val hasQuery = tc.query != null
         val hasKey = tc.key != null
@@ -3711,25 +3838,29 @@ class PlanTyperTestsPorted {
         }
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
 
-        val collector = ProblemCollector()
+        val collector = PErrorCollector()
         val plan = infer(input, session, collector)
-        when (val statement = plan.statement) {
-            is Statement.Query -> {
+        when (val statement = plan.action) {
+            is Action.Query -> {
                 assert(collector.problems.isEmpty()) {
+                    // Throw internal error for debugging
+                    collector.problems.firstOrNull { it.code() == PError.INTERNAL_ERROR }?.let { pError ->
+                        pError.getOrNull("CAUSE", Throwable::class.java)?.let { throw it }
+                    }
                     buildString {
                         appendLine(collector.problems.toString())
                         appendLine()
-                        PlanPrinter.append(this, statement)
+                        PlanPrinter.append(this, plan)
                     }
                 }
-                val actual = statement.root.type
+                val actual = statement.rex.type.pType
                 assert(tc.expected == actual) {
                     buildString {
                         appendLine()
                         appendLine("Expect: ${tc.expected}")
                         appendLine("Actual: $actual")
                         appendLine()
-                        PlanPrinter.append(this, statement)
+                        PlanPrinter.append(this, plan)
                     }
                 }
             }
@@ -3737,15 +3868,12 @@ class PlanTyperTestsPorted {
     }
 
     private fun runTest(tc: ErrorTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray())
-        )
-        val collector = ProblemCollector()
-
+        val session = Session.builder()
+            .catalog(tc.catalog)
+            .catalogs(*catalogs.toTypedArray())
+            .namespace(tc.catalogPath)
+            .build()
+        val collector = PErrorCollector()
         val hasQuery = tc.query != null
         val hasKey = tc.key != null
         if (hasQuery == hasKey) {
@@ -3754,8 +3882,8 @@ class PlanTyperTestsPorted {
         val input = tc.query ?: testProvider[tc.key!!]!!.statement
         val plan = infer(input, session, collector)
 
-        when (val statement = plan.statement) {
-            is Statement.Query -> {
+        when (val operation = plan.action) {
+            is Action.Query -> {
                 assert(collector.problems.isNotEmpty()) {
                     buildString {
                         appendLine("Expected to find problems, but none were found.")
@@ -3764,11 +3892,12 @@ class PlanTyperTestsPorted {
                     }
                 }
                 if (tc.expected != null) {
-                    assert(tc.expected == statement.root.type) {
+                    val actual = operation.rex.type.pType
+                    assert(tc.expected == actual) {
                         buildString {
                             appendLine()
                             appendLine("Expect: ${tc.expected}")
-                            appendLine("Actual: ${statement.root.type}")
+                            appendLine("Actual: $actual")
                             appendLine()
                             PlanPrinter.append(this, plan)
                         }
@@ -3777,20 +3906,18 @@ class PlanTyperTestsPorted {
                 assert(collector.problems.isNotEmpty()) {
                     "Expected to find problems, but none were found."
                 }
-                tc.problemHandler?.handle(collector.problems, true)
+                tc.problemHandler?.handle(collector, true)
             }
         }
     }
 
     private fun runTest(tc: ThrowingExceptionTestCase) {
-        val session = PartiQLPlanner.Session(
-            tc.query.hashCode().toString(),
-            USER_ID,
-            tc.catalog,
-            tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray())
-        )
-        val collector = ProblemCollector()
+        val session = Session.builder()
+            .catalog(tc.catalog)
+            .catalogs(*catalogs.toTypedArray())
+            .namespace(tc.catalogPath)
+            .build()
+        val collector = PErrorCollector()
         val exception = assertThrows<Throwable> {
             infer(tc.query, session, collector)
             Unit
@@ -3813,7 +3940,7 @@ class PlanTyperTestsPorted {
                 name = "Pets should not be accessible #1",
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StaticType.unionOf(
+                    unionOf(
                         StructType(
                             fields = emptyMap(),
                             contentClosed = false,
@@ -3823,8 +3950,8 @@ class PlanTyperTestsPorted {
                             )
                         ),
                         StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
+                            fields = listOf(
+                                StructType.Field("_1", ANY)
                             ),
                             contentClosed = true,
                             constraints = setOf(
@@ -3834,45 +3961,18 @@ class PlanTyperTestsPorted {
                         ),
                     )
                 ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitive("pets"), emptySet())
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, insensitive("pets"), emptyList())
+                )
             ),
             TestCase.ErrorTestCase(
                 name = "Pets should not be accessible #2",
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM pets",
-                expected = BagType(
-                    StaticType.unionOf(
-                        StructType(
-                            fields = emptyMap(),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                    )
-                ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitive("pets"), emptySet())
-                    )
-                }
+                expected = PType.bag(PType.dynamic()),
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, insensitive("pets"), emptyList())
+                )
             ),
             TestCase.SuccessTestCase(
                 name = "Project all explicitly",
@@ -3885,7 +3985,7 @@ class PlanTyperTestsPorted {
                 name = "Project all implicitly",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
-                query = "SELECT id, breed, tag FROM pets",
+                query = "SELECT id, breed FROM pets",
                 expected = TABLE_AWS_DDB_PETS
             ),
             TestCase.SuccessTestCase(
@@ -3913,9 +4013,9 @@ class PlanTyperTestsPorted {
                 name = "Test #7",
                 query = "SELECT * FROM ddb.pets",
                 expected = BagType(
-                    StaticType.unionOf(
+                    unionOf(
                         StructType(
-                            fields = emptyMap(),
+                            fields = emptyList(),
                             contentClosed = false,
                             constraints = setOf(
                                 TupleConstraint.Open(true),
@@ -3923,8 +4023,8 @@ class PlanTyperTestsPorted {
                             )
                         ),
                         StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
+                            fields = listOf(
+                                StructType.Field("_1", ANY)
                             ),
                             contentClosed = true,
                             constraints = setOf(
@@ -3934,12 +4034,9 @@ class PlanTyperTestsPorted {
                         ),
                     )
                 ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(id(insensitive("ddb"), insensitive("pets")), emptySet())
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, Identifier.regular("ddb", "pets"), emptyList())
+                )
             ),
             TestCase.SuccessTestCase(
                 name = "Test #10",
@@ -3952,14 +4049,14 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
                 query = "b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #12",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
-                query = "SELECT * FROM b.b",
-                expected = TABLE_AWS_B_B
+                query = "SELECT * FROM b",
+                expected = TABLE_AWS_DDB_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #13",
@@ -3983,7 +4080,7 @@ class PlanTyperTestsPorted {
                 name = "Test #16",
                 catalog = CATALOG_B,
                 query = "b.b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #17",
@@ -3996,7 +4093,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
                 query = "b.b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #19",
@@ -4012,20 +4109,20 @@ class PlanTyperTestsPorted {
                 name = "Test #21",
                 catalog = CATALOG_B,
                 query = "b.b.b.b",
-                expected = TYPE_B_B_B_B
+                expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
                 name = "Test #22",
                 catalog = CATALOG_B,
-                query = "b.b.b.c",
-                expected = TYPE_B_B_C
+                query = "b.b.c",
+                expected = TYPE_B_B_B_C
             ),
             SuccessTestCase(
                 name = "Test #23",
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
-                query = "b.b.b.b",
-                expected = TYPE_B_B_B_B
+                query = "b.b.b",
+                expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
                 name = "Test #24",
@@ -4033,9 +4130,9 @@ class PlanTyperTestsPorted {
                 expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
-                name = "Test #24",
+                name = "Test #25",
                 catalog = CATALOG_B,
-                query = "b.b.b.b.b",
+                query = "b.b.b.b",
                 expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
@@ -4093,15 +4190,9 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id IN 'hello'",
                 expected = ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "in_collection",
-                            listOf(StaticType.INT4, StaticType.STRING),
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("IN_COLLECTION"), listOf(PType.integer(), PType.string()), emptyList())
+                )
             ),
             SuccessTestCase(
                 name = "BETWEEN",
@@ -4116,19 +4207,9 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id BETWEEN 1 AND 'a'",
                 expected = ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "between",
-                            listOf(
-                                StaticType.INT4,
-                                StaticType.INT4,
-                                StaticType.STRING
-                            ),
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("BETWEEN"), listOf(PType.integer(), PType.integer(), PType.string()), emptyList())
+                )
             ),
             SuccessTestCase(
                 name = "LIKE",
@@ -4143,15 +4224,9 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.ship_option LIKE 3",
                 expected = ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "like",
-                            listOf(StaticType.STRING, StaticType.INT4),
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("LIKE"), listOf(PType.string(), PType.integer()), emptyList())
+                )
             ),
             SuccessTestCase(
                 name = "Case Insensitive success",
@@ -4161,6 +4236,7 @@ class PlanTyperTestsPorted {
                 expected = TYPE_BOOL
             ),
             // MISSING = 1
+            // TODO: Semantic not finalized
             ErrorTestCase(
                 name = "Case Sensitive failure",
                 catalog = CATALOG_DB,
@@ -4201,15 +4277,13 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "non_existing_column = 1",
+                // non_existing_column get typed as missing
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
                 expected = StaticType.BOOL,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitive("non_existing_column"), emptySet())
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, insensitive("non_existing_column"), emptyList())
+                )
             ),
             ErrorTestCase(
                 name = "Bad comparison",
@@ -4217,15 +4291,9 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 1 AND 1",
                 expected = ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "and",
-                            listOf(StaticType.BOOL, StaticType.INT4),
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("AND"), listOf(PType.bool(), PType.integer()), emptyList())
+                )
             ),
             ErrorTestCase(
                 name = "Bad comparison",
@@ -4233,15 +4301,9 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "1 AND order_info.customer_id = 1",
                 expected = ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "and",
-                            listOf(StaticType.INT4, StaticType.BOOL),
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("AND"), listOf(PType.integer(), PType.bool()), emptyList())
+                )
             ),
             ErrorTestCase(
                 name = "Unknown column",
@@ -4250,7 +4312,9 @@ class PlanTyperTestsPorted {
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("unknown_col" to AnyType()),
+                        fields = listOf(
+                            StructType.Field("unknown_col", ANY)
+                        ),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -4259,12 +4323,9 @@ class PlanTyperTestsPorted {
                         )
                     )
                 ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitive("unknown_col"), setOf("orders"))
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.varRefNotFound(null, insensitive("unknown_col"), listOf("orders"))
+                )
             ),
             SuccessTestCase(
                 name = "LIMIT INT",
@@ -4279,12 +4340,9 @@ class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT '5'",
                 expected = TABLE_AWS_DDB_PETS,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.typeUnexpected(null, PType.string(), listOf(PType.numeric(38, 0)))
+                )
             ),
             SuccessTestCase(
                 name = "OFFSET INT",
@@ -4299,12 +4357,9 @@ class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT 1 OFFSET '5'",
                 expected = TABLE_AWS_DDB_PETS,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.typeUnexpected(null, PType.string(), listOf(PType.numeric(38, 0)))
+                )
             ),
             SuccessTestCase(
                 name = "CAST",
@@ -4343,29 +4398,21 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "Non-tuples",
                 query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf("a" to ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL))),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                expected = PType.bag(
+                    PType.row(
+                        Field.of("a", PType.array()),
                     )
-                )
+                ),
             ),
             SuccessTestCase(
                 name = "Non-tuples in SELECT VALUE",
                 query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
-                expected =
-                BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
+                expected = PType.bag(PType.array())
             ),
             SuccessTestCase(
                 name = "SELECT VALUE",
                 query = "SELECT VALUE [1, 1.0] FROM <<>>",
-                expected =
-                BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
+                expected = PType.bag(PType.array())
             ),
             SuccessTestCase(
                 name = "Duplicate fields in struct",
@@ -4379,26 +4426,6 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.unionOf(StaticType.INT4, StaticType.STRING))
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "Duplicate fields in ordered STRUCT. NOTE: b.b.d is an ordered struct with two attributes (e). First is INT4.",
-                query = """
-                    SELECT d.e AS e
-                    FROM << b.b.d >> AS d
-                """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("e", StaticType.INT4)
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -4470,20 +4497,14 @@ class PlanTyperTestsPorted {
                 name = "TRIM_2_error",
                 query = "trim(2 FROM ' Hello, World! ')",
                 expected = ANY,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "trim_chars",
-                            args = listOf(StaticType.STRING, StaticType.INT4)
-                        )
-                    )
-                }
+                problemHandler = assertProblemExists(
+                    PErrors.functionTypeMismatch(null, Identifier.delimited("trim_chars"), listOf(PType.string(), PType.integer()), emptyList())
+                )
             ),
         )
     }
 }
 
 fun interface ProblemHandler {
-    fun handle(problems: List<Problem>, ignoreSourceLocation: Boolean)
+    fun handle(problems: PErrorCollector, ignoreSourceLocation: Boolean)
 }

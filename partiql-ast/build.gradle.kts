@@ -16,59 +16,32 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
-    id(Plugins.pig)
 }
 
 dependencies {
-    api(Deps.pigRuntime)
     api(Deps.ionElement)
-    api(project(":partiql-types"))
+    compileOnly(Deps.lombok)
+    annotationProcessor(Deps.lombok)
+}
+
+// TODO: Figure out why this is needed.
+tasks.withType<Jar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.shadowJar {
+    configurations = listOf(project.configurations.shadow.get())
+}
+
+// Workaround for https://github.com/johnrengelman/shadow/issues/651
+components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
+    c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
+        skip()
+    }
 }
 
 publish {
     artifactId = "partiql-ast"
     name = "PartiQL AST"
     description = "PartiQL's Abstract Syntax Tree"
-}
-
-pig {
-    namespace = "org.partiql.lang.domains"
-}
-
-tasks.dokkaHtml.configure {
-    dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
-}
-
-tasks.processResources {
-    from("src/main/pig") {
-        include("partiql.ion")
-        into("org/partiql/type-domains/")
-    }
-}
-
-kotlin {
-    // TODO: Once PIG is either removed or adds explicit visibility modifiers, we can remove this.
-    //  See https://github.com/partiql/partiql-ir-generator/issues/108.
-    explicitApi = null
-}
-
-val generate = tasks.register<Exec>("generate") {
-    dependsOn(":lib:sprout:install")
-    workingDir(projectDir)
-    commandLine(
-        "../lib/sprout/build/install/sprout/bin/sprout", "generate", "kotlin",
-        "-o", "$buildDir/generated-src",
-        "-p", "org.partiql.ast",
-        "-u", "Ast",
-        "--poems", "factory",
-        "--poems", "visitor",
-        "--poems", "builder",
-        "--poems", "util",
-        "--opt-in", "org.partiql.value.PartiQLValueExperimental",
-        "./src/main/resources/partiql_ast.ion"
-    )
-}
-
-tasks.compileKotlin {
-    dependsOn(generate)
 }

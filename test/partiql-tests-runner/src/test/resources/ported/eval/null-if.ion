@@ -1,0 +1,218 @@
+
+{
+  name:"nullif(1, 1)",
+  statement:"nullif(1, 1)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif(1, 2)",
+  statement:"nullif(1, 2)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}
+{
+  name:"nullif(1, 1.0)",
+  statement:"nullif(1, 1.0)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif(1, '1')",
+  statement:"nullif(1, '1')",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}
+{
+  name:"nullif(null, null)",
+  statement:"nullif(null, null)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif(null, 1)",
+  statement:"nullif(null, 1)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif(1, null)",
+  statement:"nullif(1, null)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}
+{
+  name:"nullif(1, missing)",
+  statement:"nullif(1, missing)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}
+{
+  name:"nullif(missing, 1)",
+  statement:"nullif(missing, 1)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$missing::null
+  }
+}
+{
+  name:"nullif(null, missing)",
+  statement:"nullif(null, missing)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif(missing, null)",
+  statement:"nullif(missing, null)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif([], [])",
+  statement:"nullif([], [])",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif({}, {})",
+  statement:"nullif({}, {})",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif({}, [])",
+  statement:"nullif({}, [])",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:{
+    }
+  }
+}
+{
+  name:"nullif(1 = 1, 2 = 2)",
+  statement:"nullif(1 = 1, 2 = 2)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif(1 in [1,2,3], 2 in [2,3,4])",
+  statement:"nullif(1 in [1,2,3], 2 in [2,3,4])",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:null
+  }
+}
+{
+  name:"nullif(1 in [1,2,3], 1 in [2,3,4])",
+  statement:"nullif(1 in [1,2,3], 1 in [2,3,4])",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"nullif(1, 'a')",
+  statement:"nullif(1, 'a')",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}

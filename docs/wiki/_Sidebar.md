@@ -38,3 +38,18 @@
   * [Abstract Syntax Tree](https://github.com/partiql/partiql-lang-kotlin/wiki/Abstract-Syntax-Tree)
   * [Architecture Design](https://github.com/partiql/partiql-lang-kotlin/wiki/Architecture-Design)
   * [Code Style Guidelines](https://github.com/partiql/partiql-lang-kotlin/wiki/CODE-STYLE)
+---
+* V1 Documentation
+  * Basics
+    * [What is PartiQL?](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+  * PartiQL CLI
+    * [Installation](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+    * [Usage Guide](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+  * Developer Usage Guides
+    * [PartiQL Library Use-Cases](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+    * [Understanding PartiQL's Components](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+    * [Using the Parser](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+    * [Using the Planner](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+    * [Using the Compiler](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+    * [Executing Compiled Queries](https://github.com/partiql/partiql-lang-kotlin/wiki/TODO)
+    * [Handling Errors](https://github.com/partiql/partiql-lang-kotlin/wiki/ErrorHandling)

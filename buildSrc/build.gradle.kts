@@ -23,20 +23,22 @@ repositories {
 }
 
 object Versions {
+    const val binaryCompatibilityValidator = "0.14.0"
     const val detekt = "1.20.0-RC2"
-    const val dokka = "1.6.10"
-    const val kotlin = "1.6.20"
+    const val dokka = "1.9.20"
+    const val kotlin = "1.9.20"
     const val ktlintGradle = "10.2.1"
-    const val pig = "0.6.1"
+    const val nexusPublish = "2.0.0"
     const val shadow = "8.1.1"
 }
 
 object Plugins {
+    const val binaryCompatibilityValidator = "org.jetbrains.kotlinx:binary-compatibility-validator:${Versions.binaryCompatibilityValidator}"
     const val detekt = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${Versions.detekt}"
     const val dokka = "org.jetbrains.dokka:dokka-gradle-plugin:${Versions.dokka}"
     const val kotlinGradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val ktlintGradle = "org.jlleitschuh.gradle:ktlint-gradle:${Versions.ktlintGradle}"
-    const val pig = "org.partiql:pig-gradle-plugin:${Versions.pig}"
+    const val nexusPublish = "io.github.gradle-nexus:publish-plugin:${Versions.nexusPublish}"
     const val shadow = "com.github.johnrengelman:shadow:${Versions.shadow}"
 }
 
@@ -45,7 +47,8 @@ dependencies {
     implementation(Plugins.dokka)
     implementation(Plugins.kotlinGradle)
     implementation(Plugins.ktlintGradle)
-    implementation(Plugins.pig)
+    implementation(Plugins.nexusPublish)
+    implementation(Plugins.binaryCompatibilityValidator)
     implementation(Plugins.shadow)
 }
 

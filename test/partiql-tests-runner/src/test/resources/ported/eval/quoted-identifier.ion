@@ -1,0 +1,423 @@
+
+envs::{
+  Abc:1,
+  aBc:2,
+  abC:3,
+  Def:[
+    {
+      n:1
+    }
+  ],
+  dEf:[
+    {
+      n:2
+    }
+  ],
+  deF:[
+    {
+      n:3
+    }
+  ],
+  a:[
+    {
+      n:1
+    }
+  ],
+  b:[
+    {
+      n:2
+    }
+  ],
+  c:[
+    {
+      n:3
+    }
+  ],
+  '':empty_variable_name_value,
+  n:{
+    b:{
+      c:{
+        d:{
+          e:5,
+          f:6
+        }
+      }
+    }
+  },
+  s:"hello"
+}
+{
+  name:"\"stores\"[0].\"books\"[2].\"title\"",
+  statement:"\"stores\"[0].\"books\"[2].\"title\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:"C"
+  }
+}
+{
+  name:"SELECT s.abc FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s",
+  statement:"SELECT s.abc FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"\"abc\"",
+  statement:"\"abc\"",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"\"ABC\"",
+  statement:"\"ABC\"",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"SELECT * FROM \"Def\"",
+  statement:"SELECT * FROM \"Def\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        n:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM \"dEf\"",
+  statement:"SELECT * FROM \"dEf\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        n:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT * FROM \"deF\"",
+  statement:"SELECT * FROM \"deF\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        n:3
+      }
+    ]
+  }
+}
+{
+  name:"\"s\".*",
+  statement:"\"s\".*",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "hello"
+    ]
+  }
+}
+{
+  name:"\"n\".z IS MISSING",
+  statement:"\"n\".z IS MISSING",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"\"stores\"[*].\"books\"[*].\"title\"",
+  statement:"\"stores\"[*].\"books\"[*].\"title\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "A",
+      "B",
+      "C",
+      "D",
+      "A",
+      "E",
+      "F"
+    ]
+  }
+}
+{
+  name:"{'a': 1, 'b': 2, 'b': 3}.\"a\"",
+  statement:"{'a': 1, 'b': 2, 'b': 3}.\"a\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}
+{
+  name:"abc",
+  statement:"abc",
+  assert:{
+    result:EvaluationFail,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ]
+  }
+}
+{
+  name:"\"friends\".\"kumo\".\"likes\".*.\"type\"",
+  statement:"\"friends\".\"kumo\".\"likes\".*.\"type\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "dog",
+      "human"
+    ]
+  }
+}
+{
+  name:"\"stores\"[0].\"books\"[*].\"title\"",
+  statement:"\"stores\"[0].\"books\"[*].\"title\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "A",
+      "B",
+      "C",
+      "D"
+    ]
+  }
+}
+{
+  name:"\"friends\".*.\"likes\".*.\"type\"",
+  statement:"\"friends\".*.\"likes\".*.\"type\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "dog",
+      "human",
+      "dog",
+      "cat"
+    ]
+  }
+}
+{
+  name:"\"n\".b.\"c\".d.\"e\"",
+  statement:"\"n\".b.\"c\".d.\"e\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:5
+  }
+}
+{
+  name:"SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as Abc, b as aBc, c as abC",
+  statement:"SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as Abc, b as aBc, c as abC",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:1,
+        b:2,
+        c:3
+      }
+    ]
+  }
+}
+{
+  name:"\"n\".\"b\".\"c\".\"d\".\"e\"",
+  statement:"\"n\".\"b\".\"c\".\"d\".\"e\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:5
+  }
+}
+{
+  name:"SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as \"Abc\", b as \"aBc\", c as \"abC\"",
+  statement:"SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as \"Abc\", b as \"aBc\", c as \"abC\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        a:1,
+        b:2,
+        c:3
+      }
+    ]
+  }
+}
+{
+  name:"n.\"z\" IS MISSING",
+  statement:"n.\"z\" IS MISSING",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"\"s\"[*]",
+  statement:"\"s\"[*]",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "hello"
+    ]
+  }
+}
+{
+  name:"n.\"b\".c.\"d\".e",
+  statement:"n.\"b\".c.\"d\".e",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:5
+  }
+}
+{
+  name:"\"n\".\"z\" IS MISSING",
+  statement:"\"n\".\"z\" IS MISSING",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:true
+  }
+}
+{
+  name:"\"Abc\"",
+  statement:"\"Abc\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:1
+  }
+}
+{
+  name:"\"aBc\"",
+  statement:"\"aBc\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:2
+  }
+}
+{
+  name:"\"abC\"",
+  statement:"\"abC\"",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:3
+  }
+}
+{
+  name:"SELECT s.\"Abc\" , s.\"aBc\", s.\"abC\" FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s",
+  statement:"SELECT s.\"Abc\" , s.\"aBc\", s.\"abC\" FROM `$bag::[{ Abc: 1, aBc: 2, abC: 3}]` AS s",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        Abc:1,
+        aBc:2,
+        abC:3
+      }
+    ]
+  }
+}

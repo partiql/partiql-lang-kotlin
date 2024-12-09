@@ -1,0 +1,713 @@
+
+envs::{
+  nullSample:[
+    {
+      val:"A",
+      control:true,
+      n:1
+    },
+    {
+      val:"B",
+      control:false,
+      n:null
+    },
+    {
+      val:"C",
+      control:null,
+      n:3
+    }
+  ],
+  missingSample:[
+    {
+      val:"A",
+      control:true,
+      n:1
+    },
+    {
+      val:"B",
+      control:false,
+      n:2
+    },
+    {
+      val:"C"
+    }
+  ],
+  missingAndNullSample:[
+    {
+      val:"A",
+      control:true,
+      n:2
+    },
+    {
+      val:"B",
+      control:false,
+      n:2
+    },
+    {
+      val:"C",
+      int:3
+    },
+    {
+      val:"D",
+      control:null,
+      n:5
+    }
+  ],
+  boolsWithUnknowns:[
+    {
+      x:true,
+      y:true
+    },
+    {
+      x:true,
+      y:false
+    },
+    {
+      x:false,
+      y:false
+    },
+    {
+      x:false,
+      y:true
+    },
+    {
+      x:true,
+      y:null
+    },
+    {
+      x:false,
+      y:null
+    },
+    {
+      x:null,
+      y:false
+    },
+    {
+      x:null,
+      y:true
+    },
+    {
+      x:null,
+      y:null
+    },
+    {
+      x:true
+    },
+    {
+      x:false
+    },
+    {
+      y:true
+    },
+    {
+      y:false
+    },
+    {
+      x:null
+    },
+    {
+      y:null
+    },
+    {
+    }
+  ]
+}
+{
+  name:"SELECT sum(x.i) from `[]` as x",
+  statement:"SELECT sum(x.i) from `[]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT count(x.n) from missingAndNullSample as x",
+  statement:"SELECT count(x.n) from missingAndNullSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:3
+      }
+    ]
+  }
+}
+{
+  name:"SELECT min(x.i) from `[]` as x",
+  statement:"SELECT min(x.i) from `[]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT count(*) from `[{}]`",
+  statement:"SELECT count(*) from `[{}]`",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT avg(x.n) from missingAndNullSample as x",
+  statement:"SELECT avg(x.n) from missingAndNullSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:3.
+      }
+    ]
+  }
+}
+{
+  name:"SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
+  statement:"SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:2.
+      }
+    ]
+  }
+}
+{
+  name:"SELECT count(*) from `[]`",
+  statement:"SELECT count(*) from `[]`",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:0
+      }
+    ]
+  }
+}
+{
+  name:"SELECT min(x.n) from missingSample as x",
+  statement:"SELECT min(x.n) from missingSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+  statement:"SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
+  statement:"SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "A"
+    ]
+  }
+}
+{
+  name:"SELECT min(x.n) from nullSample as x",
+  statement:"SELECT min(x.n) from nullSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT count(x.n) from nullSample as x",
+  statement:"SELECT count(x.n) from nullSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT min(x.i) from `[{}]` as x",
+  statement:"SELECT min(x.i) from `[{}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT VALUE D.val from missingSample as D WHERE D.control",
+  statement:"SELECT VALUE D.val from missingSample as D WHERE D.control",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "A"
+    ]
+  }
+}
+{
+  name:"SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
+  statement:"SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+    ]
+  }
+}
+{
+  name:"SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
+  statement:"SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:3
+      }
+    ]
+  }
+}
+{
+  name:"SELECT avg(x.i) from `[{}]` as x",
+  statement:"SELECT avg(x.i) from `[{}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT VALUE D.val from nullSample as D WHERE D.control",
+  statement:"SELECT VALUE D.val from nullSample as D WHERE D.control",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      "A"
+    ]
+  }
+}
+{
+  name:"SELECT max(x.i) from `[]` as x",
+  statement:"SELECT max(x.i) from `[]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT avg(x.n) from missingSample as x",
+  statement:"SELECT avg(x.n) from missingSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:1.5
+      }
+    ]
+  }
+}
+{
+  name:"SELECT min(x.n) from missingAndNullSample as x",
+  statement:"SELECT min(x.n) from missingAndNullSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+  statement:"SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)",
+  statement:"SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE NULL AND CAST(s.x as INT)",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT sum(x.n) from nullSample as x",
+  statement:"SELECT sum(x.n) from nullSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:4
+      }
+    ]
+  }
+}
+{
+  name:"SELECT avg(x.n) from nullSample as x",
+  statement:"SELECT avg(x.n) from nullSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:2.
+      }
+    ]
+  }
+}
+{
+  name:"SELECT count(x.n) from missingSample as x",
+  statement:"SELECT count(x.n) from missingSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:2
+      }
+    ]
+  }
+}
+{
+  name:"SELECT sum(x.n) from missingSample as x",
+  statement:"SELECT sum(x.n) from missingSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:3
+      }
+    ]
+  }
+}
+{
+  name:"SELECT sum(x.i) from `[{}]` as x",
+  statement:"SELECT sum(x.i) from `[{}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
+  statement:"SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:4
+      }
+    ]
+  }
+}
+{
+  name:"SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
+  statement:"SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:10
+      }
+    ]
+  }
+}
+{
+  name:"SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+  statement:"SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:1
+      }
+    ]
+  }
+}
+{
+  name:"SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
+  statement:"SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:2.
+      }
+    ]
+  }
+}
+{
+  name:"SELECT count(1) from `[{}, {}, {}, {}]` as x",
+  statement:"SELECT count(1) from `[{}, {}, {}, {}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:4
+      }
+    ]
+  }
+}
+{
+  name:"SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)",
+  statement:"SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE MISSING AND CAST(s.x as INT)",
+  assert:[
+    {
+      result:EvaluationFail,
+      evalMode:EvalModeError
+    },
+    {
+      result:EvaluationSuccess,
+      evalMode:EvalModeCoerce,
+      output:$bag::[
+      ]
+    }
+  ]
+}
+{
+  name:"SELECT avg(x.i) from `[]` as x",
+  statement:"SELECT avg(x.i) from `[]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+  statement:"SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:3
+      }
+    ]
+  }
+}
+{
+  name:"SELECT max(x.i) from `[{}]` as x",
+  statement:"SELECT max(x.i) from `[{}]` as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:null
+      }
+    ]
+  }
+}
+{
+  name:"SELECT sum(x.n) from missingAndNullSample as x",
+  statement:"SELECT sum(x.n) from missingAndNullSample as x",
+  assert:{
+    result:EvaluationSuccess,
+    evalMode:[
+      EvalModeCoerce,
+      EvalModeError
+    ],
+    output:$bag::[
+      {
+        _1:9
+      }
+    ]
+  }
+}

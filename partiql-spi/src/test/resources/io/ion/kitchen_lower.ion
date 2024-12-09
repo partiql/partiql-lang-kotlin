@@ -1,0 +1,12 @@
+null
+missing
+true
+false
+1     // int
+1e23  // float
+1.23  // double
+"abc"
+{{ "This is a CLOB of text." }}
+{{ VG8gaW5maW5pdHkuLi4gYW5kIGJleW9uZCE= }}
+{ x: 1, y: 2, z: 3 }
+[ "a", "b", "c" ]

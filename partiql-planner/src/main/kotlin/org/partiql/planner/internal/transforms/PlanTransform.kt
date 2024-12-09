@@ -1,429 +1,409 @@
 package org.partiql.planner.internal.transforms
 
-import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
-import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.plan.PlanNode
-import org.partiql.plan.partiQLPlan
-import org.partiql.planner.PlanningProblemDetails
-import org.partiql.planner.internal.ir.Agg
-import org.partiql.planner.internal.ir.Catalog
-import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Identifier
-import org.partiql.planner.internal.ir.PartiQLPlan
+import org.partiql.plan.Action
+import org.partiql.plan.Collation
+import org.partiql.plan.Exclusion
+import org.partiql.plan.JoinType
+import org.partiql.plan.Operators
+import org.partiql.plan.Plan
+import org.partiql.plan.rel.RelAggregate
+import org.partiql.plan.rel.RelType
+import org.partiql.plan.rex.Rex
+import org.partiql.plan.rex.RexCase
+import org.partiql.plan.rex.RexStruct
+import org.partiql.plan.rex.RexType
+import org.partiql.plan.rex.RexVar
+import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ir.Rel
-import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.Statement
+import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
-import org.partiql.planner.internal.utils.PlanUtils
-import org.partiql.types.function.FunctionSignature
+import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.value.Datum
+import org.partiql.types.Field
+import org.partiql.types.PType
+import org.partiql.value.DecimalValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
+import org.partiql.planner.internal.ir.PlanNode as INode
+import org.partiql.planner.internal.ir.Rel as IRel
+import org.partiql.planner.internal.ir.Rex as IRex
+import org.partiql.planner.internal.ir.Statement as IStatement
 
 /**
- * This is an internal utility to translate from the internal unresolved plan used for typing to the public plan IR.
- * At the moment, these data structures are very similar sans-unresolved variants. The internal unresolved plan
- * continues to undergo frequent changes as we improve our typing model. This indirection enables a more stable public
- * consumable API while guaranteeing resolution safety.
+ * This produces a V1 plan from the internal plan IR.
  *
- * Ideally this class becomes very small as the internal IR will be a thin wrapper over the public API.
+ * TODO types and schemas!
  */
-internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
+internal class PlanTransform(private val flags: Set<PlannerFlag>) {
 
-    override fun defaultReturn(node: org.partiql.planner.internal.ir.PlanNode, ctx: ProblemCallback): PlanNode {
-        error("Not implemented")
+    /**
+     * Transform the internal IR to the public plan interfaces.
+     *
+     * @param internal
+     * @param listener
+     * @return
+     */
+    fun transform(internal: IPlan, listener: PErrorListener): Plan {
+        val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
+        val query = (internal.statement as IStatement.Query)
+        val visitor = Visitor(listener, signal)
+        val root = visitor.visitRex(query.root, query.root.type)
+        val action = Action.Query { root }
+        // TODO replace with standard implementations (or just remove plan transform altogether when possible).
+        return Plan { action }
     }
 
-    override fun visitPartiQLPlan(node: PartiQLPlan, ctx: ProblemCallback): org.partiql.plan.PartiQLPlan {
-        val catalogs = node.catalogs.map { visitCatalog(it, ctx) }
-        val statement = visitStatement(node.statement, ctx)
-        return partiQLPlan(catalogs, statement)
-    }
+    private class Visitor(
+        private val listener: PErrorListener,
+        private val signal: Boolean,
+    ) : PlanBaseVisitor<Any?, PType>() {
 
-    override fun visitCatalog(node: Catalog, ctx: ProblemCallback): org.partiql.plan.Catalog {
-        val symbols = node.symbols.map { visitCatalogSymbol(it, ctx) }
-        return org.partiql.plan.Catalog(node.name, symbols)
-    }
+        private val operators = Operators.STANDARD
 
-    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol {
-        return org.partiql.plan.Catalog.Symbol(node.path, node.type)
-    }
+        override fun defaultReturn(node: INode, ctx: PType): Any {
+            TODO("Translation not supported for ${node::class.simpleName}")
+        }
 
-    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol.Ref {
-        return org.partiql.plan.Catalog.Symbol.Ref(node.catalog, node.symbol)
-    }
+        // ERRORS
 
-    override fun visitFnResolved(node: Fn.Resolved, ctx: ProblemCallback) = org.partiql.plan.fn(node.signature)
+        /**
+         * TODO the following comment comes from the existing implementation, but how does it apply to CAST ??
+         *
+         * See PartiQL Specification [Section 4.1.1](https://partiql.org/partiql-lang/#sec:schema-in-tuple-path).
+         * While it talks about pathing into a tuple, it provides guidance on expressions that always return missing:
+         *
+         * > In a more important and common case, an PartiQL implementation can utilize the input data schema to prove
+         * > that a path expression always returns MISSING and thus throw a compile-time error.
+         *
+         * This is accomplished via the signaling mode below.
+         */
+        override fun visitRexOpErr(node: IRex.Op.Err, ctx: PType): Any {
+            // Listener should have already received the error/warning. The listener should have already failed compilation.
+            return operators.error(ctx)
+        }
 
-    override fun visitFnUnresolved(node: Fn.Unresolved, ctx: ProblemCallback): org.partiql.plan.Rex.Op {
-        error("Unresolved function ${node.identifier}")
-    }
+        override fun visitRelOpErr(node: org.partiql.planner.internal.ir.Rel.Op.Err, ctx: PType): Any {
+            // Listener should have already received the error. This node is a dud. Registered error listeners should
+            // have failed compilation already.
+            return operators.scan(operators.error(ctx))
+        }
 
-    override fun visitAgg(node: Agg, ctx: ProblemCallback) = super.visitAgg(node, ctx) as org.partiql.plan.Agg
+        // EXPRESSIONS
 
-    override fun visitAggResolved(node: Agg.Resolved, ctx: ProblemCallback) = org.partiql.plan.Agg(node.signature)
+        override fun visitRex(node: IRex, ctx: PType): Rex {
+            val o = visitRexOp(node.op, node.type)
+            o.type = RexType.of(ctx)
+            return o
+        }
 
-    override fun visitAggUnresolved(node: Agg.Unresolved, ctx: ProblemCallback): org.partiql.plan.Rex.Op {
-        error("Internal error: This should have been handled somewhere else. Cause: Unresolved aggregation ${node.identifier}.")
-    }
+        override fun visitRexOp(node: IRex.Op, ctx: PType): Rex = super.visitRexOp(node, ctx) as Rex
 
-    override fun visitStatement(node: Statement, ctx: ProblemCallback) =
-        super.visitStatement(node, ctx) as org.partiql.plan.Statement
+        override fun visitRexOpTupleUnion(node: IRex.Op.TupleUnion, ctx: PType): Any {
+            val args = node.args.map { visitRex(it, ctx) }
+            return operators.spread(args)
+        }
 
-    override fun visitStatementQuery(node: Statement.Query, ctx: ProblemCallback): org.partiql.plan.Statement.Query {
-        val root = visitRex(node.root, ctx)
-        return org.partiql.plan.Statement.Query(root)
-    }
+        override fun visitRexOpSelect(node: IRex.Op.Select, ctx: PType): Any {
+            val input = visitRel(node.rel, ctx)
+            val constructor = visitRex(node.constructor, ctx)
+            return operators.select(input, constructor)
+        }
 
-    override fun visitIdentifier(node: Identifier, ctx: ProblemCallback) =
-        super.visitIdentifier(node, ctx) as org.partiql.plan.Identifier
+        /**
+         * TODO proper handling of subqueries in the planner.
+         *
+         * @param node
+         * @param ctx
+         * @return
+         */
+        override fun visitRexOpSubquery(node: IRex.Op.Subquery, ctx: PType): Any {
+            val input = visitRel(node.rel, ctx)
+            val constructor = visitRex(node.constructor, ctx)
+            val isScalar = node.coercion == IRex.Op.Subquery.Coercion.SCALAR
+            return operators.subquery(input, constructor, isScalar)
+        }
 
-    override fun visitIdentifierSymbol(node: Identifier.Symbol, ctx: ProblemCallback) =
-        org.partiql.plan.Identifier.Symbol(
-            symbol = node.symbol,
-            caseSensitivity = when (node.caseSensitivity) {
-                Identifier.CaseSensitivity.SENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.SENSITIVE
-                Identifier.CaseSensitivity.INSENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE
-            }
-        )
+        override fun visitRexOpPivot(node: IRex.Op.Pivot, ctx: PType): Any {
+            val input = visitRel(node.rel, ctx)
+            val key = visitRex(node.key, ctx)
+            val value = visitRex(node.value, ctx)
+            return operators.pivot(input, key, value)
+        }
 
-    override fun visitIdentifierQualified(node: Identifier.Qualified, ctx: ProblemCallback) =
-        org.partiql.plan.Identifier.Qualified(
-            root = visitIdentifierSymbol(node.root, ctx),
-            steps = node.steps.map { visitIdentifierSymbol(it, ctx) }
-        )
+        override fun visitRexOpStruct(node: IRex.Op.Struct, ctx: PType): Any {
+            val fields = node.fields.map { field(it) }
+            return operators.struct(fields)
+        }
 
-    // EXPRESSIONS
-
-    override fun visitRex(node: Rex, ctx: ProblemCallback): org.partiql.plan.Rex {
-        val type = node.type
-        val op = visitRexOp(node.op, ctx)
-        return org.partiql.plan.Rex(type, op)
-    }
-
-    override fun visitRexOp(node: Rex.Op, ctx: ProblemCallback) = super.visitRexOp(node, ctx) as org.partiql.plan.Rex.Op
-
-    @OptIn(PartiQLValueExperimental::class)
-    override fun visitRexOpLit(node: Rex.Op.Lit, ctx: ProblemCallback) = org.partiql.plan.rexOpLit(node.value)
-
-    override fun visitRexOpVar(node: Rex.Op.Var, ctx: ProblemCallback) =
-        super.visitRexOpVar(node, ctx) as org.partiql.plan.Rex.Op
-
-    override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: ProblemCallback) =
-        org.partiql.plan.Rex.Op.Var(node.ref)
-
-    override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: ProblemCallback) =
-        org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
-
-    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Global(
-        ref = visitCatalogSymbolRef(node.ref, ctx)
-    )
-
-    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: ProblemCallback): PlanNode {
-        val root = visitRex(node.root, ctx)
-        val key = visitRex(node.key, ctx)
-        return org.partiql.plan.Rex.Op.Path.Index(root, key)
-    }
-
-    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: ProblemCallback): PlanNode {
-        val root = visitRex(node.root, ctx)
-        val key = visitRex(node.key, ctx)
-        return org.partiql.plan.Rex.Op.Path.Key(root, key)
-    }
-
-    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: ProblemCallback): PlanNode {
-        val root = visitRex(node.root, ctx)
-        return org.partiql.plan.Rex.Op.Path.Symbol(root, node.key)
-    }
-
-    override fun visitRexOpCall(node: Rex.Op.Call, ctx: ProblemCallback) =
-        super.visitRexOpCall(node, ctx) as org.partiql.plan.Rex.Op
-
-    override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: ProblemCallback): org.partiql.plan.Rex.Op {
-        val fn = visitFn(node.fn, ctx)
-        val args = node.args.map { visitRex(it, ctx) }
-        return when (fn) {
-            is org.partiql.plan.Fn -> {
-                org.partiql.plan.Rex.Op.Call.Static(fn, args)
-            }
-            is org.partiql.plan.Rex.Op -> {
-                // had error
-                fn
-            }
-            else -> {
-                error("Expected Fn or Err, found $fn")
+        override fun visitRexOpCollection(node: IRex.Op.Collection, ctx: PType): Any {
+            val values = node.values.map { visitRex(it, ctx) }
+            return when (ctx.code()) {
+                PType.ARRAY -> operators.array(values)
+                PType.BAG -> operators.bag(values)
+                else -> error("Expected bag or array, found ${ctx.name().lowercase()}")
             }
         }
-    }
 
-    override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: ProblemCallback): PlanNode {
-        val candidates = node.candidates.map {
-            val c = visitRexOpCallDynamicCandidate(it, ctx)
-            if (c is org.partiql.plan.Rex.Op.Err) return c
-            c as org.partiql.plan.Rex.Op.Call.Dynamic.Candidate
+        override fun visitRexOpCoalesce(node: IRex.Op.Coalesce, ctx: PType): Any {
+            val args = node.args.map { visitRex(it, ctx) }
+            return operators.coalesce(args)
         }
-        return org.partiql.plan.Rex.Op.Call.Dynamic(
-            candidates = candidates,
-            args = node.args.map { visitRex(it, ctx) }
-        )
-    }
 
-    override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: ProblemCallback): PlanNode {
-        val fn = visitFn(node.fn, ctx)
-        if (fn is org.partiql.plan.Rex.Op.Err) return fn
-        fn as org.partiql.plan.Fn
-        val coercions = node.coercions.map {
-            it?.let {
-                val c = visitFn(it, ctx)
-                if (c is org.partiql.plan.Rex.Op.Err) return c
-                c as org.partiql.plan.Fn
-            }
+        override fun visitRexOpNullif(node: IRex.Op.Nullif, ctx: PType): Any {
+            val value = visitRex(node.value, ctx)
+            val nullifier = visitRex(node.nullifier, ctx)
+            return operators.nullIf(value, nullifier)
         }
-        return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, coercions)
-    }
 
-    override fun visitRexOpCase(node: Rex.Op.Case, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Case(
-        branches = node.branches.map { visitRexOpCaseBranch(it, ctx) }, default = visitRex(node.default, ctx)
-        )
+        override fun visitRexOpCase(node: IRex.Op.Case, ctx: PType): Any {
+            val branches = node.branches.map { branch(it) }
+            val default = visitRex(node.default, ctx)
+            return operators.caseWhen(null, branches, default)
+        }
 
-        override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: ProblemCallback) =
-            org.partiql.plan.Rex.Op.Nullif(
-                value = visitRex(node.value, ctx),
-                nullifier = visitRex(node.nullifier, ctx),
-            )
+        override fun visitRexOpCallDynamic(node: IRex.Op.Call.Dynamic, ctx: PType): Any {
+            // TODO assert on function name in plan typer .. here is not the place.
+            val args = node.args.map { visitRex(it, ctx) }
+            val fns = node.candidates.map { it.fn.signature }
+            val name = node.candidates.first().fn.name.getName()
+            return operators.dispatch(name, fns, args)
+        }
 
-        override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: ProblemCallback) =
-            org.partiql.plan.Rex.Op.Coalesce(
-                args = node.args.map { visitRex(it, ctx) }
-            )
+        override fun visitRexOpCallStatic(node: IRex.Op.Call.Static, ctx: PType): Any {
+            val fn = node.fn
+            val args = node.args.map { visitRex(it, ctx) }
+            return operators.call(fn, args)
+        }
 
-        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: ProblemCallback) =
-            org.partiql.plan.Rex.Op.Case.Branch(
-                condition = visitRex(node.condition, ctx), rex = visitRex(node.rex, ctx)
-            )
+        override fun visitRexOpCallUnresolved(node: IRex.Op.Call.Unresolved, ctx: PType): Any {
+            error("The Internal Node Rex.Op.Call.Unresolved should be converted to an Err Node during type resolution if resolution failed")
+        }
 
-        override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: ProblemCallback) =
-            org.partiql.plan.Rex.Op.Collection(values = node.values.map { visitRex(it, ctx) })
+        override fun visitRexOpCastUnresolved(node: IRex.Op.Cast.Unresolved, ctx: PType): Any {
+            error("This should have been converted to an error node.")
+        }
 
-        override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: ProblemCallback) =
-            org.partiql.plan.Rex.Op.Struct(fields = node.fields.map { visitRexOpStructField(it, ctx) })
+        override fun visitRexOpCastResolved(node: IRex.Op.Cast.Resolved, ctx: PType): Any {
+            val operand = visitRex(node.arg, ctx)
+            val target = node.cast.target
+            return operators.cast(operand, target)
+        }
 
-        override fun visitRexOpStructField(node: Rex.Op.Struct.Field, ctx: ProblemCallback) =
-            org.partiql.plan.Rex.Op.Struct.Field(
-                k = visitRex(node.k, ctx),
-                v = visitRex(node.v, ctx),
-            )
+        override fun visitRexOpPathSymbol(node: IRex.Op.Path.Symbol, ctx: PType): Any {
+            val operand = visitRex(node.root, ctx)
+            val symbol = node.key
+            return operators.pathSymbol(operand, symbol)
+        }
 
-        override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Pivot(
-            key = visitRex(node.key, ctx),
-            value = visitRex(node.value, ctx),
-            rel = visitRel(node.rel, ctx),
-        )
+        override fun visitRexOpPathKey(node: IRex.Op.Path.Key, ctx: PType): Any {
+            val operand = visitRex(node.root, ctx)
+            val key = visitRex(node.key, ctx)
+            return operators.pathKey(operand, key)
+        }
 
-        override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Subquery(
-            select = visitRexOpSelect(node.select, ctx),
-            coercion = when (node.coercion) {
-                Rex.Op.Subquery.Coercion.SCALAR -> org.partiql.plan.Rex.Op.Subquery.Coercion.SCALAR
-                Rex.Op.Subquery.Coercion.ROW -> org.partiql.plan.Rex.Op.Subquery.Coercion.ROW
+        override fun visitRexOpPathIndex(node: IRex.Op.Path.Index, ctx: PType): Any {
+            val operand = visitRex(node.root, ctx)
+            val index = visitRex(node.key, ctx)
+            return operators.pathIndex(operand, index)
+        }
+
+        override fun visitRexOpVarGlobal(node: IRex.Op.Var.Global, ctx: PType): Any {
+            return operators.table(node.ref.table)
+        }
+
+        override fun visitRexOpVarUnresolved(node: IRex.Op.Var.Unresolved, ctx: PType): Any {
+            error("The Internal Plan Node Rex.Op.Var.Unresolved should be converted to an MISSING Node during type resolution if resolution failed")
+        }
+
+        override fun visitRexOpVarLocal(node: IRex.Op.Var.Local, ctx: PType): Any {
+            val depth = node.depth
+            val offset = node.ref
+            return operators.variable(depth, offset, ctx)
+        }
+
+        @OptIn(PartiQLValueExperimental::class)
+        override fun visitRexOpLit(node: IRex.Op.Lit, ctx: PType): Any {
+            val value = node.value
+            // TODO: PartiQLValue doesn't have a finite decimal type, so we need to specially handle this until we remove
+            //  PartiQLValue.
+            if (value is DecimalValue && ctx.code() == PType.DECIMAL) {
+                return when (val dec = value.value) {
+                    null -> operators.lit(Datum.nullValue(ctx))
+                    else -> operators.lit(Datum.decimal(dec, ctx.precision, ctx.scale))
+                }
             }
-        )
-
-        override fun visitRexOpSelect(node: Rex.Op.Select, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Select(
-            constructor = visitRex(node.constructor, ctx),
-            rel = visitRel(node.rel, ctx),
-        )
-
-        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: ProblemCallback) =
-            org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
-
-        override fun visitRexOpErr(node: Rex.Op.Err, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Err(node.message)
+            return operators.lit(Datum.of(node.value))
+        }
 
         // RELATION OPERATORS
 
-        override fun visitRel(node: Rel, ctx: ProblemCallback) = org.partiql.plan.Rel(
-            type = visitRelType(node.type, ctx),
-            op = visitRelOp(node.op, ctx),
-        )
-
-        override fun visitRelType(node: Rel.Type, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Type(
-                schema = node.schema.map { visitRelBinding(it, ctx) },
-                props = node.props.map {
-                    when (it) {
-                        Rel.Prop.ORDERED -> org.partiql.plan.Rel.Prop.ORDERED
-                    }
-                }.toSet()
-
-            )
-
-        override fun visitRelOp(node: Rel.Op, ctx: ProblemCallback) = super.visitRelOp(node, ctx) as org.partiql.plan.Rel.Op
-
-        override fun visitRelOpScan(node: Rel.Op.Scan, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Scan(
-            rex = visitRex(node.rex, ctx),
-        )
-
-        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.ScanIndexed(
-                rex = visitRex(node.rex, ctx),
-            )
-
-        override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Unpivot(
-            rex = visitRex(node.rex, ctx),
-        )
-
-        override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Distinct(
-            input = visitRel(node.input, ctx),
-        )
-
-        override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Filter(
-            input = visitRel(node.input, ctx),
-            predicate = visitRex(node.predicate, ctx),
-        )
-
-        override fun visitRelOpSort(node: Rel.Op.Sort, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Sort(
-                input = visitRel(node.input, ctx),
-                specs = node.specs.map { visitRelOpSortSpec(it, ctx) }
-            )
-
-        override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Sort.Spec(
-            rex = visitRex(node.rex, ctx),
-            order = when (node.order) {
-                Rel.Op.Sort.Order.ASC_NULLS_LAST -> org.partiql.plan.Rel.Op.Sort.Order.ASC_NULLS_LAST
-                Rel.Op.Sort.Order.ASC_NULLS_FIRST -> org.partiql.plan.Rel.Op.Sort.Order.ASC_NULLS_FIRST
-                Rel.Op.Sort.Order.DESC_NULLS_LAST -> org.partiql.plan.Rel.Op.Sort.Order.DESC_NULLS_LAST
-                Rel.Op.Sort.Order.DESC_NULLS_FIRST -> org.partiql.plan.Rel.Op.Sort.Order.DESC_NULLS_FIRST
-            }
-        )
-
-        override fun visitRelOpUnion(node: Rel.Op.Union, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Union(
-            lhs = visitRel(node.lhs, ctx),
-            rhs = visitRel(node.rhs, ctx),
-        )
-
-        override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Intersect(
-            lhs = visitRel(node.lhs, ctx),
-            rhs = visitRel(node.rhs, ctx),
-        )
-
-        override fun visitRelOpExcept(node: Rel.Op.Except, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Except(
-            lhs = visitRel(node.lhs, ctx),
-            rhs = visitRel(node.rhs, ctx),
-        )
-
-        override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Limit(
-            input = visitRel(node.input, ctx),
-            limit = visitRex(node.limit, ctx),
-        )
-
-        override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Offset(
-            input = visitRel(node.input, ctx),
-            offset = visitRex(node.offset, ctx),
-        )
-
-        override fun visitRelOpProject(node: Rel.Op.Project, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Project(
-            input = visitRel(node.input, ctx),
-            projections = node.projections.map { visitRex(it, ctx) },
-        )
-
-        override fun visitRelOpJoin(node: Rel.Op.Join, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Join(
-            lhs = visitRel(node.lhs, ctx),
-            rhs = visitRel(node.rhs, ctx),
-            rex = visitRex(node.rex, ctx),
-            type = when (node.type) {
-                Rel.Op.Join.Type.INNER -> org.partiql.plan.Rel.Op.Join.Type.INNER
-                Rel.Op.Join.Type.LEFT -> org.partiql.plan.Rel.Op.Join.Type.LEFT
-                Rel.Op.Join.Type.RIGHT -> org.partiql.plan.Rel.Op.Join.Type.RIGHT
-                Rel.Op.Join.Type.FULL -> org.partiql.plan.Rel.Op.Join.Type.FULL
-            }
-        )
-
-        override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Aggregate(
-            input = visitRel(node.input, ctx),
-            strategy = when (node.strategy) {
-                Rel.Op.Aggregate.Strategy.FULL -> org.partiql.plan.Rel.Op.Aggregate.Strategy.FULL
-                Rel.Op.Aggregate.Strategy.PARTIAL -> org.partiql.plan.Rel.Op.Aggregate.Strategy.PARTIAL
-            },
-            calls = node.calls.map { visitRelOpAggregateCall(it, ctx) },
-            groups = node.groups.map { visitRex(it, ctx) },
-        )
-
-        @OptIn(PartiQLValueExperimental::class)
-        override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Aggregate.Call {
-            val agg = when (val agg = node.agg) {
-                is Agg.Unresolved -> {
-                    val name = PlanUtils.identifierToString(visitIdentifier(agg.identifier, ctx))
-                    ctx.invoke(
-                        Problem(
-                            UNKNOWN_PROBLEM_LOCATION,
-                            PlanningProblemDetails.UnknownAggregateFunction(
-                                visitIdentifier(agg.identifier, ctx),
-                                node.args.map { it.type }
-                            )
-                        )
-                    )
-                    org.partiql.plan.Agg(
-                        FunctionSignature.Aggregation(
-                            "UNKNOWN_AGG::$name",
-                            returns = PartiQLValueType.ANY, // TODO: Make unknown or something similar
-                            parameters = emptyList()
-                        )
-                    )
-                }
-                is Agg.Resolved -> {
-                    visitAggResolved(agg, ctx)
-                }
-            }
-            return org.partiql.plan.Rel.Op.Aggregate.Call(
-                agg = agg,
-                args = node.args.map { visitRex(it, ctx) },
-            )
+        override fun visitRel(node: IRel, ctx: PType): org.partiql.plan.rel.Rel {
+            val o = visitRelOp(node.op, ctx)
+            val fields = node.type.schema.map { Field.of(it.name, it.type) }.toTypedArray()
+            val properties = if (node.type.props.contains(Rel.Prop.ORDERED)) RelType.ORDERED else 0
+            o.type = RelType.of(fields, properties)
+            return o
         }
 
-        override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Exclude(
-            input = visitRel(node.input, ctx),
-            items = node.items.map { visitRelOpExcludeItem(it, ctx) },
-        )
+        override fun visitRelOp(node: IRel.Op, ctx: PType): org.partiql.plan.rel.Rel =
+            super.visitRelOp(node, ctx) as org.partiql.plan.rel.Rel
 
-        override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Exclude.Item {
-            val root = when (node.root) {
-                is Rex.Op.Var.Resolved -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
-                is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1) // unresolved in `PlanTyper` results in error
-            }
-            return org.partiql.plan.Rel.Op.Exclude.Item(
-                root = root,
-                steps = node.steps.map { visitRelOpExcludeStep(it, ctx) },
-            )
+        override fun visitRelOpAggregate(node: IRel.Op.Aggregate, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val calls = node.calls.map { visitRelOpAggregateCall(it, ctx) as RelAggregate.Measure }
+            val groups = node.groups.map { visitRex(it, ctx) }
+            return operators.aggregate(input, calls, groups)
         }
 
-        override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: ProblemCallback) =
-            super.visit(node, ctx) as org.partiql.plan.Rel.Op.Exclude.Step
+        override fun visitRelOpAggregateCallUnresolved(node: IRel.Op.Aggregate.Call.Unresolved, ctx: PType): Any {
+            error("Unresolved aggregate call $node")
+        }
 
-        override fun visitRelOpExcludeStepStructField(node: Rel.Op.Exclude.Step.StructField, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Step.StructField(
-                symbol = visitIdentifierSymbol(node.symbol, ctx),
-            )
+        override fun visitRelOpAggregateCallResolved(node: IRel.Op.Aggregate.Call.Resolved, ctx: PType): Any {
+            val agg = node.agg.signature
+            val args = node.args.map { visitRex(it, ctx) }
+            val isDistinct = node.setq == SetQuantifier.DISTINCT
+            return RelAggregate.measure(agg, args, isDistinct)
+        }
 
-        override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Step.CollIndex(
-                index = node.index,
-            )
+        override fun visitRelOpJoin(node: IRel.Op.Join, ctx: PType): Any {
+            val lhs = visitRel(node.lhs, ctx)
+            val rhs = visitRel(node.rhs, ctx)
+            val condition = visitRex(node.rex, ctx)
 
-        override fun visitRelOpExcludeStepStructWildcard(
-            node: Rel.Op.Exclude.Step.StructWildcard,
-            ctx: ProblemCallback,
-        ) = org.partiql.plan.Rel.Op.Exclude.Step.StructWildcard()
+            val joinType = when (node.type) {
+                IRel.Op.Join.Type.INNER -> JoinType.INNER()
+                IRel.Op.Join.Type.LEFT -> JoinType.LEFT()
+                IRel.Op.Join.Type.RIGHT -> JoinType.RIGHT()
+                IRel.Op.Join.Type.FULL -> JoinType.FULL()
+            }
+            return operators.join(lhs, rhs, condition, joinType)
+        }
 
-        override fun visitRelOpExcludeStepCollWildcard(
-            node: Rel.Op.Exclude.Step.CollWildcard,
-            ctx: ProblemCallback,
-        ) = org.partiql.plan.Rel.Op.Exclude.Step.CollWildcard()
+        override fun visitRelOpExclude(node: IRel.Op.Exclude, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val paths = node.paths.mapNotNull { visitRelOpExcludePath(it, ctx) }
+            return operators.exclude(input, paths)
+        }
 
-        override fun visitRelOpErr(node: Rel.Op.Err, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Err(node.message)
+        override fun visitRelOpExcludePath(node: IRel.Op.Exclude.Path, ctx: PType): Exclusion? {
+            val variable = visitRexOp(node.root, ctx) as? RexVar ?: return null
+            val items = node.steps.map { visitRelOpExcludeStep(it, ctx) }
+            return Exclusion(variable, items)
+        }
 
-        override fun visitRelBinding(node: Rel.Binding, ctx: ProblemCallback) = org.partiql.plan.Rel.Binding(
-            name = node.name,
-            type = node.type,
-        )
+        override fun visitRelOpExcludeStep(node: IRel.Op.Exclude.Step, ctx: PType): Exclusion.Item {
+            val items = node.substeps.map { visitRelOpExcludeStep(it, ctx) }
+            return when (node.type) {
+                is IRel.Op.Exclude.Type.CollIndex -> Exclusion.collIndex(node.type.index, items)
+                is IRel.Op.Exclude.Type.CollWildcard -> Exclusion.collWildcard(items)
+                is IRel.Op.Exclude.Type.StructKey -> Exclusion.structKey(node.type.key, items)
+                is IRel.Op.Exclude.Type.StructSymbol -> Exclusion.structSymbol(node.type.symbol, items)
+                is IRel.Op.Exclude.Type.StructWildcard -> Exclusion.structWildCard(items)
+            }
+        }
+
+        override fun visitRelOpProject(node: IRel.Op.Project, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val projections = node.projections.map { visitRex(it, ctx) }
+            return operators.project(input, projections)
+        }
+
+        override fun visitRelOpOffset(node: IRel.Op.Offset, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val offset = visitRex(node.offset, ctx)
+            return operators.offset(input, offset)
+        }
+
+        override fun visitRelOpLimit(node: IRel.Op.Limit, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val limit = visitRex(node.limit, ctx)
+            return operators.limit(input, limit)
+        }
+
+        override fun visitRelOpIntersect(node: IRel.Op.Intersect, ctx: PType): Any {
+            val lhs = visitRel(node.lhs, ctx)
+            val rhs = visitRel(node.rhs, ctx)
+            val isAll = node.setq == SetQuantifier.ALL
+            return operators.intersect(lhs, rhs, isAll)
+        }
+
+        override fun visitRelOpUnion(node: IRel.Op.Union, ctx: PType): Any {
+            val lhs = visitRel(node.lhs, ctx)
+            val rhs = visitRel(node.rhs, ctx)
+            val isAll = node.setq == SetQuantifier.ALL
+            return operators.union(lhs, rhs, isAll)
+        }
+
+        override fun visitRelOpExcept(node: IRel.Op.Except, ctx: PType): Any {
+            val lhs = visitRel(node.lhs, ctx)
+            val rhs = visitRel(node.rhs, ctx)
+            val isAll = node.setq == SetQuantifier.ALL
+            return operators.except(lhs, rhs, isAll)
+        }
+
+        override fun visitRelOpSort(node: IRel.Op.Sort, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val collations = node.specs.map { collation(it) }
+            return operators.sort(input, collations)
+        }
+
+        override fun visitRelOpFilter(node: IRel.Op.Filter, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            val condition = visitRex(node.predicate, ctx)
+            return operators.filter(input, condition)
+        }
+
+        override fun visitRelOpDistinct(node: IRel.Op.Distinct, ctx: PType): Any {
+            val input = visitRel(node.input, ctx)
+            return operators.distinct(input)
+        }
+
+        override fun visitRelOpUnpivot(node: IRel.Op.Unpivot, ctx: PType): Any {
+            val input = visitRex(node.rex, ctx)
+            return operators.unpivot(input)
+        }
+
+        override fun visitRelOpScanIndexed(node: IRel.Op.ScanIndexed, ctx: PType): Any {
+            val input = visitRex(node.rex, ctx)
+            return operators.iterate(input)
+        }
+
+        override fun visitRelOpScan(node: IRel.Op.Scan, ctx: PType): Any {
+            val input = visitRex(node.rex, ctx)
+            return operators.scan(input)
+        }
+
+        // HELPERS
+
+        /**
+         * TODO STANDARD COLLATION IMPLEMENTATION.
+         */
+        private fun collation(spec: IRel.Op.Sort.Spec): Collation {
+            val rex = visitRex(spec.rex, spec.rex.type)
+            val (order, nulls) = when (spec.order) {
+                IRel.Op.Sort.Order.ASC_NULLS_LAST -> Collation.Order.ASC() to Collation.Nulls.LAST()
+                IRel.Op.Sort.Order.ASC_NULLS_FIRST -> Collation.Order.ASC() to Collation.Nulls.FIRST()
+                IRel.Op.Sort.Order.DESC_NULLS_LAST -> Collation.Order.DESC() to Collation.Nulls.LAST()
+                IRel.Op.Sort.Order.DESC_NULLS_FIRST -> Collation.Order.DESC() to Collation.Nulls.FIRST()
+            }
+            return object : Collation {
+                override fun getColumn(): Rex = rex
+                override fun getOrder(): Collation.Order = order
+                override fun getNulls(): Collation.Nulls = nulls
+            }
+        }
+
+        private fun field(field: IRex.Op.Struct.Field): RexStruct.Field {
+            val key = visitRex(field.k, field.k.type)
+            val value = visitRex(field.v, field.v.type)
+            return RexStruct.field(key, value)
+        }
+
+        private fun branch(branch: IRex.Op.Case.Branch): RexCase.Branch {
+            val condition = visitRex(branch.condition, branch.condition.type)
+            val result = visitRex(branch.rex, branch.rex.type)
+            return RexCase.branch(condition, result)
+        }
     }
-    
+}
