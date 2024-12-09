@@ -47,8 +47,7 @@ public interface Session {
          */
         @JvmStatic
         public fun empty(): Session {
-            val catalog = Catalog.empty("empty")
-            return builder().catalog(catalog.getName()).catalogs(catalog).build()
+            return builder().catalog(System.INSTANCE.getName()).catalogs().build()
         }
 
         @JvmStatic
@@ -62,7 +61,7 @@ public interface Session {
 
         private var identity: String = "unknown"
         private var catalog: String? = null
-        private var systemCatalog: Catalog = PartiQLSystemCatalog.INSTANCE
+        private var system: Catalog = System.INSTANCE
         private var catalogs: Catalogs.Builder = Catalogs.builder()
         private var namespace: Namespace = Namespace.empty()
         private var properties: MutableMap<String, String> = mutableMapOf()
@@ -103,7 +102,7 @@ public interface Session {
          * If this is never invoked, a default system catalog is provided.
          */
         public fun system(catalog: Catalog): Builder {
-            this.systemCatalog = catalog
+            this.system = catalog
             return this
         }
 
@@ -120,11 +119,11 @@ public interface Session {
         public fun build(): Session = object : Session {
 
             private val _catalogs: Catalogs
-            private val systemCatalogNamespace: Namespace = Namespace.of(systemCatalog.getName())
+            private val systemCatalogNamespace: Namespace = Namespace.of(system.getName())
 
             init {
                 require(catalog != null) { "Session catalog must be set" }
-                catalogs.add(systemCatalog)
+                catalogs.add(system)
                 _catalogs = catalogs.build()
             }
 

@@ -18,7 +18,7 @@ import java.util.Collection;
  * </p>
  * @see Session.Builder
  */
-final class PartiQLSystemCatalog implements Catalog {
+final class System implements Catalog {
 
     @NotNull
     private static final String NAME = "$system";
@@ -26,7 +26,7 @@ final class PartiQLSystemCatalog implements Catalog {
     /**
      * This is a package-private singleton.
      */
-    static PartiQLSystemCatalog INSTANCE = new PartiQLSystemCatalog();
+    static System INSTANCE = new System();
 
     @NotNull
     @Override

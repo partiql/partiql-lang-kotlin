@@ -70,7 +70,6 @@ public class org/partiql/spi/SourceLocations : java/util/Map {
 public abstract interface class org/partiql/spi/catalog/Catalog {
 	public static final field Companion Lorg/partiql/spi/catalog/Catalog$Companion;
 	public static fun builder ()Lorg/partiql/spi/catalog/Catalog$Builder;
-	public static fun empty (Ljava/lang/String;)Lorg/partiql/spi/catalog/Catalog;
 	public abstract fun getAggregations (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getFunctions (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getName ()Ljava/lang/String;
@@ -86,7 +85,6 @@ public final class org/partiql/spi/catalog/Catalog$Builder {
 
 public final class org/partiql/spi/catalog/Catalog$Companion {
 	public final fun builder ()Lorg/partiql/spi/catalog/Catalog$Builder;
-	public final fun empty (Ljava/lang/String;)Lorg/partiql/spi/catalog/Catalog;
 }
 
 public final class org/partiql/spi/catalog/Catalog$DefaultImpls {
