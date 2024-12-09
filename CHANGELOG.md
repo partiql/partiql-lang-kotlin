@@ -26,7 +26,6 @@ Thank you to all who have contributed!
 ## [1.0.0-rc.2]
 
 ### Added
-- Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
 
 ### Changed
 

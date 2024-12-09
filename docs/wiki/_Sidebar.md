@@ -20,7 +20,7 @@
 * Testing
   * [Writing PartiQL Unit Tests](https://github.com/partiql/partiql-lang-kotlin/wiki/PartiQL-Code-Coverage)
 * Serde
-  * [PartiQL Value <> ION](https://github.com/partiql/partiql-lang-kotlin/wiki/PartiQLIonSerde)
+  * [PartiQL Value <> ION](https://github.com/partiql/partiql-lang-kotlin/wiki/Serde)
 * Upgrade Guides
   * [Upgrade Guide General](https://github.com/partiql/partiql-lang-kotlin/wiki/upgrade-guide)
   * [CLI Versions](https://github.com/partiql/partiql-lang-kotlin/wiki/cli-versions)
