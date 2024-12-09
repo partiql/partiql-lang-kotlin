@@ -73,8 +73,8 @@ public abstract interface class org/partiql/spi/catalog/Catalog {
 	public abstract fun getAggregations (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getFunctions (Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public abstract fun getName ()Ljava/lang/String;
-	public abstract fun getTable (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Table;
 	public abstract fun getTable (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
+	public abstract fun resolveTable (Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Name;
 }
 
 public final class org/partiql/spi/catalog/Catalog$Builder {
@@ -90,8 +90,8 @@ public final class org/partiql/spi/catalog/Catalog$Companion {
 public final class org/partiql/spi/catalog/Catalog$DefaultImpls {
 	public static fun getAggregations (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
 	public static fun getFunctions (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Ljava/lang/String;)Ljava/util/Collection;
-	public static fun getTable (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Table;
 	public static fun getTable (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
+	public static fun resolveTable (Lorg/partiql/spi/catalog/Catalog;Lorg/partiql/spi/catalog/Session;Lorg/partiql/spi/catalog/Identifier;)Lorg/partiql/spi/catalog/Name;
 }
 
 public abstract interface class org/partiql/spi/catalog/Catalogs {

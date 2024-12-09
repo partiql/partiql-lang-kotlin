@@ -42,7 +42,7 @@ final class System implements Catalog {
 
     @Nullable
     @Override
-    public Table getTable(@NotNull Session session, @NotNull Identifier identifier) {
+    public Name resolveTable(@NotNull Session session, @NotNull Identifier identifier) {
         return null;
     }
 

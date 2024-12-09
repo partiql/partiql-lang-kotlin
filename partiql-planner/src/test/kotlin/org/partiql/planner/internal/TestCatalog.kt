@@ -20,15 +20,19 @@ public class TestCatalog private constructor(
     override fun getName(): String = name
 
     override fun getTable(session: Session, name: Name): Table? {
+        var curr: Tree = root
+        for (part in name) {
+            curr = curr.get(Identifier.delimited(part).first()) ?: break
+        }
         return null
     }
 
-    override fun getTable(session: Session, identifier: Identifier): Table? {
+    override fun resolveTable(session: Session, identifier: Identifier): Name? {
         var curr: Tree = root
         for (part in identifier) {
             curr = curr.get(part) ?: break
         }
-        return curr.table
+        return curr.table?.getName()
     }
 
     private class Tree(
