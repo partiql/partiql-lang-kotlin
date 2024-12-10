@@ -7,7 +7,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Literal;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -24,7 +23,7 @@ public class ExprLit extends Expr {
 
     @NotNull
     @Override
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(lit);
         return kids;

@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public abstract class QueryBody extends AstNode {
@@ -48,7 +47,7 @@ public abstract class QueryBody extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(select);
             if (exclude != null) kids.add(exclude);
@@ -89,7 +88,7 @@ public abstract class QueryBody extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(type);
             kids.add(lhs);

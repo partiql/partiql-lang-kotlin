@@ -8,7 +8,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.DatetimeField;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ public class ExprExtract extends Expr {
 
     @Override
     @NotNull
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(source);
         return kids;

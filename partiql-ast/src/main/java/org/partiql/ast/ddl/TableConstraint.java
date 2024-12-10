@@ -9,7 +9,6 @@ import org.partiql.ast.Identifier;
 import org.partiql.ast.IdentifierChain;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public abstract class TableConstraint extends AstNode {
@@ -35,7 +34,7 @@ public abstract class TableConstraint extends AstNode {
 
         @NotNull
         @Override
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(name);
             kids.addAll(columns);

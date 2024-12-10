@@ -9,7 +9,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -39,7 +38,7 @@ public abstract class GraphPart extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             if (prefilter != null) {
                 kids.add(prefilter);
@@ -88,7 +87,7 @@ public abstract class GraphPart extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             if (quantifier != null) {
                 kids.add(quantifier);
@@ -123,7 +122,7 @@ public abstract class GraphPart extends AstNode {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(pattern);
             return kids;

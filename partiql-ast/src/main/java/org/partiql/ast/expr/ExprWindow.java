@@ -9,7 +9,6 @@ import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Sort;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,7 +42,7 @@ public class ExprWindow extends Expr {
 
     @Override
     @NotNull
-    public Collection<AstNode> children() {
+    public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(expression);
         if (offset != null) {
@@ -80,7 +79,7 @@ public class ExprWindow extends Expr {
 
         @Override
         @NotNull
-        public Collection<AstNode> children() {
+        public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             if (partitions != null) {
                 kids.addAll(partitions);
