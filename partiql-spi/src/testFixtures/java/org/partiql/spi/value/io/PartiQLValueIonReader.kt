@@ -8,7 +8,6 @@ import com.amazon.ionelement.api.IonElement
 import org.partiql.value.DecimalValue
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
-
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.bagValue
 import org.partiql.value.blobValue
@@ -42,7 +41,6 @@ import java.math.BigDecimal
  * The reader will attempt to create a time value
  *
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class PartiQLValueIonReader(
     private val ionReader: IonReader,
     private val sourceDataFormat: PartiQLValueIonReaderBuilder.SourceDataFormat

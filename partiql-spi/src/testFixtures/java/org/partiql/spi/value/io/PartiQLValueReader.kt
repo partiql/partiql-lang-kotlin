@@ -16,11 +16,9 @@ package org.partiql.spi.value.io
 
 import org.partiql.value.PartiQLValue
 
-
 /**
  * Basic PartiQLValueReader akin to java.io.Reader.
  */
-@PartiQLValueExperimental
 public interface PartiQLValueReader : AutoCloseable {
 
     /**

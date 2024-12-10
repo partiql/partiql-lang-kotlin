@@ -22,7 +22,6 @@ interface ValueEquals<T> {
 /**
  * Value equality using the [PartiQLValue] equality implementation.
  */
-@OptIn(PartiQLValueExperimental::class)
 private object PartiQLValueEquals : ValueEquals<PartiQLValue> {
     override fun equals(left: PartiQLValue, right: PartiQLValue) = left.equals(right)
 }

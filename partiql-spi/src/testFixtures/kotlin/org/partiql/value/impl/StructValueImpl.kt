@@ -29,7 +29,6 @@ import org.partiql.value.util.PartiQLValueVisitor
  * @property delegate
  * @property annotations
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class IterableStructValueImpl<T : PartiQLValue>(
     private val delegate: Iterable<Pair<String, T>>?,
     override val annotations: PersistentList<String>,
@@ -82,7 +81,6 @@ internal class IterableStructValueImpl<T : PartiQLValue>(
  * @property delegate
  * @property annotations
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class MultiMapStructValueImpl<T : PartiQLValue>(
     private val delegate: Map<String, Iterable<T>>?,
     override val annotations: PersistentList<String>,
@@ -122,7 +120,6 @@ internal class MultiMapStructValueImpl<T : PartiQLValue>(
  * @property delegate
  * @property annotations
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class MapStructValueImpl<T : PartiQLValue>(
     private val delegate: Map<String, T>?,
     override val annotations: PersistentList<String>,

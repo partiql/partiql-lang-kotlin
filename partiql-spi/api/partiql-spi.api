@@ -555,41 +555,6 @@ public abstract interface class org/partiql/spi/value/Field {
 	public static fun of (Ljava/lang/String;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Field;
 }
 
-public final class org/partiql/value/PartiQLValueType : java/lang/Enum {
-	public static final field ANY Lorg/partiql/value/PartiQLValueType;
-	public static final field BAG Lorg/partiql/value/PartiQLValueType;
-	public static final field BINARY Lorg/partiql/value/PartiQLValueType;
-	public static final field BLOB Lorg/partiql/value/PartiQLValueType;
-	public static final field BOOL Lorg/partiql/value/PartiQLValueType;
-	public static final field BYTE Lorg/partiql/value/PartiQLValueType;
-	public static final field CHAR Lorg/partiql/value/PartiQLValueType;
-	public static final field CLOB Lorg/partiql/value/PartiQLValueType;
-	public static final field DATE Lorg/partiql/value/PartiQLValueType;
-	public static final field DECIMAL Lorg/partiql/value/PartiQLValueType;
-	public static final field DECIMAL_ARBITRARY Lorg/partiql/value/PartiQLValueType;
-	public static final field FLOAT32 Lorg/partiql/value/PartiQLValueType;
-	public static final field FLOAT64 Lorg/partiql/value/PartiQLValueType;
-	public static final field INT Lorg/partiql/value/PartiQLValueType;
-	public static final field INT16 Lorg/partiql/value/PartiQLValueType;
-	public static final field INT32 Lorg/partiql/value/PartiQLValueType;
-	public static final field INT64 Lorg/partiql/value/PartiQLValueType;
-	public static final field INT8 Lorg/partiql/value/PartiQLValueType;
-	public static final field INTERVAL Lorg/partiql/value/PartiQLValueType;
-	public static final field LIST Lorg/partiql/value/PartiQLValueType;
-	public static final field MISSING Lorg/partiql/value/PartiQLValueType;
-	public static final field NULL Lorg/partiql/value/PartiQLValueType;
-	public static final field SEXP Lorg/partiql/value/PartiQLValueType;
-	public static final field STRING Lorg/partiql/value/PartiQLValueType;
-	public static final field STRUCT Lorg/partiql/value/PartiQLValueType;
-	public static final field SYMBOL Lorg/partiql/value/PartiQLValueType;
-	public static final field TIME Lorg/partiql/value/PartiQLValueType;
-	public static final field TIMESTAMP Lorg/partiql/value/PartiQLValueType;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun toPType ()Lorg/partiql/types/PType;
-	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/value/PartiQLValueType;
-	public static fun values ()[Lorg/partiql/value/PartiQLValueType;
-}
-
 public abstract interface class org/partiql/value/datetime/Date : java/lang/Comparable, org/partiql/value/datetime/DateTime {
 	public abstract fun atTime (Lorg/partiql/value/datetime/Time;)Lorg/partiql/value/datetime/Timestamp;
 	public abstract fun compareTo (Lorg/partiql/value/datetime/Date;)I

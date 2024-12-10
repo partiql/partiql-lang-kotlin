@@ -1,5 +1,3 @@
-@file:OptIn(PartiQLValueExperimental::class)
-
 /*
  * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
@@ -18,7 +16,6 @@ package org.partiql.value.impl
 
 import org.partiql.value.Annotations
 import org.partiql.value.PartiQLValue
-
 
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: Annotations): T =
