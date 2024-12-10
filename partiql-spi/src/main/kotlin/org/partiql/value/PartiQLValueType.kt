@@ -61,7 +61,7 @@ public enum class PartiQLValueType {
     MISSING;
 
     /**
-     * @return a corresponding PType from a [PartiQLValueType]
+     * @return a corresponding PType.
      */
     @Deprecated(
         """this API is experimental and is subject to modification/deletion without prior notice. This is

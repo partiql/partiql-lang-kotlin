@@ -16,7 +16,6 @@ import org.partiql.spi.value.Datum.bool
 import org.partiql.spi.value.Datum.integer
 import org.partiql.spi.value.Datum.string
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
 class ExprCallDynamicTest {
@@ -32,20 +31,18 @@ class ExprCallDynamicTest {
         val expectedIndex: Int,
     ) {
 
-        @OptIn(PartiQLValueExperimental::class)
         fun assert() {
             val expr = ExprCallDynamic(
                 name = "example_function",
                 functions = functions,
                 args = arrayOf(ExprLit(lhs), ExprLit(rhs)),
             )
-            val result = expr.eval(Environment()).check(PartiQLValueType.INT32)
+            val result = expr.eval(Environment()).check(PType.integer())
             assertEquals(expectedIndex, result.int)
         }
 
         companion object {
 
-            @OptIn(PartiQLValueExperimental::class)
             private val params = listOf(
                 PartiQLValueType.LIST to PartiQLValueType.LIST, // Index 0
                 PartiQLValueType.BAG to PartiQLValueType.BAG, // Index 1
@@ -62,7 +59,6 @@ class ExprCallDynamicTest {
                 PartiQLValueType.ANY to PartiQLValueType.ANY, // Index 12
             )
 
-            @OptIn(PartiQLValueExperimental::class)
             internal val functions: Array<Function> = params.mapIndexed { index, it ->
                 object : Function {
 
