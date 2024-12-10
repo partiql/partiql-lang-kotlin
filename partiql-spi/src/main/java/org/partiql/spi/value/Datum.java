@@ -1,12 +1,9 @@
 package org.partiql.spi.value;
 
-import kotlin.NotImplementedError;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.errors.DataException;
 import org.partiql.types.PType;
-import org.partiql.value.PartiQLValue;
-import org.partiql.value.PartiQLValueType;
 import org.partiql.value.datetime.Date;
 import org.partiql.value.datetime.Time;
 import org.partiql.value.datetime.Timestamp;
@@ -19,30 +16,13 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Objects;
 
 /**
- * This is an EXPERIMENTAL representation of a value in PartiQL's type system. The intention of this modeling is to
+ * This is a representation of a value in PartiQL's type system. The intention of this modeling is to
  * provide a layer of indirection between PartiQL's type semantics and Java's type semantics.
- * <p>
- * ! EXPERIMENTAL ! This API is experimental and may be removed/modified without prior notice.
- * </p>
- * <p></p>
- * INTERNAL DEVELOPER NOTES:
- * <p></p>
- * This is intended to completely replace {@link org.partiql.value.PartiQLValue} in the future (for evaluation). As it
- * stands, this implementation will initially be used solely for the evaluator. {@link org.partiql.value.PartiQLValue}
- * may be modified to be solely used for the plan representation (DOM).
- * <p></p>
- * Note that this is public, however, it will not be released until it replaces  {@link org.partiql.value.PartiQLValue}
- * for evaluation.
- * <p></p>
- * There are some pre-requisites to actually replacing {@link PartiQLValue} for evaluation including, but not limited to:
- * - The comparator for ordering and aggregations
- * - Equality
- * - Adding support for annotations
  */
 public interface Datum extends Iterable<Datum> {
+    // TODO: Annotations?
 
     /**
      * Determines whether the current value is a null value of any type (for example, null or null.int). It should be

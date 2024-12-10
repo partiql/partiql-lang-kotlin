@@ -77,3 +77,12 @@ public abstract interface class org/partiql/eval/compiler/Strategy$Callback {
 	public abstract fun apply (Lorg/partiql/plan/Operator;)Lorg/partiql/eval/Expr;
 }
 
+public final class org/partiql/eval/internal/operator/rex/TestOverloads {
+	public fun <init> ()V
+	public final fun foo ()I
+	public final fun foo (Ljava/lang/Integer;)I
+	public final fun foo (Ljava/lang/Integer;Ljava/lang/Integer;)I
+	public final fun foo (Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;)I
+	public static synthetic fun foo$default (Lorg/partiql/eval/internal/operator/rex/TestOverloads;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;ILjava/lang/Object;)I
+}
+

@@ -18,7 +18,6 @@ import org.partiql.types.PType
 /**
  * PartiQL Type Names
  */
-@PartiQLValueExperimental
 public enum class PartiQLValueType {
     ANY,
     BOOL,
