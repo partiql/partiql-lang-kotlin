@@ -9,9 +9,8 @@ import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.stringValue
 
 /**
  * Represents local variable scopes.
@@ -171,7 +170,6 @@ internal data class Scope(
             rex(type, op)
         }
 
-        @OptIn(PartiQLValueExperimental::class)
-        private fun string(text: String) = rex(CompilerType(PType.string()), rexOpLit(stringValue(text)))
+        private fun string(text: String) = rex(CompilerType(PType.string()), rexOpLit(Datum.string(text)))
     }
 }

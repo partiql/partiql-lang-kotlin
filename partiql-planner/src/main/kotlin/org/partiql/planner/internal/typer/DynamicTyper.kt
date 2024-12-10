@@ -3,31 +3,8 @@ package org.partiql.planner.internal.typer
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.typer.PlanTyper.Companion.anyOf
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.MissingValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.bagValue
-import org.partiql.value.blobValue
-import org.partiql.value.boolValue
-import org.partiql.value.charValue
-import org.partiql.value.clobValue
-import org.partiql.value.dateValue
-import org.partiql.value.decimalValue
-import org.partiql.value.float32Value
-import org.partiql.value.float64Value
-import org.partiql.value.int16Value
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.int8Value
-import org.partiql.value.intValue
-import org.partiql.value.listValue
-import org.partiql.value.missingValue
-import org.partiql.value.nullValue
-import org.partiql.value.stringValue
-import org.partiql.value.structValue
-import org.partiql.value.timeValue
-import org.partiql.value.timestampValue
 
 /**
  * Graph of super types for quick lookup because we don't have a tree.
@@ -63,7 +40,6 @@ internal class DynamicTyper {
     /**
      * Checks for literal NULL
      */
-    @OptIn(PartiQLValueExperimental::class)
     private fun Rex.isLiteralNull(): Boolean {
         val op = this.op
         return op is Rex.Op.Lit && op.value.isNull
@@ -72,10 +48,9 @@ internal class DynamicTyper {
     /**
      * Checks for literal MISSING
      */
-    @OptIn(PartiQLValueExperimental::class)
     private fun Rex.isLiteralMissing(): Boolean {
         val op = this.op
-        return op is Rex.Op.Lit && op.value is MissingValue
+        return op is Rex.Op.Lit && op.value.isMissing
     }
 
     /**
@@ -104,7 +79,6 @@ internal class DynamicTyper {
      *
      * @return
      */
-    @OptIn(PartiQLValueExperimental::class)
     fun mapping(): Pair<CompilerType, List<Mapping?>?> {
         var s = supertype ?: return CompilerType(PType.dynamic()) to null
         val superTypeBase = s.code()
@@ -134,8 +108,8 @@ internal class DynamicTyper {
         // Otherwise, return the supertype along with the coercion mapping
         val mapping = args.map {
             when {
-                it.isLiteralNull() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(nullValue(s.code()))))
-                it.isLiteralMissing() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(missingValue())))
+                it.isLiteralNull() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(Datum.nullValue(PType.of(s.code())))))
+                it.isLiteralMissing() -> Mapping.Replacement(Rex(s, Rex.Op.Lit(Datum.missing(PType.of(s.code())))))
                 it.type == s -> Mapping.Coercion(s)
                 else -> null
             }
@@ -416,40 +390,5 @@ internal class DynamicTyper {
             PType.VARIANT -> TODO("variant in dynamic typer")
             else -> error("Unknown type: $this")
         }.toCType()
-
-        @OptIn(PartiQLValueExperimental::class)
-        private fun nullValue(kind: Int): PartiQLValue {
-            return when (kind) {
-                PType.DYNAMIC -> nullValue()
-                PType.BOOL -> boolValue(null)
-                PType.TINYINT -> int8Value(null)
-                PType.SMALLINT -> int16Value(null)
-                PType.INTEGER -> int32Value(null)
-                PType.BIGINT -> int64Value(null)
-                PType.NUMERIC -> intValue(null)
-                PType.DECIMAL -> decimalValue(null)
-                PType.REAL -> float32Value(null)
-                PType.DOUBLE -> float64Value(null)
-                PType.CHAR -> charValue(null)
-                PType.VARCHAR -> TODO("No implementation of VAR CHAR")
-                PType.STRING -> stringValue(null)
-                PType.BLOB -> blobValue(null)
-                PType.CLOB -> clobValue(null)
-                PType.DATE -> dateValue(null)
-                PType.TIMEZ,
-                PType.TIME -> timeValue(null)
-
-                PType.TIMESTAMPZ,
-                PType.TIMESTAMP -> timestampValue(null)
-
-                PType.BAG -> bagValue<PartiQLValue>(null)
-                PType.ARRAY -> listValue<PartiQLValue>(null)
-                PType.ROW -> structValue<PartiQLValue>(null)
-                PType.STRUCT -> structValue<PartiQLValue>()
-                PType.UNKNOWN -> nullValue()
-                PType.VARIANT -> TODO("variant in dynamic typer")
-                else -> error("Unknown type: $kind")
-            }
-        }
     }
 }

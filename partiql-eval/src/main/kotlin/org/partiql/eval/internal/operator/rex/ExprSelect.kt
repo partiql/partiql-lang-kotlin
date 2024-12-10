@@ -4,7 +4,6 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.spi.value.Datum
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Invoke the constructor over all inputs.
@@ -18,7 +17,6 @@ internal class ExprSelect(
     private val ordered: Boolean,
 ) : ExprValue {
 
-    @OptIn(PartiQLValueExperimental::class)
     class Elements(
         private val input: ExprRelation,
         private val constructor: ExprValue,
@@ -49,7 +47,6 @@ internal class ExprSelect(
         }
     }
 
-    @PartiQLValueExperimental
     override fun eval(env: Environment): Datum {
         val elements = Elements(input, constructor, env)
         return when (ordered) {

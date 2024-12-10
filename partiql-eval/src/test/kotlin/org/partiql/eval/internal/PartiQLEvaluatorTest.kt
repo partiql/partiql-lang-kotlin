@@ -9,7 +9,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.decimalValue
@@ -25,7 +24,6 @@ import java.math.BigDecimal
 /**
  * This holds sanity tests during the development of the [PartiQLCompiler.standard] implementation.
  */
-@OptIn(PartiQLValueExperimental::class)
 class PartiQLEvaluatorTest {
 
     @ParameterizedTest

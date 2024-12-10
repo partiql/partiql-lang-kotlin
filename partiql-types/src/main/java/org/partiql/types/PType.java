@@ -722,4 +722,70 @@ public abstract class PType extends Enum {
     public static PType variant(String encoding) {
         return new PTypeVariant(encoding);
     }
+
+    /**
+     * @param code PartiQL type code
+     * @return the PartiQL type corresponding with the code; if the type is parameterized, then the returned type will
+     * contain the default parameters
+     * @throws IllegalArgumentException if the code is not recognized
+     */
+    @NotNull
+    public static PType of(int code) throws IllegalArgumentException {
+        switch (code) {
+            case DYNAMIC:
+                return dynamic();
+            case BOOL:
+                return bool();
+            case TINYINT:
+                return tinyint();
+            case SMALLINT:
+                return smallint();
+            case INTEGER:
+                return integer();
+            case BIGINT:
+                return bigint();
+            case NUMERIC:
+                return numeric(38, 0);
+            case DECIMAL:
+                return decimal(38, 0);
+            case REAL:
+                return real();
+            case DOUBLE:
+                return doublePrecision();
+            case CHAR:
+                return character(1);
+            case VARCHAR:
+                return varchar(1);
+            case STRING:
+                return string();
+            case CLOB:
+                return clob(Integer.MAX_VALUE);
+            case BLOB:
+                return blob(Integer.MAX_VALUE);
+            case DATE:
+                return date();
+            case TIME:
+                return time(6);
+            case TIMEZ:
+                return timez(6);
+            case TIMESTAMP:
+                return timestamp(6);
+            case TIMESTAMPZ:
+                return timestampz(6);
+            case ARRAY:
+                return array();
+            case BAG:
+                return bag();
+            case ROW:
+                return row();
+            case STRUCT:
+                return struct();
+            case UNKNOWN:
+                return unknown();
+            case VARIANT:
+                return variant("ion");
+            default:
+                throw new IllegalArgumentException("Unknown type code: " + code);
+        }
+    }
 }

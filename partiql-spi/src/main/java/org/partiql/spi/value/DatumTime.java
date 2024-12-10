@@ -12,12 +12,17 @@ class DatumTime implements Datum {
     @NotNull
     private final Time _value;
 
-    // TODO: Pass precision to constructor.
     // TODO: Create a variant specifically for without TZ
-    private final static PType _type = PType.timez(6);
+    private final PType _type;
 
     DatumTime(@NotNull Time value) {
         _value = value;
+        _type = PType.timez(6);
+    }
+
+    DatumTime(@NotNull Time value, int precision) {
+        _value = value;
+        _type = PType.timez(precision);
     }
 
     @Override

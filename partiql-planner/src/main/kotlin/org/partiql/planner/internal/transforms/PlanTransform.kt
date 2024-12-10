@@ -18,11 +18,8 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
-import org.partiql.value.DecimalValue
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
 import org.partiql.planner.internal.ir.PlanNode as INode
 import org.partiql.planner.internal.ir.Rel as IRel
@@ -221,18 +218,8 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             return operators.variable(depth, offset, ctx)
         }
 
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpLit(node: IRex.Op.Lit, ctx: PType): Any {
-            val value = node.value
-            // TODO: PartiQLValue doesn't have a finite decimal type, so we need to specially handle this until we remove
-            //  PartiQLValue.
-            if (value is DecimalValue && ctx.code() == PType.DECIMAL) {
-                return when (val dec = value.value) {
-                    null -> operators.lit(Datum.nullValue(ctx))
-                    else -> operators.lit(Datum.decimal(dec, ctx.precision, ctx.scale))
-                }
-            }
-            return operators.lit(Datum.of(node.value))
+            return operators.lit(node.value)
         }
 
         // RELATION OPERATORS

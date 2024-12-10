@@ -10,7 +10,6 @@ import java.math.BigDecimal
 import java.util.Base64
 import java.util.Random
 
-@OptIn(PartiQLValueExperimental::class)
 class PartiQLValueComparatorTest {
     class EquivValues(vararg val values: PartiQLValue)
 

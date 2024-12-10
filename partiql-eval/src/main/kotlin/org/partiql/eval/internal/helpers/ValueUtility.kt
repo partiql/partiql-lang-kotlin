@@ -3,13 +3,10 @@ package org.partiql.eval.internal.helpers
 import org.partiql.errors.TypeCheckException
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import java.math.BigInteger
 
 /**
- * Holds helper functions for [PartiQLValue].
+ * Holds helper functions for [Datum].
  */
 internal object ValueUtility {
 
@@ -19,11 +16,6 @@ internal object ValueUtility {
     @JvmStatic
     fun Datum.isTrue(): Boolean {
         return this.type.code() == PType.BOOL && !this.isNull && !this.isMissing && this.boolean
-    }
-
-    @OptIn(PartiQLValueExperimental::class)
-    fun Datum.check(type: PartiQLValueType): Datum {
-        return this.check(type.toPType())
     }
 
     /**

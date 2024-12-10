@@ -29,6 +29,7 @@ dependencies {
     testImplementation(project(":partiql-eval"))
     testImplementation(project(":partiql-parser", configuration = "shadow"))
     testImplementation(project(":partiql-planner"))
+    testImplementation(testFixtures(project(":partiql-spi")))
 }
 
 val tests = System.getenv()["PARTIQL_TESTS_DATA"] ?: "../partiql-tests/partiql-tests-data"

@@ -1,14 +1,9 @@
 package org.partiql.spi.value;
 
-import kotlin.NotImplementedError;
-import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.errors.DataException;
 import org.partiql.types.PType;
-import org.partiql.value.PartiQL;
-import org.partiql.value.PartiQLValue;
-import org.partiql.value.PartiQLValueType;
 import org.partiql.value.datetime.Date;
 import org.partiql.value.datetime.Time;
 import org.partiql.value.datetime.Timestamp;
@@ -21,55 +16,13 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Objects;
-
-import static org.partiql.types.PType.DYNAMIC;
-import static org.partiql.types.PType.BOOL;
-import static org.partiql.types.PType.TINYINT;
-import static org.partiql.types.PType.SMALLINT;
-import static org.partiql.types.PType.INTEGER;
-import static org.partiql.types.PType.BIGINT;
-import static org.partiql.types.PType.NUMERIC;
-import static org.partiql.types.PType.DECIMAL;
-import static org.partiql.types.PType.REAL;
-import static org.partiql.types.PType.DOUBLE;
-import static org.partiql.types.PType.CHAR;
-import static org.partiql.types.PType.STRING;
-import static org.partiql.types.PType.BLOB;
-import static org.partiql.types.PType.CLOB;
-import static org.partiql.types.PType.DATE;
-import static org.partiql.types.PType.TIME;
-import static org.partiql.types.PType.TIMEZ;
-import static org.partiql.types.PType.TIMESTAMP;
-import static org.partiql.types.PType.TIMESTAMPZ;
-import static org.partiql.types.PType.ARRAY;
-import static org.partiql.types.PType.BAG;
-import static org.partiql.types.PType.ROW;
-import static org.partiql.types.PType.STRUCT;
-import static org.partiql.types.PType.UNKNOWN;
 
 /**
- * This is an EXPERIMENTAL representation of a value in PartiQL's type system. The intention of this modeling is to
+ * This is a representation of a value in PartiQL's type system. The intention of this modeling is to
  * provide a layer of indirection between PartiQL's type semantics and Java's type semantics.
- * <p>
- * ! EXPERIMENTAL ! This API is experimental and may be removed/modified without prior notice.
- * </p>
- * <p></p>
- * INTERNAL DEVELOPER NOTES:
- * <p></p>
- * This is intended to completely replace {@link org.partiql.value.PartiQLValue} in the future (for evaluation). As it
- * stands, this implementation will initially be used solely for the evaluator. {@link org.partiql.value.PartiQLValue}
- * may be modified to be solely used for the plan representation (DOM).
- * <p></p>
- * Note that this is public, however, it will not be released until it replaces  {@link org.partiql.value.PartiQLValue}
- * for evaluation.
- * <p></p>
- * There are some pre-requisites to actually replacing {@link PartiQLValue} for evaluation including, but not limited to:
- * - The comparator for ordering and aggregations
- * - Equality
- * - Adding support for annotations
  */
 public interface Datum extends Iterable<Datum> {
+    // TODO: Annotations?
 
     /**
      * Determines whether the current value is a null value of any type (for example, null or null.int). It should be
@@ -393,168 +346,6 @@ public interface Datum extends Iterable<Datum> {
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * Converts a {@link Datum} into a {@link PartiQLValue}.
-     *
-     * @return the equivalent {@link PartiQLValue}
-     * @deprecated this is an experimental API and is designed for use by the internal PartiQL library. This may
-     * be modified/removed at any time.
-     */
-    @NotNull
-    @Deprecated
-    default PartiQLValue toPartiQLValue() {
-        PType type = this.getType();
-        if (this.isMissing()) {
-            return PartiQL.missingValue();
-        }
-        switch (type.code()) {
-            case BOOL:
-                return this.isNull() ? PartiQL.boolValue(null) : PartiQL.boolValue(this.getBoolean());
-            case TINYINT:
-                return this.isNull() ? PartiQL.int8Value(null) : PartiQL.int8Value(this.getByte());
-            case SMALLINT:
-                return this.isNull() ? PartiQL.int16Value(null) : PartiQL.int16Value(this.getShort());
-            case INTEGER:
-                return this.isNull() ? PartiQL.int32Value(null) : PartiQL.int32Value(this.getInt());
-            case BIGINT:
-                return this.isNull() ? PartiQL.int64Value(null) : PartiQL.int64Value(this.getLong());
-            case NUMERIC:
-                return this.isNull() ? PartiQL.intValue(null) : PartiQL.intValue(this.getBigInteger());
-            case DECIMAL:
-                return this.isNull() ? PartiQL.decimalValue(null) : PartiQL.decimalValue(this.getBigDecimal());
-            case REAL:
-                return this.isNull() ? PartiQL.float32Value(null) : PartiQL.float32Value(this.getFloat());
-            case DOUBLE:
-                return this.isNull() ? PartiQL.float64Value(null) : PartiQL.float64Value(this.getDouble());
-            case CHAR:
-                return this.isNull() ? PartiQL.charValue(null) : PartiQL.charValue(this.getString().charAt(0));
-            case STRING:
-                return this.isNull() ? PartiQL.stringValue(null) : PartiQL.stringValue(this.getString());
-            case BLOB:
-                return this.isNull() ? PartiQL.blobValue(null) : PartiQL.blobValue(this.getBytes());
-            case CLOB:
-                return this.isNull() ? PartiQL.clobValue(null) : PartiQL.clobValue(this.getBytes());
-            case DATE:
-                return this.isNull() ? PartiQL.dateValue(null) : PartiQL.dateValue(this.getDate());
-            case TIMEZ:
-            case TIME: // TODO
-                return this.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(this.getTime());
-            case TIMESTAMPZ:
-            case TIMESTAMP:
-                return this.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(this.getTimestamp());
-            case BAG:
-                return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(this));
-            case ARRAY:
-                return this.isNull() ? PartiQL.listValue((Iterable<? extends PartiQLValue>) null) : PartiQL.listValue(new PQLToPartiQLIterable(this));
-            case STRUCT:
-            case ROW:
-                return this.isNull() ? PartiQL.structValue((Iterable<? extends Pair<String, ? extends PartiQLValue>>) null) : PartiQL.structValue(new PQLToPartiQLStruct(this));
-            case DYNAMIC:
-            case UNKNOWN:
-                if (this.isNull()) {
-                    return PartiQL.nullValue();
-                } else if (this.isMissing()) {
-                    return PartiQL.missingValue();
-                }
-            default:
-                throw new UnsupportedOperationException("Unsupported datum type: " + type);
-        }
-    }
-
-    /**
-     * Converts a {@link PartiQLValue} into {@link Datum}.
-     *
-     * @return the equivalent {@link Datum}
-     */
-    @NotNull
-    @Deprecated
-    static Datum of(PartiQLValue value) {
-        PartiQLValueType type = value.getType();
-        if (value.isNull()) {
-            return new DatumNull(type.toPType());
-        }
-        switch (type) {
-            case MISSING:
-                return new DatumMissing();
-            case NULL:
-                return new DatumNull();
-            case INT8:
-                org.partiql.value.Int8Value int8Value = (org.partiql.value.Int8Value) value;
-                return new DatumByte(Objects.requireNonNull(int8Value.getValue()), PType.tinyint());
-            case STRUCT:
-                @SuppressWarnings("unchecked") org.partiql.value.StructValue<PartiQLValue> STRUCTValue = (org.partiql.value.StructValue<PartiQLValue>) value;
-                return new DatumStruct(new PartiQLToPQLStruct(Objects.requireNonNull(STRUCTValue)));
-            case STRING:
-                org.partiql.value.StringValue STRINGValue = (org.partiql.value.StringValue) value;
-                return new DatumString(Objects.requireNonNull(STRINGValue.getValue()), PType.string());
-            case INT64:
-                org.partiql.value.Int64Value INT64Value = (org.partiql.value.Int64Value) value;
-                return new DatumLong(Objects.requireNonNull(INT64Value.getValue()));
-            case INT32:
-                org.partiql.value.Int32Value INT32Value = (org.partiql.value.Int32Value) value;
-                return new DatumInt(Objects.requireNonNull(INT32Value.getValue()));
-            case INT16:
-                org.partiql.value.Int16Value INT16Value = (org.partiql.value.Int16Value) value;
-                return new DatumShort(Objects.requireNonNull(INT16Value.getValue()));
-            case SEXP:
-                throw new IllegalStateException("SEXP is not supported.");
-            case LIST:
-                @SuppressWarnings("unchecked") org.partiql.value.ListValue<PartiQLValue> LISTValue = (org.partiql.value.ListValue<PartiQLValue>) value;
-                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(LISTValue)), PType.array());
-            case BOOL:
-                org.partiql.value.BoolValue BOOLValue = (org.partiql.value.BoolValue) value;
-                return new DatumBoolean(Objects.requireNonNull(BOOLValue.getValue()));
-            case INT:
-                org.partiql.value.IntValue INTValue = (org.partiql.value.IntValue) value;
-                return new DatumBigInteger(Objects.requireNonNull(INTValue.getValue()));
-            case BAG:
-                @SuppressWarnings("unchecked") org.partiql.value.BagValue<PartiQLValue> BAGValue = (org.partiql.value.BagValue<PartiQLValue>) value;
-                return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(BAGValue)), PType.bag());
-            case BINARY:
-                throw new UnsupportedOperationException();
-            case DATE:
-                org.partiql.value.DateValue DATEValue = (org.partiql.value.DateValue) value;
-                return new DatumDate(Objects.requireNonNull(DATEValue.getValue()));
-            case INTERVAL:
-                org.partiql.value.IntervalValue INTERVALValue = (org.partiql.value.IntervalValue) value;
-                return new DatumInterval(Objects.requireNonNull(INTERVALValue.getValue()));
-            case TIMESTAMP:
-                org.partiql.value.TimestampValue TIMESTAMPValue = (org.partiql.value.TimestampValue) value;
-                return new DatumTimestamp(Objects.requireNonNull(TIMESTAMPValue.getValue()));
-            case TIME:
-                org.partiql.value.TimeValue TIMEValue = (org.partiql.value.TimeValue) value;
-                return new DatumTime(Objects.requireNonNull(TIMEValue.getValue()));
-            case FLOAT32:
-                org.partiql.value.Float32Value FLOAT32Value = (org.partiql.value.Float32Value) value;
-                return new DatumFloat(Objects.requireNonNull(FLOAT32Value.getValue()));
-            case FLOAT64:
-                org.partiql.value.Float64Value FLOAT64Value = (org.partiql.value.Float64Value) value;
-                return new DatumDouble(Objects.requireNonNull(FLOAT64Value.getValue()));
-            case DECIMAL:
-            case DECIMAL_ARBITRARY:
-                org.partiql.value.DecimalValue DECIMALValue = (org.partiql.value.DecimalValue) value;
-                BigDecimal d = Objects.requireNonNull(DECIMALValue.getValue());
-                return Datum.decimal(d, d.precision(), d.scale());
-            case CHAR:
-                org.partiql.value.CharValue CHARValue = (org.partiql.value.CharValue) value;
-                String charString = Objects.requireNonNull(CHARValue.getValue()).toString();
-                return new DatumChars(charString, charString.length());
-            case SYMBOL:
-                throw new IllegalStateException("SYMBOL not supported.");
-            case CLOB:
-                org.partiql.value.ClobValue CLOBValue = (org.partiql.value.ClobValue) value;
-                return new DatumBytes(Objects.requireNonNull(CLOBValue.getValue()), PType.clob(Integer.MAX_VALUE)); // TODO
-            case BLOB:
-                org.partiql.value.BlobValue BLOBValue = (org.partiql.value.BlobValue) value;
-                return new DatumBytes(Objects.requireNonNull(BLOBValue.getValue()), PType.blob(Integer.MAX_VALUE)); // TODO
-            case BYTE:
-                throw new UnsupportedOperationException();
-            case ANY:
-            default:
-                throw new NotImplementedError();
-        }
-    }
-
     @NotNull
     static Datum nullValue() {
         return new DatumNull();
@@ -572,12 +363,9 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * Returns a typed missing value
-     * ! EXPERIMENTAL ! This is subject to breaking changes and/or removal without prior notice.
      * @param type the type of the value
      * @return a typed missing value
-     * @deprecated this may not be required. This is subject to removal.
      */
-    @Deprecated
     @NotNull
     static Datum missing(@NotNull PType type) {
         return new DatumMissing(type);
@@ -746,8 +534,18 @@ public interface Datum extends Iterable<Datum> {
     }
 
     @NotNull
+    static Datum time(@NotNull Time value, int precision) {
+        return new DatumTime(value, precision);
+    }
+
+    @NotNull
     static Datum timestamp(@NotNull Timestamp value) {
         return new DatumTimestamp(value);
+    }
+
+    @NotNull
+    static Datum timestamp(@NotNull Timestamp value, int precision) {
+        return new DatumTimestamp(value, precision);
     }
 
     // COLLECTIONS

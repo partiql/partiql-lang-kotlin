@@ -86,10 +86,8 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.boolValue
-import org.partiql.value.stringValue
 
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.
@@ -255,12 +253,11 @@ internal object RelConverter {
             return rel(type, op)
         }
 
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitFrom(node: From, ctx: Rel): Rel {
             val tableRefs = node.tableRefs.map { visitFromTableRef(it, ctx) }
             return tableRefs.drop(1).fold(tableRefs.first()) { acc, tRef ->
                 val joinType = Rel.Op.Join.Type.INNER
-                val condition = rex(BOOL, rexOpLit(boolValue(true)))
+                val condition = rex(BOOL, rexOpLit(Datum.bool(true)))
                 val schema = acc.type.schema + tRef.type.schema
                 val props = emptySet<Rel.Prop>()
                 val type = relType(schema, props)
@@ -310,13 +307,12 @@ internal object RelConverter {
          *
          * TODO compute basic schema
          */
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitFromJoin(node: FromJoin, nil: Rel): Rel {
             val lhs = visitFromTableRef(node.lhs, nil)
             val rhs = visitFromTableRef(node.rhs, nil)
             val schema = lhs.type.schema + rhs.type.schema // Note: This gets more specific in PlanTyper. It is only used to find binding names here.
             val props = emptySet<Rel.Prop>()
-            val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(BOOL, rexOpLit(boolValue(true)))
+            val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(BOOL, rexOpLit(Datum.bool(true)))
             val joinType = when (node.joinType?.code()) {
                 JoinType.LEFT_OUTER, JoinType.LEFT, JoinType.LEFT_CROSS -> Rel.Op.Join.Type.LEFT
                 JoinType.RIGHT_OUTER, JoinType.RIGHT -> Rel.Op.Join.Type.RIGHT
@@ -406,7 +402,6 @@ internal object RelConverter {
          *         1. Ast.Expr.SFW has every Ast.Expr.CallAgg replaced by a synthetic Ast.Expr.Var
          *         2. Rel which has the appropriate Rex.Agg calls and groups
          */
-        @OptIn(PartiQLValueExperimental::class)
         private fun convertAgg(input: Rel, select: QueryBody.SFW, groupBy: GroupBy?): Pair<QueryBody.SFW, Rel> {
             // Rewrite and extract all aggregations in the SELECT clause
             val (sel, aggregations) = AggregationTransform.apply(select)
@@ -459,7 +454,7 @@ internal object RelConverter {
                     schema.add(binding)
                     val fields = input.type.schema.mapIndexed { bindingIndex, currBinding ->
                         rexOpStructField(
-                            k = rex(STRING, rexOpLit(stringValue(currBinding.name))),
+                            k = rex(STRING, rexOpLit(Datum.string(currBinding.name))),
                             v = rex(ANY, rexOpVarLocal(0, bindingIndex))
                         )
                     }
