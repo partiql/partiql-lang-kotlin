@@ -32,8 +32,8 @@ import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.DatumUtils
+import org.partiql.spi.value.io.PartiQLValueTextWriter
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path

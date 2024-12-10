@@ -25,8 +25,8 @@ import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.DatumUtils
+import org.partiql.spi.value.io.PartiQLValueTextWriter
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.io.PartiQLValueTextWriter
 import picocli.CommandLine
 import java.io.File
 import java.io.InputStream

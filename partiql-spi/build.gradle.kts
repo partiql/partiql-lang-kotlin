@@ -59,6 +59,12 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     }
 }
 
+tasks.compileTestFixturesKotlin {
+    kotlinOptions.jvmTarget = Versions.jvmTarget
+    kotlinOptions.apiVersion = Versions.kotlinApi
+    kotlinOptions.languageVersion = Versions.kotlinLanguage
+}
+
 publish {
     artifactId = "partiql-spi"
     name = "PartiQL SPI"

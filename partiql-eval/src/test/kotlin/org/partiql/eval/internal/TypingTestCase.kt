@@ -10,10 +10,10 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumUtils
+import org.partiql.spi.value.io.PartiQLValueIonWriterBuilder
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.io.PartiQLValueIonWriterBuilder
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

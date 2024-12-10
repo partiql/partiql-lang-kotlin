@@ -1,4 +1,4 @@
-package org.partiql.value.io
+package org.partiql.spi.value.io
 
 import com.amazon.ion.IonWriter
 import com.amazon.ion.system.IonBinaryWriterBuilder
