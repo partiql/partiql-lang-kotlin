@@ -94,11 +94,13 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprCall(function: IdentifierChain, args: List<Expr>, setq: SetQuantifier? = null): ExprCall {
         return ExprCall(function, args, setq)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprCase(expr: Expr? = null, branches: List<ExprCase.Branch>, defaultExpr: Expr? = null): ExprCase {
         return ExprCase(expr, branches, defaultExpr)
     }
@@ -134,6 +136,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprLike(value: Expr, pattern: Expr, escape: Expr? = null, not: Boolean): ExprLike {
         return ExprLike(value, pattern, escape, not)
     }
@@ -159,6 +162,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprOperator(symbol: String, lhs: Expr? = null, rhs: Expr): ExprOperator {
         return ExprOperator(symbol, lhs, rhs)
     }
@@ -169,6 +173,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprOverlay(value: Expr, placing: Expr, from: Expr, forLength: Expr? = null): ExprOverlay {
         return ExprOverlay(value, placing, from, forLength)
     }
@@ -179,6 +184,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprPath(root: Expr, next: PathStep? = null): ExprPath {
         return ExprPath(root, next)
     }
@@ -188,6 +194,13 @@ public object Ast {
         return ExprPosition(lhs, rhs)
     }
 
+    // query set variant with only required field; optional fields set to null
+    @JvmStatic
+    public fun exprQuerySet(body: QueryBody): ExprQuerySet {
+        return ExprQuerySet(body, null, null, null)
+    }
+
+    // query set variant with all fields and nullable defaults set to null
     @JvmStatic
     public fun exprQuerySet(body: QueryBody, orderBy: OrderBy? = null, limit: Expr? = null, offset: Expr? = null): ExprQuerySet {
         return ExprQuerySet(body, orderBy, limit, offset)
@@ -209,11 +222,13 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprSubstring(value: Expr, start: Expr? = null, length: Expr? = null): ExprSubstring {
         return ExprSubstring(value, start, length)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprTrim(value: Expr, chars: Expr? = null, trimSpec: TrimSpec? = null): ExprTrim {
         return ExprTrim(value, chars, trimSpec)
     }
@@ -245,37 +260,42 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprWindow(
         windowFunction: WindowFunction,
-        exression: Expr,
+        expression: Expr,
         offset: Expr? = null,
         defaultValue: Expr? = null,
         over: ExprWindow.Over
     ): ExprWindow {
-        return ExprWindow(windowFunction, exression, offset, defaultValue, over)
+        return ExprWindow(windowFunction, expression, offset, defaultValue, over)
     }
 
     @JvmStatic
-    public fun exprWindowOver(partitions: List<Expr>? = null, sorts: List<Sort>? = null): ExprWindow.Over {
+    public fun exprWindowOver(partitions: List<Expr>, sorts: List<Sort>): ExprWindow.Over {
         return ExprWindow.Over(partitions, sorts)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprPathStepField(value: Identifier, next: PathStep? = null): PathStep.Field {
         return PathStep.Field(value, next)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprPathStepElement(element: Expr, next: PathStep? = null): PathStep.Element {
         return PathStep.Element(element, next)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprPathStepAllElements(next: PathStep? = null): PathStep.AllElements {
         return PathStep.AllElements(next)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun exprPathStepAllFields(next: PathStep? = null): AllFields {
         return AllFields(next)
     }
@@ -307,16 +327,19 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun graphMatch(patterns: List<GraphPattern>, selector: GraphSelector? = null): GraphMatch {
         return GraphMatch(patterns, selector)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun graphMatchNode(prefilter: Expr? = null, variable: String? = null, label: GraphLabel? = null): GraphPart.Node {
         return GraphPart.Node(prefilter, variable, label)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun graphMatchEdge(
         direction: GraphDirection,
         quantifier: GraphQuantifier? = null,
@@ -333,6 +356,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun graphPattern(
         restrictor: GraphRestrictor? = null,
         prefilter: Expr? = null,
@@ -344,6 +368,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun graphQuantifier(lower: Long, upper: Long? = null): GraphQuantifier {
         return GraphQuantifier(lower, upper)
     }
@@ -420,21 +445,25 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun fromExpr(expr: Expr, fromType: FromType, asAlias: Identifier? = null, atAlias: Identifier? = null): FromExpr {
         return FromExpr(expr, fromType, asAlias, atAlias)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun fromJoin(lhs: FromTableRef, rhs: FromTableRef, joinType: JoinType? = null, condition: Expr? = null): FromJoin {
         return FromJoin(lhs, rhs, joinType, condition)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun groupBy(strategy: GroupByStrategy, keys: List<GroupBy.Key>, asAlias: Identifier? = null): GroupBy {
         return GroupBy(strategy, keys, asAlias)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun groupByKey(expr: Expr, asAlias: Identifier? = null): GroupBy.Key {
         return GroupBy.Key(expr, asAlias)
     }
@@ -445,6 +474,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun identifierChain(root: Identifier, next: IdentifierChain? = null): IdentifierChain {
         return IdentifierChain(root, next)
     }
@@ -470,26 +500,31 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun insert(tableName: IdentifierChain, asAlias: Identifier? = null, source: InsertSource, onConflict: OnConflict? = null): Insert {
         return Insert(tableName, asAlias, source, onConflict)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun upsert(tableName: IdentifierChain, asAlias: Identifier? = null, source: InsertSource): Upsert {
         return Upsert(tableName, asAlias, source)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun replace(tableName: IdentifierChain, asAlias: Identifier? = null, source: InsertSource): Replace {
         return Replace(tableName, asAlias, source)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun update(tableName: IdentifierChain, setClauses: List<SetClause>, condition: Expr? = null): Update {
         return Update(tableName, setClauses, condition)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun delete(tableName: IdentifierChain, condition: Expr? = null): Delete {
         return Delete(tableName, condition)
     }
@@ -500,6 +535,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun insertSourceExpr(columns: List<Identifier>? = null, expr: Expr): InsertSource.FromExpr {
         return InsertSource.FromExpr(columns, expr)
     }
@@ -510,6 +546,7 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun onConflict(action: ConflictAction, target: ConflictTarget? = null): OnConflict {
         return OnConflict(action, target)
     }
@@ -530,11 +567,13 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun doReplace(action: DoReplaceAction, condition: Expr? = null): ConflictAction.DoReplace {
         return ConflictAction.DoReplace(action, condition)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun doUpdate(action: DoUpdateAction, condition: Expr? = null): ConflictAction.DoUpdate {
         return ConflictAction.DoUpdate(action, condition)
     }
@@ -569,6 +608,19 @@ public object Ast {
         return UpdateTargetStep.Field(key)
     }
 
+    // SFW variant with only required fields; optional fields are set to null
+    @JvmStatic
+    public fun queryBodySFW(select: Select, from: From): QueryBody.SFW {
+        return QueryBody.SFW(select, null, from, null, null, null, null)
+    }
+
+    // SFW variant with `WHERE`; optional fields are set to null
+    @JvmStatic
+    public fun queryBodySFW(select: Select, from: From, where: Expr): QueryBody.SFW {
+        return QueryBody.SFW(select, null, from, null, where, null, null)
+    }
+
+    // SFW variant with all fields and nullable defaults set to null
     @JvmStatic
     public fun queryBodySFW(
         select: Select,
@@ -593,11 +645,13 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun selectItemExpr(expr: Expr, asAlias: Identifier? = null): SelectItem.Expr {
         return SelectItem.Expr(expr, asAlias)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun selectList(items: List<SelectItem>, setq: SetQuantifier? = null): SelectList {
         return SelectList(items, setq)
     }
@@ -608,21 +662,25 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun selectStar(setq: SetQuantifier? = null): SelectStar {
         return SelectStar(setq)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun selectValue(constructor: Expr, setq: SetQuantifier? = null): SelectValue {
         return SelectValue(constructor, setq)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun setOp(setOpType: SetOpType, setq: SetQuantifier? = null): SetOp {
         return SetOp(setOpType, setq)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun sort(expr: Expr, order: Order? = null, nulls: Nulls? = null): Sort {
         return Sort(expr, order, nulls)
     }
@@ -631,6 +689,7 @@ public object Ast {
     // DDL
     //
     @JvmStatic
+    @JvmOverloads
     public fun createTable(name: IdentifierChain, columns: List<ColumnDefinition>, constraints: List<TableConstraint>, partitionBy: PartitionBy? = null, tableProperties: List<KeyValue>): CreateTable {
         return CreateTable(
             name,
@@ -642,26 +701,31 @@ public object Ast {
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun columnDefinition(name: Identifier, type: DataType, isOptional: Boolean, constraints: List<AttributeConstraint>, comment: String? = null): ColumnDefinition {
         return ColumnDefinition(name, type, isOptional, constraints, comment)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun tableConstraintUnique(name: IdentifierChain? = null, columns: List<Identifier>, isPrimaryKey: Boolean): TableConstraint.Unique {
         return TableConstraint.Unique(name, columns, isPrimaryKey)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun columnConstraintNullable(name: IdentifierChain? = null, isNullable: Boolean): AttributeConstraint.Null {
         return AttributeConstraint.Null(name, isNullable)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun columnConstraintUnique(name: IdentifierChain? = null, isPrimaryKey: Boolean): AttributeConstraint.Unique {
         return AttributeConstraint.Unique(name, isPrimaryKey)
     }
 
     @JvmStatic
+    @JvmOverloads
     public fun columnConstraintCheck(name: IdentifierChain? = null, searchCondition: Expr): AttributeConstraint.Check {
         return AttributeConstraint.Check(name, searchCondition)
     }
