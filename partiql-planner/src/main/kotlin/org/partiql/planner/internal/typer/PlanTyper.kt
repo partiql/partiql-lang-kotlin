@@ -55,13 +55,9 @@ import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
-import org.partiql.value.BoolValue
-import org.partiql.value.MissingValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.TextValue
-import org.partiql.value.stringValue
 import kotlin.math.max
 
 /**
@@ -69,7 +65,6 @@ import kotlin.math.max
  *
  * @property env
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class PlanTyper(private val env: Env, config: Context) {
 
     private val _listener = config.errorListener
@@ -575,7 +570,6 @@ internal class PlanTyper(private val env: Env, config: Context) {
      *
      * @property typeEnv TypeEnv in which this rex tree is evaluated.
      */
-    @OptIn(PartiQLValueExperimental::class)
     private inner class RexTyper(
         private val typeEnv: TypeEnv,
         private val strategy: Strategy,
@@ -647,7 +641,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             return rex(root.type.typeParameter, rexOpPathIndex(root, key))
         }
 
-        private fun Rex.isLiteralMissing(): Boolean = this.op is Rex.Op.Lit && this.op.value is MissingValue
+        private fun Rex.isLiteralMissing(): Boolean = this.op is Rex.Op.Lit && this.op.value.isMissing
 
         override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: CompilerType?): Rex {
             val root = visitRex(node.root, node.root.type)
@@ -670,7 +664,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
             // Get Literal Key
             val keyOp = key.op
-            val keyLiteral = when (keyOp is Rex.Op.Lit && keyOp.value is TextValue<*> && !keyOp.value.isNull) {
+            val keyLiteral = when (keyOp is Rex.Op.Lit && keyOp.value.isTextValue() && !keyOp.value.isNull) {
                 true -> keyOp.value.string!!
                 false -> return rex(CompilerType(PType.dynamic()), rexOpPathKey(root, key))
             }
@@ -681,6 +675,10 @@ internal class PlanTyper(private val env: Env, config: Context) {
             }
 
             return rex(elementType, rexOpPathKey(root, key))
+        }
+
+        private fun Datum.isTextValue(): Boolean {
+            return this.type.code() in setOf(PType.STRING, PType.CHAR, PType.VARCHAR)
         }
 
         override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: CompilerType?): Rex {
@@ -729,7 +727,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             }
         }
 
-        private fun rexString(str: String) = rex(CompilerType(PType.string()), Rex.Op.Lit(stringValue(str)))
+        private fun rexString(str: String) = rex(CompilerType(PType.string()), Rex.Op.Lit(Datum.string(str)))
 
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: CompilerType?): Rex {
             val arg = visitRex(node.arg, null)
@@ -931,9 +929,8 @@ internal class PlanTyper(private val env: Env, config: Context) {
         /**
          * Returns the boolean value of the expression. For now, only handle literals.
          */
-        @OptIn(PartiQLValueExperimental::class)
         private fun boolOrNull(op: Rex.Op): Boolean? {
-            return if (op is Rex.Op.Lit && op.value is BoolValue) op.value.value else null
+            return if (op is Rex.Op.Lit && op.value.type.code() == PType.BOOL) op.value.boolean else null
         }
 
         /**
@@ -972,7 +969,6 @@ internal class PlanTyper(private val env: Env, config: Context) {
             return rex(CompilerType(type), rexOpCollection(values))
         }
 
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: CompilerType?): Rex {
             val fields = node.fields.map {
                 val k = visitRex(it.k, it.k.type)
@@ -984,7 +980,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             for (field in fields) {
                 val keyOp = field.k.op
                 // TODO: Check key type
-                if (keyOp !is Rex.Op.Lit || keyOp.value !is TextValue<*>) {
+                if (keyOp !is Rex.Op.Lit || !keyOp.value.isTextValue()) {
                     structIsClosed = false
                     continue
                 }

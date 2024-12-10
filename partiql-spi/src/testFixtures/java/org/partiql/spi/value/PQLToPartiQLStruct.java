@@ -28,7 +28,7 @@ class PQLToPartiQLStruct implements Iterable<Pair<String, PartiQLValue>> {
             @Override
             public Pair<String, PartiQLValue> next() {
                 Field field = _fields.next();
-                return new Pair<>(field.getName(), field.getValue().toPartiQLValue());
+                return new Pair<>(field.getName(), DatumUtils.toPartiQLValue(field.getValue()));
             }
         };
     }

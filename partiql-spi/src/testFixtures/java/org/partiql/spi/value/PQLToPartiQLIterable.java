@@ -26,7 +26,7 @@ class PQLToPartiQLIterable implements Iterable<PartiQLValue> {
 
             @Override
             public PartiQLValue next() {
-                return iter.next().toPartiQLValue();
+                return DatumUtils.toPartiQLValue(iter.next());
             }
         };
     }

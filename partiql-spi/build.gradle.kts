@@ -16,6 +16,7 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
+    id(Plugins.testFixtures)
 }
 
 dependencies {

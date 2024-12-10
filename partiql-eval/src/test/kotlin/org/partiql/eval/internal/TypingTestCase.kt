@@ -9,6 +9,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.DatumUtils
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -30,7 +31,7 @@ public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
     @OptIn(PartiQLValueExperimental::class)
     override fun run() {
         val (permissiveResult, plan) = run(mode = Mode.PERMISSIVE())
-        val permissiveResultPValue = permissiveResult.toPartiQLValue()
+        val permissiveResultPValue = DatumUtils.toPartiQLValue(permissiveResult)
         val assertionCondition = try {
             expectedPermissive == permissiveResultPValue // TODO: Assert using Datum
         } catch (t: Throwable) {

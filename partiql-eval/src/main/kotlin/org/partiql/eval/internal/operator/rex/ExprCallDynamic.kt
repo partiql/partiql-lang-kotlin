@@ -10,7 +10,6 @@ import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNK
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValue
 
 /**
  * Implementation of Dynamic Dispatch.
@@ -23,7 +22,7 @@ import org.partiql.value.PartiQLValue
  *  3. Lookup the candidate to dispatch to and invoke.
  *
  * This implementation can evaluate ([eval]) the input [Row], execute and gather the
- * arguments, and pass the [PartiQLValue]s directly to the [Candidate.eval].
+ * arguments, and pass the values directly to the [Candidate.eval].
  *
  * This implementation also caches previously resolved candidates.
  *

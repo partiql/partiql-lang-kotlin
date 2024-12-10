@@ -31,6 +31,7 @@ import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.value.DatumUtils
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.Closeable
@@ -276,7 +277,8 @@ internal class Shell(
                         out.appendLine()
                         out.info("=== RESULT ===")
                         val writer = PartiQLValueTextWriter(out)
-                        writer.append(result.toPartiQLValue()) // TODO: Create a Datum writer
+                        val p = DatumUtils.toPartiQLValue(result)
+                        writer.append(p) // TODO: Create a Datum writer
                         out.appendLine()
                         out.appendLine()
                         out.success("OK!")
