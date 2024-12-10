@@ -58,8 +58,8 @@ public class org/partiql/spi/SourceLocations : java/util/Map {
 	public fun get (Ljava/lang/Object;)Lorg/partiql/spi/SourceLocation;
 	public fun isEmpty ()Z
 	public fun keySet ()Ljava/util/Set;
+	public fun put (Ljava/lang/Integer;Lorg/partiql/spi/SourceLocation;)Lorg/partiql/spi/SourceLocation;
 	public synthetic fun put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun put (Ljava/lang/String;Lorg/partiql/spi/SourceLocation;)Lorg/partiql/spi/SourceLocation;
 	public fun putAll (Ljava/util/Map;)V
 	public synthetic fun remove (Ljava/lang/Object;)Ljava/lang/Object;
 	public fun remove (Ljava/lang/Object;)Lorg/partiql/spi/SourceLocation;

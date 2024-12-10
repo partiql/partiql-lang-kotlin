@@ -122,10 +122,11 @@ public abstract class org/partiql/ast/AstEnum : org/partiql/ast/AstNode {
 }
 
 public abstract class org/partiql/ast/AstNode {
-	public field tag Ljava/lang/String;
 	public fun <init> ()V
 	public abstract fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getChildren ()Ljava/util/List;
+	public fun getTag ()I
+	public fun setTag (I)V
 }
 
 public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {

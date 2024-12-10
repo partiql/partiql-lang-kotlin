@@ -376,9 +376,11 @@ internal class PartiQLParserDefault : PartiQLParser {
      */
     private class Visitor(
         private val tokens: CommonTokenStream,
-        private val locations: MutableMap<String, SourceLocation>,
+        private val locations: MutableMap<Int, SourceLocation>,
         private val parameters: Map<Int, Int> = mapOf(),
     ) : PartiQLParserBaseVisitor<AstNode>() {
+        // Counter to store unique AstNode tags
+        private var counter = 0
 
         companion object {
 
@@ -391,7 +393,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 tokens: CountingTokenStream,
                 tree: GeneratedParser.StatementsContext,
             ): PartiQLParser.Result {
-                val locations = mutableMapOf<String, SourceLocation>()
+                val locations = mutableMapOf<Int, SourceLocation>()
                 val visitor = Visitor(tokens, locations, tokens.parameterIndexes)
                 val statements = tree.statement().map { statementCtx ->
                     visitor.visit(statementCtx) as Statement
@@ -447,6 +449,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
         private inline fun <T : AstNode> translate(ctx: ParserRuleContext, block: () -> T): T {
             val node = block()
+            node.tag = counter++
             if (ctx.start != null) {
                 locations[node.tag] = SourceLocation(
                     ctx.start.line,

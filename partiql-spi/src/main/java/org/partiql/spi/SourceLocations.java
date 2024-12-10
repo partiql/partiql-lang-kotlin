@@ -13,9 +13,9 @@ import java.util.Set;
  * <b>Note!</b>: This class is immutable and does not support {@link Map#put(Object, Object)}, amongst others. Please
  * handle the runtime exceptions indicated by {@link Map}'s Javadocs.
  */
-public class SourceLocations implements Map<String, SourceLocation> {
+public class SourceLocations implements Map<Integer, SourceLocation> {
 
-    private final Map<String, SourceLocation> delegate;
+    private final Map<Integer, SourceLocation> delegate;
 
     /**
      * Creates an empty instance.
@@ -29,20 +29,20 @@ public class SourceLocations implements Map<String, SourceLocation> {
      * to an internal structure.
      * @param delegate the delegate holding the locations.
      */
-    public SourceLocations(Map<String, SourceLocation> delegate) {
+    public SourceLocations(Map<Integer, SourceLocation> delegate) {
         this.delegate = new java.util.HashMap<>();
         this.delegate.putAll(delegate);
     }
 
     @NotNull
     @Override
-    public Set<Map.Entry<String, SourceLocation>> entrySet() {
+    public Set<Map.Entry<Integer, SourceLocation>> entrySet() {
         return delegate.entrySet();
     }
 
     @NotNull
     @Override
-    public Set<String> keySet() {
+    public Set<Integer> keySet() {
         return delegate.keySet();
     }
 
@@ -74,7 +74,7 @@ public class SourceLocations implements Map<String, SourceLocation> {
 
     @Nullable
     @Override
-    public SourceLocation put(String key, SourceLocation value) {
+    public SourceLocation put(Integer key, SourceLocation value) {
         throw new UnsupportedOperationException();
     }
 
@@ -84,7 +84,7 @@ public class SourceLocations implements Map<String, SourceLocation> {
     }
 
     @Override
-    public void putAll(@NotNull Map<? extends String, ? extends SourceLocation> m) {
+    public void putAll(@NotNull Map<? extends Integer, ? extends SourceLocation> m) {
         throw new UnsupportedOperationException();
     }
 

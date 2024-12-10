@@ -1,17 +1,19 @@
 package org.partiql.ast;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Random;
 
 /**
  * TODO docs, equals, hashcode
  * TODO support source location -- https://github.com/partiql/partiql-lang-kotlin/issues/1608
  */
+@Setter
+@Getter
 public abstract class AstNode {
-    @NotNull
-    public String tag = "Ast-" + String.format("%06x", new Random().nextInt());
+    private int tag = 0;
 
     @NotNull
     public abstract List<AstNode> getChildren();
