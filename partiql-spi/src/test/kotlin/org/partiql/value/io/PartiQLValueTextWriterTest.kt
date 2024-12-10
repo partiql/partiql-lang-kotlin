@@ -1,5 +1,3 @@
-@file:OptIn(PartiQLValueExperimental::class)
-
 package org.partiql.value.io
 
 import org.junit.jupiter.api.Assertions
@@ -10,7 +8,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.spi.value.io.PartiQLValueTextWriter
 import org.partiql.value.Annotations
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.charValue
@@ -87,7 +84,6 @@ class PartiQLValueTextWriterTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun testAnnotations(case: Case) = case.assert()
 
-    @OptIn(PartiQLValueExperimental::class)
     companion object {
 
         private val annotations: Annotations = listOf("x", "y")
@@ -760,7 +756,6 @@ class PartiQLValueTextWriterTest {
         )
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     class Case(
         private val value: PartiQLValue,
         private val expected: String,

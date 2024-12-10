@@ -37,7 +37,7 @@ import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.ScalarValue
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
@@ -47,7 +47,6 @@ import org.partiql.value.TextValue
 import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
 
-@PartiQLValueExperimental
 public interface PartiQLValueVisitor<R, C> {
 
     public fun visit(v: PartiQLValue, ctx: C): R

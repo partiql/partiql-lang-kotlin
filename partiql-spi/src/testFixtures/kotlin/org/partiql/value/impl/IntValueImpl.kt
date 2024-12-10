@@ -26,7 +26,7 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -37,7 +37,6 @@ import org.partiql.value.int8Value
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigInteger
 
-@OptIn(PartiQLValueExperimental::class)
 internal data class IntValueImpl(
     override val value: BigInteger?,
     override val annotations: PersistentList<String>,

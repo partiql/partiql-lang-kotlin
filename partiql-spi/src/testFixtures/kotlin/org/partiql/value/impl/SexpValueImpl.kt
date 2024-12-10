@@ -18,11 +18,10 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.SexpValue
 import org.partiql.value.util.PartiQLValueVisitor
 
-@OptIn(PartiQLValueExperimental::class)
 internal class SexpValueImpl<T : PartiQLValue>(
     private val delegate: Iterable<T>?,
     override val annotations: PersistentList<String>,

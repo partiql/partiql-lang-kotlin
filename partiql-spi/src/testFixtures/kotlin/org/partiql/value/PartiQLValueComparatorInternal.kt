@@ -6,7 +6,6 @@ import org.partiql.value.util.isNegInf
 import org.partiql.value.util.isPosInf
 import org.partiql.value.util.isZero
 
-@OptIn(PartiQLValueExperimental::class)
 internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) : Comparator<PartiQLValue> {
     companion object {
         private const val EQUAL = 0

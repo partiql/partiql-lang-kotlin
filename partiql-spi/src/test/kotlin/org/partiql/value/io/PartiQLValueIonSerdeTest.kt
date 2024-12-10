@@ -15,7 +15,6 @@ import org.partiql.spi.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.spi.value.io.PartiQLValueIonWriterBuilder
 import org.partiql.value.Annotations
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.blobValue
 import org.partiql.value.boolValue
@@ -46,7 +45,6 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
 
-@OptIn(PartiQLValueExperimental::class)
 class PartiQLValueIonSerdeTest {
 
     @ParameterizedTest

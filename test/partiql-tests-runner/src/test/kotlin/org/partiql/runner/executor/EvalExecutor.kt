@@ -29,7 +29,6 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumUtils
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.DatumIonReaderBuilder
 import org.partiql.value.toIon
 import kotlin.test.assertEquals
@@ -38,7 +37,6 @@ import kotlin.test.assertEquals
  * @property session
  * @property mode
  */
-@OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(
     private val session: Session,
     private val mode: Mode,

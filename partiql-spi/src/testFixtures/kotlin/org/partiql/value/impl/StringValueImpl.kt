@@ -17,11 +17,10 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.StringValue
 import org.partiql.value.util.PartiQLValueVisitor
 
-@OptIn(PartiQLValueExperimental::class)
 internal data class StringValueImpl(
     override val value: String?,
     override val annotations: PersistentList<String>,

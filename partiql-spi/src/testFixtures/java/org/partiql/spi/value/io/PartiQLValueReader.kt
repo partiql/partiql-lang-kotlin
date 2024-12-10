@@ -15,7 +15,7 @@
 package org.partiql.spi.value.io
 
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 
 /**
  * Basic PartiQLValueReader akin to java.io.Reader.

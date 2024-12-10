@@ -33,7 +33,6 @@ import org.partiql.cli.pipeline.Pipeline
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.DatumUtils
 import org.partiql.spi.value.io.PartiQLValueTextWriter
-import org.partiql.value.PartiQLValueExperimental
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
@@ -162,7 +161,6 @@ internal class Shell(
         }
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun run(exiting: AtomicBoolean) = TerminalBuilder.builder()
         .name("PartiQL")
         .nativeSignals(true)

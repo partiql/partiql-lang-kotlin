@@ -15,12 +15,11 @@
 package org.partiql.spi.value.io
 
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 
 /**
  * Basic PartiQLValue Writer akin to java.io.Writer.
  */
-@PartiQLValueExperimental
 public interface PartiQLValueWriter : AutoCloseable {
 
     /**

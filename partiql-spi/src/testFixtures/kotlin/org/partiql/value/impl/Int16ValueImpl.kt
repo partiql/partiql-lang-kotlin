@@ -26,7 +26,7 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
@@ -38,7 +38,6 @@ import org.partiql.value.intValue
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigInteger
 
-@OptIn(PartiQLValueExperimental::class)
 internal data class Int16ValueImpl(
     override val value: Short?,
     override val annotations: PersistentList<String>,

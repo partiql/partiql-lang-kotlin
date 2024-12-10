@@ -19,7 +19,7 @@ import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.bagValue
 import org.partiql.value.binaryValue
@@ -47,7 +47,6 @@ import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
 import org.partiql.value.util.PartiQLValueVisitor
 
-@OptIn(PartiQLValueExperimental::class)
 internal data class NullValueImpl(
     override val annotations: PersistentList<String>,
 ) : NullValue() {

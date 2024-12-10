@@ -555,9 +555,6 @@ public abstract interface class org/partiql/spi/value/Field {
 	public static fun of (Ljava/lang/String;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Field;
 }
 
-public abstract interface annotation class org/partiql/value/PartiQLValueExperimental : java/lang/annotation/Annotation {
-}
-
 public final class org/partiql/value/PartiQLValueType : java/lang/Enum {
 	public static final field ANY Lorg/partiql/value/PartiQLValueType;
 	public static final field BAG Lorg/partiql/value/PartiQLValueType;

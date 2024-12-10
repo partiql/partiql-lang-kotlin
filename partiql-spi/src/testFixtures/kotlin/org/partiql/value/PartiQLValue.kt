@@ -25,14 +25,13 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.BitSet
 
-internal typealias Annotations = List<String>
+public typealias Annotations = List<String>
 
 /**
  * TODO
  *  - Implement ANY
  *  - Implement comparators
  */
-@PartiQLValueExperimental
 public sealed interface PartiQLValue {
 
     public val type: PartiQLValueType
@@ -90,7 +89,6 @@ public sealed interface PartiQLValue {
     }
 }
 
-@PartiQLValueExperimental
 public sealed interface ScalarValue<T> : PartiQLValue {
 
     public val value: T?
@@ -105,7 +103,6 @@ public sealed interface ScalarValue<T> : PartiQLValue {
     override fun withoutAnnotations(): ScalarValue<T>
 }
 
-@PartiQLValueExperimental
 public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Iterable<T> {
 
     override val isNull: Boolean
@@ -119,7 +116,6 @@ public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Iterab
     override fun withoutAnnotations(): CollectionValue<T>
 }
 
-@PartiQLValueExperimental
 public abstract class BoolValue : ScalarValue<Boolean?> {
 
     override val type: PartiQLValueType = PartiQLValueType.BOOL
@@ -131,7 +127,6 @@ public abstract class BoolValue : ScalarValue<Boolean?> {
     abstract override fun withoutAnnotations(): BoolValue
 }
 
-@PartiQLValueExperimental
 public sealed class NumericValue<T : Number> : ScalarValue<T> {
 
     public abstract fun toInt8(): Int8Value
@@ -157,7 +152,6 @@ public sealed class NumericValue<T : Number> : ScalarValue<T> {
     abstract override fun withoutAnnotations(): NumericValue<T>
 }
 
-@PartiQLValueExperimental
 public abstract class Int8Value : NumericValue<Byte>() {
 
     override val type: PartiQLValueType = PartiQLValueType.INT8
@@ -169,7 +163,6 @@ public abstract class Int8Value : NumericValue<Byte>() {
     abstract override fun withoutAnnotations(): Int8Value
 }
 
-@PartiQLValueExperimental
 public abstract class Int16Value : NumericValue<Short>() {
 
     override val type: PartiQLValueType = PartiQLValueType.INT16
@@ -181,7 +174,6 @@ public abstract class Int16Value : NumericValue<Short>() {
     abstract override fun withoutAnnotations(): Int16Value
 }
 
-@PartiQLValueExperimental
 public abstract class Int32Value : NumericValue<Int>() {
 
     override val type: PartiQLValueType = PartiQLValueType.INT32
@@ -193,7 +185,6 @@ public abstract class Int32Value : NumericValue<Int>() {
     abstract override fun withoutAnnotations(): Int32Value
 }
 
-@PartiQLValueExperimental
 public abstract class Int64Value : NumericValue<Long>() {
 
     override val type: PartiQLValueType = PartiQLValueType.INT64
@@ -205,7 +196,6 @@ public abstract class Int64Value : NumericValue<Long>() {
     abstract override fun withoutAnnotations(): Int64Value
 }
 
-@PartiQLValueExperimental
 public abstract class IntValue : NumericValue<BigInteger>() {
 
     override val type: PartiQLValueType = PartiQLValueType.INT
@@ -217,7 +207,6 @@ public abstract class IntValue : NumericValue<BigInteger>() {
     abstract override fun withoutAnnotations(): IntValue
 }
 
-@PartiQLValueExperimental
 public abstract class DecimalValue : NumericValue<BigDecimal>() {
 
     override val type: PartiQLValueType = PartiQLValueType.DECIMAL
@@ -229,7 +218,6 @@ public abstract class DecimalValue : NumericValue<BigDecimal>() {
     abstract override fun withoutAnnotations(): DecimalValue
 }
 
-@PartiQLValueExperimental
 public abstract class Float32Value : NumericValue<Float>() {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT32
@@ -241,7 +229,6 @@ public abstract class Float32Value : NumericValue<Float>() {
     abstract override fun withoutAnnotations(): Float32Value
 }
 
-@PartiQLValueExperimental
 public abstract class Float64Value : NumericValue<Double>() {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT64
@@ -253,7 +240,6 @@ public abstract class Float64Value : NumericValue<Double>() {
     abstract override fun withoutAnnotations(): Float64Value
 }
 
-@PartiQLValueExperimental
 public sealed class TextValue<T> : ScalarValue<T> {
 
     public abstract val string: String?
@@ -265,7 +251,6 @@ public sealed class TextValue<T> : ScalarValue<T> {
     abstract override fun withoutAnnotations(): TextValue<T>
 }
 
-@PartiQLValueExperimental
 public abstract class CharValue : TextValue<Char>() {
 
     override val type: PartiQLValueType = PartiQLValueType.CHAR
@@ -280,7 +265,6 @@ public abstract class CharValue : TextValue<Char>() {
     abstract override fun withoutAnnotations(): CharValue
 }
 
-@PartiQLValueExperimental
 public abstract class StringValue : TextValue<String>() {
 
     override val type: PartiQLValueType = PartiQLValueType.STRING
@@ -295,7 +279,6 @@ public abstract class StringValue : TextValue<String>() {
     abstract override fun withoutAnnotations(): StringValue
 }
 
-@PartiQLValueExperimental
 public abstract class SymbolValue : TextValue<String>() {
 
     override val type: PartiQLValueType = PartiQLValueType.SYMBOL
@@ -310,7 +293,6 @@ public abstract class SymbolValue : TextValue<String>() {
     abstract override fun withoutAnnotations(): SymbolValue
 }
 
-@PartiQLValueExperimental
 public abstract class ClobValue : ScalarValue<ByteArray> {
 
     override val type: PartiQLValueType = PartiQLValueType.CLOB
@@ -322,7 +304,6 @@ public abstract class ClobValue : ScalarValue<ByteArray> {
     abstract override fun withoutAnnotations(): ClobValue
 }
 
-@PartiQLValueExperimental
 public abstract class BinaryValue : ScalarValue<BitSet> {
 
     override val type: PartiQLValueType = PartiQLValueType.BINARY
@@ -334,7 +315,6 @@ public abstract class BinaryValue : ScalarValue<BitSet> {
     abstract override fun withoutAnnotations(): BinaryValue
 }
 
-@PartiQLValueExperimental
 public abstract class ByteValue : ScalarValue<Byte> {
 
     override val type: PartiQLValueType = PartiQLValueType.BYTE
@@ -346,7 +326,6 @@ public abstract class ByteValue : ScalarValue<Byte> {
     abstract override fun withoutAnnotations(): ByteValue
 }
 
-@PartiQLValueExperimental
 public abstract class BlobValue : ScalarValue<ByteArray> {
 
     override val type: PartiQLValueType = PartiQLValueType.BLOB
@@ -358,7 +337,6 @@ public abstract class BlobValue : ScalarValue<ByteArray> {
     abstract override fun withoutAnnotations(): BlobValue
 }
 
-@PartiQLValueExperimental
 public abstract class DateValue : ScalarValue<Date> {
 
     override val type: PartiQLValueType = PartiQLValueType.DATE
@@ -370,7 +348,6 @@ public abstract class DateValue : ScalarValue<Date> {
     abstract override fun withoutAnnotations(): DateValue
 }
 
-@PartiQLValueExperimental
 public abstract class TimeValue : ScalarValue<Time> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIME
@@ -382,7 +359,6 @@ public abstract class TimeValue : ScalarValue<Time> {
     abstract override fun withoutAnnotations(): TimeValue
 }
 
-@PartiQLValueExperimental
 public abstract class TimestampValue : ScalarValue<Timestamp> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIMESTAMP
@@ -394,7 +370,6 @@ public abstract class TimestampValue : ScalarValue<Timestamp> {
     abstract override fun withoutAnnotations(): TimestampValue
 }
 
-@PartiQLValueExperimental
 public abstract class IntervalValue : ScalarValue<Long> {
 
     override val type: PartiQLValueType = PartiQLValueType.INTERVAL
@@ -406,7 +381,6 @@ public abstract class IntervalValue : ScalarValue<Long> {
     abstract override fun withoutAnnotations(): IntervalValue
 }
 
-@PartiQLValueExperimental
 public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
 
     override val type: PartiQLValueType = PartiQLValueType.BAG
@@ -440,7 +414,6 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
     }
 }
 
-@PartiQLValueExperimental
 public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
 
     override val type: PartiQLValueType = PartiQLValueType.LIST
@@ -472,7 +445,6 @@ public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
     }
 }
 
-@PartiQLValueExperimental
 public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
 
     override val type: PartiQLValueType = PartiQLValueType.SEXP
@@ -503,7 +475,6 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
     }
 }
 
-@PartiQLValueExperimental
 public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
 
     override val type: PartiQLValueType = PartiQLValueType.STRUCT
@@ -571,7 +542,6 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
     }
 }
 
-@PartiQLValueExperimental
 public abstract class NullValue : PartiQLValue {
 
     override val type: PartiQLValueType = PartiQLValueType.NULL
@@ -587,7 +557,6 @@ public abstract class NullValue : PartiQLValue {
     abstract override fun withoutAnnotations(): NullValue
 }
 
-@PartiQLValueExperimental
 public abstract class MissingValue : PartiQLValue {
 
     override val type: PartiQLValueType = PartiQLValueType.MISSING
@@ -601,10 +570,8 @@ public abstract class MissingValue : PartiQLValue {
     abstract override fun withoutAnnotations(): MissingValue
 }
 
-@PartiQLValueExperimental
 public fun PartiQLValue.toIon(): IonElement = accept(ToIon, Unit)
 
-@PartiQLValueExperimental
 @Throws(TypeCheckException::class)
 public inline fun <reified T : PartiQLValue> PartiQLValue.check(): T {
     if (this is T) return this else throw TypeCheckException("Expected ${T::class.java} but received $this.")

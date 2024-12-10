@@ -18,11 +18,10 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.BinaryValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.util.PartiQLValueVisitor
 import java.util.BitSet
 
-@OptIn(PartiQLValueExperimental::class)
 internal data class BinaryValueImpl(
     override val value: BitSet?,
     override val annotations: PersistentList<String>,

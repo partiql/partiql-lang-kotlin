@@ -5,11 +5,10 @@ import com.amazon.ion.system.IonBinaryWriterBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ion.system.IonWriterBuilder
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.toIon
 import java.io.OutputStream
 
-@OptIn(PartiQLValueExperimental::class)
 public class PartiQLValueIonWriter internal constructor(
     private val ionWriter: IonWriter,
 ) : PartiQLValueWriter {
@@ -24,7 +23,6 @@ public class PartiQLValueIonWriter internal constructor(
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 public class PartiQLValueIonWriterBuilder private constructor(
     private var ionWriterBuilder: IonWriterBuilder,
 ) {

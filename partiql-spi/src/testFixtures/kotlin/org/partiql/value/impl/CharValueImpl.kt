@@ -18,10 +18,9 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.CharValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.util.PartiQLValueVisitor
 
-@OptIn(PartiQLValueExperimental::class)
 internal data class CharValueImpl(
     override val value: Char?,
     override val annotations: PersistentList<String>,

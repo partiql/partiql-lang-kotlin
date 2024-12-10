@@ -26,7 +26,6 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.DatumUtils
 import org.partiql.spi.value.io.PartiQLValueTextWriter
-import org.partiql.value.PartiQLValueExperimental
 import picocli.CommandLine
 import java.io.File
 import java.io.InputStream
@@ -188,7 +187,6 @@ internal class MainCommand : Runnable {
         Shell(pipeline, session(), debug).start()
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun run(statement: String) {
         val config = getPipelineConfig()
         val pipeline = when (strict) {

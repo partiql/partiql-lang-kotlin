@@ -16,7 +16,6 @@ import org.partiql.spi.value.DatumUtils
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import kotlin.test.assertEquals
 
 public class SuccessTestCase(
@@ -27,7 +26,6 @@ public class SuccessTestCase(
     val jvmEquality: Boolean = false
 ) : PTestCase {
 
-    @OptIn(PartiQLValueExperimental::class)
     constructor(
         input: String,
         expected: PartiQLValue,

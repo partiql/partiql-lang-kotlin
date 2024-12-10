@@ -18,7 +18,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.StructValue
 import org.partiql.value.util.PartiQLValueVisitor
 

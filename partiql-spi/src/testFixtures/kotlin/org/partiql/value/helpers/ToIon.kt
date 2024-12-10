@@ -38,7 +38,7 @@ import org.partiql.value.ListValue
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
@@ -50,7 +50,6 @@ import org.partiql.value.datetime.TimestampWithTimeZone
 import org.partiql.value.datetime.TimestampWithoutTimeZone
 import org.partiql.value.util.PartiQLValueBaseVisitor
 
-@OptIn(PartiQLValueExperimental::class)
 internal object ToIon : PartiQLValueBaseVisitor<IonElement, Unit>() {
 
     const val MISSING_ANNOTATION = "\$missing"

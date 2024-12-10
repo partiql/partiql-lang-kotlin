@@ -61,7 +61,6 @@ import java.util.BitSet
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun boolValue(
     value: Boolean?,
     annotations: Annotations = emptyList(),
@@ -75,7 +74,6 @@ public fun boolValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun int8Value(
     value: Byte?,
     annotations: Annotations = emptyList(),
@@ -89,7 +87,6 @@ public fun int8Value(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun int16Value(
     value: Short?,
     annotations: Annotations = emptyList(),
@@ -103,7 +100,6 @@ public fun int16Value(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun int32Value(
     value: Int?,
     annotations: Annotations = emptyList(),
@@ -117,7 +113,6 @@ public fun int32Value(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun int64Value(
     value: Long?,
     annotations: Annotations = emptyList(),
@@ -131,7 +126,6 @@ public fun int64Value(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun intValue(
     value: BigInteger?,
     annotations: Annotations = emptyList(),
@@ -145,7 +139,6 @@ public fun intValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun decimalValue(
     value: BigDecimal?,
     annotations: Annotations = emptyList(),
@@ -159,7 +152,6 @@ public fun decimalValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun float32Value(
     value: Float?,
     annotations: Annotations = emptyList(),
@@ -173,7 +165,6 @@ public fun float32Value(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun float64Value(
     value: Double?,
     annotations: Annotations = emptyList(),
@@ -187,7 +178,6 @@ public fun float64Value(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun charValue(
     value: Char?,
     annotations: Annotations = emptyList(),
@@ -201,7 +191,6 @@ public fun charValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun stringValue(
     value: String?,
     annotations: Annotations = emptyList(),
@@ -215,7 +204,6 @@ public fun stringValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun symbolValue(
     value: String?,
     annotations: Annotations = emptyList(),
@@ -229,7 +217,6 @@ public fun symbolValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun clobValue(
     value: ByteArray?,
     annotations: Annotations = emptyList(),
@@ -243,7 +230,6 @@ public fun clobValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun binaryValue(
     value: BitSet?,
     annotations: Annotations = emptyList(),
@@ -257,7 +243,6 @@ public fun binaryValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun byteValue(
     value: Byte?,
     annotations: Annotations = emptyList(),
@@ -271,7 +256,6 @@ public fun byteValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun blobValue(
     value: ByteArray?,
     annotations: Annotations = emptyList(),
@@ -285,7 +269,6 @@ public fun blobValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun dateValue(
     value: Date?,
     annotations: Annotations = emptyList(),
@@ -299,7 +282,6 @@ public fun dateValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun timeValue(
     value: Time?,
     annotations: Annotations = emptyList(),
@@ -313,7 +295,6 @@ public fun timeValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun timestampValue(
     value: Timestamp?,
     annotations: Annotations = emptyList(),
@@ -327,7 +308,6 @@ public fun timestampValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun intervalValue(
     value: Long?,
     annotations: Annotations = emptyList(),
@@ -342,7 +322,6 @@ public fun intervalValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> bagValue(
     elements: Iterable<T>?,
     annotations: Annotations = emptyList(),
@@ -357,7 +336,6 @@ public fun <T : PartiQLValue> bagValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> bagValue(
     vararg elements: T,
     annotations: Annotations = emptyList(),
@@ -372,7 +350,6 @@ public fun <T : PartiQLValue> bagValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> listValue(
     elements: Iterable<T>?,
     annotations: Annotations = emptyList(),
@@ -387,7 +364,6 @@ public fun <T : PartiQLValue> listValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> listValue(
     vararg elements: T,
     annotations: Annotations = emptyList(),
@@ -402,7 +378,6 @@ public fun <T : PartiQLValue> listValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> sexpValue(
     elements: Iterable<T>?,
     annotations: Annotations = emptyList(),
@@ -417,7 +392,6 @@ public fun <T : PartiQLValue> sexpValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> sexpValue(
     vararg elements: T,
     annotations: Annotations = emptyList(),
@@ -432,7 +406,6 @@ public fun <T : PartiQLValue> sexpValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> structValue(
     fields: Iterable<Pair<String, T>>?,
     annotations: Annotations = emptyList(),
@@ -447,7 +420,6 @@ public fun <T : PartiQLValue> structValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> structValue(
     vararg fields: Pair<String, T>,
     annotations: Annotations = emptyList(),
@@ -463,7 +435,6 @@ public fun <T : PartiQLValue> structValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> structValueMultiMap(
     fields: Map<String, Iterable<T>>?,
     annotations: Annotations = emptyList(),
@@ -479,7 +450,6 @@ public fun <T : PartiQLValue> structValueMultiMap(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun <T : PartiQLValue> structValueMap(
     fields: Map<String, T>?,
     annotations: Annotations = emptyList(),
@@ -492,7 +462,6 @@ public fun <T : PartiQLValue> structValueMap(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun nullValue(
     annotations: Annotations = emptyList(),
 ): NullValue = NullValueImpl(annotations.toPersistentList())
@@ -504,7 +473,6 @@ public fun nullValue(
  * @return
  */
 @JvmOverloads
-@PartiQLValueExperimental
 public fun missingValue(
     annotations: Annotations = emptyList(),
 ): MissingValue = MissingValueImpl(annotations.toPersistentList())

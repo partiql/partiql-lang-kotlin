@@ -31,7 +31,7 @@ import org.partiql.value.ListValue
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
@@ -55,7 +55,6 @@ import kotlin.math.abs
  * @property formatted  Print with newlines and indents
  * @property indent     Indent prefix, default is 2-spaces
  */
-@PartiQLValueExperimental
 public class PartiQLValueTextWriter(
     private val out: PrintStream,
     private val formatted: Boolean = true,
@@ -350,7 +349,6 @@ public class PartiQLValueTextWriter(
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 public class PartiQLValueWriterBuilder private constructor() {
 
     private var formatted: Boolean = true

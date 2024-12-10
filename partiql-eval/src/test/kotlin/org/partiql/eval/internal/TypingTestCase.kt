@@ -13,12 +13,11 @@ import org.partiql.spi.value.DatumUtils
 import org.partiql.spi.value.io.PartiQLValueIonWriterBuilder
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
+public class TypingTestCase(
     val name: String,
     val input: String,
     val expectedPermissive: PartiQLValue,
@@ -28,7 +27,6 @@ public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
     private val parser = PartiQLParser.standard()
     private val planner = PartiQLPlanner.standard()
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun run() {
         val (permissiveResult, plan) = run(mode = Mode.PERMISSIVE())
         val permissiveResultPValue = DatumUtils.toPartiQLValue(permissiveResult)
@@ -72,7 +70,6 @@ public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
         return result to plan
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: Plan): String {
         val expectedBuffer = ByteArrayOutputStream()
         val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)

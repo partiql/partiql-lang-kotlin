@@ -8,7 +8,7 @@ import com.amazon.ionelement.api.IonElement
 import org.partiql.value.DecimalValue
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.bagValue
 import org.partiql.value.blobValue
@@ -544,7 +544,6 @@ internal class PartiQLValueIonReader(
     }
 }
 
-@OptIn(PartiQLValueExperimental::class)
 public class PartiQLValueIonReaderBuilder private constructor(
     private var sourceDataFormat: SourceDataFormat = SourceDataFormat.IonForPartiQL,
     private var ionReaderBuilder: IonReaderBuilder,

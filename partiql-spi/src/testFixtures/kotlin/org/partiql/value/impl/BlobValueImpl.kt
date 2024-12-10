@@ -18,10 +18,9 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.BlobValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.util.PartiQLValueVisitor
 
-@OptIn(PartiQLValueExperimental::class)
 internal data class BlobValueImpl(
     override val value: ByteArray?,
     override val annotations: PersistentList<String>,

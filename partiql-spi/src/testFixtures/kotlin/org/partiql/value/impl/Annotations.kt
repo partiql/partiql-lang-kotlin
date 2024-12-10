@@ -18,9 +18,8 @@ package org.partiql.value.impl
 
 import org.partiql.value.Annotations
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 
-@OptIn(PartiQLValueExperimental::class)
+
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: Annotations): T =
     when {
@@ -28,7 +27,6 @@ internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: A
         else -> copy(annotations = this.annotations.plus(annotations)) as T
     }
 
-@OptIn(PartiQLValueExperimental::class)
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withoutAnnotations(): T =
     when {
