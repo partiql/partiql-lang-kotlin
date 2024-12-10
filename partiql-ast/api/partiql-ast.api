@@ -124,8 +124,10 @@ public abstract class org/partiql/ast/AstEnum : org/partiql/ast/AstNode {
 public abstract class org/partiql/ast/AstNode {
 	public fun <init> ()V
 	public abstract fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun equals (Ljava/lang/Object;)Z
 	public abstract fun getChildren ()Ljava/util/List;
 	public fun getTag ()I
+	public abstract fun hashCode ()I
 	public fun setTag (I)V
 }
 
@@ -886,7 +888,10 @@ public class org/partiql/ast/GroupBy$Key : org/partiql/ast/AstNode {
 	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/GroupBy$Key$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/GroupBy$Key$Builder {
@@ -1001,7 +1006,10 @@ public class org/partiql/ast/Let$Binding : org/partiql/ast/AstNode {
 	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/Identifier;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/Let$Binding$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
 }
 
 public class org/partiql/ast/Let$Binding$Builder {
