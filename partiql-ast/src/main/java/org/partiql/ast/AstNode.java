@@ -1,7 +1,5 @@
 package org.partiql.ast;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -10,10 +8,16 @@ import java.util.List;
  * TODO docs, equals, hashcode
  * TODO support source location -- https://github.com/partiql/partiql-lang-kotlin/issues/1608
  */
-@Setter
-@Getter
 public abstract class AstNode {
     private int tag = 0;
+
+    public int getTag() {
+        return tag;
+    }
+
+    public void setTag(int tag) {
+        this.tag = tag;
+    }
 
     @NotNull
     public abstract List<AstNode> getChildren();
