@@ -3,13 +3,10 @@ package org.partiql.eval.internal.helpers
 import org.partiql.errors.TypeCheckException
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import java.math.BigInteger
 
 /**
- * Holds helper functions for [PartiQLValue].
+ * Holds helper functions for [Datum].
  */
 internal object ValueUtility {
 
@@ -18,12 +15,13 @@ internal object ValueUtility {
      */
     @JvmStatic
     fun Datum.isTrue(): Boolean {
-        return this.type.code() == PType.BOOL && !this.isNull && !this.isMissing && this.boolean
-    }
-
-    @OptIn(PartiQLValueExperimental::class)
-    fun Datum.check(type: PartiQLValueType): Datum {
-        return this.check(type.toPType())
+        if (this.isNull || this.isMissing) {
+            return false
+        }
+        if (this.type.code() == PType.VARIANT) {
+            return this.lower().isTrue()
+        }
+        return this.type.code() == PType.BOOL && this.boolean
     }
 
     /**
@@ -36,6 +34,9 @@ internal object ValueUtility {
     fun Datum.check(type: PType): Datum {
         if (this.type == type) {
             return this
+        }
+        if (this.type.code() == PType.VARIANT) {
+            return this.lower().check(type)
         }
         if (!this.isNull) {
             throw TypeCheckException("Expected type $type but received ${this.type}.")
@@ -51,6 +52,7 @@ internal object ValueUtility {
      */
     fun Datum.getText(): String {
         return when (this.type.code()) {
+            PType.VARIANT -> this.lower().getText()
             PType.STRING, PType.CHAR -> this.string
             else -> throw TypeCheckException("Expected text, but received ${this.type}.")
         }
@@ -68,6 +70,7 @@ internal object ValueUtility {
      */
     fun Datum.getBigIntCoerced(): BigInteger {
         return when (this.type.code()) {
+            PType.VARIANT -> this.lower().getBigIntCoerced()
             PType.TINYINT -> this.byte.toInt().toBigInteger()
             PType.SMALLINT -> this.short.toInt().toBigInteger()
             PType.INTEGER -> this.int.toBigInteger()
@@ -90,6 +93,7 @@ internal object ValueUtility {
      */
     fun Datum.getInt32Coerced(): Int {
         return when (this.type.code()) {
+            PType.VARIANT -> this.lower().getInt32Coerced()
             PType.TINYINT -> this.byte.toInt()
             PType.SMALLINT -> this.short.toInt()
             PType.INTEGER -> this.int

@@ -29,6 +29,7 @@ import org.partiql.types.PType.TIMESTAMPZ
 import org.partiql.types.PType.TIMEZ
 import org.partiql.types.PType.TINYINT
 import org.partiql.types.PType.VARCHAR
+import org.partiql.types.PType.VARIANT
 import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -69,6 +70,9 @@ internal object CastTable {
         }
         if (target.code() == DYNAMIC) {
             return source
+        }
+        if (source.type.code() == VARIANT) {
+            return cast(source.lower(), target)
         }
         val cast = _table[source.type.code()][target.code()]
             ?: throw TypeCheckException("CAST(${source.type} AS $target) is not supported.")

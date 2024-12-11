@@ -26,9 +26,9 @@ import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.value.Datum
+import org.partiql.spi.value.DatumUtils
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.DatumIonReaderBuilder
 import org.partiql.value.toIon
 import kotlin.test.assertEquals
@@ -37,7 +37,6 @@ import kotlin.test.assertEquals
  * @property session
  * @property mode
  */
-@OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(
     private val session: Session,
     private val mode: Mode,
@@ -94,13 +93,13 @@ class EvalExecutor(
     }
 
     override fun toIon(value: Datum): IonValue {
-        val partiql = value.toPartiQLValue()
+        val partiql = DatumUtils.toPartiQLValue(value)
         return partiql.toIon().toIonValue(ION)
     }
 
     // TODO: Use DATUM
     override fun compare(actual: Datum, expect: Datum): Boolean {
-        return valueComparison(actual.toPartiQLValue(), expect.toPartiQLValue())
+        return valueComparison(DatumUtils.toPartiQLValue(actual), DatumUtils.toPartiQLValue(expect))
     }
 
     // Value comparison of PartiQL Value that utilized Ion Hashcode.

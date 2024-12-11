@@ -113,10 +113,29 @@ abstract class DatumComparator implements Comparator<Datum> {
             return rhsUnknown();
         }
 
+        // Lower (if needed)
+        Datum lhsActual = lhs.getType().code() == PType.VARIANT ? lhs.lower() : lhs;
+        Datum rhsActual = rhs.getType().code() == PType.VARIANT ? rhs.lower() : rhs;
+
+        
+        // TODO: Consolidate
+
+        boolean lhsActualIsUnknown = lhsActual.isNull() || lhsActual.isMissing();
+        boolean rhsActualIsUnknown = rhsActual.isNull() || rhsActual.isMissing();
+        if (lhsActualIsUnknown && rhsActualIsUnknown) {
+            return EQUAL;
+        }
+        if (lhsActualIsUnknown) {
+            return lhsUnknown();
+        }
+        if (rhsActualIsUnknown) {
+            return rhsUnknown();
+        }
+
         // Invoke the Comparison Table
-        int lhsKind = lhs.getType().code();
-        int rhsKind = rhs.getType().code();
-        return COMPARISON_TABLE[lhsKind][rhsKind].apply(lhs, rhs, this);
+        int lhsKind = lhsActual.getType().code();
+        int rhsKind = rhsActual.getType().code();
+        return COMPARISON_TABLE[lhsKind][rhsKind].apply(lhsActual, rhsActual, this);
     }
 
     /**

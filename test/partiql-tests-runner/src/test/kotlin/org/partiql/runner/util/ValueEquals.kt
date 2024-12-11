@@ -1,7 +1,6 @@
 package org.partiql.runner.util
 
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Different methods for asserting value equality. The legacy comparator needed to compared on lowered IonValue but
@@ -15,7 +14,6 @@ interface ValueEquals<T> {
 
     companion object {
 
-        @OptIn(PartiQLValueExperimental::class)
         @JvmStatic
         val partiql: ValueEquals<PartiQLValue> = PartiQLValueEquals
     }
@@ -24,7 +22,6 @@ interface ValueEquals<T> {
 /**
  * Value equality using the [PartiQLValue] equality implementation.
  */
-@OptIn(PartiQLValueExperimental::class)
 private object PartiQLValueEquals : ValueEquals<PartiQLValue> {
     override fun equals(left: PartiQLValue, right: PartiQLValue) = left.equals(right)
 }

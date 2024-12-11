@@ -7,8 +7,6 @@ import org.partiql.plan.Exclusion
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueType
 
 /**
  * Implementation of the EXCLUDE clause; there are good opportunities to tune/optimize this.
@@ -133,8 +131,8 @@ internal class RelOpExclude(
     }
 
     /**
-     * Returns a [PartiQLValue] created from an iterable of [coll]. Requires [type] to be a collection type
-     * (i.e. [PartiQLValueType.LIST] or [PartiQLValueType.BAG].).
+     * Returns a [Datum] created from an iterable of [coll]. Requires [type] to be a collection type
+     * (i.e. [PType.ARRAY] or [PType.BAG].).
      */
     private fun newCollValue(type: PType, coll: Iterable<Datum>): Datum {
         return when (type.code()) {
