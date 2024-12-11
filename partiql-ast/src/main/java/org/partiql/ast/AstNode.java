@@ -23,4 +23,10 @@ public abstract class AstNode {
     public abstract List<AstNode> getChildren();
 
     public abstract <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx);
+
+    @Override
+    public abstract int hashCode();
+
+    @Override
+    public abstract boolean equals(Object obj);
 }

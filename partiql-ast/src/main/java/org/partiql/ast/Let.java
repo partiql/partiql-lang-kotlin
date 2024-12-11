@@ -36,6 +36,7 @@ public class Let extends AstNode {
      * TODO docs, equals, hashcode
      */
     @lombok.Builder(builderClassName = "Builder")
+    @EqualsAndHashCode(callSuper = false)
     public static class Binding extends AstNode {
         @NotNull
         public final Expr expr;
