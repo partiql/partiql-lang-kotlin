@@ -19,7 +19,6 @@ import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
-
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.bagValue
 import org.partiql.value.binaryValue

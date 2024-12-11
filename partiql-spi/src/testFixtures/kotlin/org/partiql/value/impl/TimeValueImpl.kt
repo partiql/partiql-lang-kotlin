@@ -17,7 +17,6 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
-
 import org.partiql.value.TimeValue
 import org.partiql.value.datetime.Time
 import org.partiql.value.util.PartiQLValueVisitor

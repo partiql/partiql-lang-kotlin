@@ -7,10 +7,8 @@ import org.partiql.types.PType;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
-
 import java.math.BigDecimal;
 import java.util.Objects;
-
 import static org.partiql.types.PType.ARRAY;
 import static org.partiql.types.PType.BAG;
 import static org.partiql.types.PType.BIGINT;

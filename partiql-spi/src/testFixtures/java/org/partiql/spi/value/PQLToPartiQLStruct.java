@@ -3,7 +3,6 @@ package org.partiql.spi.value;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValue;
-
 import java.util.Iterator;
 
 class PQLToPartiQLStruct implements Iterable<Pair<String, PartiQLValue>> {

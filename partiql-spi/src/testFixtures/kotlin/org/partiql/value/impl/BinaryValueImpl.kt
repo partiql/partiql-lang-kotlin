@@ -18,7 +18,6 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.BinaryValue
-
 import org.partiql.value.util.PartiQLValueVisitor
 import java.util.BitSet
 

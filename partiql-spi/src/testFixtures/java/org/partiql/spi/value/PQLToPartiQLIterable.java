@@ -2,7 +2,6 @@ package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValue;
-
 import java.util.Iterator;
 
 class PQLToPartiQLIterable implements Iterable<PartiQLValue> {

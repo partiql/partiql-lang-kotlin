@@ -5,7 +5,6 @@ import com.amazon.ion.system.IonBinaryWriterBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ion.system.IonWriterBuilder
 import org.partiql.value.PartiQLValue
-
 import org.partiql.value.toIon
 import java.io.OutputStream
 

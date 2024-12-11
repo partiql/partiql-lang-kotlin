@@ -37,7 +37,6 @@ import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
-
 import org.partiql.value.ScalarValue
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue

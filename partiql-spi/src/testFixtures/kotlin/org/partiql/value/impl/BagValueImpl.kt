@@ -19,7 +19,6 @@ import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.BagValue
 import org.partiql.value.PartiQLValue
-
 import org.partiql.value.util.PartiQLValueVisitor
 
 internal class BagValueImpl<T : PartiQLValue>(

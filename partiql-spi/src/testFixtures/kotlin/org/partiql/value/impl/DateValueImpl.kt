@@ -18,7 +18,6 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
 import org.partiql.value.DateValue
-
 import org.partiql.value.datetime.Date
 import org.partiql.value.util.PartiQLValueVisitor
 

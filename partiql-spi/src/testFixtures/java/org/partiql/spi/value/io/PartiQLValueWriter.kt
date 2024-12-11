@@ -16,7 +16,6 @@ package org.partiql.spi.value.io
 
 import org.partiql.value.PartiQLValue
 
-
 /**
  * Basic PartiQLValue Writer akin to java.io.Writer.
  */
