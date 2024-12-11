@@ -501,6 +501,7 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun getTimestamp ()Lorg/partiql/value/datetime/Timestamp;
 	public abstract fun getType ()Lorg/partiql/types/PType;
 	public static fun integer (I)Lorg/partiql/spi/value/Datum;
+	public static fun ion (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public fun isMissing ()Z
 	public fun isNull ()Z
 	public fun iterator ()Ljava/util/Iterator;

@@ -33,6 +33,7 @@ import static org.partiql.types.PType.TIMESTAMPZ;
 import static org.partiql.types.PType.TIMEZ;
 import static org.partiql.types.PType.TINYINT;
 import static org.partiql.types.PType.UNKNOWN;
+import static org.partiql.types.PType.VARIANT;
 
 public class DatumUtils {
 
@@ -95,6 +96,8 @@ public class DatumUtils {
                 } else if (datum.isMissing()) {
                     return PartiQL.missingValue();
                 }
+            case VARIANT:
+                return datum.isNull() ? PartiQL.nullValue() : toPartiQLValue(datum.lower());
             default:
                 throw new UnsupportedOperationException("Unsupported datum type: " + type);
         }

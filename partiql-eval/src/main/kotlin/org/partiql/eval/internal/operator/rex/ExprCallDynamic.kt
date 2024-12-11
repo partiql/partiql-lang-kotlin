@@ -45,7 +45,14 @@ internal class ExprCallDynamic(
     private val candidates: MutableMap<List<PType>, Candidate> = mutableMapOf()
 
     override fun eval(env: Environment): Datum {
-        val actualArgs = args.map { it.eval(env) }.toTypedArray()
+        val actualArgs = args.map {
+            val arg = it.eval(env)
+            if (arg.type.code() == PType.VARIANT) {
+                arg.lower()
+            } else {
+                arg
+            }
+        }.toTypedArray()
         val actualTypes = actualArgs.map { it.type }
         var candidate = candidates[actualTypes]
         if (candidate == null) {
@@ -173,6 +180,9 @@ internal class ExprCallDynamic(
                 val arg = args[i]
                 if (function.isNullCall && arg.isNull) {
                     return nil.invoke()
+                }
+                if (arg.isMissing && function.isMissingCall) {
+                    return Datum.missing(function.returns)
                 }
                 val argType = arg.type
                 val paramType = function.parameters[i]

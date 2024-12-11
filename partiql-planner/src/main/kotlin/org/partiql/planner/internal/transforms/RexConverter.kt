@@ -89,7 +89,6 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.utils.DateTimeUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.value.Datum
-import org.partiql.spi.value.DatumReader
 import org.partiql.types.PType
 import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
@@ -216,10 +215,7 @@ internal object RexConverter {
             if (node.encoding != "ion") {
                 throw IllegalArgumentException("unsupported encoding ${node.encoding}")
             }
-            // TODO: Does this result in a Datum of type variant?
-            val v = DatumReader.ion(node.value.byteInputStream())
-            val datum = v.next() ?: error("Expected a single value")
-            v.next()?.let { throw TypeCheckException("Expected a single value") }
+            val datum = Datum.ion(node.value)
             val type = CompilerType(datum.type)
             return rex(type, rexOpLit(datum))
         }

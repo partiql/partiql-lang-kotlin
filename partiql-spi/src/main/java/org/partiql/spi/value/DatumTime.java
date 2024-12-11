@@ -16,12 +16,12 @@ class DatumTime implements Datum {
     private final PType _type;
 
     DatumTime(@NotNull Time value) {
-        _value = value;
+        _value = value.toPrecision(6);
         _type = PType.timez(6);
     }
 
     DatumTime(@NotNull Time value, int precision) {
-        _value = value;
+        _value = value.toPrecision(precision);
         _type = PType.timez(precision);
     }
 

@@ -16,12 +16,12 @@ class DatumTimestamp implements Datum {
     private final PType _type;
 
     DatumTimestamp(@NotNull Timestamp value) {
-        _value = value;
+        _value = value.toPrecision(6);
         _type = PType.timestampz(6);
     }
 
     DatumTimestamp(@NotNull Timestamp value, int precision) {
-        _value = value;
+        _value = value.toPrecision(precision);
         _type = PType.timestampz(precision);
     }
 

@@ -224,7 +224,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val kType = PType.string()
 
             // Check Root (Dynamic)
-            if (rex.type.code() == PType.DYNAMIC) {
+            if (rex.type.code() == PType.DYNAMIC || rex.type.code() == PType.VARIANT) {
                 val type = ctx!!.copyWithSchema(listOf(kType, PType.dynamic()).toCType())
                 return rel(type, op)
             }
@@ -624,7 +624,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             }
 
             // Check if Root is DYNAMIC
-            if (root.type.code() == PType.DYNAMIC) {
+            if (root.type.code() == PType.DYNAMIC || root.type.code() == PType.VARIANT) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Index(root, key))
             }
 
@@ -653,7 +653,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             }
 
             // Check if Root is DYNAMIC
-            if (root.type.code() == PType.DYNAMIC) {
+            if (root.type.code() == PType.DYNAMIC || root.type.code() == PType.VARIANT) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Key(root, key))
             }
 
@@ -685,7 +685,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val root = visitRex(node.root, node.root.type)
 
             // Check if Root is DYNAMIC
-            if (root.type.code() == PType.DYNAMIC) {
+            if (root.type.code() == PType.DYNAMIC || root.type.code() == PType.VARIANT) {
                 return Rex(CompilerType(PType.dynamic()), Rex.Op.Path.Symbol(root, node.key))
             }
 
@@ -923,7 +923,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * Hence, we permit Static Type BOOL, Static Type NULL, Static Type Missing here.
          */
         private fun canBeBoolean(type: CompilerType): Boolean {
-            return type.code() == PType.DYNAMIC || type.code() == PType.BOOL
+            return type.code() == PType.DYNAMIC || type.code() == PType.VARIANT || type.code() == PType.BOOL
         }
 
         /**
@@ -1040,7 +1040,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * Calculate output type of a scalar subquery.
          */
         private fun visitRexOpSubqueryScalar(subquery: Rex.Op.Subquery, cons: CompilerType): Rex {
-            if (cons.code() == PType.DYNAMIC) {
+            if (cons.code() == PType.DYNAMIC || cons.code() == PType.VARIANT) {
                 return Rex(PType.dynamic().toCType(), subquery)
             }
             if (cons.code() != PType.ROW) {
@@ -1186,7 +1186,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
                 when (arg.code()) {
                     PType.ROW -> fields.addAll(arg.fields!!)
                     PType.STRUCT -> structIsOpen = true
-                    PType.DYNAMIC -> containsDynamic = true
+                    PType.DYNAMIC, PType.VARIANT -> containsDynamic = true
                     PType.UNKNOWN -> structIsOpen = true
                     else -> containsNonStruct = true
                 }
