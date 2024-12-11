@@ -1836,15 +1836,12 @@ internal class PartiQLParserDefault : PartiQLParser {
             val offset = visitOrNull<Expr>(ctx.expr(1))
             val default = visitOrNull<Expr>(ctx.expr(2))
             val over = visitOver(ctx.over())
-            if (over.sorts == null) {
-                throw error(ctx.over(), "$function requires Window ORDER BY")
-            }
             exprWindow(function, expression, offset, default, over)
         }
 
         override fun visitOver(ctx: GeneratedParser.OverContext) = translate(ctx) {
-            val partitions = ctx.windowPartitionList()?.let { visitOrEmpty<Expr>(it.expr()) }
-            val sorts = ctx.windowSortSpecList()?.let { visitOrEmpty<Sort>(it.orderSortSpec()) }
+            val partitions = visitOrEmpty<Expr>(ctx.windowPartitionList().expr())
+            val sorts = visitOrEmpty<Sort>(ctx.windowSortSpecList().orderSortSpec())
             exprWindowOver(partitions, sorts)
         }
 
