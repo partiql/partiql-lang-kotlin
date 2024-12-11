@@ -144,6 +144,7 @@ internal data class Scope(
             PType.ROW -> this.fields.any { name.matches(it.name) }
             PType.STRUCT -> null
             PType.DYNAMIC -> null
+            PType.VARIANT -> null
             else -> false
         }
     }

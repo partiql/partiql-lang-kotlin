@@ -15,7 +15,13 @@ internal object ValueUtility {
      */
     @JvmStatic
     fun Datum.isTrue(): Boolean {
-        return this.type.code() == PType.BOOL && !this.isNull && !this.isMissing && this.boolean
+        if (this.isNull || this.isMissing) {
+            return false
+        }
+        if (this.type.code() == PType.VARIANT) {
+            return this.lower().isTrue()
+        }
+        return this.type.code() == PType.BOOL && this.boolean
     }
 
     /**
@@ -28,6 +34,9 @@ internal object ValueUtility {
     fun Datum.check(type: PType): Datum {
         if (this.type == type) {
             return this
+        }
+        if (this.type.code() == PType.VARIANT) {
+            return this.lower().check(type)
         }
         if (!this.isNull) {
             throw TypeCheckException("Expected type $type but received ${this.type}.")
@@ -43,29 +52,42 @@ internal object ValueUtility {
      */
     fun Datum.getText(): String {
         return when (this.type.code()) {
+            PType.VARIANT -> this.lower().getText()
             PType.STRING, PType.CHAR -> this.string
             else -> throw TypeCheckException("Expected text, but received ${this.type}.")
         }
     }
 
     /**
-     * Takes in a [Datum] that is any integer type ([PartiQLValueType.INT8], [PartiQLValueType.INT8],
-     * [PartiQLValueType.INT8], [PartiQLValueType.INT8], [PartiQLValueType.INT8]) and returns the [BigInteger] (potentially
-     * coerced) that represents the integer.
+     * Converts all number values to [BigInteger]. If the number is [PType.DECIMAL] or [PType.NUMERIC], this asserts that
+     * the scale is zero.
      *
      * INTERNAL NOTE: The PLANNER should be handling the coercion. This function should not be necessary.
+     *
+     * TODO: This is used specifically for LIMIT and OFFSET. This makes the conformance tests pass by coercing values
+     *  of type [PType.NUMERIC] and [PType.DECIMAL], but this is unspecified. Do we allow for LIMIT 2.0? Or of
+     *  a value that is greater than [PType.BIGINT]'s MAX value by using a [PType.DECIMAL] with a high precision and scale
+     *  of zero? This hasn't been decided, however, as the conformance tests allow for this, this function coerces
+     *  the value to a [BigInteger] regardless of the number's type.
      *
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if type is not an integer type
      */
     fun Datum.getBigIntCoerced(): BigInteger {
         return when (this.type.code()) {
+            PType.VARIANT -> this.lower().getBigIntCoerced()
             PType.TINYINT -> this.byte.toInt().toBigInteger()
             PType.SMALLINT -> this.short.toInt().toBigInteger()
             PType.INTEGER -> this.int.toBigInteger()
             PType.BIGINT -> this.long.toBigInteger()
-            PType.NUMERIC -> this.bigInteger
-            else -> throw TypeCheckException()
+            PType.NUMERIC, PType.DECIMAL -> {
+                val decimal = this.bigDecimal
+                if (decimal.scale() != 0) {
+                    throw TypeCheckException("Expected integer, but received decimal.")
+                }
+                return decimal.toBigInteger()
+            }
+            else -> throw TypeCheckException("Type: ${this.type}")
         }
     }
 
@@ -82,6 +104,7 @@ internal object ValueUtility {
      */
     fun Datum.getInt32Coerced(): Int {
         return when (this.type.code()) {
+            PType.VARIANT -> this.lower().getInt32Coerced()
             PType.TINYINT -> this.byte.toInt()
             PType.SMALLINT -> this.short.toInt()
             PType.INTEGER -> this.int

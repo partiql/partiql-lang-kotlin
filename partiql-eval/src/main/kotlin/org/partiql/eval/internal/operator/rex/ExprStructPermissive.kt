@@ -32,6 +32,7 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
                 return null
             }
             return when (this.type.code()) {
+                PType.VARIANT -> this.lower().getTextOrNull()
                 PType.STRING, PType.CHAR -> this.string
                 else -> null
             }

@@ -6,6 +6,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.RecordValueIterator
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal class RelOpScan(
@@ -16,11 +17,16 @@ internal class RelOpScan(
 
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Row()))
-        records = when (r.type.code()) {
-            PType.ARRAY, PType.BAG -> RecordValueIterator(r.iterator())
+        records = r.records()
+    }
+
+    private fun Datum.records(): RecordValueIterator {
+        return when (this.type.code()) {
+            PType.VARIANT -> this.lower().records()
+            PType.ARRAY, PType.BAG -> RecordValueIterator(this.iterator())
             else -> {
                 close()
-                throw TypeCheckException("Unexpected type for scan: ${r.type}")
+                throw TypeCheckException("Unexpected type for scan: ${this.type}")
             }
         }
     }

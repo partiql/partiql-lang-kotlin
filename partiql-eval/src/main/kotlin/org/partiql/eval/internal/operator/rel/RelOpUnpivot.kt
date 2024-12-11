@@ -58,7 +58,13 @@ internal sealed class RelOpUnpivot : ExprRelation {
     class Strict(private val expr: ExprValue) : RelOpUnpivot() {
 
         override fun struct(): Datum {
-            val v = expr.eval(env.push(Row()))
+            val v = expr.eval(env.push(Row())).let {
+                if (it.type.code() == PType.VARIANT) {
+                    it.lower()
+                } else {
+                    it
+                }
+            }
             if (v.type.code() != PType.STRUCT && v.type.code() != PType.ROW) {
                 throw TypeCheckException()
             }
@@ -78,7 +84,13 @@ internal sealed class RelOpUnpivot : ExprRelation {
     class Permissive(private val expr: ExprValue) : RelOpUnpivot() {
 
         override fun struct(): Datum {
-            val v = expr.eval(env.push(Row()))
+            val v = expr.eval(env.push(Row())).let {
+                if (it.type.code() == PType.VARIANT) {
+                    it.lower()
+                } else {
+                    it
+                }
+            }
             if (v.isMissing) {
                 return Datum.struct(emptyList())
             }

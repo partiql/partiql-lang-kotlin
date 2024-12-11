@@ -18,7 +18,12 @@ internal class RelOpIterate(
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Row()))
         index = 0
-        iterator = when (r.type.code()) {
+        iterator = records(r)
+    }
+
+    private fun records(r: Datum): Iterator<Datum> {
+        return when (r.type.code()) {
+            PType.VARIANT -> records(r.lower())
             PType.BAG -> {
                 close()
                 throw TypeCheckException()

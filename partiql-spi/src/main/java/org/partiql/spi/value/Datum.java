@@ -1,13 +1,18 @@
 package org.partiql.spi.value;
 
+import com.amazon.ionelement.api.AnyElement;
+import com.amazon.ionelement.api.ElementLoader;
+import com.amazon.ionelement.api.IonElementLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.errors.DataException;
+import org.partiql.spi.value.ion.IonVariant;
 import org.partiql.types.PType;
 import org.partiql.value.datetime.Date;
 import org.partiql.value.datetime.Time;
 import org.partiql.value.datetime.Timestamp;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
@@ -198,7 +203,7 @@ public interface Datum extends Iterable<Datum> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     default int getInt() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Has type: " + getType() + " and class " + this.getClass().getName());
     }
 
     /**
@@ -570,6 +575,13 @@ public interface Datum extends Iterable<Datum> {
     @NotNull
     static Datum struct(@NotNull Iterable<Field> values) {
         return new DatumStruct(values);
+    }
+
+    @NotNull
+    static Datum ion(@NotNull String value) {
+        IonElementLoader loader = ElementLoader.createIonElementLoader();
+        AnyElement element = loader.loadSingleElement(value);
+        return new IonVariant(element);
     }
 
     /**

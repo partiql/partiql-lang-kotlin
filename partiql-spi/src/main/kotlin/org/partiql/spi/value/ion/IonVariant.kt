@@ -3,7 +3,10 @@ package org.partiql.spi.value.ion
 import com.amazon.ion.system.IonBinaryWriterBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.AnyElement
+import com.amazon.ionelement.api.ElementType
+import com.amazon.ionelement.api.ElementType.BLOB
 import com.amazon.ionelement.api.ElementType.BOOL
+import com.amazon.ionelement.api.ElementType.CLOB
 import com.amazon.ionelement.api.ElementType.DECIMAL
 import com.amazon.ionelement.api.ElementType.FLOAT
 import com.amazon.ionelement.api.ElementType.INT
@@ -16,14 +19,8 @@ import com.amazon.ionelement.api.ElementType.TIMESTAMP
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
-import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeValue
-import org.partiql.value.datetime.Time
-import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.Timestamp
 import java.io.ByteArrayOutputStream
-import java.math.BigDecimal
-import java.math.BigInteger
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -54,127 +51,54 @@ internal class IonVariant(private var value: AnyElement) : Datum {
         return buffer.toByteArray()
     }
 
-    /**
-     * TODO!
-     */
     override fun lower(): Datum {
-        throw UnsupportedOperationException("VARIANT<ION> lower")
+        if (value.isNull) {
+            return Datum.nullValue(value.type.toPType())
+        }
+        return when (value.type) {
+            STRING -> Datum.string(value.stringValue)
+            SYMBOL -> Datum.string(value.symbolValue)
+            BOOL -> Datum.bool(value.booleanValue)
+            CLOB -> Datum.clob(value.clobValue.copyOfBytes())
+            BLOB -> Datum.blob(value.blobValue.copyOfBytes())
+            TIMESTAMP -> Datum.timestamp(DateTimeValue.timestamp(value.timestampValue))
+            INT -> {
+                val bigInteger = value.bigIntegerValue
+                Datum.bigint(bigInteger.longValueExact())
+                // Datum.decimal(value.bigIntegerValue.toBigDecimal(), 38, 0)
+            }
+            FLOAT -> Datum.doublePrecision(value.doubleValue)
+            DECIMAL -> {
+                val decimal = value.decimalValue.bigDecimalValue()
+                Datum.decimal(decimal, decimal.precision(), decimal.scale())
+            }
+            LIST -> Datum.array(value.listValues.map { IonVariant(it) })
+            SEXP -> Datum.array(value.sexpValues.map { IonVariant(it) })
+            STRUCT -> Datum.struct(value.structFields.map { Field.of(it.name, IonVariant(it.value)) })
+            ElementType.NULL -> error("The NULL type is impossible to be received.")
+        }
+    }
+
+    private fun ElementType.toPType(): PType {
+        val code = when (this) {
+            SYMBOL, STRING -> PType.STRING
+            BOOL -> PType.BOOL
+            CLOB -> PType.CLOB
+            BLOB -> PType.BLOB
+            TIMESTAMP -> PType.TIMESTAMP
+            INT -> PType.DECIMAL
+            FLOAT -> PType.DOUBLE
+            DECIMAL -> PType.DECIMAL
+            LIST, SEXP -> PType.ARRAY
+            STRUCT -> PType.STRUCT
+            ElementType.NULL -> PType.UNKNOWN
+        }
+        return PType.of(code)
     }
 
     override fun getType(): PType = type
 
-    override fun isNull(): Boolean = value.isNull
+    override fun isNull(): Boolean = false
 
     override fun isMissing(): Boolean = false
-
-    override fun getString(): String = when (value.type) {
-        SYMBOL -> value.stringValue
-        STRING -> value.stringValue
-        else -> super.getString()
-    }
-
-    override fun getBoolean(): Boolean = when (value.type) {
-        BOOL -> value.booleanValue
-        else -> super.getBoolean()
-    }
-
-    // override fun getBytes(): ByteArray =  when (value.type) {
-    //     CLOB -> value.clobValue.copyOfBytes()
-    //     BLOB -> value.blobValue.copyOfBytes()
-    //     else -> super.getBytes()
-    // }
-    //
-    // override fun getByte(): Byte {
-    //     return super.getByte()
-    // }
-
-    override fun getDate(): Date {
-        return when (value.type) {
-            TIMESTAMP -> {
-                val ts = value.timestampValue
-                DateTimeValue.date(ts.year, ts.month, ts.day)
-            }
-            else -> super.getDate()
-        }
-    }
-
-    override fun getTime(): Time {
-        return when (value.type) {
-            TIMESTAMP -> {
-                val ts = value.timestampValue
-                val tz = when (ts.localOffset) {
-                    null -> TimeZone.UnknownTimeZone
-                    else -> TimeZone.UtcOffset.of(ts.zHour, ts.zMinute)
-                }
-                DateTimeValue.time(ts.hour, ts.minute, ts.second, tz)
-            }
-            else -> super.getTime()
-        }
-    }
-
-    // TODO: Handle struct notation
-    override fun getTimestamp(): Timestamp {
-        return when (value.type) {
-            TIMESTAMP -> DateTimeValue.timestamp(value.timestampValue)
-            else -> super.getTimestamp()
-        }
-    }
-
-    override fun getBigInteger(): BigInteger = when (value.type) {
-        INT -> value.bigIntegerValue
-        else -> super.getBigInteger()
-    }
-
-    override fun getDouble(): Double = when (value.type) {
-        FLOAT -> value.doubleValue
-        else -> super.getDouble()
-    }
-
-    override fun getBigDecimal(): BigDecimal = when (value.type) {
-        DECIMAL -> value.decimalValue.bigDecimalValue()
-        else -> super.getBigDecimal()
-    }
-
-    override fun iterator(): MutableIterator<Datum> = when (value.type) {
-        LIST -> value.listValues.map { IonVariant(it) }.toMutableList().iterator()
-        SEXP -> value.sexpValues.map { IonVariant(it) }.toMutableList().iterator()
-        else -> super.iterator()
-    }
-
-    override fun getFields(): MutableIterator<Field> {
-        if (value.type != STRUCT) {
-            return super.getFields()
-        }
-        return value.structFields
-            .map { Field.of(it.name, IonVariant(it.value)) }
-            .toMutableList()
-            .iterator()
-    }
-
-    override fun get(name: String): Datum {
-        if (value.type != STRUCT) {
-            return super.get(name)
-        }
-        // TODO handle multiple/ambiguous field names?
-        val v = value.asStruct().getOptional(name)
-        return if (v == null) {
-            Datum.missing()
-        } else {
-            IonVariant(v)
-        }
-    }
-
-    override fun getInsensitive(name: String): Datum {
-        if (value.type != STRUCT) {
-            return super.get(name)
-        }
-        // TODO handle multiple/ambiguous field names?
-        val struct = value.asStruct()
-        for (field in struct.fields) {
-            if (field.name.equals(name, ignoreCase = true)) {
-                return IonVariant(field.value)
-            }
-        }
-        return Datum.missing()
-    }
 }
