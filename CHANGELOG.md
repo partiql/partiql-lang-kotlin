@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- Template: after a release, copy and paste out below
-## [Unreleased]
+## [Unreleased] - YYYY-MM-DD
 
 ### Added
 
@@ -23,64 +23,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [1.0.0-rc.2]
+## [1.0.0-rc.3] - 2024-12-10
 
-### Added
-
-### Changed
-
-### Deprecated
-
-### Fixed
-
-### Removed
-
-### Security
-
-### Contributors
 Thank you to all who have contributed!
 
-## [1.0.0-rc.1]
+## [1.0.0-rc.2] - 2024-11-04
 
-### Added
-
-### Changed
-
-### Deprecated
-
-### Fixed
-
-### Removed
-
-### Security
-
-### Contributors
 Thank you to all who have contributed!
 
-## [0.14.8]
+## [1.0.0-rc.1] - 2024-10-02
 
-### Added
+Thank you to all who have contributed!
+
+## [0.14.9] - 2024-09-26
 
 ### Changed
+- With full, closed schema, the planner will now give a plan-time warning when it can prove an exclude path will never
+  exclude a value (relevant issue -- https://github.com/partiql/partiql-lang/issues/91).
 
-### Deprecated
+### Experimental Changes
+- **BREAKING**: For the _experimental_ `org.partiql.lang.domains` of `PartiqlLogical`, `PartiqlLogicalResolved`, and `PartiqlPhysical`,
+  the modeling of DML has changed substantially. These changes, while considered breaking changes, are part of an
+  experimental area of the PartiQL library and thus do not mandate a major-version bump of this library. Consumers
+  of these experimental APIs should be wary of these changes.
+
+### Contributors
+- @alancai98
+- @dlurton
+- @johnedquinn
+
+## [0.14.8] - 2024-08-19
 
 ### Fixed
 - Case When Branch inference will preserve type constraint for String Type and Decimal Type, if no coercion is required.
-### Removed
-
-### Security
 
 ### Contributors
 Thank you to all who have contributed!
 
-## [0.14.7]
+## [0.14.7] - 2024-08-05
 
 ### Fixed
 - `partiql-lang`'s `PartiQLParserBuilder.standard()` will use the ANTLR dependency from `partiql-parser` to
 prevent `NoSuchMethodError`s
 
-## [0.14.6]
+## [0.14.6] - 2024-07-25
 
 ### Added
 - Adds `PartiQLValueTextWriter` implementation of date, time, and timestamp values
@@ -98,25 +84,17 @@ org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 - partiql-parser: parses non-SFW expressions to be PartiQL `OUTER` bag operators
 - partiql-ast: fixes missing parens from `bag_op` when printing using `SqlDialect`
 
-### Deprecated
-
 ### Fixed
 - Fixed classpath conflict for IsStaticTypeMeta
 - Fixes ANTLR parser grammar file naming.
 
-### Removed
-
-### Security
-
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
-
 - @rchowell
 - @alancai98
 - @johnedquinn
 
-## [0.14.5]
+## [0.14.5] - 2024-04-26
 
 ### Added
 - partiql-ast: adds warning not to implement `AstVisitor` interface directly. Please extend `AstBaseVisitor` instead.
@@ -138,10 +116,6 @@ Thank you to all who have contributed!
 - Updates the default `.sql()` method to use a more efficient (internal) printer implementation.
 - Fixes aggregations of attribute references to values of union types. This fix also allows for proper error handling by passing the UnknownAggregateFunction problem to the ProblemCallback. Please note that, with this change, the planner will no longer immediately throw an IllegalStateException for this exact scenario.
 
-### Removed
-
-### Security
-
 ### Contributors
 Thank you to all who have contributed!
 - @rchowell
@@ -156,7 +130,7 @@ This is a pre-release containing:
 
 Please note that these changes are subject to future breaking changes without warning.
 
-## [0.14.4]
+## [0.14.4] - 2024-03-14
 
 ### Added
 - Added constrained decimal as valid parameter type to functions that take in numeric parameters.
@@ -1155,9 +1129,11 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.8...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-rc.3...HEAD
+[1.0.0-rc.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-rc.2...v1.0.0-rc.3
 [1.0.0-rc.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-rc.1...v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v1.0.0-perf.1...v1.0.0-rc.1
+[0.14.9]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.8...v0.14.9
 [0.14.8]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.7...v0.14.8
 [0.14.7]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.6...v0.14.7
 [0.14.6]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.5...v0.14.6

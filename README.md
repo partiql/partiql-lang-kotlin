@@ -31,8 +31,9 @@ This project is published to [Maven Central](https://search.maven.org/artifact/o
 
 | Group ID      | Artifact ID           | Recommended Version |
 |---------------|-----------------------|---------------------|
-| `org.partiql` | `partiql-lang-kotlin` | `1.0.0-rc.2`        |
+| `org.partiql` | `partiql-lang-kotlin` | `0.14.9`            |
 
+If you are looking for a pre-release version, the latest is: `1.0.0-rc.3`.
 
 For Maven builds, add the following to your `pom.xml`:
 
