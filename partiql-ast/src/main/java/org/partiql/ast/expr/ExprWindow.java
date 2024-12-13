@@ -66,13 +66,15 @@ public class ExprWindow extends Expr {
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Over extends AstNode {
-        @Nullable
+        // Empty list represents no `PARTITION BY` specifications
+        @NotNull
         public final List<Expr> partitions;
 
-        @Nullable
+        // Empty list represents no `ORDER BY` specifications
+        @NotNull
         public final List<Sort> sorts;
 
-        public Over(@Nullable List<Expr> partitions, @Nullable List<Sort> sorts) {
+        public Over(@NotNull List<Expr> partitions, @NotNull List<Sort> sorts) {
         this.partitions = partitions;
         this.sorts = sorts;
     }
@@ -81,12 +83,8 @@ public class ExprWindow extends Expr {
         @NotNull
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
-            if (partitions != null) {
-                kids.addAll(partitions);
-            }
-            if (sorts != null) {
-                kids.addAll(sorts);
-            }
+            kids.addAll(partitions);
+            kids.addAll(sorts);
             return kids;
         }
 

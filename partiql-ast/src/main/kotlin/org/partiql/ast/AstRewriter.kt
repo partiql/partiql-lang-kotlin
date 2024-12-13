@@ -415,8 +415,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitExprWindowOver(node: ExprWindow.Over, ctx: C): AstNode {
-        val partitions = node.partitions?.let { _visitList(it, ctx, ::visitExpr) }
-        val sorts = node.sorts?.let { _visitList(it, ctx, ::visitSort) }
+        val partitions = _visitList(node.partitions, ctx, ::visitExpr)
+        val sorts = node.sorts.let { _visitList(it, ctx, ::visitSort) }
         return if (partitions !== node.partitions || sorts !== node.sorts) {
             ExprWindow.Over(partitions, sorts)
         } else {
