@@ -66,9 +66,11 @@ public class ExprWindow extends Expr {
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Over extends AstNode {
+        // Empty list represents no `PARTITION BY` specifications
         @NotNull
         public final List<Expr> partitions;
 
+        // Empty list represents no `ORDER BY` specifications
         @NotNull
         public final List<Sort> sorts;
 
