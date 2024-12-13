@@ -24,6 +24,7 @@ import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag
 import org.partiql.ast.expr.ExprBetween
+import org.partiql.ast.expr.ExprBoolTest
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprCast
@@ -34,8 +35,10 @@ import org.partiql.ast.expr.ExprIsType
 import org.partiql.ast.expr.ExprLike
 import org.partiql.ast.expr.ExprLit
 import org.partiql.ast.expr.ExprMatch
+import org.partiql.ast.expr.ExprMissingPredicate
 import org.partiql.ast.expr.ExprNot
 import org.partiql.ast.expr.ExprNullIf
+import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
 import org.partiql.ast.expr.ExprOverlay
@@ -186,6 +189,37 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val not = node.not
         return if (lhs !== node.lhs || rhs !== node.rhs || not != node.not) {
             ExprInCollection(lhs, rhs, not)
+        } else {
+            node
+        }
+    }
+
+    override fun visitExprMissingPredicate(node: ExprMissingPredicate, ctx: C): AstNode {
+        val value = visitExpr(node.value, ctx) as Expr
+        val not = node.not
+        return if (value !== node.value || not != node.not) {
+            ExprMissingPredicate(value, not)
+        } else {
+            node
+        }
+    }
+
+    override fun visitExprNullPredicate(node: ExprNullPredicate, ctx: C): AstNode {
+        val value = visitExpr(node.value, ctx) as Expr
+        val not = node.not
+        return if (value !== node.value || not != node.not) {
+            ExprNullPredicate(value, not)
+        } else {
+            node
+        }
+    }
+
+    override fun visitExprBoolTest(node: ExprBoolTest, ctx: C): AstNode {
+        val value = visitExpr(node.value, ctx) as Expr
+        val not = node.not
+        val truthValue = node.truthValue
+        return if (value !== node.value || not != node.not || truthValue != node.value) {
+            ExprBoolTest(value, not, truthValue)
         } else {
             node
         }

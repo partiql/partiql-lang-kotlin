@@ -24,6 +24,7 @@ import org.partiql.ast.Ast.excludeStepStructWildcard
 import org.partiql.ast.Ast.exprArray
 import org.partiql.ast.Ast.exprBag
 import org.partiql.ast.Ast.exprBetween
+import org.partiql.ast.Ast.exprBoolTest
 import org.partiql.ast.Ast.exprCall
 import org.partiql.ast.Ast.exprCase
 import org.partiql.ast.Ast.exprCaseBranch
@@ -34,8 +35,10 @@ import org.partiql.ast.Ast.exprInCollection
 import org.partiql.ast.Ast.exprIsType
 import org.partiql.ast.Ast.exprLike
 import org.partiql.ast.Ast.exprLit
+import org.partiql.ast.Ast.exprMissingPredicate
 import org.partiql.ast.Ast.exprNot
 import org.partiql.ast.Ast.exprNullIf
+import org.partiql.ast.Ast.exprNullPredicate
 import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.exprOverlay
 import org.partiql.ast.Ast.exprPath
@@ -102,6 +105,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
+import org.partiql.ast.expr.TruthValue
 import java.math.BigDecimal
 import kotlin.test.assertFails
 
@@ -237,7 +241,6 @@ class SqlDialectTest {
         @JvmStatic
         fun types() = listOf(
             // SQL
-            expect("NULL", DataType.NULL()),
             expect("BOOL", DataType.BOOL()),
             expect("SMALLINT", DataType.SMALLINT()),
             expect("INT", DataType.INT()),
@@ -266,7 +269,6 @@ class SqlDialectTest {
             // TODO INTERVAL
             // TODO other types in `DataType`
             // PartiQL
-            expect("MISSING", DataType.MISSING()),
             expect("STRING", DataType.STRING()),
             expect("SYMBOL", DataType.SYMBOL()),
             expect("STRUCT", DataType.STRUCT()),
@@ -999,6 +1001,87 @@ class SqlDialectTest {
                     lhs = v("x"),
                     rhs = v("y"),
                     not = true
+                )
+            ),
+            // IS [NOT] TRUE
+            expect(
+                "x IS TRUE",
+                exprBoolTest(
+                    value = v("x"),
+                    not = false,
+                    truthValue = TruthValue.TRUE()
+                )
+            ),
+            expect(
+                "x IS NOT TRUE",
+                exprBoolTest(
+                    value = v("x"),
+                    not = true,
+                    truthValue = TruthValue.TRUE()
+                )
+            ),
+            // IS [NOT] FALSE
+            expect(
+                "x IS FALSE",
+                exprBoolTest(
+                    value = v("x"),
+                    not = false,
+                    truthValue = TruthValue.FALSE()
+                )
+            ),
+            expect(
+                "x IS NOT FALSE",
+                exprBoolTest(
+                    value = v("x"),
+                    not = true,
+                    truthValue = TruthValue.FALSE()
+                )
+            ),
+            // IS [NOT] UNKNOWN
+            expect(
+                "x IS UNKNOWN",
+                exprBoolTest(
+                    value = v("x"),
+                    not = false,
+                    truthValue = TruthValue.UNK()
+                )
+            ),
+            expect(
+                "x IS NOT UNKNOWN",
+                exprBoolTest(
+                    value = v("x"),
+                    not = true,
+                    truthValue = TruthValue.UNK()
+                )
+            ),
+            // IS [NOT] NULL
+            expect(
+                "x IS NULL",
+                exprNullPredicate(
+                    value = v("x"),
+                    not = false,
+                )
+            ),
+            expect(
+                "x IS NOT NULL",
+                exprNullPredicate(
+                    value = v("x"),
+                    not = true,
+                )
+            ),
+            // IS [NOT] MISSING
+            expect(
+                "x IS MISSING",
+                exprMissingPredicate(
+                    value = v("x"),
+                    not = false,
+                )
+            ),
+            expect(
+                "x IS NOT MISSING",
+                exprMissingPredicate(
+                    value = v("x"),
+                    not = true,
                 )
             ),
             expect(

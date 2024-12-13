@@ -40,6 +40,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprArray (Ljava/util/List;)Lorg/partiql/ast/expr/ExprArray;
 	public static final fun exprBag (Ljava/util/List;)Lorg/partiql/ast/expr/ExprBag;
 	public static final fun exprBetween (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Z)Lorg/partiql/ast/expr/ExprBetween;
+	public static final fun exprBoolTest (Lorg/partiql/ast/expr/Expr;ZLorg/partiql/ast/expr/TruthValue;)Lorg/partiql/ast/expr/ExprBoolTest;
 	public static final fun exprCall (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;)Lorg/partiql/ast/expr/ExprCall;
 	public static final fun exprCall (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/expr/ExprCall;
 	public static synthetic fun exprCall$default (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Lorg/partiql/ast/SetQuantifier;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprCall;
@@ -58,8 +59,10 @@ public final class org/partiql/ast/Ast {
 	public static synthetic fun exprLike$default (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;ZILjava/lang/Object;)Lorg/partiql/ast/expr/ExprLike;
 	public static final fun exprLit (Lorg/partiql/ast/Literal;)Lorg/partiql/ast/expr/ExprLit;
 	public static final fun exprMatch (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/graph/GraphMatch;)Lorg/partiql/ast/expr/ExprMatch;
+	public static final fun exprMissingPredicate (Lorg/partiql/ast/expr/Expr;Z)Lorg/partiql/ast/expr/ExprMissingPredicate;
 	public static final fun exprNot (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprNot;
 	public static final fun exprNullIf (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprNullIf;
+	public static final fun exprNullPredicate (Lorg/partiql/ast/expr/Expr;Z)Lorg/partiql/ast/expr/ExprNullPredicate;
 	public static final fun exprOperator (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOperator;
 	public static final fun exprOperator (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOperator;
 	public static synthetic fun exprOperator$default (Ljava/lang/String;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprOperator;
@@ -284,6 +287,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitExprBag (Lorg/partiql/ast/expr/ExprBag;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprBetween (Lorg/partiql/ast/expr/ExprBetween;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBetween (Lorg/partiql/ast/expr/ExprBetween;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprBoolTest (Lorg/partiql/ast/expr/ExprBoolTest;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprBoolTest (Lorg/partiql/ast/expr/ExprBoolTest;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprCall (Lorg/partiql/ast/expr/ExprCall;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/expr/ExprCall;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprCase (Lorg/partiql/ast/expr/ExprCase;Ljava/lang/Object;)Ljava/lang/Object;
@@ -306,10 +311,14 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitExprLit (Lorg/partiql/ast/expr/ExprLit;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprMatch (Lorg/partiql/ast/expr/ExprMatch;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprMatch (Lorg/partiql/ast/expr/ExprMatch;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprMissingPredicate (Lorg/partiql/ast/expr/ExprMissingPredicate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMissingPredicate (Lorg/partiql/ast/expr/ExprMissingPredicate;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprNot (Lorg/partiql/ast/expr/ExprNot;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNot (Lorg/partiql/ast/expr/ExprNot;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprNullIf (Lorg/partiql/ast/expr/ExprNullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNullIf (Lorg/partiql/ast/expr/ExprNullIf;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitExprNullPredicate (Lorg/partiql/ast/expr/ExprNullPredicate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNullPredicate (Lorg/partiql/ast/expr/ExprNullPredicate;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprOperator (Lorg/partiql/ast/expr/ExprOperator;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOperator (Lorg/partiql/ast/expr/ExprOperator;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExprOr (Lorg/partiql/ast/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;
@@ -471,6 +480,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitExprArray (Lorg/partiql/ast/expr/ExprArray;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBag (Lorg/partiql/ast/expr/ExprBag;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBetween (Lorg/partiql/ast/expr/ExprBetween;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprBoolTest (Lorg/partiql/ast/expr/ExprBoolTest;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/expr/ExprCall;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCase (Lorg/partiql/ast/expr/ExprCase;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCaseBranch (Lorg/partiql/ast/expr/ExprCase$Branch;Ljava/lang/Object;)Ljava/lang/Object;
@@ -482,8 +492,10 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitExprLike (Lorg/partiql/ast/expr/ExprLike;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLit (Lorg/partiql/ast/expr/ExprLit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprMatch (Lorg/partiql/ast/expr/ExprMatch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMissingPredicate (Lorg/partiql/ast/expr/ExprMissingPredicate;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNot (Lorg/partiql/ast/expr/ExprNot;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNullIf (Lorg/partiql/ast/expr/ExprNullIf;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNullPredicate (Lorg/partiql/ast/expr/ExprNullPredicate;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOperator (Lorg/partiql/ast/expr/ExprOperator;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOr (Lorg/partiql/ast/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOverlay (Lorg/partiql/ast/expr/ExprOverlay;Ljava/lang/Object;)Ljava/lang/Object;
@@ -607,8 +619,6 @@ public class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public static final field INTEGER8 I
 	public static final field INTERVAL I
 	public static final field LIST I
-	public static final field MISSING I
-	public static final field NULL I
 	public static final field NUMERIC I
 	public static final field REAL I
 	public static final field SEXP I
@@ -673,8 +683,6 @@ public class org/partiql/ast/DataType : org/partiql/ast/AstEnum {
 	public static fun INTEGER8 ()Lorg/partiql/ast/DataType;
 	public static fun INTERVAL ()Lorg/partiql/ast/DataType;
 	public static fun LIST ()Lorg/partiql/ast/DataType;
-	public static fun MISSING ()Lorg/partiql/ast/DataType;
-	public static fun NULL ()Lorg/partiql/ast/DataType;
 	public static fun NUMERIC ()Lorg/partiql/ast/DataType;
 	public static fun NUMERIC (I)Lorg/partiql/ast/DataType;
 	public static fun NUMERIC (II)Lorg/partiql/ast/DataType;
@@ -2070,6 +2078,27 @@ public class org/partiql/ast/expr/ExprBetween$Builder {
 	public fun value (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprBetween$Builder;
 }
 
+public class org/partiql/ast/expr/ExprBoolTest : org/partiql/ast/expr/Expr {
+	public final field not Z
+	public final field truthValue Lorg/partiql/ast/expr/TruthValue;
+	public final field value Lorg/partiql/ast/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/expr/Expr;ZLorg/partiql/ast/expr/TruthValue;)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/expr/ExprBoolTest$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/expr/ExprBoolTest$Builder {
+	public fun build ()Lorg/partiql/ast/expr/ExprBoolTest;
+	public fun not (Z)Lorg/partiql/ast/expr/ExprBoolTest$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun truthValue (Lorg/partiql/ast/expr/TruthValue;)Lorg/partiql/ast/expr/ExprBoolTest$Builder;
+	public fun value (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprBoolTest$Builder;
+}
+
 public class org/partiql/ast/expr/ExprCall : org/partiql/ast/expr/Expr {
 	public final field args Ljava/util/List;
 	public final field function Lorg/partiql/ast/IdentifierChain;
@@ -2280,6 +2309,25 @@ public class org/partiql/ast/expr/ExprMatch$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
+public class org/partiql/ast/expr/ExprMissingPredicate : org/partiql/ast/expr/Expr {
+	public final field not Z
+	public final field value Lorg/partiql/ast/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/expr/Expr;Z)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/expr/ExprMissingPredicate$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/expr/ExprMissingPredicate$Builder {
+	public fun build ()Lorg/partiql/ast/expr/ExprMissingPredicate;
+	public fun not (Z)Lorg/partiql/ast/expr/ExprMissingPredicate$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprMissingPredicate$Builder;
+}
+
 public class org/partiql/ast/expr/ExprNot : org/partiql/ast/expr/Expr {
 	public final field value Lorg/partiql/ast/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/expr/Expr;)V
@@ -2314,6 +2362,25 @@ public class org/partiql/ast/expr/ExprNullIf$Builder {
 	public fun toString ()Ljava/lang/String;
 	public fun v1 (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprNullIf$Builder;
 	public fun v2 (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprNullIf$Builder;
+}
+
+public class org/partiql/ast/expr/ExprNullPredicate : org/partiql/ast/expr/Expr {
+	public final field not Z
+	public final field value Lorg/partiql/ast/expr/Expr;
+	public fun <init> (Lorg/partiql/ast/expr/Expr;Z)V
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun builder ()Lorg/partiql/ast/expr/ExprNullPredicate$Builder;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+}
+
+public class org/partiql/ast/expr/ExprNullPredicate$Builder {
+	public fun build ()Lorg/partiql/ast/expr/ExprNullPredicate;
+	public fun not (Z)Lorg/partiql/ast/expr/ExprNullPredicate$Builder;
+	public fun toString ()Ljava/lang/String;
+	public fun value (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprNullPredicate$Builder;
 }
 
 public class org/partiql/ast/expr/ExprOperator : org/partiql/ast/expr/Expr {
@@ -2771,6 +2838,25 @@ public class org/partiql/ast/expr/TrimSpec : org/partiql/ast/AstEnum {
 	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/expr/TrimSpec;
 }
 
+public class org/partiql/ast/expr/TruthValue : org/partiql/ast/AstEnum {
+	public static final field FALSE I
+	public static final field TRUE I
+	public static final field UNK I
+	public static final field UNKNOWN I
+	public fun <init> (I)V
+	public static fun FALSE ()Lorg/partiql/ast/expr/TruthValue;
+	public static fun TRUE ()Lorg/partiql/ast/expr/TruthValue;
+	public static fun UNK ()Lorg/partiql/ast/expr/TruthValue;
+	public static fun UNKNOWN ()Lorg/partiql/ast/expr/TruthValue;
+	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	protected fun canEqual (Ljava/lang/Object;)Z
+	public fun code ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
+}
+
 public class org/partiql/ast/expr/WindowFunction : org/partiql/ast/AstEnum {
 	public static final field LAG I
 	public static final field LEAD I
@@ -3224,6 +3310,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitExprBag (Lorg/partiql/ast/expr/ExprBag;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprBetween (Lorg/partiql/ast/expr/ExprBetween;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprBetween (Lorg/partiql/ast/expr/ExprBetween;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprBoolTest (Lorg/partiql/ast/expr/ExprBoolTest;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprBoolTest (Lorg/partiql/ast/expr/ExprBoolTest;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprCall (Lorg/partiql/ast/expr/ExprCall;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprCall (Lorg/partiql/ast/expr/ExprCall;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprCase (Lorg/partiql/ast/expr/ExprCase;Ljava/lang/Object;)Ljava/lang/Object;
@@ -3244,10 +3332,14 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitExprLike (Lorg/partiql/ast/expr/ExprLike;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprLit (Lorg/partiql/ast/expr/ExprLit;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprLit (Lorg/partiql/ast/expr/ExprLit;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprMissingPredicate (Lorg/partiql/ast/expr/ExprMissingPredicate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprMissingPredicate (Lorg/partiql/ast/expr/ExprMissingPredicate;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprNot (Lorg/partiql/ast/expr/ExprNot;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNot (Lorg/partiql/ast/expr/ExprNot;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprNullIf (Lorg/partiql/ast/expr/ExprNullIf;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprNullIf (Lorg/partiql/ast/expr/ExprNullIf;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitExprNullPredicate (Lorg/partiql/ast/expr/ExprNullPredicate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitExprNullPredicate (Lorg/partiql/ast/expr/ExprNullPredicate;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprOperator (Lorg/partiql/ast/expr/ExprOperator;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExprOperator (Lorg/partiql/ast/expr/ExprOperator;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExprOr (Lorg/partiql/ast/expr/ExprOr;Ljava/lang/Object;)Ljava/lang/Object;

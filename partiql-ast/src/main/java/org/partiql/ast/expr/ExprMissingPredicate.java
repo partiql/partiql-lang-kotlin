@@ -5,28 +5,24 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.DataType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs + further specification on supported types
+ * TODO docs
+ * Corresponds to PartiQL's `IS [NOT] MISSING`.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprIsType extends Expr {
+public class ExprMissingPredicate extends Expr {
     @NotNull
     public final Expr value;
 
-    @NotNull
-    public final DataType type;
-
     public final boolean not;
 
-    public ExprIsType(@NotNull Expr value, @NotNull DataType type, boolean not) {
+    public ExprMissingPredicate(@NotNull Expr value, boolean not) {
         this.value = value;
-        this.type = type;
         this.not = not;
     }
 
@@ -35,12 +31,11 @@ public class ExprIsType extends Expr {
     public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(value);
-        kids.add(type);
         return kids;
     }
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitExprIsType(this, ctx);
+        return visitor.visitExprMissingPredicate(this, ctx);
     }
 }

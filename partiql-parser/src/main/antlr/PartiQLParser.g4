@@ -575,8 +575,8 @@ joinSpec
  * 3. Multiplication, Division, Modulo (ex: a * b)
  * 4. Addition, Subtraction (ex: a + b)
  * 5. Other operators (ex: a || b, a & b)
- * 6. Predicates (ex: a LIKE b, a < b, a IN b, a = b)
- * 7. IS true/false. Not yet implemented in PartiQL, but defined in SQL-92. (ex: a IS TRUE)
+ * 6. Predicates (ex: a LIKE b, a < b, a IN b, a = b, IS [NOT] NULL|MISSING)
+ * 7. IS [NOT] TRUE|FALSE|UNKNOWN
  * 8. NOT (ex: NOT a)
  * 8. AND (ex: a AND b)
  * 9. OR (ex: a OR b)
@@ -621,17 +621,24 @@ exprAnd
 
 exprNot
     : <assoc=right> op=NOT rhs=exprNot  # Not
-    | parent=exprPredicate              # ExprNotBase
+    | parent=exprBoolTest               # ExprNotBase
+    ;
+
+exprBoolTest
+    : exprBoolTest IS NOT? truthValue=(TRUE|FALSE|UNKNOWN) # BoolTest
+    | parent=exprPredicate                                 # ExprBoolTestBase
     ;
 
 exprPredicate
-    : lhs=exprPredicate op=comparisonOp rhs=mathOp00  # PredicateComparison
-    | lhs=exprPredicate IS NOT? type                                                 # PredicateIs
-    | lhs=exprPredicate NOT? IN PAREN_LEFT expr PAREN_RIGHT                          # PredicateIn
-    | lhs=exprPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
-    | lhs=exprPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=expr )?               # PredicateLike
-    | lhs=exprPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00               # PredicateBetween
-    | parent=mathOp00                                                                # PredicateBase
+    : lhs=exprPredicate op=comparisonOp rhs=mathOp00                   # PredicateComparison
+    | lhs=exprPredicate IS NOT? NULL                                   # PredicateNull
+    | lhs=exprPredicate IS NOT? MISSING                                # PredicateMissing
+    | lhs=exprPredicate IS NOT? type                                   # PredicateIs
+    | lhs=exprPredicate NOT? IN PAREN_LEFT expr PAREN_RIGHT            # PredicateIn
+    | lhs=exprPredicate NOT? IN rhs=mathOp00                           # PredicateIn
+    | lhs=exprPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=expr )? # PredicateLike
+    | lhs=exprPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00 # PredicateBetween
+    | parent=mathOp00                                                  # PredicateBase
     ;
 
 comparisonOp
@@ -934,8 +941,8 @@ literal
 
 type
     : datatype=(
-        NULL | BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
-        | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER | MISSING
+        BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
+        | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER
         | STRING | SYMBOL | BLOB | CLOB | DATE | ANY
       )                                                                                                                # TypeAtomic
     | datatype=( STRUCT | TUPLE | LIST | ARRAY | SEXP | BAG )                                                          # TypeComplexAtomic
