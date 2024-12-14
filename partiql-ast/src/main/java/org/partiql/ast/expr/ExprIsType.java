@@ -12,6 +12,7 @@ import java.util.List;
 
 /**
  * TODO docs + further specification on supported types
+ * Note: this is an experimental API. Class's fields and behavior may change in a subsequent release.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
