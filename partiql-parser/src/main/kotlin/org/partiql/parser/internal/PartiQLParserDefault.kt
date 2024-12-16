@@ -55,6 +55,7 @@ import org.partiql.ast.Ast.exprAnd
 import org.partiql.ast.Ast.exprArray
 import org.partiql.ast.Ast.exprBag
 import org.partiql.ast.Ast.exprBetween
+import org.partiql.ast.Ast.exprBoolTest
 import org.partiql.ast.Ast.exprCall
 import org.partiql.ast.Ast.exprCase
 import org.partiql.ast.Ast.exprCaseBranch
@@ -66,8 +67,10 @@ import org.partiql.ast.Ast.exprIsType
 import org.partiql.ast.Ast.exprLike
 import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprMatch
+import org.partiql.ast.Ast.exprMissingPredicate
 import org.partiql.ast.Ast.exprNot
 import org.partiql.ast.Ast.exprNullIf
+import org.partiql.ast.Ast.exprNullPredicate
 import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.exprOr
 import org.partiql.ast.Ast.exprOverlay
@@ -190,6 +193,7 @@ import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.SessionAttribute
 import org.partiql.ast.expr.TrimSpec
+import org.partiql.ast.expr.TruthValue
 import org.partiql.ast.expr.WindowFunction
 import org.partiql.ast.graph.GraphDirection
 import org.partiql.ast.graph.GraphLabel
@@ -619,7 +623,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         // The following types are not supported in DDL yet,
         //  either as a top level type or as a element/field type in complex type declaration
         private fun isValidTypeDeclarationOrThrow(type: DataType, ctx: GeneratedParser.TypeContext) = when (type.code()) {
-            DataType.UNKNOWN, DataType.NULL, DataType.MISSING,
+            DataType.UNKNOWN,
             DataType.BAG,
             DataType.USER_DEFINED -> throw error(ctx, "declaration attribute with $type is not supported")
             else -> Unit
@@ -1399,6 +1403,17 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprNot(expr)
         }
 
+        override fun visitBoolTest(ctx: GeneratedParser.BoolTestContext) = translate(ctx) {
+            val expr = visitAs<Expr>(ctx.exprBoolTest())
+            val not = ctx.NOT() != null
+            when (ctx.truthValue.type) {
+                GeneratedParser.TRUE -> exprBoolTest(expr, not, TruthValue.TRUE())
+                GeneratedParser.FALSE -> exprBoolTest(expr, not, TruthValue.FALSE())
+                GeneratedParser.UNKNOWN -> exprBoolTest(expr, not, TruthValue.UNK())
+                else -> throw error(ctx, "Unexpected value for boolean test IS [NOT] TRUE|FALSE|UNKNOWN")
+            }
+        }
+
         private fun checkForInvalidTokens(op: ParserRuleContext) {
             val start = op.start.tokenIndex
             val stop = op.stop.tokenIndex
@@ -1482,6 +1497,18 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
             val not = ctx.NOT() != null
             exprInCollection(lhs, rhs, not)
+        }
+
+        override fun visitPredicateNull(ctx: GeneratedParser.PredicateNullContext) = translate(ctx) {
+            val value = visitAs<Expr>(ctx.lhs)
+            val not = ctx.NOT() != null
+            exprNullPredicate(value, not)
+        }
+
+        override fun visitPredicateMissing(ctx: GeneratedParser.PredicateMissingContext) = translate(ctx) {
+            val value = visitAs<Expr>(ctx.lhs)
+            val not = ctx.NOT() != null
+            exprMissingPredicate(value, not)
         }
 
         override fun visitPredicateIs(ctx: GeneratedParser.PredicateIsContext) = translate(ctx) {
@@ -1993,7 +2020,6 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTypeAtomic(ctx: GeneratedParser.TypeAtomicContext) = translate(ctx) {
             when (ctx.datatype.type) {
-                GeneratedParser.NULL -> DataType.NULL()
                 GeneratedParser.BOOL -> DataType.BOOLEAN()
                 GeneratedParser.BOOLEAN -> DataType.BOOL()
                 GeneratedParser.SMALLINT -> DataType.SMALLINT()
@@ -2013,7 +2039,6 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.TIMESTAMP -> DataType.TIMESTAMP()
                 GeneratedParser.CHAR -> DataType.CHAR()
                 GeneratedParser.CHARACTER -> DataType.CHARACTER()
-                GeneratedParser.MISSING -> DataType.MISSING()
                 GeneratedParser.STRING -> DataType.STRING()
                 GeneratedParser.SYMBOL -> DataType.SYMBOL()
                 // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1125

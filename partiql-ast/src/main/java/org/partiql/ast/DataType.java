@@ -10,7 +10,6 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
 public class DataType extends AstEnum {
-
     /**
      * A field definition with in a Struct Type Definition
      */
@@ -70,78 +69,66 @@ public class DataType extends AstEnum {
     }
 
     public static final int UNKNOWN = 0;
-    // TODO remove `NULL` and `MISSING` variants from DataType
-    // <absent types>
-    public static final int NULL = 1;
-    public static final int MISSING = 2;
     // <character string type>
-    public static final int CHARACTER = 3;
-    public static final int CHAR = 4;
-    public static final int CHARACTER_VARYING = 5;
-    public static final int CHAR_VARYING = 6; // TODO not defined in parser yet
-    public static final int VARCHAR = 7;
-    public static final int CHARACTER_LARGE_OBJECT = 8; // TODO not defined in parser yet
-    public static final int CHAR_LARGE_OBJECT = 9; // TODO not defined in parser yet
-    public static final int CLOB = 10;
-    public static final int STRING = 11;
-    public static final int SYMBOL = 12;
+    public static final int CHARACTER = 1;
+    public static final int CHAR = 2;
+    public static final int CHARACTER_VARYING = 3;
+    public static final int CHAR_VARYING = 4; // TODO not defined in parser yet
+    public static final int VARCHAR = 5;
+    public static final int CHARACTER_LARGE_OBJECT = 6; // TODO not defined in parser yet
+    public static final int CHAR_LARGE_OBJECT = 7; // TODO not defined in parser yet
+    public static final int CLOB = 8;
+    public static final int STRING = 9;
+    public static final int SYMBOL = 10;
     // <binary large object string type>
-    public static final int BLOB = 13;
-    public static final int BINARY_LARGE_OBJECT = 14; // TODO not defined in parser yet
+    public static final int BLOB = 11;
+    public static final int BINARY_LARGE_OBJECT = 12; // TODO not defined in parser yet
     // <bit string type>
-    public static final int BIT = 15; // TODO not defined in parser yet
-    public static final int BIT_VARYING = 16; // TODO not defined in parser yet
+    public static final int BIT = 13; // TODO not defined in parser yet
+    public static final int BIT_VARYING = 14; // TODO not defined in parser yet
     // <numeric type> - <exact numeric type>
-    public static final int NUMERIC = 17;
-    public static final int DECIMAL = 18;
-    public static final int DEC = 19;
-    public static final int BIGINT = 20;
-    public static final int INT8 = 21;
-    public static final int INTEGER8 = 22;
-    public static final int INT4 = 23;
-    public static final int INTEGER4 = 24;
-    public static final int INTEGER = 25;
-    public static final int INT = 26;
-    public static final int INT2 = 27;
-    public static final int INTEGER2 = 28;
-    public static final int SMALLINT = 29;
-    public static final int TINYINT = 30; // TODO not defined in parser yet
+    public static final int NUMERIC = 15;
+    public static final int DECIMAL = 16;
+    public static final int DEC = 17;
+    public static final int BIGINT = 18;
+    public static final int INT8 = 19;
+    public static final int INTEGER8 = 20;
+    public static final int INT4 = 21;
+    public static final int INTEGER4 = 22;
+    public static final int INTEGER = 23;
+    public static final int INT = 24;
+    public static final int INT2 = 25;
+    public static final int INTEGER2 = 26;
+    public static final int SMALLINT = 27;
+    public static final int TINYINT = 28; // TODO not defined in parser yet
     // <numeric type> - <approximate numeric type>
-    public static final int FLOAT = 31;
-    public static final int REAL = 32;
-    public static final int DOUBLE_PRECISION = 33;
+    public static final int FLOAT = 29;
+    public static final int REAL = 30;
+    public static final int DOUBLE_PRECISION = 31;
     // <boolean type>
-    public static final int BOOLEAN = 34;
-    public static final int BOOL = 35;
+    public static final int BOOLEAN = 32;
+    public static final int BOOL = 33;
     // <datetime type>
-    public static final int DATE = 36;
-    public static final int TIME = 37;
-    public static final int TIME_WITH_TIME_ZONE = 38;
-    public static final int TIMESTAMP = 39;
-    public static final int TIMESTAMP_WITH_TIME_ZONE = 40;
+    public static final int DATE = 34;
+    public static final int TIME = 35;
+    public static final int TIME_WITH_TIME_ZONE = 36;
+    public static final int TIMESTAMP = 37;
+    public static final int TIMESTAMP_WITH_TIME_ZONE = 38;
     // <interval type>
-    public static final int INTERVAL = 41; // TODO not defined in parser yet
+    public static final int INTERVAL = 39; // TODO not defined in parser yet
     // <container type>
-    public static final int STRUCT = 42;
-    public static final int TUPLE = 43;
+    public static final int STRUCT = 40;
+    public static final int TUPLE = 41;
     // <collection type>
-    public static final int LIST = 44;
-    public static final int ARRAY = 48; // TODO: Fix the numbering
-    public static final int BAG = 45;
-    public static final int SEXP = 46;
+    public static final int LIST = 42;
+    public static final int ARRAY = 43;
+    public static final int BAG = 44;
+    public static final int SEXP = 45;
     // <user defined type>
-    public static final int USER_DEFINED = 47;
+    public static final int USER_DEFINED = 46;
 
     public static DataType UNKNOWN() {
         return new DataType(UNKNOWN);
-    }
-
-    public static DataType NULL() {
-        return new DataType(NULL);
-    }
-
-    public static DataType MISSING() {
-        return new DataType(MISSING);
     }
 
     public static DataType BOOL() {
@@ -508,8 +495,6 @@ public class DataType extends AstEnum {
     @Override
     public String name() {
         switch (code) {
-            case NULL: return "NULL";
-            case MISSING: return "MISSING";
             case CHARACTER: return "CHARACTER";
             case CHAR: return "CHAR";
             case CHARACTER_VARYING: return "CHARACTER_VARYING";
@@ -562,8 +547,6 @@ public class DataType extends AstEnum {
 
     @NotNull
     private static final int[] codes = {
-        NULL,
-        MISSING,
         CHARACTER,
         CHAR,
         CHARACTER_VARYING,
@@ -615,8 +598,6 @@ public class DataType extends AstEnum {
     @NotNull
     public static DataType parse(@NotNull String value) {
         switch (value) {
-            case "NULL": return NULL();
-            case "MISSING": return MISSING();
             case "BOOL": return BOOL();
             case "BOOLEAN": return BOOLEAN();
             case "TINYINT": return TINYINT();

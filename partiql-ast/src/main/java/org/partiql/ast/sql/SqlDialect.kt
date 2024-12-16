@@ -59,6 +59,7 @@ import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag
 import org.partiql.ast.expr.ExprBetween
+import org.partiql.ast.expr.ExprBoolTest
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprCast
@@ -68,8 +69,10 @@ import org.partiql.ast.expr.ExprInCollection
 import org.partiql.ast.expr.ExprIsType
 import org.partiql.ast.expr.ExprLike
 import org.partiql.ast.expr.ExprLit
+import org.partiql.ast.expr.ExprMissingPredicate
 import org.partiql.ast.expr.ExprNot
 import org.partiql.ast.expr.ExprNullIf
+import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
 import org.partiql.ast.expr.ExprOverlay
@@ -87,6 +90,7 @@ import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
+import org.partiql.ast.expr.TruthValue
 
 /**
  * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
@@ -180,8 +184,6 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     // TYPES
     override fun visitDataType(node: DataType, tail: SqlBlock): SqlBlock {
         return when (node.code()) {
-            // <absent types>
-            DataType.NULL, DataType.MISSING -> tail concat node.name()
             // <character string type>
             //   no params
             DataType.STRING, DataType.SYMBOL -> tail concat node.name()
@@ -416,6 +418,33 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         t = visitExprWrapped(node.lhs, t)
         t = t concat if (node.not) " NOT IN " else " IN "
         t = visitExprWrapped(node.rhs, t)
+        return t
+    }
+
+    override fun visitExprNullPredicate(node: ExprNullPredicate, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.value, t)
+        t = t concat if (node.not) " IS NOT NULL" else " IS NULL"
+        return t
+    }
+
+    override fun visitExprMissingPredicate(node: ExprMissingPredicate, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.value, t)
+        t = t concat if (node.not) " IS NOT MISSING" else " IS MISSING"
+        return t
+    }
+
+    override fun visitExprBoolTest(node: ExprBoolTest, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.value, t)
+        t = t concat if (node.not) " IS NOT " else " IS "
+        t = t concat when (node.truthValue.code()) {
+            TruthValue.TRUE -> "TRUE"
+            TruthValue.FALSE -> "FALSE"
+            TruthValue.UNK -> "UNKNOWN"
+            else -> throw UnsupportedOperationException("Cannot print $node")
+        }
         return t
     }
 

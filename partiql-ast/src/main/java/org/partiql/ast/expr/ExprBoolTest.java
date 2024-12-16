@@ -5,30 +5,29 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.DataType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs + further specification on supported types
- * Note: this is an experimental API. Class's fields and behavior may change in a subsequent release.
+ * TODO docs
+ * Corresponds to SQL99's boolean test (6.30).
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprIsType extends Expr {
+public class ExprBoolTest extends Expr {
     @NotNull
     public final Expr value;
 
-    @NotNull
-    public final DataType type;
-
     public final boolean not;
 
-    public ExprIsType(@NotNull Expr value, @NotNull DataType type, boolean not) {
+    @NotNull
+    public final TruthValue truthValue;
+
+    public ExprBoolTest(@NotNull Expr value, boolean not, @NotNull TruthValue truthValue) {
         this.value = value;
-        this.type = type;
         this.not = not;
+        this.truthValue = truthValue;
     }
 
     @Override
@@ -36,12 +35,11 @@ public class ExprIsType extends Expr {
     public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(value);
-        kids.add(type);
         return kids;
     }
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-        return visitor.visitExprIsType(this, ctx);
+        return visitor.visitExprBoolTest(this, ctx);
     }
 }

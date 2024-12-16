@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
+import org.partiql.spi.value.Datum
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -1024,13 +1025,146 @@ class PartiQLEvaluatorTest {
                     int32Value(3),
                 )
             ),
+            // TODO port `IS <boolean value>` tests to conformance tests
+            // IS TRUE
+            SuccessTestCase(
+                input = "TRUE IS TRUE;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "FALSE IS TRUE;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "NULL IS TRUE;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "MISSING IS TRUE;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "'foo' IS TRUE",
+                expected = Datum.missing(),
+                mode = Mode.PERMISSIVE()
+            ),
+            // IS NOT TRUE
+            SuccessTestCase(
+                input = "TRUE IS NOT TRUE;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "FALSE IS NOT TRUE;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "NULL IS NOT TRUE;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "MISSING IS NOT TRUE;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "'foo' IS NOT TRUE",
+                expected = Datum.nullValue(),
+                mode = Mode.PERMISSIVE()
+            ),
+            // IS FALSE
+            SuccessTestCase(
+                input = "TRUE IS FALSE;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "FALSE IS FALSE;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "NULL IS FALSE;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "MISSING IS FALSE;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "'foo' IS FALSE",
+                expected = Datum.nullValue(),
+                mode = Mode.PERMISSIVE()
+            ),
+            // IS NOT FALSE
+            SuccessTestCase(
+                input = "TRUE IS NOT FALSE;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "FALSE IS NOT FALSE;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "NULL IS NOT FALSE;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "MISSING IS NOT FALSE;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "'foo' IS NOT FALSE",
+                expected = Datum.nullValue(),
+                mode = Mode.PERMISSIVE()
+            ),
+            // IS UNKNOWN
+            SuccessTestCase(
+                input = "TRUE IS UNKNOWN;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "FALSE IS UNKNOWN;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "NULL IS UNKNOWN;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "MISSING IS UNKNOWN;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "'foo' IS UNKNOWN",
+                expected = Datum.nullValue(),
+                mode = Mode.PERMISSIVE()
+            ),
+            // IS NOT UNKNOWN
+            SuccessTestCase(
+                input = "TRUE IS NOT UNKNOWN;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "FALSE IS NOT UNKNOWN;",
+                expected = boolValue(true)
+            ),
+            SuccessTestCase(
+                input = "NULL IS NOT UNKNOWN;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "MISSING IS NOT UNKNOWN;",
+                expected = boolValue(false)
+            ),
+            SuccessTestCase(
+                input = "'foo' IS NOT UNKNOWN",
+                expected = Datum.missing(),
+                mode = Mode.PERMISSIVE()
+            ),
             SuccessTestCase(
                 input = "MISSING IS MISSING;",
                 expected = boolValue(true)
             ),
             SuccessTestCase(
                 input = "MISSING IS MISSING;",
-                expected = boolValue(true), // TODO: Is this right?
+                expected = boolValue(true),
                 mode = Mode.STRICT(),
             ),
             SuccessTestCase(

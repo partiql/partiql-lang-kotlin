@@ -32,6 +32,9 @@ import org.partiql.ast.expr.ExprCast;
 import org.partiql.ast.expr.ExprCoalesce;
 import org.partiql.ast.expr.ExprExtract;
 import org.partiql.ast.expr.ExprInCollection;
+import org.partiql.ast.expr.ExprMissingPredicate;
+import org.partiql.ast.expr.ExprNullPredicate;
+import org.partiql.ast.expr.ExprBoolTest;
 import org.partiql.ast.expr.ExprIsType;
 import org.partiql.ast.expr.ExprLike;
 import org.partiql.ast.expr.ExprLit;
@@ -343,6 +346,18 @@ public abstract class AstVisitor<R, C> {
     }
 
     public R visitExprInCollection(ExprInCollection node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitExprNullPredicate(ExprNullPredicate node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitExprMissingPredicate(ExprMissingPredicate node, C ctx) {
+        return defaultVisit(node, ctx);
+    }
+
+    public R visitExprBoolTest(ExprBoolTest node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

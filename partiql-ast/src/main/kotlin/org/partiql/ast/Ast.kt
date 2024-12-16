@@ -25,6 +25,7 @@ import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag
 import org.partiql.ast.expr.ExprBetween
+import org.partiql.ast.expr.ExprBoolTest
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprCast
@@ -35,8 +36,10 @@ import org.partiql.ast.expr.ExprIsType
 import org.partiql.ast.expr.ExprLike
 import org.partiql.ast.expr.ExprLit
 import org.partiql.ast.expr.ExprMatch
+import org.partiql.ast.expr.ExprMissingPredicate
 import org.partiql.ast.expr.ExprNot
 import org.partiql.ast.expr.ExprNullIf
+import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
 import org.partiql.ast.expr.ExprOverlay
@@ -58,6 +61,7 @@ import org.partiql.ast.expr.PathStep.AllFields
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.SessionAttribute
 import org.partiql.ast.expr.TrimSpec
+import org.partiql.ast.expr.TruthValue
 import org.partiql.ast.expr.WindowFunction
 import org.partiql.ast.graph.GraphDirection
 import org.partiql.ast.graph.GraphLabel
@@ -128,6 +132,21 @@ public object Ast {
     @JvmStatic
     public fun exprInCollection(lhs: Expr, rhs: Expr, not: Boolean): ExprInCollection {
         return ExprInCollection(lhs, rhs, not)
+    }
+
+    @JvmStatic
+    public fun exprNullPredicate(value: Expr, not: Boolean): ExprNullPredicate {
+        return ExprNullPredicate(value, not)
+    }
+
+    @JvmStatic
+    public fun exprMissingPredicate(value: Expr, not: Boolean): ExprMissingPredicate {
+        return ExprMissingPredicate(value, not)
+    }
+
+    @JvmStatic
+    public fun exprBoolTest(value: Expr, not: Boolean, truthValue: TruthValue): ExprBoolTest {
+        return ExprBoolTest(value, not, truthValue)
     }
 
     @JvmStatic

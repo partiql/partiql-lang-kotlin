@@ -29,6 +29,7 @@ import org.partiql.ast.expr.ExprAnd
 import org.partiql.ast.expr.ExprArray
 import org.partiql.ast.expr.ExprBag
 import org.partiql.ast.expr.ExprBetween
+import org.partiql.ast.expr.ExprBoolTest
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprCast
@@ -38,8 +39,10 @@ import org.partiql.ast.expr.ExprInCollection
 import org.partiql.ast.expr.ExprIsType
 import org.partiql.ast.expr.ExprLike
 import org.partiql.ast.expr.ExprLit
+import org.partiql.ast.expr.ExprMissingPredicate
 import org.partiql.ast.expr.ExprNot
 import org.partiql.ast.expr.ExprNullIf
+import org.partiql.ast.expr.ExprNullPredicate
 import org.partiql.ast.expr.ExprOperator
 import org.partiql.ast.expr.ExprOr
 import org.partiql.ast.expr.ExprOverlay
@@ -57,6 +60,7 @@ import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
+import org.partiql.ast.expr.TruthValue
 import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
@@ -391,6 +395,24 @@ internal object RexConverter {
             } else {
                 resolveUnaryOp(node.symbol, node.rhs, ctx)
             }
+        }
+
+        override fun visitExprBoolTest(node: ExprBoolTest, ctx: Env): Rex {
+            val value = visitExprCoerce(node.value, ctx)
+            var call = when (node.truthValue.code()) {
+                TruthValue.TRUE -> call("is_true", value)
+                TruthValue.FALSE -> call("is_false", value)
+                TruthValue.UNK -> call("is_unknown", value)
+                else -> error("Unexpected TruthValue: ${node.truthValue}")
+            }
+            // See SQL99 6.30 pg 216 Rule 2 for equivalence
+            // > IF NOT is specified in a <boolean test>, then let BP be the contained <boolean primary> and let
+            // > TV be the contained <truth value>. The <boolean test> is equivalent to:
+            // >   ( NOT ( BP IS TV ) )
+            if (node.not) {
+                call = negate(call)
+            }
+            return rex(BOOL, call)
         }
 
         override fun visitExprNot(node: ExprNot, ctx: Env): Rex {
@@ -784,7 +806,7 @@ internal object RexConverter {
                 else -> call("like_escape", arg0, arg1, arg2)
             }
             // NOT?
-            if (node.not == true) {
+            if (node.not) {
                 call = negate(call)
             }
             return rex(type, call)
@@ -802,7 +824,7 @@ internal object RexConverter {
             // Call
             var call = call("between", arg0, arg1, arg2)
             // NOT?
-            if (node.not == true) {
+            if (node.not) {
                 call = negate(call)
             }
             rex(type, call)
@@ -829,10 +851,34 @@ internal object RexConverter {
             // Call
             var call = call("in_collection", arg0, arg1)
             // NOT?
-            if (node.not == true) {
+            if (node.not) {
                 call = negate(call)
             }
             return rex(type, call)
+        }
+
+        /**
+         * <value> IS NOT? NULL
+         */
+        override fun visitExprNullPredicate(node: ExprNullPredicate, ctx: Env): Rex {
+            val value = visitExprCoerce(node.value, ctx)
+            var call = call("is_null", value)
+            if (node.not) {
+                call = negate(call)
+            }
+            return rex(BOOL, call)
+        }
+
+        /**
+         * <value> IS NOT? MISSING
+         */
+        override fun visitExprMissingPredicate(node: ExprMissingPredicate, ctx: Env): Rex {
+            val value = visitExprCoerce(node.value, ctx)
+            var call = call("is_missing", value)
+            if (node.not) {
+                call = negate(call)
+            }
+            return rex(BOOL, call)
         }
 
         /**
@@ -844,9 +890,6 @@ internal object RexConverter {
             val arg0 = visitExprCoerce(node.value, ctx)
             val targetType = node.type
             var call = when (targetType.code()) {
-                // <absent types>
-                DataType.NULL -> call("is_null", arg0)
-                DataType.MISSING -> call("is_missing", arg0)
                 // <character string types>
                 // TODO CHAR_VARYING, CHARACTER_LARGE_OBJECT, CHAR_LARGE_OBJECT
                 DataType.CHARACTER, DataType.CHAR -> call("is_char", targetType.length.toRex(), arg0)
@@ -895,7 +938,7 @@ internal object RexConverter {
                 else -> error("Unexpected DataType type: $targetType")
             }
 
-            if (node.not == true) {
+            if (node.not) {
                 call = negate(call)
             }
 
@@ -1032,9 +1075,6 @@ internal object RexConverter {
 
         private fun visitType(type: DataType): CompilerType {
             return when (type.code()) {
-                // <absent types>
-                DataType.NULL -> error("Casting to NULL is not supported.")
-                DataType.MISSING -> error("Casting to MISSING is not supported.")
                 // <character string types>
                 // TODO CHAR_VARYING, CHARACTER_LARGE_OBJECT, CHAR_LARGE_OBJECT
                 DataType.CHARACTER, DataType.CHAR -> {

@@ -144,6 +144,11 @@ internal object Builtins {
         FnGt,
         FnGte,
         FnInCollection,
+
+        Fn_IS_TRUE__ANY__BOOL,
+        Fn_IS_FALSE__ANY__BOOL,
+        Fn_IS_UNKNOWN__ANY__BOOL,
+
         Fn_IS_ANY__ANY__BOOL,
         Fn_IS_BAG__ANY__BOOL,
         Fn_IS_BINARY__ANY__BOOL,
