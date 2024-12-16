@@ -3,7 +3,7 @@ package org.partiql.spi.value;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Represents a field within a PartiQL {@link org.partiql.value.PartiQLValueType#STRUCT}.
+ * Represents a field within a PartiQL {@link org.partiql.types.PType#STRUCT}.
  */
 public interface Field {
 

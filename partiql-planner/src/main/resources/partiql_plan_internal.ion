@@ -2,7 +2,7 @@ imports::{
   kotlin: [
     identifier::'org.partiql.spi.catalog.Identifier',
     name::'org.partiql.spi.catalog.Name',
-    partiql_value::'org.partiql.value.PartiQLValue',
+    partiql_value::'org.partiql.spi.value.Datum',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
     fn_signature::'org.partiql.spi.function.Function',

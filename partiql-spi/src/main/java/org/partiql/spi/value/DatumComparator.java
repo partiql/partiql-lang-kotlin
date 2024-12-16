@@ -100,7 +100,36 @@ abstract class DatumComparator implements Comparator<Datum> {
 
     @Override
     public int compare(Datum lhs, Datum rhs) {
-        // Check for NULL/MISSING
+        // Check if  NULL/MISSING
+        Integer result = checkUnknown(lhs, rhs);
+        if (result != null) {
+            return result;
+        }
+
+        // Check for VARIANT & if NULL/MISSING
+        boolean lhsIsVariant = lhs.getType().code() == PType.VARIANT;
+        boolean rhsIsVariant = rhs.getType().code() == PType.VARIANT;
+        Datum lhsActual = lhsIsVariant ? lhs.lower() : lhs;
+        Datum rhsActual = rhsIsVariant ? rhs.lower() : rhs;
+        if (lhsIsVariant || rhsIsVariant) {
+            result = checkUnknown(lhsActual, rhsActual);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        // Invoke the Comparison Table
+        int lhsKind = lhsActual.getType().code();
+        int rhsKind = rhsActual.getType().code();
+        return COMPARISON_TABLE[lhsKind][rhsKind].apply(lhsActual, rhsActual, this);
+    }
+
+    /**
+     * @param lhs the left side
+     * @param rhs the right side
+     * @return null if both are NOT unknown (AKA, they are both concrete); the result if one or more is unknown.
+     */
+    private Integer checkUnknown(Datum lhs, Datum rhs) {
         boolean lhsIsUnknown = lhs.isNull() || lhs.isMissing();
         boolean rhsIsUnknown = rhs.isNull() || rhs.isMissing();
         if (lhsIsUnknown && rhsIsUnknown) {
@@ -112,11 +141,7 @@ abstract class DatumComparator implements Comparator<Datum> {
         if (rhsIsUnknown) {
             return rhsUnknown();
         }
-
-        // Invoke the Comparison Table
-        int lhsKind = lhs.getType().code();
-        int rhsKind = rhs.getType().code();
-        return COMPARISON_TABLE[lhsKind][rhsKind].apply(lhs, rhs, this);
+        return null;
     }
 
     /**

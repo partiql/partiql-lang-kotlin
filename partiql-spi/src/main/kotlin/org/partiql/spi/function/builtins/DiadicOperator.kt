@@ -36,8 +36,8 @@ internal abstract class DiadicOperator(
     override fun getInstance(args: Array<PType>): Function.Instance? {
         val lhs = args[0]
         val rhs = args[1]
-        val lhsPrecedence = TYPE_PRECEDENCE[lhs.code()] ?: throw IllegalArgumentException("Type not supported -- LHS = $lhs")
-        val rhsPrecedence = TYPE_PRECEDENCE[rhs.code()] ?: throw IllegalArgumentException("Type not supported -- RHS = $rhs")
+        val lhsPrecedence = TYPE_PRECEDENCE[lhs.code()] ?: return null
+        val rhsPrecedence = TYPE_PRECEDENCE[rhs.code()] ?: return null
         val (newLhs, newRhs) = when (lhsPrecedence.compareTo(rhsPrecedence)) {
             -1 -> (rhs to rhs)
             0 -> (lhs to rhs)
