@@ -2,6 +2,7 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -58,13 +59,15 @@ public abstract class ConflictAction extends AstNode {
          * TODO
          */
         @NotNull
-        public final DoReplaceAction action;
+        @Getter
+        private final DoReplaceAction action;
 
         /**
          * TODO
          */
         @Nullable
-        public final Expr condition;
+        @Getter
+        private final Expr condition;
 
         /**
          * TODO
@@ -106,13 +109,15 @@ public abstract class ConflictAction extends AstNode {
          * TODO
          */
         @NotNull
-        public final DoUpdateAction action;
+        @Getter
+        private final DoUpdateAction action;
 
         /**
          * TODO
          */
         @Nullable
-        public final Expr condition;
+        @Getter
+        private final Expr condition;
 
         /**
          * TODO

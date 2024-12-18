@@ -2,6 +2,7 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -20,7 +21,8 @@ public abstract class GraphLabel extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Name extends GraphLabel {
         @NotNull
-        public final String name;
+        @Getter
+        private final String name;
 
         public Name(@NotNull String name) {
             this.name = name;
@@ -65,7 +67,8 @@ public abstract class GraphLabel extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Negation extends GraphLabel {
         @NotNull
-        public final GraphLabel arg;
+        @Getter
+        private final GraphLabel arg;
 
         public Negation(@NotNull GraphLabel arg) {
             this.arg = arg;
@@ -92,10 +95,12 @@ public abstract class GraphLabel extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Conj extends GraphLabel {
         @NotNull
-        public final GraphLabel lhs;
+        @Getter
+        private final GraphLabel lhs;
 
         @NotNull
-        public final GraphLabel rhs;
+        @Getter
+        private final GraphLabel rhs;
 
         public Conj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
             this.lhs = lhs;
@@ -124,10 +129,12 @@ public abstract class GraphLabel extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Disj extends GraphLabel {
         @NotNull
-        public final GraphLabel lhs;
+        @Getter
+        private final GraphLabel lhs;
 
         @NotNull
-        public final GraphLabel rhs;
+        @Getter
+        private final GraphLabel rhs;
 
         public Disj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
             this.lhs = lhs;

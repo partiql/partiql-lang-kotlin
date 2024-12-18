@@ -2,6 +2,7 @@ package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -17,31 +18,35 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ColumnDefinition extends AstNode {
+public final class ColumnDefinition extends AstNode {
+    @NotNull
+    @Getter
+    private final Identifier name;
 
     @NotNull
-    public final Identifier name;
+    @Getter
+    private final DataType dataType;
+
+    @Getter
+    private final boolean optional;
 
     @NotNull
-    public final DataType dataType;
-
-    public final boolean isOptional;
-
-    @NotNull
-    public final List<AttributeConstraint> constraints;
+    @Getter
+    private final List<AttributeConstraint> constraints;
 
     @Nullable
-    public final String comment;
+    @Getter
+    private final String comment;
 
     public ColumnDefinition(
             @NotNull Identifier name,
             @NotNull DataType dataType,
-            boolean isOptional,
+            boolean optional,
             @NotNull List<AttributeConstraint> constraints,
             @Nullable String comment) {
         this.name = name;
         this.dataType = dataType;
-        this.isOptional = isOptional;
+        this.optional = optional;
         this.constraints = constraints;
         this.comment = comment;
     }

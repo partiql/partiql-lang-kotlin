@@ -2,6 +2,7 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -31,13 +32,15 @@ public abstract class InsertSource extends AstNode {
          * TODO
          */
         @Nullable
-        public final List<Identifier> columns;
+        @Getter
+        private final List<Identifier> columns;
 
         /**
          * TODO
          */
         @NotNull
-        public final Expr expr;
+        @Getter
+        private final Expr expr;
 
         /**
          * TODO

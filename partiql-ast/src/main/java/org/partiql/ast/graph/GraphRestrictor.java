@@ -13,7 +13,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class GraphRestrictor extends AstEnum {
+public final class GraphRestrictor extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int TRAIL = 1;
     public static final int ACYCLIC = 2;

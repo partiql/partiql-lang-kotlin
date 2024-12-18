@@ -10,7 +10,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class SetOpType extends AstEnum {
+public final class SetOpType extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int UNION = 1;
     public static final int INTERSECT = 2;

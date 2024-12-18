@@ -2,6 +2,7 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -15,11 +16,13 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class GraphQuantifier extends AstNode {
-    public final long lower;
+public final class GraphQuantifier extends AstNode {
+    @Getter
+    private final long lower;
 
     @Nullable
-    public final Long upper;
+    @Getter
+    private final Long upper;
 
     public GraphQuantifier(long lower, @Nullable Long upper) {
         this.lower = lower;

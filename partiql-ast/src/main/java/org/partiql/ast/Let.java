@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.expr.Expr;
 
@@ -13,9 +14,10 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class Let extends AstNode {
+public final class Let extends AstNode {
     @NotNull
-    public final List<Binding> bindings;
+    @Getter
+    private final List<Binding> bindings;
 
     public Let(@NotNull List<Binding> bindings) {
         this.bindings = bindings;
@@ -39,10 +41,12 @@ public class Let extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Binding extends AstNode {
         @NotNull
-        public final Expr expr;
+        @Getter
+        private final Expr expr;
 
         @NotNull
-        public final Identifier asAlias;
+        @Getter
+        private final Identifier asAlias;
 
         public Binding(@NotNull Expr expr, @NotNull Identifier asAlias) {
             this.expr = expr;

@@ -2,6 +2,7 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -22,13 +23,15 @@ public final class UpdateTarget extends AstNode {
      * TODO
      */
     @NotNull
-    public final Identifier root;
+    @Getter
+    private final Identifier root;
 
     /**
      * TODO
      */
     @NotNull
-    public final List<UpdateTargetStep> steps;
+    @Getter
+    private final List<UpdateTargetStep> steps;
 
     /**
      * TODO

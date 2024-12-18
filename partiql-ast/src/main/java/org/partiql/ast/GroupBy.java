@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.expr.Expr;
@@ -14,15 +15,18 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class GroupBy extends AstNode {
+public final class GroupBy extends AstNode {
     @NotNull
-    public final GroupByStrategy strategy;
+    @Getter
+    private final GroupByStrategy strategy;
 
     @NotNull
-    public final List<Key> keys;
+    @Getter
+    private final List<Key> keys;
 
     @Nullable
-    public final Identifier asAlias;
+    @Getter
+    private final Identifier asAlias;
 
     public GroupBy(@NotNull GroupByStrategy strategy, @NotNull List<Key> keys, @Nullable Identifier asAlias) {
         this.strategy = strategy;
@@ -52,10 +56,12 @@ public class GroupBy extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Key extends AstNode {
         @NotNull
-        public final Expr expr;
+        @Getter
+        private final Expr expr;
 
         @Nullable
-        public final Identifier asAlias;
+        @Getter
+        private final Identifier asAlias;
 
         public Key(@NotNull Expr expr, @Nullable Identifier asAlias) {
         this.expr = expr;

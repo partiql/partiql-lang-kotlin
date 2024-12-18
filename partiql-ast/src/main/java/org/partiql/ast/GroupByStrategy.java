@@ -10,7 +10,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class GroupByStrategy extends AstEnum {
+public final class GroupByStrategy extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int FULL = 1;
     public static final int PARTIAL = 2;

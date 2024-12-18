@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.expr.Expr;
@@ -14,18 +15,22 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class FromJoin extends FromTableRef {
+public final class FromJoin extends FromTableRef {
     @NotNull
-    public final FromTableRef lhs;
+    @Getter
+    private final FromTableRef lhs;
 
     @NotNull
-    public final FromTableRef rhs;
+    @Getter
+    private final FromTableRef rhs;
 
     @Nullable
-    public final JoinType joinType;
+    @Getter
+    private final JoinType joinType;
 
     @Nullable
-    public final Expr condition;
+    @Getter
+    private final Expr condition;
 
     public FromJoin(@NotNull FromTableRef lhs, @NotNull FromTableRef rhs, @Nullable JoinType joinType, @Nullable Expr condition) {
         this.lhs = lhs;

@@ -10,7 +10,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class SetQuantifier extends AstEnum {
+public final class SetQuantifier extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int ALL = 1;
     public static final int DISTINCT = 2;

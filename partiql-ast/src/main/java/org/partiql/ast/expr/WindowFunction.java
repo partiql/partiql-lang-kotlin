@@ -13,7 +13,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class WindowFunction extends AstEnum {
+public final class WindowFunction extends AstEnum {
     public static final int UNKNOWN = 0;
     public static final int LAG = 1;
     public static final int LEAD = 2;

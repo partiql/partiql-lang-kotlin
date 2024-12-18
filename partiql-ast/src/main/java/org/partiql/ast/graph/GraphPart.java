@@ -2,6 +2,7 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -22,13 +23,16 @@ public abstract class GraphPart extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Node extends GraphPart {
         @Nullable
-        public final Expr prefilter;
+        @Getter
+        private final Expr prefilter;
 
         @Nullable
-        public final String variable;
+        @Getter
+        private final String variable;
 
         @Nullable
-        public final GraphLabel label;
+        @Getter
+        private final GraphLabel label;
 
         public Node(@Nullable Expr prefilter, @Nullable String variable, @Nullable GraphLabel label) {
             this.prefilter = prefilter;
@@ -62,19 +66,24 @@ public abstract class GraphPart extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Edge extends GraphPart {
         @NotNull
-        public final GraphDirection direction;
+        @Getter
+        private final GraphDirection direction;
 
         @Nullable
-        public final GraphQuantifier quantifier;
+        @Getter
+        private final GraphQuantifier quantifier;
 
         @Nullable
-        public final Expr prefilter;
+        @Getter
+        private final Expr prefilter;
 
         @Nullable
-        public final String variable;
+        @Getter
+        private final String variable;
 
         @Nullable
-        public final GraphLabel label;
+        @Getter
+        private final GraphLabel label;
 
         public Edge(@NotNull GraphDirection direction, @Nullable GraphQuantifier quantifier,
         @Nullable Expr prefilter, @Nullable String variable, @Nullable GraphLabel label) {
@@ -114,7 +123,8 @@ public abstract class GraphPart extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Pattern extends GraphPart {
         @NotNull
-        public final GraphPattern pattern;
+        @Getter
+        private final GraphPattern pattern;
 
         public Pattern(@NotNull GraphPattern pattern) {
             this.pattern = pattern;

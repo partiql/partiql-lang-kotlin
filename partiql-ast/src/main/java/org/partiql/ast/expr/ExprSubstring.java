@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -15,15 +16,18 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprSubstring extends Expr {
+public final class ExprSubstring extends Expr {
     @NotNull
-    public final Expr value;
+    @Getter
+    private final Expr value;
 
     @Nullable
-    public final Expr start;
+    @Getter
+    private final Expr start;
 
     @Nullable
-    public final Expr length;
+    @Getter
+    private final Expr length;
 
     public ExprSubstring(@NotNull Expr value, @Nullable Expr start, @Nullable Expr length) {
         this.value = value;
