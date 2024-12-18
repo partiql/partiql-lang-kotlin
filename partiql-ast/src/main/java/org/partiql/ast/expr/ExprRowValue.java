@@ -22,10 +22,6 @@ import java.util.List;
 @lombok.Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class ExprRowValue extends Expr {
-    public boolean isExplicit() {
-        return explicit;
-    }
-
     /**
      * Specifies whether the ROW keyword explicitly precedes the elements in the textual representation. For example,
      * {@code ROW (1, 2, 3)} versus {@code (1, 2, 3)}. In the first example, {@code isExplicit} is true.

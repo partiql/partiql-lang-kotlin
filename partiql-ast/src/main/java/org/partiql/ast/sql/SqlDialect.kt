@@ -396,7 +396,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprLike(node: ExprLike, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.value, t)
-        t = t concat if (node.not) " NOT LIKE " else " LIKE "
+        t = t concat if (node.isNot) " NOT LIKE " else " LIKE "
         t = visitExprWrapped(node.pattern, t)
         val escape = node.escape
         if (escape != null) {
@@ -409,7 +409,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprBetween(node: ExprBetween, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.value, t)
-        t = t concat if (node.not) " NOT BETWEEN " else " BETWEEN "
+        t = t concat if (node.isNot) " NOT BETWEEN " else " BETWEEN "
         t = visitExprWrapped(node.from, t)
         t = t concat " AND "
         t = visitExprWrapped(node.to, t)
@@ -419,7 +419,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprInCollection(node: ExprInCollection, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.lhs, t)
-        t = t concat if (node.not) " NOT IN " else " IN "
+        t = t concat if (node.isNot) " NOT IN " else " IN "
         t = visitExprWrapped(node.rhs, t)
         return t
     }
@@ -427,21 +427,21 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprNullPredicate(node: ExprNullPredicate, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.value, t)
-        t = t concat if (node.not) " IS NOT NULL" else " IS NULL"
+        t = t concat if (node.isNot) " IS NOT NULL" else " IS NULL"
         return t
     }
 
     override fun visitExprMissingPredicate(node: ExprMissingPredicate, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.value, t)
-        t = t concat if (node.not) " IS NOT MISSING" else " IS MISSING"
+        t = t concat if (node.isNot) " IS NOT MISSING" else " IS MISSING"
         return t
     }
 
     override fun visitExprBoolTest(node: ExprBoolTest, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.value, t)
-        t = t concat if (node.not) " IS NOT " else " IS "
+        t = t concat if (node.isNot) " IS NOT " else " IS "
         t = t concat when (node.truthValue.code()) {
             TruthValue.TRUE -> "TRUE"
             TruthValue.FALSE -> "FALSE"
@@ -454,7 +454,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprIsType(node: ExprIsType, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.value, t)
-        t = t concat if (node.not) " IS NOT " else " IS "
+        t = t concat if (node.isNot) " IS NOT " else " IS "
         t = visitDataType(node.type, t)
         return t
     }
@@ -631,7 +631,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitQueryBodySetOp(node: QueryBody.SetOp, tail: SqlBlock): SqlBlock {
         val op = mutableListOf<String>()
-        when (node.outer) {
+        when (node.isOuter) {
             true -> op.add("OUTER")
             else -> {}
         }
@@ -894,7 +894,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         )
     }
 
-    private fun Identifier.sql() = when (delimited) {
+    private fun Identifier.sql() = when (isDelimited) {
         true -> "\"$symbol\""
         false -> symbol // verbatim ..
     }

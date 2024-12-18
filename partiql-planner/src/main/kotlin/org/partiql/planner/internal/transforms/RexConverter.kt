@@ -409,7 +409,7 @@ internal object RexConverter {
             // > IF NOT is specified in a <boolean test>, then let BP be the contained <boolean primary> and let
             // > TV be the contained <truth value>. The <boolean test> is equivalent to:
             // >   ( NOT ( BP IS TV ) )
-            if (node.not) {
+            if (node.isNot) {
                 call = negate(call)
             }
             return rex(BOOL, call)
@@ -519,7 +519,7 @@ internal object RexConverter {
                     }
 
                     is PathStep.Field -> {
-                        when (curStep.field.delimited) {
+                        when (curStep.field.isDelimited) {
                             true -> {
                                 // case-sensitive path step becomes a key lookup
                                 rexOpPathKey(curPathNavi, rexString(curStep.field.symbol))
@@ -806,7 +806,7 @@ internal object RexConverter {
                 else -> call("like_escape", arg0, arg1, arg2)
             }
             // NOT?
-            if (node.not) {
+            if (node.isNot) {
                 call = negate(call)
             }
             return rex(type, call)
@@ -824,7 +824,7 @@ internal object RexConverter {
             // Call
             var call = call("between", arg0, arg1, arg2)
             // NOT?
-            if (node.not) {
+            if (node.isNot) {
                 call = negate(call)
             }
             rex(type, call)
@@ -851,7 +851,7 @@ internal object RexConverter {
             // Call
             var call = call("in_collection", arg0, arg1)
             // NOT?
-            if (node.not) {
+            if (node.isNot) {
                 call = negate(call)
             }
             return rex(type, call)
@@ -863,7 +863,7 @@ internal object RexConverter {
         override fun visitExprNullPredicate(node: ExprNullPredicate, ctx: Env): Rex {
             val value = visitExprCoerce(node.value, ctx)
             var call = call("is_null", value)
-            if (node.not) {
+            if (node.isNot) {
                 call = negate(call)
             }
             return rex(BOOL, call)
@@ -875,7 +875,7 @@ internal object RexConverter {
         override fun visitExprMissingPredicate(node: ExprMissingPredicate, ctx: Env): Rex {
             val value = visitExprCoerce(node.value, ctx)
             var call = call("is_missing", value)
-            if (node.not) {
+            if (node.isNot) {
                 call = negate(call)
             }
             return rex(BOOL, call)
@@ -938,7 +938,7 @@ internal object RexConverter {
                 else -> error("Unexpected DataType type: $targetType")
             }
 
-            if (node.not) {
+            if (node.isNot) {
                 call = negate(call)
             }
 
