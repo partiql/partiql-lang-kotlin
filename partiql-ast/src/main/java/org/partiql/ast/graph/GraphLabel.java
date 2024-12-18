@@ -96,11 +96,11 @@ public abstract class GraphLabel extends AstNode {
     public static class Conj extends GraphLabel {
         @NotNull
         @Getter
-        public final GraphLabel lhs;
+        private final GraphLabel lhs;
 
         @NotNull
         @Getter
-        public final GraphLabel rhs;
+        private final GraphLabel rhs;
 
         public Conj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
             this.lhs = lhs;
@@ -130,11 +130,11 @@ public abstract class GraphLabel extends AstNode {
     public static class Disj extends GraphLabel {
         @NotNull
         @Getter
-        public final GraphLabel lhs;
+        private final GraphLabel lhs;
 
         @NotNull
         @Getter
-        public final GraphLabel rhs;
+        private final GraphLabel rhs;
 
         public Disj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
             this.lhs = lhs;

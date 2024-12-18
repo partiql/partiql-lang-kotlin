@@ -105,7 +105,8 @@ public abstract class GraphSelector extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class ShortestK extends GraphSelector {
-        public final long k;
+        @Getter
+        private final long k;
 
         public ShortestK(long k) {
             this.k = k;
@@ -129,7 +130,8 @@ public abstract class GraphSelector extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class ShortestKGroup extends GraphSelector {
-        public final long k;
+        @Getter
+        private final long k;
 
         public ShortestKGroup(long k) {
             this.k = k;

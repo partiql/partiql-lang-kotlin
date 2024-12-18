@@ -2807,8 +2807,6 @@ public abstract class org/partiql/ast/graph/GraphLabel : org/partiql/ast/AstNode
 }
 
 public class org/partiql/ast/graph/GraphLabel$Conj : org/partiql/ast/graph/GraphLabel {
-	public final field lhs Lorg/partiql/ast/graph/GraphLabel;
-	public final field rhs Lorg/partiql/ast/graph/GraphLabel;
 	public fun <init> (Lorg/partiql/ast/graph/GraphLabel;Lorg/partiql/ast/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/graph/GraphLabel$Conj$Builder;
@@ -2828,8 +2826,6 @@ public class org/partiql/ast/graph/GraphLabel$Conj$Builder {
 }
 
 public class org/partiql/ast/graph/GraphLabel$Disj : org/partiql/ast/graph/GraphLabel {
-	public final field lhs Lorg/partiql/ast/graph/GraphLabel;
-	public final field rhs Lorg/partiql/ast/graph/GraphLabel;
 	public fun <init> (Lorg/partiql/ast/graph/GraphLabel;Lorg/partiql/ast/graph/GraphLabel;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/graph/GraphLabel$Disj$Builder;
@@ -2983,16 +2979,16 @@ public class org/partiql/ast/graph/GraphPart$Pattern$Builder {
 }
 
 public final class org/partiql/ast/graph/GraphPattern : org/partiql/ast/AstNode {
-	public final field parts Ljava/util/List;
-	public final field prefilter Lorg/partiql/ast/expr/Expr;
-	public final field quantifier Lorg/partiql/ast/graph/GraphQuantifier;
-	public final field restrictor Lorg/partiql/ast/graph/GraphRestrictor;
-	public final field variable Ljava/lang/String;
 	public fun <init> (Lorg/partiql/ast/graph/GraphRestrictor;Lorg/partiql/ast/expr/Expr;Ljava/lang/String;Lorg/partiql/ast/graph/GraphQuantifier;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/graph/GraphPattern$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
+	public fun getParts ()Ljava/util/List;
+	public fun getPrefilter ()Lorg/partiql/ast/expr/Expr;
+	public fun getQuantifier ()Lorg/partiql/ast/graph/GraphQuantifier;
+	public fun getRestrictor ()Lorg/partiql/ast/graph/GraphRestrictor;
+	public fun getVariable ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -3108,13 +3104,13 @@ public class org/partiql/ast/graph/GraphSelector$AnyShortest$Builder {
 }
 
 public class org/partiql/ast/graph/GraphSelector$ShortestK : org/partiql/ast/graph/GraphSelector {
-	public final field k J
 	public fun <init> (J)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/graph/GraphSelector$ShortestK$Builder;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
+	public fun getK ()J
 	public fun hashCode ()I
 }
 
@@ -3125,13 +3121,13 @@ public class org/partiql/ast/graph/GraphSelector$ShortestK$Builder {
 }
 
 public class org/partiql/ast/graph/GraphSelector$ShortestKGroup : org/partiql/ast/graph/GraphSelector {
-	public final field k J
 	public fun <init> (J)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/graph/GraphSelector$ShortestKGroup$Builder;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
+	public fun getK ()J
 	public fun hashCode ()I
 }
 
