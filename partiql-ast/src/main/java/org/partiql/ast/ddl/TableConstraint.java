@@ -1,6 +1,7 @@
 package org.partiql.ast.ddl;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -13,7 +14,8 @@ import java.util.List;
 
 public abstract class TableConstraint extends AstNode {
     @Nullable
-    public final IdentifierChain name;
+    @Getter
+    protected final IdentifierChain name;
 
     protected TableConstraint(@Nullable IdentifierChain name) {
         this.name = name;
@@ -22,14 +24,16 @@ public abstract class TableConstraint extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends TableConstraint {
         @NotNull
-        public final List<Identifier> columns;
+        @Getter
+        private final List<Identifier> columns;
 
-        public final boolean isPrimaryKey;
+        @Getter
+        private final boolean primaryKey;
 
-        public Unique(@Nullable IdentifierChain name, @NotNull List<Identifier> column, boolean isPrimaryKey) {
+        public Unique(@Nullable IdentifierChain name, @NotNull List<Identifier> column, boolean primaryKey) {
             super(name);
             this.columns = column;
-            this.isPrimaryKey = isPrimaryKey;
+            this.primaryKey = primaryKey;
         }
 
         @NotNull

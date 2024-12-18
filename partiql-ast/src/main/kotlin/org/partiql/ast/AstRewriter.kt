@@ -218,7 +218,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val value = visitExpr(node.value, ctx) as Expr
         val not = node.not
         val truthValue = node.truthValue
-        return if (value !== node.value || not != node.not || truthValue != node.value) {
+        return if (value !== node.value || not != node.not || truthValue != node.truthValue) {
             ExprBoolTest(value, not, truthValue)
         } else {
             node
@@ -670,7 +670,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitIdentifier(node: Identifier, ctx: C): AstNode {
         val symbol = node.symbol
-        val isDelimited = node.isDelimited
+        val isDelimited = node.delimited
         return identifier(symbol, isDelimited)
     }
 
@@ -731,10 +731,10 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     public override fun visitQueryBodySetOp(node: QueryBody.SetOp, ctx: C): AstNode {
         val type = visitSetOp(node.type, ctx) as SetOp
-        val isOuter = node.isOuter
+        val isOuter = node.outer
         val lhs = visitExpr(node.lhs, ctx) as Expr
         val rhs = visitExpr(node.rhs, ctx) as Expr
-        return if (type !== node.type || isOuter != node.isOuter || lhs !== node.lhs || rhs !== node.rhs) {
+        return if (type !== node.type || isOuter != node.outer || lhs !== node.lhs || rhs !== node.rhs) {
             QueryBody.SetOp(type, isOuter, lhs, rhs)
         } else {
             node

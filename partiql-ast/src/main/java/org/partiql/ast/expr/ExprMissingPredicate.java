@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -15,11 +16,13 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprMissingPredicate extends Expr {
+public final class ExprMissingPredicate extends Expr {
     @NotNull
-    public final Expr value;
+    @Getter
+    private final Expr value;
 
-    public final boolean not;
+    @Getter
+    private final boolean not;
 
     public ExprMissingPredicate(@NotNull Expr value, boolean not) {
         this.value = value;

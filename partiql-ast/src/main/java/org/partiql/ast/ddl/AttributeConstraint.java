@@ -1,6 +1,7 @@
 package org.partiql.ast.ddl;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -17,7 +18,8 @@ import java.util.List;
 public abstract class AttributeConstraint extends AstNode {
 
     @Nullable
-    public final IdentifierChain name;
+    @Getter
+    protected final IdentifierChain name;
 
     protected AttributeConstraint(@Nullable IdentifierChain name) {
         this.name = name;
@@ -38,12 +40,12 @@ public abstract class AttributeConstraint extends AstNode {
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Null extends AttributeConstraint {
+        @Getter
+        private final boolean nullable;
 
-        public final boolean isNullable;
-
-        public Null(@Nullable IdentifierChain name, boolean isNullable) {
+        public Null(@Nullable IdentifierChain name, boolean nullable) {
             super(name);
-            this.isNullable = isNullable;
+            this.nullable = nullable;
         }
 
         @Override
@@ -59,12 +61,12 @@ public abstract class AttributeConstraint extends AstNode {
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends AttributeConstraint {
+        @Getter
+        private final boolean primaryKey;
 
-        public final boolean isPrimaryKey;
-
-        public Unique(@Nullable IdentifierChain name, boolean isPrimary) {
+        public Unique(@Nullable IdentifierChain name, boolean primaryKey) {
             super(name);
-            this.isPrimaryKey = isPrimary;
+            this.primaryKey = primaryKey;
         }
 
         @Override
@@ -78,9 +80,9 @@ public abstract class AttributeConstraint extends AstNode {
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Check extends AttributeConstraint {
-
         @NotNull
-        public final Expr searchCondition;
+        @Getter
+        private final Expr searchCondition;
 
         public Check(@Nullable IdentifierChain name, @NotNull Expr searchCondition) {
             super(name);

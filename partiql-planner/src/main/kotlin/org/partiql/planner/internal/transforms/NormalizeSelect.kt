@@ -128,7 +128,7 @@ internal object NormalizeSelect {
                 exprQuerySet(
                     body = queryBodySetOp(
                         type = body.type,
-                        isOuter = body.isOuter,
+                        isOuter = body.outer,
                         lhs = lhs,
                         rhs = rhs
                     ),

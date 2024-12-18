@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -13,12 +14,14 @@ import java.util.Map;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class Explain extends Statement {
+public final class Explain extends Statement {
     @NotNull
-    public final Map<String, Literal> options;
+    @Getter
+    private final Map<String, Literal> options;
 
     @NotNull
-    public final Statement statement;
+    @Getter
+    private final Statement statement;
 
     public Explain(@NotNull Map<String, Literal> options, @NotNull Statement statement) {
         this.options = options;

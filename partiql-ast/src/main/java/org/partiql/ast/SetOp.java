@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,12 +14,14 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class SetOp extends AstNode {
+public final class SetOp extends AstNode {
     @NotNull
-    public final SetOpType setOpType;
+    @Getter
+    private final SetOpType setOpType;
 
     @Nullable
-    public final SetQuantifier setq;
+    @Getter
+    private final SetQuantifier setq;
 
     public SetOp(@NotNull SetOpType setOpType, @Nullable SetQuantifier setq) {
         this.setOpType = setOpType;

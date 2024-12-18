@@ -2,6 +2,7 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -31,7 +32,8 @@ public abstract class ConflictTarget extends AstNode {
          */
         // TODO: Should this be a list of identifiers? Or paths? Expressions?
         @NotNull
-        public final List<Identifier> indexes;
+        @Getter
+        private final List<Identifier> indexes;
 
         /**
          * TODO
@@ -65,7 +67,8 @@ public abstract class ConflictTarget extends AstNode {
          * TODO
          */
         @NotNull
-        public final IdentifierChain name;
+        @Getter
+        private final IdentifierChain name;
 
         /**
          * TODO

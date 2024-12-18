@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -17,7 +18,7 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprValues extends Expr {
+public final class ExprValues extends Expr {
     // TODO: May not be an expr?
     // TODO: Tracking issue for VALUES and subqueries -- https://github.com/partiql/partiql-lang-kotlin/issues/1641.
 
@@ -25,7 +26,8 @@ public class ExprValues extends Expr {
      * TODO
      */
     @NotNull
-    public final List<Expr> rows;
+    @Getter
+    private final List<Expr> rows;
 
     /**
      * TODO

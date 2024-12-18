@@ -2,6 +2,7 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -21,13 +22,15 @@ public final class SetClause extends AstNode {
      * TODO
      */
     @NotNull
-    public final UpdateTarget target;
+    @Getter
+    private final UpdateTarget target;
 
     /**
      * TODO
      */
     @NotNull
-    public final Expr expr;
+    @Getter
+    private final Expr expr;
 
     /**
      * TODO

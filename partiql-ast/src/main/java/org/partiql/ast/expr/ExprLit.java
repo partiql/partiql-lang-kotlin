@@ -1,6 +1,7 @@
 package org.partiql.ast.expr;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -13,9 +14,10 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class ExprLit extends Expr {
+public final class ExprLit extends Expr {
     @NotNull
-    public Literal lit;
+    @Getter
+    private final Literal lit;
 
     public ExprLit(@NotNull Literal lit) {
         this.lit = lit;
