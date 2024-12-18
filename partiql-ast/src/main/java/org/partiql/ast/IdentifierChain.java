@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,12 +14,14 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class IdentifierChain extends AstNode {
+public final class IdentifierChain extends AstNode {
     @NotNull
-    public final Identifier root;
+    @Getter
+    private final Identifier root;
 
     @Nullable
-    public final IdentifierChain next;
+    @Getter
+    private final IdentifierChain next;
 
     public IdentifierChain(@NotNull Identifier root, @Nullable IdentifierChain next) {
         this.root = root;

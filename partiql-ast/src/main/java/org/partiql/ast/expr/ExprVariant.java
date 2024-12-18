@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -11,11 +12,14 @@ import java.util.List;
 
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprVariant extends Expr {
+public final class ExprVariant extends Expr {
     @NotNull
-    public final String value;
+    @Getter
+    private final String value;
+
     @NotNull
-    public final String encoding;
+    @Getter
+    private final String encoding;
 
     public ExprVariant(@NotNull String value, @NotNull String encoding) {
         this.value = value;

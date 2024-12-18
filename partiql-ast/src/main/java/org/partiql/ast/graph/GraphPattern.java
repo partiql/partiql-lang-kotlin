@@ -16,7 +16,7 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class GraphPattern extends AstNode {
+public final class GraphPattern extends AstNode {
     @Nullable
     public final GraphRestrictor restrictor;
 

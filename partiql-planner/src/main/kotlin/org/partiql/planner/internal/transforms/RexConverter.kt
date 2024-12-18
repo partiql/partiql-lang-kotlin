@@ -519,7 +519,7 @@ internal object RexConverter {
                     }
 
                     is PathStep.Field -> {
-                        when (curStep.field.isDelimited) {
+                        when (curStep.field.delimited) {
                             true -> {
                                 // case-sensitive path step becomes a key lookup
                                 rexOpPathKey(curPathNavi, rexString(curStep.field.symbol))

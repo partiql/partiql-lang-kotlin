@@ -14,7 +14,7 @@ import static java.util.Objects.requireNonNull;
  * TODO docs
  */
 @EqualsAndHashCode(callSuper = false)
-public class Literal extends AstEnum {
+public final class Literal extends AstEnum {
     // absent literals
     public static final int NULL = 0;
     public static final int MISSING = 1;

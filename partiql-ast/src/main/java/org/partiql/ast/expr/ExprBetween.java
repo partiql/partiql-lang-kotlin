@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -14,17 +15,21 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprBetween extends Expr {
+public final class ExprBetween extends Expr {
     @NotNull
-    public final Expr value;
+    @Getter
+    private final Expr value;
 
     @NotNull
-    public final Expr from;
+    @Getter
+    private final Expr from;
 
     @NotNull
-    public final Expr to;
+    @Getter
+    private final Expr to;
 
-    public final boolean not;
+    @Getter
+    private final boolean not;
 
     public ExprBetween(@NotNull Expr value, @NotNull Expr from, @NotNull Expr to, boolean not) {
         this.value = value;

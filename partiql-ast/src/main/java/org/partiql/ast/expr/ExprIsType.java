@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -16,14 +17,17 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprIsType extends Expr {
+public final class ExprIsType extends Expr {
     @NotNull
-    public final Expr value;
+    @Getter
+    private final Expr value;
 
     @NotNull
-    public final DataType type;
+    @Getter
+    private final DataType type;
 
-    public final boolean not;
+    @Getter
+    private final boolean not;
 
     public ExprIsType(@NotNull Expr value, @NotNull DataType type, boolean not) {
         this.value = value;

@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -12,9 +13,10 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class From extends AstNode {
+public final class From extends AstNode {
     @NotNull
-    public final List<FromTableRef> tableRefs;
+    @Getter
+    private final List<FromTableRef> tableRefs;
 
     public From(@NotNull List<FromTableRef> tableRefs) {
         this.tableRefs = tableRefs;

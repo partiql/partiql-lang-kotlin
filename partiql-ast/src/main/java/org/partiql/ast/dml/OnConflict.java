@@ -2,6 +2,7 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -22,13 +23,15 @@ public final class OnConflict extends AstNode {
      * TODO
      */
     @NotNull
-    public final ConflictAction action;
+    @Getter
+    private final ConflictAction action;
 
     /**
      * TODO
      */
     @Nullable
-    public final ConflictTarget target;
+    @Getter
+    private final ConflictTarget target;
 
     /**
      * TODO

@@ -13,7 +13,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class SessionAttribute extends AstEnum {
+public final class SessionAttribute extends AstEnum {
     public static final int CURRENT_USER = 0;
     public static final int CURRENT_DATE = 1;
 

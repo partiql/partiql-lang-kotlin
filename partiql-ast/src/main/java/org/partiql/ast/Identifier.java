@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -12,15 +13,17 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class Identifier extends AstNode {
+public final class Identifier extends AstNode {
     @NotNull
-    public final String symbol;
+    @Getter
+    private final String symbol;
 
-    public final boolean isDelimited;
+    @Getter
+    private final boolean delimited;
 
-    public Identifier(@NotNull String symbol, boolean isDelimited) {
+    public Identifier(@NotNull String symbol, boolean delimited) {
         this.symbol = symbol;
-        this.isDelimited = isDelimited;
+        this.delimited = delimited;
     }
 
     @NotNull

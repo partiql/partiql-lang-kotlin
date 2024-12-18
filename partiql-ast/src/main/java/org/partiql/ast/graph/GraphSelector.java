@@ -2,6 +2,7 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -79,7 +80,8 @@ public abstract class GraphSelector extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class AnyK extends GraphSelector {
-        public final long k;
+        @Getter
+        private final long k;
 
         public AnyK(long k) {
             this.k = k;

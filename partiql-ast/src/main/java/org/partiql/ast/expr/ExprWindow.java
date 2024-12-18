@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -16,21 +17,26 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprWindow extends Expr {
+public final class ExprWindow extends Expr {
     @NotNull
-    public final WindowFunction windowFunction;
+    @Getter
+    private final WindowFunction windowFunction;
 
     @NotNull
-    public final Expr expression;
+    @Getter
+    private final Expr expression;
 
     @Nullable
-    public final Expr offset;
+    @Getter
+    private final Expr offset;
 
     @Nullable
-    public final Expr defaultValue;
+    @Getter
+    private final Expr defaultValue;
 
     @NotNull
-    public final Over over;
+    @Getter
+    private final Over over;
 
     public ExprWindow(@NotNull WindowFunction windowFunction, @NotNull Expr expression, @Nullable Expr offset, @Nullable Expr defaultValue, @NotNull Over over) {
         this.windowFunction = windowFunction;
@@ -68,11 +74,13 @@ public class ExprWindow extends Expr {
     public static class Over extends AstNode {
         // Empty list represents no `PARTITION BY` specifications
         @NotNull
-        public final List<Expr> partitions;
+        @Getter
+        private final List<Expr> partitions;
 
         // Empty list represents no `ORDER BY` specifications
         @NotNull
-        public final List<Sort> sorts;
+        @Getter
+        private final List<Sort> sorts;
 
         public Over(@NotNull List<Expr> partitions, @NotNull List<Sort> sorts) {
         this.partitions = partitions;

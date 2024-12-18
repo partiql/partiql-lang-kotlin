@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.expr.Expr;
@@ -14,12 +15,14 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class SelectValue extends Select {
+public final class SelectValue extends Select {
     @NotNull
-    public final Expr constructor;
+    @Getter
+    private final Expr constructor;
 
     @Nullable
-    public final SetQuantifier setq;
+    @Getter
+    private final SetQuantifier setq;
 
     public SelectValue(@NotNull Expr constructor, @Nullable SetQuantifier setq) {
         this.constructor = constructor;

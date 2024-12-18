@@ -143,8 +143,9 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitIdentifierChain(node: IdentifierChain, tail: SqlBlock): SqlBlock {
         var path = node.root.sql()
-        if (node.next != null) {
-            path += ".${node.next.sql()}"
+        val next = node.next
+        if (next != null) {
+            path += ".${next.sql()}"
         }
         return tail concat path
     }
@@ -261,7 +262,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         val lhs = node.lhs
         return if (lhs != null) {
             var t = tail
-            t = visitExprWrapped(node.lhs, t)
+            t = visitExprWrapped(lhs, t)
             t = t concat " ${node.symbol} "
             t = visitExprWrapped(node.rhs, t)
             t
@@ -359,7 +360,8 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             t = t concat list { newArgs }
             return t
         }
-        val start = if (node.setq != null) "(${node.setq.name()} " else "("
+        val setq = node.setq
+        val start = if (setq != null) "(${setq.name()} " else "("
         t = visitIdentifierChain(f, t)
         t = t concat list(start) { node.args }
         return t
@@ -396,9 +398,10 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         t = visitExprWrapped(node.value, t)
         t = t concat if (node.not) " NOT LIKE " else " LIKE "
         t = visitExprWrapped(node.pattern, t)
-        if (node.escape != null) {
+        val escape = node.escape
+        if (escape != null) {
             t = t concat " ESCAPE "
-            t = visitExprWrapped(node.escape, t)
+            t = visitExprWrapped(escape, t)
         }
         return t
     }
@@ -459,18 +462,18 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprCase(node: ExprCase, tail: SqlBlock): SqlBlock {
         var t = tail
         t = t concat "CASE"
-        t = when (node.expr) {
+        t = when (val expr = node.expr) {
             null -> t
-            else -> visitExprWrapped(node.expr, t concat " ")
+            else -> visitExprWrapped(expr, t concat " ")
         }
         // WHEN(s)
         t = node.branches.fold(t) { acc, branch -> visitExprCaseBranch(branch, acc) }
         // ELSE
-        t = when (node.defaultExpr) {
+        t = when (val defaultExpr = node.defaultExpr) {
             null -> t
             else -> {
                 t = t concat " ELSE "
-                visitExprWrapped(node.defaultExpr, t)
+                visitExprWrapped(defaultExpr, t)
             }
         }
         t = t concat " END"
@@ -505,13 +508,15 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         var t = tail
         t = t concat "SUBSTRING("
         t = visitExprWrapped(node.value, t)
-        if (node.start != null) {
+        val start = node.start
+        if (start != null) {
             t = t concat " FROM "
-            t = visitExprWrapped(node.start, t)
+            t = visitExprWrapped(start, t)
         }
-        if (node.length != null) {
+        val length = node.length
+        if (length != null) {
             t = t concat " FOR "
-            t = visitExprWrapped(node.length, t)
+            t = visitExprWrapped(length, t)
         }
         t = t concat ")"
         return t
@@ -531,12 +536,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         var t = tail
         t = t concat "TRIM("
         // [LEADING|TRAILING|BOTH]
-        if (node.trimSpec != null) {
-            t = t concat "${node.trimSpec.name()} "
+        val trimSpec = node.trimSpec
+        if (trimSpec != null) {
+            t = t concat "${trimSpec.name()} "
         }
         // [<chars> FROM]
-        if (node.chars != null) {
-            t = visitExprWrapped(node.chars, t)
+        val chars = node.chars
+        if (chars != null) {
+            t = visitExprWrapped(chars, t)
             t = t concat " FROM "
         }
         t = visitExprWrapped(node.value, t)
@@ -552,9 +559,10 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         t = visitExprWrapped(node.placing, t)
         t = t concat " FROM "
         t = visitExprWrapped(node.from, t)
-        if (node.forLength != null) {
+        val forLength = node.forLength
+        if (forLength != null) {
             t = t concat " FOR "
-            t = visitExprWrapped(node.forLength, t)
+            t = visitExprWrapped(forLength, t)
         }
         t = t concat ")"
         return t
@@ -585,11 +593,14 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         // visit body (SFW or other SQL set op)
         t = visit(node.body, t)
         // ORDER BY
-        t = if (node.orderBy != null) visitOrderBy(node.orderBy, t concat " ") else t
+        val orderBy = node.orderBy
+        t = if (orderBy != null) visitOrderBy(orderBy, t concat " ") else t
         // LIMIT
-        t = if (node.limit != null) visitExprWrapped(node.limit, t concat " LIMIT ") else t
+        val limit = node.limit
+        t = if (limit != null) visitExprWrapped(limit, t concat " LIMIT ") else t
         // OFFSET
-        t = if (node.offset != null) visitExprWrapped(node.offset, t concat " OFFSET ") else t
+        val offset = node.offset
+        t = if (offset != null) visitExprWrapped(offset, t concat " OFFSET ") else t
         return t
     }
 
@@ -604,19 +615,23 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         // FROM
         t = visitFrom(node.from, t concat " FROM ")
         // LET
-        t = if (node.let != null) visitLet(node.let, t concat " ") else t
+        val let = node.let
+        t = if (let != null) visitLet(let, t concat " ") else t
         // WHERE
-        t = if (node.where != null) visitExprWrapped(node.where, t concat " WHERE ") else t
+        val where = node.where
+        t = if (where != null) visitExprWrapped(where, t concat " WHERE ") else t
         // GROUP BY
-        t = if (node.groupBy != null) visitGroupBy(node.groupBy, t concat " ") else t
+        val groupBy = node.groupBy
+        t = if (groupBy != null) visitGroupBy(groupBy, t concat " ") else t
         // HAVING
-        t = if (node.having != null) visitExprWrapped(node.having, t concat " HAVING ") else t
+        val having = node.having
+        t = if (having != null) visitExprWrapped(having, t concat " HAVING ") else t
         return t
     }
 
     override fun visitQueryBodySetOp(node: QueryBody.SetOp, tail: SqlBlock): SqlBlock {
         val op = mutableListOf<String>()
-        when (node.isOuter) {
+        when (node.outer) {
             true -> op.add("OUTER")
             else -> {}
         }
@@ -671,7 +686,8 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitSelectItemExpr(node: SelectItem.Expr, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.expr, t)
-        t = if (node.asAlias != null) t concat " AS ${node.asAlias.sql()}" else t
+        val asAlias = node.asAlias
+        t = if (asAlias != null) t concat " AS ${asAlias.sql()}" else t
         return t
     }
 
@@ -710,8 +726,10 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             else -> defaultReturn(node, tail)
         }
         t = visitExprWrapped(node.expr, t)
-        t = if (node.asAlias != null) t concat " AS ${node.asAlias.sql()}" else t
-        t = if (node.atAlias != null) t concat " AT ${node.atAlias.sql()}" else t
+        val asAlias = node.asAlias
+        t = if (asAlias != null) t concat " AS ${asAlias.sql()}" else t
+        val atAlias = node.atAlias
+        t = if (atAlias != null) t concat " AT ${atAlias.sql()}" else t
         return t
     }
 
@@ -757,23 +775,25 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             else -> throw UnsupportedOperationException("Cannot print $node")
         }
         t = t concat list("", "") { node.keys }
-        t = if (node.asAlias != null) t concat " GROUP AS ${node.asAlias.sql()}" else t
+        val asAlias = node.asAlias
+        t = if (asAlias != null) t concat " GROUP AS ${asAlias.sql()}" else t
         return t
     }
 
     override fun visitGroupByKey(node: GroupBy.Key, tail: SqlBlock): SqlBlock {
         var t = tail
         t = visitExprWrapped(node.expr, t)
-        t = if (node.asAlias != null) t concat " AS ${node.asAlias.sql()}" else t
+        val asAlias = node.asAlias
+        t = if (asAlias != null) t concat " AS ${asAlias.sql()}" else t
         return t
     }
 
     // SET OPERATORS
 
     override fun visitSetOp(node: SetOp, tail: SqlBlock): SqlBlock {
-        val op = when (node.setq) {
+        val op = when (val setq = node.setq) {
             null -> node.setOpType.name()
-            else -> "${node.setOpType.name()} ${node.setq.name()}"
+            else -> "${node.setOpType.name()} ${setq.name()}"
         }
         return tail concat op
     }
@@ -874,7 +894,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         )
     }
 
-    private fun Identifier.sql() = when (isDelimited) {
+    private fun Identifier.sql() = when (delimited) {
         true -> "\"$symbol\""
         false -> symbol // verbatim ..
     }

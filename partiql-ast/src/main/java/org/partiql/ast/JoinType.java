@@ -10,7 +10,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class JoinType extends AstEnum {
+public final class JoinType extends AstEnum {
     public static final int INNER = 0;
     public static final int LEFT = 1;
     public static final int LEFT_OUTER = 2;

@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -18,7 +19,8 @@ public abstract class ExcludeStep extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class StructField extends ExcludeStep {
         @NotNull
-        public final Identifier symbol;
+        @Getter
+        private final Identifier symbol;
 
         public StructField(@NotNull Identifier symbol) {
             this.symbol = symbol;
@@ -44,7 +46,8 @@ public abstract class ExcludeStep extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class CollIndex extends ExcludeStep {
-        public final int index;
+        @Getter
+        private final int index;
 
         public CollIndex(int index) {
             this.index = index;

@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.expr.Expr;
 
@@ -13,9 +14,10 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class Query extends Statement {
+public final class Query extends Statement {
     @NotNull
-    public final Expr expr;
+    @Getter
+    private final Expr expr;
 
     public Query(@NotNull Expr expr) {
         this.expr = expr;

@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -14,9 +15,10 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprSessionAttribute extends Expr {
+public final class ExprSessionAttribute extends Expr {
     @NotNull
-    public final SessionAttribute sessionAttribute;
+    @Getter
+    private final SessionAttribute sessionAttribute;
 
     public ExprSessionAttribute(@NotNull SessionAttribute sessionAttribute) {
         this.sessionAttribute = sessionAttribute;

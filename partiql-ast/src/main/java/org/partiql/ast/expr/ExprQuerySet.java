@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -17,18 +18,22 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprQuerySet extends Expr {
+public final class ExprQuerySet extends Expr {
     @NotNull
-    public final QueryBody body;
+    @Getter
+    private final QueryBody body;
 
     @Nullable
-    public final OrderBy orderBy;
+    @Getter
+    private final OrderBy orderBy;
 
     @Nullable
-    public final Expr limit;
+    @Getter
+    private final Expr limit;
 
     @Nullable
-    public final Expr offset;
+    @Getter
+    private final Expr offset;
 
     public ExprQuerySet(@NotNull QueryBody body, @Nullable OrderBy orderBy, @Nullable Expr limit, @Nullable Expr offset) {
         this.body = body;

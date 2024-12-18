@@ -10,7 +10,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class FromType extends AstEnum {
+public final class FromType extends AstEnum {
     public static final int SCAN = 0;
     public static final int UNPIVOT = 1;
 

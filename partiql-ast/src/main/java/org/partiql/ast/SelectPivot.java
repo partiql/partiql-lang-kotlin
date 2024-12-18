@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.expr.Expr;
 
@@ -13,12 +14,14 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class SelectPivot extends Select {
+public final class SelectPivot extends Select {
     @NotNull
-    public final Expr key;
+    @Getter
+    private final Expr key;
 
     @NotNull
-    public final Expr value;
+    @Getter
+    private final Expr value;
 
     public SelectPivot(@NotNull Expr key, @NotNull Expr value) {
         this.key = key;

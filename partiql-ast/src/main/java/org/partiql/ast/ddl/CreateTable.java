@@ -2,6 +2,7 @@ package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -16,22 +17,27 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class CreateTable extends Ddl {
+public final class CreateTable extends Ddl {
 
     @NotNull
-    public final IdentifierChain name;
+    @Getter
+    private final IdentifierChain name;
 
     @NotNull
-    public final List<ColumnDefinition> columns;
+    @Getter
+    private final List<ColumnDefinition> columns;
 
     @NotNull
-    public final List<TableConstraint> constraints;
+    @Getter
+    private final List<TableConstraint> constraints;
 
     @Nullable
-    public final PartitionBy partitionBy;
+    @Getter
+    private final PartitionBy partitionBy;
 
     @NotNull
-    public final List<KeyValue> tableProperties;
+    @Getter
+    private final List<KeyValue> tableProperties;
 
     public CreateTable(
             @NotNull IdentifierChain name,

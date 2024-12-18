@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -17,15 +18,18 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprCall extends Expr {
+public final class ExprCall extends Expr {
     @NotNull
-    public final IdentifierChain function;
+    @Getter
+    private final IdentifierChain function;
 
     @NotNull
-    public final List<Expr> args;
+    @Getter
+    private final List<Expr> args;
 
     @Nullable
-    public final SetQuantifier setq;
+    @Getter
+    private final SetQuantifier setq;
 
     public ExprCall(@NotNull IdentifierChain function, @NotNull List<Expr> args, @Nullable SetQuantifier setq) {
         this.function = function;

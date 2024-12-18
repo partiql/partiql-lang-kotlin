@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.expr.Expr;
@@ -14,25 +15,32 @@ public abstract class QueryBody extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class SFW extends QueryBody {
         @NotNull
-        public final Select select;
+        @Getter
+        private final Select select;
 
         @Nullable
-        public final Exclude exclude;
+        @Getter
+        private final Exclude exclude;
 
         @NotNull
-        public final From from;
+        @Getter
+        private final From from;
 
         @Nullable
-        public final Let let;
+        @Getter
+        private final Let let;
 
         @Nullable
-        public final Expr where;
+        @Getter
+        private final Expr where;
 
         @Nullable
-        public final GroupBy groupBy;
+        @Getter
+        private final GroupBy groupBy;
 
         @Nullable
-        public final Expr having;
+        @Getter
+        private final Expr having;
 
         public SFW(@NotNull Select select, @Nullable Exclude exclude, @NotNull From from,
         @Nullable Let let, @Nullable Expr where, @Nullable GroupBy groupBy, @Nullable Expr having) {
@@ -69,9 +77,11 @@ public abstract class QueryBody extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class SetOp extends QueryBody {
         @NotNull
-        public final org.partiql.ast.SetOp type;
+        @Getter
+        private final org.partiql.ast.SetOp type;
 
-        public final boolean isOuter;
+        @Getter
+        private final boolean outer;
 
         @NotNull
         public Expr lhs;
@@ -79,9 +89,9 @@ public abstract class QueryBody extends AstNode {
         @NotNull
         public Expr rhs;
 
-        public SetOp(@NotNull org.partiql.ast.SetOp type, boolean isOuter, @NotNull Expr lhs, @NotNull Expr rhs) {
+        public SetOp(@NotNull org.partiql.ast.SetOp type, boolean outer, @NotNull Expr lhs, @NotNull Expr rhs) {
             this.type = type;
-            this.isOuter = isOuter;
+            this.outer = outer;
             this.lhs = lhs;
             this.rhs = rhs;
         }

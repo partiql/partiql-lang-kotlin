@@ -644,8 +644,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             val constrName = ctx.constraintName()?.let { visitQualifiedName(it.qualifiedName()) }
             val body = visitAs<AttributeConstraint>(ctx.columnConstraint())
             when (body) {
-                is AttributeConstraint.Unique -> columnConstraintUnique(constrName, body.isPrimaryKey)
-                is AttributeConstraint.Null -> columnConstraintNullable(constrName, body.isNullable)
+                is AttributeConstraint.Unique -> columnConstraintUnique(constrName, body.primaryKey)
+                is AttributeConstraint.Null -> columnConstraintNullable(constrName, body.nullable)
                 is AttributeConstraint.Check -> columnConstraintCheck(constrName, body.searchCondition)
                 else -> throw error(ctx, "Unexpected Table Constraint Definition")
             }
@@ -676,7 +676,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val constraintName = ctx.constraintName()?.let { visitQualifiedName(it.qualifiedName()) }
             val body = visitAs<TableConstraint>(ctx.tableConstraint())
             when (body) {
-                is TableConstraint.Unique -> tableConstraintUnique(constraintName, body.columns, body.isPrimaryKey)
+                is TableConstraint.Unique -> tableConstraintUnique(constraintName, body.columns, body.primaryKey)
                 else -> throw error(ctx, "Unexpected Table Constraint Definition")
             }
         }

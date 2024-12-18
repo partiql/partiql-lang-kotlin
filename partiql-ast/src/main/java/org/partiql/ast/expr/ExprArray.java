@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -14,9 +15,10 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprArray extends Expr {
+public final class ExprArray extends Expr {
     @NotNull
-    public final List<Expr> values;
+    @Getter
+    private final List<Expr> values;
 
     public ExprArray(@NotNull List<Expr> values) {
         this.values = values;

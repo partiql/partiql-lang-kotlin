@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -12,9 +13,10 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class Exclude extends AstNode {
+public final class Exclude extends AstNode {
     @NotNull
-    public final List<ExcludePath> excludePaths;
+    @Getter
+    private final List<ExcludePath> excludePaths;
 
     public Exclude(@NotNull List<ExcludePath> excludePaths) {
         this.excludePaths = excludePaths;
