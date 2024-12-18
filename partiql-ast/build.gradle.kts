@@ -16,7 +16,7 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
-    // To allow for Kotlin code in partiql-ast to understand Java Lombok annotations, need the following plugin.
+    // Need the Kotlin lombok plugin to allow for Kotlin code in partiql-ast to understand Java Lombok annotations.
     // https://kotlinlang.org/docs/lombok.html
     id(Plugins.kotlinLombok) version Versions.kotlinLombok
 }
