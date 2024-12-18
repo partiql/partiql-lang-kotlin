@@ -659,6 +659,7 @@ public abstract class PType extends Enum {
      */
     @NotNull
     public static PType array(@NotNull PType typeParam) {
+        // TODO optional length https://github.com/partiql/partiql-lang-kotlin/issues/1686
         return new PTypeCollection(ARRAY, typeParam);
     }
 
@@ -676,6 +677,7 @@ public abstract class PType extends Enum {
      */
     @NotNull
     public static PType bag(@NotNull PType typeParam) {
+        // TODO optional length https://github.com/partiql/partiql-lang-kotlin/issues/1686
         return new PTypeCollection(BAG, typeParam);
     }
 
