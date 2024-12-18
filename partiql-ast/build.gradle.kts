@@ -21,10 +21,6 @@ plugins {
     kotlin("plugin.lombok") version "2.1.0"
 }
 
-kotlinLombok {
-    lombokConfigurationFile(file("lombok.config"))
-}
-
 dependencies {
     api(Deps.ionElement)
     compileOnly(Deps.lombok)

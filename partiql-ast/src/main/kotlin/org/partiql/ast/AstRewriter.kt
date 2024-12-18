@@ -114,8 +114,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val value = visitExpr(node.value, ctx) as Expr
         val from = visitExpr(node.from, ctx) as Expr
         val to = visitExpr(node.to, ctx) as Expr
-        val not = node.not
-        return if (value !== node.value || from !== node.from || to !== node.to || not != node.not) {
+        val not = node.isNot
+        return if (value !== node.value || from !== node.from || to !== node.to || not != node.isNot) {
             ExprBetween(value, from, to, not)
         } else {
             node
@@ -186,8 +186,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     override fun visitExprInCollection(node: ExprInCollection, ctx: C): AstNode {
         val lhs = visitExpr(node.lhs, ctx) as Expr
         val rhs = visitExpr(node.rhs, ctx) as Expr
-        val not = node.not
-        return if (lhs !== node.lhs || rhs !== node.rhs || not != node.not) {
+        val not = node.isNot
+        return if (lhs !== node.lhs || rhs !== node.rhs || not != node.isNot) {
             ExprInCollection(lhs, rhs, not)
         } else {
             node
@@ -196,8 +196,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitExprMissingPredicate(node: ExprMissingPredicate, ctx: C): AstNode {
         val value = visitExpr(node.value, ctx) as Expr
-        val not = node.not
-        return if (value !== node.value || not != node.not) {
+        val not = node.isNot
+        return if (value !== node.value || not != node.isNot) {
             ExprMissingPredicate(value, not)
         } else {
             node
@@ -206,8 +206,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitExprNullPredicate(node: ExprNullPredicate, ctx: C): AstNode {
         val value = visitExpr(node.value, ctx) as Expr
-        val not = node.not
-        return if (value !== node.value || not != node.not) {
+        val not = node.isNot
+        return if (value !== node.value || not != node.isNot) {
             ExprNullPredicate(value, not)
         } else {
             node
@@ -216,9 +216,9 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitExprBoolTest(node: ExprBoolTest, ctx: C): AstNode {
         val value = visitExpr(node.value, ctx) as Expr
-        val not = node.not
+        val not = node.isNot
         val truthValue = node.truthValue
-        return if (value !== node.value || not != node.not || truthValue != node.truthValue) {
+        return if (value !== node.value || not != node.isNot || truthValue != node.truthValue) {
             ExprBoolTest(value, not, truthValue)
         } else {
             node
@@ -228,8 +228,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     override fun visitExprIsType(node: ExprIsType, ctx: C): AstNode {
         val value = visitExpr(node.value, ctx) as Expr
         val type = node.type
-        val not = node.not
-        return if (value !== node.value || type !== node.type || not != node.not) {
+        val not = node.isNot
+        return if (value !== node.value || type !== node.type || not != node.isNot) {
             ExprIsType(value, type, not)
         } else {
             node
@@ -240,8 +240,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         val value = visitExpr(node.value, ctx) as Expr
         val pattern = visitExpr(node.pattern, ctx) as Expr
         val escape = node.escape?.let { visitExpr(it, ctx) as Expr? }
-        val not = node.not
-        return if (value !== node.value || pattern !== node.pattern || escape !== node.escape || not != node.not) {
+        val not = node.isNot
+        return if (value !== node.value || pattern !== node.pattern || escape !== node.escape || not != node.isNot) {
             ExprLike(value, pattern, escape, not)
         } else {
             node
@@ -670,7 +670,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitIdentifier(node: Identifier, ctx: C): AstNode {
         val symbol = node.symbol
-        val isDelimited = node.delimited
+        val isDelimited = node.isDelimited
         return identifier(symbol, isDelimited)
     }
 
@@ -731,10 +731,10 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     public override fun visitQueryBodySetOp(node: QueryBody.SetOp, ctx: C): AstNode {
         val type = visitSetOp(node.type, ctx) as SetOp
-        val isOuter = node.outer
+        val isOuter = node.isOuter
         val lhs = visitExpr(node.lhs, ctx) as Expr
         val rhs = visitExpr(node.rhs, ctx) as Expr
-        return if (type !== node.type || isOuter != node.outer || lhs !== node.lhs || rhs !== node.rhs) {
+        return if (type !== node.type || isOuter != node.isOuter || lhs !== node.lhs || rhs !== node.rhs) {
             QueryBody.SetOp(type, isOuter, lhs, rhs)
         } else {
             node

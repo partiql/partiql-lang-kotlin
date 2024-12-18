@@ -68,7 +68,7 @@ internal object AstToPlan {
         return Identifier.of(part(identifier))
     }
 
-    fun part(identifier: AstIdentifier): Identifier.Part = when (identifier.delimited) {
+    fun part(identifier: AstIdentifier): Identifier.Part = when (identifier.isDelimited) {
         true -> Identifier.Part.delimited(identifier.symbol)
         false -> Identifier.Part.regular(identifier.symbol)
     }

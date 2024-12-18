@@ -730,9 +730,9 @@ public class org/partiql/ast/DataType$StructField : org/partiql/ast/AstNode {
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun getName ()Lorg/partiql/ast/Identifier;
-	public fun getOptional ()Z
 	public fun getType ()Lorg/partiql/ast/DataType;
 	public fun hashCode ()I
+	public fun isOptional ()Z
 }
 
 public final class org/partiql/ast/DatetimeField : org/partiql/ast/AstEnum {
@@ -1021,9 +1021,9 @@ public final class org/partiql/ast/Identifier : org/partiql/ast/AstNode {
 	public static fun builder ()Lorg/partiql/ast/Identifier$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getDelimited ()Z
 	public fun getSymbol ()Ljava/lang/String;
 	public fun hashCode ()I
+	public fun isDelimited ()Z
 }
 
 public class org/partiql/ast/Identifier$Builder {
@@ -1253,9 +1253,9 @@ public class org/partiql/ast/QueryBody$SetOp : org/partiql/ast/QueryBody {
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getOuter ()Z
 	public fun getType ()Lorg/partiql/ast/SetOp;
 	public fun hashCode ()I
+	public fun isOuter ()Z
 }
 
 public class org/partiql/ast/QueryBody$SetOp$Builder {
@@ -1477,8 +1477,8 @@ public class org/partiql/ast/ddl/AttributeConstraint$Null : org/partiql/ast/ddl/
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
-	public fun getNullable ()Z
 	public fun hashCode ()I
+	public fun isNullable ()Z
 }
 
 public class org/partiql/ast/ddl/AttributeConstraint$Unique : org/partiql/ast/ddl/AttributeConstraint {
@@ -1486,8 +1486,8 @@ public class org/partiql/ast/ddl/AttributeConstraint$Unique : org/partiql/ast/dd
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
-	public fun getPrimaryKey ()Z
 	public fun hashCode ()I
+	public fun isPrimaryKey ()Z
 }
 
 public final class org/partiql/ast/ddl/ColumnDefinition : org/partiql/ast/AstNode {
@@ -1500,8 +1500,8 @@ public final class org/partiql/ast/ddl/ColumnDefinition : org/partiql/ast/AstNod
 	public fun getConstraints ()Ljava/util/List;
 	public fun getDataType ()Lorg/partiql/ast/DataType;
 	public fun getName ()Lorg/partiql/ast/Identifier;
-	public fun getOptional ()Z
 	public fun hashCode ()I
+	public fun isOptional ()Z
 }
 
 public class org/partiql/ast/ddl/ColumnDefinition$Builder {
@@ -1589,8 +1589,8 @@ public class org/partiql/ast/ddl/TableConstraint$Unique : org/partiql/ast/ddl/Ta
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun getColumns ()Ljava/util/List;
-	public fun getPrimaryKey ()Z
 	public fun hashCode ()I
+	public fun isPrimaryKey ()Z
 }
 
 public abstract class org/partiql/ast/dml/ConflictAction : org/partiql/ast/AstNode {
@@ -2008,10 +2008,10 @@ public final class org/partiql/ast/expr/ExprBetween : org/partiql/ast/expr/Expr 
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun getFrom ()Lorg/partiql/ast/expr/Expr;
-	public fun getNot ()Z
 	public fun getTo ()Lorg/partiql/ast/expr/Expr;
 	public fun getValue ()Lorg/partiql/ast/expr/Expr;
 	public fun hashCode ()I
+	public fun isNot ()Z
 }
 
 public class org/partiql/ast/expr/ExprBetween$Builder {
@@ -2029,10 +2029,10 @@ public final class org/partiql/ast/expr/ExprBoolTest : org/partiql/ast/expr/Expr
 	public static fun builder ()Lorg/partiql/ast/expr/ExprBoolTest$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getNot ()Z
 	public fun getTruthValue ()Lorg/partiql/ast/expr/TruthValue;
 	public fun getValue ()Lorg/partiql/ast/expr/Expr;
 	public fun hashCode ()I
+	public fun isNot ()Z
 }
 
 public class org/partiql/ast/expr/ExprBoolTest$Builder {
@@ -2161,9 +2161,9 @@ public final class org/partiql/ast/expr/ExprInCollection : org/partiql/ast/expr/
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun getLhs ()Lorg/partiql/ast/expr/Expr;
-	public fun getNot ()Z
 	public fun getRhs ()Lorg/partiql/ast/expr/Expr;
 	public fun hashCode ()I
+	public fun isNot ()Z
 }
 
 public class org/partiql/ast/expr/ExprInCollection$Builder {
@@ -2180,10 +2180,10 @@ public final class org/partiql/ast/expr/ExprIsType : org/partiql/ast/expr/Expr {
 	public static fun builder ()Lorg/partiql/ast/expr/ExprIsType$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getNot ()Z
 	public fun getType ()Lorg/partiql/ast/DataType;
 	public fun getValue ()Lorg/partiql/ast/expr/Expr;
 	public fun hashCode ()I
+	public fun isNot ()Z
 }
 
 public class org/partiql/ast/expr/ExprIsType$Builder {
@@ -2201,10 +2201,10 @@ public final class org/partiql/ast/expr/ExprLike : org/partiql/ast/expr/Expr {
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun getEscape ()Lorg/partiql/ast/expr/Expr;
-	public fun getNot ()Z
 	public fun getPattern ()Lorg/partiql/ast/expr/Expr;
 	public fun getValue ()Lorg/partiql/ast/expr/Expr;
 	public fun hashCode ()I
+	public fun isNot ()Z
 }
 
 public class org/partiql/ast/expr/ExprLike$Builder {
@@ -2249,9 +2249,9 @@ public final class org/partiql/ast/expr/ExprMissingPredicate : org/partiql/ast/e
 	public static fun builder ()Lorg/partiql/ast/expr/ExprMissingPredicate$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getNot ()Z
 	public fun getValue ()Lorg/partiql/ast/expr/Expr;
 	public fun hashCode ()I
+	public fun isNot ()Z
 }
 
 public class org/partiql/ast/expr/ExprMissingPredicate$Builder {
@@ -2301,9 +2301,9 @@ public final class org/partiql/ast/expr/ExprNullPredicate : org/partiql/ast/expr
 	public static fun builder ()Lorg/partiql/ast/expr/ExprNullPredicate$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getNot ()Z
 	public fun getValue ()Lorg/partiql/ast/expr/Expr;
 	public fun hashCode ()I
+	public fun isNot ()Z
 }
 
 public class org/partiql/ast/expr/ExprNullPredicate$Builder {
@@ -2454,7 +2454,6 @@ public final class org/partiql/ast/expr/ExprRowValue : org/partiql/ast/expr/Expr
 	public static fun builder ()Lorg/partiql/ast/expr/ExprRowValue$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getExplicit ()Z
 	public fun getValues ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun isExplicit ()Z

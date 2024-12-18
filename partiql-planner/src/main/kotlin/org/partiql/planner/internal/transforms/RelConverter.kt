@@ -532,7 +532,7 @@ internal object RelConverter {
                 null, SetQuantifier.DISTINCT -> org.partiql.planner.internal.ir.SetQuantifier.DISTINCT
                 else -> error("Unexpected SetQuantifier type: ${setExpr.type.setq}")
             }
-            val outer = setExpr.outer
+            val outer = setExpr.isOuter
             val op = when (setExpr.type.setOpType.code()) {
                 SetOpType.UNION -> Rel.Op.Union(quantifier, outer, lhs, rhs)
                 SetOpType.EXCEPT -> Rel.Op.Except(quantifier, outer, lhs, rhs)
@@ -630,7 +630,7 @@ internal object RelConverter {
         private fun stepToExcludeType(step: ExcludeStep): Rel.Op.Exclude.Type {
             return when (step) {
                 is ExcludeStep.StructField -> {
-                    when (step.symbol.delimited) {
+                    when (step.symbol.isDelimited) {
                         false -> relOpExcludeTypeStructSymbol(step.symbol.symbol)
                         true -> relOpExcludeTypeStructKey(step.symbol.symbol)
                     }
