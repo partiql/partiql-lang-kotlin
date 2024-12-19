@@ -15,20 +15,19 @@ import static java.util.Objects.requireNonNull;
  */
 @EqualsAndHashCode(callSuper = false)
 public class Literal extends AstEnum {
-    public static final int UNKNOWN = 0;
     // absent literals
-    public static final int NULL = 1;
-    public static final int MISSING = 2;
+    public static final int NULL = 0;
+    public static final int MISSING = 1;
     // boolean literal
-    public static final int BOOL = 3;
+    public static final int BOOL = 2;
     // numeric literals
-    public static final int APPROX_NUM = 4;
-    public static final int EXACT_NUM = 5;
-    public static final int INT_NUM = 6;
+    public static final int APPROX_NUM = 3;
+    public static final int EXACT_NUM = 4;
+    public static final int INT_NUM = 5;
     // string literal
-    public static final int STRING = 7;
+    public static final int STRING = 6;
     // typed string literal
-    public static final int TYPED_STRING = 8;
+    public static final int TYPED_STRING = 7;
 
     // Literal fields
     private final int code;
@@ -97,7 +96,7 @@ public class Literal extends AstEnum {
             case INT_NUM: return "INT_NUM";
             case STRING: return "STRING";
             case TYPED_STRING: return "TYPED_STRING";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid Literal code: " + code);
         }
     }
 

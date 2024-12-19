@@ -11,20 +11,15 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class JoinType extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int INNER = 1;
-    public static final int LEFT = 2;
-    public static final int LEFT_OUTER = 3;
-    public static final int RIGHT = 4;
-    public static final int RIGHT_OUTER = 5;
-    public static final int FULL = 6;
-    public static final int FULL_OUTER = 7;
-    public static final int CROSS = 8;
-    public static final int LEFT_CROSS = 9;
-
-    public static JoinType UNKNOWN() {
-        return new JoinType(UNKNOWN);
-    }
+    public static final int INNER = 0;
+    public static final int LEFT = 1;
+    public static final int LEFT_OUTER = 2;
+    public static final int RIGHT = 3;
+    public static final int RIGHT_OUTER = 4;
+    public static final int FULL = 5;
+    public static final int FULL_OUTER = 6;
+    public static final int CROSS = 7;
+    public static final int LEFT_CROSS = 8;
 
     public static JoinType INNER() {
         return new JoinType(INNER);
@@ -86,7 +81,7 @@ public class JoinType extends AstEnum {
             case FULL_OUTER: return "FULL_OUTER";
             case CROSS: return "CROSS";
             case LEFT_CROSS: return "LEFT_CROSS";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid JoinType code: " + code);
         }
     }
 
@@ -115,7 +110,7 @@ public class JoinType extends AstEnum {
             case "FULL_OUTER": return FULL_OUTER();
             case "CROSS": return CROSS();
             case "LEFT_CROSS": return LEFT_CROSS();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant JoinType." + value);
         }
     }
 

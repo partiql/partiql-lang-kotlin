@@ -13,10 +13,9 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class TruthValue extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int TRUE = 1;
-    public static final int FALSE = 2;
-    public static final int UNK = 3;
+    public static final int TRUE = 0;
+    public static final int FALSE = 1;
+    public static final int UNK = 2;
 
     private final int code;
 
@@ -24,10 +23,6 @@ public class TruthValue extends AstEnum {
         this.code = code;
     }
 
-    public static TruthValue UNKNOWN() {
-        return new TruthValue(UNKNOWN);
-    }
-    
     public static TruthValue TRUE() {
         return new TruthValue(TRUE);
     }
@@ -48,7 +43,22 @@ public class TruthValue extends AstEnum {
     @NotNull
     @Override
     public String name() {
-        return "";
+        switch (code) {
+            case TRUE: return "TRUE";
+            case FALSE: return "FALSE";
+            case UNK: return "UNK";
+            default: throw new IllegalStateException("Invalid TruthValue code: " + code);
+        }
+    }
+
+    @NotNull
+    public static TruthValue parse(@NotNull String value) {
+        switch (value) {
+            case "TRUE": return TruthValue.TRUE();
+            case "FALSE": return TruthValue.FALSE();
+            case "UNK": return TruthValue.UNK();
+            default: throw new IllegalArgumentException("No enum constant TruthValue." + value);
+        }
     }
 
     @NotNull

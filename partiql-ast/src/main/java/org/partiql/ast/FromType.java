@@ -11,13 +11,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class FromType extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int SCAN = 1;
-    public static final int UNPIVOT = 2;
-
-    public static FromType UNKNOWN() {
-        return new FromType(UNKNOWN);
-    }
+    public static final int SCAN = 0;
+    public static final int UNPIVOT = 1;
 
     public static FromType SCAN() {
         return new FromType(SCAN);
@@ -44,7 +39,7 @@ public class FromType extends AstEnum {
         switch (code) {
             case SCAN: return "SCAN";
             case UNPIVOT: return "UNPIVOT";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid FromType code: " + code);
         }
     }
 
@@ -59,7 +54,7 @@ public class FromType extends AstEnum {
         switch (value) {
             case "SCAN": return SCAN();
             case "UNPIVOT": return UNPIVOT();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant FromType." + value);
         }
     }
 

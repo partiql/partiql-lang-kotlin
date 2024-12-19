@@ -14,13 +14,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class WindowFunction extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int LAG = 1;
-    public static final int LEAD = 2;
-
-    public static WindowFunction UNKNOWN() {
-        return new WindowFunction(UNKNOWN);
-    }
+    public static final int LAG = 0;
+    public static final int LEAD = 1;
 
     public static WindowFunction LAG() {
         return new WindowFunction(LAG);
@@ -47,7 +42,7 @@ public class WindowFunction extends AstEnum {
         switch (code) {
             case LAG: return "LAG";
             case LEAD: return "LEAD";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid WindowFunction code: " + code);
         }
     }
 
@@ -62,7 +57,7 @@ public class WindowFunction extends AstEnum {
         switch (value) {
             case "LAG": return LAG();
             case "LEAD": return LEAD();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant WindowFunction." + value);
         }
     }
 

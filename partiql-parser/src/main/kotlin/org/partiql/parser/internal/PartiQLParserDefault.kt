@@ -623,7 +623,6 @@ internal class PartiQLParserDefault : PartiQLParser {
         // The following types are not supported in DDL yet,
         //  either as a top level type or as a element/field type in complex type declaration
         private fun isValidTypeDeclarationOrThrow(type: DataType, ctx: GeneratedParser.TypeContext) = when (type.code()) {
-            DataType.UNKNOWN,
             DataType.BAG,
             DataType.USER_DEFINED -> throw error(ctx, "declaration attribute with $type is not supported")
             else -> Unit

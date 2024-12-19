@@ -8,13 +8,8 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
 public class Order extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int ASC = 1;
-    public static final int DESC = 2;
-
-    public static Order UNKNOWN() {
-        return new Order(UNKNOWN);
-    }
+    public static final int ASC = 0;
+    public static final int DESC = 1;
 
     public static Order ASC() {
         return new Order(ASC);
@@ -41,7 +36,7 @@ public class Order extends AstEnum {
         switch (code) {
             case ASC: return "ASC";
             case DESC: return "DESC";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid Order code: " + code);
         }
     }
 
@@ -56,7 +51,7 @@ public class Order extends AstEnum {
         switch (value) {
             case "ASC": return ASC();
             case "DESC": return DESC();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant Order." + value);
         }
     }
 

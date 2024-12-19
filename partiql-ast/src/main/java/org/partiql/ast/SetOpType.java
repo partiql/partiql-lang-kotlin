@@ -11,14 +11,9 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class SetOpType extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int UNION = 1;
-    public static final int INTERSECT = 2;
-    public static final int EXCEPT = 3;
-
-    public static SetOpType UNKNOWN() {
-        return new SetOpType(UNKNOWN);
-    }
+    public static final int UNION = 0;
+    public static final int INTERSECT = 1;
+    public static final int EXCEPT = 2;
 
     public static SetOpType UNION() {
         return new SetOpType(UNION);
@@ -50,7 +45,7 @@ public class SetOpType extends AstEnum {
             case UNION: return "UNION";
             case INTERSECT: return "INTERSECT";
             case EXCEPT: return "EXCEPT";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid SetOpType code: " + code);
         }
     }
 
@@ -67,7 +62,7 @@ public class SetOpType extends AstEnum {
             case "UNION": return UNION();
             case "INTERSECT": return INTERSECT();
             case "EXCEPT": return EXCEPT();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant SetOpType." + value);
         }
     }
 
