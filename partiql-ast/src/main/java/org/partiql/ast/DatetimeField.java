@@ -11,19 +11,14 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class DatetimeField extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int YEAR = 1;
-    public static final int MONTH = 2;
-    public static final int DAY = 3;
-    public static final int HOUR = 4;
-    public static final int MINUTE = 5;
-    public static final int SECOND = 6;
-    public static final int TIMEZONE_HOUR = 7;
-    public static final int TIMEZONE_MINUTE = 8;
-
-    public static DatetimeField UNKNOWN() {
-        return new DatetimeField(UNKNOWN);
-    }
+    public static final int YEAR = 0;
+    public static final int MONTH = 1;
+    public static final int DAY = 2;
+    public static final int HOUR = 3;
+    public static final int MINUTE = 4;
+    public static final int SECOND = 5;
+    public static final int TIMEZONE_HOUR = 6;
+    public static final int TIMEZONE_MINUTE = 7;
 
     public static DatetimeField YEAR() {
         return new DatetimeField(YEAR);
@@ -80,7 +75,7 @@ public class DatetimeField extends AstEnum {
             case SECOND: return "SECOND";
             case TIMEZONE_HOUR: return "TIMEZONE_HOUR";
             case TIMEZONE_MINUTE: return "TIMEZONE_MINUTE";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid DatetimeField code: " + code);
         }
     }
 
@@ -107,7 +102,7 @@ public class DatetimeField extends AstEnum {
             case "SECOND": return SECOND();
             case "TIMEZONE_HOUR": return TIMEZONE_HOUR();
             case "TIMEZONE_MINUTE": return TIMEZONE_MINUTE();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant DatetimeField." + value);
         }
     }
 

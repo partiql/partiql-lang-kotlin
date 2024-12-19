@@ -11,14 +11,9 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
 public class TrimSpec extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int LEADING = 1;
-    public static final int TRAILING = 2;
-    public static final int BOTH = 3;
-
-    public static TrimSpec UNKNOWN() {
-        return new TrimSpec(UNKNOWN);
-    }
+    public static final int LEADING = 0;
+    public static final int TRAILING = 1;
+    public static final int BOTH = 2;
 
     public static TrimSpec LEADING() {
         return new TrimSpec(LEADING);
@@ -50,7 +45,7 @@ public class TrimSpec extends AstEnum {
             case LEADING: return "LEADING";
             case TRAILING: return "TRAILING";
             case BOTH: return "BOTH";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid TrimSpec code: " + code);
         }
     }
 
@@ -67,7 +62,7 @@ public class TrimSpec extends AstEnum {
             case "LEADING": return LEADING();
             case "TRAILING": return TRAILING();
             case "BOTH": return BOTH();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant TrimSpec." + value);
         }
     }
 

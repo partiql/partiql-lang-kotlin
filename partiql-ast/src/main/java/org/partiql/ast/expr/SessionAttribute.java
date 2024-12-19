@@ -14,13 +14,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class SessionAttribute extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int CURRENT_USER = 1;
-    public static final int CURRENT_DATE = 2;
-
-    public static SessionAttribute UNKNOWN() {
-        return new SessionAttribute(UNKNOWN);
-    }
+    public static final int CURRENT_USER = 0;
+    public static final int CURRENT_DATE = 1;
 
     public static SessionAttribute CURRENT_USER() {
         return new SessionAttribute(CURRENT_USER);
@@ -47,7 +42,7 @@ public class SessionAttribute extends AstEnum {
         switch (code) {
             case CURRENT_USER: return "CURRENT_USER";
             case CURRENT_DATE: return "CURRENT_DATE";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid SessionAttribute code: " + code);
         }
     }
 
@@ -62,7 +57,7 @@ public class SessionAttribute extends AstEnum {
         switch (value) {
             case "CURRENT_USER": return CURRENT_USER();
             case "CURRENT_DATE": return CURRENT_DATE();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant SessionAttribute." + value);
         }
     }
 

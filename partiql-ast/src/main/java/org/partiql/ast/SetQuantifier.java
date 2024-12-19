@@ -11,13 +11,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class SetQuantifier extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int ALL = 1;
-    public static final int DISTINCT = 2;
-
-    public static SetQuantifier UNKNOWN() {
-        return new SetQuantifier(UNKNOWN);
-    }
+    public static final int ALL = 0;
+    public static final int DISTINCT = 1;
 
     public static SetQuantifier ALL() {
         return new SetQuantifier(ALL);
@@ -44,7 +39,7 @@ public class SetQuantifier extends AstEnum {
         switch (code) {
             case ALL: return "ALL";
             case DISTINCT: return "DISTINCT";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid SetQuantifier code: " + code);
         }
     }
 
@@ -59,7 +54,7 @@ public class SetQuantifier extends AstEnum {
         switch (value) {
             case "ALL": return ALL();
             case "DISTINCT": return DISTINCT();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant SetQuantifier." + value);
         }
     }
 

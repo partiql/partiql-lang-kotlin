@@ -11,13 +11,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class Nulls extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int FIRST = 1;
-    public static final int LAST = 2;
-
-    public static Nulls UNKNOWN() {
-        return new Nulls(UNKNOWN);
-    }
+    public static final int FIRST = 0;
+    public static final int LAST = 1;
 
     public static Nulls FIRST() {
         return new Nulls(FIRST);
@@ -44,7 +39,7 @@ public class Nulls extends AstEnum {
         switch (code) {
             case FIRST: return "FIRST";
             case LAST: return "LAST";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid Nulls code: " + code);
         }
     }
 
@@ -57,10 +52,9 @@ public class Nulls extends AstEnum {
     @NotNull
     public static Nulls parse(@NotNull String value) {
         switch (value) {
-            case "UNKNOWN": return UNKNOWN();
             case "FIRST": return FIRST();
             case "LAST": return LAST();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant Nulls." + value);
         }
     }
 

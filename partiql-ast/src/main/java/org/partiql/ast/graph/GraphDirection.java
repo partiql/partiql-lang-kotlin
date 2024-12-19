@@ -14,18 +14,13 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class GraphDirection extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int LEFT = 1;
-    public static final int UNDIRECTED = 2;
-    public static final int RIGHT = 3;
-    public static final int LEFT_OR_UNDIRECTED = 4;
-    public static final int UNDIRECTED_OR_RIGHT = 5;
-    public static final int LEFT_OR_RIGHT = 6;
-    public static final int LEFT_UNDIRECTED_OR_RIGHT = 7;
-
-    public static GraphDirection UNKNOWN() {
-        return new GraphDirection(UNKNOWN);
-    }
+    public static final int LEFT = 0;
+    public static final int UNDIRECTED = 1;
+    public static final int RIGHT = 2;
+    public static final int LEFT_OR_UNDIRECTED = 3;
+    public static final int UNDIRECTED_OR_RIGHT = 4;
+    public static final int LEFT_OR_RIGHT = 5;
+    public static final int LEFT_UNDIRECTED_OR_RIGHT = 6;
 
     public static GraphDirection LEFT() {
         return new GraphDirection(LEFT);
@@ -88,7 +83,7 @@ public class GraphDirection extends AstEnum {
             case UNDIRECTED_OR_RIGHT: return "UNDIRECTED_OR_RIGHT";
             case LEFT_OR_RIGHT: return "LEFT_OR_RIGHT";
             case LEFT_UNDIRECTED_OR_RIGHT: return "LEFT_UNDIRECTED_OR_RIGHT";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid GraphDirection code: " + code);
         }
     }
 
@@ -102,7 +97,7 @@ public class GraphDirection extends AstEnum {
             case "UNDIRECTED_OR_RIGHT": return UNDIRECTED_OR_RIGHT();
             case "LEFT_OR_RIGHT": return LEFT_OR_RIGHT();
             case "LEFT_UNDIRECTED_OR_RIGHT": return LEFT_UNDIRECTED_OR_RIGHT();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant GraphDirection." + value);
         }
     }
 

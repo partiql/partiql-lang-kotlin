@@ -68,68 +68,63 @@ public class DataType extends AstEnum {
         }
     }
 
-    public static final int UNKNOWN = 0;
     // <character string type>
-    public static final int CHARACTER = 1;
-    public static final int CHAR = 2;
-    public static final int CHARACTER_VARYING = 3;
-    public static final int CHAR_VARYING = 4; // TODO not defined in parser yet
-    public static final int VARCHAR = 5;
-    public static final int CHARACTER_LARGE_OBJECT = 6; // TODO not defined in parser yet
-    public static final int CHAR_LARGE_OBJECT = 7; // TODO not defined in parser yet
-    public static final int CLOB = 8;
-    public static final int STRING = 9;
-    public static final int SYMBOL = 10;
+    public static final int CHARACTER = 0;
+    public static final int CHAR = 1;
+    public static final int CHARACTER_VARYING = 2;
+    public static final int CHAR_VARYING = 3; // TODO not defined in parser yet
+    public static final int VARCHAR = 4;
+    public static final int CHARACTER_LARGE_OBJECT = 5; // TODO not defined in parser yet
+    public static final int CHAR_LARGE_OBJECT = 6; // TODO not defined in parser yet
+    public static final int CLOB = 7;
+    public static final int STRING = 8;
+    public static final int SYMBOL = 9;
     // <binary large object string type>
-    public static final int BLOB = 11;
-    public static final int BINARY_LARGE_OBJECT = 12; // TODO not defined in parser yet
+    public static final int BLOB = 10;
+    public static final int BINARY_LARGE_OBJECT = 11; // TODO not defined in parser yet
     // <bit string type>
-    public static final int BIT = 13; // TODO not defined in parser yet
-    public static final int BIT_VARYING = 14; // TODO not defined in parser yet
+    public static final int BIT = 12; // TODO not defined in parser yet
+    public static final int BIT_VARYING = 13; // TODO not defined in parser yet
     // <numeric type> - <exact numeric type>
-    public static final int NUMERIC = 15;
-    public static final int DECIMAL = 16;
-    public static final int DEC = 17;
-    public static final int BIGINT = 18;
-    public static final int INT8 = 19;
-    public static final int INTEGER8 = 20;
-    public static final int INT4 = 21;
-    public static final int INTEGER4 = 22;
-    public static final int INTEGER = 23;
-    public static final int INT = 24;
-    public static final int INT2 = 25;
-    public static final int INTEGER2 = 26;
-    public static final int SMALLINT = 27;
-    public static final int TINYINT = 28; // TODO not defined in parser yet
+    public static final int NUMERIC = 14;
+    public static final int DECIMAL = 15;
+    public static final int DEC = 16;
+    public static final int BIGINT = 17;
+    public static final int INT8 = 18;
+    public static final int INTEGER8 = 19;
+    public static final int INT4 = 20;
+    public static final int INTEGER4 = 21;
+    public static final int INTEGER = 22;
+    public static final int INT = 23;
+    public static final int INT2 = 24;
+    public static final int INTEGER2 = 25;
+    public static final int SMALLINT = 26;
+    public static final int TINYINT = 27; // TODO not defined in parser yet
     // <numeric type> - <approximate numeric type>
-    public static final int FLOAT = 29;
-    public static final int REAL = 30;
-    public static final int DOUBLE_PRECISION = 31;
+    public static final int FLOAT = 28;
+    public static final int REAL = 29;
+    public static final int DOUBLE_PRECISION = 30;
     // <boolean type>
-    public static final int BOOLEAN = 32;
-    public static final int BOOL = 33;
+    public static final int BOOLEAN = 31;
+    public static final int BOOL = 32;
     // <datetime type>
-    public static final int DATE = 34;
-    public static final int TIME = 35;
-    public static final int TIME_WITH_TIME_ZONE = 36;
-    public static final int TIMESTAMP = 37;
-    public static final int TIMESTAMP_WITH_TIME_ZONE = 38;
+    public static final int DATE = 33;
+    public static final int TIME = 34;
+    public static final int TIME_WITH_TIME_ZONE = 35;
+    public static final int TIMESTAMP = 36;
+    public static final int TIMESTAMP_WITH_TIME_ZONE = 37;
     // <interval type>
-    public static final int INTERVAL = 39; // TODO not defined in parser yet
+    public static final int INTERVAL = 38; // TODO not defined in parser yet
     // <container type>
-    public static final int STRUCT = 40;
-    public static final int TUPLE = 41;
+    public static final int STRUCT = 39;
+    public static final int TUPLE = 40;
     // <collection type>
-    public static final int LIST = 42;
-    public static final int ARRAY = 43;
-    public static final int BAG = 44;
-    public static final int SEXP = 45;
+    public static final int LIST = 41;
+    public static final int ARRAY = 42;
+    public static final int BAG = 43;
+    public static final int SEXP = 44;
     // <user defined type>
-    public static final int USER_DEFINED = 46;
-
-    public static DataType UNKNOWN() {
-        return new DataType(UNKNOWN);
-    }
+    public static final int USER_DEFINED = 45;
 
     public static DataType BOOL() {
         return new DataType(BOOL);
@@ -541,7 +536,7 @@ public class DataType extends AstEnum {
             case BAG: return "BAG";
             case SEXP: return "SEXP";
             case USER_DEFINED: return "USER_DEFINED";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid DataType code: " + code);
         }
     }
 
@@ -643,7 +638,7 @@ public class DataType extends AstEnum {
             case "TIMESTAMP_WITH_TIME_ZONE": return TIMESTAMP_WITH_TIME_ZONE();
             case "INTERVAL": return INTERVAL();
             case "USER_DEFINED": return USER_DEFINED();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant DataType." + value);
         }
     }
 
