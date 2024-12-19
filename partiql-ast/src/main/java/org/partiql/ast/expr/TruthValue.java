@@ -15,7 +15,7 @@ import java.util.List;
 public class TruthValue extends AstEnum {
     public static final int TRUE = 0;
     public static final int FALSE = 1;
-    public static final int UNK = 2;
+    public static final int UNKNOWN = 2;
 
     private final int code;
 
@@ -31,8 +31,8 @@ public class TruthValue extends AstEnum {
         return new TruthValue(FALSE);
     }
     
-    public static TruthValue UNK() {
-        return new TruthValue(UNK);
+    public static TruthValue UNKNOWN() {
+        return new TruthValue(UNKNOWN);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class TruthValue extends AstEnum {
         switch (code) {
             case TRUE: return "TRUE";
             case FALSE: return "FALSE";
-            case UNK: return "UNK";
+            case UNKNOWN: return "UNKNOWN";
             default: throw new IllegalStateException("Invalid TruthValue code: " + code);
         }
     }
@@ -56,7 +56,7 @@ public class TruthValue extends AstEnum {
         switch (value) {
             case "TRUE": return TruthValue.TRUE();
             case "FALSE": return TruthValue.FALSE();
-            case "UNK": return TruthValue.UNK();
+            case "UNK": return TruthValue.UNKNOWN();
             default: throw new IllegalArgumentException("No enum constant TruthValue." + value);
         }
     }

@@ -2816,11 +2816,11 @@ public class org/partiql/ast/expr/TrimSpec : org/partiql/ast/AstEnum {
 public class org/partiql/ast/expr/TruthValue : org/partiql/ast/AstEnum {
 	public static final field FALSE I
 	public static final field TRUE I
-	public static final field UNK I
+	public static final field UNKNOWN I
 	public fun <init> (I)V
 	public static fun FALSE ()Lorg/partiql/ast/expr/TruthValue;
 	public static fun TRUE ()Lorg/partiql/ast/expr/TruthValue;
-	public static fun UNK ()Lorg/partiql/ast/expr/TruthValue;
+	public static fun UNKNOWN ()Lorg/partiql/ast/expr/TruthValue;
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun code ()I

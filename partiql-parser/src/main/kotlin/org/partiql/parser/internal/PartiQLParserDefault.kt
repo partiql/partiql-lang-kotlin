@@ -1408,7 +1408,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             when (ctx.truthValue.type) {
                 GeneratedParser.TRUE -> exprBoolTest(expr, not, TruthValue.TRUE())
                 GeneratedParser.FALSE -> exprBoolTest(expr, not, TruthValue.FALSE())
-                GeneratedParser.UNKNOWN -> exprBoolTest(expr, not, TruthValue.UNK())
+                GeneratedParser.UNKNOWN -> exprBoolTest(expr, not, TruthValue.UNKNOWN())
                 else -> throw error(ctx, "Unexpected value for boolean test IS [NOT] TRUE|FALSE|UNKNOWN")
             }
         }
