@@ -26,7 +26,7 @@ import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.value.Datum
-import org.partiql.spi.value.DatumUtils
+import org.partiql.spi.value.ValueUtils
 import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.io.DatumIonReaderBuilder
@@ -93,13 +93,13 @@ class EvalExecutor(
     }
 
     override fun toIon(value: Datum): IonValue {
-        val partiql = DatumUtils.toPartiQLValue(value)
+        val partiql = ValueUtils.newPartiQLValue(value)
         return partiql.toIon().toIonValue(ION)
     }
 
     // TODO: Use DATUM
     override fun compare(actual: Datum, expect: Datum): Boolean {
-        return valueComparison(DatumUtils.toPartiQLValue(actual), DatumUtils.toPartiQLValue(expect))
+        return valueComparison(ValueUtils.newPartiQLValue(actual), ValueUtils.newPartiQLValue(expect))
     }
 
     // Value comparison of PartiQL Value that utilized Ion Hashcode.

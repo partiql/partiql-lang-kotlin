@@ -4,6 +4,7 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
+import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
@@ -45,14 +46,7 @@ internal class ExprCallDynamic(
     private val candidates: MutableMap<List<PType>, Candidate> = mutableMapOf()
 
     override fun eval(env: Environment): Datum {
-        val actualArgs = args.map {
-            val arg = it.eval(env)
-            if (arg.type.code() == PType.VARIANT) {
-                arg.lower()
-            } else {
-                arg
-            }
-        }.toTypedArray()
+        val actualArgs = args.map { it.eval(env).lowerSafe() }.toTypedArray()
         val actualTypes = actualArgs.map { it.type }
         var candidate = candidates[actualTypes]
         if (candidate == null) {

@@ -12,7 +12,7 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
-import org.partiql.spi.value.DatumUtils
+import org.partiql.spi.value.ValueUtils
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
 import org.partiql.value.PartiQLValue
@@ -31,7 +31,7 @@ public class SuccessTestCase(
         expected: PartiQLValue,
         mode: Mode = Mode.PERMISSIVE(),
         globals: List<Global> = emptyList(),
-    ) : this(input, DatumUtils.toDatum(expected), mode, globals)
+    ) : this(input, ValueUtils.newDatum(expected), mode, globals)
 
     private val compiler = PartiQLCompiler.standard()
     private val parser = PartiQLParser.standard()

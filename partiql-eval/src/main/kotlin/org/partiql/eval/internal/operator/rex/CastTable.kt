@@ -71,9 +71,6 @@ internal object CastTable {
         if (target.code() == DYNAMIC) {
             return source
         }
-        if (source.type.code() == VARIANT) {
-            return cast(source.lower(), target)
-        }
         val cast = _table[source.type.code()][target.code()]
             ?: throw TypeCheckException("CAST(${source.type} AS $target) is not supported.")
         return try {
@@ -109,6 +106,7 @@ internal object CastTable {
         registerTimestamp()
         registerDate()
         registerTime()
+        registerVariant()
     }
 
     private fun String.pad(): String {
@@ -495,6 +493,13 @@ internal object CastTable {
         register(TIMEZ, TIME) { x, _ -> Datum.time(x.time) }
         register(TIMEZ, TIMESTAMP) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
         register(TIMEZ, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
+    }
+
+    private fun registerVariant() {
+        PType.codes().forEach { pType ->
+            register(VARIANT, pType) { x, t -> cast(x.lower(), t) }
+        }
+        register(VARIANT, VARIANT) { x, _ -> x }
     }
 
     private fun register(source: Int, target: Int, cast: (Datum, PType) -> Datum) {

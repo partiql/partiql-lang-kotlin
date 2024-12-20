@@ -10,7 +10,6 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.Encoding
 import org.partiql.spi.value.Field
-import org.partiql.types.PType
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import java.io.IOException
 import java.io.InputStream
@@ -67,64 +66,36 @@ internal class IonDatumReader internal constructor(
     /**
      * Read without any explicit PartiQL type information.
      */
-    private fun read(): Datum {
-        if (reader.isNullValue) {
-            return Datum.nullValue(reader.type.toPTypeDefault())
-        }
-        return when (reader.type) {
-            IonType.NULL -> Datum.nullValue()
-            IonType.BOOL -> bool()
-            IonType.INT -> bigint()
-            IonType.FLOAT -> double()
-            IonType.DECIMAL -> decimal0()
-            IonType.TIMESTAMP -> TODO("timestamp without annotation")
-            IonType.STRING -> varchar0()
-            IonType.CLOB -> clob0()
-            IonType.BLOB -> clob0()
-            IonType.LIST -> array()
-            IonType.STRUCT -> struct()
-            IonType.SYMBOL -> missing()
-            IonType.SEXP -> {
-                reader.stepIn()
-                if (reader.next() == null) {
-                    throw IonDatumException("expected type, was null", null, span())
-                }
-                val method = method()
-                if (reader.next() == null) {
-                    throw IonDatumException("expected value, was null", null, span())
-                }
-                val value = method()
-                if (reader.next() != null) {
-                    throw IonDatumException("expected end of s-expression pair", null, span())
-                }
-                reader.stepOut()
-                value
+    private fun read(): Datum = when (reader.type) {
+        IonType.NULL -> Datum.nullValue()
+        IonType.BOOL -> bool()
+        IonType.INT -> bigint()
+        IonType.FLOAT -> double()
+        IonType.DECIMAL -> decimal0()
+        IonType.TIMESTAMP -> TODO("timestamp without annotation")
+        IonType.STRING -> varchar0()
+        IonType.CLOB -> clob0()
+        IonType.BLOB -> clob0()
+        IonType.LIST -> array()
+        IonType.STRUCT -> struct()
+        IonType.SYMBOL -> missing()
+        IonType.SEXP -> {
+            reader.stepIn()
+            if (reader.next() == null) {
+                throw IonDatumException("expected type, was null", null, span())
             }
-            else -> throw IonDatumException("unknown type", null, span())
+            val method = method()
+            if (reader.next() == null) {
+                throw IonDatumException("expected value, was null", null, span())
+            }
+            val value = method()
+            if (reader.next() != null) {
+                throw IonDatumException("expected end of s-expression pair", null, span())
+            }
+            reader.stepOut()
+            value
         }
-    }
-
-    /**
-     * Returns the default [PType] for the given [IonType].
-     */
-    private fun IonType.toPTypeDefault(): PType {
-        val code = when (this) {
-            IonType.NULL -> PType.UNKNOWN
-            IonType.BOOL -> PType.BOOL
-            IonType.INT -> PType.BIGINT
-            IonType.FLOAT -> PType.DOUBLE
-            IonType.DECIMAL -> PType.DECIMAL
-            IonType.TIMESTAMP -> PType.TIMESTAMP
-            IonType.STRING -> PType.STRING
-            IonType.CLOB -> PType.CLOB
-            IonType.BLOB -> PType.BLOB
-            IonType.LIST -> PType.ARRAY
-            IonType.STRUCT -> PType.STRUCT
-            IonType.SYMBOL -> PType.STRING
-            IonType.SEXP -> PType.ARRAY
-            else -> throw IonDatumException("Unknown type", null, span())
-        }
-        return PType.of(code)
+        else -> throw IonDatumException("unknown type", null, span())
     }
 
     /**

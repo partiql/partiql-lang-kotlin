@@ -64,8 +64,14 @@ internal class IonVariant(private var value: AnyElement) : Datum {
             TIMESTAMP -> Datum.timestamp(DateTimeValue.timestamp(value.timestampValue))
             INT -> {
                 val bigInteger = value.bigIntegerValue
-                Datum.bigint(bigInteger.longValueExact())
-                // Datum.decimal(value.bigIntegerValue.toBigDecimal(), 38, 0)
+                when {
+                    bigInteger < Int.MAX_VALUE.toBigInteger() && bigInteger > Int.MIN_VALUE.toBigInteger() -> Datum.integer(bigInteger.toInt())
+                    bigInteger < Long.MAX_VALUE.toBigInteger() && bigInteger > Long.MIN_VALUE.toBigInteger() -> Datum.bigint(bigInteger.toLong())
+                    else -> {
+                        val dec = bigInteger.toBigDecimal()
+                        Datum.decimal(dec, dec.precision(), 0)
+                    }
+                }
             }
             FLOAT -> Datum.doublePrecision(value.doubleValue)
             DECIMAL -> {
@@ -79,6 +85,9 @@ internal class IonVariant(private var value: AnyElement) : Datum {
         }
     }
 
+    /**
+     * This returns the [PType] of a null Ion value, given its [ElementType].
+     */
     private fun ElementType.toPType(): PType {
         val code = when (this) {
             SYMBOL, STRING -> PType.STRING
@@ -86,7 +95,7 @@ internal class IonVariant(private var value: AnyElement) : Datum {
             CLOB -> PType.CLOB
             BLOB -> PType.BLOB
             TIMESTAMP -> PType.TIMESTAMP
-            INT -> PType.DECIMAL
+            INT -> PType.INTEGER
             FLOAT -> PType.DOUBLE
             DECIMAL -> PType.DECIMAL
             LIST, SEXP -> PType.ARRAY

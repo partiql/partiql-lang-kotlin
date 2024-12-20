@@ -5,6 +5,7 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
+import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -16,14 +17,9 @@ internal class RelOpIterate(
     private var index: Long = 0
 
     override fun open(env: Environment) {
-        val r = expr.eval(env.push(Row()))
+        val r = expr.eval(env.push(Row())).lowerSafe()
         index = 0
-        iterator = records(r)
-    }
-
-    private fun records(r: Datum): Iterator<Datum> {
-        return when (r.type.code()) {
-            PType.VARIANT -> records(r.lower())
+        iterator = when (r.type.code()) {
             PType.BAG -> {
                 close()
                 throw TypeCheckException()

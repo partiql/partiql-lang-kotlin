@@ -45,12 +45,16 @@ public abstract class org/partiql/types/PType : org/partiql/types/Enum {
 	public static fun bag ()Lorg/partiql/types/PType;
 	public static fun bag (Lorg/partiql/types/PType;)Lorg/partiql/types/PType;
 	public static fun bigint ()Lorg/partiql/types/PType;
+	public static fun blob ()Lorg/partiql/types/PType;
 	public static fun blob (I)Lorg/partiql/types/PType;
 	public static fun bool ()Lorg/partiql/types/PType;
+	public static fun character ()Lorg/partiql/types/PType;
 	public static fun character (I)Lorg/partiql/types/PType;
+	public static fun clob ()Lorg/partiql/types/PType;
 	public static fun clob (I)Lorg/partiql/types/PType;
 	public static fun codes ()[I
 	public static fun date ()Lorg/partiql/types/PType;
+	public static fun decimal ()Lorg/partiql/types/PType;
 	public static fun decimal (II)Lorg/partiql/types/PType;
 	public static fun doublePrecision ()Lorg/partiql/types/PType;
 	public static fun dynamic ()Lorg/partiql/types/PType;
@@ -61,6 +65,7 @@ public abstract class org/partiql/types/PType : org/partiql/types/Enum {
 	public fun getTypeParameter ()Lorg/partiql/types/PType;
 	public static fun integer ()Lorg/partiql/types/PType;
 	public fun name ()Ljava/lang/String;
+	public static fun numeric ()Lorg/partiql/types/PType;
 	public static fun numeric (II)Lorg/partiql/types/PType;
 	public static fun of (I)Lorg/partiql/types/PType;
 	public static fun real ()Lorg/partiql/types/PType;
@@ -69,12 +74,17 @@ public abstract class org/partiql/types/PType : org/partiql/types/Enum {
 	public static fun smallint ()Lorg/partiql/types/PType;
 	public static fun string ()Lorg/partiql/types/PType;
 	public static fun struct ()Lorg/partiql/types/PType;
+	public static fun time ()Lorg/partiql/types/PType;
 	public static fun time (I)Lorg/partiql/types/PType;
+	public static fun timestamp ()Lorg/partiql/types/PType;
 	public static fun timestamp (I)Lorg/partiql/types/PType;
+	public static fun timestampz ()Lorg/partiql/types/PType;
 	public static fun timestampz (I)Lorg/partiql/types/PType;
+	public static fun timez ()Lorg/partiql/types/PType;
 	public static fun timez (I)Lorg/partiql/types/PType;
 	public static fun tinyint ()Lorg/partiql/types/PType;
 	public static fun unknown ()Lorg/partiql/types/PType;
+	public static fun varchar ()Lorg/partiql/types/PType;
 	public static fun varchar (I)Lorg/partiql/types/PType;
 	public static fun variant (Ljava/lang/String;)Lorg/partiql/types/PType;
 }

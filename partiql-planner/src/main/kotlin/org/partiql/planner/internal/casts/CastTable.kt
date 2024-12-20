@@ -63,6 +63,7 @@ internal class CastTable private constructor(
                     cast(it)
                 }
             }
+            // A VARIANT can be cast to all other types.
             graph[PType.VARIANT] = relationships {
                 PType.codes().map {
                     cast(it)

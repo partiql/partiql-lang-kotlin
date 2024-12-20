@@ -31,7 +31,7 @@ class PartiQLToPQLIterable implements Iterable<Datum> {
         @Override
         public Datum next() {
             PartiQLValue value = _value.next();
-            return DatumUtils.toDatum(value);
+            return ValueUtils.newDatum(value);
         }
     }
 }

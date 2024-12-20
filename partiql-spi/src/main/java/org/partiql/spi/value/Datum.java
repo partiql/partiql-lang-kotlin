@@ -203,7 +203,7 @@ public interface Datum extends Iterable<Datum> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     default int getInt() {
-        throw new UnsupportedOperationException("Has type: " + getType() + " and class " + this.getClass().getName());
+        throw new UnsupportedOperationException();
     }
 
     /**

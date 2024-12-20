@@ -42,7 +42,7 @@ class PartiQLToPQLStruct implements Iterable<Field> {
                 @NotNull
                 @Override
                 public Datum getValue() {
-                    return DatumUtils.toDatum(value.getSecond());
+                    return ValueUtils.newDatum(value.getSecond());
                 }
             };
         }

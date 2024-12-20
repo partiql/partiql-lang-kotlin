@@ -24,7 +24,7 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
-import org.partiql.spi.value.DatumUtils
+import org.partiql.spi.value.ValueUtils
 import org.partiql.spi.value.io.PartiQLValueTextWriter
 import picocli.CommandLine
 import java.io.File
@@ -205,7 +205,7 @@ internal class MainCommand : Runnable {
         // TODO add format support
         checkFormat(format)
         val writer = PartiQLValueTextWriter(System.out)
-        val p = DatumUtils.toPartiQLValue(result)
+        val p = ValueUtils.newPartiQLValue(result)
         writer.append(p) // TODO: Create a Datum writer
         println()
     }

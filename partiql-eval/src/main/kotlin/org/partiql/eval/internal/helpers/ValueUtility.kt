@@ -18,10 +18,11 @@ internal object ValueUtility {
         if (this.isNull || this.isMissing) {
             return false
         }
-        if (this.type.code() == PType.VARIANT) {
-            return this.lower().isTrue()
+        return when (this.type.code()) {
+            PType.VARIANT -> this.lower().isTrue()
+            PType.BOOL -> this.boolean
+            else -> false
         }
-        return this.type.code() == PType.BOOL && this.boolean
     }
 
     /**

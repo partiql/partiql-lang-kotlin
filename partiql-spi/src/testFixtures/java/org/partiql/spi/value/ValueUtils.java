@@ -35,14 +35,17 @@ import static org.partiql.types.PType.TINYINT;
 import static org.partiql.types.PType.UNKNOWN;
 import static org.partiql.types.PType.VARIANT;
 
-public class DatumUtils {
+/**
+ * This internal class contains utility methods pertaining to {@link PartiQLValue} and {@link Datum}.
+ */
+public class ValueUtils {
 
     /**
      * Converts a {@link Datum} into a {@link PartiQLValue}.
      * @return the equivalent {@link PartiQLValue}
      */
     @NotNull
-    public static PartiQLValue toPartiQLValue(@NotNull Datum datum) {
+    public static PartiQLValue newPartiQLValue(@NotNull Datum datum) {
         PType type = datum.getType();
         if (datum.isMissing()) {
             return PartiQL.missingValue();
@@ -97,7 +100,7 @@ public class DatumUtils {
                     return PartiQL.missingValue();
                 }
             case VARIANT:
-                return datum.isNull() ? PartiQL.nullValue() : toPartiQLValue(datum.lower());
+                return datum.isNull() ? PartiQL.nullValue() : newPartiQLValue(datum.lower());
             default:
                 throw new UnsupportedOperationException("Unsupported datum type: " + type);
         }
@@ -109,7 +112,7 @@ public class DatumUtils {
      * @return the equivalent {@link Datum}
      */
     @NotNull
-    public static Datum toDatum(PartiQLValue value) {
+    public static Datum newDatum(PartiQLValue value) {
         PartiQLValueType type = value.getType();
         if (value.isNull()) {
             return new DatumNull(type.toPType());
