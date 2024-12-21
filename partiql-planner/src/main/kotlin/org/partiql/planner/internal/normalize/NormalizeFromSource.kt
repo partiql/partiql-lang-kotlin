@@ -23,6 +23,7 @@ import org.partiql.ast.FromExpr
 import org.partiql.ast.FromJoin
 import org.partiql.ast.FromTableRef
 import org.partiql.ast.FromType
+import org.partiql.ast.Query
 import org.partiql.ast.QueryBody
 import org.partiql.ast.Statement
 import org.partiql.ast.expr.Expr
@@ -33,7 +34,10 @@ import org.partiql.planner.internal.helpers.toBinder
  */
 internal object NormalizeFromSource : AstPass {
 
-    override fun apply(statement: Statement): Statement = statement.accept(Visitor, 0) as Statement
+    override fun apply(statement: Statement): Statement = when (statement) {
+        is Query -> statement.accept(Visitor, 0) as Statement
+        else -> statement
+    }
 
     private object Visitor : AstRewriter<Int>() {
 

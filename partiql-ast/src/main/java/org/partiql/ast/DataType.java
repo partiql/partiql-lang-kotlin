@@ -34,7 +34,7 @@ public class DataType extends AstEnum {
 
         public final boolean isOptional;
 
-        @Nullable
+        @NotNull
         public final List<AttributeConstraint> constraints;
         @Nullable
         public final String comment;
@@ -43,7 +43,7 @@ public class DataType extends AstEnum {
                 @NotNull Identifier name,
                 @NotNull DataType type,
                 boolean isOptional,
-                @Nullable List<AttributeConstraint> constraints,
+                @NotNull List<AttributeConstraint> constraints,
                 @Nullable String comment) {
             this.name = name;
             this.type = type;

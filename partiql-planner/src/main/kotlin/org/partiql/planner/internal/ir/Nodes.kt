@@ -62,6 +62,12 @@ import org.partiql.planner.internal.ir.builder.RexOpTupleUnionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarLocalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
+import org.partiql.planner.internal.ir.builder.StatementDdlAttributeBuilder
+import org.partiql.planner.internal.ir.builder.StatementDdlBuilder
+import org.partiql.planner.internal.ir.builder.StatementDdlCommandCreateTableBuilder
+import org.partiql.planner.internal.ir.builder.StatementDdlConstraintCheckBuilder
+import org.partiql.planner.internal.ir.builder.StatementDdlPartitionByAttrListBuilder
+import org.partiql.planner.internal.ir.builder.StatementDdlTablePropertyBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.planner.internal.typer.CompilerType
@@ -73,6 +79,7 @@ import org.partiql.spi.function.Function
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import kotlin.random.Random
+import org.partiql.types.shape.PShape
 
 internal abstract class PlanNode {
     @JvmField
@@ -177,6 +184,7 @@ internal sealed class Ref : PlanNode() {
 internal sealed class Statement : PlanNode() {
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
         is Query -> visitor.visitStatementQuery(this, ctx)
+        is DDL -> visitor.visitStatementDDL(this, ctx)
     }
 
     internal data class Query(
@@ -193,6 +201,169 @@ internal sealed class Statement : PlanNode() {
         internal companion object {
             @JvmStatic
             internal fun builder(): StatementQueryBuilder = StatementQueryBuilder()
+        }
+    }
+
+    internal data class DDL(
+        @JvmField
+        internal val command: Command,
+    ) : Statement() {
+        override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(command)
+            kids.filterNotNull()
+        }
+
+
+        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitStatementDDL(this, ctx)
+
+        sealed class Command : PlanNode() {
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                is CreateTable -> visitor.visitStatementDDLCommandCreateTable(this, ctx)
+            }
+
+            internal data class CreateTable(
+                @JvmField
+                internal val name: Identifier,
+                @JvmField
+                internal val attributes: List<Attribute>,
+                @JvmField
+                internal val tblConstraints: List<Constraint>,
+                @JvmField
+                internal val partitionBy: PartitionBy?,
+                @JvmField
+                internal val tableProperties: List<TableProperty>,
+                @JvmField
+                internal val primaryKey: List<Identifier>,
+                @JvmField
+                internal val unique: List<Identifier>,
+            ) : Command() {
+                override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.addAll(attributes)
+                    kids.addAll(tblConstraints)
+                    partitionBy?.let { kids.add(it) }
+                    kids.addAll(tableProperties)
+                    kids.filterNotNull()
+                }
+
+
+                override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitStatementDDLCommandCreateTable(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): StatementDdlCommandCreateTableBuilder =
+                        StatementDdlCommandCreateTableBuilder()
+                }
+            }
+        }
+
+        internal data class Attribute(
+            @JvmField
+            internal val name: Identifier,
+            @JvmField
+            internal val type: PShape,
+            @JvmField
+            internal val isNullable: Boolean,
+            @JvmField
+            internal val isOptional: Boolean,
+            @JvmField
+            internal val isPrimaryKey: Boolean,
+            @JvmField
+            internal val isUnique: Boolean,
+            @JvmField
+            internal val constraints: List<Constraint>,
+            @JvmField
+            val comment: String?
+        ) : PlanNode() {
+            override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.addAll(constraints)
+                kids.filterNotNull()
+            }
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitStatementDDLAttribute(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): StatementDdlAttributeBuilder = StatementDdlAttributeBuilder()
+            }
+        }
+
+        internal sealed class Constraint : PlanNode() {
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                is Check -> visitor.visitStatementDDLConstraintCheck(this, ctx)
+            }
+
+            internal data class Check(
+                @JvmField
+                internal val expression: Rex,
+                @JvmField
+                val sql: String
+            ) : Constraint() {
+                override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(expression)
+                    kids.filterNotNull()
+                }
+
+
+                override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitStatementDDLConstraintCheck(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): StatementDdlConstraintCheckBuilder =
+                        StatementDdlConstraintCheckBuilder()
+                }
+            }
+        }
+
+        internal sealed class PartitionBy : PlanNode() {
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                is AttrList -> visitor.visitStatementDDLPartitionByAttrList(this, ctx)
+            }
+
+            internal data class AttrList(
+                @JvmField
+                internal val attrs: List<Identifier>,
+            ) : PartitionBy() {
+                override val children: List<PlanNode> = emptyList()
+
+                override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitStatementDDLPartitionByAttrList(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): StatementDdlPartitionByAttrListBuilder =
+                        StatementDdlPartitionByAttrListBuilder()
+                }
+            }
+        }
+
+        internal data class TableProperty(
+            @JvmField
+            internal val name: String,
+            @JvmField
+            internal val `value`: String,
+        ) : PlanNode() {
+            override val children: List<PlanNode> = emptyList()
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitStatementDDLTableProperty(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): StatementDdlTablePropertyBuilder = StatementDdlTablePropertyBuilder()
+            }
+        }
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): StatementDdlBuilder = StatementDdlBuilder()
         }
     }
 }

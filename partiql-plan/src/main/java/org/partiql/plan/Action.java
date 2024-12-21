@@ -2,6 +2,7 @@ package org.partiql.plan;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.rex.Rex;
+import org.partiql.spi.catalog.Table;
 
 /**
  * A PartiQL statement action within a plan.
@@ -18,5 +19,11 @@ public interface Action {
          */
         @NotNull
         public Rex getRex();
+    }
+
+    // A better way to segment is to have an object interface in SPI
+    public interface CreateTable extends Action {
+        @NotNull
+        public Table getTable();
     }
 }
