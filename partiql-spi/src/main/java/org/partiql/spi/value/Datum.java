@@ -18,6 +18,7 @@ import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
+import java.time.*;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -123,65 +124,6 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * @return the underlying value applicable to the types:
-     * {@link PType#DATE}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default org.partiql.value.datetime.Date getDate() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the types:
-     * {@link PType#TIME}
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default Time getTime() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the types:
-     * {@link PType#TIMESTAMP}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default Timestamp getTimestamp() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
-     * @return the underlying value applicable to the types:
-     * TODO
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
-     * @deprecated This implementation is likely wrong and is not recommended for use.
-     */
-    @Deprecated
-    default long getInterval() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the types:
      * {@link PType#SMALLINT}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PType#INTEGER}, then this method
@@ -270,6 +212,56 @@ public interface Datum extends Iterable<Datum> {
      */
     @NotNull
     default BigDecimal getBigDecimal() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return a {@link LocalDate} for DATE, TIMESTAMP, and TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not in (DATE, TIMESTAMP, TIMESTAMPZ)
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default LocalDate getLocalDate() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return an {@link OffsetTime} for TIME, TIMEZ, TIMESTAMP, TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not in (TIME, TIMEZ, TIMESTAMP, TIMESTAMPZ)
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default LocalTime getLocalTime() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return an {@link OffsetTime} for TIMEZ and TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not in (TIMEZ, TIMESTAMPZ)
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default OffsetTime getOffsetTime() {
+        throw new UnsupportedOperationException("Cannot call getOffsetTime ");
+    }
+
+    /**
+     * @return a {@link LocalDateTime} for TIMESTAMP, TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not in (TIMESTAMP, TIMESTAMPZ)
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default LocalDateTime getLocalDateTime() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return a {@link OffsetDateTime} for TIMESTAMPZ types.
+     * @throws UnsupportedOperationException if type not TIMESTAMPZ
+     * @throws NullPointerException          if isNull() is true; callers should check to avoid NPEs.
+     */
+    @NotNull
+    default OffsetDateTime getOffsetDateTime() {
         throw new UnsupportedOperationException();
     }
 
@@ -529,28 +521,28 @@ public interface Datum extends Iterable<Datum> {
     // DATE/TIME
 
     @NotNull
-    static Datum date(@NotNull Date value) {
+    static Datum date(@NotNull LocalDate value) {
         return new DatumDate(value);
     }
 
     @NotNull
-    static Datum time(@NotNull Time value) {
-        return new DatumTime(value);
-    }
-
-    @NotNull
-    static Datum time(@NotNull Time value, int precision) {
+    static Datum time(@NotNull LocalTime value, int precision) {
         return new DatumTime(value, precision);
     }
 
     @NotNull
-    static Datum timestamp(@NotNull Timestamp value) {
-        return new DatumTimestamp(value);
+    static Datum timez(@NotNull OffsetTime value, int precision) {
+        return new DatumTimez(value, precision);
     }
 
     @NotNull
-    static Datum timestamp(@NotNull Timestamp value, int precision) {
+    static Datum timestamp(@NotNull LocalDateTime value, int precision) {
         return new DatumTimestamp(value, precision);
+    }
+
+    @NotNull
+    static Datum timestampz(@NotNull OffsetDateTime value, int precision) {
+        return new DatumTimestampz(value, precision);
     }
 
     // COLLECTIONS
