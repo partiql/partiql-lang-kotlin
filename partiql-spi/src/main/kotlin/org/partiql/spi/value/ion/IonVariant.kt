@@ -6,7 +6,6 @@ import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.AnyElement
 import java.math.BigDecimal
 import java.math.BigInteger
-
 import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.ElementType.BLOB
 import com.amazon.ionelement.api.ElementType.BOOL
@@ -141,7 +140,7 @@ internal class IonVariant(private var value: AnyElement) : Datum {
     }
 
     @Deprecated("Deprecated in Java")
-    override fun getBytes(): ByteArray =  when (value.type) {
+    override fun getBytes(): ByteArray = when (value.type) {
         CLOB -> value.clobValue.copyOfBytes()
         BLOB -> value.blobValue.copyOfBytes()
         else -> super.getBytes()
@@ -216,10 +215,7 @@ internal class IonVariant(private var value: AnyElement) : Datum {
         if (value.type != STRUCT) {
             return super.getFields()
         }
-        return value.structFields
-            .map { Field.of(it.name, IonVariant(it.value)) }
-            .toMutableList()
-            .iterator()
+        return value.structFields.map { Field.of(it.name, IonVariant(it.value)) }.toMutableList().iterator()
     }
 
     override fun get(name: String): Datum {
