@@ -14,9 +14,9 @@
 
 package org.partiql.value.datetime
 
-import org.partiql.value.datetime.DateTimeUtil.MAX_TIME_ZONE_HOURS
-import org.partiql.value.datetime.DateTimeUtil.MAX_TIME_ZONE_MINUTES
-import org.partiql.value.datetime.DateTimeUtil.MAX_TOTAL_OFFSET_MINUTES
+import org.partiql.spi.value.DateTimeUtil.MAX_TIME_ZONE_HOURS
+import org.partiql.spi.value.DateTimeUtil.MAX_TIME_ZONE_MINUTES
+import org.partiql.spi.value.DateTimeUtil.MAX_TOTAL_OFFSET_MINUTES
 import kotlin.math.abs
 
 public sealed class TimeZone {

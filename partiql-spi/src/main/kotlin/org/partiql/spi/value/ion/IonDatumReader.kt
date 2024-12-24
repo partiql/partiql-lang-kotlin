@@ -10,7 +10,7 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.Encoding
 import org.partiql.spi.value.Field
-import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
+import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import java.io.IOException
 import java.io.InputStream
 

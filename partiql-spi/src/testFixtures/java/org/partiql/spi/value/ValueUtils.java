@@ -7,6 +7,8 @@ import org.partiql.types.PType;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
+import org.partiql.value.util.DateTimeUtil;
+
 import java.math.BigDecimal;
 import java.util.Objects;
 import static org.partiql.types.PType.ARRAY;
@@ -78,13 +80,15 @@ public class ValueUtils {
             case CLOB:
                 return datum.isNull() ? PartiQL.clobValue(null) : PartiQL.clobValue(datum.getBytes());
             case DATE:
-                return datum.isNull() ? PartiQL.dateValue(null) : PartiQL.dateValue(datum.getDate());
+                return datum.isNull() ? PartiQL.dateValue(null) : PartiQL.dateValue(DateTimeUtil.toDate(datum.getLocalDate()));
+            case TIME:
+                return datum.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(DateTimeUtil.toTime(datum.getLocalTime()));
             case TIMEZ:
-            case TIME: // TODO
-                return datum.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(datum.getTime());
-            case TIMESTAMPZ:
+                return datum.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(DateTimeUtil.toTime(datum.getOffsetTime()));
             case TIMESTAMP:
-                return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(datum.getTimestamp());
+                return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(datum.getLocalDateTime()));
+            case TIMESTAMPZ:
+                return datum.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(datum.getOffsetDateTime()));
             case BAG:
                 return datum.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(datum));
             case ARRAY:
@@ -158,16 +162,15 @@ public class ValueUtils {
                 throw new UnsupportedOperationException();
             case DATE:
                 org.partiql.value.DateValue DATEValue = (org.partiql.value.DateValue) value;
-                return new DatumDate(Objects.requireNonNull(DATEValue.getValue()));
-            case INTERVAL:
-                org.partiql.value.IntervalValue INTERVALValue = (org.partiql.value.IntervalValue) value;
-                return new DatumInterval(Objects.requireNonNull(INTERVALValue.getValue()));
-            case TIMESTAMP:
-                org.partiql.value.TimestampValue TIMESTAMPValue = (org.partiql.value.TimestampValue) value;
-                return new DatumTimestamp(Objects.requireNonNull(TIMESTAMPValue.getValue()));
+                return DateTimeUtil.toDatumDate(Objects.requireNonNull(DATEValue.getValue()));
             case TIME:
                 org.partiql.value.TimeValue TIMEValue = (org.partiql.value.TimeValue) value;
-                return new DatumTime(Objects.requireNonNull(TIMEValue.getValue()));
+                return DateTimeUtil.toDatumTime(Objects.requireNonNull(TIMEValue.getValue()));
+            case TIMESTAMP:
+                org.partiql.value.TimestampValue TIMESTAMPValue = (org.partiql.value.TimestampValue) value;
+                return DateTimeUtil.toDatumTimestamp(Objects.requireNonNull(TIMESTAMPValue.getValue()));
+            case INTERVAL:
+                throw new UnsupportedOperationException("interval not supported");
             case FLOAT32:
                 org.partiql.value.Float32Value FLOAT32Value = (org.partiql.value.Float32Value) value;
                 return new DatumFloat(Objects.requireNonNull(FLOAT32Value.getValue()));

@@ -16,9 +16,8 @@
 package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
+import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.Timestamp
 import org.partiql.value.datetime.TimestampWithTimeZone
 import java.math.BigDecimal
 import java.math.RoundingMode

@@ -15,7 +15,7 @@
 
 package org.partiql.value.datetime
 
-import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
+import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.impl.OffsetTimestampLowPrecision
 import java.math.BigDecimal
 import kotlin.jvm.Throws
