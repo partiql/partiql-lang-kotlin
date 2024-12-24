@@ -22,9 +22,9 @@ internal val Fn_DATE_ADD_HOUR__INT32_TIME__TIME = Function.static(
 ) { args ->
     val interval = args[0].int
     val datetime = args[1]
-    val datetimeValue = datetime.time
+    val datetimeValue = datetime.localTime
     val intervalValue = interval.toLong()
-    Datum.time(datetimeValue.plusHours(intervalValue))
+    Datum.time(datetimeValue.plusHours(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_HOUR__INT64_TIME__TIME = Function.static(
@@ -39,9 +39,9 @@ internal val Fn_DATE_ADD_HOUR__INT64_TIME__TIME = Function.static(
 ) { args ->
     val interval = args[0]
     val datetime = args[1]
-    val datetimeValue = datetime.time
+    val datetimeValue = datetime.localTime
     val intervalValue = interval.long
-    Datum.time(datetimeValue.plusHours(intervalValue))
+    Datum.time(datetimeValue.plusHours(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_HOUR__INT_TIME__TIME = Function.static(
@@ -56,13 +56,13 @@ internal val Fn_DATE_ADD_HOUR__INT_TIME__TIME = Function.static(
 ) { args ->
     val interval = args[0]
     val datetime = args[1]
-    val datetimeValue = datetime.time
+    val datetimeValue = datetime.localTime
     val intervalValue = try {
         interval.bigInteger.toLong()
     } catch (e: DataException) {
         throw TypeCheckException()
     }
-    Datum.time(datetimeValue.plusHours(intervalValue))
+    Datum.time(datetimeValue.plusHours(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP = Function.static(
@@ -77,9 +77,9 @@ internal val Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP = Function.static(
 ) { args ->
     val interval = args[0].int
     val datetime = args[1]
-    val datetimeValue = datetime.timestamp
+    val datetimeValue = datetime.localDateTime
     val intervalValue = interval.toLong()
-    Datum.timestamp(datetimeValue.plusHours(intervalValue))
+    Datum.timestamp(datetimeValue.plusHours(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP = Function.static(
@@ -94,9 +94,9 @@ internal val Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP = Function.static(
 ) { args ->
     val interval = args[0]
     val datetime = args[1]
-    val datetimeValue = datetime.timestamp
+    val datetimeValue = datetime.localDateTime
     val intervalValue = interval.long
-    Datum.timestamp(datetimeValue.plusHours(intervalValue))
+    Datum.timestamp(datetimeValue.plusHours(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP = Function.static(
@@ -111,11 +111,11 @@ internal val Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP = Function.static(
 ) { args ->
     val interval = args[0]
     val datetime = args[1]
-    val datetimeValue = datetime.timestamp
+    val datetimeValue = datetime.localDateTime
     val intervalValue = try {
         interval.bigInteger.toLong()
     } catch (e: DataException) {
         throw TypeCheckException()
     }
-    Datum.timestamp(datetimeValue.plusHours(intervalValue))
+    Datum.timestamp(datetimeValue.plusHours(intervalValue), 6)
 }

@@ -189,9 +189,9 @@ internal val Fn_BETWEEN__DATE_DATE_DATE__BOOL = Function.static(
     ),
 
 ) { args ->
-    val value = args[0].date
-    val lower = args[1].date
-    val upper = args[2].date
+    val value = args[0].localDate
+    val lower = args[1].localDate
+    val upper = args[2].localDate
     Datum.bool(value in lower..upper)
 }
 
@@ -206,9 +206,9 @@ internal val Fn_BETWEEN__TIME_TIME_TIME__BOOL = Function.static(
     ),
 
 ) { args ->
-    val value = args[0].time
-    val lower = args[1].time
-    val upper = args[2].time
+    val value = args[0].localTime
+    val lower = args[1].localTime
+    val upper = args[2].localTime
     Datum.bool(value in lower..upper)
 }
 
@@ -223,8 +223,8 @@ internal val Fn_BETWEEN__TIMESTAMP_TIMESTAMP_TIMESTAMP__BOOL = Function.static(
     ),
 
 ) { args ->
-    val value = args[0].timestamp
-    val lower = args[1].timestamp
-    val upper = args[2].timestamp
+    val value = args[0].localDateTime
+    val lower = args[1].localDateTime
+    val upper = args[2].localDateTime
     Datum.bool(value in lower..upper)
 }

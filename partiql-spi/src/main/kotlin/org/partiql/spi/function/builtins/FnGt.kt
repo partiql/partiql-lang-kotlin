@@ -85,24 +85,24 @@ internal object FnGt : DiadicComparisonOperator("gt") {
 
     override fun getTimestampInstance(timestampLhs: PType, timestampRhs: PType): Function.Instance {
         return basic(PType.bool(), timestampLhs, timestampRhs) { args ->
-            val lhs = args[0].timestamp
-            val rhs = args[1].timestamp
+            val lhs = args[0].localDateTime
+            val rhs = args[1].localDateTime
             Datum.bool(lhs > rhs)
         }
     }
 
     override fun getDateInstance(dateLhs: PType, dateRhs: PType): Function.Instance {
         return basic(PType.bool(), PType.date()) { args ->
-            val lhs = args[0].date
-            val rhs = args[1].date
+            val lhs = args[0].localDate
+            val rhs = args[1].localDate
             Datum.bool(lhs > rhs)
         }
     }
 
     override fun getTimeInstance(timeLhs: PType, timeRhs: PType): Function.Instance {
         return basic(PType.bool(), timeLhs, timeRhs) { args ->
-            val lhs = args[0].time
-            val rhs = args[1].time
+            val lhs = args[0].localTime
+            val rhs = args[1].localTime
             Datum.bool(lhs > rhs)
         }
     }
