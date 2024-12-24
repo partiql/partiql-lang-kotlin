@@ -19,6 +19,7 @@ import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
+import org.partiql.types.PType
 import org.partiql.value.datetime.impl.LocalTimeLowPrecision
 import org.partiql.value.datetime.impl.LocalTimeLowPrecision.Companion.forNano
 import org.partiql.value.datetime.impl.LocalTimestampLowPrecision.Companion.forDateTime
@@ -32,6 +33,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.OffsetTime
+import java.time.ZoneOffset
 
 internal object DateTimeUtil {
 
@@ -98,11 +100,29 @@ internal object DateTimeUtil {
 
     @JvmStatic
     fun toDatumTime(time: Time): Datum {
-        TODO("see if we can avoid this..")
+        // [0-59].000_000_000
+        val ds = time.decimalSecond
+        val second: Int = ds.toInt()
+        val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(9).toInt()
+        // local
+        val local = LocalTime.of(time.hour, time.minute, second, nanoOfSecond)
+        // check offset
+        if (time.timeZone != null && time.timeZone is TimeZone.UtcOffset) {
+            val zone = time.timeZone as TimeZone.UtcOffset
+            val offset = ZoneOffset.ofHoursMinutes(zone.tzHour, zone.tzMinute)
+            return Datum.timez(local.atOffset(offset), 9)
+        }
+        return Datum.time(local, 9)
     }
 
     @JvmStatic
     fun toDatumTimestamp(timestamp: Timestamp): Datum {
-        TODO("see if we can avoid this..")
+        val date = toDatumDate(timestamp.toDate()).localDate
+        val time = toDatumTime(timestamp.toTime())
+        return when (time.type.code()) {
+            PType.TIME -> Datum.timestamp(LocalDateTime.of(date, time.localTime), 9)
+            PType.TIMEZ -> Datum.timestampz(OffsetDateTime.of(date, time.localTime, time.offsetTime.offset), 9)
+            else -> throw IllegalArgumentException("unsupported timestamp type")
+        }
     }
 }
