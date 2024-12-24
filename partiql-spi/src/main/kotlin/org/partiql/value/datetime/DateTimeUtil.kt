@@ -14,14 +14,27 @@
 
 package org.partiql.value.datetime
 
+import org.partiql.spi.value.Datum
+import org.partiql.types.PType
+import org.partiql.value.datetime.impl.LocalTimeLowPrecision
+import org.partiql.value.datetime.impl.LocalTimeLowPrecision.Companion.forNano
+import org.partiql.value.datetime.impl.LocalTimestampLowPrecision.Companion.forDateTime
+import org.partiql.value.datetime.impl.OffsetTimeLowPrecision
+import org.partiql.value.datetime.impl.OffsetTimeLowPrecision.Companion.of
+import org.partiql.value.datetime.impl.OffsetTimestampLowPrecision.Companion.forDateTime
+import org.partiql.value.datetime.impl.SqlDate
 import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.OffsetTime
+import java.time.ZoneOffset
 import java.util.regex.Pattern
 
 internal object DateTimeUtil {
     internal val DATETIME_PATTERN = Pattern.compile(
-        "(?<year>[-+]?\\d{4,})-(?<month>\\d{1,2})-(?<day>\\d{1,2})" +
-            "(?: (?<hour>\\d{1,2}):(?<minute>\\d{1,2})(?::(?<decimalSecond>\\d{1,2})(?:\\.(?<fraction>\\d+))?)?)?" +
-            "\\s*(?<timezone>[+-]\\d\\d:\\d\\d)?"
+        "(?<year>[-+]?\\d{4,})-(?<month>\\d{1,2})-(?<day>\\d{1,2})" + "(?: (?<hour>\\d{1,2}):(?<minute>\\d{1,2})(?::(?<decimalSecond>\\d{1,2})(?:\\.(?<fraction>\\d+))?)?)?" + "\\s*(?<timezone>[+-]\\d\\d:\\d\\d)?"
     )
 
     internal val DATE_PATTERN = Pattern.compile("(?<year>\\d{4,})-(?<month>\\d{2,})-(?<day>\\d{2,})")
@@ -48,5 +61,73 @@ internal object DateTimeUtil {
         is Long -> BigDecimal.valueOf(this)
         is Int -> BigDecimal.valueOf(this.toLong())
         else -> throw IllegalArgumentException("can not convert $this to BigDecimal")
+    }
+
+    @JvmStatic
+    fun toDate(date: LocalDate): Date {
+        return SqlDate.of(date.year, date.monthValue, date.dayOfMonth)
+    }
+
+    @JvmStatic
+    fun toTime(time: LocalTime): Time {
+        return forNano(time.hour, time.minute, time.second, time.nano)
+    }
+
+    @JvmStatic
+    fun toTime(time: OffsetTime): Time {
+        val offset = time.offset.totalSeconds
+        val zone: TimeZone = TimeZone.UtcOffset.of(offset / 60, offset % 60)
+        return of(time.hour, time.minute, time.second, time.nano, zone)
+    }
+
+    @JvmStatic
+    fun toTimestamp(timestamp: LocalDateTime): Timestamp {
+        val date = toDate(timestamp.toLocalDate())
+        val time = toTime(timestamp.toLocalTime())
+        return forDateTime(
+            (date as SqlDate), (time as LocalTimeLowPrecision)
+        )
+    }
+
+    @JvmStatic
+    fun toTimestamp(timestamp: OffsetDateTime): Timestamp {
+        val date = toDate(timestamp.toLocalDate())
+        val time = toTime(timestamp.toOffsetTime())
+        return forDateTime(
+            date, (time as OffsetTimeLowPrecision)
+        )
+    }
+
+    @JvmStatic
+    fun toDatumDate(date: Date): Datum {
+        return Datum.date(LocalDate.of(date.year, date.month, date.day))
+    }
+
+    @JvmStatic
+    fun toDatumTime(time: Time): Datum {
+        // [0-59].000_000_000
+        val ds = time.decimalSecond
+        val second: Int = ds.toInt()
+        val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(9).toInt()
+        // local
+        val local = LocalTime.of(time.hour, time.minute, second, nanoOfSecond)
+        // check offset
+        if (time.timeZone != null && time.timeZone is TimeZone.UtcOffset) {
+            val zone = time.timeZone as TimeZone.UtcOffset
+            val offset = ZoneOffset.ofHoursMinutes(zone.tzHour, zone.tzMinute)
+            return Datum.timez(local.atOffset(offset), 9)
+        }
+        return Datum.time(local, 9)
+    }
+
+    @JvmStatic
+    fun toDatumTimestamp(timestamp: Timestamp): Datum {
+        val date = toDatumDate(timestamp.toDate()).localDate
+        val time = toDatumTime(timestamp.toTime())
+        return when (time.type.code()) {
+            PType.TIME -> Datum.timestamp(LocalDateTime.of(date, time.localTime), 9)
+            PType.TIMEZ -> Datum.timestampz(OffsetDateTime.of(date, time.localTime, time.offsetTime.offset), 9)
+            else -> throw IllegalArgumentException("unsupported timestamp type")
+        }
     }
 }

@@ -22,9 +22,9 @@ internal val Fn_DATE_ADD_MINUTE__INT32_TIME__TIME = Function.static(
 ) { args ->
     val interval = args[0].int
     val datetime = args[1]
-    val datetimeValue = datetime.time
+    val datetimeValue = datetime.localTime
     val intervalValue = interval.toLong()
-    Datum.time(datetimeValue.plusMinutes(intervalValue))
+    Datum.time(datetimeValue.plusMinutes(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_MINUTE__INT64_TIME__TIME = Function.static(
@@ -39,9 +39,9 @@ internal val Fn_DATE_ADD_MINUTE__INT64_TIME__TIME = Function.static(
 ) { args ->
     val interval = args[0]
     val datetime = args[1]
-    val datetimeValue = datetime.time
+    val datetimeValue = datetime.localTime
     val intervalValue = interval.long
-    Datum.time(datetimeValue.plusMinutes(intervalValue))
+    Datum.time(datetimeValue.plusMinutes(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_MINUTE__INT_TIME__TIME = Function.static(
@@ -56,13 +56,13 @@ internal val Fn_DATE_ADD_MINUTE__INT_TIME__TIME = Function.static(
 ) { args ->
     val interval = args[0]
     val datetime = args[1]
-    val datetimeValue = datetime.time
+    val datetimeValue = datetime.localTime
     val intervalValue = try {
         interval.bigInteger.toLong()
     } catch (e: DataException) {
         throw TypeCheckException()
     }
-    Datum.time(datetimeValue.plusMinutes(intervalValue))
+    Datum.time(datetimeValue.plusMinutes(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP = Function.static(
@@ -77,9 +77,9 @@ internal val Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP = Function.static(
 ) { args ->
     val interval = args[0].int
     val datetime = args[1]
-    val datetimeValue = datetime.timestamp
+    val datetimeValue = datetime.localDateTime
     val intervalValue = interval.toLong()
-    Datum.timestamp(datetimeValue.plusMinutes(intervalValue))
+    Datum.timestamp(datetimeValue.plusMinutes(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP = Function.static(
@@ -94,9 +94,9 @@ internal val Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP = Function.static(
 ) { args ->
     val interval = args[0]
     val datetime = args[1]
-    val datetimeValue = datetime.timestamp
+    val datetimeValue = datetime.localDateTime
     val intervalValue = interval.long
-    Datum.timestamp(datetimeValue.plusMinutes(intervalValue))
+    Datum.timestamp(datetimeValue.plusMinutes(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP = Function.static(
@@ -111,11 +111,11 @@ internal val Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP = Function.static(
 ) { args ->
     val interval = args[0]
     val datetime = args[1]
-    val datetimeValue = datetime.timestamp
+    val datetimeValue = datetime.localDateTime
     val intervalValue = try {
         interval.bigInteger.toLong()
     } catch (e: DataException) {
         throw TypeCheckException()
     }
-    Datum.timestamp(datetimeValue.plusMinutes(intervalValue))
+    Datum.timestamp(datetimeValue.plusMinutes(intervalValue), 6)
 }

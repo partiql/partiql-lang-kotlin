@@ -5,21 +5,20 @@ import org.partiql.types.PType;
 
 import java.time.LocalTime;
 import java.time.OffsetTime;
-import java.time.ZoneOffset;
 
 /**
- * Today we wrap a {@link LocalTime}, in the future we do a 4-byte array to avoid double references.
+ * Today we wrap an {@link OffsetTime}, in the future we do a 5-byte array to avoid double references.
  */
-final class DatumTime implements Datum {
+final class DatumTimez implements Datum {
 
     @NotNull
     private final PType type;
 
     @NotNull
-    private final LocalTime value;
+    private final OffsetTime value;
 
-    DatumTime(@NotNull LocalTime value, int precision) {
-        this.type = PType.time(precision);
+    DatumTimez(@NotNull OffsetTime value, int precision) {
+        this.type = PType.timez(precision);
         this.value = value;
     }
 
@@ -32,12 +31,12 @@ final class DatumTime implements Datum {
     @NotNull
     @Override
     public LocalTime getLocalTime() {
-        return value;
+        return value.toLocalTime();
     }
 
     @NotNull
     @Override
     public OffsetTime getOffsetTime() {
-        return value.atOffset(ZoneOffset.UTC);
+        return value;
     }
 }

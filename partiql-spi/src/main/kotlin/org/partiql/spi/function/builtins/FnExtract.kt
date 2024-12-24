@@ -7,34 +7,30 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.datetime.TimeZone
+import java.math.BigDecimal
 
 //
 // Extract Year
 //
 internal val Fn_EXTRACT_YEAR__DATE__INT32 = Function.static(
-
     name = "extract_year",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.date()),
     ),
-
 ) { args ->
-    val v = args[0].date
+    val v = args[0].localDate
     Datum.integer(v.year)
 }
 
 internal val Fn_EXTRACT_YEAR__TIMESTAMP__INT32 = Function.static(
-
     name = "extract_year",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.timestamp(6)),
     ),
-
 ) { args ->
-    val v = args[0].timestamp
+    val v = args[0].localDateTime
     Datum.integer(v.year)
 }
 
@@ -42,29 +38,25 @@ internal val Fn_EXTRACT_YEAR__TIMESTAMP__INT32 = Function.static(
 // Extract Month
 //
 internal val Fn_EXTRACT_MONTH__DATE__INT32 = Function.static(
-
     name = "extract_month",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.date()),
     ),
-
 ) { args ->
-    val v = args[0].date
-    Datum.integer(v.month)
+    val v = args[0].localDate
+    Datum.integer(v.monthValue)
 }
 
 internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = Function.static(
-
     name = "extract_month",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.timestamp(6)),
     ),
-
 ) { args ->
-    val v = args[0].timestamp
-    Datum.integer(v.month)
+    val v = args[0].localDateTime
+    Datum.integer(v.monthValue)
 }
 
 //
@@ -72,57 +64,49 @@ internal val Fn_EXTRACT_MONTH__TIMESTAMP__INT32 = Function.static(
 //
 
 internal val Fn_EXTRACT_DAY__DATE__INT32 = Function.static(
-
     name = "extract_day",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.date()),
     ),
-
 ) { args ->
-    val v = args[0].date
-    Datum.integer(v.day)
+    val v = args[0].localDate
+    Datum.integer(v.dayOfMonth)
 }
 
 internal val Fn_EXTRACT_DAY__TIMESTAMP__INT32 = Function.static(
-
     name = "extract_day",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.timestamp(6)),
     ),
-
 ) { args ->
-    val v = args[0].timestamp
-    Datum.integer(v.day)
+    val v = args[0].localDateTime
+    Datum.integer(v.dayOfMonth)
 }
 
 //
 // Extract Hour
 //
 internal val Fn_EXTRACT_HOUR__TIME__INT32 = Function.static(
-
     name = "extract_hour",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.time(6)),
     ),
-
 ) { args ->
-    val v = args[0].time
+    val v = args[0].localTime
     Datum.integer(v.hour)
 }
 
 internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = Function.static(
-
     name = "extract_hour",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.timestamp(6)),
     ),
-
 ) { args ->
-    val v = args[0].timestamp
+    val v = args[0].localDateTime
     Datum.integer(v.hour)
 }
 
@@ -130,130 +114,112 @@ internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = Function.static(
 // Extract Minute
 //
 internal val Fn_EXTRACT_MINUTE__TIME__INT32 = Function.static(
-
     name = "extract_minute",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.time(6)),
     ),
-
 ) { args ->
-    val v = args[0].time
+    val v = args[0].localTime
     Datum.integer(v.minute)
 }
 
 internal val Fn_EXTRACT_MINUTE__TIMESTAMP__INT32 = Function.static(
-
     name = "extract_minute",
     returns = PType.integer(),
     parameters = arrayOf(
         Parameter("datetime", PType.timestamp(6)),
     ),
-
 ) { args ->
-    val v = args[0].timestamp
+    val v = args[0].localDateTime
     Datum.integer(v.minute)
 }
 
 //
-// Extract Second
+// Extract Second.
+//
+// Rules:
+// - The declared type of the result is exact numeric with implementation-defined precision and scale.
+// - The implementation-defined scale shall not be less than the fractional seconds precision of the source.
+//
+// Seconds is limited to [0-59].000_000_000 so DECIMAL(11,9) for now.
+//
+// We could return the exact precision/scale of the input type, but kiss/scope.
 //
 internal val Fn_EXTRACT_SECOND__TIME__DECIMAL_ARBITRARY = Function.static(
-
     name = "extract_second",
-    returns = PType.decimal(38, 19), // TODO: Rewrite using new function modeling.
+    returns = PType.decimal(11, 9), // TODO: Rewrite using new function modeling.
     parameters = arrayOf(
-        Parameter("datetime", PType.time(6)),
+        Parameter("datetime", PType.time(9)),
     ),
-
 ) { args ->
-    val v = args[0].time
-    Datum.decimal(v.decimalSecond)
+    val v = args[0].localTime
+    val d = BigDecimal(v.second).add(BigDecimal(v.nano).scaleByPowerOfTen(-9))
+    Datum.decimal(d, 11, 9)
 }
 
 internal val Fn_EXTRACT_SECOND__TIMESTAMP__DECIMAL_ARBITRARY = Function.static(
-
     name = "extract_second",
-    returns = PType.decimal(38, 19), // TODO: Rewrite using new function modeling.
+    returns = PType.decimal(11, 9), // TODO: Rewrite using new function modeling.
     parameters = arrayOf(
         Parameter("datetime", PType.timestamp(6)),
     ),
-
 ) { args ->
-    val v = args[0].timestamp
-    Datum.decimal(v.decimalSecond)
+    val v = args[0].localDateTime
+    val d = BigDecimal(v.second).add(BigDecimal(v.nano).scaleByPowerOfTen(-9))
+    Datum.decimal(d, 11, 9)
 }
 
 //
 // Extract Timezone Hour
 //
 internal val Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 = Function.static(
-
     name = "extract_timezone_hour",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.time(6)),
+        Parameter("datetime", PType.timez(6)),
     ),
-
 ) { args ->
-    val v = args[0].time
-    when (val tz = v.timeZone) {
-        TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
-        is TimeZone.UtcOffset -> Datum.integer(tz.tzHour)
-        null -> Datum.nullValue(PType.integer())
-    }
+    val v = args[0].offsetTime
+    val o = v.offset.totalSeconds / 3600
+    Datum.integer(o)
 }
 
 internal val Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 = Function.static(
-
     name = "extract_timezone_hour",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.timestamp(6)),
+        Parameter("datetime", PType.timestampz(6)),
     ),
-
 ) { args ->
-    val v = args[0].timestamp
-    when (val tz = v.timeZone) {
-        TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
-        is TimeZone.UtcOffset -> Datum.integer(tz.tzHour)
-        null -> Datum.nullValue(PType.integer())
-    }
+    val v = args[0].offsetDateTime
+    val o = v.offset.totalSeconds / 3600
+    Datum.integer(o)
 }
 
 //
 // Extract Timezone Minute
 //
 internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 = Function.static(
-
     name = "extract_timezone_minute",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.time(6)),
+        Parameter("datetime", PType.timez(6)),
     ),
-
 ) { args ->
-    val v = args[0].time
-    when (val tz = v.timeZone) {
-        TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
-        is TimeZone.UtcOffset -> Datum.integer(tz.tzMinute)
-        null -> Datum.nullValue(PType.integer())
-    }
+    val v = args[0].offsetTime
+    val o = (v.offset.totalSeconds / 60) % 60
+    Datum.integer(o)
 }
 
 internal val Fn_EXTRACT_TIMEZONE_MINUTE__TIMESTAMP__INT32 = Function.static(
-
     name = "extract_timezone_minute",
     returns = PType.integer(),
     parameters = arrayOf(
-        Parameter("datetime", PType.timestamp(6)),
+        Parameter("datetime", PType.timestampz(6)),
     ),
-
 ) { args ->
-    val v = args[0].timestamp
-    when (val tz = v.timeZone) {
-        TimeZone.UnknownTimeZone -> Datum.integer(0) // TODO: Should this be NULL?
-        is TimeZone.UtcOffset -> Datum.integer(tz.tzMinute)
-        null -> Datum.nullValue(PType.integer())
-    }
+    val v = args[0].offsetDateTime
+    val o = (v.offset.totalSeconds / 60) % 60
+    Datum.integer(o)
 }
