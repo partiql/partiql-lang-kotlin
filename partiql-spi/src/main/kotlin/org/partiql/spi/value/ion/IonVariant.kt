@@ -1,8 +1,12 @@
 package org.partiql.spi.value.ion
 
+import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonBinaryWriterBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.AnyElement
+import java.math.BigDecimal
+import java.math.BigInteger
+
 import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.ElementType.BLOB
 import com.amazon.ionelement.api.ElementType.BOOL
@@ -20,10 +24,15 @@ import com.amazon.ionelement.api.IntElementSize
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
-import org.partiql.value.datetime.DateTimeValue
 import java.io.ByteArrayOutputStream
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.OffsetTime
+import java.time.ZoneOffset
 
 /**
  * A [Datum] implemented over Ion's [AnyElement].
@@ -62,7 +71,11 @@ internal class IonVariant(private var value: AnyElement) : Datum {
             BOOL -> Datum.bool(value.booleanValue)
             CLOB -> Datum.clob(value.clobValue.copyOfBytes())
             BLOB -> Datum.blob(value.blobValue.copyOfBytes())
-            TIMESTAMP -> Datum.timestamp(DateTimeValue.timestamp(value.timestampValue))
+            TIMESTAMP -> {
+                val ts = value.timestampValue
+                val ot = ts.toOffsetDateTime()
+                Datum.timestampz(ot, 9)
+            }
             INT -> {
                 when (value.integerSize) {
                     IntElementSize.LONG -> {
@@ -115,4 +128,143 @@ internal class IonVariant(private var value: AnyElement) : Datum {
     override fun isNull(): Boolean = false
 
     override fun isMissing(): Boolean = false
+
+    override fun getString(): String = when (value.type) {
+        SYMBOL -> value.stringValue
+        STRING -> value.stringValue
+        else -> super.getString()
+    }
+
+    override fun getBoolean(): Boolean = when (value.type) {
+        BOOL -> value.booleanValue
+        else -> super.getBoolean()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun getBytes(): ByteArray =  when (value.type) {
+        CLOB -> value.clobValue.copyOfBytes()
+        BLOB -> value.blobValue.copyOfBytes()
+        else -> super.getBytes()
+    }
+
+    /**
+     * Ion timestamp with "whole-day precision" and no time component.
+     */
+    override fun getLocalDate(): LocalDate {
+        if (value.type != TIMESTAMP) {
+            return super.getLocalDate()
+        }
+        val ts = value.timestampValue
+        return LocalDate.of(ts.year, ts.month, ts.day)
+    }
+
+    /**
+     * Ion does not have a TIME type, only TIMESTAMP, so use lower() then coerce.
+     */
+    override fun getLocalTime(): LocalTime {
+        throw IllegalArgumentException("getLocalTime() not supported, use lower() or getLocalDateTime()")
+    }
+
+    /**
+     * Ion does not have TIMEZ type, only TIMESTAMP, so use lower() then coerce.
+     */
+    override fun getOffsetTime(): OffsetTime {
+        throw IllegalArgumentException("getOffsetTime() not supported, use lower() or getOffsetDateTime()")
+    }
+
+    /**
+     * Get the OffsetDateTime and return the local part.
+     *
+     * See: https://github.com/partiql/partiql-lang-kotlin/issues/1689
+     */
+    override fun getLocalDateTime(): LocalDateTime {
+        return offsetDateTime.toLocalDateTime()
+    }
+
+    /**
+     * Get the OffsetDateTime, using UTC if no offset is given.
+     */
+    override fun getOffsetDateTime(): OffsetDateTime {
+        if (value.type != TIMESTAMP) {
+            return super.getOffsetDateTime()
+        }
+        return value.timestampValue.toOffsetDateTime()
+    }
+
+    override fun getBigInteger(): BigInteger = when (value.type) {
+        INT -> value.bigIntegerValue
+        else -> super.getBigInteger()
+    }
+
+    override fun getDouble(): Double = when (value.type) {
+        FLOAT -> value.doubleValue
+        else -> super.getDouble()
+    }
+
+    override fun getBigDecimal(): BigDecimal = when (value.type) {
+        DECIMAL -> value.decimalValue.bigDecimalValue()
+        else -> super.getBigDecimal()
+    }
+
+    override fun iterator(): MutableIterator<Datum> = when (value.type) {
+        LIST -> value.listValues.map { IonVariant(it) }.toMutableList().iterator()
+        SEXP -> value.sexpValues.map { IonVariant(it) }.toMutableList().iterator()
+        else -> super.iterator()
+    }
+
+    override fun getFields(): MutableIterator<Field> {
+        if (value.type != STRUCT) {
+            return super.getFields()
+        }
+        return value.structFields
+            .map { Field.of(it.name, IonVariant(it.value)) }
+            .toMutableList()
+            .iterator()
+    }
+
+    override fun get(name: String): Datum {
+        if (value.type != STRUCT) {
+            return super.get(name)
+        }
+        // TODO handle multiple/ambiguous field names?
+        val v = value.asStruct().getOptional(name)
+        return if (v == null) {
+            Datum.missing()
+        } else {
+            IonVariant(v)
+        }
+    }
+
+    override fun getInsensitive(name: String): Datum {
+        if (value.type != STRUCT) {
+            return super.get(name)
+        }
+        // TODO handle multiple/ambiguous field names?
+        val struct = value.asStruct()
+        for (field in struct.fields) {
+            if (field.name.equals(name, ignoreCase = true)) {
+                return IonVariant(field.value)
+            }
+        }
+        return Datum.missing()
+    }
+
+    /**
+     * Get the OffsetDateTime from an Ion Timestamp, using UTC if no offset is given.
+     */
+    private fun Timestamp.toOffsetDateTime(): OffsetDateTime {
+        val ts = this
+        val tz = when (ts.localOffset) {
+            null -> ZoneOffset.UTC
+            else -> ZoneOffset.ofHoursMinutes(ts.zHour, ts.zMinute)
+        }
+        // [0-59].000_000_000
+        val ds = ts.decimalSecond
+        val second: Int = ds.toInt()
+        val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(9).toInt()
+        // date/time pair
+        val date = LocalDate.of(ts.year, ts.month, ts.day)
+        val time = LocalTime.of(ts.hour, ts.minute, second, nanoOfSecond)
+        return OffsetDateTime.of(date, time, tz)
+    }
 }
