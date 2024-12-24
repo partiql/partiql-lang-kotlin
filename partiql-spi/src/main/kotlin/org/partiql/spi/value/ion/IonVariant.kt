@@ -3,7 +3,9 @@ package org.partiql.spi.value.ion
 import com.amazon.ion.system.IonBinaryWriterBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.AnyElement
+import com.amazon.ionelement.api.ElementType.CLOB
 import com.amazon.ionelement.api.ElementType.BOOL
+import com.amazon.ionelement.api.ElementType.BLOB
 import com.amazon.ionelement.api.ElementType.DECIMAL
 import com.amazon.ionelement.api.ElementType.FLOAT
 import com.amazon.ionelement.api.ElementType.INT
@@ -16,16 +18,17 @@ import com.amazon.ionelement.api.ElementType.TIMESTAMP
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
-import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.DateTimeValue
-import org.partiql.value.datetime.Time
-import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.Timestamp
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.OffsetTime
+import java.time.ZoneOffset
 
 /**
  * A [Datum] implemented over Ion's [AnyElement].
@@ -78,46 +81,69 @@ internal class IonVariant(private var value: AnyElement) : Datum {
         else -> super.getBoolean()
     }
 
-    // override fun getBytes(): ByteArray =  when (value.type) {
-    //     CLOB -> value.clobValue.copyOfBytes()
-    //     BLOB -> value.blobValue.copyOfBytes()
-    //     else -> super.getBytes()
-    // }
-    //
-    // override fun getByte(): Byte {
-    //     return super.getByte()
-    // }
-
-    override fun getDate(): Date {
-        return when (value.type) {
-            TIMESTAMP -> {
-                val ts = value.timestampValue
-                DateTimeValue.date(ts.year, ts.month, ts.day)
-            }
-            else -> super.getDate()
-        }
+    @Deprecated("Deprecated in Java")
+    override fun getBytes(): ByteArray =  when (value.type) {
+        CLOB -> value.clobValue.copyOfBytes()
+        BLOB -> value.blobValue.copyOfBytes()
+        else -> super.getBytes()
     }
 
-    override fun getTime(): Time {
-        return when (value.type) {
-            TIMESTAMP -> {
-                val ts = value.timestampValue
-                val tz = when (ts.localOffset) {
-                    null -> TimeZone.UnknownTimeZone
-                    else -> TimeZone.UtcOffset.of(ts.zHour, ts.zMinute)
-                }
-                DateTimeValue.time(ts.hour, ts.minute, ts.second, tz)
-            }
-            else -> super.getTime()
+    /**
+     * Ion timestamp with "whole-day precision" and no time component.
+     */
+    override fun getLocalDate(): LocalDate {
+        if (value.type != TIMESTAMP) {
+            return super.getLocalDate()
         }
+        val ts = value.timestampValue
+        return LocalDate.of(ts.year, ts.month, ts.day)
     }
 
-    // TODO: Handle struct notation
-    override fun getTimestamp(): Timestamp {
-        return when (value.type) {
-            TIMESTAMP -> DateTimeValue.timestamp(value.timestampValue)
-            else -> super.getTimestamp()
+    /**
+     * Ion does not have a TIME type, only TIMESTAMP, so use lower() then coerce.
+     */
+    override fun getLocalTime(): LocalTime {
+        throw IllegalArgumentException("getLocalTime() not supported, use lower() or getLocalDateTime()")
+    }
+
+    /**
+     * Ion does not have TIMEZ type, only TIMESTAMP, so use lower() then coerce.
+     */
+    override fun getOffsetTime(): OffsetTime {
+        throw IllegalArgumentException("getOffsetTime() not supported, use lower() or getOffsetDateTime()")
+    }
+
+    /**
+     * Get the OffsetDateTime and return the local part.
+     *
+     * See: https://github.com/partiql/partiql-lang-kotlin/issues/1689
+     */
+    override fun getLocalDateTime(): LocalDateTime {
+        return offsetDateTime.toLocalDateTime()
+    }
+
+    /**
+     * Get the OffsetDateTime, using UTC if no offset is given.
+     *
+     * @return
+     */
+    override fun getOffsetDateTime(): OffsetDateTime {
+        if (value.type != TIMESTAMP) {
+            return super.getOffsetDateTime()
         }
+        val ts = value.timestampValue
+        val tz = when (ts.localOffset) {
+            null -> ZoneOffset.UTC
+            else -> ZoneOffset.ofHoursMinutes(ts.zHour, ts.zMinute)
+        }
+        // [0-59].000_000_000
+        val ds = ts.decimalSecond
+        val second: Int = ds.toInt()
+        val nanoOfSecond: Int = ds.remainder(BigDecimal.ONE).movePointRight(9).toInt()
+        // date/time pair
+        val date = LocalDate.of(ts.year, ts.month, ts.day)
+        val time = LocalTime.of(ts.hour, ts.minute, second, nanoOfSecond)
+        return OffsetDateTime.of(date, time, tz)
     }
 
     override fun getBigInteger(): BigInteger = when (value.type) {
