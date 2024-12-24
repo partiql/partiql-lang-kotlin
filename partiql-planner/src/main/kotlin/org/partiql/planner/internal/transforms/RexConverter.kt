@@ -402,7 +402,7 @@ internal object RexConverter {
             var call = when (node.truthValue.code()) {
                 TruthValue.TRUE -> call("is_true", value)
                 TruthValue.FALSE -> call("is_false", value)
-                TruthValue.UNK -> call("is_unknown", value)
+                TruthValue.UNKNOWN -> call("is_unknown", value)
                 else -> error("Unexpected TruthValue: ${node.truthValue}")
             }
             // See SQL99 6.30 pg 216 Rule 2 for equivalence

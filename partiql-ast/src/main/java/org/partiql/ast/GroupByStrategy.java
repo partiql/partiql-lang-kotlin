@@ -11,13 +11,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class GroupByStrategy extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int FULL = 1;
-    public static final int PARTIAL = 2;
-
-    public static GroupByStrategy UNKNOWN() {
-        return new GroupByStrategy(UNKNOWN);
-    }
+    public static final int FULL = 0;
+    public static final int PARTIAL = 1;
 
     public static GroupByStrategy FULL() {
         return new GroupByStrategy(FULL);
@@ -50,7 +45,7 @@ public class GroupByStrategy extends AstEnum {
         switch (code) {
             case FULL: return "FULL";
             case PARTIAL: return "PARTIAL";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid GroupByStrategy code: " + code);
         }
     }
 
@@ -59,7 +54,7 @@ public class GroupByStrategy extends AstEnum {
         switch (value) {
             case "FULL": return FULL();
             case "PARTIAL": return PARTIAL();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant GroupByStrategy." + value);
         }
     }
 

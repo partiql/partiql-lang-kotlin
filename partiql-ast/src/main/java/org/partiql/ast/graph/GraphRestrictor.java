@@ -14,14 +14,9 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class GraphRestrictor extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int TRAIL = 1;
-    public static final int ACYCLIC = 2;
-    public static final int SIMPLE = 3;
-
-    public static GraphRestrictor UNKNOWN() {
-        return new GraphRestrictor(UNKNOWN);
-    }
+    public static final int TRAIL = 0;
+    public static final int ACYCLIC = 1;
+    public static final int SIMPLE = 2;
 
     public static GraphRestrictor TRAIL() {
         return new GraphRestrictor(TRAIL);
@@ -53,7 +48,7 @@ public class GraphRestrictor extends AstEnum {
             case TRAIL: return "TRAIL";
             case ACYCLIC: return "ACYCLIC";
             case SIMPLE: return "SIMPLE";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid GraphRestrictor code: " + code);
         }
     }
 
@@ -70,7 +65,7 @@ public class GraphRestrictor extends AstEnum {
             case "TRAIL": return TRAIL();
             case "ACYCLIC": return ACYCLIC();
             case "SIMPLE": return SIMPLE();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant GraphRestrictor." + value);
         }
     }
 

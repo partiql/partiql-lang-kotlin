@@ -442,7 +442,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         t = t concat when (node.truthValue.code()) {
             TruthValue.TRUE -> "TRUE"
             TruthValue.FALSE -> "FALSE"
-            TruthValue.UNK -> "UNKNOWN"
+            TruthValue.UNKNOWN -> "UNKNOWN"
             else -> throw UnsupportedOperationException("Cannot print $node")
         }
         return t

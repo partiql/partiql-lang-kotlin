@@ -14,13 +14,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 public class Scope extends AstEnum {
-    public static final int UNKNOWN = 0;
-    public static final int DEFAULT = 1;
-    public static final int LOCAL = 2;
-
-    public static Scope UNKNOWN() {
-        return new Scope(UNKNOWN);
-    }
+    public static final int DEFAULT = 0;
+    public static final int LOCAL = 1;
 
     public static Scope DEFAULT() {
         return new Scope(DEFAULT);
@@ -47,7 +42,7 @@ public class Scope extends AstEnum {
         switch (code) {
             case DEFAULT: return "DEFAULT";
             case LOCAL: return "LOCAL";
-            default: return "UNKNOWN";
+            default: throw new IllegalStateException("Invalid Scope code: " + code);
         }
     }
 
@@ -60,10 +55,9 @@ public class Scope extends AstEnum {
     @NotNull
     public static Scope parse(@NotNull String value) {
         switch (value) {
-            case "UNKNOWN": return UNKNOWN();
             case "DEFAULT": return DEFAULT();
             case "LOCAL": return LOCAL();
-            default: return UNKNOWN();
+            default: throw new IllegalArgumentException("No enum constant Scope." + value);
         }
     }
 

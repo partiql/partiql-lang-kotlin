@@ -623,7 +623,6 @@ internal class PartiQLParserDefault : PartiQLParser {
         // The following types are not supported in DDL yet,
         //  either as a top level type or as a element/field type in complex type declaration
         private fun isValidTypeDeclarationOrThrow(type: DataType, ctx: GeneratedParser.TypeContext) = when (type.code()) {
-            DataType.UNKNOWN,
             DataType.BAG,
             DataType.USER_DEFINED -> throw error(ctx, "declaration attribute with $type is not supported")
             else -> Unit
@@ -1409,7 +1408,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             when (ctx.truthValue.type) {
                 GeneratedParser.TRUE -> exprBoolTest(expr, not, TruthValue.TRUE())
                 GeneratedParser.FALSE -> exprBoolTest(expr, not, TruthValue.FALSE())
-                GeneratedParser.UNKNOWN -> exprBoolTest(expr, not, TruthValue.UNK())
+                GeneratedParser.UNKNOWN -> exprBoolTest(expr, not, TruthValue.UNKNOWN())
                 else -> throw error(ctx, "Unexpected value for boolean test IS [NOT] TRUE|FALSE|UNKNOWN")
             }
         }

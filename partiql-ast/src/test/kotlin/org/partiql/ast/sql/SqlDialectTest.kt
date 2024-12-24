@@ -1043,7 +1043,7 @@ class SqlDialectTest {
                 exprBoolTest(
                     value = v("x"),
                     not = false,
-                    truthValue = TruthValue.UNK()
+                    truthValue = TruthValue.UNKNOWN()
                 )
             ),
             expect(
@@ -1051,7 +1051,7 @@ class SqlDialectTest {
                 exprBoolTest(
                     value = v("x"),
                     not = true,
-                    truthValue = TruthValue.UNK()
+                    truthValue = TruthValue.UNKNOWN()
                 )
             ),
             // IS [NOT] NULL
