@@ -7,7 +7,6 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.datetime.TimeZone
 import java.math.BigDecimal
 
 //
@@ -70,8 +69,7 @@ internal val Fn_EXTRACT_DAY__DATE__INT32 = Function.static(
     parameters = arrayOf(
         Parameter("datetime", PType.date()),
     ),
-
-    ) { args ->
+) { args ->
     val v = args[0].localDate
     Datum.integer(v.dayOfMonth)
 }
@@ -96,8 +94,7 @@ internal val Fn_EXTRACT_HOUR__TIME__INT32 = Function.static(
     parameters = arrayOf(
         Parameter("datetime", PType.time(6)),
     ),
-
-    ) { args ->
+) { args ->
     val v = args[0].localTime
     Datum.integer(v.hour)
 }
@@ -108,8 +105,7 @@ internal val Fn_EXTRACT_HOUR__TIMESTAMP__INT32 = Function.static(
     parameters = arrayOf(
         Parameter("datetime", PType.timestamp(6)),
     ),
-
-    ) { args ->
+) { args ->
     val v = args[0].localDateTime
     Datum.integer(v.hour)
 }
@@ -123,8 +119,7 @@ internal val Fn_EXTRACT_MINUTE__TIME__INT32 = Function.static(
     parameters = arrayOf(
         Parameter("datetime", PType.time(6)),
     ),
-
-    ) { args ->
+) { args ->
     val v = args[0].localTime
     Datum.integer(v.minute)
 }

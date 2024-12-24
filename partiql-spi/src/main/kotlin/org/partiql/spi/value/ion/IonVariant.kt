@@ -3,9 +3,9 @@ package org.partiql.spi.value.ion
 import com.amazon.ion.system.IonBinaryWriterBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.AnyElement
-import com.amazon.ionelement.api.ElementType.CLOB
-import com.amazon.ionelement.api.ElementType.BOOL
 import com.amazon.ionelement.api.ElementType.BLOB
+import com.amazon.ionelement.api.ElementType.BOOL
+import com.amazon.ionelement.api.ElementType.CLOB
 import com.amazon.ionelement.api.ElementType.DECIMAL
 import com.amazon.ionelement.api.ElementType.FLOAT
 import com.amazon.ionelement.api.ElementType.INT
@@ -82,7 +82,7 @@ internal class IonVariant(private var value: AnyElement) : Datum {
     }
 
     @Deprecated("Deprecated in Java")
-    override fun getBytes(): ByteArray =  when (value.type) {
+    override fun getBytes(): ByteArray = when (value.type) {
         CLOB -> value.clobValue.copyOfBytes()
         BLOB -> value.blobValue.copyOfBytes()
         else -> super.getBytes()
@@ -171,10 +171,7 @@ internal class IonVariant(private var value: AnyElement) : Datum {
         if (value.type != STRUCT) {
             return super.getFields()
         }
-        return value.structFields
-            .map { Field.of(it.name, IonVariant(it.value)) }
-            .toMutableList()
-            .iterator()
+        return value.structFields.map { Field.of(it.name, IonVariant(it.value)) }.toMutableList().iterator()
     }
 
     override fun get(name: String): Datum {
