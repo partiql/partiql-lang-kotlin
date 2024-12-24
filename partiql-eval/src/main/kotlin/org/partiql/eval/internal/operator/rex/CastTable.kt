@@ -455,11 +455,13 @@ internal object CastTable {
         // WITHOUT TZ
         register(TIME, STRING) { x, _ -> Datum.string(x.localTime.toString()) }
         register(TIME, TIME) { x, t -> Datum.time(x.localTime, t.precision) }
+        register(TIME, TIMEZ) { x, t -> Datum.timez(x.localTime.atOffset(ZoneOffset.UTC), t.precision) }
         register(TIME, TIMESTAMP) { x, t -> Datum.timestamp(x.localTime.atDate(LocalDate.now()), t.precision) }
         register(TIME, TIMESTAMPZ) { x, t -> Datum.timestampz(x.localTime.atDate(LocalDate.now()).atOffset(ZoneOffset.UTC), t.precision) }
         // WITH TZ
         register(TIMEZ, STRING) { x, _ -> Datum.string(x.offsetTime.toString()) }
         register(TIMEZ, TIME) { x, t -> Datum.time(x.localTime, t.precision) }
+        register(TIMEZ, TIMEZ) { x, t -> Datum.timez(x.offsetTime, t.precision) }
         register(TIMEZ, TIMESTAMP) { x, t -> Datum.timestamp(x.localTime.atDate(LocalDate.now()), t.precision) }
         register(TIMEZ, TIMESTAMPZ) { x, t -> Datum.timestampz(x.offsetTime.atDate(LocalDate.now()), t.precision) }
     }
