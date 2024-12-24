@@ -15,11 +15,6 @@
 
 package org.partiql.lang.randomized.syntax
 
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
-import org.partiql.lang.randomized.eval.assertExpression
-import org.partiql.spi.value.Datum
-import org.partiql.value.datetime.DateTimeValue
 import java.util.Random
 
 class PartiQLParserDateTimeRandomizedTests {
@@ -50,18 +45,5 @@ class PartiQLParserDateTimeRandomizedTests {
             else -> nextInt(30)
         } + 1
         return Date(year, month, day)
-    }
-
-    @Test
-    @Disabled("The planner does not return the v1 plans right now. See assertExpression.") // TODO
-    fun testRandomDates() {
-        randomDates.map { date ->
-            val yearStr = date.year.toString().padStart(4, '0')
-            val monthStr = date.month.toString().padStart(2, '0')
-            val dayStr = date.day.toString().padStart(2, '0')
-            assertExpression("DATE '$yearStr-$monthStr-$dayStr'") {
-                Datum.date(DateTimeValue.date(date.year, date.month, date.day))
-            }
-        }
     }
 }

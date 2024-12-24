@@ -9,9 +9,7 @@ import org.partiql.types.PType;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
-import org.partiql.value.datetime.Date;
-import org.partiql.value.datetime.Time;
-import org.partiql.value.datetime.Timestamp;
+import org.partiql.value.datetime.DateTimeUtil;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -427,11 +425,15 @@ public interface Datum extends Iterable<Datum> {
             case CLOB:
                 return this.isNull() ? PartiQL.clobValue(null) : PartiQL.clobValue(this.getBytes());
             case DATE:
-            case TIMEZ:
+                return (this.isNull()) ? PartiQL.dateValue(null) : PartiQL.dateValue(DateTimeUtil.toDate(getLocalDate()));
             case TIME:
-            case TIMESTAMPZ:
+                return this.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(DateTimeUtil.toTime(getLocalTime()));
+            case TIMEZ:
+                return this.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(DateTimeUtil.toTime(getOffsetTime()));
             case TIMESTAMP:
-                throw new UnsupportedOperationException("update after merging #1678");
+                return this.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(getLocalDateTime()));
+            case TIMESTAMPZ:
+                return this.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(DateTimeUtil.toTimestamp(getOffsetDateTime()));
             case BAG:
                 return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(this));
             case ARRAY:
@@ -503,10 +505,16 @@ public interface Datum extends Iterable<Datum> {
             case BINARY:
                 throw new UnsupportedOperationException();
             case DATE:
+                org.partiql.value.DateValue DATEValue = (org.partiql.value.DateValue) value;
+                return DateTimeUtil.toDatumDate(Objects.requireNonNull(DATEValue.getValue()));
             case TIME:
+                org.partiql.value.TimeValue TIMEValue = (org.partiql.value.TimeValue) value;
+                return DateTimeUtil.toDatumTime(Objects.requireNonNull(TIMEValue.getValue()));
             case TIMESTAMP:
+                org.partiql.value.TimestampValue TIMESTAMPValue = (org.partiql.value.TimestampValue) value;
+                return DateTimeUtil.toDatumTimestamp(Objects.requireNonNull(TIMESTAMPValue.getValue()));
             case INTERVAL:
-                throw new UnsupportedOperationException("update after merging #1678");
+                throw new UnsupportedOperationException("interval not supported");
             case FLOAT32:
                 org.partiql.value.Float32Value FLOAT32Value = (org.partiql.value.Float32Value) value;
                 return new DatumFloat(Objects.requireNonNull(FLOAT32Value.getValue()));
