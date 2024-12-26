@@ -9,6 +9,7 @@ imports::{
     fn_instance::'org.partiql.spi.function.Function.Instance',
     agg_signature::'org.partiql.spi.function.Aggregation',
     table::'org.partiql.spi.catalog.Table',
+    shape::'org.partiql.types.shape.PShape',
   ],
 }
 
@@ -59,6 +60,50 @@ statement::[
   query::{
     root: rex,
   },
+  d_d_l::{
+    command:[
+      create_table::{
+        // Table Name, unresolved
+        name: identifier,
+        attributes: list::[attribute],
+        tbl_constraints: list::[constraint],
+        partition_by: optional::partition_by,
+        table_properties: list::[table_property],
+        primary_key: list::[identifier],
+        unique: list::[identifier]
+      },
+    ],
+    _:[
+      // Here we flattern non-check constraint
+      // into field associated with attribute
+      // !! Note: Constraint name will be ignored in the plan data model
+      attribute ::{
+        name: identifier,
+        type: shape,
+        isNullable: bool,
+        isOptional: bool,
+        isPrimaryKey: bool,
+        isUnique: bool,
+        constraints: list::[constraint],
+        comment: optional::string
+      },
+      constraint::[
+        check::{
+          expression: rex,
+          sql: string
+        }
+      ],
+      partition_by::[
+        attr_list::{
+          attrs: list::[identifier]
+        }
+      ],
+      table_property::{
+        name: string,
+        value: string,
+      },
+    ]
+  }
 ]
 
 // [ ALL | DISTINCT ]

@@ -16,6 +16,7 @@
 
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.internal.DdlField
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.exclude.ExcludeRepr
@@ -49,6 +50,9 @@ import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
+import org.partiql.planner.internal.ir.statementDDL
+import org.partiql.planner.internal.ir.statementDDLCommandCreateTable
+import org.partiql.planner.internal.ir.statementDDLPartitionByAttrList
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.Context
@@ -57,6 +61,7 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.types.Field
 import org.partiql.types.PType
+import org.partiql.types.shape.PShape
 import org.partiql.value.BoolValue
 import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
@@ -78,12 +83,13 @@ internal class PlanTyper(private val env: Env, config: Context) {
      * Rewrite the statement with inferred types and resolved variables
      */
     fun resolve(statement: Statement): Statement {
-        if (statement !is Statement.Query) {
-            throw IllegalArgumentException("PartiQLPlanner only supports Query statements")
+        return when (statement) {
+            is Statement.DDL -> statement.accept(DdlTyper(), emptyList()) as Statement
+            is Statement.Query -> {
+                val root = statement.root.type(emptyList(), emptyList(), Strategy.GLOBAL)
+                return statementQuery(root)
+            }
         }
-        // root TypeEnv has no bindings
-        val root = statement.root.type(emptyList(), emptyList(), Strategy.GLOBAL)
-        return statementQuery(root)
     }
     internal companion object {
         fun PType.static(): CompilerType = CompilerType(this)
@@ -1233,6 +1239,157 @@ internal class PlanTyper(private val env: Env, config: Context) {
         }
     }
 
+    /**
+     * Consider this as the secondary pass to lower to PShape.
+     *
+     * Post this pass:
+     * 1. Constraints associated with collection type are moved from attribute level to table level.
+     * 2. Side effect of PRIMARY KEY leads to unique and not null of attribute.
+     *
+     * We also verfied that:
+     * 1. primary key:
+     *    - Only one PRIMARY KEY constraint declaration across the table declaration.
+     *    - PRIMARY KEY cannot be asscoiated with optional attribute
+     *    - PRIMARY KEY can only be associated with attribute which has scalar type
+     *    - Duplicated attribute not allowed in Primary key declaration.
+     */
+    internal inner class DdlTyper : PlanRewriter<List<DdlField>>() {
+        override fun visitStatementDDL(node: Statement.DDL, ctx: List<DdlField>): Statement.DDL {
+            when (val command = node.command) {
+                is Statement.DDL.Command.CreateTable -> {
+                    val createTable = visitStatementDDLCommandCreateTable(command, ctx)
+                    return statementDDL(createTable)
+                }
+            }
+        }
+
+        override fun visitStatementDDLCommandCreateTable(
+            node: Statement.DDL.Command.CreateTable,
+            ctx: List<DdlField>
+        ): Statement.DDL.Command.CreateTable {
+            val attrs = node.attributes.map { attr ->
+                visitStatementDDLAttribute(attr, ctx)
+            }
+
+            // Make sure that no duplicated PK across Attribute
+            // i.e.,
+            // FOO INT2 PRIMARY KEY
+            // BAR INT2 PRIMARY KEY
+            val (attributePK, attributeUnique) = node.attributes.fold(mutableListOf<String>() to mutableListOf<String>()) { acc, attr ->
+                val pk = acc.first
+                val unique = acc.second
+                if (attr.isPrimaryKey) {
+                    if (pk.isNotEmpty()) {
+                        throw IllegalArgumentException("Multiple primary key constraint declarations are not allowed")
+                    } else pk.add(attr.name.getIdentifier().getText())
+                }
+                if (attr.isUnique) {
+                    unique.add(attr.name.getIdentifier().getText())
+                }
+                pk to unique
+            }
+
+            // Make sure no duplicated PK across attribute and table level
+            if (node.primaryKey.isNotEmpty() && attributePK.isNotEmpty()) {
+                throw IllegalArgumentException("Multiple primary key constraint declarations are not allowed")
+            }
+
+            // We make sure that the table level unique or primary key constraint does not refers to a non-existing attribute
+            // Only top level attribute can be associated with a primary key or unique constraint
+            val tableUniqueContr = node.unique.map { uniqueAttr ->
+                isDeclaredAttribute(uniqueAttr, attrs.map { DdlField.fromAttr(it) }) ?: throw IllegalArgumentException("Unresolved ref")
+            }
+
+            val tablePrimaryContr = node.primaryKey.map { pkAtrr ->
+                isDeclaredAttribute(pkAtrr, attrs.map { DdlField.fromAttr(it) }) ?: throw IllegalArgumentException("Unresolved ref")
+            }
+
+            // ALSO: For PK
+            // Thing like PRIMARY KEY (FOO, FOO) will be rejected
+            if (tablePrimaryContr.toSet().size != tablePrimaryContr.size) {
+                throw IllegalArgumentException("Attribute appears multiple times in primary key constraint")
+            }
+            val finalPK = (tablePrimaryContr + attributePK)
+
+            val finalUnique = (tableUniqueContr + attributeUnique + finalPK).toSet().toList()
+
+            val nonScalarTypeCode = listOf(PType.ROW, PType.STRUCT, PType.ARRAY, PType.DYNAMIC, PType.UNKNOWN, PType.VARIANT)
+
+            val finalAttrs = attrs.map {
+                val name = it.name.getIdentifier().getText()
+                if (finalPK.contains(name)) {
+                    when {
+                        it.isOptional -> throw IllegalArgumentException("Optional Attribute $name can not be declared as Primary Key.")
+                        it.type.code() in nonScalarTypeCode -> throw IllegalArgumentException("Primary Key can only be associated with scalar typed attribute")
+                        else -> it.copy(isNullable = false)
+                    }
+                } else it
+            }
+
+            val partitionBy = when (val partitionAttr = node.partitionBy) {
+                is Statement.DDL.PartitionBy.AttrList -> {
+                    val attrListResolved = partitionAttr.attrs.map { attr ->
+                        isDeclaredAttribute(attr, attrs.map { DdlField.fromAttr(it) }) ?: throw IllegalArgumentException("Unresolved ref")
+                    }
+                    statementDDLPartitionByAttrList(attrListResolved.map { Identifier.of(Identifier.Part.delimited(it)) })
+                }
+                null -> null
+            }
+            return statementDDLCommandCreateTable(
+                node.name,
+                finalAttrs,
+                node.tblConstraints,
+                partitionBy,
+                node.tableProperties,
+                finalPK.map { Identifier.of(Identifier.Part.delimited(it)) },
+                finalUnique.map { Identifier.of(Identifier.Part.delimited(it)) }
+            )
+        }
+
+        override fun visitStatementDDLAttribute(node: Statement.DDL.Attribute, ctx: List<DdlField>): Statement.DDL.Attribute {
+            val ddlField = DdlField.fromAttr(node)
+            return visitDdlField(ddlField, ctx).toAttr()
+        }
+
+        private fun visitDdlField(node: DdlField, ctx: List<DdlField>): DdlField {
+            // Make sure those check constraints do not refer to out of scope variable
+            // and the check constraints resolves to boolean
+            val resolvedConstraint = node.constraints.map {
+                it.accept(this, listOf(node)) as Statement.DDL.Constraint
+            }
+            val type = if (node.type.code() == PType.ROW) {
+                val nested = node.type.fields.map { field ->
+                    visitDdlField(field as DdlField, ctx)
+                }
+                PType.row(nested)
+            } else {
+                node.type
+            }.let { PShape(it) }
+            return node.copy(type = type, constraints = resolvedConstraint)
+        }
+
+        // TODO: Identifier case sensitivity
+        private fun isDeclaredAttribute(identifier: Identifier, declareAttrs: List<Field>): String? {
+            declareAttrs.forEach { declared ->
+                if (identifier.matches(declared.name, identifier.getIdentifier().isRegular()))
+                // Storing as Declared to work around identifier case sensitivity at the moment
+                    return declared.name
+            }
+            return null
+        }
+
+        override fun visitStatementDDLConstraintCheck(
+            node: Statement.DDL.Constraint.Check,
+            ctx: List<DdlField>
+        ): Statement.DDL.Constraint.Check {
+            val bindings = ctx.map { Rel.Binding(it.name.getIdentifier().getText(), it.type.toCType()) }
+            val typed = node.expression.type(bindings, emptyList())
+            if (typed.type.code() != PType.BOOL) {
+                throw IllegalArgumentException("Check Constraint - Search condition inferred as a non-boolean type")
+            }
+            return node.copy(typed, node.sql)
+        }
+    }
     // HELPERS
 
     private fun Rel.type(stack: List<Scope>, strategy: Strategy = Strategy.LOCAL): Rel =

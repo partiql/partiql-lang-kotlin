@@ -19,6 +19,7 @@ import org.partiql.ast.Ast.groupByKey
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Query
 import org.partiql.ast.Statement
 import org.partiql.ast.expr.Expr
 import org.partiql.planner.internal.helpers.toBinder
@@ -28,7 +29,10 @@ import org.partiql.planner.internal.helpers.toBinder
  */
 internal object NormalizeGroupBy : AstPass {
 
-    override fun apply(statement: Statement) = Visitor.visitStatement(statement, 0) as Statement
+    override fun apply(statement: Statement) = when (statement) {
+        is Query -> Visitor.visitStatement(statement, 0) as Statement
+        else -> statement
+    }
 
     private object Visitor : AstRewriter<Int>() {
 

@@ -61,7 +61,6 @@ import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
-import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -89,8 +88,8 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
+import org.partiql.planner.internal.transforms.AstToPlan.visitType
 import org.partiql.planner.internal.typer.CompilerType
-import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.utils.DateTimeUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
@@ -1071,120 +1070,6 @@ internal object RexConverter {
             val type = visitType(node.asType)
             val arg = visitExprCoerce(node.value, ctx)
             return rex(ANY, rexOpCastUnresolved(type, arg))
-        }
-
-        private fun visitType(type: DataType): CompilerType {
-            return when (type.code()) {
-                // <character string types>
-                // TODO CHAR_VARYING, CHARACTER_LARGE_OBJECT, CHAR_LARGE_OBJECT
-                DataType.CHARACTER, DataType.CHAR -> {
-                    val length = type.length ?: 1
-                    assertGtZeroAndCreate(PType.CHAR, "length", length, PType::character)
-                }
-                DataType.CHARACTER_VARYING, DataType.VARCHAR -> {
-                    val length = type.length ?: 1
-                    assertGtZeroAndCreate(PType.VARCHAR, "length", length, PType::varchar)
-                }
-                DataType.CLOB -> assertGtZeroAndCreate(PType.CLOB, "length", type.length ?: Int.MAX_VALUE, PType::clob)
-                DataType.STRING -> PType.string()
-                // <binary large object string type>
-                // TODO BINARY_LARGE_OBJECT
-                DataType.BLOB -> assertGtZeroAndCreate(PType.BLOB, "length", type.length ?: Int.MAX_VALUE, PType::blob)
-                // <bit string type>
-                DataType.BIT -> error("BIT is not supported yet.")
-                DataType.BIT_VARYING -> error("BIT VARYING is not supported yet.")
-                // <numeric types> - <exact numeric types>
-                DataType.NUMERIC -> {
-                    val p = type.precision
-                    val s = type.scale
-                    when {
-                        p == null && s == null -> PType.decimal(38, 0)
-                        p != null && s != null -> {
-                            assertParamCompToZero(PType.NUMERIC, "precision", p, false)
-                            assertParamCompToZero(PType.NUMERIC, "scale", s, true)
-                            if (s > p) {
-                                throw TypeCheckException("Numeric scale cannot be greater than precision.")
-                            }
-                            PType.decimal(type.precision!!, type.scale!!)
-                        }
-                        p != null && s == null -> {
-                            assertParamCompToZero(PType.NUMERIC, "precision", p, false)
-                            PType.decimal(p, 0)
-                        }
-                        else -> error("Precision can never be null while scale is specified.")
-                    }
-                }
-                DataType.DEC, DataType.DECIMAL -> {
-                    val p = type.precision
-                    val s = type.scale
-                    when {
-                        p == null && s == null -> PType.decimal(38, 0)
-                        p != null && s != null -> {
-                            assertParamCompToZero(PType.DECIMAL, "precision", p, false)
-                            assertParamCompToZero(PType.DECIMAL, "scale", s, true)
-                            if (s > p) {
-                                throw TypeCheckException("Decimal scale cannot be greater than precision.")
-                            }
-                            PType.decimal(p, s)
-                        }
-                        p != null && s == null -> {
-                            assertParamCompToZero(PType.DECIMAL, "precision", p, false)
-                            PType.decimal(p, 0)
-                        }
-                        else -> error("Precision can never be null while scale is specified.")
-                    }
-                }
-                DataType.BIGINT, DataType.INT8, DataType.INTEGER8 -> PType.bigint()
-                DataType.INT4, DataType.INTEGER4, DataType.INTEGER, DataType.INT -> PType.integer()
-                DataType.INT2, DataType.SMALLINT -> PType.smallint()
-                DataType.TINYINT -> PType.tinyint() // TODO define in parser
-                // <numeric type> - <approximate numeric type>
-                DataType.FLOAT -> PType.real()
-                DataType.REAL -> PType.real()
-                DataType.DOUBLE_PRECISION -> PType.doublePrecision()
-                // <boolean type>
-                DataType.BOOL -> PType.bool()
-                // <datetime type>
-                DataType.DATE -> PType.date()
-                DataType.TIME -> assertGtEqZeroAndCreate(PType.TIME, "precision", type.precision ?: 0, PType::time)
-                DataType.TIME_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(PType.TIMEZ, "precision", type.precision ?: 0, PType::timez)
-                DataType.TIMESTAMP -> assertGtEqZeroAndCreate(PType.TIMESTAMP, "precision", type.precision ?: 6, PType::timestamp)
-                DataType.TIMESTAMP_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(PType.TIMESTAMPZ, "precision", type.precision ?: 6, PType::timestampz)
-                // <interval type>
-                DataType.INTERVAL -> error("INTERVAL is not supported yet.")
-                // <container type>
-                DataType.STRUCT -> PType.struct()
-                DataType.TUPLE -> PType.struct()
-                // <collection type>
-                DataType.LIST -> PType.array()
-                DataType.BAG -> PType.bag()
-                // <user defined type>
-                DataType.USER_DEFINED -> TODO("Custom type not supported ")
-                else -> error("Unsupported DataType type: $type")
-            }.toCType()
-        }
-
-        private fun assertGtZeroAndCreate(type: Int, param: String, value: Int, create: (Int) -> PType): PType {
-            assertParamCompToZero(type, param, value, false)
-            return create.invoke(value)
-        }
-
-        private fun assertGtEqZeroAndCreate(type: Int, param: String, value: Int, create: (Int) -> PType): PType {
-            assertParamCompToZero(type, param, value, true)
-            return create.invoke(value)
-        }
-
-        /**
-         * @param allowZero when FALSE, this asserts that [value] > 0. If TRUE, this asserts that [value] >= 0.
-         */
-        private fun assertParamCompToZero(type: Int, param: String, value: Int, allowZero: Boolean) {
-            val (result, compString) = when (allowZero) {
-                true -> (value >= 0) to "greater than"
-                false -> (value > 0) to "greater than or equal to"
-            }
-            if (!result) {
-                throw TypeCheckException("$type $param must be an integer value $compString 0.")
-            }
         }
 
         override fun visitExprSessionAttribute(node: ExprSessionAttribute, ctx: Env): Rex {

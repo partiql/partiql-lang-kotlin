@@ -13,21 +13,30 @@ import org.partiql.plan.rex.RexCase
 import org.partiql.plan.rex.RexStruct
 import org.partiql.plan.rex.RexType
 import org.partiql.plan.rex.RexVar
+import org.partiql.planner.internal.DdlField
 import org.partiql.planner.internal.PlannerFlag
+import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.SetQuantifier
+import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.value.Datum
 import org.partiql.types.Field
 import org.partiql.types.PType
+import org.partiql.types.shape.PShape
+import org.partiql.types.shape.trait.MetadataTrait
+import org.partiql.types.shape.trait.NotNullTrait
+import org.partiql.types.shape.trait.PrimaryKeyTrait
+import org.partiql.types.shape.trait.RequiredTrait
+import org.partiql.types.shape.trait.UniqueTrait
 import org.partiql.value.DecimalValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
 import org.partiql.planner.internal.ir.PlanNode as INode
 import org.partiql.planner.internal.ir.Rel as IRel
 import org.partiql.planner.internal.ir.Rex as IRex
-import org.partiql.planner.internal.ir.Statement as IStatement
 
 /**
  * This produces a V1 plan from the internal plan IR.
@@ -45,12 +54,114 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
      */
     fun transform(internal: IPlan, listener: PErrorListener): Plan {
         val signal = flags.contains(PlannerFlag.SIGNAL_MODE)
-        val query = (internal.statement as IStatement.Query)
-        val visitor = Visitor(listener, signal)
-        val root = visitor.visitRex(query.root, query.root.type)
-        val action = Action.Query { root }
-        // TODO replace with standard implementations (or just remove plan transform altogether when possible).
-        return Plan { action }
+        when (internal.statement) {
+            is Statement.DDL -> {
+                val query = internal.statement
+                val visitor = DDLVisitor(listener, signal)
+                val action = visitor.visitStatementDDL(query, Unit)
+                // TODO replace with standard implementations (or just remove plan transform altogether when possible).
+                return Plan { action }
+            }
+            is Statement.Query -> {
+                val query = internal.statement
+                val visitor = Visitor(listener, signal)
+                val root = visitor.visitRex(query.root, query.root.type)
+                val action = Action.Query { root }
+                // TODO replace with standard implementations (or just remove plan transform altogether when possible).
+                return Plan { action }
+            }
+        }
+    }
+
+    // For now: Break down to two separate visitors
+    private class DDLVisitor(
+        private val listener: PErrorListener,
+        private val signal: Boolean,
+    ) : PlanBaseVisitor<Any?, Unit>() {
+        override fun defaultReturn(node: PlanNode, ctx: Unit): Any? {
+            TODO("Translation not supported for ${node::class.simpleName}")
+        }
+
+        // DDL
+        override fun visitStatementDDL(node: Statement.DDL, ctx: Unit): Action {
+            return when (val command = node.command) {
+                is Statement.DDL.Command.CreateTable -> {
+                    visitStatementDDLCommandCreateTable(command, ctx)
+                }
+            }
+        }
+
+        override fun visitStatementDDLCommandCreateTable(node: Statement.DDL.Command.CreateTable, ctx: Unit): Action.CreateTable {
+            val fields = node.attributes.map {
+                val shape = visitStatementDDLAttribute(it, ctx)
+                Field.of(it.name.getIdentifier().getText(), shape)
+            }
+            val row = PShape(PType.row(fields))
+            val schema = PShape(PType.bag(row)).let {
+                if (node.primaryKey.isNotEmpty())
+                    PrimaryKeyTrait(it, node.primaryKey.map { it.getIdentifier().getText() })
+                else it
+            }.let {
+                if (node.unique.isNotEmpty())
+                    UniqueTrait(it, node.unique.map { it.getIdentifier().getText() })
+                else it
+            }.let {
+                var shape = it
+                if (node.tableProperties.isNotEmpty()) {
+                    node.tableProperties.forEach { prop ->
+                        shape = MetadataTrait(shape, prop.name, prop.value)
+                    }
+                }
+                shape
+            }.let { it ->
+                when (val partition = node.partitionBy) {
+                    is Statement.DDL.PartitionBy.AttrList -> {
+                        val names = buildString {
+                            append("[")
+                            append(partition.attrs.joinToString(",") { it.getIdentifier().getText() })
+                            append("]")
+                        }
+                        MetadataTrait(it, "partition", names)
+                    }
+                    null -> it
+                }
+            }
+            return Action.CreateTable {
+                Table.builder()
+                    .name(node.name.getIdentifier().getText())
+                    .schema(schema)
+                    .build()
+            }
+        }
+
+        override fun visitStatementDDLAttribute(node: Statement.DDL.Attribute, ctx: Unit): PShape {
+            val ddlField = DdlField.fromAttr(node)
+            return visitDdlField(ddlField, ctx)
+        }
+
+        private fun visitDdlField(ddlField: DdlField, ctx: Unit): PShape {
+            val baseShape = ddlField.type
+            val fieldReduced = when (baseShape.code()) {
+                PType.ROW -> {
+                    val fields = baseShape.fields.map {
+                        val shape = visitDdlField(it as DdlField, ctx)
+                        Field.of(it.name.getIdentifier().getText(), shape)
+                    }
+                    PType.row(fields)
+                }
+                else -> baseShape
+            }.let { PShape(it) }
+            val constraintReduced = ddlField
+                .constraints
+                .fold(fieldReduced) { acc, constr ->
+                    InlineCheckConstraintExtractor.visitStatementDDLConstraint(constr, acc)
+                }.let { if (!ddlField.isNullable) NotNullTrait(it) else it }
+                .let { if (!ddlField.isOptional) RequiredTrait(it) else it }
+            val metadataReduced = ddlField.comment?.let {
+                MetadataTrait(constraintReduced, "comment", it)
+            } ?: constraintReduced
+            return metadataReduced
+        }
     }
 
     private class Visitor(

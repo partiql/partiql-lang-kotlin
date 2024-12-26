@@ -78,3 +78,92 @@ public abstract class org/partiql/types/PType : org/partiql/types/Enum {
 	public static fun variant (Ljava/lang/String;)Lorg/partiql/types/PType;
 }
 
+public class org/partiql/types/shape/PShape : org/partiql/types/PType {
+	public fun <init> (Lorg/partiql/types/PType;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFields ()Ljava/util/Collection;
+	public fun getLength ()I
+	public fun getPrecision ()I
+	public fun getScale ()I
+	public fun getTypeParameter ()Lorg/partiql/types/PType;
+	public fun hashCode ()I
+	public fun isNullable ()Z
+	public fun isOptional ()Z
+	public fun maxValue ()Ljava/lang/Number;
+	public fun meta ()Ljava/util/Map;
+	public fun minValue ()Ljava/lang/Number;
+	public fun name ()Ljava/lang/String;
+	public fun primaryKey ()Ljava/util/Collection;
+	public fun toString ()Ljava/lang/String;
+	public fun unique ()Ljava/util/Collection;
+}
+
+public class org/partiql/types/shape/trait/ConstraintTrait : org/partiql/types/shape/trait/PTrait {
+	public fun <init> (Lorg/partiql/types/shape/PShape;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public class org/partiql/types/shape/trait/MetadataTrait : org/partiql/types/shape/trait/PTrait {
+	public fun <init> (Lorg/partiql/types/shape/PShape;Ljava/lang/String;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun meta ()Ljava/util/Map;
+}
+
+public class org/partiql/types/shape/trait/NotNullTrait : org/partiql/types/shape/trait/PTrait {
+	public fun <init> (Lorg/partiql/types/shape/PShape;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun isNullable ()Z
+}
+
+public abstract class org/partiql/types/shape/trait/PTrait : org/partiql/types/shape/PShape {
+	protected fun <init> (Lorg/partiql/types/shape/PShape;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getFields ()Ljava/util/Collection;
+	public fun getLength ()I
+	public fun getPrecision ()I
+	public fun getScale ()I
+	public fun getTypeParameter ()Lorg/partiql/types/PType;
+	public fun hashCode ()I
+	public fun isNullable ()Z
+	public fun isOptional ()Z
+	public fun maxValue ()Ljava/lang/Number;
+	public fun meta ()Ljava/util/Map;
+	public fun minValue ()Ljava/lang/Number;
+	public fun name ()Ljava/lang/String;
+	public fun primaryKey ()Ljava/util/Collection;
+	public fun toString ()Ljava/lang/String;
+	public fun unique ()Ljava/util/Collection;
+}
+
+public class org/partiql/types/shape/trait/PrimaryKeyTrait : org/partiql/types/shape/trait/PTrait {
+	public fun <init> (Lorg/partiql/types/shape/PShape;Ljava/util/List;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun primaryKey ()Ljava/util/Collection;
+}
+
+public class org/partiql/types/shape/trait/RangeTrait : org/partiql/types/shape/trait/PTrait {
+	public fun <init> (Lorg/partiql/types/shape/PShape;Ljava/lang/Number;Ljava/lang/Number;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun maxValue ()Ljava/lang/Number;
+	public fun minValue ()Ljava/lang/Number;
+}
+
+public class org/partiql/types/shape/trait/RequiredTrait : org/partiql/types/shape/trait/PTrait {
+	public fun <init> (Lorg/partiql/types/shape/PShape;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun isOptional ()Z
+}
+
+public class org/partiql/types/shape/trait/UniqueTrait : org/partiql/types/shape/trait/PTrait {
+	public fun <init> (Lorg/partiql/types/shape/PShape;Ljava/util/List;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun unique ()Ljava/util/Collection;
+}
+
