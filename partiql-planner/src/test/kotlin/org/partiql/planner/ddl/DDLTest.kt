@@ -232,7 +232,7 @@ class DDLTest {
             "foo"
         )
         val struct_attr = fields[0]
-        assertField(struct_attr, "struct_attr", PType.ROW, true, false )
+        assertField(struct_attr, "struct_attr", PType.ROW, true, false)
         val structFields = struct_attr.type.fields.toList()
 
         val int2_attr = structFields[0]

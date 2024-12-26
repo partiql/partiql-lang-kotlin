@@ -2,7 +2,6 @@ package org.partiql.planner.internal
 
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.statementDDLAttribute
-import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.Field
 import org.partiql.types.PType

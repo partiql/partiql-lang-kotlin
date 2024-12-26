@@ -1323,8 +1323,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
                         it.type.code() in nonScalarTypeCode -> throw IllegalArgumentException("Primary Key can only be associated with scalar typed attribute")
                         else -> it.copy(isNullable = false)
                     }
-                }
-                else it
+                } else it
             }
 
             val partitionBy = when (val partitionAttr = node.partitionBy) {

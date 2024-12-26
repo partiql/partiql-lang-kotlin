@@ -26,7 +26,6 @@ import org.partiql.planner.internal.ir.statementDDLPartitionByAttrList
 import org.partiql.planner.internal.ir.statementDDLTableProperty
 import org.partiql.planner.internal.transforms.AstToPlan.convert
 import org.partiql.planner.internal.transforms.AstToPlan.visitType
-import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Identifier
 import org.partiql.types.PType
 import org.partiql.types.shape.PShape
