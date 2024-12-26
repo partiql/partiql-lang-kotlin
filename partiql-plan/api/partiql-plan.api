@@ -1,6 +1,10 @@
 public abstract interface class org/partiql/plan/Action {
 }
 
+public abstract interface class org/partiql/plan/Action$CreateTable : org/partiql/plan/Action {
+	public abstract fun getTable ()Lorg/partiql/spi/catalog/Table;
+}
+
 public abstract interface class org/partiql/plan/Action$Query : org/partiql/plan/Action {
 	public abstract fun getRex ()Lorg/partiql/plan/rex/Rex;
 }
