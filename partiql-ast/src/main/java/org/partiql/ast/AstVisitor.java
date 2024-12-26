@@ -3,7 +3,6 @@ package org.partiql.ast;
 import org.partiql.ast.ddl.AttributeConstraint;
 import org.partiql.ast.ddl.ColumnDefinition;
 import org.partiql.ast.ddl.CreateTable;
-import org.partiql.ast.ddl.Ddl;
 import org.partiql.ast.ddl.KeyValue;
 import org.partiql.ast.ddl.PartitionBy;
 import org.partiql.ast.ddl.TableConstraint;
@@ -88,10 +87,6 @@ public abstract class AstVisitor<R, C> {
     //
     // DDL
     //
-    public R visitDdl(Ddl node, C ctx) {
-        return defaultVisit(node, ctx);
-    }
-
     public R visitCreateTable(CreateTable node, C ctx) {
         return defaultVisit(node, ctx);
     }

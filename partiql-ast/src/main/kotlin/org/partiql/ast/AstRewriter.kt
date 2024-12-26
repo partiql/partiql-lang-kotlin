@@ -4,7 +4,7 @@ import org.partiql.ast.Ast.explain
 import org.partiql.ast.Ast.exprQuerySet
 import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.query
-import org.partiql.ast.ddl.Ddl
+import org.partiql.ast.ddl.CreateTable
 import org.partiql.ast.dml.ConflictAction
 import org.partiql.ast.dml.ConflictTarget
 import org.partiql.ast.dml.Delete
@@ -802,8 +802,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     // TODO: DDL
-    override fun visitDdl(node: Ddl, ctx: C): AstNode {
-        throw UnsupportedOperationException("DDL has not been supported yet in AstRewriter")
+    override fun visitCreateTable(node: CreateTable?, ctx: C): AstNode {
+        throw UnsupportedOperationException("CREATE TABLE has not been supported yet in AstRewriter")
     }
 
     override fun visitInsert(node: Insert, ctx: C): AstNode {

@@ -48,7 +48,7 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
-import org.partiql.ast.ddl.Ddl
+import org.partiql.ast.ddl.CreateTable
 import org.partiql.ast.dml.Delete
 import org.partiql.ast.dml.Insert
 import org.partiql.ast.dml.Replace
@@ -822,8 +822,8 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     }
 
     // TODO: DDL
-    override fun visitDdl(node: Ddl, ctx: SqlBlock): SqlBlock {
-        throw UnsupportedOperationException("DDL has not been supported yet in SqlDialect")
+    override fun visitCreateTable(node: CreateTable, ctx: SqlBlock): SqlBlock {
+        throw UnsupportedOperationException("CREATE TABLE has not been supported yet in SqlDialect")
     }
 
     override fun visitInsert(node: Insert?, ctx: SqlBlock?): SqlBlock {

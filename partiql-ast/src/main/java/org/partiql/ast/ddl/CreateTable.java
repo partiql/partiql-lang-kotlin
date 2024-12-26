@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.IdentifierChain;
+import org.partiql.ast.Statement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public final class CreateTable extends Ddl {
+public final class CreateTable extends Statement {
 
     @NotNull
     @Getter
