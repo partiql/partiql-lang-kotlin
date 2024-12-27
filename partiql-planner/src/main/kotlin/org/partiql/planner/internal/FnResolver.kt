@@ -27,8 +27,6 @@ internal object FnResolver {
     /**
      * Resolution of either a static or dynamic function.
      *
-     * TODO: How do we handle DYNAMIC?
-     *
      * @param variants
      * @param args
      * @return
@@ -46,8 +44,8 @@ internal object FnResolver {
             }
         }
 
-        // 2. If there are DYNAMIC arguments, return all candidates
-        val isDynamic = args.any { it.code() == PType.DYNAMIC }
+        // 2. If there are DYNAMIC/VARIANT arguments, return all candidates
+        val isDynamic = args.any { it.code() == PType.DYNAMIC || it.code() == PType.VARIANT }
         if (isDynamic) {
             val orderedMatches = candidates.sortedWith(FnComparator)
             return FnMatch.Dynamic(orderedMatches)

@@ -22,7 +22,6 @@ import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
 import org.partiql.ast.Literal.intNum
 import org.partiql.ast.expr.Scope
-import org.partiql.value.PartiQLValueExperimental
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -116,7 +115,6 @@ class PartiQLParserDDLTests {
             ),
         )
 
-        @OptIn(PartiQLValueExperimental::class)
         val createTableTests_addition = listOf(
             //
             // Column Constraints

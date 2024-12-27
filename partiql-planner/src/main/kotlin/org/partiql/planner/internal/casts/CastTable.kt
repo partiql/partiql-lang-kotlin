@@ -63,6 +63,12 @@ internal class CastTable private constructor(
                     cast(it)
                 }
             }
+            // A VARIANT can be cast to all other types.
+            graph[PType.VARIANT] = relationships {
+                PType.codes().map {
+                    cast(it)
+                }
+            }
             graph[PType.DYNAMIC] = relationships {
                 cast(PType.DYNAMIC)
                 PType.codes().filterNot { it == PType.DYNAMIC }.forEach {

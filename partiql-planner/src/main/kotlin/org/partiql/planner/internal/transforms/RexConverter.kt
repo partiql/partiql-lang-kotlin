@@ -16,7 +16,6 @@
 
 package org.partiql.planner.internal.transforms
 
-import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstVisitor
 import org.partiql.ast.DataType
@@ -93,24 +92,10 @@ import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.utils.DateTimeUtils
 import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.DecimalValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.boolValue
-import org.partiql.value.dateValue
 import org.partiql.value.datetime.DateTimeValue
-import org.partiql.value.decimalValue
-import org.partiql.value.float64Value
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.intValue
-import org.partiql.value.io.PartiQLValueIonReaderBuilder
-import org.partiql.value.missingValue
-import org.partiql.value.nullValue
-import org.partiql.value.stringValue
-import org.partiql.value.timeValue
-import org.partiql.value.timestampValue
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
@@ -127,7 +112,6 @@ internal object RexConverter {
 
     internal fun applyRel(expr: Expr, context: Env): Rex = expr.accept(ToRex, context)
 
-    @OptIn(PartiQLValueExperimental::class)
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private object ToRex : AstVisitor<Rex, Env>() {
 
@@ -152,51 +136,34 @@ internal object RexConverter {
         }
 
         override fun visitExprLit(node: ExprLit, context: Env): Rex {
-            val pValue = node.lit.toPartiQLValue()
-            val type = when (pValue) {
-                // Specifically handle the lack of an infinite precision/scale
-                // TODO: PartiQLValue won't be in AST soon
-                is DecimalValue -> {
-                    when (val decimal = pValue.value) {
-                        null -> PType.decimal(38, 19)
-                        else -> PType.decimal(decimal.precision(), decimal.scale())
-                    }
-                }
-                else -> pValue.type.toPType()
-            }
+            val datum = node.lit.toDatum()
+            val type = datum.type
             val cType = CompilerType(
                 _delegate = type,
                 isNullValue = node.lit.code() == Literal.NULL,
                 isMissingValue = node.lit.code() == Literal.MISSING
             )
-            val op = rexOpLit(pValue)
+            val op = rexOpLit(datum)
             return rex(cType, op)
         }
 
-        private fun Literal.toPartiQLValue(): PartiQLValue {
+        private fun Literal.toDatum(): Datum {
             val lit = this
             return when (lit.code()) {
-                Literal.NULL -> nullValue()
-                Literal.MISSING -> missingValue()
-                Literal.STRING -> stringValue(lit.stringValue())
-                Literal.BOOL -> boolValue(lit.booleanValue())
+                Literal.NULL -> Datum.nullValue()
+                Literal.MISSING -> Datum.missing()
+                Literal.STRING -> Datum.string(lit.stringValue())
+                Literal.BOOL -> Datum.bool(lit.booleanValue())
                 Literal.EXACT_NUM -> {
-                    // TODO previous behavior inferred decimals with scale = 0 to be a PartiQLValue.IntValue with
-                    //  PType of numeric. Since we're keeping numeric and decimal, need to take another look at
-                    //  whether the literal should have type decimal or numeric.
                     val dec = lit.bigDecimalValue().round(MathContext(38, RoundingMode.HALF_EVEN))
-                    if (dec.scale() == 0) {
-                        intValue(dec.toBigInteger())
-                    } else {
-                        decimalValue(dec)
-                    }
+                    Datum.decimal(dec, dec.precision(), dec.scale())
                 }
                 Literal.INT_NUM -> {
                     val n = lit.numberValue()
                     // 1st, try parse as int
                     try {
                         val v = n.toInt(10)
-                        return int32Value(v)
+                        return Datum.integer(v)
                     } catch (ex: NumberFormatException) {
                         // ignore
                     }
@@ -204,7 +171,7 @@ internal object RexConverter {
                     // 2nd, try parse as long
                     try {
                         val v = n.toLong(10)
-                        return int64Value(v)
+                        return Datum.bigint(v)
                     } catch (ex: NumberFormatException) {
                         // ignore
                     }
@@ -212,13 +179,14 @@ internal object RexConverter {
                     // 3rd, try parse as BigInteger
                     try {
                         val v = BigInteger(n)
-                        return intValue(v)
+                        val vDecimal = BigDecimal(v)
+                        return Datum.decimal(vDecimal, vDecimal.precision(), vDecimal.scale())
                     } catch (ex: NumberFormatException) {
                         throw ex
                     }
                 }
                 Literal.APPROX_NUM -> {
-                    float64Value(lit.numberValue().toDouble())
+                    return Datum.doublePrecision(lit.numberValue().toDouble())
                 }
                 Literal.TYPED_STRING -> {
                     val type = this.dataType()
@@ -227,18 +195,18 @@ internal object RexConverter {
                         DataType.DATE -> {
                             val value = LocalDate.parse(typedString, DateTimeFormatter.ISO_LOCAL_DATE)
                             val date = DateTimeValue.date(value.year, value.monthValue, value.dayOfMonth)
-                            dateValue(date)
+                            return Datum.date(date)
                         }
                         DataType.TIME, DataType.TIME_WITH_TIME_ZONE -> {
                             val time = DateTimeUtils.parseTimeLiteral(typedString)
                             val precision = type.precision ?: 6
-                            timeValue(time.toPrecision(precision))
+                            return Datum.time(time, precision)
                         }
                         DataType.TIMESTAMP, DataType.TIMESTAMP_WITH_TIME_ZONE -> {
                             val timestamp = DateTimeUtils.parseTimestamp(typedString)
                             val precision = type.precision ?: 6
                             val value = timestamp.toPrecision(precision)
-                            timestampValue(value)
+                            return Datum.timestamp(value)
                         }
                         else -> error("Unsupported typed literal string: $this")
                     }
@@ -247,17 +215,13 @@ internal object RexConverter {
             }
         }
 
-        /**
-         * TODO PartiQLValue will be replaced by Datum (i.e. IonDatum) is a subsequent PR.
-         */
         override fun visitExprVariant(node: ExprVariant, ctx: Env): Rex {
             if (node.encoding != "ion") {
                 throw IllegalArgumentException("unsupported encoding ${node.encoding}")
             }
-            val ion = loadSingleElement(node.value)
-            val value = PartiQLValueIonReaderBuilder.standard().build(ion).read()
-            val type = CompilerType(value.type.toPType())
-            return rex(type, rexOpLit(value))
+            val datum = Datum.ion(node.value)
+            val type = CompilerType(datum.type)
+            return rex(type, rexOpLit(datum))
         }
 
         /**
@@ -583,7 +547,7 @@ internal object RexConverter {
                 val schema = acc.type.schema + scan.type.schema
                 val props = emptySet<Rel.Prop>()
                 val type = relType(schema, props)
-                rel(type, relOpJoin(acc, scan, rex(BOOL, rexOpLit(boolValue(true))), Rel.Op.Join.Type.INNER))
+                rel(type, relOpJoin(acc, scan, rex(BOOL, rexOpLit(Datum.bool(true))), Rel.Op.Join.Type.INNER))
             }
 
             // compute the ref used by select construct
@@ -644,7 +608,7 @@ internal object RexConverter {
             return rel(relType, relOpUnpivot(path))
         }
 
-        private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
+        private fun rexString(str: String) = rex(STRING, rexOpLit(Datum.string(str)))
 
         override fun visitExprCall(node: ExprCall, context: Env): Rex {
             val type = (ANY)
@@ -759,7 +723,7 @@ internal object RexConverter {
             }.toMutableList()
 
             val defaultRex = when (val default = node.defaultExpr) {
-                null -> rex(type = ANY, op = rexOpLit(value = nullValue()))
+                null -> rex(type = ANY, op = rexOpLit(value = Datum.nullValue()))
                 else -> visitExprCoerce(default, context)
             }
             val op = rexOpCase(branches = branches, default = defaultRex)
@@ -969,7 +933,7 @@ internal object RexConverter {
             val type = ANY
             // Args
             val arg0 = visitExprCoerce(node.value, ctx)
-            val arg1 = node.start?.let { visitExprCoerce(it, ctx) } ?: rex(INT, rexOpLit(int64Value(1)))
+            val arg1 = node.start?.let { visitExprCoerce(it, ctx) } ?: rex(INT, rexOpLit(Datum.bigint(1L)))
             val arg2 = node.length?.let { visitExprCoerce(it, ctx) }
             // Call Variants
             val call = when (arg2) {
@@ -1047,8 +1011,8 @@ internal object RexConverter {
                 call(
                     "substring",
                     cv,
-                    rex(INT4, rexOpLit(int32Value(1))),
-                    rex(ANY, call("minus", sp, rex(INT4, rexOpLit(int32Value(1)))))
+                    rex(INT4, rexOpLit(Datum.integer(1))),
+                    rex(ANY, call("minus", sp, rex(INT4, rexOpLit(Datum.integer(1)))))
                 )
             )
             val p2 = rex(ANY, call("concat", p1, rs))
@@ -1213,7 +1177,12 @@ internal object RexConverter {
             return rexOpCallUnresolved(id, args.toList())
         }
 
-        private fun Int?.toRex() = rex(INT4, rexOpLit(int32Value(this)))
+        private fun Int?.toRex(): Rex {
+            return when (this) {
+                null -> rex(INT4, rexOpLit(Datum.nullValue(PType.integer())))
+                else -> rex(INT4, rexOpLit(Datum.integer(this)))
+            }
+        }
 
         private val ANY: CompilerType = CompilerType(PType.dynamic())
         private val BOOL: CompilerType = CompilerType(PType.bool())

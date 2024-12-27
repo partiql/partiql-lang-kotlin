@@ -12,10 +12,10 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
+import org.partiql.spi.value.ValueUtils
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import kotlin.test.assertEquals
 
 public class SuccessTestCase(
@@ -26,13 +26,12 @@ public class SuccessTestCase(
     val jvmEquality: Boolean = false
 ) : PTestCase {
 
-    @OptIn(PartiQLValueExperimental::class)
     constructor(
         input: String,
         expected: PartiQLValue,
         mode: Mode = Mode.PERMISSIVE(),
         globals: List<Global> = emptyList(),
-    ) : this(input, Datum.of(expected), mode, globals)
+    ) : this(input, ValueUtils.newDatum(expected), mode, globals)
 
     private val compiler = PartiQLCompiler.standard()
     private val parser = PartiQLParser.standard()

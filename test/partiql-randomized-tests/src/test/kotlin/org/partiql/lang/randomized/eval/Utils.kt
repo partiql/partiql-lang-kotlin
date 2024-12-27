@@ -6,11 +6,8 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.Datum
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 import kotlin.test.assertEquals
 
-@OptIn(PartiQLValueExperimental::class)
 fun runEvaluatorTestCase(
     query: String,
     expectedResult: String
@@ -20,8 +17,7 @@ fun runEvaluatorTestCase(
     assertEquals(expected, result)
 }
 
-@OptIn(PartiQLValueExperimental::class)
-private fun execute(query: String): PartiQLValue {
+private fun execute(query: String): Datum {
     val parser = PartiQLParser.builder().build()
     val planner = PartiQLPlanner.builder().build()
     val catalog = object : Catalog {
@@ -39,9 +35,9 @@ private fun execute(query: String): PartiQLValue {
     // return (compiled.execute(session) as PartiQLResult.Value).value
 }
 
-@OptIn(PartiQLValueExperimental::class)
 fun assertExpression(query: String, value: () -> Datum) {
-    val expected = value.invoke().toPartiQLValue() // TODO: Make the PartiQL Engine return a Datum, not PartiQL Value
+    val expected = value.invoke()
     val result = execute(query)
-    assertEquals(expected, result)
+    val comparison = Datum.comparator().compare(expected, result)
+    assert(comparison == 0) { "Expected $expected, got $result" }
 }

@@ -34,6 +34,7 @@ dependencies {
     // Test
     testImplementation(project(":partiql-parser"))
     testImplementation(testFixtures(project(":partiql-types"))) // TODO: Remove use of StaticType
+    testImplementation(testFixtures(project(":partiql-spi")))
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4

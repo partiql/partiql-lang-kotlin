@@ -35,9 +35,6 @@ PERMISSIVE:::SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, di
 STRICT:::SELECT VALUE { 'col1': col1, 'g': g } FROM simple_1_col_1_group, different_types_per_row GROUP BY col1 GROUP AS g
 PERMISSIVE:::select fld3,period from t1,t2 where fld1 = 011401
 PERMISSIVE:::select fld3,period from t2,t1 where companynr*10 = 37*10
-PERMISSIVE:::undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing
-PERMISSIVE:::undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing
-PERMISSIVE:::undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing
 PERMISSIVE:::MYSQL_SELECT_20
 STRICT:::MYSQL_SELECT_20
 PERMISSIVE:::MYSQL_SELECT_21
@@ -74,16 +71,9 @@ STRICT:::POSITION string in invalid type
 STRICT:::BIT_LENGTH invalid type
 
 // TODO: Invalid casts. Needed for V1 release.
-STRICT:::cast to int invalid target type{value:"`2017T`",target:"TIMESTAMP"}
-STRICT:::cast to int invalid target type{value:" `{{\"\"}}` ",target:"CLOB"}
-STRICT:::cast to int invalid target type{value:" `{{\"1\"}}` ",target:"CLOB"}
-STRICT:::cast to int invalid target type{value:"`{{}}`",target:"BLOB"}
 STRICT:::cast to int invalid target type{value:"[1, 2]",target:"LIST"}
 STRICT:::cast to int invalid target type{value:"[1]",target:"LIST"}
 STRICT:::cast to int invalid target type{value:"[]",target:"LIST"}
-STRICT:::cast to int invalid target type{value:"`(1 2)`",target:"SEXP"}
-STRICT:::cast to int invalid target type{value:"`(1)`",target:"SEXP"}
-STRICT:::cast to int invalid target type{value:"`()`",target:"SEXP"}
 STRICT:::cast to int invalid target type{value:"{'a': 1}",target:"STRUCT"}
 STRICT:::cast to int invalid target type{value:"{'a': '12'}",target:"STRUCT"}
 STRICT:::cast to int invalid target type{value:"{}",target:"STRUCT"}
@@ -102,19 +92,13 @@ PERMISSIVE:::Example 6 - Value Coercion not union-compatible
 STRICT:::Example 6 - Value Coercion not union-compatible
 
 // TODO: Operators. Needed for V1 release.
-STRICT:::array navigation with wrongly typed array index
 STRICT:::data type mismatch in comparison expression
-STRICT:::data type mismatch in logical expression
 
 // TODO: Sexp tests. Needed for V1 release.
 PERMISSIVE:::projectOfSexp
 STRICT:::projectOfSexp
 
 // TODO: Miscellaneous. Needed for V1 release.
-STRICT:::subscript with non-existent variable in lowercase
-STRICT:::subscript with non-existent variable in uppercase
-STRICT:::repeated field on struct is ambiguous{identifier:"REPEATED",cn:9,bn:"REPEATED"}
-STRICT:::repeated field on struct is ambiguous{identifier:" \"repeated\" ",cn:10,bn:"repeated"}
 STRICT:::invalid extract year from time
 STRICT:::invalid extract month from time
 STRICT:::invalid extract day from time

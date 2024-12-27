@@ -535,11 +535,27 @@ public abstract class PType extends Enum {
     }
 
     /**
+     * @return a SQL:1999 NUMERIC type with default precision (38) and scale (0).
+     */
+    @NotNull
+    public static PType numeric() {
+        return new PTypeDecimal(NUMERIC, 38, 0);
+    }
+
+    /**
      * @return a PartiQL decimal type
      */
     @NotNull
     public static PType decimal(int precision, int scale) {
         return new PTypeDecimal(PType.DECIMAL, precision, scale);
+    }
+
+    /**
+     * @return a PartiQL decimal type with default precision (38) and scale (0).
+     */
+    @NotNull
+    public static PType decimal() {
+        return new PTypeDecimal(PType.DECIMAL, 38, 0);
     }
 
     /**
@@ -569,12 +585,30 @@ public abstract class PType extends Enum {
     }
 
     /**
-     * @return a PartiQL char type
+     * @return a PartiQL char type with a default length of 1
+     */
+    @NotNull
+    @SuppressWarnings("unused")
+    public static PType character() {
+        return new PTypeWithMaxLength(CHAR, 1);
+    }
+
+    /**
+     * @return a PartiQL varchar type
      */
     @NotNull
     @SuppressWarnings("unused")
     public static PType varchar(int length) {
         return new PTypeWithMaxLength(VARCHAR, length);
+    }
+
+    /**
+     * @return a PartiQL varchar type with a default length of 1
+     */
+    @NotNull
+    @SuppressWarnings("unused")
+    public static PType varchar() {
+        return new PTypeWithMaxLength(VARCHAR, 1);
     }
 
     /**
@@ -595,12 +629,28 @@ public abstract class PType extends Enum {
     }
 
     /**
+     * @return a PartiQL clob type with a default length of {@link Integer#MAX_VALUE}.
+     */
+    @NotNull
+    public static PType clob() {
+        return new PTypeWithMaxLength(CLOB, Integer.MAX_VALUE);
+    }
+
+    /**
      * @return a PartiQL blob type
      */
     @NotNull
     @SuppressWarnings("SameParameterValue")
     public static PType blob(int length) {
         return new PTypeWithMaxLength(BLOB, length);
+    }
+
+    /**
+     * @return a PartiQL blob type with a default length of {@link Integer#MAX_VALUE}.
+     */
+    @NotNull
+    public static PType blob() {
+        return new PTypeWithMaxLength(BLOB, Integer.MAX_VALUE);
     }
 
     /**
@@ -620,12 +670,29 @@ public abstract class PType extends Enum {
     }
 
     /**
+     * @return a PartiQL time without timezone type with a default precision of 6.
+     */
+    @NotNull
+    public static PType time() {
+        return new PTypeWithPrecisionOnly(TIME, 6);
+    }
+
+    /**
      * @return a PartiQL time with timezone type
      */
     @NotNull
     @SuppressWarnings("unused")
     public static PType timez(int precision) {
         return new PTypeWithPrecisionOnly(TIMEZ, precision);
+    }
+
+    /**
+     * @return a PartiQL time with timezone type with a default precision of 6.
+     */
+    @NotNull
+    @SuppressWarnings("unused")
+    public static PType timez() {
+        return new PTypeWithPrecisionOnly(TIMEZ, 6);
     }
 
     /**
@@ -637,12 +704,29 @@ public abstract class PType extends Enum {
     }
 
     /**
+     * @return a PartiQL timestamp without timezone type with a default precision of 6.
+     */
+    @NotNull
+    public static PType timestamp() {
+        return new PTypeWithPrecisionOnly(TIMESTAMP, 6);
+    }
+
+    /**
      * @return a PartiQL timestamp with timezone type
      */
     @NotNull
     @SuppressWarnings("unused")
     public static PType timestampz(int precision) {
         return new PTypeWithPrecisionOnly(TIMESTAMPZ, precision);
+    }
+
+    /**
+     * @return a PartiQL timestamp with timezone type with a default precision of 6.
+     */
+    @NotNull
+    @SuppressWarnings("unused")
+    public static PType timestampz() {
+        return new PTypeWithPrecisionOnly(TIMESTAMPZ, 6);
     }
 
     /**
@@ -721,5 +805,71 @@ public abstract class PType extends Enum {
     @SuppressWarnings("unused")
     public static PType variant(String encoding) {
         return new PTypeVariant(encoding);
+    }
+
+    /**
+     * @param code PartiQL type code
+     * @return the PartiQL type corresponding with the code; if the type is parameterized, then the returned type will
+     * contain the default parameters
+     * @throws IllegalArgumentException if the code is not recognized
+     */
+    @NotNull
+    public static PType of(int code) throws IllegalArgumentException {
+        switch (code) {
+            case DYNAMIC:
+                return dynamic();
+            case BOOL:
+                return bool();
+            case TINYINT:
+                return tinyint();
+            case SMALLINT:
+                return smallint();
+            case INTEGER:
+                return integer();
+            case BIGINT:
+                return bigint();
+            case NUMERIC:
+                return numeric();
+            case DECIMAL:
+                return decimal();
+            case REAL:
+                return real();
+            case DOUBLE:
+                return doublePrecision();
+            case CHAR:
+                return character();
+            case VARCHAR:
+                return varchar();
+            case STRING:
+                return string();
+            case CLOB:
+                return clob();
+            case BLOB:
+                return blob();
+            case DATE:
+                return date();
+            case TIME:
+                return time();
+            case TIMEZ:
+                return timez();
+            case TIMESTAMP:
+                return timestamp();
+            case TIMESTAMPZ:
+                return timestampz();
+            case ARRAY:
+                return array();
+            case BAG:
+                return bag();
+            case ROW:
+                return row();
+            case STRUCT:
+                return struct();
+            case UNKNOWN:
+                return unknown();
+            case VARIANT:
+                return variant("ion");
+            default:
+                throw new IllegalArgumentException("Unknown type code: " + code);
+        }
     }
 }

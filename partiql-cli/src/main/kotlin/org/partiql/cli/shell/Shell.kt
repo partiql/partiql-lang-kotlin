@@ -31,8 +31,8 @@ import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.spi.catalog.Session
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.io.PartiQLValueTextWriter
+import org.partiql.spi.value.ValueUtils
+import org.partiql.spi.value.io.PartiQLValueTextWriter
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
@@ -161,7 +161,6 @@ internal class Shell(
         }
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun run(exiting: AtomicBoolean) = TerminalBuilder.builder()
         .name("PartiQL")
         .nativeSignals(true)
@@ -276,7 +275,8 @@ internal class Shell(
                         out.appendLine()
                         out.info("=== RESULT ===")
                         val writer = PartiQLValueTextWriter(out)
-                        writer.append(result.toPartiQLValue()) // TODO: Create a Datum writer
+                        val p = ValueUtils.newPartiQLValue(result)
+                        writer.append(p) // TODO: Create a Datum writer
                         out.appendLine()
                         out.appendLine()
                         out.success("OK!")

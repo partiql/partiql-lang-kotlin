@@ -29,6 +29,7 @@ import org.partiql.types.PType.TIMESTAMPZ
 import org.partiql.types.PType.TIMEZ
 import org.partiql.types.PType.TINYINT
 import org.partiql.types.PType.VARCHAR
+import org.partiql.types.PType.VARIANT
 import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -105,6 +106,7 @@ internal object CastTable {
         registerTimestamp()
         registerDate()
         registerTime()
+        registerVariant()
     }
 
     private fun String.pad(): String {
@@ -491,6 +493,13 @@ internal object CastTable {
         register(TIMEZ, TIME) { x, _ -> Datum.time(x.time) }
         register(TIMEZ, TIMESTAMP) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
         register(TIMEZ, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
+    }
+
+    private fun registerVariant() {
+        PType.codes().forEach { pType ->
+            register(VARIANT, pType) { x, t -> cast(x.lower(), t) }
+        }
+        register(VARIANT, VARIANT) { x, _ -> x }
     }
 
     private fun register(source: Int, target: Int, cast: (Datum, PType) -> Datum) {

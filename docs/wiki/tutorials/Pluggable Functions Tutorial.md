@@ -27,7 +27,7 @@ import org.partiql.types.PartiQLValueType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+
 import org.partiql.value.StringValue
 import org.partiql.value.stringValue
 
@@ -43,7 +43,6 @@ object TrimLead : PartiQLFunction {
         description = "Trims leading whitespace of a [str]." // A brief description of your function
     )
 
-    @OptIn(PartiQLValueExperimental::class)
     override operator fun invoke(session: ConnectorSession, arguments: List<PartiQLValue>): PartiQLValue {
         // Implement the function logic here
         val str = (arguments[0] as? StringValue)?.string ?: ""

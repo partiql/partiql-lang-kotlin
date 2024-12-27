@@ -4,6 +4,7 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
+import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.helpers.RecordValueIterator
 import org.partiql.types.PType
 
@@ -14,7 +15,7 @@ internal class RelOpScanPermissive(
     private lateinit var records: Iterator<Row>
 
     override fun open(env: Environment) {
-        val r = expr.eval(env.push(Row()))
+        val r = expr.eval(env.push(Row())).lowerSafe()
         records = when (r.type.code()) {
             PType.BAG, PType.ARRAY -> RecordValueIterator(r.iterator())
             else -> iterator { yield(Row(arrayOf(r))) }

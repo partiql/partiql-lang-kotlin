@@ -45,6 +45,9 @@ internal fun comparisonAccumulator(comparator: Comparator<Datum>): (Datum?, Datu
     }
 
 internal fun checkIsNumberType(funcName: String, value: Datum) {
+    if (value.type.code() == PType.VARIANT) {
+        return checkIsNumberType(funcName, value.lower())
+    }
     if (!value.type.isNumber()) {
         throw TypeCheckException("Expected NUMBER but received ${value.type}.")
     }
@@ -97,12 +100,16 @@ private fun Long.checkOverflowPlus(other: Long): Number {
 }
 
 internal fun checkIsBooleanType(funcName: String, value: Datum) {
+    if (value.type.code() == PType.VARIANT) {
+        return checkIsBooleanType(funcName, value.lower())
+    }
     if (value.type.code() != PType.BOOL) {
         throw TypeCheckException("Expected ${PType.BOOL} but received ${value.type}.")
     }
 }
 
 internal fun Datum.numberValue(): Number = when (this.type.code()) {
+    PType.VARIANT -> this.lower().numberValue()
     PType.TINYINT -> this.byte
     PType.SMALLINT -> this.short
     PType.INTEGER -> this.int
@@ -115,6 +122,7 @@ internal fun Datum.numberValue(): Number = when (this.type.code()) {
 }
 
 internal fun Datum.booleanValue(): Boolean = when (this.type.code()) {
+    PType.VARIANT -> this.lower().booleanValue()
     PType.BOOL -> this.boolean
     else -> error("Cannot convert PartiQLValue ($this) to boolean.")
 }

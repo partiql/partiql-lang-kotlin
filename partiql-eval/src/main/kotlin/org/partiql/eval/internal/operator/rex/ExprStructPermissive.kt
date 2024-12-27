@@ -2,6 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
+import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
@@ -10,7 +11,7 @@ internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
     ExprValue {
     override fun eval(env: Environment): Datum {
         val fields = fields.mapNotNull {
-            val key = it.key.eval(env)
+            val key = it.key.eval(env).lowerSafe()
             val keyString = key.getTextOrNull() ?: return@mapNotNull null
             val value = it.value.eval(env)
             when (value.isMissing) {

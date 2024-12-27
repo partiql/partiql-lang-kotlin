@@ -1,5 +1,3 @@
-@file:OptIn(PartiQLValueExperimental::class)
-
 package org.partiql.planner.`internal`.ir
 
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
@@ -70,8 +68,7 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.function.Function
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.spi.value.Datum
 import kotlin.random.Random
 
 internal abstract class PlanNode {
@@ -231,11 +228,18 @@ internal data class Rex(
         }
 
         internal data class Lit(
-            @JvmField internal val `value`: PartiQLValue,
+            @JvmField internal val `value`: Datum,
         ) : Op() {
             public override val children: List<PlanNode> = emptyList()
 
             override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpLit(this, ctx)
+
+            override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (other !is Lit) return false
+                val result = Datum.comparator().compare(value, other.value)
+                return result == 0
+            }
 
             internal companion object {
                 @JvmStatic

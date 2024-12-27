@@ -4,13 +4,13 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
+import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.PartiQLValue
 
 /**
  * Implementation of Dynamic Dispatch.
@@ -23,7 +23,7 @@ import org.partiql.value.PartiQLValue
  *  3. Lookup the candidate to dispatch to and invoke.
  *
  * This implementation can evaluate ([eval]) the input [Row], execute and gather the
- * arguments, and pass the [PartiQLValue]s directly to the [Candidate.eval].
+ * arguments, and pass the values directly to the [Candidate.eval].
  *
  * This implementation also caches previously resolved candidates.
  *
@@ -46,7 +46,7 @@ internal class ExprCallDynamic(
     private val candidates: MutableMap<List<PType>, Candidate> = mutableMapOf()
 
     override fun eval(env: Environment): Datum {
-        val actualArgs = args.map { it.eval(env) }.toTypedArray()
+        val actualArgs = args.map { it.eval(env).lowerSafe() }.toTypedArray()
         val actualTypes = actualArgs.map { it.type }
         var candidate = candidates[actualTypes]
         if (candidate == null) {
