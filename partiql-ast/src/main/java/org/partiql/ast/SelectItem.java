@@ -2,6 +2,7 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +20,8 @@ public abstract class SelectItem extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Star extends SelectItem {
         @NotNull
-        public final org.partiql.ast.expr.Expr expr;
+        @Getter
+        private final org.partiql.ast.expr.Expr expr;
 
         public Star(@NotNull org.partiql.ast.expr.Expr expr) {
             this.expr = expr;
@@ -46,10 +48,12 @@ public abstract class SelectItem extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Expr extends SelectItem {
         @NotNull
-        public final org.partiql.ast.expr.Expr expr;
+        @Getter
+        private final org.partiql.ast.expr.Expr expr;
 
         @Nullable
-        public final Identifier asAlias;
+        @Getter
+        private final Identifier asAlias;
 
         public Expr(@NotNull org.partiql.ast.expr.Expr expr, @Nullable Identifier asAlias) {
             this.expr = expr;

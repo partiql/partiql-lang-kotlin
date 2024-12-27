@@ -1,6 +1,7 @@
 package org.partiql.ast.expr;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -15,7 +16,8 @@ import java.util.List;
  */
 public abstract class PathStep extends AstNode {
     @Nullable
-    public final PathStep next;
+    @Getter
+    private final PathStep next;
 
     protected PathStep(@Nullable PathStep _next) {
         this.next = _next;
@@ -27,7 +29,8 @@ public abstract class PathStep extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Field extends PathStep {
         @NotNull
-        public final Identifier field;
+        @Getter
+        private final Identifier field;
 
         public Field(@NotNull Identifier field, @Nullable PathStep next) {
             super(next);
@@ -38,6 +41,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
+            PathStep next = getNext();
             if (next != null) {
                 kids.add(next);
             }
@@ -56,7 +60,8 @@ public abstract class PathStep extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Element extends PathStep {
         @NotNull
-        public final Expr element;
+        @Getter
+        private final Expr element;
 
         public Element(@NotNull Expr element, @Nullable PathStep next) {
             super(next);
@@ -68,6 +73,7 @@ public abstract class PathStep extends AstNode {
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(element);
+            PathStep next = getNext();
             if (next != null) {
                 kids.add(next);
             }
@@ -93,6 +99,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
+            PathStep next = getNext();
             if (next != null) {
                 kids.add(next);
             }
@@ -118,6 +125,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
+            PathStep next = getNext();
             if (next != null) {
                 kids.add(next);
             }

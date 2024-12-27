@@ -12,7 +12,7 @@ import java.util.List;
  * TODO docs
  */
 @EqualsAndHashCode(callSuper = false)
-public class TruthValue extends AstEnum {
+public final class TruthValue extends AstEnum {
     public static final int TRUE = 0;
     public static final int FALSE = 1;
     public static final int UNKNOWN = 2;

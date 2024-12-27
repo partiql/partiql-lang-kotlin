@@ -2,6 +2,7 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -23,13 +24,15 @@ public final class Delete extends Statement {
      * TODO
      */
     @NotNull
-    public final IdentifierChain tableName;
+    @Getter
+    private final IdentifierChain tableName;
 
     /**
      * TODO
      */
     @Nullable
-    public final Expr condition;
+    @Getter
+    private final Expr condition;
 
     /**
      * TODO

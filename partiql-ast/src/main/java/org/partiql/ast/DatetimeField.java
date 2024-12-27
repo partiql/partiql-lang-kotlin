@@ -10,7 +10,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class DatetimeField extends AstEnum {
+public final class DatetimeField extends AstEnum {
     public static final int YEAR = 0;
     public static final int MONTH = 1;
     public static final int DAY = 2;

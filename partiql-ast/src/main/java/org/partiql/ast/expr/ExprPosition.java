@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -14,12 +15,14 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprPosition extends Expr {
+public final class ExprPosition extends Expr {
     @NotNull
-    public final Expr lhs;
+    @Getter
+    private final Expr lhs;
 
     @NotNull
-    public final Expr rhs;
+    @Getter
+    private final Expr rhs;
 
     public ExprPosition(@NotNull Expr lhs, @NotNull Expr rhs) {
         this.lhs = lhs;

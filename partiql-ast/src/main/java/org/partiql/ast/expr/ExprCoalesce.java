@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -14,9 +15,10 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprCoalesce extends Expr {
+public final class ExprCoalesce extends Expr {
     @NotNull
-    public final List<Expr> args;
+    @Getter
+    private final List<Expr> args;
 
     public ExprCoalesce(@NotNull List<Expr> args) {
         this.args = args;

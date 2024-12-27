@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
-public class TrimSpec extends AstEnum {
+public final class TrimSpec extends AstEnum {
     public static final int LEADING = 0;
     public static final int TRAILING = 1;
     public static final int BOTH = 2;

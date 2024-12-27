@@ -2,6 +2,7 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -15,12 +16,14 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class ExprPath extends Expr {
+public final class ExprPath extends Expr {
     @NotNull
-    public final Expr root;
+    @Getter
+    private final Expr root;
 
     @Nullable
-    public final PathStep next;
+    @Getter
+    private final PathStep next;
 
     public ExprPath(@NotNull Expr root, @Nullable PathStep next) {
         this.root = root;

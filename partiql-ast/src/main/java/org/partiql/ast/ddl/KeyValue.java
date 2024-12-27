@@ -2,6 +2,7 @@ package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -16,11 +17,14 @@ import java.util.List;
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
-public class KeyValue extends AstNode {
+public final class KeyValue extends AstNode {
     @NotNull
-    public final String key;
+    @Getter
+    private final String key;
+
     @NotNull
-    public final String value;
+    @Getter
+    private final String value;
 
     public KeyValue(@NotNull String key, @NotNull String value) {
         this.key = key;

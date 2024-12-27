@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
-public class Order extends AstEnum {
+public final class Order extends AstEnum {
     public static final int ASC = 0;
     public static final int DESC = 1;
 

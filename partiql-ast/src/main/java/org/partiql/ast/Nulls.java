@@ -10,7 +10,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class Nulls extends AstEnum {
+public final class Nulls extends AstEnum {
     public static final int FIRST = 0;
     public static final int LAST = 1;
 

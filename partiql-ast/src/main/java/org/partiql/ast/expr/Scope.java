@@ -13,7 +13,7 @@ import java.util.List;
  * TODO docs, equals, hashcode
  */
 @EqualsAndHashCode(callSuper = false)
-public class Scope extends AstEnum {
+public final class Scope extends AstEnum {
     public static final int DEFAULT = 0;
     public static final int LOCAL = 1;
 

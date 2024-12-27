@@ -1,6 +1,7 @@
 package org.partiql.ast;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.ddl.AttributeConstraint;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
-public class DataType extends AstEnum {
+public final class DataType extends AstEnum {
     /**
      * A field definition with in a Struct Type Definition
      */
@@ -28,26 +29,33 @@ public class DataType extends AstEnum {
     @EqualsAndHashCode(callSuper = false)
     public static class StructField extends AstNode {
         @NotNull
-        public final Identifier name;
+        @Getter
+        private final Identifier name;
+
         @NotNull
-        public final DataType type;
+        @Getter
+        private final DataType type;
 
-        public final boolean isOptional;
+        @Getter
+        private final boolean optional;
 
         @Nullable
-        public final List<AttributeConstraint> constraints;
+        @Getter
+        private final List<AttributeConstraint> constraints;
+
         @Nullable
-        public final String comment;
+        @Getter
+        private final String comment;
 
         public StructField(
                 @NotNull Identifier name,
                 @NotNull DataType type,
-                boolean isOptional,
+                boolean optional,
                 @Nullable List<AttributeConstraint> constraints,
                 @Nullable String comment) {
             this.name = name;
             this.type = type;
-            this.isOptional = isOptional;
+            this.optional = optional;
             this.constraints = constraints;
             this.comment = comment;
         }
