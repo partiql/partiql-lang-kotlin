@@ -257,8 +257,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitConflictTargetConstraint (Lorg/partiql/ast/dml/ConflictTarget$Constraint;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitConflictTargetIndex (Lorg/partiql/ast/dml/ConflictTarget$Index;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitConflictTargetIndex (Lorg/partiql/ast/dml/ConflictTarget$Index;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitDoReplaceActionExcluded (Lorg/partiql/ast/dml/DoReplaceAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
@@ -461,7 +461,6 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitConflictTargetIndex (Lorg/partiql/ast/dml/ConflictTarget$Index;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDataType (Lorg/partiql/ast/DataType;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDoReplaceAction (Lorg/partiql/ast/dml/DoReplaceAction;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDoReplaceActionExcluded (Lorg/partiql/ast/dml/DoReplaceAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
@@ -1514,7 +1513,7 @@ public class org/partiql/ast/ddl/ColumnDefinition$Builder {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/ddl/CreateTable : org/partiql/ast/ddl/Ddl {
+public final class org/partiql/ast/ddl/CreateTable : org/partiql/ast/Statement {
 	public fun <init> (Lorg/partiql/ast/IdentifierChain;Ljava/util/List;Ljava/util/List;Lorg/partiql/ast/ddl/PartitionBy;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/ddl/CreateTable$Builder;
@@ -1536,10 +1535,6 @@ public class org/partiql/ast/ddl/CreateTable$Builder {
 	public fun partitionBy (Lorg/partiql/ast/ddl/PartitionBy;)Lorg/partiql/ast/ddl/CreateTable$Builder;
 	public fun tableProperties (Ljava/util/List;)Lorg/partiql/ast/ddl/CreateTable$Builder;
 	public fun toString ()Ljava/lang/String;
-}
-
-public abstract class org/partiql/ast/ddl/Ddl : org/partiql/ast/Statement {
-	public fun <init> ()V
 }
 
 public final class org/partiql/ast/ddl/KeyValue : org/partiql/ast/AstNode {
@@ -3176,10 +3171,10 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun defaultReturn (Lorg/partiql/ast/AstNode;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public static final fun getSTANDARD ()Lorg/partiql/ast/sql/SqlDialect;
 	public final fun transform (Lorg/partiql/ast/AstNode;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitDataType (Lorg/partiql/ast/DataType;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDataType (Lorg/partiql/ast/DataType;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public synthetic fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitDdl (Lorg/partiql/ast/ddl/Ddl;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDelete (Lorg/partiql/ast/dml/Delete;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
