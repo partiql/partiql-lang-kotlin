@@ -84,10 +84,12 @@ public abstract class QueryBody extends AstNode {
         private final boolean outer;
 
         @NotNull
-        public Expr lhs;
+        @Getter
+        private final Expr lhs;
 
         @NotNull
-        public Expr rhs;
+        @Getter
+        private final Expr rhs;
 
         public SetOp(@NotNull org.partiql.ast.SetOp type, boolean outer, @NotNull Expr lhs, @NotNull Expr rhs) {
             this.type = type;

@@ -40,8 +40,11 @@ public final class DataType extends AstEnum {
         private final boolean optional;
 
         @Nullable
+        @Getter
         private final List<AttributeConstraint> constraints;
+
         @Nullable
+        @Getter
         private final String comment;
 
         public StructField(

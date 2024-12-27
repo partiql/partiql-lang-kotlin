@@ -48,9 +48,11 @@ public abstract class SelectItem extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Expr extends SelectItem {
         @NotNull
+        @Getter
         private final org.partiql.ast.expr.Expr expr;
 
         @Nullable
+        @Getter
         private final Identifier asAlias;
 
         public Expr(@NotNull org.partiql.ast.expr.Expr expr, @Nullable Identifier asAlias) {
@@ -72,16 +74,6 @@ public abstract class SelectItem extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitSelectItemExpr(this, ctx);
-        }
-
-        @NotNull
-        public org.partiql.ast.expr.Expr getExpr() {
-            return this.expr;
-        }
-
-        @Nullable
-        public Identifier getAsAlias() {
-            return this.asAlias;
         }
     }
 }

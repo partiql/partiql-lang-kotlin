@@ -17,7 +17,7 @@ import java.util.List;
 public abstract class PathStep extends AstNode {
     @Nullable
     @Getter
-    protected final PathStep next;
+    private final PathStep next;
 
     protected PathStep(@Nullable PathStep _next) {
         this.next = _next;
@@ -41,6 +41,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
+            PathStep next = getNext();
             if (next != null) {
                 kids.add(next);
             }
@@ -72,6 +73,7 @@ public abstract class PathStep extends AstNode {
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(element);
+            PathStep next = getNext();
             if (next != null) {
                 kids.add(next);
             }
@@ -97,6 +99,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
+            PathStep next = getNext();
             if (next != null) {
                 kids.add(next);
             }
@@ -122,6 +125,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
+            PathStep next = getNext();
             if (next != null) {
                 kids.add(next);
             }

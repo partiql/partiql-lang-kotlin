@@ -15,7 +15,7 @@ import java.util.List;
 public abstract class TableConstraint extends AstNode {
     @Nullable
     @Getter
-    protected final IdentifierChain name;
+    private final IdentifierChain name;
 
     protected TableConstraint(@Nullable IdentifierChain name) {
         this.name = name;
@@ -40,7 +40,7 @@ public abstract class TableConstraint extends AstNode {
         @Override
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
-            kids.add(name);
+            kids.add(getName());
             kids.addAll(columns);
             return kids;
         }

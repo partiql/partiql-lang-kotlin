@@ -728,6 +728,8 @@ public class org/partiql/ast/DataType$StructField : org/partiql/ast/AstNode {
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
+	public fun getComment ()Ljava/lang/String;
+	public fun getConstraints ()Ljava/util/List;
 	public fun getName ()Lorg/partiql/ast/Identifier;
 	public fun getType ()Lorg/partiql/ast/DataType;
 	public fun hashCode ()I
@@ -1244,14 +1246,14 @@ public class org/partiql/ast/QueryBody$SFW$Builder {
 }
 
 public class org/partiql/ast/QueryBody$SetOp : org/partiql/ast/QueryBody {
-	public field lhs Lorg/partiql/ast/expr/Expr;
-	public field rhs Lorg/partiql/ast/expr/Expr;
 	public fun <init> (Lorg/partiql/ast/SetOp;ZLorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/QueryBody$SetOp$Builder;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
+	public fun getLhs ()Lorg/partiql/ast/expr/Expr;
+	public fun getRhs ()Lorg/partiql/ast/expr/Expr;
 	public fun getType ()Lorg/partiql/ast/SetOp;
 	public fun hashCode ()I
 	public fun isOuter ()Z
@@ -1572,7 +1574,6 @@ public class org/partiql/ast/ddl/PartitionBy$Builder {
 }
 
 public abstract class org/partiql/ast/ddl/TableConstraint : org/partiql/ast/AstNode {
-	protected final field name Lorg/partiql/ast/IdentifierChain;
 	protected fun <init> (Lorg/partiql/ast/IdentifierChain;)V
 	public fun getName ()Lorg/partiql/ast/IdentifierChain;
 }
@@ -2648,7 +2649,6 @@ public class org/partiql/ast/expr/ExprWindow$Over$Builder {
 }
 
 public abstract class org/partiql/ast/expr/PathStep : org/partiql/ast/AstNode {
-	protected final field next Lorg/partiql/ast/expr/PathStep;
 	protected fun <init> (Lorg/partiql/ast/expr/PathStep;)V
 	public fun getNext ()Lorg/partiql/ast/expr/PathStep;
 }
