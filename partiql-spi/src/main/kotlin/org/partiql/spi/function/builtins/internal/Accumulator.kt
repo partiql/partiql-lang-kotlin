@@ -45,6 +45,9 @@ internal fun comparisonAccumulator(comparator: Comparator<Datum>): (Datum?, Datu
     }
 
 internal fun checkIsNumberType(funcName: String, value: Datum) {
+    if (value.type.code() == PType.VARIANT) {
+        return checkIsNumberType(funcName, value.lower())
+    }
     if (!value.type.isNumber()) {
         throw TypeCheckException("Expected NUMBER but received ${value.type}.")
     }

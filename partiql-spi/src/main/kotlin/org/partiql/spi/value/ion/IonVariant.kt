@@ -16,6 +16,7 @@ import com.amazon.ionelement.api.ElementType.STRING
 import com.amazon.ionelement.api.ElementType.STRUCT
 import com.amazon.ionelement.api.ElementType.SYMBOL
 import com.amazon.ionelement.api.ElementType.TIMESTAMP
+import com.amazon.ionelement.api.IntElementSize
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
@@ -63,12 +64,16 @@ internal class IonVariant(private var value: AnyElement) : Datum {
             BLOB -> Datum.blob(value.blobValue.copyOfBytes())
             TIMESTAMP -> Datum.timestamp(DateTimeValue.timestamp(value.timestampValue))
             INT -> {
-                val bigInteger = value.bigIntegerValue
-                when {
-                    bigInteger < Int.MAX_VALUE.toBigInteger() && bigInteger > Int.MIN_VALUE.toBigInteger() -> Datum.integer(bigInteger.toInt())
-                    bigInteger < Long.MAX_VALUE.toBigInteger() && bigInteger > Long.MIN_VALUE.toBigInteger() -> Datum.bigint(bigInteger.toLong())
-                    else -> {
-                        val dec = bigInteger.toBigDecimal()
+                when (value.integerSize) {
+                    IntElementSize.LONG -> {
+                        val long = value.longValue
+                        when (long < Int.MAX_VALUE && long > Int.MIN_VALUE) {
+                            true -> Datum.integer(long.toInt())
+                            false -> Datum.bigint(long)
+                        }
+                    }
+                    IntElementSize.BIG_INTEGER -> {
+                        val dec = value.bigIntegerValue.toBigDecimal()
                         Datum.decimal(dec, dec.precision(), 0)
                     }
                 }
