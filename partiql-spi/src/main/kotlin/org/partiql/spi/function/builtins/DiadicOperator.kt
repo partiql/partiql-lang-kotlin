@@ -3,20 +3,26 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.TypePrecedence.TYPE_PRECEDENCE
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
+ * This represents an operator backed by a function provider. Note that the name of the operator is obfuscated
+ * using [FunctionUtils.SYSTEM_PREFIX_INTERNAL].
+ *
  * This carries along with it a static table containing a mapping between the input types and the implementation.
  *
  * Implementations of this should invoke [fillTable] in the constructor of the function.
  */
 internal abstract class DiadicOperator(
-    private val name: String,
+    name: String,
     private val lhs: Parameter,
     private val rhs: Parameter
 ) : Function {
+
+    private val name = FunctionUtils.SYSTEM_PREFIX_INTERNAL + name
 
     companion object {
         private val DEC_TINY_INT = PType.decimal(3, 0)

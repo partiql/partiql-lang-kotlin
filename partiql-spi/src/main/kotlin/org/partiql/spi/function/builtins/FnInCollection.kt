@@ -5,13 +5,16 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal object FnInCollection : Function {
 
+    private const val NAME = FunctionUtils.SYSTEM_PREFIX_INTERNAL + "in_collection"
+
     override fun getName(): String {
-        return "in_collection"
+        return NAME
     }
 
     override fun getReturnType(args: Array<PType>): PType {
@@ -29,7 +32,7 @@ internal object FnInCollection : Function {
             return null
         }
         return object : Function.Instance(
-            "in_collection",
+            NAME,
             arrayOf(vType, cType),
             PType.bool(),
         ) {

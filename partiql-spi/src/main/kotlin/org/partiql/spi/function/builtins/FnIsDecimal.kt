@@ -3,14 +3,14 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import java.math.RoundingMode
 import kotlin.math.max
 
-internal val Fn_IS_DECIMAL__ANY__BOOL = Function.static(
+internal val Fn_IS_DECIMAL__ANY__BOOL = FunctionUtils.hidden(
     name = "is_decimal",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
@@ -18,7 +18,7 @@ internal val Fn_IS_DECIMAL__ANY__BOOL = Function.static(
     Datum.bool(args[0].type.code() == PType.DECIMAL)
 }
 
-internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
+internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = FunctionUtils.hidden(
     name = "is_decimal",
     returns = PType.bool(),
     parameters = arrayOf(
@@ -46,14 +46,14 @@ internal val Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL = Function.static(
 { args ->
     val v = args[2]
     if (v.type.code() != PType.DECIMAL) {
-        return@static Datum.bool(false)
+        return@hidden Datum.bool(false)
     }
     val p = args[0].int
     val s = args[1].int
     val d = v.bigDecimal
     val dp = max(d.scale(), 0)
     if (dp > s) {
-        return@static Datum.bool(false)
+        return@hidden Datum.bool(false)
     }
     val ip = d.setScale(0, RoundingMode.DOWN)
     val il = if (ip.signum() != 0) ip.precision() - ip.scale() else 0

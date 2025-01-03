@@ -14,15 +14,17 @@ import org.partiql.spi.function.builtins.internal.AccumulatorEvery
 import org.partiql.spi.function.builtins.internal.AccumulatorMax
 import org.partiql.spi.function.builtins.internal.AccumulatorMin
 import org.partiql.spi.function.builtins.internal.AccumulatorSum
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 internal abstract class Fn_COLL_AGG__BAG__ANY(
-    private var name: String,
+    name: String,
     private var isDistinct: Boolean,
     private var accumulator: () -> Accumulator,
 ) : Function {
 
+    private val name: String = FunctionUtils.SYSTEM_PREFIX_INTERNAL + name
     private var parameters = arrayOf(Parameter("value", PType.bag()))
     private var returns = PType.dynamic()
 
@@ -32,7 +34,7 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
     override fun getInstance(args: Array<PType>): Function.Instance = instance
 
     private val instance = object : Function.Instance(
-        name,
+        this.name,
         parameters = arrayOf(PType.bag()),
         returns = PType.dynamic(),
     ) {

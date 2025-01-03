@@ -64,7 +64,7 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         val p = Math.min(38, Math.max(decimalLhs.scale, decimalRhs.scale) + Math.max(decimalLhs.precision - decimalLhs.scale, decimalRhs.precision - decimalRhs.scale) + 1)
         val s = Math.min(38, Math.max(decimalLhs.scale, decimalRhs.scale))
         return Function.instance(
-            name = "plus",
+            name = getName(),
             returns = PType.decimal(p, s),
             parameters = arrayOf(
                 Parameter("lhs", decimalLhs),

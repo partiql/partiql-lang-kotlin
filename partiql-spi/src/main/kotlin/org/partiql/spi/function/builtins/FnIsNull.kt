@@ -5,15 +5,16 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * Function (operator) for the `IS NULL` special form.
+ * Function (operator) for the `IS NULL` special form. Its name is obfuscated via [FunctionUtils.SYSTEM_PREFIX_INTERNAL].
  */
 internal val Fn_IS_NULL__ANY__BOOL = object : Function {
 
-    private var name = "is_null"
+    private val name = FunctionUtils.SYSTEM_PREFIX_INTERNAL + "is_null"
 
     private var parameters = arrayOf(Parameter("value", PType.dynamic()))
 
