@@ -691,7 +691,7 @@ internal object RexConverter {
                 null -> "_all"
                 else -> error("Unexpected SetQuantifier type: $setQuantifier")
             }
-            val newId = Identifier.regular(id.getIdentifier().getText() + postfix)
+            val newId = Identifier.regular(FunctionUtils.hidden(id.getIdentifier().getText() + postfix))
             val op = Rex.Op.Call.Unresolved(newId, listOf(args[0]))
             return Rex(ANY, op)
         }
