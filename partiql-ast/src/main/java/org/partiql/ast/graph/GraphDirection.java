@@ -10,16 +10,37 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents graph edge direction.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class GraphDirection extends AstEnum {
+    /**
+     * Pointing left {@code <−[ spec ]−}.
+     */
     public static final int LEFT = 0;
+    /**
+     * Undirected {@code ~[ spec ]~}.
+     */
     public static final int UNDIRECTED = 1;
+    /**
+     * Pointing right {@code −[ spec ]−>}.
+     */
     public static final int RIGHT = 2;
+    /**
+     * Left or undirected {@code <~[ spec ]~}.
+     */
     public static final int LEFT_OR_UNDIRECTED = 3;
+    /**
+     * Undirected or right {@code ~[ spec ]~>}.
+     */
     public static final int UNDIRECTED_OR_RIGHT = 4;
+    /**
+     * Left or right {@code <−[ spec ]−>}.
+     */
     public static final int LEFT_OR_RIGHT = 5;
+    /**
+     * Left, undirected, or right {@code −[ spec ]−}.
+     */
     public static final int LEFT_UNDIRECTED_OR_RIGHT = 6;
 
     public static GraphDirection LEFT() {

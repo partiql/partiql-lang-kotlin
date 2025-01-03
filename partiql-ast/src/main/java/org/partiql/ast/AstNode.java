@@ -5,8 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
- * TODO support source location -- https://github.com/partiql/partiql-lang-kotlin/issues/1608
+ * Base abstract class for the AST nodes.
  */
 public abstract class AstNode {
     private int tag = 0;

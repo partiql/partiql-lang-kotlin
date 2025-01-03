@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents PartiQL's PIVOT clause.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

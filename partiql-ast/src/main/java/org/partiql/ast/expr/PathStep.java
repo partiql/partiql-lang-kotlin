@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * A path step in a path expression.
  */
 public abstract class PathStep extends AstNode {
     @Nullable
@@ -24,7 +24,7 @@ public abstract class PathStep extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A path step that represents a field referenced with the dot notation. E.g. {@code a.b}.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Field extends PathStep {
@@ -55,7 +55,7 @@ public abstract class PathStep extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A path step that represents an element reference with the bracket notation. E.g. {@code a[0]} or {@code a['b']}
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Element extends PathStep {
@@ -87,7 +87,7 @@ public abstract class PathStep extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A path step with a wildcard within square brackets. E.g. {@code a[*]}.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class AllElements extends PathStep {
@@ -113,7 +113,7 @@ public abstract class PathStep extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A path step with a wildcard within dot notation. E.g. {@code a.*}.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class AllFields extends PathStep {

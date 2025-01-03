@@ -12,6 +12,9 @@ import org.partiql.ast.IdentifierChain;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Abstract base class for table constraints.
+ */
 public abstract class TableConstraint extends AstNode {
     @Nullable
     @Getter
@@ -21,6 +24,9 @@ public abstract class TableConstraint extends AstNode {
         this.name = name;
     }
 
+    /**
+     * Represents CREATE TABLE's UNIQUE constraint.
+     */
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends TableConstraint {
         @NotNull

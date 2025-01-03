@@ -7,17 +7,43 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents different datetime fields in PartiQL.
+ *
+ * @see org.partiql.ast.expr.ExprExtract
  */
 @EqualsAndHashCode(callSuper = false)
 public final class DatetimeField extends AstEnum {
+    /**
+     * Year date time field.
+     */
     public static final int YEAR = 0;
+    /**
+     * Month date time field.
+     */
     public static final int MONTH = 1;
+    /**
+     * Day date time field.
+     */
     public static final int DAY = 2;
+    /**
+     * Hour date time field.
+     */
     public static final int HOUR = 3;
+    /**
+     * Minute date time field.
+     */
     public static final int MINUTE = 4;
+    /**
+     * Second date time field.
+     */
     public static final int SECOND = 5;
+    /**
+     * Timezone hour date time field.
+     */
     public static final int TIMEZONE_HOUR = 6;
+    /**
+     * Timezone minute date time field.
+     */
     public static final int TIMEZONE_MINUTE = 7;
 
     public static DatetimeField YEAR() {

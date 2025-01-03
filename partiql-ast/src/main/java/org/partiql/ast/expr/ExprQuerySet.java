@@ -14,7 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a query expression with an optional ORDER BY, LIMIT, and OFFSET clause.
+ *
+ * @see QueryBody.SFW
+ * @see QueryBody.SetOp
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

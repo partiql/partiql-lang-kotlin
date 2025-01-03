@@ -7,11 +7,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents SQL's GROUP BY strategy.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class GroupByStrategy extends AstEnum {
+    /**
+     * Group by FULL strategy. Commonly the default if unspecified.
+     */
     public static final int FULL = 0;
+    /**
+     * Group by PARTIAL strategy.
+     */
     public static final int PARTIAL = 1;
 
     public static GroupByStrategy FULL() {

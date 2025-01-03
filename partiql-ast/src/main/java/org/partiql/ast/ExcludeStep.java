@@ -9,11 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a single step in a PartiQL exclude path.
+ *
+ * @see ExcludePath
  */
 public abstract class ExcludeStep extends AstNode {
     /**
-     * TODO docs, equals, hashcode
+     * Exclude step on a struct field. E.g. {@code EXCLUDE t.a.b}.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -41,7 +43,7 @@ public abstract class ExcludeStep extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Exclude step on a collection index. E.g. {@code EXCLUDE t.a[1]}
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -66,7 +68,7 @@ public abstract class ExcludeStep extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Exclude step on a struct wildcard. E.g. {@code EXCLUDE t.a.*}
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -86,7 +88,7 @@ public abstract class ExcludeStep extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Exclude step on a collection wildcard. E.g. {@code EXCLUDE t.a[*]}
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

@@ -48,7 +48,6 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
-import org.partiql.ast.expr.Scope
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.helpers.toBinder
 import org.partiql.planner.internal.ir.Rel
@@ -690,7 +689,7 @@ internal object RelConverter {
         override fun visitSelectValue(node: SelectValue, ctx: Context): AstNode {
             val visited = super.visitSelectValue(node, ctx)
             val substitutions = ctx.keys.associate {
-                it.expr to exprVarRef(identifierChain(identifier(it.asAlias!!.symbol, isDelimited = true), next = null), Scope.DEFAULT())
+                it.expr to exprVarRef(identifierChain(identifier(it.asAlias!!.symbol, isDelimited = true), next = null), isQualified = false)
             }
             return SubstitutionVisitor.visit(visited, substitutions)
         }
@@ -711,7 +710,7 @@ internal object RelConverter {
                         next = null
                     )
                     ctx.aggregations += node
-                    exprVarRef(id, Scope.DEFAULT())
+                    exprVarRef(id, isQualified = false)
                 }
                 else -> node
             }

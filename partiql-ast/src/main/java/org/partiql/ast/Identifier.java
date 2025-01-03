@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents an identifier in PartiQL, which may be delimited or not.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

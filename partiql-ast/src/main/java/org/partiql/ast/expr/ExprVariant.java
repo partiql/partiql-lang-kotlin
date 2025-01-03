@@ -10,6 +10,9 @@ import org.partiql.ast.AstVisitor;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents a string-encoded variant expression. E.g. {@code `a::2`}.
+ */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class ExprVariant extends Expr {

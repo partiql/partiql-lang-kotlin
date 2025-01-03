@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs
- * Corresponds to PartiQL's `IS [NOT] MISSING`.
+ * Represents PartiQL's IS [NOT] MISSING predicate.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

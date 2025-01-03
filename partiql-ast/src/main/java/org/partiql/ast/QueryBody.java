@@ -10,7 +10,13 @@ import org.partiql.ast.expr.Expr;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Base abstract class for contents within a query.
+ */
 public abstract class QueryBody extends AstNode {
+    /**
+     * Represents a SELECT-FROM-WHERE query.
+     */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class SFW extends QueryBody {
@@ -73,6 +79,10 @@ public abstract class QueryBody extends AstNode {
         }
     }
 
+    /**
+     * Represents a set operation query, which is composed of a set operation with two other expressions. This can
+     * also be used to represent PartiQL's outer bag operator.
+     */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class SetOp extends QueryBody {

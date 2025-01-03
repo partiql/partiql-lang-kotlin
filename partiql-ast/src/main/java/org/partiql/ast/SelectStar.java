@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents SQL's SELECT * clause.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

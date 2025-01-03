@@ -48,7 +48,6 @@ import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprStruct
 import org.partiql.ast.expr.ExprVarRef
-import org.partiql.ast.expr.Scope
 import org.partiql.planner.internal.helpers.toBinder
 
 /**
@@ -356,7 +355,7 @@ internal object NormalizeSelect {
 
         private fun varLocal(name: String): ExprVarRef = exprVarRef(
             identifierChain = identifierChain(identifier(name, isDelimited = true), next = null),
-            scope = Scope.LOCAL()
+            isQualified = true
         )
 
         private fun FromTableRef.aliases(): List<Pair<String, String?>> = when (this) {
@@ -371,14 +370,14 @@ internal object NormalizeSelect {
 
         // t -> t.* AS _i
         private fun String.star(i: Int): SelectItem.Expr {
-            val expr = exprVarRef(identifierChain(id(this), next = null), Scope.DEFAULT())
+            val expr = exprVarRef(identifierChain(id(this), next = null), isQualified = false)
             val alias = expr.toBinder(i)
             return selectItemExpr(expr, alias)
         }
 
         // t -> t AS t
         private fun String.simple(): SelectItem.Expr {
-            val expr = exprVarRef(identifierChain(id(this), next = null), Scope.DEFAULT())
+            val expr = exprVarRef(identifierChain(id(this), next = null), isQualified = false)
             val alias = id(this)
             return selectItemExpr(expr, alias)
         }

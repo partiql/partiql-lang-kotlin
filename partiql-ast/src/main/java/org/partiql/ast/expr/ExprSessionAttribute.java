@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents SQL session attributes as an expression. E.g. {@code CURRENT_USER}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

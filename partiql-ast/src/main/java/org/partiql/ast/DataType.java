@@ -9,6 +9,9 @@ import org.partiql.ast.ddl.AttributeConstraint;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents PartiQL's data types. Includes both SQL and PartiQL's spec-defined types.
+ */
 @EqualsAndHashCode(callSuper = false)
 public final class DataType extends AstEnum {
     /**

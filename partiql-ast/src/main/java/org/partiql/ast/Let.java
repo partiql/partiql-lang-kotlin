@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a PartiQL LET clause.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
@@ -35,7 +35,7 @@ public final class Let extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents a binding in a PartiQL LET clause.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

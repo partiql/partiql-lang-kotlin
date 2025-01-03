@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Re
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

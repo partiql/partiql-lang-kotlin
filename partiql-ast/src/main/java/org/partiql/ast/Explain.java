@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents PartiQL's EXPLAIN statement.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

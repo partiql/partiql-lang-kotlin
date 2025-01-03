@@ -11,6 +11,9 @@ import org.partiql.ast.Identifier;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the optional partition by clause in a CREATE TABLE statement.
+ */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class PartitionBy extends AstNode {

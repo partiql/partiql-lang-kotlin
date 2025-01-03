@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a column definition in a CREATE TABLE statement.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

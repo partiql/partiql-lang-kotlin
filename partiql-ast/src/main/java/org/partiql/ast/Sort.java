@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Sort specification. &lt;expr&gt; [ASC|DESC] [NULLS FIRST | NULLS LAST]
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

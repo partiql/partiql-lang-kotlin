@@ -10,7 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a single exclude path in an exclude clause. Composed on one or more exclude steps.
+ *
+ * @see Exclude
+ * @see ExcludeStep
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

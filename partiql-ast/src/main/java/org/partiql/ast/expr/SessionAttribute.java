@@ -10,11 +10,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Enum represents the supported SQL session attributes. E.g. {@code CURRENT_USER}.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class SessionAttribute extends AstEnum {
+    /**
+     * CURRENT_USER session attribute.
+     */
     public static final int CURRENT_USER = 0;
+    /**
+     * CURRENT_DATE session attribute.
+     */
     public static final int CURRENT_DATE = 1;
 
     public static SessionAttribute CURRENT_USER() {

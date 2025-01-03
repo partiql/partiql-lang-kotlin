@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * A label spec in a node pattern like {@code MATCH (x : <lab>)} or in an edge pattern like {@code MATCH −[t : <lab>]−>}.
  */
 public abstract class GraphLabel extends AstNode {
     /**
-     * TODO docs, equals, hashcode
+     * Name label as in {@code MATCH (x:Account)} or {@code MATCH -[x:Transfer]->}.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -41,7 +41,7 @@ public abstract class GraphLabel extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Wildcard label as in {@code MATCH (x: %)}.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -61,7 +61,7 @@ public abstract class GraphLabel extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Negation label as in {@code MATCH (x: !Account)}.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -89,7 +89,7 @@ public abstract class GraphLabel extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Conjunction label as in {@code MATCH (x: City&Country)} - like Monaco.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -123,7 +123,7 @@ public abstract class GraphLabel extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Disjunction label as in {@code MATCH (x: City|Country)} - like Paris or Germany.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

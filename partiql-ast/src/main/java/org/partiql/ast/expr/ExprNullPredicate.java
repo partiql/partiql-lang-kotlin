@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs
- * Corresponds to SQL99's null predicate (8.7).
+ * Represents SQL's IS [NOT] NULL predicate (8.7). E.g. {@code col1 IS NULL}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

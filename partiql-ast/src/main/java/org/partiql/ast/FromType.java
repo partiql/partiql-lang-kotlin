@@ -7,11 +7,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a single FROM source.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class FromType extends AstEnum {
+    /**
+     * A table scan.
+     */
     public static final int SCAN = 0;
+    /**
+     * A table unpivot.
+     */
     public static final int UNPIVOT = 1;
 
     public static FromType SCAN() {

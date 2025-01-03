@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents operators represented with special symbol(s) that take one or two expressions as operands.
+ * <p>
+ * E.g. arithmetic operators {@code 1 + 2}, comparison operators {@code 1 < 2}, etc.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

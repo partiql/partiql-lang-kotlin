@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a join in a FROM clause.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
@@ -45,6 +45,9 @@ public final class FromJoin extends FromTableRef {
         List<AstNode> kids = new ArrayList<>();
         kids.add(lhs);
         kids.add(rhs);
+        if (joinType != null) {
+            kids.add(joinType);
+        }
         if (condition != null) {
             kids.add(condition);
         }

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents PartiQL's literal expression. E.g. {@code 'string literal'}.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class ExprLit extends Expr {

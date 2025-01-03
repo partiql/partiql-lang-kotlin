@@ -21,7 +21,6 @@ import org.partiql.ast.Ast.tableConstraintUnique
 import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
 import org.partiql.ast.Literal.intNum
-import org.partiql.ast.expr.Scope
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
@@ -233,7 +232,7 @@ class PartiQLParserDDLTests {
                                                 identifier("a", false),
                                                 null
                                             ),
-                                            Scope.DEFAULT()
+                                            isQualified = false
                                         ),
                                         exprLit(
                                             intNum(0)

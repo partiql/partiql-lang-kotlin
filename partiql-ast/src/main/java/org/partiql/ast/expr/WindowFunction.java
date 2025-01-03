@@ -10,11 +10,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a SQL window function enum. E.g. {@code LAG}.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class WindowFunction extends AstEnum {
+    /**
+     * LAG window function.
+     */
     public static final int LAG = 0;
+    /**
+     * LEAD window function.
+     */
     public static final int LEAD = 1;
 
     public static WindowFunction LAG() {

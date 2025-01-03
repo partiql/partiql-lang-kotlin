@@ -12,7 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs + further specification on supported types
+ * Represents PartiQL's IS &lt;type&gt; predicate. E.g. {@code foo IS INTEGER}.
+ * <p>
  * Note: this is an experimental API. Class's fields and behavior may change in a subsequent release.
  */
 @Builder(builderClassName = "Builder")

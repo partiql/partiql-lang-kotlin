@@ -7,12 +7,21 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents SQL set operations. E.g. {@code UNION}.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class SetOpType extends AstEnum {
+    /**
+     * UNION set op variant.
+     */
     public static final int UNION = 0;
+    /**
+     * INTERSECT set op variant.
+     */
     public static final int INTERSECT = 1;
+    /**
+     * EXCEPT set op variant.
+     */
     public static final int EXCEPT = 2;
 
     public static SetOpType UNION() {

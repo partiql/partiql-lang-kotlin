@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Graph edge quantifier. E.g., the {@code {2,5}} in {@code MATCH (x)->{2,5}(y)}).
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

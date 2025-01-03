@@ -57,7 +57,6 @@ import org.partiql.ast.expr.ExprValues
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
-import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
 import org.partiql.errors.TypeCheckException
@@ -262,12 +261,11 @@ internal object RexConverter {
         override fun visitExprVarRef(node: ExprVarRef, context: Env): Rex {
             val type = (ANY)
             val identifier = AstToPlan.convert(node.identifierChain)
-            val scope = when (node.scope.code()) {
-                Scope.DEFAULT -> Rex.Op.Var.Scope.DEFAULT
-                Scope.LOCAL -> Rex.Op.Var.Scope.LOCAL
-                else -> error("Unexpected Scope type: ${node.scope}")
+            val isQualified = when (node.isQualified) {
+                false -> Rex.Op.Var.Scope.DEFAULT
+                true -> Rex.Op.Var.Scope.LOCAL
             }
-            val op = rexOpVarUnresolved(identifier, scope)
+            val op = rexOpVarUnresolved(identifier, isQualified)
             return rex(type, op)
         }
 

@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs
- * Corresponds to SQL99's boolean test (6.30).
+ * Represents SQL99's boolean test (6.30). E.g. {@code IS TRUE}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents an attribute level constraint.
  */
 public abstract class AttributeConstraint extends AstNode {
 
@@ -36,7 +36,7 @@ public abstract class AttributeConstraint extends AstNode {
     // NULL & NOT NULL
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents the {@code NULL} and {@code NOT NULL} attribute level constraints.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Null extends AttributeConstraint {
@@ -57,7 +57,7 @@ public abstract class AttributeConstraint extends AstNode {
     // Unique and primary
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents the {@code UNIQUE} and {@code PRIMARY KEY} attribute level constraints.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends AttributeConstraint {
@@ -76,7 +76,7 @@ public abstract class AttributeConstraint extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents the {@code CHECK} attribute level constraint.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Check extends AttributeConstraint {

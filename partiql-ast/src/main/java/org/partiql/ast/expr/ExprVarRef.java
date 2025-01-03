@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a variable reference, e.g. {@code foo.bar} or {@code @foo.bar}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
@@ -21,13 +21,12 @@ public final class ExprVarRef extends Expr {
     @Getter
     private final IdentifierChain identifierChain;
 
-    @NotNull
     @Getter
-    private final Scope scope;
+    private final boolean qualified;
 
-    public ExprVarRef(@NotNull IdentifierChain identifierChain, @NotNull Scope scope) {
+    public ExprVarRef(@NotNull IdentifierChain identifierChain, boolean qualified) {
         this.identifierChain = identifierChain;
-        this.scope = scope;
+        this.qualified = qualified;
     }
 
     @Override

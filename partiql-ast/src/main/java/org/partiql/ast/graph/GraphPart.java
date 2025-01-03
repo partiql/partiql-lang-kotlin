@@ -13,11 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Base abstract class for graph pattern parts.
  */
 public abstract class GraphPart extends AstNode {
     /**
-     * TODO docs, equals, hashcode
+     * A single node in a graph pattern.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -60,7 +60,7 @@ public abstract class GraphPart extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A single edge in a graph pattern.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

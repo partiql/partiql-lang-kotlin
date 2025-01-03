@@ -6,9 +6,21 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents the ordering used within certain clauses.
+ *
+ * @see OrderBy
+ * @see Sort
+ */
 @EqualsAndHashCode(callSuper = false)
 public final class Order extends AstEnum {
+    /**
+     * Ascending order.
+     */
     public static final int ASC = 0;
+    /**
+     * Descending order.
+     */
     public static final int DESC = 1;
 
     public static Order ASC() {

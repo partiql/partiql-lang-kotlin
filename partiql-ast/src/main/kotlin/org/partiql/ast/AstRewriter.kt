@@ -425,9 +425,9 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitExprVarRef(node: ExprVarRef, ctx: C): AstNode {
         val identifierChain = visitIdentifierChain(node.identifierChain, ctx) as IdentifierChain
-        val scope = node.scope
-        return if (identifierChain !== node.identifierChain || scope !== node.scope) {
-            ExprVarRef(identifierChain, scope)
+        val isQualified = node.isQualified
+        return if (identifierChain !== node.identifierChain || isQualified !== node.isQualified) {
+            ExprVarRef(identifierChain, isQualified)
         } else {
             node
         }

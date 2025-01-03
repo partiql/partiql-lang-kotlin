@@ -12,8 +12,6 @@ import java.util.List;
 
 /**
  * Any option that consists of a key value pair where the key is a string and value is a string.
- * <p>
- * TODO: equals, hashcode
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

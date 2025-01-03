@@ -7,18 +7,45 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents the support join types in PartiQL.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class JoinType extends AstEnum {
+    /**
+     * Inner join variant.
+     */
     public static final int INNER = 0;
+    /**
+     * Left join variant.
+     */
     public static final int LEFT = 1;
+    /**
+     * Left outer join variant.
+     */
     public static final int LEFT_OUTER = 2;
+    /**
+     * Right join variant.
+     */
     public static final int RIGHT = 3;
+    /**
+     * Right outer join variant.
+     */
     public static final int RIGHT_OUTER = 4;
+    /**
+     * Full join variant.
+     */
     public static final int FULL = 5;
+    /**
+     * Full outer join variant.
+     */
     public static final int FULL_OUTER = 6;
+    /**
+     * Cross join variant.
+     */
     public static final int CROSS = 7;
+    /**
+     * Left cross join variant.
+     */
     public static final int LEFT_CROSS = 8;
 
     public static JoinType INNER() {

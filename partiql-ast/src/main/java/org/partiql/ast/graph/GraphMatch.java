@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Graph match. See Graph Match Nodes — <a href="https://partiql.org/gpml/graph_query.html">specification</a>.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

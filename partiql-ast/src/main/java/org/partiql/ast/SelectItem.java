@@ -10,11 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents an item within a select list.
+ *
+ * @see SelectList
  */
 public abstract class SelectItem extends AstNode {
     /**
-     * TODO docs, equals, hashcode
+     * Represents PartiQL's {@code <select item>.*} operator used in a select list.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -42,7 +44,7 @@ public abstract class SelectItem extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents an expr select list item with an optional alias.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
