@@ -3,13 +3,13 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.function.utils.StringUtils.codepointPosition
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_POSITION__STRING_STRING__INT64 = Function.static(
+internal val Fn_POSITION__STRING_STRING__INT64 = FunctionUtils.hidden(
 
     name = "position",
     returns = PType.bigint(),
@@ -25,7 +25,7 @@ internal val Fn_POSITION__STRING_STRING__INT64 = Function.static(
     Datum.bigint(result.toLong())
 }
 
-internal val Fn_POSITION__CLOB_CLOB__INT64 = Function.static(
+internal val Fn_POSITION__CLOB_CLOB__INT64 = FunctionUtils.hidden(
 
     name = "position",
     returns = PType.bigint(),

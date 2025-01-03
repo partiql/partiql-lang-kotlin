@@ -3,10 +3,10 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.types.PType
 
-internal val Fn_CURRENT_USER____STRING = Function.static(
+internal val Fn_CURRENT_USER____STRING = FunctionUtils.hidden(
 
     name = "current_user",
     returns = PType.string(),

@@ -3,12 +3,12 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_BETWEEN__INT8_INT8_INT8__BOOL = Function.static(
+internal val Fn_BETWEEN__INT8_INT8_INT8__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -25,7 +25,7 @@ internal val Fn_BETWEEN__INT8_INT8_INT8__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__INT16_INT16_INT16__BOOL = Function.static(
+internal val Fn_BETWEEN__INT16_INT16_INT16__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -42,7 +42,7 @@ internal val Fn_BETWEEN__INT16_INT16_INT16__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__INT32_INT32_INT32__BOOL = Function.static(
+internal val Fn_BETWEEN__INT32_INT32_INT32__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -59,7 +59,7 @@ internal val Fn_BETWEEN__INT32_INT32_INT32__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__INT64_INT64_INT64__BOOL = Function.static(
+internal val Fn_BETWEEN__INT64_INT64_INT64__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -76,7 +76,7 @@ internal val Fn_BETWEEN__INT64_INT64_INT64__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__INT_INT_INT__BOOL = Function.static(
+internal val Fn_BETWEEN__INT_INT_INT__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -93,7 +93,7 @@ internal val Fn_BETWEEN__INT_INT_INT__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL = Function.static(
+internal val Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -110,7 +110,7 @@ internal val Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL = Function.static(
+internal val Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -127,7 +127,7 @@ internal val Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL = Function.static(
+internal val Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -144,7 +144,7 @@ internal val Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__STRING_STRING_STRING__BOOL = Function.static(
+internal val Fn_BETWEEN__STRING_STRING_STRING__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -161,7 +161,7 @@ internal val Fn_BETWEEN__STRING_STRING_STRING__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL = Function.static(
+internal val Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -178,7 +178,7 @@ internal val Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__DATE_DATE_DATE__BOOL = Function.static(
+internal val Fn_BETWEEN__DATE_DATE_DATE__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -195,7 +195,7 @@ internal val Fn_BETWEEN__DATE_DATE_DATE__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__TIME_TIME_TIME__BOOL = Function.static(
+internal val Fn_BETWEEN__TIME_TIME_TIME__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
@@ -212,7 +212,7 @@ internal val Fn_BETWEEN__TIME_TIME_TIME__BOOL = Function.static(
     Datum.bool(value in lower..upper)
 }
 
-internal val Fn_BETWEEN__TIMESTAMP_TIMESTAMP_TIMESTAMP__BOOL = Function.static(
+internal val Fn_BETWEEN__TIMESTAMP_TIMESTAMP_TIMESTAMP__BOOL = FunctionUtils.hidden(
 
     name = "between",
     returns = PType.bool(),
