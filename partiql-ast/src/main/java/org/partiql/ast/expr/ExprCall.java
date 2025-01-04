@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -14,21 +13,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a scalar function call. E.g. {@code foo(a, b, c)}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class ExprCall extends Expr {
     @NotNull
-    @Getter
     private final IdentifierChain function;
 
     @NotNull
-    @Getter
     private final List<Expr> args;
 
     @Nullable
-    @Getter
     private final SetQuantifier setq;
 
     public ExprCall(@NotNull IdentifierChain function, @NotNull List<Expr> args, @Nullable SetQuantifier setq) {
@@ -49,5 +45,20 @@ public final class ExprCall extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprCall(this, ctx);
+    }
+
+    @NotNull
+    public IdentifierChain getFunction() {
+        return this.function;
+    }
+
+    @NotNull
+    public List<Expr> getArgs() {
+        return this.args;
+    }
+
+    @Nullable
+    public SetQuantifier getSetq() {
+        return this.setq;
     }
 }

@@ -2,23 +2,20 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents an identifier in PartiQL, which may be delimited or not.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Identifier extends AstNode {
     @NotNull
-    @Getter
     private final String symbol;
 
-    @Getter
     private final boolean delimited;
 
     public Identifier(@NotNull String symbol, boolean delimited) {
@@ -35,5 +32,14 @@ public final class Identifier extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitIdentifier(this, ctx);
+    }
+
+    @NotNull
+    public String getSymbol() {
+        return this.symbol;
+    }
+
+    public boolean isDelimited() {
+        return this.delimited;
     }
 }

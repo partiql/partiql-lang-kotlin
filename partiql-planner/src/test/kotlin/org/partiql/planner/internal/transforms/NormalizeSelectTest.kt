@@ -19,7 +19,6 @@ import org.partiql.ast.Literal.intNum
 import org.partiql.ast.Literal.string
 import org.partiql.ast.SelectItem
 import org.partiql.ast.expr.Expr
-import org.partiql.ast.expr.Scope
 import kotlin.test.assertEquals
 
 class NormalizeSelectTest {
@@ -134,7 +133,7 @@ class NormalizeSelectTest {
             ),
             next = null
         ),
-        scope = Scope.DEFAULT(),
+        isQualified = false,
     )
 
     private fun select(vararg items: SelectItem) =
@@ -191,7 +190,7 @@ class NormalizeSelectTest {
                                     ),
                                     next = null
                                 ),
-                                scope = Scope.DEFAULT()
+                                isQualified = false
                             ),
                             fromType = FromType.SCAN(),
                             asAlias = null,

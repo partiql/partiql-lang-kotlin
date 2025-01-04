@@ -58,7 +58,6 @@ import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.ExprWindow
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.PathStep.AllFields
-import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.SessionAttribute
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
@@ -274,8 +273,8 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun exprVarRef(identifierChain: IdentifierChain, scope: Scope): ExprVarRef {
-        return ExprVarRef(identifierChain, scope)
+    public fun exprVarRef(identifierChain: IdentifierChain, isQualified: Boolean): ExprVarRef {
+        return ExprVarRef(identifierChain, isQualified)
     }
 
     @JvmStatic

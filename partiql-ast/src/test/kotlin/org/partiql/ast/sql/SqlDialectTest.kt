@@ -103,7 +103,6 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetOpType
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.expr.Expr
-import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
 import java.math.BigDecimal
@@ -518,7 +517,7 @@ class SqlDialectTest {
                         root = id("x"),
                         next = null
                     ),
-                    Scope.DEFAULT()
+                    isQualified = false
                 )
             ),
             expect(
@@ -528,7 +527,7 @@ class SqlDialectTest {
                         root = id("x", isDelimited = true),
                         next = null
                     ),
-                    Scope.DEFAULT()
+                    isQualified = false
                 )
             ),
             expect(
@@ -544,7 +543,7 @@ class SqlDialectTest {
                             )
                         )
                     ),
-                    Scope.DEFAULT()
+                    isQualified = false
                 )
             ),
             expect(
@@ -560,7 +559,7 @@ class SqlDialectTest {
                             )
                         )
                     ),
-                    Scope.DEFAULT()
+                    isQualified = false
                 )
             ),
             expect(
@@ -576,7 +575,7 @@ class SqlDialectTest {
                             )
                         )
                     ),
-                    Scope.DEFAULT()
+                    isQualified = false
                 )
             ),
             // LOCAL
@@ -587,7 +586,7 @@ class SqlDialectTest {
                         root = id("x"),
                         next = null
                     ),
-                    Scope.LOCAL()
+                    isQualified = true
                 )
             ),
             expect(
@@ -597,7 +596,7 @@ class SqlDialectTest {
                         root = id("x", isDelimited = true),
                         next = null
                     ),
-                    Scope.LOCAL()
+                    isQualified = true
                 )
             ),
             expect(
@@ -613,7 +612,7 @@ class SqlDialectTest {
                             )
                         )
                     ),
-                    Scope.LOCAL()
+                    isQualified = true
                 )
             ),
             expect(
@@ -626,7 +625,7 @@ class SqlDialectTest {
                             next = idChain(root = id("z"))
                         )
                     ),
-                    Scope.LOCAL()
+                    isQualified = true
                 )
             ),
             expect(
@@ -639,7 +638,7 @@ class SqlDialectTest {
                             next = idChain(root = id("z", isDelimited = true))
                         )
                     ),
-                    Scope.LOCAL()
+                    isQualified = true
                 )
             ),
         )
@@ -651,7 +650,7 @@ class SqlDialectTest {
                 exprPath(
                     root = exprVarRef(
                         identifierChain = idChain(id("x")),
-                        scope = Scope.DEFAULT()
+                        isQualified = false
                     ),
                     next = exprPathStepField(
                         value = id("y"),
@@ -664,7 +663,7 @@ class SqlDialectTest {
                 exprPath(
                     root = exprVarRef(
                         identifierChain = idChain(id("x")),
-                        scope = Scope.DEFAULT()
+                        isQualified = false
                     ),
                     next = exprPathStepField(
                         value = id("y"),
@@ -677,7 +676,7 @@ class SqlDialectTest {
                 exprPath(
                     root = exprVarRef(
                         identifierChain = idChain(id("x")),
-                        scope = Scope.DEFAULT()
+                        isQualified = false
                     ),
                     next = exprPathStepElement(
                         element = exprOperator(
@@ -685,7 +684,7 @@ class SqlDialectTest {
                             lhs = exprLit(intNum(1)),
                             rhs = exprVarRef(
                                 identifierChain = idChain(id("a")),
-                                scope = Scope.DEFAULT()
+                                isQualified = false
                             )
                         ),
                         next = null
@@ -697,7 +696,7 @@ class SqlDialectTest {
                 exprPath(
                     root = exprVarRef(
                         identifierChain = idChain(id("x")),
-                        scope = Scope.DEFAULT()
+                        isQualified = false
                     ),
                     next = exprPathStepElement(exprLit(string("y")), next = null)
                 )
@@ -758,7 +757,7 @@ class SqlDialectTest {
                 "FOO(x)",
                 exprCall(
                     function = idChain(id("FOO")),
-                    args = listOf(exprVarRef(idChain(id("x")), Scope.DEFAULT())),
+                    args = listOf(exprVarRef(idChain(id("x")), isQualified = false)),
                     setq = null
                 )
             ),
@@ -766,7 +765,7 @@ class SqlDialectTest {
                 "FOO(ALL x)",
                 exprCall(
                     function = idChain(id("FOO")),
-                    args = listOf(exprVarRef(idChain(id("x")), Scope.DEFAULT())),
+                    args = listOf(exprVarRef(idChain(id("x")), isQualified = false)),
                     setq = SetQuantifier.ALL()
                 )
             ),
@@ -774,7 +773,7 @@ class SqlDialectTest {
                 "FOO(DISTINCT x)",
                 exprCall(
                     function = idChain(id("FOO")),
-                    args = listOf(exprVarRef(idChain(id("x")), Scope.DEFAULT())),
+                    args = listOf(exprVarRef(idChain(id("x")), isQualified = false)),
                     setq = SetQuantifier.DISTINCT(),
                 )
             ),
@@ -783,8 +782,8 @@ class SqlDialectTest {
                 exprCall(
                     function = idChain(id("FOO")),
                     args = listOf(
-                        exprVarRef(idChain(id("x")), Scope.DEFAULT()),
-                        exprVarRef(idChain(id("y")), Scope.DEFAULT())
+                        exprVarRef(idChain(id("x")), isQualified = false),
+                        exprVarRef(idChain(id("y")), isQualified = false)
                     ),
                     setq = null
                 )
@@ -794,8 +793,8 @@ class SqlDialectTest {
                 exprCall(
                     function = idChain(id("FOO")),
                     args = listOf(
-                        exprVarRef(idChain(id("x")), Scope.DEFAULT()),
-                        exprVarRef(idChain(id("y")), Scope.DEFAULT())
+                        exprVarRef(idChain(id("x")), isQualified = false),
+                        exprVarRef(idChain(id("y")), isQualified = false)
                     ),
                     setq = SetQuantifier.ALL()
                 )
@@ -805,8 +804,8 @@ class SqlDialectTest {
                 exprCall(
                     function = idChain(id("FOO")),
                     args = listOf(
-                        exprVarRef(idChain(id("x")), Scope.DEFAULT()),
-                        exprVarRef(idChain(id("y")), Scope.DEFAULT())
+                        exprVarRef(idChain(id("x")), isQualified = false),
+                        exprVarRef(idChain(id("y")), isQualified = false)
                     ),
                     setq = SetQuantifier.DISTINCT(),
                 )
@@ -1727,7 +1726,7 @@ class SqlDialectTest {
                                     )
                                 ),
                                 excludePath(
-                                    varRef = exprVarRef(idChain(id("s", isDelimited = true)), Scope.DEFAULT()),
+                                    varRef = exprVarRef(idChain(id("s", isDelimited = true)), isQualified = false),
                                     excludeSteps = listOf(
                                         excludeStepCollIndex(0),
                                         insensitiveExcludeStructField("d"),
@@ -2660,7 +2659,7 @@ class SqlDialectTest {
 
         private fun v(symbol: String) = exprVarRef(
             identifierChain = idChain(id(symbol)),
-            scope = Scope.DEFAULT()
+            isQualified = false
         )
 
         private fun id(

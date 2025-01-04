@@ -190,7 +190,6 @@ import org.partiql.ast.expr.ExprPath
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprRowValue
 import org.partiql.ast.expr.PathStep
-import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.SessionAttribute
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
@@ -1013,7 +1012,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExcludeExpr(ctx: GeneratedParser.ExcludeExprContext) = translate(ctx) {
             val rootId = visitSymbolPrimitive(ctx.symbolPrimitive())
-            val root = exprVarRef(identifierChain(rootId, null), Scope.DEFAULT())
+            val root = exprVarRef(identifierChain(rootId, null), isQualified = false)
             val steps = visitOrEmpty<ExcludeStep>(ctx.excludeExprSteps())
             excludePath(root, steps)
         }
@@ -1549,32 +1548,32 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.IDENTIFIER -> false
                 else -> true
             }
-            val scope = when (ctx.qualifier) {
-                null -> Scope.DEFAULT()
-                else -> Scope.LOCAL()
+            val isQualified = when (ctx.qualifier) {
+                null -> false
+                else -> true
             }
             exprVarRef(
                 identifierChain(
                     root = identifier(symbol, isDelimited),
                     next = null
                 ),
-                scope
+                isQualified
             )
         }
 
         override fun visitVariableKeyword(ctx: GeneratedParser.VariableKeywordContext) = translate(ctx) {
             val symbol = ctx.key.text
             val isDelimited = false
-            val scope = when (ctx.qualifier) {
-                null -> Scope.DEFAULT()
-                else -> Scope.LOCAL()
+            val isQualified = when (ctx.qualifier) {
+                null -> false
+                else -> true
             }
             exprVarRef(
                 identifierChain(
                     root = identifier(symbol, isDelimited),
                     next = null
                 ),
-                scope
+                isQualified
             )
         }
 

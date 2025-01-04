@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -12,17 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a CAST expression. E.g. {@code CAST(col1 AS INTEGER)}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class ExprCast extends Expr {
     @NotNull
-    @Getter
     private final Expr value;
 
     @NotNull
-    @Getter
     private final DataType asType;
 
     public ExprCast(@NotNull Expr value, @NotNull DataType asType) {
@@ -42,5 +39,15 @@ public final class ExprCast extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprCast(this, ctx);
+    }
+
+    @NotNull
+    public Expr getValue() {
+        return this.value;
+    }
+
+    @NotNull
+    public DataType getAsType() {
+        return this.asType;
     }
 }

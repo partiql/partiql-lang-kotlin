@@ -9,12 +9,21 @@ import org.partiql.ast.AstVisitor;
 import java.util.List;
 
 /**
- * TODO docs
+ * Represents SQL's truth value enum used for {@link ExprBoolTest}. E.g. {@code TRUE}, {@code FALSE}, {@code UNKNOWN}.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class TruthValue extends AstEnum {
+    /**
+     * Bool test truth value for IS [NOT] TRUE.
+     */
     public static final int TRUE = 0;
+    /**
+     * Bool test truth value for IS [NOT] FALSE.
+     */
     public static final int FALSE = 1;
+    /**
+     * Bool test truth value for IS [NOT] UNKNOWN.
+     */
     public static final int UNKNOWN = 2;
 
     private final int code;

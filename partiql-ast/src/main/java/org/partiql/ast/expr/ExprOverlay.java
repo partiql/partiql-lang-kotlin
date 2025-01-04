@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -12,25 +11,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents SQL's OVERLAY special form. E.g. {@code OVERLAY(value, placing, from, forLength)}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class ExprOverlay extends Expr {
     @NotNull
-    @Getter
     private final Expr value;
 
     @NotNull
-    @Getter
     private final Expr placing;
 
     @NotNull
-    @Getter
     private final Expr from;
 
     @Nullable
-    @Getter
     private final Expr forLength;
 
     public ExprOverlay(@NotNull Expr value, @NotNull Expr placing, @NotNull Expr from, @Nullable Expr forLength) {
@@ -56,5 +51,25 @@ public final class ExprOverlay extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprOverlay(this, ctx);
+    }
+
+    @NotNull
+    public Expr getValue() {
+        return this.value;
+    }
+
+    @NotNull
+    public Expr getPlacing() {
+        return this.placing;
+    }
+
+    @NotNull
+    public Expr getFrom() {
+        return this.from;
+    }
+
+    @Nullable
+    public Expr getForLength() {
+        return this.forLength;
     }
 }

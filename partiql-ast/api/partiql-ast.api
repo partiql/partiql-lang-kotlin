@@ -104,7 +104,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprTrim (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/TrimSpec;)Lorg/partiql/ast/expr/ExprTrim;
 	public static synthetic fun exprTrim$default (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/TrimSpec;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprTrim;
 	public static final fun exprValues (Ljava/util/List;)Lorg/partiql/ast/expr/ExprValues;
-	public static final fun exprVarRef (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/expr/Scope;)Lorg/partiql/ast/expr/ExprVarRef;
+	public static final fun exprVarRef (Lorg/partiql/ast/IdentifierChain;Z)Lorg/partiql/ast/expr/ExprVarRef;
 	public static final fun exprVariant (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/expr/ExprVariant;
 	public static final fun exprWindow (Lorg/partiql/ast/expr/WindowFunction;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/ExprWindow$Over;)Lorg/partiql/ast/expr/ExprWindow;
 	public static final fun exprWindow (Lorg/partiql/ast/expr/WindowFunction;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/ExprWindow$Over;)Lorg/partiql/ast/expr/ExprWindow;
@@ -2570,20 +2570,20 @@ public class org/partiql/ast/expr/ExprValues$Builder {
 }
 
 public final class org/partiql/ast/expr/ExprVarRef : org/partiql/ast/expr/Expr {
-	public fun <init> (Lorg/partiql/ast/IdentifierChain;Lorg/partiql/ast/expr/Scope;)V
+	public fun <init> (Lorg/partiql/ast/IdentifierChain;Z)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/expr/ExprVarRef$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun getIdentifierChain ()Lorg/partiql/ast/IdentifierChain;
-	public fun getScope ()Lorg/partiql/ast/expr/Scope;
 	public fun hashCode ()I
+	public fun isQualified ()Z
 }
 
 public class org/partiql/ast/expr/ExprVarRef$Builder {
 	public fun build ()Lorg/partiql/ast/expr/ExprVarRef;
 	public fun identifierChain (Lorg/partiql/ast/IdentifierChain;)Lorg/partiql/ast/expr/ExprVarRef$Builder;
-	public fun scope (Lorg/partiql/ast/expr/Scope;)Lorg/partiql/ast/expr/ExprVarRef$Builder;
+	public fun qualified (Z)Lorg/partiql/ast/expr/ExprVarRef$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -2689,21 +2689,6 @@ public class org/partiql/ast/expr/PathStep$Field : org/partiql/ast/expr/PathStep
 	public fun getChildren ()Ljava/util/List;
 	public fun getField ()Lorg/partiql/ast/Identifier;
 	public fun hashCode ()I
-}
-
-public final class org/partiql/ast/expr/Scope : org/partiql/ast/AstEnum {
-	public static final field DEFAULT I
-	public static final field LOCAL I
-	public static fun DEFAULT ()Lorg/partiql/ast/expr/Scope;
-	public static fun LOCAL ()Lorg/partiql/ast/expr/Scope;
-	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun code ()I
-	public static fun codes ()[I
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun name ()Ljava/lang/String;
-	public static fun parse (Ljava/lang/String;)Lorg/partiql/ast/expr/Scope;
 }
 
 public final class org/partiql/ast/expr/SessionAttribute : org/partiql/ast/AstEnum {

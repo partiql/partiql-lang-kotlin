@@ -64,8 +64,11 @@ import org.partiql.ast.graph.GraphPattern;
 import org.partiql.ast.graph.GraphQuantifier;
 import org.partiql.ast.graph.GraphSelector;
 
-// TODO docs
-//  Also include docs on how a library user could create a new variant for sum types and which methods to override
+/**
+ * Visitor interface for AST nodes.
+ * @param <R> return type of the visitor functions.
+ * @param <C> context type of the visitor functions.
+ */
 public abstract class AstVisitor<R, C> {
     public R defaultVisit(AstNode node, C ctx) {
         for (AstNode child : node.getChildren()) {

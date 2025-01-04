@@ -2,7 +2,6 @@ package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -14,28 +13,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a column definition in a CREATE TABLE statement.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class ColumnDefinition extends AstNode {
     @NotNull
-    @Getter
     private final Identifier name;
 
     @NotNull
-    @Getter
     private final DataType dataType;
 
-    @Getter
     private final boolean optional;
 
     @NotNull
-    @Getter
     private final List<AttributeConstraint> constraints;
 
     @Nullable
-    @Getter
     private final String comment;
 
     public ColumnDefinition(
@@ -64,5 +58,29 @@ public final class ColumnDefinition extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitColumnDefinition(this, ctx);
+    }
+
+    @NotNull
+    public Identifier getName() {
+        return this.name;
+    }
+
+    @NotNull
+    public DataType getDataType() {
+        return this.dataType;
+    }
+
+    public boolean isOptional() {
+        return this.optional;
+    }
+
+    @NotNull
+    public List<AttributeConstraint> getConstraints() {
+        return this.constraints;
+    }
+
+    @Nullable
+    public String getComment() {
+        return this.comment;
     }
 }

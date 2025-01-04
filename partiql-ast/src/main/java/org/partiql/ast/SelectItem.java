@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,17 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents an item within a select list.
+ *
+ * @see SelectList
  */
 public abstract class SelectItem extends AstNode {
     /**
-     * TODO docs, equals, hashcode
+     * Represents PartiQL's {@code <select item>.*} operator used in a select list.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Star extends SelectItem {
         @NotNull
-        @Getter
         private final org.partiql.ast.expr.Expr expr;
 
         public Star(@NotNull org.partiql.ast.expr.Expr expr) {
@@ -39,20 +39,23 @@ public abstract class SelectItem extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitSelectItemStar(this, ctx);
         }
+
+        @NotNull
+        public org.partiql.ast.expr.Expr getExpr() {
+            return this.expr;
+        }
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents an expr select list item with an optional alias.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Expr extends SelectItem {
         @NotNull
-        @Getter
         private final org.partiql.ast.expr.Expr expr;
 
         @Nullable
-        @Getter
         private final Identifier asAlias;
 
         public Expr(@NotNull org.partiql.ast.expr.Expr expr, @Nullable Identifier asAlias) {
@@ -74,6 +77,16 @@ public abstract class SelectItem extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitSelectItemExpr(this, ctx);
+        }
+
+        @NotNull
+        public org.partiql.ast.expr.Expr getExpr() {
+            return this.expr;
+        }
+
+        @Nullable
+        public Identifier getAsAlias() {
+            return this.asAlias;
         }
     }
 }

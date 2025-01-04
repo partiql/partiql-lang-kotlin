@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.expr.Expr;
@@ -11,25 +10,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a join in a FROM clause.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class FromJoin extends FromTableRef {
     @NotNull
-    @Getter
     private final FromTableRef lhs;
 
     @NotNull
-    @Getter
     private final FromTableRef rhs;
 
     @Nullable
-    @Getter
     private final JoinType joinType;
 
     @Nullable
-    @Getter
     private final Expr condition;
 
     public FromJoin(@NotNull FromTableRef lhs, @NotNull FromTableRef rhs, @Nullable JoinType joinType, @Nullable Expr condition) {
@@ -45,6 +40,9 @@ public final class FromJoin extends FromTableRef {
         List<AstNode> kids = new ArrayList<>();
         kids.add(lhs);
         kids.add(rhs);
+        if (joinType != null) {
+            kids.add(joinType);
+        }
         if (condition != null) {
             kids.add(condition);
         }
@@ -54,5 +52,25 @@ public final class FromJoin extends FromTableRef {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitFromJoin(this, ctx);
+    }
+
+    @NotNull
+    public FromTableRef getLhs() {
+        return this.lhs;
+    }
+
+    @NotNull
+    public FromTableRef getRhs() {
+        return this.rhs;
+    }
+
+    @Nullable
+    public JoinType getJoinType() {
+        return this.joinType;
+    }
+
+    @Nullable
+    public Expr getCondition() {
+        return this.condition;
     }
 }

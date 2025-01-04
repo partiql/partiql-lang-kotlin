@@ -1,7 +1,6 @@
 package org.partiql.ast.expr;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -12,24 +11,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * A path step in a path expression.
  */
 public abstract class PathStep extends AstNode {
     @Nullable
-    @Getter
     private final PathStep next;
 
     protected PathStep(@Nullable PathStep _next) {
         this.next = _next;
     }
 
+    @Nullable
+    public PathStep getNext() {
+        return this.next;
+    }
+
     /**
-     * TODO docs, equals, hashcode
+     * A path step that represents a field referenced with the dot notation. E.g. {@code a.b}.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Field extends PathStep {
         @NotNull
-        @Getter
         private final Identifier field;
 
         public Field(@NotNull Identifier field, @Nullable PathStep next) {
@@ -52,15 +54,19 @@ public abstract class PathStep extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitPathStepField(this, ctx);
         }
+
+        @NotNull
+        public Identifier getField() {
+            return this.field;
+        }
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A path step that represents an element reference with the bracket notation. E.g. {@code a[0]} or {@code a['b']}
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Element extends PathStep {
         @NotNull
-        @Getter
         private final Expr element;
 
         public Element(@NotNull Expr element, @Nullable PathStep next) {
@@ -84,10 +90,15 @@ public abstract class PathStep extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitPathStepElement(this, ctx);
         }
+
+        @NotNull
+        public Expr getElement() {
+            return this.element;
+        }
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A path step with a wildcard within square brackets. E.g. {@code a[*]}.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class AllElements extends PathStep {
@@ -113,7 +124,7 @@ public abstract class PathStep extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A path step with a wildcard within dot notation. E.g. {@code a.*}.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class AllFields extends PathStep {

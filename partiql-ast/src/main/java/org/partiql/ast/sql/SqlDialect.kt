@@ -89,7 +89,6 @@ import org.partiql.ast.expr.ExprValues
 import org.partiql.ast.expr.ExprVarRef
 import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
-import org.partiql.ast.expr.Scope
 import org.partiql.ast.expr.TruthValue
 
 /**
@@ -302,7 +301,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprVarRef(node: ExprVarRef, tail: SqlBlock): SqlBlock {
         var t = tail
         // Prepend @
-        if (node.scope.code() == Scope.LOCAL) {
+        if (node.isQualified()) {
             t = t concat "@"
         }
         t = visitIdentifierChain(node.identifierChain, t)
@@ -355,7 +354,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             val dtField = (node.args[0] as ExprLit).lit.stringValue()
             // Represent as an `ExprVarRef` to mimic a literal symbol.
             // TODO consider some other representation for unquoted strings
-            val newArgs = listOf(exprVarRef(identifierChain(identifier(dtField, isDelimited = false), next = null), scope = Scope.DEFAULT())) + node.args.drop(1)
+            val newArgs = listOf(exprVarRef(identifierChain(identifier(dtField, isDelimited = false), next = null), isQualified = false)) + node.args.drop(1)
             t = visitIdentifierChain(f, t)
             t = t concat list { newArgs }
             return t

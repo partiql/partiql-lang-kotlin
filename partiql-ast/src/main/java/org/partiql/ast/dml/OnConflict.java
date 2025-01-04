@@ -2,7 +2,6 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -13,31 +12,19 @@ import java.util.List;
 
 /**
  * This is the ON CONFLICT clause for the INSERT statement.
+ *
  * @see Insert
- * @see Insert#onConflict
+ * @see Insert#getOnConflict()
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class OnConflict extends AstNode {
-    /**
-     * TODO
-     */
     @NotNull
-    @Getter
     private final ConflictAction action;
 
-    /**
-     * TODO
-     */
     @Nullable
-    @Getter
     private final ConflictTarget target;
 
-    /**
-     * TODO
-     * @param action TODO
-     * @param target TODO
-     */
     public OnConflict(@NotNull ConflictAction action, @Nullable ConflictTarget target) {
         this.action = action;
         this.target = target;
@@ -57,5 +44,15 @@ public final class OnConflict extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitOnConflict(this, ctx);
+    }
+
+    @NotNull
+    public ConflictAction getAction() {
+        return this.action;
+    }
+
+    @Nullable
+    public ConflictTarget getTarget() {
+        return this.target;
     }
 }

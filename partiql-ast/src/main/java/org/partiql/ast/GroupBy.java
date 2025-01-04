@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.expr.Expr;
@@ -11,21 +10,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a GROUP BY clause in SQL.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class GroupBy extends AstNode {
     @NotNull
-    @Getter
     private final GroupByStrategy strategy;
 
     @NotNull
-    @Getter
     private final List<Key> keys;
 
     @Nullable
-    @Getter
     private final Identifier asAlias;
 
     public GroupBy(@NotNull GroupByStrategy strategy, @NotNull List<Key> keys, @Nullable Identifier asAlias) {
@@ -49,24 +45,37 @@ public final class GroupBy extends AstNode {
         return visitor.visitGroupBy(this, ctx);
     }
 
+    @NotNull
+    public GroupByStrategy getStrategy() {
+        return this.strategy;
+    }
+
+    @NotNull
+    public List<Key> getKeys() {
+        return this.keys;
+    }
+
+    @Nullable
+    public Identifier getAsAlias() {
+        return this.asAlias;
+    }
+
     /**
-     * TODO docs, equals, hashcode
+     * Represents a single key in a GROUP BY clause with an optional alias.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Key extends AstNode {
         @NotNull
-        @Getter
         private final Expr expr;
 
         @Nullable
-        @Getter
         private final Identifier asAlias;
 
         public Key(@NotNull Expr expr, @Nullable Identifier asAlias) {
-        this.expr = expr;
-        this.asAlias = asAlias;
-    }
+            this.expr = expr;
+            this.asAlias = asAlias;
+        }
 
         @NotNull
         @Override
@@ -82,6 +91,16 @@ public final class GroupBy extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGroupByKey(this, ctx);
+        }
+
+        @NotNull
+        public Expr getExpr() {
+            return this.expr;
+        }
+
+        @Nullable
+        public Identifier getAsAlias() {
+            return this.asAlias;
         }
     }
 }

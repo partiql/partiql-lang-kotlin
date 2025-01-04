@@ -7,11 +7,23 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Set quantifier used in different clauses and expressions.
+ *
+ * @see SetOp
+ * @see SelectList
+ * @see SelectStar
+ * @see SelectValue
+ * @see org.partiql.ast.expr.ExprCall
  */
 @EqualsAndHashCode(callSuper = false)
 public final class SetQuantifier extends AstEnum {
+    /**
+     * Set quantifier ALL variant.
+     */
     public static final int ALL = 0;
+    /**
+     * Set quantifier DISTINCT variant.
+     */
     public static final int DISTINCT = 1;
 
     public static SetQuantifier ALL() {
