@@ -117,7 +117,7 @@ public abstract class GraphPart extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A sub-pattern.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

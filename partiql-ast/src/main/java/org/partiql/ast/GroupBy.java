@@ -50,7 +50,7 @@ public final class GroupBy extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents a single key in a GROUP BY clause with an optional alias.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

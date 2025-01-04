@@ -659,48 +659,42 @@ public final class DataType extends AstEnum {
     }
 
     /**
-     * TODO docs
-     * @return
+     * @return the precision of this data type. If there is no precision, null is returned.
      */
     public Integer getPrecision() {
         return precision;
     }
 
     /**
-     * TODO docs
-     * @return
+     * @return the scale of this data type. If there is no scale, null is returned.
      */
     public Integer getScale() {
         return scale;
     }
 
     /**
-     * TODO docs
-     * @return
+     * @return the length of this data type. If there is no length, null is returned.
      */
     public Integer getLength() {
         return length;
     }
 
     /**
-     * TODO docs
-     * @return
+     * @return the name of this data type. If there is no name, null is returned.
      */
     public IdentifierChain getName() {
         return name;
     }
 
     /**
-     * TODO docs
-     * @return
+     * @return the element type of this data type. If there is no element type, null is returned.
      */
     public DataType getElementType() {
         return elementType;
     }
 
     /**
-     * TODO docs
-     * @return
+     * @return the struct fields of this data type. If there are no struct fields defined, null is returned.
      */
     public List<StructField> getFields() {
         return fields;

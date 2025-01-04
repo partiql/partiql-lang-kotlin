@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Re
+ * Represents a window function expression. E.g. {@code LAG (sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp.date}.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
@@ -67,7 +67,7 @@ public final class ExprWindow extends Expr {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents the OVER clause of a window function. E.g. {@code OVER (PARTITION BY <expr> ORDER BY <expr>)}.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

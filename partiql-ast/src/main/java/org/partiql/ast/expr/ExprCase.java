@@ -62,7 +62,7 @@ public final class ExprCase extends Expr {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents a single branch of a CASE expression. E.g. {@code WHEN <expr> THEN <expr>}.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

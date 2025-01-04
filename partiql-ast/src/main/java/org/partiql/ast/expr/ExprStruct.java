@@ -36,7 +36,7 @@ public final class ExprStruct extends Expr {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents a single field of a struct constructor. E.g. {@code 'a': 1}.
      */
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
