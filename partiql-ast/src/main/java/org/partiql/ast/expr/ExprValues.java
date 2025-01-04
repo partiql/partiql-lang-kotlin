@@ -21,17 +21,9 @@ public final class ExprValues extends Expr {
     // TODO: May not be an expr?
     // TODO: Tracking issue for VALUES and subqueries -- https://github.com/partiql/partiql-lang-kotlin/issues/1641.
 
-    /**
-     * TODO
-     */
     @NotNull
     private final List<Expr> rows;
 
-    /**
-     * TODO
-     *
-     * @param rows TODO
-     */
     public ExprValues(@NotNull List<Expr> rows) {
         this.rows = rows;
     }

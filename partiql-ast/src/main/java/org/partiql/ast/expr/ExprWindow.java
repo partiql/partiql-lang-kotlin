@@ -91,11 +91,9 @@ public final class ExprWindow extends Expr {
     @lombok.Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Over extends AstNode {
-        // Empty list represents no `PARTITION BY` specifications
         @NotNull
         private final List<Expr> partitions;
 
-        // Empty list represents no `ORDER BY` specifications
         @NotNull
         private final List<Sort> sorts;
 
@@ -118,11 +116,17 @@ public final class ExprWindow extends Expr {
             return visitor.visitExprWindowOver(this, ctx);
         }
 
+        /**
+          * Empty list represents no `PARTITION BY` specifications
+         */
         @NotNull
         public List<Expr> getPartitions() {
             return this.partitions;
         }
 
+        /**
+         * Empty list represents no `ORDER BY` specifications
+         */
         @NotNull
         public List<Sort> getSorts() {
             return this.sorts;
