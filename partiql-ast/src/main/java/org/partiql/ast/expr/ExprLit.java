@@ -1,7 +1,6 @@
 package org.partiql.ast.expr;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -16,7 +15,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprLit extends Expr {
     @NotNull
-    @Getter
     private final Literal lit;
 
     public ExprLit(@NotNull Literal lit) {
@@ -34,5 +32,10 @@ public final class ExprLit extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprLit(this, ctx);
+    }
+
+    @NotNull
+    public Literal getLit() {
+        return this.lit;
     }
 }

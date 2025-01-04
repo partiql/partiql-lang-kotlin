@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -20,15 +19,12 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprOperator extends Expr {
     @NotNull
-    @Getter
     private final String symbol;
 
     @Nullable
-    @Getter
     private final Expr lhs;
 
     @NotNull
-    @Getter
     private final Expr rhs;
 
     public ExprOperator(@NotNull String symbol, @Nullable Expr lhs, @NotNull Expr rhs) {
@@ -51,5 +47,20 @@ public final class ExprOperator extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprOperator(this, ctx);
+    }
+
+    @NotNull
+    public String getSymbol() {
+        return this.symbol;
+    }
+
+    @Nullable
+    public Expr getLhs() {
+        return this.lhs;
+    }
+
+    @NotNull
+    public Expr getRhs() {
+        return this.rhs;
     }
 }

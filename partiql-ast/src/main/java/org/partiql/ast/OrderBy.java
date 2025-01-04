@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -15,7 +14,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class OrderBy extends AstNode {
     @NotNull
-    @Getter
     private final List<Sort> sorts;
 
     public OrderBy(@NotNull List<Sort> sorts) {
@@ -31,5 +29,10 @@ public final class OrderBy extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitOrderBy(this, ctx);
+    }
+
+    @NotNull
+    public List<Sort> getSorts() {
+        return this.sorts;
     }
 }

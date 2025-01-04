@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -17,11 +16,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprNullIf extends Expr {
     @NotNull
-    @Getter
     private final Expr v1;
 
     @NotNull
-    @Getter
     private final Expr v2;
 
     public ExprNullIf(@NotNull Expr v1, @NotNull Expr v2) {
@@ -41,5 +38,15 @@ public final class ExprNullIf extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprNullIf(this, ctx);
+    }
+
+    @NotNull
+    public Expr getV1() {
+        return this.v1;
+    }
+
+    @NotNull
+    public Expr getV2() {
+        return this.v2;
     }
 }

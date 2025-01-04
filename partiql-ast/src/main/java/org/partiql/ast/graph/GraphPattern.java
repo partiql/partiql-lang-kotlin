@@ -2,7 +2,6 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -19,23 +18,18 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class GraphPattern extends AstNode {
     @Nullable
-    @Getter
     private final GraphRestrictor restrictor;
 
     @Nullable
-    @Getter
     private final Expr prefilter;
 
     @Nullable
-    @Getter
     private final String variable;
 
     @Nullable
-    @Getter
     private final GraphQuantifier quantifier;
 
     @NotNull
-    @Getter
     private final List<GraphPart> parts;
 
     public GraphPattern(@Nullable GraphRestrictor restrictor, @Nullable Expr prefilter,
@@ -65,5 +59,30 @@ public final class GraphPattern extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitGraphPattern(this, ctx);
+    }
+
+    @Nullable
+    public GraphRestrictor getRestrictor() {
+        return this.restrictor;
+    }
+
+    @Nullable
+    public Expr getPrefilter() {
+        return this.prefilter;
+    }
+
+    @Nullable
+    public String getVariable() {
+        return this.variable;
+    }
+
+    @Nullable
+    public GraphQuantifier getQuantifier() {
+        return this.quantifier;
+    }
+
+    @NotNull
+    public List<GraphPart> getParts() {
+        return this.parts;
     }
 }

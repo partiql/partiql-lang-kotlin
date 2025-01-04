@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -18,11 +17,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprExtract extends Expr {
     @NotNull
-    @Getter
     private final DatetimeField field;
 
     @NotNull
-    @Getter
     private final Expr source;
 
     public ExprExtract(@NotNull DatetimeField field, @NotNull Expr source) {
@@ -41,5 +38,15 @@ public final class ExprExtract extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprExtract(this, ctx);
+    }
+
+    @NotNull
+    public DatetimeField getField() {
+        return this.field;
+    }
+
+    @NotNull
+    public Expr getSource() {
+        return this.source;
     }
 }

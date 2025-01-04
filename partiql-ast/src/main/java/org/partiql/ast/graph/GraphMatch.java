@@ -2,7 +2,6 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -18,11 +17,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class GraphMatch extends AstNode {
     @NotNull
-    @Getter
     private final List<GraphPattern> patterns;
 
     @Nullable
-    @Getter
     private final GraphSelector selector;
 
     public GraphMatch(@NotNull List<GraphPattern> patterns, @Nullable GraphSelector selector) {
@@ -43,5 +40,15 @@ public final class GraphMatch extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitGraphMatch(this, ctx);
+    }
+
+    @NotNull
+    public List<GraphPattern> getPatterns() {
+        return this.patterns;
+    }
+
+    @Nullable
+    public GraphSelector getSelector() {
+        return this.selector;
     }
 }

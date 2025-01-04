@@ -2,7 +2,6 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -21,7 +20,6 @@ public abstract class GraphLabel extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Name extends GraphLabel {
         @NotNull
-        @Getter
         private final String name;
 
         public Name(@NotNull String name) {
@@ -37,6 +35,11 @@ public abstract class GraphLabel extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphLabelName(this, ctx);
+        }
+
+        @NotNull
+        public String getName() {
+            return this.name;
         }
     }
 
@@ -67,7 +70,6 @@ public abstract class GraphLabel extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Negation extends GraphLabel {
         @NotNull
-        @Getter
         private final GraphLabel arg;
 
         public Negation(@NotNull GraphLabel arg) {
@@ -86,6 +88,11 @@ public abstract class GraphLabel extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphLabelNegation(this, ctx);
         }
+
+        @NotNull
+        public GraphLabel getArg() {
+            return this.arg;
+        }
     }
 
     /**
@@ -95,11 +102,9 @@ public abstract class GraphLabel extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Conj extends GraphLabel {
         @NotNull
-        @Getter
         private final GraphLabel lhs;
 
         @NotNull
-        @Getter
         private final GraphLabel rhs;
 
         public Conj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
@@ -120,6 +125,16 @@ public abstract class GraphLabel extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphLabelConj(this, ctx);
         }
+
+        @NotNull
+        public GraphLabel getLhs() {
+            return this.lhs;
+        }
+
+        @NotNull
+        public GraphLabel getRhs() {
+            return this.rhs;
+        }
     }
 
     /**
@@ -129,11 +144,9 @@ public abstract class GraphLabel extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Disj extends GraphLabel {
         @NotNull
-        @Getter
         private final GraphLabel lhs;
 
         @NotNull
-        @Getter
         private final GraphLabel rhs;
 
         public Disj(@NotNull GraphLabel lhs, @NotNull GraphLabel rhs) {
@@ -153,6 +166,16 @@ public abstract class GraphLabel extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphLabelDisj(this, ctx);
+        }
+
+        @NotNull
+        public GraphLabel getLhs() {
+            return this.lhs;
+        }
+
+        @NotNull
+        public GraphLabel getRhs() {
+            return this.rhs;
         }
     }
 }

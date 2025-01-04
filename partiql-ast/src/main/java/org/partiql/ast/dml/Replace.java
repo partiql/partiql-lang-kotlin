@@ -2,7 +2,6 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -16,6 +15,7 @@ import java.util.List;
 
 /**
  * This is the REPLACE INTO statement.
+ *
  * @see InsertSource
  */
 @Builder(builderClassName = "Builder")
@@ -25,28 +25,26 @@ public final class Replace extends Statement {
      * TODO
      */
     @NotNull
-    @Getter
     private final IdentifierChain tableName;
 
     /**
      * TODO
      */
     @Nullable
-    @Getter
     private final Identifier asAlias;
 
     /**
      * TODO
      */
     @NotNull
-    @Getter
     private final InsertSource source;
 
     /**
      * TODO
+     *
      * @param tableName TODO
-     * @param asAlias TODO
-     * @param source TODO
+     * @param asAlias   TODO
+     * @param source    TODO
      */
     public Replace(@NotNull IdentifierChain tableName, @Nullable Identifier asAlias, @NotNull InsertSource source) {
         this.tableName = tableName;
@@ -69,5 +67,20 @@ public final class Replace extends Statement {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitReplace(this, ctx);
+    }
+
+    @NotNull
+    public IdentifierChain getTableName() {
+        return this.tableName;
+    }
+
+    @Nullable
+    public Identifier getAsAlias() {
+        return this.asAlias;
+    }
+
+    @NotNull
+    public InsertSource getSource() {
+        return this.source;
     }
 }

@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -18,11 +17,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprMatch extends Expr {
     @NotNull
-    @Getter
     private final Expr expr;
 
     @NotNull
-    @Getter
     private final GraphMatch pattern;
 
     public ExprMatch(@NotNull Expr expr, @NotNull GraphMatch pattern) {
@@ -42,5 +39,15 @@ public final class ExprMatch extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprMatch(this, ctx);
+    }
+
+    @NotNull
+    public Expr getExpr() {
+        return this.expr;
+    }
+
+    @NotNull
+    public GraphMatch getPattern() {
+        return this.pattern;
     }
 }

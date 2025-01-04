@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -18,18 +17,14 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprLike extends Expr {
     @NotNull
-    @Getter
     private final Expr value;
 
     @NotNull
-    @Getter
     private final Expr pattern;
 
     @Nullable
-    @Getter
     private final Expr escape;
 
-    @Getter
     private final boolean not;
 
     public ExprLike(@NotNull Expr value, @NotNull Expr pattern, @Nullable Expr escape, boolean not) {
@@ -54,5 +49,24 @@ public final class ExprLike extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprLike(this, ctx);
+    }
+
+    @NotNull
+    public Expr getValue() {
+        return this.value;
+    }
+
+    @NotNull
+    public Expr getPattern() {
+        return this.pattern;
+    }
+
+    @Nullable
+    public Expr getEscape() {
+        return this.escape;
+    }
+
+    public boolean isNot() {
+        return this.not;
     }
 }

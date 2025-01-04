@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -23,19 +22,15 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprQuerySet extends Expr {
     @NotNull
-    @Getter
     private final QueryBody body;
 
     @Nullable
-    @Getter
     private final OrderBy orderBy;
 
     @Nullable
-    @Getter
     private final Expr limit;
 
     @Nullable
-    @Getter
     private final Expr offset;
 
     public ExprQuerySet(@NotNull QueryBody body, @Nullable OrderBy orderBy, @Nullable Expr limit, @Nullable Expr offset) {
@@ -65,5 +60,25 @@ public final class ExprQuerySet extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprQuerySet(this, ctx);
+    }
+
+    @NotNull
+    public QueryBody getBody() {
+        return this.body;
+    }
+
+    @Nullable
+    public OrderBy getOrderBy() {
+        return this.orderBy;
+    }
+
+    @Nullable
+    public Expr getLimit() {
+        return this.limit;
+    }
+
+    @Nullable
+    public Expr getOffset() {
+        return this.offset;
     }
 }

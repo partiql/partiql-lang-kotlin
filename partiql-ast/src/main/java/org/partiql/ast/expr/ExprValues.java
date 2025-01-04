@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -13,7 +12,7 @@ import java.util.List;
 /**
  * This represents SQL:1999's table value constructor.
  * <code>
- *     &lt;table value constructor&gt; ::= VALUES &lt;row value expression list&gt;
+ * &lt;table value constructor&gt; ::= VALUES &lt;row value expression list&gt;
  * </code>
  */
 @Builder(builderClassName = "Builder")
@@ -26,11 +25,11 @@ public final class ExprValues extends Expr {
      * TODO
      */
     @NotNull
-    @Getter
     private final List<Expr> rows;
 
     /**
      * TODO
+     *
      * @param rows TODO
      */
     public ExprValues(@NotNull List<Expr> rows) {
@@ -46,5 +45,10 @@ public final class ExprValues extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprValues(this, ctx);
+    }
+
+    @NotNull
+    public List<Expr> getRows() {
+        return this.rows;
     }
 }

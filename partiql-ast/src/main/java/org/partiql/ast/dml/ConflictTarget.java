@@ -2,7 +2,6 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -21,6 +20,7 @@ public abstract class ConflictTarget extends AstNode {
 
     /**
      * This is the index variant of the conflict target.
+     *
      * @see OnConflict
      * @see ConflictTarget
      */
@@ -32,11 +32,11 @@ public abstract class ConflictTarget extends AstNode {
          */
         // TODO: Should this be a list of identifiers? Or paths? Expressions?
         @NotNull
-        @Getter
         private final List<Identifier> indexes;
 
         /**
          * TODO
+         *
          * @param indexes TODO
          */
         public Index(@NotNull List<Identifier> indexes) {
@@ -53,10 +53,16 @@ public abstract class ConflictTarget extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitConflictTargetIndex(this, ctx);
         }
+
+        @NotNull
+        public List<Identifier> getIndexes() {
+            return this.indexes;
+        }
     }
 
     /**
      * This is the ON CONSTRAINT variant of the conflict target.
+     *
      * @see OnConflict
      * @see ConflictTarget
      */
@@ -67,11 +73,11 @@ public abstract class ConflictTarget extends AstNode {
          * TODO
          */
         @NotNull
-        @Getter
         private final IdentifierChain name;
 
         /**
          * TODO
+         *
          * @param name TODO
          */
         public Constraint(@NotNull IdentifierChain name) {
@@ -89,6 +95,11 @@ public abstract class ConflictTarget extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitConflictTargetConstraint(this, ctx);
+        }
+
+        @NotNull
+        public IdentifierChain getName() {
+            return this.name;
         }
     }
 }

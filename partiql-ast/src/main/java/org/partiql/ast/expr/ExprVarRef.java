@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -18,10 +17,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprVarRef extends Expr {
     @NotNull
-    @Getter
     private final IdentifierChain identifierChain;
 
-    @Getter
     private final boolean qualified;
 
     public ExprVarRef(@NotNull IdentifierChain identifierChain, boolean qualified) {
@@ -40,5 +37,14 @@ public final class ExprVarRef extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprVarRef(this, ctx);
+    }
+
+    @NotNull
+    public IdentifierChain getIdentifierChain() {
+        return this.identifierChain;
+    }
+
+    public boolean isQualified() {
+        return this.qualified;
     }
 }

@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.expr.Expr;
 
@@ -16,7 +15,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class Let extends AstNode {
     @NotNull
-    @Getter
     private final List<Binding> bindings;
 
     public Let(@NotNull List<Binding> bindings) {
@@ -34,6 +32,11 @@ public final class Let extends AstNode {
         return visitor.visitLet(this, ctx);
     }
 
+    @NotNull
+    public List<Binding> getBindings() {
+        return this.bindings;
+    }
+
     /**
      * Represents a binding in a PartiQL LET clause.
      */
@@ -41,11 +44,9 @@ public final class Let extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Binding extends AstNode {
         @NotNull
-        @Getter
         private final Expr expr;
 
         @NotNull
-        @Getter
         private final Identifier asAlias;
 
         public Binding(@NotNull Expr expr, @NotNull Identifier asAlias) {
@@ -65,6 +66,16 @@ public final class Let extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitLetBinding(this, ctx);
+        }
+
+        @NotNull
+        public Expr getExpr() {
+            return this.expr;
+        }
+
+        @NotNull
+        public Identifier getAsAlias() {
+            return this.asAlias;
         }
     }
 }

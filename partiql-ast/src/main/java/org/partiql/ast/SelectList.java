@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,11 +17,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class SelectList extends Select {
     @NotNull
-    @Getter
     private final List<SelectItem> items;
 
     @Nullable
-    @Getter
     private final SetQuantifier setq;
 
     public SelectList(@NotNull List<SelectItem> items, @Nullable SetQuantifier setq) {
@@ -39,5 +36,15 @@ public final class SelectList extends Select {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitSelectList(this, ctx);
+    }
+
+    @NotNull
+    public List<SelectItem> getItems() {
+        return this.items;
+    }
+
+    @Nullable
+    public SetQuantifier getSetq() {
+        return this.setq;
     }
 }

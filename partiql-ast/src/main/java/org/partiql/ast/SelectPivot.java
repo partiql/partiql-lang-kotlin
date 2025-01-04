@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.expr.Expr;
 
@@ -16,11 +15,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class SelectPivot extends Select {
     @NotNull
-    @Getter
     private final Expr key;
 
     @NotNull
-    @Getter
     private final Expr value;
 
     public SelectPivot(@NotNull Expr key, @NotNull Expr value) {
@@ -40,5 +37,15 @@ public final class SelectPivot extends Select {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitSelectPivot(this, ctx);
+    }
+
+    @NotNull
+    public Expr getKey() {
+        return this.key;
+    }
+
+    @NotNull
+    public Expr getValue() {
+        return this.value;
     }
 }

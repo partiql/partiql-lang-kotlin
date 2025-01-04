@@ -2,7 +2,6 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -22,6 +21,7 @@ public abstract class UpdateTargetStep extends AstNode {
 
     /**
      * This is a reference to a field of an array/struct using the bracket notation.
+     *
      * @see UpdateTarget
      * @see UpdateTargetStep
      */
@@ -34,11 +34,11 @@ public abstract class UpdateTargetStep extends AstNode {
          * TODO
          */
         @NotNull
-        @Getter
         private final Literal key;
 
         /**
          * TODO
+         *
          * @param key TODO
          */
         public Element(@NotNull Literal key) {
@@ -47,6 +47,7 @@ public abstract class UpdateTargetStep extends AstNode {
 
         /**
          * TODO
+         *
          * @param key TODO
          */
         public Element(int key) {
@@ -55,6 +56,7 @@ public abstract class UpdateTargetStep extends AstNode {
 
         /**
          * TODO
+         *
          * @param key TODO
          */
         public Element(@NotNull String key) {
@@ -73,10 +75,16 @@ public abstract class UpdateTargetStep extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitUpdateTargetStepElement(this, ctx);
         }
+
+        @NotNull
+        public Literal getKey() {
+            return this.key;
+        }
     }
 
     /**
      * This is a reference to a field of a struct using the dot notation.
+     *
      * @see UpdateTarget
      * @see UpdateTargetStep
      */
@@ -87,11 +95,11 @@ public abstract class UpdateTargetStep extends AstNode {
          * TODO
          */
         @NotNull
-        @Getter
         private final Identifier key;
 
         /**
          * TODO
+         *
          * @param key TODO
          */
         public Field(@NotNull Identifier key) {
@@ -109,6 +117,11 @@ public abstract class UpdateTargetStep extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitUpdateTargetStepField(this, ctx);
+        }
+
+        @NotNull
+        public Identifier getKey() {
+            return this.key;
         }
     }
 }

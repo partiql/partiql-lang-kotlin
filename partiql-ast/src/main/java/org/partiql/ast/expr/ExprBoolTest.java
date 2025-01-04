@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -17,14 +16,11 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprBoolTest extends Expr {
     @NotNull
-    @Getter
     private final Expr value;
 
-    @Getter
     private final boolean not;
 
     @NotNull
-    @Getter
     private final TruthValue truthValue;
 
     public ExprBoolTest(@NotNull Expr value, boolean not, @NotNull TruthValue truthValue) {
@@ -44,5 +40,19 @@ public final class ExprBoolTest extends Expr {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitExprBoolTest(this, ctx);
+    }
+
+    @NotNull
+    public Expr getValue() {
+        return this.value;
+    }
+
+    public boolean isNot() {
+        return this.not;
+    }
+
+    @NotNull
+    public TruthValue getTruthValue() {
+        return this.truthValue;
     }
 }

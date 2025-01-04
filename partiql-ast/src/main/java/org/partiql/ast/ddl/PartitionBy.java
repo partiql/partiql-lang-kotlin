@@ -2,7 +2,6 @@ package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -18,7 +17,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class PartitionBy extends AstNode {
     @NotNull
-    @Getter
     private final List<Identifier> columns;
 
     public PartitionBy(@NotNull List<Identifier> columns) {
@@ -34,5 +32,10 @@ public final class PartitionBy extends AstNode {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitPartitionBy(this, ctx);
+    }
+
+    @NotNull
+    public List<Identifier> getColumns() {
+        return this.columns;
     }
 }

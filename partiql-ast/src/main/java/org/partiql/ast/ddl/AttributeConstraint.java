@@ -1,7 +1,6 @@
 package org.partiql.ast.ddl;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -18,7 +17,6 @@ import java.util.List;
 public abstract class AttributeConstraint extends AstNode {
 
     @Nullable
-    @Getter
     protected final IdentifierChain name;
 
     protected AttributeConstraint(@Nullable IdentifierChain name) {
@@ -33,6 +31,11 @@ public abstract class AttributeConstraint extends AstNode {
         return kids;
     }
 
+    @Nullable
+    public IdentifierChain getName() {
+        return this.name;
+    }
+
     // NULL & NOT NULL
 
     /**
@@ -40,7 +43,6 @@ public abstract class AttributeConstraint extends AstNode {
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Null extends AttributeConstraint {
-        @Getter
         private final boolean nullable;
 
         public Null(@Nullable IdentifierChain name, boolean nullable) {
@@ -52,6 +54,10 @@ public abstract class AttributeConstraint extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitNullable(this, ctx);
         }
+
+        public boolean isNullable() {
+            return this.nullable;
+        }
     }
 
     // Unique and primary
@@ -61,7 +67,6 @@ public abstract class AttributeConstraint extends AstNode {
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends AttributeConstraint {
-        @Getter
         private final boolean primaryKey;
 
         public Unique(@Nullable IdentifierChain name, boolean primaryKey) {
@@ -73,6 +78,10 @@ public abstract class AttributeConstraint extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitUnique(this, ctx);
         }
+
+        public boolean isPrimaryKey() {
+            return this.primaryKey;
+        }
     }
 
     /**
@@ -81,7 +90,6 @@ public abstract class AttributeConstraint extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Check extends AttributeConstraint {
         @NotNull
-        @Getter
         private final Expr searchCondition;
 
         public Check(@Nullable IdentifierChain name, @NotNull Expr searchCondition) {
@@ -101,6 +109,11 @@ public abstract class AttributeConstraint extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitCheck(this, ctx);
+        }
+
+        @NotNull
+        public Expr getSearchCondition() {
+            return this.searchCondition;
         }
     }
 }

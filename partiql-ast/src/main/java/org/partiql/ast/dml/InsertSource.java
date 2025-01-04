@@ -2,7 +2,6 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -22,6 +21,7 @@ public abstract class InsertSource extends AstNode {
     /**
      * This specifies the data to be inserted from a subquery or expression. This represents (and generalizes)
      * SQL:1999's &lt;from subquery&gt; EBNF rule.
+     *
      * @see Insert
      * @see InsertSource
      */
@@ -32,20 +32,19 @@ public abstract class InsertSource extends AstNode {
          * TODO
          */
         @Nullable
-        @Getter
         private final List<Identifier> columns;
 
         /**
          * TODO
          */
         @NotNull
-        @Getter
         private final Expr expr;
 
         /**
          * TODO
+         *
          * @param columns TODO
-         * @param expr TODO
+         * @param expr    TODO
          */
         public FromExpr(@Nullable List<Identifier> columns, @NotNull Expr expr) {
             this.columns = columns;
@@ -66,6 +65,16 @@ public abstract class InsertSource extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitInsertSourceFromExpr(this, ctx);
+        }
+
+        @Nullable
+        public List<Identifier> getColumns() {
+            return this.columns;
+        }
+
+        @NotNull
+        public Expr getExpr() {
+            return this.expr;
         }
     }
 

@@ -2,7 +2,6 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -80,7 +79,6 @@ public abstract class GraphSelector extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class AnyK extends GraphSelector {
-        @Getter
         private final long k;
 
         public AnyK(long k) {
@@ -97,6 +95,10 @@ public abstract class GraphSelector extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphSelectorAnyK(this, ctx);
         }
+
+        public long getK() {
+            return this.k;
+        }
     }
 
     /**
@@ -105,7 +107,6 @@ public abstract class GraphSelector extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class ShortestK extends GraphSelector {
-        @Getter
         private final long k;
 
         public ShortestK(long k) {
@@ -122,6 +123,10 @@ public abstract class GraphSelector extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphSelectorShortestK(this, ctx);
         }
+
+        public long getK() {
+            return this.k;
+        }
     }
 
     /**
@@ -130,7 +135,6 @@ public abstract class GraphSelector extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class ShortestKGroup extends GraphSelector {
-        @Getter
         private final long k;
 
         public ShortestKGroup(long k) {
@@ -146,6 +150,10 @@ public abstract class GraphSelector extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphSelectorShortestKGroup(this, ctx);
+        }
+
+        public long getK() {
+            return this.k;
         }
     }
 }

@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +15,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class SelectStar extends Select {
     @Nullable
-    @Getter
     private final SetQuantifier setq;
 
     public SelectStar(@Nullable SetQuantifier setq) {
@@ -32,5 +30,10 @@ public final class SelectStar extends Select {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitSelectStar(this, ctx);
+    }
+
+    @Nullable
+    public SetQuantifier getSetq() {
+        return this.setq;
     }
 }

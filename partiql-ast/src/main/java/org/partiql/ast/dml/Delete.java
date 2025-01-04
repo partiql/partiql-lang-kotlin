@@ -2,7 +2,6 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -24,18 +23,17 @@ public final class Delete extends Statement {
      * TODO
      */
     @NotNull
-    @Getter
     private final IdentifierChain tableName;
 
     /**
      * TODO
      */
     @Nullable
-    @Getter
     private final Expr condition;
 
     /**
      * TODO
+     *
      * @param tableName TODO
      * @param condition TODO
      */
@@ -58,5 +56,15 @@ public final class Delete extends Statement {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitDelete(this, ctx);
+    }
+
+    @NotNull
+    public IdentifierChain getTableName() {
+        return this.tableName;
+    }
+
+    @Nullable
+    public Expr getCondition() {
+        return this.condition;
     }
 }

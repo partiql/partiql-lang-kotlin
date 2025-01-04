@@ -1,7 +1,6 @@
 package org.partiql.ast.expr;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -16,11 +15,15 @@ import java.util.List;
  */
 public abstract class PathStep extends AstNode {
     @Nullable
-    @Getter
     private final PathStep next;
 
     protected PathStep(@Nullable PathStep _next) {
         this.next = _next;
+    }
+
+    @Nullable
+    public PathStep getNext() {
+        return this.next;
     }
 
     /**
@@ -29,7 +32,6 @@ public abstract class PathStep extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Field extends PathStep {
         @NotNull
-        @Getter
         private final Identifier field;
 
         public Field(@NotNull Identifier field, @Nullable PathStep next) {
@@ -52,6 +54,11 @@ public abstract class PathStep extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitPathStepField(this, ctx);
         }
+
+        @NotNull
+        public Identifier getField() {
+            return this.field;
+        }
     }
 
     /**
@@ -60,7 +67,6 @@ public abstract class PathStep extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Element extends PathStep {
         @NotNull
-        @Getter
         private final Expr element;
 
         public Element(@NotNull Expr element, @Nullable PathStep next) {
@@ -83,6 +89,11 @@ public abstract class PathStep extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitPathStepElement(this, ctx);
+        }
+
+        @NotNull
+        public Expr getElement() {
+            return this.element;
         }
     }
 

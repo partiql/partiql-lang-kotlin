@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -19,23 +18,18 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprWindow extends Expr {
     @NotNull
-    @Getter
     private final WindowFunction windowFunction;
 
     @NotNull
-    @Getter
     private final Expr expression;
 
     @Nullable
-    @Getter
     private final Expr offset;
 
     @Nullable
-    @Getter
     private final Expr defaultValue;
 
     @NotNull
-    @Getter
     private final Over over;
 
     public ExprWindow(@NotNull WindowFunction windowFunction, @NotNull Expr expression, @Nullable Expr offset, @Nullable Expr defaultValue, @NotNull Over over) {
@@ -66,6 +60,31 @@ public final class ExprWindow extends Expr {
         return visitor.visitExprWindow(this, ctx);
     }
 
+    @NotNull
+    public WindowFunction getWindowFunction() {
+        return this.windowFunction;
+    }
+
+    @NotNull
+    public Expr getExpression() {
+        return this.expression;
+    }
+
+    @Nullable
+    public Expr getOffset() {
+        return this.offset;
+    }
+
+    @Nullable
+    public Expr getDefaultValue() {
+        return this.defaultValue;
+    }
+
+    @NotNull
+    public Over getOver() {
+        return this.over;
+    }
+
     /**
      * Represents the OVER clause of a window function. E.g. {@code OVER (PARTITION BY <expr> ORDER BY <expr>)}.
      */
@@ -74,18 +93,16 @@ public final class ExprWindow extends Expr {
     public static class Over extends AstNode {
         // Empty list represents no `PARTITION BY` specifications
         @NotNull
-        @Getter
         private final List<Expr> partitions;
 
         // Empty list represents no `ORDER BY` specifications
         @NotNull
-        @Getter
         private final List<Sort> sorts;
 
         public Over(@NotNull List<Expr> partitions, @NotNull List<Sort> sorts) {
-        this.partitions = partitions;
-        this.sorts = sorts;
-    }
+            this.partitions = partitions;
+            this.sorts = sorts;
+        }
 
         @Override
         @NotNull
@@ -99,6 +116,16 @@ public final class ExprWindow extends Expr {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitExprWindowOver(this, ctx);
+        }
+
+        @NotNull
+        public List<Expr> getPartitions() {
+            return this.partitions;
+        }
+
+        @NotNull
+        public List<Sort> getSorts() {
+            return this.sorts;
         }
     }
 }
