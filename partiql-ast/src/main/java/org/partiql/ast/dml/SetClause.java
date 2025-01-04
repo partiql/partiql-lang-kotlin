@@ -18,24 +18,12 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class SetClause extends AstNode {
-    /**
-     * TODO
-     */
     @NotNull
     private final UpdateTarget target;
 
-    /**
-     * TODO
-     */
     @NotNull
     private final Expr expr;
 
-    /**
-     * TODO
-     *
-     * @param target TODO
-     * @param expr   TODO
-     */
     public SetClause(@NotNull UpdateTarget target, @NotNull Expr expr) {
         this.target = target;
         this.expr = expr;

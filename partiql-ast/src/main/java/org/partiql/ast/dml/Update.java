@@ -21,31 +21,15 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Update extends Statement {
-    /**
-     * TODO
-     */
     @NotNull
     private final IdentifierChain tableName;
 
-    /**
-     * TODO
-     */
     @NotNull
     private final List<SetClause> setClauses;
 
-    /**
-     * TODO
-     */
     @Nullable
     private final Expr condition;
 
-    /**
-     * TODO
-     *
-     * @param tableName  TODO
-     * @param setClauses TODO
-     * @param condition  TODO
-     */
     public Update(@NotNull IdentifierChain tableName, @NotNull List<SetClause> setClauses, @Nullable Expr condition) {
         this.tableName = tableName;
         this.setClauses = setClauses;

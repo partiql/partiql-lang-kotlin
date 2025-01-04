@@ -19,24 +19,12 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class UpdateTarget extends AstNode {
-    /**
-     * TODO
-     */
     @NotNull
     private final Identifier root;
 
-    /**
-     * TODO
-     */
     @NotNull
     private final List<UpdateTargetStep> steps;
 
-    /**
-     * TODO
-     *
-     * @param root  TODO
-     * @param steps TODO
-     */
     public UpdateTarget(@NotNull Identifier root, @NotNull List<UpdateTargetStep> steps) {
         this.root = root;
         this.steps = steps;

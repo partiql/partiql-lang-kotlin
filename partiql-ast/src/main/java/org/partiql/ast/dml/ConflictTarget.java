@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * This represents the potential targets for the ON CONFLICT clause.
  * @see OnConflict
- * @see OnConflict#target
+ * @see OnConflict#getTarget()
  */
 public abstract class ConflictTarget extends AstNode {
 
@@ -27,18 +27,10 @@ public abstract class ConflictTarget extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Index extends ConflictTarget {
-        /**
-         * TODO
-         */
         // TODO: Should this be a list of identifiers? Or paths? Expressions?
         @NotNull
         private final List<Identifier> indexes;
 
-        /**
-         * TODO
-         *
-         * @param indexes TODO
-         */
         public Index(@NotNull List<Identifier> indexes) {
             this.indexes = indexes;
         }
@@ -69,17 +61,9 @@ public abstract class ConflictTarget extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Constraint extends ConflictTarget {
-        /**
-         * TODO
-         */
         @NotNull
         private final IdentifierChain name;
 
-        /**
-         * TODO
-         *
-         * @param name TODO
-         */
         public Constraint(@NotNull IdentifierChain name) {
             this.name = name;
         }

@@ -19,24 +19,12 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Delete extends Statement {
-    /**
-     * TODO
-     */
     @NotNull
     private final IdentifierChain tableName;
 
-    /**
-     * TODO
-     */
     @Nullable
     private final Expr condition;
 
-    /**
-     * TODO
-     *
-     * @param tableName TODO
-     * @param condition TODO
-     */
     public Delete(@NotNull IdentifierChain tableName, @Nullable Expr condition) {
         this.tableName = tableName;
         this.condition = condition;

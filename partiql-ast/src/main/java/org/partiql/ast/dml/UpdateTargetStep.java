@@ -30,35 +30,17 @@ public abstract class UpdateTargetStep extends AstNode {
     public static final class Element extends UpdateTargetStep {
         // TODO: Should we explicitly have an ElementInt and ElementString? Especially once PartiQLValue is removed.
 
-        /**
-         * TODO
-         */
         @NotNull
         private final Literal key;
 
-        /**
-         * TODO
-         *
-         * @param key TODO
-         */
         public Element(@NotNull Literal key) {
             this.key = key;
         }
 
-        /**
-         * TODO
-         *
-         * @param key TODO
-         */
         public Element(int key) {
             this.key = Literal.intNum(key);
         }
 
-        /**
-         * TODO
-         *
-         * @param key TODO
-         */
         public Element(@NotNull String key) {
             this.key = Literal.string(key);
         }
@@ -91,17 +73,9 @@ public abstract class UpdateTargetStep extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Field extends UpdateTargetStep {
-        /**
-         * TODO
-         */
         @NotNull
         private final Identifier key;
 
-        /**
-         * TODO
-         *
-         * @param key TODO
-         */
         public Field(@NotNull Identifier key) {
             this.key = key;
         }

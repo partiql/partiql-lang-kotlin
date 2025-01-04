@@ -14,8 +14,8 @@ import java.util.List;
 /**
  * This is the mandatory action of the ON CONFLICT clause.
  *
- * @see Insert#onConflict
- * @see OnConflict#action
+ * @see Insert#getOnConflict()
+ * @see OnConflict#getAction()
  */
 public abstract class ConflictAction extends AstNode {
 
@@ -23,16 +23,12 @@ public abstract class ConflictAction extends AstNode {
      * This is the DO NOTHING variant of the conflict action.
      *
      * @see ConflictAction
-     * @see OnConflict#action
-     * @see Insert#onConflict
+     * @see OnConflict#getAction()
+     * @see Insert#getOnConflict()
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoNothing extends ConflictAction {
-
-        /**
-         * TODO
-         */
         public DoNothing() {
         }
 
@@ -52,30 +48,18 @@ public abstract class ConflictAction extends AstNode {
      * This is the DO REPLACE variant of the conflict action.
      *
      * @see ConflictAction
-     * @see OnConflict#action
-     * @see Insert#onConflict
+     * @see OnConflict#getAction()
+     * @see Insert#getOnConflict()
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoReplace extends ConflictAction {
-        /**
-         * TODO
-         */
         @NotNull
         private final DoReplaceAction action;
 
-        /**
-         * TODO
-         */
         @Nullable
         private final Expr condition;
 
-        /**
-         * TODO
-         *
-         * @param action    TODO
-         * @param condition TODO
-         */
         public DoReplace(@NotNull DoReplaceAction action, @Nullable Expr condition) {
             this.action = action;
             this.condition = condition;
@@ -112,21 +96,15 @@ public abstract class ConflictAction extends AstNode {
      * This is the DO UPDATE variant of the conflict action.
      *
      * @see ConflictAction
-     * @see OnConflict#action
-     * @see Insert#onConflict
+     * @see OnConflict#getAction()
+     * @see Insert#getOnConflict()
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoUpdate extends ConflictAction {
-        /**
-         * TODO
-         */
         @NotNull
         private final DoUpdateAction action;
 
-        /**
-         * TODO
-         */
         @Nullable
         private final Expr condition;
 

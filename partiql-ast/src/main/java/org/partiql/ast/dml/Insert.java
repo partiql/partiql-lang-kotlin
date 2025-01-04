@@ -21,38 +21,18 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Insert extends Statement {
-    /**
-     * TODO
-     */
     @NotNull
     private final IdentifierChain tableName;
 
-    /**
-     * TODO
-     */
     @Nullable
     private final Identifier asAlias;
 
-    /**
-     * TODO
-     */
     @NotNull
     private final InsertSource source;
 
-    /**
-     * TODO
-     */
     @Nullable
     private final OnConflict onConflict;
 
-    /**
-     * TODO
-     *
-     * @param tableName  TODO
-     * @param asAlias    TODO
-     * @param source     TODO
-     * @param onConflict TODO
-     */
     public Insert(@NotNull IdentifierChain tableName, @Nullable Identifier asAlias, @NotNull InsertSource source, @Nullable OnConflict onConflict) {
         this.tableName = tableName;
         this.asAlias = asAlias;

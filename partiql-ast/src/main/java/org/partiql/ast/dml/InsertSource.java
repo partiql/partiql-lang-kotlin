@@ -28,24 +28,12 @@ public abstract class InsertSource extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class FromExpr extends InsertSource {
-        /**
-         * TODO
-         */
         @Nullable
         private final List<Identifier> columns;
 
-        /**
-         * TODO
-         */
         @NotNull
         private final Expr expr;
 
-        /**
-         * TODO
-         *
-         * @param columns TODO
-         * @param expr    TODO
-         */
         public FromExpr(@Nullable List<Identifier> columns, @NotNull Expr expr) {
             this.columns = columns;
             this.expr = expr;
@@ -87,9 +75,6 @@ public abstract class InsertSource extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static final class FromDefault extends InsertSource {
 
-        /**
-         * TODO
-         */
         public FromDefault() {}
 
         @NotNull

@@ -14,29 +14,17 @@ import java.util.List;
  * This is the ON CONFLICT clause for the INSERT statement.
  *
  * @see Insert
- * @see Insert#onConflict
+ * @see Insert#getOnConflict()
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class OnConflict extends AstNode {
-    /**
-     * TODO
-     */
     @NotNull
     private final ConflictAction action;
 
-    /**
-     * TODO
-     */
     @Nullable
     private final ConflictTarget target;
 
-    /**
-     * TODO
-     *
-     * @param action TODO
-     * @param target TODO
-     */
     public OnConflict(@NotNull ConflictAction action, @Nullable ConflictTarget target) {
         this.action = action;
         this.target = target;

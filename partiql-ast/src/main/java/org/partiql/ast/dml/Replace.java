@@ -21,31 +21,15 @@ import java.util.List;
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class Replace extends Statement {
-    /**
-     * TODO
-     */
     @NotNull
     private final IdentifierChain tableName;
 
-    /**
-     * TODO
-     */
     @Nullable
     private final Identifier asAlias;
 
-    /**
-     * TODO
-     */
     @NotNull
     private final InsertSource source;
 
-    /**
-     * TODO
-     *
-     * @param tableName TODO
-     * @param asAlias   TODO
-     * @param source    TODO
-     */
     public Replace(@NotNull IdentifierChain tableName, @Nullable Identifier asAlias, @NotNull InsertSource source) {
         this.tableName = tableName;
         this.asAlias = asAlias;
