@@ -90,6 +90,7 @@ import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
+import org.partiql.planner.internal.util.DateTimeUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -97,12 +98,6 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.OffsetDateTime
-import java.time.OffsetTime
-import java.time.format.DateTimeFormatter
 import org.partiql.ast.SetQuantifier as AstSetQuantifier
 
 /**
@@ -195,27 +190,26 @@ internal object RexConverter {
                     val typedString = this.stringValue()
                     when (type.code()) {
                         DataType.DATE -> {
-                            val value = LocalDate.parse(typedString, DateTimeFormatter.ISO_LOCAL_DATE)
-                            val date = LocalDate.of(value.year, value.monthValue, value.dayOfMonth)
+                            val date = DateTimeUtils.parseDate(typedString)
                             return Datum.date(date)
                         }
                         DataType.TIME -> {
-                            val time = LocalTime.parse(typedString, DateTimeFormatter.ISO_LOCAL_TIME)
+                            val time = DateTimeUtils.parseTime(typedString)
                             val precision = type.precision ?: 6
                             return Datum.time(time, precision)
                         }
                         DataType.TIME_WITH_TIME_ZONE -> {
-                            val time = OffsetTime.parse(typedString, DateTimeFormatter.ISO_OFFSET_TIME)
+                            val time = DateTimeUtils.parseTimez(typedString)
                             val precision = type.precision ?: 6
                             return Datum.timez(time, precision)
                         }
                         DataType.TIMESTAMP -> {
-                            val timestamp = LocalDateTime.parse(typedString, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                            val timestamp = DateTimeUtils.parseTimestamp(typedString)
                             val precision = type.precision ?: 6
                             return Datum.timestamp(timestamp, precision)
                         }
                         DataType.TIMESTAMP_WITH_TIME_ZONE -> {
-                            val timestamp = OffsetDateTime.parse(typedString, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                            val timestamp = DateTimeUtils.parseTimestampz(typedString)
                             val precision = type.precision ?: 6
                             return Datum.timestampz(timestamp, precision)
                         }
@@ -224,6 +218,12 @@ internal object RexConverter {
                 }
                 else -> error("Unsupported literal: $this")
             }
+        }
+
+        private fun parseTime() {
+        }
+
+        private fun parseTimestamp() {
         }
 
         override fun visitExprVariant(node: ExprVariant, ctx: Env): Rex {

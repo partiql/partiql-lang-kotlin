@@ -250,9 +250,9 @@ internal class IonVariant(private var value: AnyElement) : Datum {
      */
     private fun Timestamp.toOffsetDateTime(): OffsetDateTime {
         val ts = this
-        val tz = when (ts.localOffset) {
+        val tz = when (val o = ts.localOffset) {
             null -> ZoneOffset.UTC
-            else -> ZoneOffset.ofHoursMinutes(ts.zHour, ts.zMinute)
+            else -> ZoneOffset.ofHoursMinutes(o / 60, o % 60)
         }
         // [0-59].000_000_000
         val ds = ts.decimalSecond
