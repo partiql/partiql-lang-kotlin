@@ -24,6 +24,11 @@ import java.util.Random
  * This class tests evaluation-time behavior for integer and integer overflows that existed *prior* to the
  * introduction of StaticType. The behavior described in these tests is still how we should handle integer arithmetic
  * in the absence of type information.
+ *
+ * TODO int overflow behavior is confusing. Should we
+ *  - Overflow (no error)
+ *  - Upcast to long (no error)
+ *  - Error
  */
 class EvaluatingCompilerIntRandomizedTest {
     companion object {
