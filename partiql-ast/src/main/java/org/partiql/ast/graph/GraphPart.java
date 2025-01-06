@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Base abstract class for graph pattern parts.
+ * Abstract base class for graph pattern parts.
  */
 public abstract class GraphPart extends AstNode {
     /**

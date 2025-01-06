@@ -3,7 +3,7 @@ package org.partiql.ast;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Base abstract class representing enums in the AST.
+ * Abstract base class representing enums in the AST.
  */
 public abstract class AstEnum extends AstNode {
     /**

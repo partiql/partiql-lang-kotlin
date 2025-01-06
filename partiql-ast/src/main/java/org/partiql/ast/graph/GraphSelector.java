@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Base abstract class for graph path selector. See <a href="https://arxiv.org/abs/2112.06217">Fig. 8</a>.
+ * Abstract base class for graph path selector. See <a href="https://arxiv.org/abs/2112.06217">Fig. 8</a>.
  */
 public abstract class GraphSelector extends AstNode {
     /**

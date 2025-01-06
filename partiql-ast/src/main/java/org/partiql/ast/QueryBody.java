@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Base abstract class for contents within a query.
+ * Abstract base class for contents within a query.
  */
 public abstract class QueryBody extends AstNode {
     /**

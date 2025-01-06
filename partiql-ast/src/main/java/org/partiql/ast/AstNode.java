@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 /**
- * Base abstract class for the AST nodes.
+ * Abstract base class for the AST nodes.
  */
 public abstract class AstNode {
     private int tag = 0;

@@ -14,35 +14,35 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class DatetimeField extends AstEnum {
     /**
-     * Year date time field.
+     * Year datetime field.
      */
     public static final int YEAR = 0;
     /**
-     * Month date time field.
+     * Month datetime field.
      */
     public static final int MONTH = 1;
     /**
-     * Day date time field.
+     * Day datetime field.
      */
     public static final int DAY = 2;
     /**
-     * Hour date time field.
+     * Hour datetime field.
      */
     public static final int HOUR = 3;
     /**
-     * Minute date time field.
+     * Minute datetime field.
      */
     public static final int MINUTE = 4;
     /**
-     * Second date time field.
+     * Second datetime field.
      */
     public static final int SECOND = 5;
     /**
-     * Timezone hour date time field.
+     * Timezone hour datetime field.
      */
     public static final int TIMEZONE_HOUR = 6;
     /**
-     * Timezone minute date time field.
+     * Timezone minute datetime field.
      */
     public static final int TIMEZONE_MINUTE = 7;
 
