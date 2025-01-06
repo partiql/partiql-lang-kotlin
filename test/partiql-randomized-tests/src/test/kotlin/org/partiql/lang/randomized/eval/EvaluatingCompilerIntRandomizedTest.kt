@@ -16,17 +16,15 @@
 package org.partiql.lang.randomized.eval
 
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.Random
 
 /**
  * This class tests evaluation-time behavior for integer and integer overflows that existed *prior* to the
- * introduction of StaticType.  The behavior described in these tests is still how the we should handle
- * integer arithmetic in the absence of type information.
+ * introduction of StaticType. The behavior described in these tests is still how we should handle integer arithmetic
+ * in the absence of type information.
  */
-@Disabled("This requires the v1 plan, however, the current planner does not expose it yet. See runEvaluatorTestCase.") // TODO
 class EvaluatingCompilerIntRandomizedTest {
     companion object {
         private val RANDOM = Random()
@@ -136,12 +134,10 @@ class EvaluatingCompilerIntRandomizedTest {
 
     @ParameterizedTest
     @MethodSource("parametersForPlus")
-    @Disabled("The new execution engine does not return the correct result.") // TODO
     fun plus(pair: Pair<String, String>) = assertPair(pair)
 
     @ParameterizedTest
     @MethodSource("parametersForMinus")
-    @Disabled("The new execution engine does not return the correct result.") // TODO
     fun minus(pair: Pair<String, String>) = assertPair(pair)
 
     @ParameterizedTest
