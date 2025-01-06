@@ -17,9 +17,9 @@ package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException
+import org.partiql.value.datetime.DateTimeUtil
 import org.partiql.value.datetime.TimeWithTimeZone
 import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.DateTimeUtil
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.OffsetTime
@@ -39,7 +39,7 @@ internal class OffsetTimeLowPrecision private constructor(
     _hour: Int? = null,
     _minute: Int? = null,
     _decimalSecond: BigDecimal? = null,
-    _timeZone: TimeZone? = null
+    _timeZone: TimeZone? = null,
 ) : TimeWithTimeZone() {
     companion object {
         fun of(
@@ -47,7 +47,7 @@ internal class OffsetTimeLowPrecision private constructor(
             minute: Int,
             second: Int,
             nanoOfSecond: Int,
-            timeZone: TimeZone
+            timeZone: TimeZone,
         ): OffsetTimeLowPrecision {
             try {
                 return when (timeZone) {
@@ -107,7 +107,8 @@ internal class OffsetTimeLowPrecision private constructor(
             val newTime = offsetTime.plusSeconds(wholeSecond).plusNanos(nano)
             val newDecimalSecond =
                 Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
-            val roundedDecimalSecond = newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
+            val roundedDecimalSecond =
+                newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
             of(newTime.hour, newTime.minute, roundedDecimalSecond, timeZone)
         }
 
@@ -131,6 +132,11 @@ internal class OffsetTimeLowPrecision private constructor(
         return of(local.hour, local.minute, this.decimalSecond, timeZone)
     }
 
-    fun copy(_hour: Int? = null, _minute: Int? = null, _decimalSecond: BigDecimal? = null, _timeZone: TimeZone? = null) =
+    fun copy(
+        _hour: Int? = null,
+        _minute: Int? = null,
+        _decimalSecond: BigDecimal? = null,
+        _timeZone: TimeZone? = null,
+    ) =
         OffsetTimeLowPrecision(this.offsetTime, this.isUnknownTimeZone, _hour, _minute, _decimalSecond, _timeZone)
 }

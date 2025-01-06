@@ -37,6 +37,7 @@ public sealed class TimeZone {
         val tzMinute: Int by lazy {
             this.totalOffsetMinutes - this.tzHour * 60
         }
+
         public companion object {
 
             /**

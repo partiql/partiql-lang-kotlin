@@ -4,8 +4,6 @@ import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonBinaryWriterBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.AnyElement
-import java.math.BigDecimal
-import java.math.BigInteger
 import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.ElementType.BLOB
 import com.amazon.ionelement.api.ElementType.BOOL
@@ -24,6 +22,8 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import org.partiql.types.PType
 import java.io.ByteArrayOutputStream
+import java.math.BigDecimal
+import java.math.BigInteger
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate

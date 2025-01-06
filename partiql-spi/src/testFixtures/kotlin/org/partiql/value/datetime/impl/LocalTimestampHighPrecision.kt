@@ -28,7 +28,7 @@ import java.math.RoundingMode
  */
 internal class LocalTimestampHighPrecision private constructor(
     val date: SqlDate,
-    val time: LocalTimeHighPrecision
+    val time: LocalTimeHighPrecision,
 ) : TimestampWithoutTimeZone() {
     companion object {
         /**
@@ -55,7 +55,7 @@ internal class LocalTimestampHighPrecision private constructor(
             day: Int,
             hour: Int,
             minute: Int,
-            decimalSecond: BigDecimal
+            decimalSecond: BigDecimal,
         ): LocalTimestampHighPrecision {
             val date = SqlDate.of(year, month, day)
             val time = LocalTimeHighPrecision.of(hour, minute, decimalSecond)

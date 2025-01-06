@@ -15,6 +15,7 @@
 
 package org.partiql.value.datetime
 
+import org.partiql.value.datetime.DateTimeUtil.JAVA_MAX_OFFSET
 import org.partiql.value.datetime.impl.LocalTimeHighPrecision
 import org.partiql.value.datetime.impl.LocalTimeLowPrecision
 import org.partiql.value.datetime.impl.LocalTimestampHighPrecision
@@ -24,7 +25,6 @@ import org.partiql.value.datetime.impl.OffsetTimeLowPrecision
 import org.partiql.value.datetime.impl.OffsetTimestampHighPrecision
 import org.partiql.value.datetime.impl.OffsetTimestampLowPrecision
 import org.partiql.value.datetime.impl.SqlDate
-import org.partiql.value.datetime.DateTimeUtil.JAVA_MAX_OFFSET
 import java.math.BigDecimal
 import kotlin.math.absoluteValue
 
@@ -52,7 +52,7 @@ public object DateTimeValue {
         hour: Int = 0,
         minute: Int = 0,
         second: BigDecimal = BigDecimal.ZERO,
-        timeZone: TimeZone? = null
+        timeZone: TimeZone? = null,
     ): Timestamp =
         when (timeZone) {
             TimeZone.UnknownTimeZone -> {
@@ -98,7 +98,7 @@ public object DateTimeValue {
         hour: Int,
         minute: Int,
         second: Int,
-        timeZone: TimeZone? = null
+        timeZone: TimeZone? = null,
     ): Timestamp =
         timestamp(year, month, day, hour, minute, second.toBigDecimal(), timeZone)
 
@@ -185,7 +185,7 @@ public object DateTimeValue {
         hour: Int,
         minute: Int,
         second: BigDecimal,
-        timeZone: TimeZone? = null
+        timeZone: TimeZone? = null,
     ): Time =
         when (timeZone) {
             TimeZone.UnknownTimeZone -> {
@@ -225,7 +225,7 @@ public object DateTimeValue {
         hour: Int,
         minute: Int,
         second: Int,
-        timeZone: TimeZone? = null
+        timeZone: TimeZone? = null,
     ): Time =
         time(hour, minute, second.toBigDecimal(), timeZone)
 
@@ -245,7 +245,7 @@ public object DateTimeValue {
         minute: Int,
         second: Int,
         nano: Int,
-        timeZone: TimeZone? = null
+        timeZone: TimeZone? = null,
     ): Time {
         val decimalSecond = second.toBigDecimal().plus(nano.toBigDecimal().movePointLeft(9))
         return time(hour, minute, decimalSecond, timeZone)
@@ -255,7 +255,7 @@ public object DateTimeValue {
     public fun date(
         year: Int,
         month: Int,
-        day: Int
+        day: Int,
     ): Date =
         SqlDate.of(year, month, day)
 }

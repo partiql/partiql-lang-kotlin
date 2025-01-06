@@ -39,7 +39,7 @@ internal class OffsetTimestampLowPrecision(
     val date: Date,
     val time: OffsetTimeLowPrecision,
     _inputIonTimestamp: com.amazon.ion.Timestamp? = null,
-    _epochSecond: BigDecimal? = null
+    _epochSecond: BigDecimal? = null,
 ) : TimestampWithTimeZone() {
 
     companion object {
@@ -85,7 +85,7 @@ internal class OffsetTimestampLowPrecision(
             hour: Int,
             minute: Int,
             decimalSecond: BigDecimal,
-            timeZone: TimeZone
+            timeZone: TimeZone,
         ): OffsetTimestampLowPrecision {
             val date = SqlDate.of(year, month, day)
             val time = OffsetTimeLowPrecision.of(hour, minute, decimalSecond, timeZone)
@@ -131,7 +131,14 @@ internal class OffsetTimestampLowPrecision(
                     offsetDateTime.nano,
                     timeZone
                 )
-                    .let { it.copy(_decimalSecond = it.decimalSecond.setScale(epochSeconds.scale(), RoundingMode.UNNECESSARY)) }
+                    .let {
+                        it.copy(
+                            _decimalSecond = it.decimalSecond.setScale(
+                                epochSeconds.scale(),
+                                RoundingMode.UNNECESSARY
+                            )
+                        )
+                    }
             return forDateTime(date, time).copy(_epochSecond = epochSeconds)
         }
 
@@ -201,7 +208,8 @@ internal class OffsetTimestampLowPrecision(
             // the real precision of this operation, should be max(original_value.decimalSecond.precision, seconds.precision)
             val newDecimalSecond = newTime.second.toBigDecimal() + newTime.nano.toBigDecimal().movePointLeft(9)
             val roundedDecimalSecond =
-                newDecimalSecond.stripTrailingZeros().setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
+                newDecimalSecond.stripTrailingZeros()
+                    .setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
             of(
                 newTime.year,
                 newTime.monthValue,
@@ -247,7 +255,7 @@ internal class OffsetTimestampLowPrecision(
 
     internal fun copy(
         _inputIonTimestamp: com.amazon.ion.Timestamp? = null,
-        _epochSecond: BigDecimal? = null
+        _epochSecond: BigDecimal? = null,
     ) =
         OffsetTimestampLowPrecision(
             this.offsetDateTime, this.isUnknownTimeZone, this.date, this.time,

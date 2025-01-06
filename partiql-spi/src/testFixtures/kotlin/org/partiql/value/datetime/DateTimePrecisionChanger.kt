@@ -118,7 +118,8 @@ internal object DateTimePrecisionChanger {
         val diff = rounded - nano
         val originalLocalTime = LocalTime.of(dateTime.hour, dateTime.minute, wholeSecond, nano)
         val newDateTime = originalLocalTime.plusNanos(diff.toLong())
-        val newDecimalSecond = newDateTime.nano.toBigDecimal().movePointLeft(9).stripTrailingZeros().setScale(precision) + newDateTime.second.toBigDecimal()
+        val newDecimalSecond = newDateTime.nano.toBigDecimal().movePointLeft(9).stripTrailingZeros()
+            .setScale(precision) + newDateTime.second.toBigDecimal()
         return time(newDateTime.hour, newDateTime.minute, newDecimalSecond, dateTime.timeZone)
     }
 }

@@ -16,13 +16,13 @@
 package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.TimeWithTimeZone
-import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.TimestampWithTimeZone
 import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_DAY
 import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_HOUR
 import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_MINUTE
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
+import org.partiql.value.datetime.TimeWithTimeZone
+import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.TimestampWithTimeZone
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -68,7 +68,7 @@ internal class OffsetTimestampHighPrecision private constructor(
             hour: Int,
             minute: Int,
             second: BigDecimal,
-            timeZone: TimeZone
+            timeZone: TimeZone,
         ): OffsetTimestampHighPrecision {
             val date = SqlDate.of(year, month, day)
             val time = OffsetTimeHighPrecision.of(hour, minute, second, timeZone)
@@ -220,9 +220,10 @@ internal class OffsetTimestampHighPrecision private constructor(
 
         return BigDecimal.valueOf(adjustForTimeZoneInSecond).plus(this.time.elapsedSecond)
     }
+
     internal fun copy(
         _inputIonTimestamp: com.amazon.ion.Timestamp? = null,
-        _epochSecond: BigDecimal? = null
+        _epochSecond: BigDecimal? = null,
     ) =
         OffsetTimestampHighPrecision(
             this.date, this.time,
