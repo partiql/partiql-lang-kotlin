@@ -15,7 +15,6 @@
 
 package org.partiql.value.datetime
 
-import org.partiql.spi.value.DateTimeUtil
 import org.partiql.value.datetime.DateTimeValue.time
 import org.partiql.value.datetime.DateTimeValue.timestamp
 import java.math.BigDecimal

@@ -15,8 +15,6 @@
 
 package org.partiql.value.datetime
 
-import org.partiql.spi.value.DateTimeUtil.JAVA_MAX_OFFSET
-import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.impl.LocalTimeHighPrecision
 import org.partiql.value.datetime.impl.LocalTimeLowPrecision
 import org.partiql.value.datetime.impl.LocalTimestampHighPrecision
@@ -26,6 +24,7 @@ import org.partiql.value.datetime.impl.OffsetTimeLowPrecision
 import org.partiql.value.datetime.impl.OffsetTimestampHighPrecision
 import org.partiql.value.datetime.impl.OffsetTimestampLowPrecision
 import org.partiql.value.datetime.impl.SqlDate
+import org.partiql.value.datetime.DateTimeUtil.JAVA_MAX_OFFSET
 import java.math.BigDecimal
 import kotlin.math.absoluteValue
 

@@ -15,10 +15,8 @@
 
 package org.partiql.value.datetime
 
-import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.impl.OffsetTimestampLowPrecision
 import java.math.BigDecimal
-import kotlin.jvm.Throws
 
 /**
  * Superclass for all classes representing datetime values.
@@ -375,6 +373,7 @@ public abstract class TimeWithTimeZone : Time {
     public final override fun plusSeconds(seconds: Long): Time = plusSeconds(seconds.toBigDecimal())
     public final override fun toPrecision(precision: Int): TimeWithTimeZone =
         DateTimePrecisionChanger.toPrecision(precision, this) as TimeWithTimeZone
+
     public abstract override fun atDate(date: Date): TimestampWithTimeZone
 
     /**
@@ -398,8 +397,10 @@ public abstract class TimeWithTimeZone : Time {
         if (this.timeZone != other.timeZone) return false
         return true
     }
+
     public final override fun hashCode(): Int =
         hour.hashCode() + minute.hashCode() + decimalSecond.hashCode() + timeZone.hashCode()
+
     public final override fun toString(): String =
         "${this.javaClass.simpleName}(hour=$hour, minute=$minute, second=$decimalSecond, timeZone=$timeZone)"
 }
@@ -494,6 +495,7 @@ public abstract class TimestampWithTimeZone : Timestamp {
     public abstract override fun plusSeconds(seconds: BigDecimal): TimestampWithTimeZone
     public final override fun plusSeconds(seconds: Long): TimestampWithTimeZone =
         plusSeconds(seconds.toBigDecimal())
+
     public final override fun toPrecision(precision: Int): TimestampWithTimeZone =
         DateTimePrecisionChanger.toPrecision(precision, this) as TimestampWithTimeZone
 
@@ -551,6 +553,7 @@ public abstract class TimestampWithoutTimeZone : Timestamp {
     public abstract override fun plusSeconds(seconds: BigDecimal): TimestampWithoutTimeZone
     public override fun plusSeconds(seconds: Long): TimestampWithoutTimeZone =
         plusSeconds(seconds.toBigDecimal())
+
     public final override fun toPrecision(precision: Int): TimestampWithoutTimeZone =
         DateTimePrecisionChanger.toPrecision(precision, this) as TimestampWithoutTimeZone
 
@@ -561,6 +564,7 @@ public abstract class TimestampWithoutTimeZone : Timestamp {
     public abstract fun withTimeZone(timeZone: TimeZone): TimestampWithTimeZone
     public final override fun toTime(): TimeWithoutTimeZone =
         DateTimeValue.time(this.hour, this.minute, this.decimalSecond) as TimeWithoutTimeZone
+
     public final override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false

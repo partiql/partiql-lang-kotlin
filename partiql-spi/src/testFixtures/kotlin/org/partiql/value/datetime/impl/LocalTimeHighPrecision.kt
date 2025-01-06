@@ -17,10 +17,9 @@ package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException
-import org.partiql.spi.value.DateTimeUtil
-import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.TimeWithoutTimeZone
 import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.DateTimeUtil
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.temporal.ChronoField
@@ -34,13 +33,13 @@ internal class LocalTimeHighPrecision private constructor(
     override val hour: Int,
     override val minute: Int,
     override val decimalSecond: BigDecimal,
-    _elapsedSecond: BigDecimal? = null
+    _elapsedSecond: BigDecimal? = null,
 ) : TimeWithoutTimeZone() {
     companion object {
         fun of(
             hour: Int,
             minute: Int,
-            decimalSecond: BigDecimal
+            decimalSecond: BigDecimal,
         ): LocalTimeHighPrecision {
             try {
                 ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
@@ -85,5 +84,6 @@ internal class LocalTimeHighPrecision private constructor(
     override fun withTimeZone(timeZone: TimeZone): OffsetTimeHighPrecision =
         OffsetTimeHighPrecision.of(hour, minute, decimalSecond, timeZone)
 
-    fun copy(_elapsedSecond: BigDecimal? = null) = LocalTimeHighPrecision(this.hour, this.minute, this.decimalSecond, _elapsedSecond)
+    fun copy(_elapsedSecond: BigDecimal? = null) =
+        LocalTimeHighPrecision(this.hour, this.minute, this.decimalSecond, _elapsedSecond)
 }

@@ -16,7 +16,6 @@
 package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
-import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.TimestampWithTimeZone
 import java.math.BigDecimal
@@ -125,8 +124,13 @@ internal class OffsetTimestampLowPrecision(
             val date = SqlDate.of(offsetDateTime.year, offsetDateTime.monthValue, offsetDateTime.dayOfMonth)
             // we need to assign a precision based on the input epochSecond
             val time =
-                OffsetTimeLowPrecision
-                    .of(offsetDateTime.hour, offsetDateTime.minute, offsetDateTime.second, offsetDateTime.nano, timeZone)
+                OffsetTimeLowPrecision.of(
+                    offsetDateTime.hour,
+                    offsetDateTime.minute,
+                    offsetDateTime.second,
+                    offsetDateTime.nano,
+                    timeZone
+                )
                     .let { it.copy(_decimalSecond = it.decimalSecond.setScale(epochSeconds.scale(), RoundingMode.UNNECESSARY)) }
             return forDateTime(date, time).copy(_epochSecond = epochSeconds)
         }
@@ -135,7 +139,13 @@ internal class OffsetTimestampLowPrecision(
         fun nowZ(): OffsetTimestampLowPrecision {
             val javaNowZ = OffsetDateTime.now(ZoneOffset.UTC)
             val date = SqlDate.of(javaNowZ.year, javaNowZ.monthValue, javaNowZ.dayOfMonth)
-            val time = OffsetTimeLowPrecision.of(javaNowZ.hour, javaNowZ.minute, javaNowZ.second, javaNowZ.nano, TimeZone.UtcOffset.of(0))
+            val time = OffsetTimeLowPrecision.of(
+                javaNowZ.hour,
+                javaNowZ.minute,
+                javaNowZ.second,
+                javaNowZ.nano,
+                TimeZone.UtcOffset.of(0)
+            )
             return forDateTime(date, time)
         }
     }

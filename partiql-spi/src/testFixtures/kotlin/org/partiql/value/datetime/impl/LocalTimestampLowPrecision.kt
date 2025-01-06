@@ -99,7 +99,8 @@ internal class LocalTimestampLowPrecision private constructor(
             val (wholeSecond, nano) = Utils.getSecondAndNanoFromDecimalSecond(seconds)
             val newTime = localDateTime.plusSeconds(wholeSecond).plusNanos(nano)
             // the real precision of this operation, should be max(original_value.decimalSecond.precision, seconds.precision)
-            val newDecimalSecond = Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
+            val newDecimalSecond =
+                Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
             val roundedDecimalSecond = newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
             of(newTime.year, newTime.monthValue, newTime.dayOfMonth, newTime.hour, newTime.minute, roundedDecimalSecond)
         }

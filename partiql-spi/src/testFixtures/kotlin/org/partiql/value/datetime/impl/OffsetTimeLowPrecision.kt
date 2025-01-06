@@ -17,9 +17,9 @@ package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException
-import org.partiql.spi.value.DateTimeUtil
 import org.partiql.value.datetime.TimeWithTimeZone
 import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.DateTimeUtil
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.OffsetTime
@@ -105,7 +105,8 @@ internal class OffsetTimeLowPrecision private constructor(
         } else {
             val (wholeSecond, nano) = Utils.getSecondAndNanoFromDecimalSecond(seconds)
             val newTime = offsetTime.plusSeconds(wholeSecond).plusNanos(nano)
-            val newDecimalSecond = Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
+            val newDecimalSecond =
+                Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
             val roundedDecimalSecond = newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
             of(newTime.hour, newTime.minute, roundedDecimalSecond, timeZone)
         }

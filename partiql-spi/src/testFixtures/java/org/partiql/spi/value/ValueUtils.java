@@ -7,7 +7,7 @@ import org.partiql.types.PType;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
-import org.partiql.value.util.DateTimeUtil;
+import org.partiql.value.datetime.DateTimeUtil;
 
 import java.math.BigDecimal;
 import java.util.Objects;

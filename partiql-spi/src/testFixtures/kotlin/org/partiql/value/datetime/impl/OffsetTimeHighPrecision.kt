@@ -16,12 +16,11 @@
 package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
-import org.partiql.spi.value.DateTimeUtil
-import org.partiql.spi.value.DateTimeUtil.SECONDS_IN_DAY
-import org.partiql.spi.value.DateTimeUtil.SECONDS_IN_HOUR
-import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.TimeWithTimeZone
 import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.DateTimeUtil
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_DAY
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_HOUR
 import java.math.BigDecimal
 
 /**

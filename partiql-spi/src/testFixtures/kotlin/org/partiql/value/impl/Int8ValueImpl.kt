@@ -25,7 +25,6 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
-import org.partiql.spi.value.DateTimeUtil.toBigDecimal
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -33,6 +32,7 @@ import org.partiql.value.int16Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.intValue
+import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigInteger
 

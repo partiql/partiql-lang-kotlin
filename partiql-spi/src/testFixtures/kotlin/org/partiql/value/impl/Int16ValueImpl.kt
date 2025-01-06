@@ -26,7 +26,7 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
-import org.partiql.spi.value.DateTimeUtil.toBigDecimal
+import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
