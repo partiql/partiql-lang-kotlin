@@ -15,6 +15,7 @@
 
 package org.partiql.lang.randomized.syntax
 
+import org.junit.jupiter.api.Test
 import java.util.Random
 
 class PartiQLParserDateTimeRandomizedTests {
@@ -45,5 +46,17 @@ class PartiQLParserDateTimeRandomizedTests {
             else -> nextInt(30)
         } + 1
         return Date(year, month, day)
+    }
+
+    @Test
+    fun testRandomDates() {
+        // randomDates.map { date -> val y = date.year.toString().padStart(4, '0')
+        //     val m = date.month.toString().padStart(2, '0')
+        //     val d = date.day.toString().padStart(2, '0')
+        //     assertExpression()
+        //     assertExpression("DATE '$yearStr-$monthStr-$dayStr'") {
+        //         Datum.date(DateTimeValue.date(date.year, date.month, date.day))
+        //     }
+        // }
     }
 }
