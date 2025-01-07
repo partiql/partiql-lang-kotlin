@@ -313,11 +313,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExprPath(node: ExprPath, tail: SqlBlock): SqlBlock {
         var t = visitExprWrapped(node.root, tail)
-        var cur = node.next
-        while (cur != null) {
-            t = visitPathStep(cur, t)
-            cur = cur.next
-        }
+        t = t concat list(delimiter = null, start = null, end = null) { node.steps }
         return t
     }
 

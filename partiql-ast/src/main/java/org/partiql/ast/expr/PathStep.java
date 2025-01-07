@@ -2,7 +2,6 @@ package org.partiql.ast.expr;
 
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
@@ -14,18 +13,6 @@ import java.util.List;
  * A path step in a path expression.
  */
 public abstract class PathStep extends AstNode {
-    @Nullable
-    private final PathStep next;
-
-    protected PathStep(@Nullable PathStep _next) {
-        this.next = _next;
-    }
-
-    @Nullable
-    public PathStep getNext() {
-        return this.next;
-    }
-
     /**
      * A path step that represents a field referenced with the dot notation. E.g. {@code a.b}.
      */
@@ -34,8 +21,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         private final Identifier field;
 
-        public Field(@NotNull Identifier field, @Nullable PathStep next) {
-            super(next);
+        public Field(@NotNull Identifier field) {
             this.field = field;
         }
 
@@ -43,10 +29,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
-            PathStep next = getNext();
-            if (next != null) {
-                kids.add(next);
-            }
+            kids.add(field);
             return kids;
         }
 
@@ -69,8 +52,7 @@ public abstract class PathStep extends AstNode {
         @NotNull
         private final Expr element;
 
-        public Element(@NotNull Expr element, @Nullable PathStep next) {
-            super(next);
+        public Element(@NotNull Expr element) {
             this.element = element;
         }
 
@@ -79,10 +61,6 @@ public abstract class PathStep extends AstNode {
         public List<AstNode> getChildren() {
             List<AstNode> kids = new ArrayList<>();
             kids.add(element);
-            PathStep next = getNext();
-            if (next != null) {
-                kids.add(next);
-            }
             return kids;
         }
 
@@ -102,19 +80,12 @@ public abstract class PathStep extends AstNode {
      */
     @EqualsAndHashCode(callSuper = false)
     public static class AllElements extends PathStep {
-        public AllElements(@Nullable PathStep next) {
-            super(next);
-        }
+        public AllElements() {}
 
         @Override
         @NotNull
         public List<AstNode> getChildren() {
-            List<AstNode> kids = new ArrayList<>();
-            PathStep next = getNext();
-            if (next != null) {
-                kids.add(next);
-            }
-            return kids;
+            return new ArrayList<>();
         }
 
         @Override
@@ -128,19 +99,12 @@ public abstract class PathStep extends AstNode {
      */
     @EqualsAndHashCode(callSuper = false)
     public static class AllFields extends PathStep {
-        public AllFields(@Nullable PathStep next) {
-            super(next);
-        }
+        public AllFields() {}
 
         @Override
         @NotNull
         public List<AstNode> getChildren() {
-            List<AstNode> kids = new ArrayList<>();
-            PathStep next = getNext();
-            if (next != null) {
-                kids.add(next);
-            }
-            return kids;
+            return new ArrayList<>();
         }
 
         @Override

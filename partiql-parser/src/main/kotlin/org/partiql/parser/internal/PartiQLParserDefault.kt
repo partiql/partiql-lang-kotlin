@@ -1599,40 +1599,28 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprArray(expressions)
         }
 
-        private fun PathStep.copy(next: PathStep?) = when (this) {
-            is PathStep.Element -> exprPathStepElement(this.element, next)
-            is PathStep.Field -> exprPathStepField(this.field, next)
-            is PathStep.AllElements -> exprPathStepAllElements(next)
-            is PathStep.AllFields -> exprPathStepAllFields(next)
-            else -> error("Unsupported PathStep: $this")
-        }
-
         override fun visitExprPrimaryPath(ctx: GeneratedParser.ExprPrimaryPathContext) = translate(ctx) {
             val base = visitAs<Expr>(ctx.exprPrimary())
-            val init: PathStep? = null
-            val steps = ctx.pathStep().reversed().fold(init) { acc, step ->
-                val stepExpr = visit(step) as PathStep
-                stepExpr.copy(acc)
-            }
+            val steps = ctx.pathStep().map { visit(it) as PathStep }
             exprPath(base, steps)
         }
 
         override fun visitPathStepIndexExpr(ctx: GeneratedParser.PathStepIndexExprContext) = translate(ctx) {
             val key = visitAs<Expr>(ctx.key)
-            exprPathStepElement(key, null)
+            exprPathStepElement(key)
         }
 
         override fun visitPathStepDotExpr(ctx: GeneratedParser.PathStepDotExprContext) = translate(ctx) {
             val symbol = visitSymbolPrimitive(ctx.symbolPrimitive())
-            exprPathStepField(symbol, null)
+            exprPathStepField(symbol)
         }
 
         override fun visitPathStepIndexAll(ctx: GeneratedParser.PathStepIndexAllContext) = translate(ctx) {
-            exprPathStepAllElements(null)
+            exprPathStepAllElements()
         }
 
         override fun visitPathStepDotAll(ctx: GeneratedParser.PathStepDotAllContext) = translate(ctx) {
-            exprPathStepAllFields(null)
+            exprPathStepAllFields()
         }
 
         override fun visitRowValueConstructor(ctx: GeneratedParser.RowValueConstructorContext) = translate(ctx) {
@@ -2252,48 +2240,32 @@ internal class PartiQLParserDefault : PartiQLParser {
             translate(ctx) {
                 val steps = mutableListOf<PathStep>()
                 var containsIndex = false
-                var curStep = path.next
-                var last = curStep
-                while (curStep != null) {
-                    val isLastStep = curStep.next == null
+                path.steps.forEachIndexed { index, step ->
                     // Only last step can have a '.*'
-                    if (curStep is PathStep.AllFields && !isLastStep) {
+                    if (step is PathStep.AllFields && index != path.steps.lastIndex) {
                         throw error(ctx, "Projection item cannot unpivot unless at end.")
                     }
                     // No step can have an indexed wildcard: '[*]'
-                    if (curStep is PathStep.AllElements) {
+                    if (step is PathStep.AllElements) {
                         throw error(ctx, "Projection item cannot index using wildcard.")
                     }
                     // TODO If the last step is '.*', no indexing is allowed
                     // if (step.metas.containsKey(IsPathIndexMeta.TAG)) {
                     //     containsIndex = true
                     // }
-                    if (curStep !is PathStep.AllFields) {
-                        steps.add(curStep)
+                    if (step !is PathStep.AllFields) {
+                        steps.add(step)
                     }
-
-                    if (isLastStep && curStep is PathStep.AllFields && containsIndex) {
-                        throw error(ctx, "Projection item use wildcard with any indexing.")
-                    }
-                    last = curStep
-                    curStep = curStep.next
+                }
+                if (path.steps.last() is PathStep.AllFields && containsIndex) {
+                    throw error(ctx, "Projection item use wildcard with any indexing.")
                 }
                 when {
-                    last is PathStep.AllFields && steps.isEmpty() -> {
+                    path.steps.last() is PathStep.AllFields && steps.isEmpty() -> {
                         selectItemStar(path.root)
                     }
-                    last is PathStep.AllFields -> {
-                        val init: PathStep? = null
-                        val newSteps = steps.reversed().fold(init) { acc, step ->
-                            when (step) {
-                                is PathStep.Element -> PathStep.Element(step.element, acc)
-                                is PathStep.Field -> PathStep.Field(step.field, acc)
-                                is PathStep.AllElements -> PathStep.AllElements(acc)
-                                is PathStep.AllFields -> PathStep.AllFields(acc)
-                                else -> error("Unexpected path step")
-                            }
-                        }
-                        selectItemStar(exprPath(path.root, newSteps))
+                    path.steps.last() is PathStep.AllFields -> {
+                        selectItemStar(exprPath(path.root, steps))
                     }
                     else -> {
                         selectItemExpr(path, alias)

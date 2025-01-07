@@ -58,17 +58,11 @@ private fun IdentifierChain.toBinder(): Identifier {
 private fun Identifier.toBinder(): Identifier = symbol.toBinder()
 
 private fun ExprPath.toBinder(index: () -> Int): Identifier {
-    if (next == null) return root.toBinder(index)
-    var cur = next
-    var prev = next
-    while (cur != null) {
-        prev = cur
-        cur = cur.next
-    }
-    return when (prev) {
-        is PathStep.Field -> prev.field.toBinder()
+    if (steps.isEmpty()) return root.toBinder(index)
+    return when (val last = steps.last()) {
+        is PathStep.Field -> last.field.toBinder()
         is PathStep.Element -> {
-            val k = prev.element
+            val k = last.element
             if (k is ExprLit && k.lit.code() == Literal.STRING) {
                 k.lit.stringValue().toBinder()
             } else {

@@ -652,9 +652,11 @@ class SqlDialectTest {
                         identifierChain = idChain(id("x")),
                         isQualified = false
                     ),
-                    next = exprPathStepField(
-                        value = id("y"),
-                        next = exprPathStepAllFields(next = null)
+                    steps = listOf(
+                        exprPathStepField(
+                            value = id("y")
+                        ),
+                        exprPathStepAllFields()
                     )
                 )
             ),
@@ -665,9 +667,11 @@ class SqlDialectTest {
                         identifierChain = idChain(id("x")),
                         isQualified = false
                     ),
-                    next = exprPathStepField(
-                        value = id("y"),
-                        next = exprPathStepAllElements(next = null)
+                    steps = listOf(
+                        exprPathStepField(
+                            value = id("y")
+                        ),
+                        exprPathStepAllElements()
                     )
                 )
             ),
@@ -678,16 +682,18 @@ class SqlDialectTest {
                         identifierChain = idChain(id("x")),
                         isQualified = false
                     ),
-                    next = exprPathStepElement(
-                        element = exprOperator(
-                            symbol = "+",
-                            lhs = exprLit(intNum(1)),
-                            rhs = exprVarRef(
-                                identifierChain = idChain(id("a")),
-                                isQualified = false
-                            )
+                    steps = listOf(
+                        exprPathStepElement(
+                            element = exprOperator(
+                                symbol = "+",
+                                lhs = exprLit(intNum(1)),
+                                rhs = exprVarRef(
+                                    identifierChain = idChain(id("a")),
+                                    isQualified = false
+                                )
+                            ),
                         ),
-                        next = null
+
                     )
                 )
             ),
@@ -698,7 +704,9 @@ class SqlDialectTest {
                         identifierChain = idChain(id("x")),
                         isQualified = false
                     ),
-                    next = exprPathStepElement(exprLit(string("y")), next = null)
+                    steps = listOf(
+                        exprPathStepElement(exprLit(string("y")))
+                    )
                 )
             ),
         )

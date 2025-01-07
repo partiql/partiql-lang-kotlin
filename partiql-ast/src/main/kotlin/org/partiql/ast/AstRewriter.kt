@@ -321,9 +321,9 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitExprPath(node: ExprPath, ctx: C): AstNode {
         val root = visitExpr(node.root, ctx) as Expr
-        val next = node.next?.let { visitPathStep(it, ctx) as PathStep? }
-        return if (root !== node.root || next !== node.next) {
-            ExprPath(root, next)
+        val pathSteps = _visitList(node.steps, ctx, ::visitPathStep)
+        return if (root !== node.root || pathSteps !== node.steps) {
+            ExprPath(root, pathSteps)
         } else {
             node
         }
@@ -464,40 +464,24 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitPathStepField(node: PathStep.Field, ctx: C): AstNode {
         val field = visitIdentifier(node.field, ctx) as Identifier
-        val next = node.next?.let { visitPathStep(it, ctx) as PathStep? }
-        return if (field !== node.field || next !== node.next) {
-            PathStep.Field(field, next)
+        return if (field !== node.field) {
+            PathStep.Field(field)
         } else {
             node
         }
     }
 
     override fun visitPathStepElement(node: PathStep.Element, ctx: C): AstNode {
-        val element = visitExpr(node.element, ctx) as Expr
-        val next = node.next?.let { visitPathStep(it, ctx) as PathStep? }
-        return if (element !== node.element || next !== node.next) {
-            PathStep.Element(element, next)
-        } else {
-            node
-        }
+        val element = node.element
+        return node
     }
 
     override fun visitPathStepAllFields(node: PathStep.AllFields, ctx: C): AstNode {
-        val next = node.next?.let { visitPathStep(it, ctx) as PathStep? }
-        return if (next !== node.next) {
-            PathStep.AllFields(next)
-        } else {
-            node
-        }
+        return node
     }
 
     override fun visitPathStepAllElements(node: PathStep.AllElements, ctx: C): AstNode {
-        val next = node.next?.let { visitPathStep(it, ctx) as PathStep? }
-        return if (next !== node.next) {
-            PathStep.AllElements(next)
-        } else {
-            node
-        }
+        return node
     }
 
     // graph

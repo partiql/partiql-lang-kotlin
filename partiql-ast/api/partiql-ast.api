@@ -71,21 +71,11 @@ public final class org/partiql/ast/Ast {
 	public static final fun exprOverlay (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprOverlay;
 	public static synthetic fun exprOverlay$default (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprOverlay;
 	public static final fun exprParameter (I)Lorg/partiql/ast/expr/ExprParameter;
-	public static final fun exprPath (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprPath;
-	public static final fun exprPath (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/PathStep;)Lorg/partiql/ast/expr/ExprPath;
-	public static synthetic fun exprPath$default (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/PathStep;ILjava/lang/Object;)Lorg/partiql/ast/expr/ExprPath;
+	public static final fun exprPath (Lorg/partiql/ast/expr/Expr;Ljava/util/List;)Lorg/partiql/ast/expr/ExprPath;
 	public static final fun exprPathStepAllElements ()Lorg/partiql/ast/expr/PathStep$AllElements;
-	public static final fun exprPathStepAllElements (Lorg/partiql/ast/expr/PathStep;)Lorg/partiql/ast/expr/PathStep$AllElements;
-	public static synthetic fun exprPathStepAllElements$default (Lorg/partiql/ast/expr/PathStep;ILjava/lang/Object;)Lorg/partiql/ast/expr/PathStep$AllElements;
 	public static final fun exprPathStepAllFields ()Lorg/partiql/ast/expr/PathStep$AllFields;
-	public static final fun exprPathStepAllFields (Lorg/partiql/ast/expr/PathStep;)Lorg/partiql/ast/expr/PathStep$AllFields;
-	public static synthetic fun exprPathStepAllFields$default (Lorg/partiql/ast/expr/PathStep;ILjava/lang/Object;)Lorg/partiql/ast/expr/PathStep$AllFields;
 	public static final fun exprPathStepElement (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/PathStep$Element;
-	public static final fun exprPathStepElement (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/PathStep;)Lorg/partiql/ast/expr/PathStep$Element;
-	public static synthetic fun exprPathStepElement$default (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/PathStep;ILjava/lang/Object;)Lorg/partiql/ast/expr/PathStep$Element;
 	public static final fun exprPathStepField (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/expr/PathStep$Field;
-	public static final fun exprPathStepField (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/expr/PathStep;)Lorg/partiql/ast/expr/PathStep$Field;
-	public static synthetic fun exprPathStepField$default (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/expr/PathStep;ILjava/lang/Object;)Lorg/partiql/ast/expr/PathStep$Field;
 	public static final fun exprPosition (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprPosition;
 	public static final fun exprQuerySet (Lorg/partiql/ast/QueryBody;)Lorg/partiql/ast/expr/ExprQuerySet;
 	public static final fun exprQuerySet (Lorg/partiql/ast/QueryBody;Lorg/partiql/ast/OrderBy;Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprQuerySet;
@@ -2386,20 +2376,20 @@ public class org/partiql/ast/expr/ExprParameter$Builder {
 }
 
 public final class org/partiql/ast/expr/ExprPath : org/partiql/ast/expr/Expr {
-	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/PathStep;)V
+	public fun <init> (Lorg/partiql/ast/expr/Expr;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static fun builder ()Lorg/partiql/ast/expr/ExprPath$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
-	public fun getNext ()Lorg/partiql/ast/expr/PathStep;
 	public fun getRoot ()Lorg/partiql/ast/expr/Expr;
+	public fun getSteps ()Ljava/util/List;
 	public fun hashCode ()I
 }
 
 public class org/partiql/ast/expr/ExprPath$Builder {
 	public fun build ()Lorg/partiql/ast/expr/ExprPath;
-	public fun next (Lorg/partiql/ast/expr/PathStep;)Lorg/partiql/ast/expr/ExprPath$Builder;
 	public fun root (Lorg/partiql/ast/expr/Expr;)Lorg/partiql/ast/expr/ExprPath$Builder;
+	public fun steps (Ljava/util/List;)Lorg/partiql/ast/expr/ExprPath$Builder;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -2649,12 +2639,11 @@ public class org/partiql/ast/expr/ExprWindow$Over$Builder {
 }
 
 public abstract class org/partiql/ast/expr/PathStep : org/partiql/ast/AstNode {
-	protected fun <init> (Lorg/partiql/ast/expr/PathStep;)V
-	public fun getNext ()Lorg/partiql/ast/expr/PathStep;
+	public fun <init> ()V
 }
 
 public class org/partiql/ast/expr/PathStep$AllElements : org/partiql/ast/expr/PathStep {
-	public fun <init> (Lorg/partiql/ast/expr/PathStep;)V
+	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
@@ -2663,7 +2652,7 @@ public class org/partiql/ast/expr/PathStep$AllElements : org/partiql/ast/expr/Pa
 }
 
 public class org/partiql/ast/expr/PathStep$AllFields : org/partiql/ast/expr/PathStep {
-	public fun <init> (Lorg/partiql/ast/expr/PathStep;)V
+	public fun <init> ()V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
@@ -2672,7 +2661,7 @@ public class org/partiql/ast/expr/PathStep$AllFields : org/partiql/ast/expr/Path
 }
 
 public class org/partiql/ast/expr/PathStep$Element : org/partiql/ast/expr/PathStep {
-	public fun <init> (Lorg/partiql/ast/expr/Expr;Lorg/partiql/ast/expr/PathStep;)V
+	public fun <init> (Lorg/partiql/ast/expr/Expr;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
@@ -2682,7 +2671,7 @@ public class org/partiql/ast/expr/PathStep$Element : org/partiql/ast/expr/PathSt
 }
 
 public class org/partiql/ast/expr/PathStep$Field : org/partiql/ast/expr/PathStep {
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/expr/PathStep;)V
+	public fun <init> (Lorg/partiql/ast/Identifier;)V
 	public fun accept (Lorg/partiql/ast/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	protected fun canEqual (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z

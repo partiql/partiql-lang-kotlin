@@ -202,9 +202,8 @@ public object Ast {
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPath(root: Expr, next: PathStep? = null): ExprPath {
-        return ExprPath(root, next)
+    public fun exprPath(root: Expr, steps: List<PathStep>): ExprPath {
+        return ExprPath(root, steps)
     }
 
     @JvmStatic
@@ -295,27 +294,23 @@ public object Ast {
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPathStepField(value: Identifier, next: PathStep? = null): PathStep.Field {
-        return PathStep.Field(value, next)
+    public fun exprPathStepField(value: Identifier): PathStep.Field {
+        return PathStep.Field(value)
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPathStepElement(element: Expr, next: PathStep? = null): PathStep.Element {
-        return PathStep.Element(element, next)
+    public fun exprPathStepElement(element: Expr): PathStep.Element {
+        return PathStep.Element(element)
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPathStepAllElements(next: PathStep? = null): PathStep.AllElements {
-        return PathStep.AllElements(next)
+    public fun exprPathStepAllElements(): PathStep.AllElements {
+        return PathStep.AllElements()
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPathStepAllFields(next: PathStep? = null): AllFields {
-        return AllFields(next)
+    public fun exprPathStepAllFields(): AllFields {
+        return AllFields()
     }
 
     // Graph

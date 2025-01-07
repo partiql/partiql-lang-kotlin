@@ -419,31 +419,27 @@ internal object RexConverter {
             val root = visitExprCoerce(node.root, context)
 
             // Attempt to create qualified identifier
-            val (newRoot, nextStep) = when (val op = root.op) {
+            val (newRoot, newSteps) = when (val op = root.op) {
                 is Rex.Op.Var.Unresolved -> {
                     // convert consecutive symbol path steps to the root identifier
                     var i = 0
                     val parts = mutableListOf<Identifier.Part>()
                     parts.addAll(op.identifier.getParts())
-                    var curStep = node.next
-                    while (curStep != null) {
-                        if (curStep !is PathStep.Field) {
+                    for (step in node.steps) {
+                        if (step !is PathStep.Field) {
                             break
                         }
-                        parts.add(AstToPlan.part(curStep.field))
+                        parts.add(AstToPlan.part(step.field))
                         i += 1
-                        curStep = curStep.next
                     }
                     val newRoot = rex(ANY, rexOpVarUnresolved(Identifier.of(parts), op.scope))
-                    val newSteps = curStep
+                    val newSteps = node.steps.subList(i, node.steps.size)
                     newRoot to newSteps
                 }
-                else -> {
-                    root to node.next
-                }
+                else -> root to node.steps
             }
 
-            if (nextStep == null) {
+            if (newSteps.isEmpty()) {
                 return newRoot
             }
 
@@ -451,35 +447,33 @@ internal object RexConverter {
 
             var varRefIndex = 0 // tracking var ref index
 
-            var curStep = nextStep
-            var curPathNavi = newRoot
-            while (curStep != null) {
-                val path = when (curStep) {
+            val pathNavi = newSteps.fold(newRoot) { current, step ->
+                val path = when (step) {
                     is PathStep.Element -> {
-                        val key = visitExprCoerce(curStep.element, context)
-                        val op = when (val astKey = curStep.element) {
+                        val key = visitExprCoerce(step.element, context)
+                        val op = when (val astKey = step.element) {
                             is ExprLit -> when (astKey.lit.code()) {
-                                Literal.STRING -> rexOpPathKey(curPathNavi, key)
-                                else -> rexOpPathIndex(curPathNavi, key)
+                                Literal.STRING -> rexOpPathKey(current, key)
+                                else -> rexOpPathIndex(current, key)
                             }
                             is ExprCast -> when (astKey.asType.code() == DataType.STRING) {
-                                true -> rexOpPathKey(curPathNavi, key)
-                                false -> rexOpPathIndex(curPathNavi, key)
+                                true -> rexOpPathKey(current, key)
+                                false -> rexOpPathIndex(current, key)
                             }
-                            else -> rexOpPathIndex(curPathNavi, key)
+
+                            else -> rexOpPathIndex(current, key)
                         }
                         op
                     }
-
                     is PathStep.Field -> {
-                        when (curStep.field.isDelimited) {
+                        when (step.field.isDelimited) {
                             true -> {
                                 // case-sensitive path step becomes a key lookup
-                                rexOpPathKey(curPathNavi, rexString(curStep.field.symbol))
+                                rexOpPathKey(current, rexString(step.field.symbol))
                             }
                             false -> {
                                 // case-insensitive path step becomes a symbol lookup
-                                rexOpPathSymbol(curPathNavi, curStep.field.symbol)
+                                rexOpPathSymbol(current, step.field.symbol)
                             }
                         }
                     }
@@ -515,7 +509,7 @@ internal object RexConverter {
                         val op = rexOpVarLocal(1, varRefIndex + 1)
                         varRefIndex += 2
                         val index = fromList.size
-                        fromList.add(relFromUnpivot(curPathNavi, index))
+                        fromList.add(relFromUnpivot(current, index))
                         op
                     }
                     is PathStep.AllElements -> {
@@ -523,15 +517,15 @@ internal object RexConverter {
                         val op = rexOpVarLocal(1, varRefIndex)
                         varRefIndex += 1
                         val index = fromList.size
-                        fromList.add(relFromDefault(curPathNavi, index))
+                        fromList.add(relFromDefault(current, index))
                         op
                     }
-                    else -> error("Unexpected PathStep type: $curStep")
+                    else -> error("Unexpected PathStep type: $step")
                 }
-                curStep = curStep.next
-                curPathNavi = rex(ANY, path)
+                rex(ANY, path)
             }
-            if (fromList.size == 0) return curPathNavi
+
+            if (fromList.size == 0) return pathNavi
             val fromNode = fromList.reduce { acc, scan ->
                 val schema = acc.type.schema + scan.type.schema
                 val props = emptySet<Rel.Prop>()
@@ -543,20 +537,11 @@ internal object RexConverter {
             // always going to be the last binding
             val selectRef = fromNode.type.schema.size - 1
 
-            val constructor = when (val op = curPathNavi.op) {
-                is Rex.Op.Path.Index -> rex(
-                    curPathNavi.type,
-                    rexOpPathIndex(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key)
-                )
-                is Rex.Op.Path.Key -> rex(
-                    curPathNavi.type,
-                    rexOpPathKey(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key)
-                )
-                is Rex.Op.Path.Symbol -> rex(
-                    curPathNavi.type,
-                    rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key)
-                )
-                is Rex.Op.Var.Local -> rex(curPathNavi.type, rexOpVarLocal(0, selectRef))
+            val constructor = when (val op = pathNavi.op) {
+                is Rex.Op.Path.Index -> rex(pathNavi.type, rexOpPathIndex(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Path.Key -> rex(pathNavi.type, rexOpPathKey(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Path.Symbol -> rex(pathNavi.type, rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Var.Local -> rex(pathNavi.type, rexOpVarLocal(0, selectRef))
                 else -> throw IllegalStateException()
             }
             val op = rexOpSelect(constructor, fromNode)
