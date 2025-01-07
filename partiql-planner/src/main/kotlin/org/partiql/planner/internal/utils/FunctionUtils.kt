@@ -63,12 +63,12 @@ internal object FunctionUtils {
     val OP_IS_BIT_VARYING: String = hide("is_bit_varying")
     val OP_IS_NUMERIC: String = hide("is_numeric")
     val OP_IS_INT: String = hide("is_int")
-    val OP_IS_INT8: String = SYSTEM_PREFIX_INTERNAL + "is_int8"
-    val OP_IS_INT16: String = SYSTEM_PREFIX_INTERNAL + "is_int16"
-    val OP_IS_INT32: String = SYSTEM_PREFIX_INTERNAL + "is_int32"
-    val OP_IS_INT64: String = SYSTEM_PREFIX_INTERNAL + "is_int64"
-    val OP_IS_FLOAT32: String = SYSTEM_PREFIX_INTERNAL + "is_float32"
-    val OP_IS_FLOAT64: String = SYSTEM_PREFIX_INTERNAL + "is_float64"
+    val OP_IS_INT8: String = hide("is_int8")
+    val OP_IS_INT16: String = hide("is_int16")
+    val OP_IS_INT32: String = hide("is_int32")
+    val OP_IS_INT64: String = hide("is_int64")
+    val OP_IS_FLOAT32: String = hide("is_float32")
+    val OP_IS_FLOAT64: String = hide("is_float64")
     val OP_IS_REAL: String = hide("is_real")
     val OP_IS_DECIMAL: String = hide("is_decimal")
     val OP_IS_DATE: String = hide("is_date")
@@ -113,7 +113,6 @@ internal object FunctionUtils {
         return when (op) {
             "-" -> OP_NEG
             "+" -> OP_POS
-            "NOT" -> OP_NOT
             else -> null
         }
     }
