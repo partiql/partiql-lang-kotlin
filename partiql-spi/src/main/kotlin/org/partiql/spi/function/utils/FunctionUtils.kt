@@ -21,7 +21,11 @@ internal object FunctionUtils {
     private const val SYSTEM_PREFIX_INTERNAL: String = "\uFDEF"
 
     /**
-     * Returns the [name] prefixed by [SYSTEM_PREFIX_INTERNAL].
+     * Returns the [name] prefixed by [SYSTEM_PREFIX_INTERNAL]. This makes it difficult for PartiQL query authors to
+     * accidentally invoke the "hidden" built-in functions such as: +, -, trim_leading, and more.
+     * Note: Some built-in functions are intentionally not hidden (and should not use this method). These are
+     * defined by SQL:1999, such as ABS, LOWER, CHAR_LENGTH, the aggregation functions, and more scalar functions. For
+     * the full list of scalar functions, see Section 20.70 of SQL:1999.
      */
     fun hide(name: String): String {
         return "$SYSTEM_PREFIX_INTERNAL$name"
