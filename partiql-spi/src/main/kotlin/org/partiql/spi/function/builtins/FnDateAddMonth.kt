@@ -5,12 +5,12 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_DATE_ADD_MONTH__INT32_DATE__DATE = Function.static(
+internal val Fn_DATE_ADD_MONTH__INT32_DATE__DATE = FunctionUtils.hidden(
 
     name = "date_add_month",
     returns = PType.date(),
@@ -27,7 +27,7 @@ internal val Fn_DATE_ADD_MONTH__INT32_DATE__DATE = Function.static(
     Datum.date(datetimeValue.plusMonths(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MONTH__INT64_DATE__DATE = Function.static(
+internal val Fn_DATE_ADD_MONTH__INT64_DATE__DATE = FunctionUtils.hidden(
 
     name = "date_add_month",
     returns = PType.date(),
@@ -44,7 +44,7 @@ internal val Fn_DATE_ADD_MONTH__INT64_DATE__DATE = Function.static(
     Datum.date(datetimeValue.plusMonths(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MONTH__INT_DATE__DATE = Function.static(
+internal val Fn_DATE_ADD_MONTH__INT_DATE__DATE = FunctionUtils.hidden(
 
     name = "date_add_month",
     returns = PType.date(),
@@ -65,7 +65,7 @@ internal val Fn_DATE_ADD_MONTH__INT_DATE__DATE = Function.static(
     Datum.date(datetimeValue.plusMonths(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP = Function.static(
+internal val Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
 
     name = "date_add_month",
     returns = PType.timestamp(6),
@@ -82,7 +82,7 @@ internal val Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP = Function.static(
     Datum.timestamp(datetimeValue.plusMonths(intervalValue), 6)
 }
 
-internal val Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP = Function.static(
+internal val Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
 
     name = "date_add_month",
     returns = PType.timestamp(6),
@@ -99,7 +99,7 @@ internal val Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP = Function.static(
     Datum.timestamp(datetimeValue.plusMonths(intervalValue), 6)
 }
 
-internal val Fn_DATE_ADD_MONTH__INT_TIMESTAMP__TIMESTAMP = Function.static(
+internal val Fn_DATE_ADD_MONTH__INT_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
 
     name = "date_add_month",
     returns = PType.timestamp(6),

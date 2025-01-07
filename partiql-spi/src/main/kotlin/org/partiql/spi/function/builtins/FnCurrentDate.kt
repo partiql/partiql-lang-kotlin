@@ -3,10 +3,10 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.types.PType
 
-internal val Fn_CURRENT_DATE____DATE = Function.static(
+internal val Fn_CURRENT_DATE____DATE = FunctionUtils.hidden(
 
     name = "current_date",
     returns = PType.date(),

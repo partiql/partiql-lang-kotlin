@@ -5,15 +5,16 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * Function (operator) for the `IS MISSING` special form.
+ * Function (operator) for the `IS MISSING` special form. Its name is hidden via [FunctionUtils.hide].
  */
 internal val Fn_IS_MISSING__ANY__BOOL = object : Function {
 
-    private var name = "is_missing"
+    private val name = FunctionUtils.hide("is_missing")
 
     private var parameters = arrayOf(Parameter("value", PType.dynamic()))
 

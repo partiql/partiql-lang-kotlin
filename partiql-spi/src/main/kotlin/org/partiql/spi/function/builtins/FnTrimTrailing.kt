@@ -3,13 +3,13 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.function.utils.StringUtils.codepointTrimTrailing
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_TRIM_TRAILING__STRING__STRING = Function.static(
+internal val Fn_TRIM_TRAILING__STRING__STRING = FunctionUtils.hidden(
 
     name = "trim_trailing",
     returns = PType.string(),
@@ -21,7 +21,7 @@ internal val Fn_TRIM_TRAILING__STRING__STRING = Function.static(
     Datum.string(result)
 }
 
-internal val Fn_TRIM_TRAILING__CLOB__CLOB = Function.static(
+internal val Fn_TRIM_TRAILING__CLOB__CLOB = FunctionUtils.hidden(
 
     name = "trim_trailing",
     returns = PType.clob(Int.MAX_VALUE),

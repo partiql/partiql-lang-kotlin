@@ -3,11 +3,11 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.types.PType
 
-internal val Fn_POS__INT8__INT8 = Function.static(
+internal val Fn_POS__INT8__INT8 = FunctionUtils.hidden(
 
     name = "pos",
     returns = PType.tinyint(),
@@ -17,7 +17,7 @@ internal val Fn_POS__INT8__INT8 = Function.static(
     args[0]
 }
 
-internal val Fn_POS__INT16__INT16 = Function.static(
+internal val Fn_POS__INT16__INT16 = FunctionUtils.hidden(
 
     name = "pos",
     returns = PType.smallint(),
@@ -27,7 +27,7 @@ internal val Fn_POS__INT16__INT16 = Function.static(
     args[0]
 }
 
-internal val Fn_POS__INT32__INT32 = Function.static(
+internal val Fn_POS__INT32__INT32 = FunctionUtils.hidden(
 
     name = "pos",
     returns = PType.integer(),
@@ -37,7 +37,7 @@ internal val Fn_POS__INT32__INT32 = Function.static(
     args[0]
 }
 
-internal val Fn_POS__INT64__INT64 = Function.static(
+internal val Fn_POS__INT64__INT64 = FunctionUtils.hidden(
 
     name = "pos",
     returns = PType.bigint(),
@@ -47,7 +47,7 @@ internal val Fn_POS__INT64__INT64 = Function.static(
     args[0]
 }
 
-internal val Fn_POS__INT__INT = Function.static(
+internal val Fn_POS__INT__INT = FunctionUtils.hidden(
 
     name = "pos",
     returns = DefaultNumeric.NUMERIC,
@@ -57,7 +57,7 @@ internal val Fn_POS__INT__INT = Function.static(
     args[0]
 }
 
-internal val Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
+internal val Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = FunctionUtils.hidden(
 
     name = "pos",
     returns = PType.decimal(38, 19), // TODO: Rewrite this using the new modeling
@@ -67,7 +67,7 @@ internal val Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
     args[0]
 }
 
-internal val Fn_POS__FLOAT32__FLOAT32 = Function.static(
+internal val Fn_POS__FLOAT32__FLOAT32 = FunctionUtils.hidden(
 
     name = "pos",
     returns = PType.real(),
@@ -77,7 +77,7 @@ internal val Fn_POS__FLOAT32__FLOAT32 = Function.static(
     args[0]
 }
 
-internal val Fn_POS__FLOAT64__FLOAT64 = Function.static(
+internal val Fn_POS__FLOAT64__FLOAT64 = FunctionUtils.hidden(
 
     name = "pos",
     returns = PType.doublePrecision(),

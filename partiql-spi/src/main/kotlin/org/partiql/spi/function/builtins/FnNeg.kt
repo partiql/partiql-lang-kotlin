@@ -3,13 +3,13 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 // TODO: Handle Overflow
-internal val Fn_NEG__INT8__INT8 = Function.static(
+internal val Fn_NEG__INT8__INT8 = FunctionUtils.hidden(
 
     name = "neg",
     returns = PType.tinyint(),
@@ -21,7 +21,7 @@ internal val Fn_NEG__INT8__INT8 = Function.static(
     Datum.tinyint(value.times(-1).toByte())
 }
 
-internal val Fn_NEG__INT16__INT16 = Function.static(
+internal val Fn_NEG__INT16__INT16 = FunctionUtils.hidden(
 
     name = "neg",
     returns = PType.smallint(),
@@ -32,7 +32,7 @@ internal val Fn_NEG__INT16__INT16 = Function.static(
     Datum.smallint(value.times(-1).toShort())
 }
 
-internal val Fn_NEG__INT32__INT32 = Function.static(
+internal val Fn_NEG__INT32__INT32 = FunctionUtils.hidden(
 
     name = "neg",
     returns = PType.integer(),
@@ -43,7 +43,7 @@ internal val Fn_NEG__INT32__INT32 = Function.static(
     Datum.integer(value.times(-1))
 }
 
-internal val Fn_NEG__INT64__INT64 = Function.static(
+internal val Fn_NEG__INT64__INT64 = FunctionUtils.hidden(
 
     name = "neg",
     returns = PType.bigint(),
@@ -54,7 +54,7 @@ internal val Fn_NEG__INT64__INT64 = Function.static(
     Datum.bigint(value.times(-1L))
 }
 
-internal val Fn_NEG__INT__INT = Function.static(
+internal val Fn_NEG__INT__INT = FunctionUtils.hidden(
 
     name = "neg",
     returns = DefaultNumeric.NUMERIC,
@@ -65,7 +65,7 @@ internal val Fn_NEG__INT__INT = Function.static(
     Datum.numeric(value.negate())
 }
 
-internal val Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
+internal val Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = FunctionUtils.hidden(
 
     name = "neg",
     returns = PType.decimal(38, 19), // TODO: Rewrite using new function modeling.
@@ -76,7 +76,7 @@ internal val Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
     Datum.decimal(value.negate())
 }
 
-internal val Fn_NEG__FLOAT32__FLOAT32 = Function.static(
+internal val Fn_NEG__FLOAT32__FLOAT32 = FunctionUtils.hidden(
 
     name = "neg",
     returns = PType.real(),
@@ -87,7 +87,7 @@ internal val Fn_NEG__FLOAT32__FLOAT32 = Function.static(
     Datum.real(value.times(-1))
 }
 
-internal val Fn_NEG__FLOAT64__FLOAT64 = Function.static(
+internal val Fn_NEG__FLOAT64__FLOAT64 = FunctionUtils.hidden(
 
     name = "neg",
     returns = PType.doublePrecision(),
