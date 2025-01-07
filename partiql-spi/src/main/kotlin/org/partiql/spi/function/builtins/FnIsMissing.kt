@@ -10,11 +10,11 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * Function (operator) for the `IS MISSING` special form. Its name is obfuscated via [FunctionUtils.SYSTEM_PREFIX_INTERNAL].
+ * Function (operator) for the `IS MISSING` special form. Its name is hidden via [FunctionUtils.hide].
  */
 internal val Fn_IS_MISSING__ANY__BOOL = object : Function {
 
-    private val name = FunctionUtils.SYSTEM_PREFIX_INTERNAL + "is_missing"
+    private val name = FunctionUtils.hide("is_missing")
 
     private var parameters = arrayOf(Parameter("value", PType.dynamic()))
 

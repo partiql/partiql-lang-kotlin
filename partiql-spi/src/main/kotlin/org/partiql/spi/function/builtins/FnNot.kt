@@ -10,11 +10,11 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * This is the boolean NOT predicate. Its name is obfuscated via the use of [FunctionUtils.SYSTEM_PREFIX_INTERNAL].
+ * This is the boolean NOT predicate. Its name is hidden via the use of [FunctionUtils.hide].
  */
 internal val Fn_NOT__BOOL__BOOL = object : Function {
 
-    private val name = FunctionUtils.SYSTEM_PREFIX_INTERNAL + "not"
+    private val name = FunctionUtils.hide("not")
 
     private var parameters = arrayOf(Parameter("value", PType.dynamic()))
 

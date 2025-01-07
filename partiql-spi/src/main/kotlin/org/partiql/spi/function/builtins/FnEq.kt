@@ -26,7 +26,7 @@ import org.partiql.types.PType
 internal object FnEq : Function {
 
     // Memoize shared variables
-    private const val NAME = FunctionUtils.SYSTEM_PREFIX_INTERNAL + "eq"
+    private val NAME = FunctionUtils.hide("eq")
     private val comparator = Datum.comparator()
     private val boolType = PType.bool()
     private val nullValue = Datum.nullValue(boolType)

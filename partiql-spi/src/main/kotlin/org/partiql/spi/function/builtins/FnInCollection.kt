@@ -11,7 +11,7 @@ import org.partiql.types.PType
 
 internal object FnInCollection : Function {
 
-    private const val NAME = FunctionUtils.SYSTEM_PREFIX_INTERNAL + "in_collection"
+    private val NAME = FunctionUtils.hide("in_collection")
 
     override fun getName(): String {
         return NAME

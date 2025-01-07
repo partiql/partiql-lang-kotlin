@@ -18,10 +18,17 @@ internal object FunctionUtils {
      * - http://www.unicode.org/versions/Unicode5.2.0/ch16.pdf#G19635
      * - http://www.unicode.org/versions/corrigendum9.html
      */
-    const val SYSTEM_PREFIX_INTERNAL: String = "\uFDEF"
+    private const val SYSTEM_PREFIX_INTERNAL: String = "\uFDEF"
 
     /**
-     * Returns an implementation of a [Function] that has the [name] obfuscated via the [SYSTEM_PREFIX_INTERNAL].
+     * Returns the [name] prefixed by [SYSTEM_PREFIX_INTERNAL].
+     */
+    fun hide(name: String): String {
+        return "$SYSTEM_PREFIX_INTERNAL$name"
+    }
+
+    /**
+     * Returns an implementation of a [Function] that has the [name] hidden via the [SYSTEM_PREFIX_INTERNAL].
      */
     fun hidden(
         name: String,
@@ -31,7 +38,7 @@ internal object FunctionUtils {
         isMissingCall: Boolean = true,
         invoke: (Array<Datum>) -> Datum,
     ): Function {
-        val hiddenName = "$SYSTEM_PREFIX_INTERNAL$name"
+        val hiddenName = hide(name)
         return object : Function {
 
             override fun getName(): String {

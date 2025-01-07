@@ -24,7 +24,7 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
     private var accumulator: () -> Accumulator,
 ) : Function {
 
-    private val name: String = FunctionUtils.SYSTEM_PREFIX_INTERNAL + name
+    private val name: String = FunctionUtils.hide(name)
     private var parameters = arrayOf(Parameter("value", PType.bag()))
     private var returns = PType.dynamic()
 

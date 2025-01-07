@@ -33,7 +33,10 @@ internal val Fn_EXISTS__LIST__BOOL = Function.static(
     Datum.bool(exists)
 }
 
-// TODO: Should this exist?
+// TODO: Should this exist? EXISTS is meant to check that a subquery has at least one element in the resulting collection.
+//  The `<exists predicate>` in SQL:1999 requires that the RHS be a syntactic `<table subquery>`,
+//  which is always a BAG. Similarly, Section 8.9 references the cardinality of the RHS, which is an attribute of
+//  collections. The term "degree" would be more characteristic of tuples.
 internal val Fn_EXISTS__STRUCT__BOOL = Function.static(
 
     name = "exists",

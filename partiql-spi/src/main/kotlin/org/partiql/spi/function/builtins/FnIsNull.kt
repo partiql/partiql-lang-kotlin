@@ -10,11 +10,11 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * Function (operator) for the `IS NULL` special form. Its name is obfuscated via [FunctionUtils.SYSTEM_PREFIX_INTERNAL].
+ * Function (operator) for the `IS NULL` special form. Its name is hidden via [FunctionUtils.hide].
  */
 internal val Fn_IS_NULL__ANY__BOOL = object : Function {
 
-    private val name = FunctionUtils.SYSTEM_PREFIX_INTERNAL + "is_null"
+    private val name = FunctionUtils.hide("is_null")
 
     private var parameters = arrayOf(Parameter("value", PType.dynamic()))
 

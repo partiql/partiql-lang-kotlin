@@ -9,8 +9,8 @@ import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
 /**
- * This represents an operator backed by a function provider. Note that the name of the operator is obfuscated
- * using [FunctionUtils.SYSTEM_PREFIX_INTERNAL].
+ * This represents an operator backed by a function provider. Note that the name of the operator is hidden
+ * using [FunctionUtils.hide].
  *
  * This carries along with it a static table containing a mapping between the input types and the implementation.
  *
@@ -22,7 +22,7 @@ internal abstract class DiadicOperator(
     private val rhs: Parameter
 ) : Function {
 
-    private val name = FunctionUtils.SYSTEM_PREFIX_INTERNAL + name
+    private val name = FunctionUtils.hide(name)
 
     companion object {
         private val DEC_TINY_INT = PType.decimal(3, 0)

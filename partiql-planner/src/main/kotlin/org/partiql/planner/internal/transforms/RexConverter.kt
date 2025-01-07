@@ -285,12 +285,7 @@ internal object RexConverter {
             val arg = visitExprCoerce(rhs, context)
             val args = listOf(arg)
             // Fn
-            val name = when (symbol) {
-                // TODO move hard-coded operator resolution into SPI
-                "+" -> FunctionUtils.OP_POS
-                "-" -> FunctionUtils.OP_NEG
-                else -> error("unsupported unary op $symbol")
-            }
+            val name = FunctionUtils.getUnaryOp(symbol) ?: error("unsupported unary op $symbol")
             val id = Identifier.delimited(name)
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
@@ -338,22 +333,7 @@ internal object RexConverter {
                     rex(type, op)
                 }
                 else -> {
-                    val name = when (symbol) {
-                        // TODO eventually move hard-coded operator resolution into SPI
-                        "<" -> FunctionUtils.OP_LT
-                        ">" -> FunctionUtils.OP_GT
-                        "<=" -> FunctionUtils.OP_LTE
-                        ">=" -> FunctionUtils.OP_GTE
-                        "=" -> FunctionUtils.OP_EQ
-                        "||" -> FunctionUtils.OP_CONCAT
-                        "+" -> FunctionUtils.OP_PLUS
-                        "-" -> FunctionUtils.OP_MINUS
-                        "*" -> FunctionUtils.OP_TIMES
-                        "/" -> FunctionUtils.OP_DIVIDE
-                        "%" -> FunctionUtils.OP_MODULO
-                        "&" -> FunctionUtils.OP_BITWISE_AND
-                        else -> error("unsupported binary op $symbol")
-                    }
+                    val name = FunctionUtils.getBinaryOp(symbol) ?: error("unsupported binary op $symbol")
                     val id = Identifier.delimited(name)
                     val op = rexOpCallUnresolved(id, args)
                     rex(type, op)
@@ -691,7 +671,7 @@ internal object RexConverter {
                 null -> "_all"
                 else -> error("Unexpected SetQuantifier type: $setQuantifier")
             }
-            val newId = Identifier.regular(FunctionUtils.hidden(id.getIdentifier().getText() + postfix))
+            val newId = Identifier.regular(FunctionUtils.hide(id.getIdentifier().getText() + postfix))
             val op = Rex.Op.Call.Unresolved(newId, listOf(args[0]))
             return Rex(ANY, op)
         }
@@ -1192,7 +1172,7 @@ internal object RexConverter {
         override fun visitExprSessionAttribute(node: ExprSessionAttribute, ctx: Env): Rex {
             val type = ANY
             val fn = node.sessionAttribute.name().lowercase()
-            val call = call(FunctionUtils.hidden(fn))
+            val call = call(FunctionUtils.hide(fn))
             return rex(type, call)
         }
 
