@@ -28,6 +28,103 @@ So how does PartiQL read values from a stream into Datums, and how does it handl
 encoding may include a data type or it may not. Also, the reader itself may expect a type (or not). Consider that a
 PartiQL value carries a type with it along with the value itself.
 
+## Type Syntax
+
+PartiQL values can be annotated with their exact types; this section defines the type annotation syntax.
+
+```
+type_t ::= bool_t
+         | tinyint_t
+         | smallint_t
+         | int_t
+         | bigint_t
+         | numeric_t
+         | decimal_t
+         | float_t
+         | real_t
+         | double_t
+         | char_t
+         | varchar_t
+         | string_t
+         | blob_t
+         | clob_t
+         | date_t
+         | time_t
+         | timez_t
+         | timestamp_t 
+         | timestampz_t
+         | array_t
+         | bag_t
+         | struct_t
+         | variant_t
+
+bool_t ::= 'bool'
+
+tinyint_t ::= 'tinyint'
+
+smallint_t ::= 'smallint'
+
+int_t ::= 'int'
+
+bigint_t ::= 'bigint'
+
+numeric_t ::= 'numeric' '(' uint ',' uint ')'
+
+decimal_t ::= 'decimal' '(' uint ',' uint ')'
+
+float_t ::= 'float' '(' uint ')'
+
+real_t ::= 'real'
+
+double_t ::= 'double'
+
+char_t ::= 'char' '(' uint ')'
+
+varchar_t ::= 'varchar' '(' uint ')'
+
+string_t ::= 'string'
+
+blob_t ::= 'blob' '(' uint ')'
+
+clob_t ::= 'clob' '(' uint ')'
+
+date_t ::= 'date'
+
+time_t ::= 'time' '(' uint ')'
+
+timez_t ::= 'timez' '(' uint ')'
+
+timestamp_t ::= 'timestamp' '(' uint ')'
+
+timestampz_t ::= 'timestampz' '(' uint ')'
+
+array_t
+    ::= 'array'
+      | 'array' '<' type_t '>'
+      | 'array' '<' type_t '>' '(' uint ')'
+      
+bag_t
+    ::= 'bag'
+      | 'bag' '<' type_t '>'
+      | 'bag' '<' type_t '>' '(' uint ')'
+
+struct_t
+    ::= 'struct'
+      | 'struct' '<' struct_t_fields '>'
+      
+struct_t_fields ::= struct_t_field (',' struct_t_field )
+
+struct_t_field ::= name ':' type_t
+ 
+variant_t ::= 'variant' '(' name ')'
+
+uint = [0-9]+
+
+name = [A-Za-z]
+```
+
+> This does NOT include things like union types, map types, and the row type.
+
 ## Writing Data
 
 ### PSink

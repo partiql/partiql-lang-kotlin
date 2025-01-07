@@ -150,7 +150,7 @@ public interface PSink {
     /**
      * Step into container, given as PType code.
      */
-    void stepIn(@NotNull int container);
+    void stepIn(int container);
 
     /**
      * Step out of container type.
