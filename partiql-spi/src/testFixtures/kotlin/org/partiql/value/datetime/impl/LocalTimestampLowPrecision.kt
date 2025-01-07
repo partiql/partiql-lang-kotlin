@@ -32,7 +32,7 @@ import kotlin.math.max
 internal class LocalTimestampLowPrecision private constructor(
     private val localDateTime: LocalDateTime,
     val date: SqlDate,
-    val time: LocalTimeLowPrecision
+    val time: LocalTimeLowPrecision,
 ) : TimestampWithoutTimeZone() {
     companion object {
         fun forDateTime(date: SqlDate, time: LocalTimeLowPrecision): LocalTimestampLowPrecision {
@@ -42,13 +42,14 @@ internal class LocalTimestampLowPrecision private constructor(
             )
             return LocalTimestampLowPrecision(localDateTime, date, time)
         }
+
         fun of(
             year: Int,
             month: Int,
             day: Int,
             hour: Int,
             minute: Int,
-            decimalSecond: BigDecimal
+            decimalSecond: BigDecimal,
         ): LocalTimestampLowPrecision {
             val date = SqlDate.of(year, month, day)
             val time = LocalTimeLowPrecision.of(hour, minute, decimalSecond)
@@ -99,8 +100,10 @@ internal class LocalTimestampLowPrecision private constructor(
             val (wholeSecond, nano) = Utils.getSecondAndNanoFromDecimalSecond(seconds)
             val newTime = localDateTime.plusSeconds(wholeSecond).plusNanos(nano)
             // the real precision of this operation, should be max(original_value.decimalSecond.precision, seconds.precision)
-            val newDecimalSecond = Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
-            val roundedDecimalSecond = newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
+            val newDecimalSecond =
+                Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
+            val roundedDecimalSecond =
+                newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
             of(newTime.year, newTime.monthValue, newTime.dayOfMonth, newTime.hour, newTime.minute, roundedDecimalSecond)
         }
 

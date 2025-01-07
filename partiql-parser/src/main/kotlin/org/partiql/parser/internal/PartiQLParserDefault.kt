@@ -1949,7 +1949,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
             val precision = ctx.LITERAL_INTEGER()?.let {
                 val p = it.text.toBigInteger().toInt()
-                if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds")
+                if (p < 0 || 9 < p) throw error(it.symbol, "Precision out of bounds [0,9]")
                 p
             }
             val type = when (ctx.ZONE()) {

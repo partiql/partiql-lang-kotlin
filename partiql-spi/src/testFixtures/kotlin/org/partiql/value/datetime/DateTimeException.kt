@@ -19,5 +19,5 @@ package org.partiql.value.datetime
  */
 public class DateTimeException(
     public override val message: String? = null,
-    public override val cause: Throwable? = null
+    public override val cause: Throwable? = null,
 ) : RuntimeException()

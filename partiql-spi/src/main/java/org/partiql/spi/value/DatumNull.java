@@ -2,12 +2,14 @@ package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
-import org.partiql.value.datetime.Date;
-import org.partiql.value.datetime.Time;
-import org.partiql.value.datetime.Timestamp;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.util.Iterator;
 
 /**
@@ -112,16 +114,6 @@ class DatumNull implements Datum {
         }
     }
 
-    @NotNull
-    @Override
-    public Date getDate() {
-        if (_type.code() == PType.DATE) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
     @Override
     public double getDouble() {
         if (_type.code() == PType.DOUBLE) {
@@ -172,26 +164,62 @@ class DatumNull implements Datum {
 
     @NotNull
     @Override
-    public Time getTime() {
-        if (_type.code() == PType.TIMEZ || _type.code() == PType.TIME) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
+    public LocalDate getLocalDate() {
+        switch (_type.code()) {
+            case PType.DATE:
+            case PType.TIMESTAMP:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
         }
     }
 
     @NotNull
     @Override
-    public Timestamp getTimestamp() {
-        if (_type.code() == PType.TIMESTAMPZ || _type.code() == PType.TIMESTAMP) {
+    public LocalTime getLocalTime() {
+        switch (_type.code()) {
+            case PType.TIME:
+            case PType.TIMEZ:
+            case PType.TIMESTAMP:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
+    public OffsetTime getOffsetTime() {
+        switch (_type.code()) {
+            case PType.TIMEZ:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
+    public LocalDateTime getLocalDateTime() {
+        switch (_type.code()) {
+            case PType.TIMESTAMP:
+            case PType.TIMESTAMPZ:
+                throw new NullPointerException();
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    @NotNull
+    @Override
+    public OffsetDateTime getOffsetDateTime() {
+        if (_type.code() == PType.TIMESTAMPZ) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
         }
-    }
-
-    @Override
-    public long getInterval() {
-        throw new UnsupportedOperationException();
     }
 }

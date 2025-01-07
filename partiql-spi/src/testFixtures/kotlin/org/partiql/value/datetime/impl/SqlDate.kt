@@ -20,10 +20,9 @@ import org.partiql.value.datetime.DateTimeValue.timestamp
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.Timestamp
 import java.time.LocalDate
-import kotlin.jvm.Throws
 
 internal data class SqlDate private constructor(
-    val localDate: LocalDate
+    val localDate: LocalDate,
 ) : DateImpl() {
     companion object {
         /**
@@ -56,11 +55,13 @@ internal data class SqlDate private constructor(
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
+
     override fun plusMonths(months: Long): SqlDate =
         this.localDate.plusMonths(months)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
+
     override fun plusYears(years: Long): SqlDate =
         this.localDate.plusYears(years)
             .let { newDate ->

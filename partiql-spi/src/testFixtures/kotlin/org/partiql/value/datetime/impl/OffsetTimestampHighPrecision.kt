@@ -68,7 +68,7 @@ internal class OffsetTimestampHighPrecision private constructor(
             hour: Int,
             minute: Int,
             second: BigDecimal,
-            timeZone: TimeZone
+            timeZone: TimeZone,
         ): OffsetTimestampHighPrecision {
             val date = SqlDate.of(year, month, day)
             val time = OffsetTimeHighPrecision.of(hour, minute, second, timeZone)
@@ -220,9 +220,10 @@ internal class OffsetTimestampHighPrecision private constructor(
 
         return BigDecimal.valueOf(adjustForTimeZoneInSecond).plus(this.time.elapsedSecond)
     }
+
     internal fun copy(
         _inputIonTimestamp: com.amazon.ion.Timestamp? = null,
-        _epochSecond: BigDecimal? = null
+        _epochSecond: BigDecimal? = null,
     ) =
         OffsetTimestampHighPrecision(
             this.date, this.time,

@@ -526,7 +526,7 @@ abstract class DatumComparator implements Comparator<Datum> {
 
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillDateComparator(DatumComparison[] comps) {
-        comps[DATE] = (self, date, comp) -> self.getDate().compareTo(date.getDate());
+        comps[DATE] = (self, date, comp) -> self.getLocalDate().compareTo(date.getLocalDate());
         return comps;
     }
 
@@ -538,8 +538,8 @@ abstract class DatumComparator implements Comparator<Datum> {
      */
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimeComparator(DatumComparison[] comps) {
-        comps[TIME] = (self, time, comp) -> self.getTime().compareTo(time.getTime());
-        comps[TIMEZ] = (self, time, comp) -> self.getTime().compareTo(time.getTime());
+        comps[TIME] = (self, time, comp) -> self.getLocalTime().compareTo(time.getLocalTime());
+        comps[TIMEZ] = (self, time, comp) -> self.getOffsetTime().compareTo(time.getOffsetTime());
         return comps;
     }
 
@@ -551,8 +551,8 @@ abstract class DatumComparator implements Comparator<Datum> {
      */
     @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTimestampComparator(DatumComparison[] comps) {
-        comps[TIMESTAMPZ] = (self, timestamp, comp) -> self.getTimestamp().compareTo(timestamp.getTimestamp());
-        comps[TIMESTAMP] = (self, timestamp, comp) -> self.getTimestamp().compareTo(timestamp.getTimestamp());
+        comps[TIMESTAMP] = (self, timestamp, comp) -> self.getLocalDateTime().compareTo(timestamp.getLocalDateTime());
+        comps[TIMESTAMPZ] = (self, timestamp, comp) -> self.getOffsetDateTime().compareTo(timestamp.getOffsetDateTime());
         return comps;
     }
 

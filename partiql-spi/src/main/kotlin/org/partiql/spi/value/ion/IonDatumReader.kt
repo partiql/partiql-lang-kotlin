@@ -10,7 +10,6 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.Encoding
 import org.partiql.spi.value.Field
-import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import java.io.IOException
 import java.io.InputStream
 
@@ -182,14 +181,14 @@ internal class IonDatumReader internal constructor(
     }
 
     private fun decimal0(): Datum {
-        val v = reader.decimalValue().toBigDecimal()
+        val v = reader.decimalValue().bigDecimalValue()
         val p = v.precision()
         val s = v.scale()
         return Datum.decimal(v, p, s)
     }
 
     private fun decimal1(precision: Int): Datum {
-        val v = reader.decimalValue().toBigDecimal()
+        val v = reader.decimalValue().bigDecimalValue()
         val p = v.precision()
         val s = v.scale()
         if (p != precision) {
@@ -199,7 +198,7 @@ internal class IonDatumReader internal constructor(
     }
 
     private fun decimal2(precision: Int, scale: Int): Datum {
-        val v = reader.decimalValue().toBigDecimal()
+        val v = reader.decimalValue().bigDecimalValue()
         val p = v.precision()
         val s = v.scale()
         if (p != precision) {

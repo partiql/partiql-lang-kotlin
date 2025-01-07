@@ -30,10 +30,12 @@ import org.partiql.types.PType.TIMEZ
 import org.partiql.types.PType.TINYINT
 import org.partiql.types.PType.VARCHAR
 import org.partiql.types.PType.VARIANT
-import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneOffset
 
 /**
  * Represent the cast operation. This casts an input [Datum] to the target [PType] (returning a potentially new [Datum]).
@@ -103,9 +105,9 @@ internal object CastTable {
         registerString()
         registerBag()
         registerList()
-        registerTimestamp()
         registerDate()
         registerTime()
+        registerTimestamp()
         registerVariant()
     }
 
@@ -442,57 +444,41 @@ internal object CastTable {
         register(ARRAY, ARRAY) { x, _ -> x }
     }
 
-    /**
-     * TODO: Flush this out.
-     */
-    private fun registerTimestamp() {
-        // WITHOUT TZ
-        register(TIMESTAMP, VARCHAR) { x, t -> Datum.varchar(x.timestamp.toString(), t.length) }
-        register(TIMESTAMP, CHAR) { x, t -> Datum.character(x.timestamp.toString(), t.length) }
-        register(TIMESTAMP, CLOB) { x, t -> Datum.clob(x.timestamp.toString().toByteArray(), t.length) }
-        register(TIMESTAMP, STRING) { x, _ -> Datum.string(x.timestamp.toString()) }
-        register(TIMESTAMP, TIMESTAMP) { x, _ -> Datum.timestamp(x.timestamp) }
-        register(TIMESTAMP, TIMESTAMPZ) { x, _ -> Datum.timestamp(x.timestamp) }
-        register(TIMESTAMP, TIME) { x, _ -> Datum.time(x.timestamp.toTime()) }
-        register(TIMESTAMP, DATE) { x, _ -> Datum.date(x.timestamp.toDate()) }
-        // WITH TZ
-        register(TIMESTAMPZ, VARCHAR) { x, t -> Datum.varchar(x.timestamp.toString(), t.length) }
-        register(TIMESTAMPZ, CHAR) { x, t -> Datum.character(x.timestamp.toString(), t.length) }
-        register(TIMESTAMPZ, CLOB) { x, t -> Datum.clob(x.timestamp.toString().toByteArray(), t.length) }
-        register(TIMESTAMPZ, STRING) { x, _ -> Datum.string(x.timestamp.toString()) }
-        register(TIMESTAMPZ, TIMESTAMP) { x, _ -> Datum.timestamp(x.timestamp) }
-        register(TIMESTAMPZ, TIMESTAMPZ) { x, _ -> Datum.timestamp(x.timestamp) }
-        register(TIMESTAMPZ, TIME) { x, _ -> Datum.time(x.timestamp.toTime()) }
-        register(TIMESTAMPZ, DATE) { x, _ -> Datum.date(x.timestamp.toDate()) }
-    }
     private fun registerDate() {
-        register(DATE, VARCHAR) { x, t -> Datum.varchar(x.date.toString(), t.length) }
-        register(DATE, CHAR) { x, t -> Datum.character(x.date.toString(), t.length) }
-        register(DATE, CLOB) { x, t -> Datum.clob(x.date.toString().toByteArray(), t.length) }
-        register(DATE, STRING) { x, _ -> Datum.string(x.date.toString()) }
-        register(DATE, DATE) { x, _ -> Datum.date(x.date) }
-        register(DATE, TIMESTAMP) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(x.date, DateTimeValue.time(0, 0, 0))) }
-        register(DATE, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(x.date, DateTimeValue.time(0, 0, 0))) }
+        register(DATE, STRING) { x, _ -> Datum.string(x.localDate.toString()) }
+        register(DATE, DATE) { x, _ -> Datum.date(x.localDate) }
+        register(DATE, TIMESTAMP) { x, _ -> Datum.timestamp(x.localDate.atTime(LocalTime.MIN), 0) }
+        register(DATE, TIMESTAMPZ) { x, _ -> Datum.timestampz(x.localDate.atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC), 0) }
     }
 
     private fun registerTime() {
         // WITHOUT TZ
-        register(TIME, VARCHAR) { x, t -> Datum.varchar(x.time.toString(), t.length) }
-        register(TIME, CHAR) { x, t -> Datum.character(x.time.toString(), t.length) }
-        register(TIME, CLOB) { x, t -> Datum.clob(x.time.toString().toByteArray(), t.length) }
-        register(TIME, STRING) { x, _ -> Datum.string(x.time.toString()) }
-        register(TIME, TIME) { x, _ -> Datum.time(x.time) }
-        register(TIME, TIMESTAMP) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
-        register(TIME, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
-
+        register(TIME, STRING) { x, _ -> Datum.string(x.localTime.toString()) }
+        register(TIME, TIME) { x, t -> Datum.time(x.localTime, t.precision) }
+        register(TIME, TIMEZ) { x, t -> Datum.timez(x.localTime.atOffset(ZoneOffset.UTC), t.precision) }
+        register(TIME, TIMESTAMP) { x, t -> Datum.timestamp(x.localTime.atDate(LocalDate.now()), t.precision) }
+        register(TIME, TIMESTAMPZ) { x, t -> Datum.timestampz(x.localTime.atDate(LocalDate.now()).atOffset(ZoneOffset.UTC), t.precision) }
         // WITH TZ
-        register(TIMEZ, VARCHAR) { x, t -> Datum.varchar(x.time.toString(), t.length) }
-        register(TIMEZ, CHAR) { x, t -> Datum.character(x.time.toString(), t.length) }
-        register(TIMEZ, CLOB) { x, t -> Datum.clob(x.time.toString().toByteArray(), t.length) }
-        register(TIMEZ, STRING) { x, _ -> Datum.string(x.time.toString()) }
-        register(TIMEZ, TIME) { x, _ -> Datum.time(x.time) }
-        register(TIMEZ, TIMESTAMP) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
-        register(TIMEZ, TIMESTAMPZ) { x, _ -> Datum.timestamp(DateTimeValue.timestamp(DateTimeValue.date(1970, 1, 1), x.time)) }
+        register(TIMEZ, STRING) { x, _ -> Datum.string(x.offsetTime.toString()) }
+        register(TIMEZ, TIME) { x, t -> Datum.time(x.localTime, t.precision) }
+        register(TIMEZ, TIMEZ) { x, t -> Datum.timez(x.offsetTime, t.precision) }
+        register(TIMEZ, TIMESTAMP) { x, t -> Datum.timestamp(x.localTime.atDate(LocalDate.now()), t.precision) }
+        register(TIMEZ, TIMESTAMPZ) { x, t -> Datum.timestampz(x.offsetTime.atDate(LocalDate.now()), t.precision) }
+    }
+
+    private fun registerTimestamp() {
+        // WITHOUT TZ
+        register(TIMESTAMP, STRING) { x, _ -> Datum.string(x.localDateTime.toString()) }
+        register(TIMESTAMP, TIMESTAMP) { x, t -> Datum.timestamp(x.localDateTime, t.precision) }
+        register(TIMESTAMP, TIMESTAMPZ) { x, t -> Datum.timestampz(x.localDateTime.atOffset(ZoneOffset.UTC), t.precision) }
+        register(TIMESTAMP, TIME) { x, t -> Datum.time(x.localTime, t.precision) }
+        register(TIMESTAMP, DATE) { x, _ -> Datum.date(x.localDate) }
+        // WITH TZ
+        register(TIMESTAMPZ, STRING) { x, _ -> Datum.string(x.localDateTime.toString()) }
+        register(TIMESTAMPZ, TIMESTAMP) { x, t -> Datum.timestamp(x.localDateTime, t.precision) }
+        register(TIMESTAMPZ, TIMESTAMPZ) { x, t -> Datum.timestampz(x.offsetDateTime, t.precision) }
+        register(TIMESTAMPZ, TIME) { x, t -> Datum.time(x.localTime, t.precision) }
+        register(TIMESTAMPZ, DATE) { x, _ -> Datum.date(x.localDate) }
     }
 
     private fun registerVariant() {

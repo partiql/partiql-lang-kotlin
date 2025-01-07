@@ -96,8 +96,10 @@ internal class LocalTimeLowPrecision private constructor(
         } else {
             val (wholeSecond, nano) = Utils.getSecondAndNanoFromDecimalSecond(seconds)
             val newTime = localTime.plusSeconds(wholeSecond).plusNanos(nano)
-            val newDecimalSecond = Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
-            val roundedDecimalSecond = newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
+            val newDecimalSecond =
+                Utils.getDecimalSecondFromSecondAndNano(newTime.second.toLong(), newTime.nano.toLong())
+            val roundedDecimalSecond =
+                newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
             of(newTime.hour, newTime.minute, roundedDecimalSecond)
         }
 

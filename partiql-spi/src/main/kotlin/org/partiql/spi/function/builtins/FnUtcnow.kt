@@ -6,13 +6,14 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Function
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.datetime.TimestampWithTimeZone
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 internal val Fn_UTCNOW____TIMESTAMP = Function.static(
     name = "utcnow",
-    returns = PType.timestamp(6),
+    returns = PType.timestampz(6),
     parameters = arrayOf(),
 ) {
-    val now = TimestampWithTimeZone.nowZ()
-    Datum.timestamp(now)
+    val now = OffsetDateTime.now(ZoneOffset.UTC)
+    Datum.timestampz(now, 6)
 }

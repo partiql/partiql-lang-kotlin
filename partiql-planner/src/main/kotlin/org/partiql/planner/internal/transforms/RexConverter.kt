@@ -89,17 +89,14 @@ import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.planner.internal.utils.DateTimeUtils
+import org.partiql.planner.internal.util.DateTimeUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
-import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import org.partiql.ast.SetQuantifier as AstSetQuantifier
 
 /**
@@ -192,20 +189,28 @@ internal object RexConverter {
                     val typedString = this.stringValue()
                     when (type.code()) {
                         DataType.DATE -> {
-                            val value = LocalDate.parse(typedString, DateTimeFormatter.ISO_LOCAL_DATE)
-                            val date = DateTimeValue.date(value.year, value.monthValue, value.dayOfMonth)
+                            val date = DateTimeUtils.parseDate(typedString)
                             return Datum.date(date)
                         }
-                        DataType.TIME, DataType.TIME_WITH_TIME_ZONE -> {
-                            val time = DateTimeUtils.parseTimeLiteral(typedString)
+                        DataType.TIME -> {
+                            val time = DateTimeUtils.parseTime(typedString)
                             val precision = type.precision ?: 6
                             return Datum.time(time, precision)
                         }
-                        DataType.TIMESTAMP, DataType.TIMESTAMP_WITH_TIME_ZONE -> {
+                        DataType.TIME_WITH_TIME_ZONE -> {
+                            val time = DateTimeUtils.parseTimez(typedString)
+                            val precision = type.precision ?: 6
+                            return Datum.timez(time, precision)
+                        }
+                        DataType.TIMESTAMP -> {
                             val timestamp = DateTimeUtils.parseTimestamp(typedString)
                             val precision = type.precision ?: 6
-                            val value = timestamp.toPrecision(precision)
-                            return Datum.timestamp(value)
+                            return Datum.timestamp(timestamp, precision)
+                        }
+                        DataType.TIMESTAMP_WITH_TIME_ZONE -> {
+                            val timestamp = DateTimeUtils.parseTimestampz(typedString)
+                            val precision = type.precision ?: 6
+                            return Datum.timestampz(timestamp, precision)
                         }
                         else -> error("Unsupported typed literal string: $this")
                     }
@@ -240,7 +245,11 @@ internal object RexConverter {
          * @param ctx
          * @return
          */
-        internal fun visitExprCoerce(node: Expr, ctx: Env, coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR): Rex {
+        internal fun visitExprCoerce(
+            node: Expr,
+            ctx: Env,
+            coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR,
+        ): Rex {
             val rex = node.accept(this, ctx)
             return when (isSqlSelect(node)) {
                 true -> {
@@ -291,7 +300,8 @@ internal object RexConverter {
             val args = when (symbol) {
                 "<", ">",
                 "<=", ">=",
-                "=", "<>", "!=" -> {
+                "=", "<>", "!=",
+                -> {
                     when {
                         // Example: [1, 2] < (SELECT a, b FROM t)
                         isLiteralArray(lhs) && isSqlSelect(rhs) -> {
@@ -553,9 +563,18 @@ internal object RexConverter {
             val selectRef = fromNode.type.schema.size - 1
 
             val constructor = when (val op = curPathNavi.op) {
-                is Rex.Op.Path.Index -> rex(curPathNavi.type, rexOpPathIndex(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
-                is Rex.Op.Path.Key -> rex(curPathNavi.type, rexOpPathKey(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
-                is Rex.Op.Path.Symbol -> rex(curPathNavi.type, rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Path.Index -> rex(
+                    curPathNavi.type,
+                    rexOpPathIndex(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key)
+                )
+                is Rex.Op.Path.Key -> rex(
+                    curPathNavi.type,
+                    rexOpPathKey(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key)
+                )
+                is Rex.Op.Path.Symbol -> rex(
+                    curPathNavi.type,
+                    rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key)
+                )
                 is Rex.Op.Var.Local -> rex(curPathNavi.type, rexOpVarLocal(0, selectRef))
                 else -> throw IllegalStateException()
             }
@@ -867,7 +886,12 @@ internal object RexConverter {
                 DataType.BIT_VARYING -> call("is_bitVarying", arg0) // TODO define in parser
                 // <numeric types> - <exact numeric types>
                 DataType.NUMERIC -> call("is_numeric", targetType.precision.toRex(), targetType.scale.toRex(), arg0)
-                DataType.DEC, DataType.DECIMAL -> call("is_decimal", targetType.precision.toRex(), targetType.scale.toRex(), arg0)
+                DataType.DEC, DataType.DECIMAL -> call(
+                    "is_decimal",
+                    targetType.precision.toRex(),
+                    targetType.scale.toRex(),
+                    arg0
+                )
                 DataType.BIGINT, DataType.INT8, DataType.INTEGER8 -> call("is_int64", arg0)
                 DataType.INT4, DataType.INTEGER4, DataType.INTEGER -> call("is_int32", arg0)
                 DataType.INT -> call("is_int", arg0)
@@ -1109,9 +1133,24 @@ internal object RexConverter {
                 // <datetime type>
                 DataType.DATE -> PType.date()
                 DataType.TIME -> assertGtEqZeroAndCreate(PType.TIME, "precision", type.precision ?: 0, PType::time)
-                DataType.TIME_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(PType.TIMEZ, "precision", type.precision ?: 0, PType::timez)
-                DataType.TIMESTAMP -> assertGtEqZeroAndCreate(PType.TIMESTAMP, "precision", type.precision ?: 6, PType::timestamp)
-                DataType.TIMESTAMP_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(PType.TIMESTAMPZ, "precision", type.precision ?: 6, PType::timestampz)
+                DataType.TIME_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(
+                    PType.TIMEZ,
+                    "precision",
+                    type.precision ?: 0,
+                    PType::timez
+                )
+                DataType.TIMESTAMP -> assertGtEqZeroAndCreate(
+                    PType.TIMESTAMP,
+                    "precision",
+                    type.precision ?: 6,
+                    PType::timestamp
+                )
+                DataType.TIMESTAMP_WITH_TIME_ZONE -> assertGtEqZeroAndCreate(
+                    PType.TIMESTAMPZ,
+                    "precision",
+                    type.precision ?: 6,
+                    PType::timestampz
+                )
                 // <interval type>
                 DataType.INTERVAL -> error("INTERVAL is not supported yet.")
                 // <container type>

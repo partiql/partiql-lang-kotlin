@@ -21,7 +21,7 @@ internal val Fn_DATE_ADD_YEAR__INT32_DATE__DATE = Function.static(
 
 ) { args ->
     val interval = args[0].int
-    val datetime = args[1].date
+    val datetime = args[1].localDate
     val datetimeValue = datetime
     val intervalValue = interval.toLong()
     Datum.date(datetimeValue.plusYears(intervalValue))
@@ -38,7 +38,7 @@ internal val Fn_DATE_ADD_YEAR__INT64_DATE__DATE = Function.static(
 
 ) { args ->
     val interval = args[0].long
-    val datetime = args[1].date
+    val datetime = args[1].localDate
     val datetimeValue = datetime
     val intervalValue = interval
     Datum.date(datetimeValue.plusYears(intervalValue))
@@ -55,7 +55,7 @@ internal val Fn_DATE_ADD_YEAR__INT_DATE__DATE = Function.static(
 
 ) { args ->
     val interval = args[0].bigInteger
-    val datetime = args[1].date
+    val datetime = args[1].localDate
     val datetimeValue = datetime
     val intervalValue = try {
         interval.toLong()
@@ -76,10 +76,10 @@ internal val Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP = Function.static(
 
 ) { args ->
     val interval = args[0].int
-    val datetime = args[1].timestamp
+    val datetime = args[1].localDateTime
     val datetimeValue = datetime
     val intervalValue = interval.toLong()
-    Datum.timestamp(datetimeValue.plusYears(intervalValue))
+    Datum.timestamp(datetimeValue.plusYears(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP = Function.static(
@@ -93,10 +93,10 @@ internal val Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP = Function.static(
 
 ) { args ->
     val interval = args[0].long
-    val datetime = args[1].timestamp
+    val datetime = args[1].localDateTime
     val datetimeValue = datetime
     val intervalValue = interval
-    Datum.timestamp(datetimeValue.plusYears(intervalValue))
+    Datum.timestamp(datetimeValue.plusYears(intervalValue), 6)
 }
 
 internal val Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP = Function.static(
@@ -110,12 +110,12 @@ internal val Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP = Function.static(
 
 ) { args ->
     val interval = args[0].bigInteger
-    val datetime = args[1].timestamp
+    val datetime = args[1].localDateTime
     val datetimeValue = datetime
     val intervalValue = try {
         interval.toLong()
     } catch (e: DataException) {
         throw TypeCheckException()
     }
-    Datum.timestamp(datetimeValue.plusYears(intervalValue))
+    Datum.timestamp(datetimeValue.plusYears(intervalValue), 6)
 }

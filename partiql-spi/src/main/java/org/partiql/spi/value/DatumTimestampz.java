@@ -9,20 +9,19 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.ZoneOffset;
 
 /**
- * Today we wrap a {@link LocalDateTime}, in the future we do a 7-byte array to avoid double references.
+ * Today we wrap an {@link OffsetDateTime}, in the future we do an 8-byte array to avoid double references.
  */
-final class DatumTimestamp implements Datum {
+final class DatumTimestampz implements Datum {
 
     @NotNull
     private final PType type;
 
     @NotNull
-    private final LocalDateTime value;
+    private final OffsetDateTime value;
 
-    DatumTimestamp(@NotNull LocalDateTime value, int precision) {
+    DatumTimestampz(@NotNull OffsetDateTime value, int precision) {
         this.type = PType.timestamp(precision);
         this.value = value;
     }
@@ -48,18 +47,18 @@ final class DatumTimestamp implements Datum {
     @NotNull
     @Override
     public OffsetTime getOffsetTime() {
-        return value.atOffset(ZoneOffset.UTC).toOffsetTime();
+        return value.toOffsetTime();
     }
 
     @NotNull
     @Override
     public LocalDateTime getLocalDateTime() {
-        return value;
+        return value.toLocalDateTime();
     }
 
     @NotNull
     @Override
     public OffsetDateTime getOffsetDateTime() {
-        return value.atOffset(ZoneOffset.UTC);
+        return value;
     }
 }
