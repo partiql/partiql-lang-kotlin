@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.expr.ExprVarRef;
 
@@ -10,17 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents a single exclude path in an exclude clause. Composed on one or more exclude steps.
+ *
+ * @see Exclude
+ * @see ExcludeStep
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class ExcludePath extends AstNode {
     @NotNull
-    @Getter
     private final ExprVarRef root;
 
     @NotNull
-    @Getter
     private final List<ExcludeStep> excludeSteps;
 
     public ExcludePath(@NotNull ExprVarRef root, @NotNull List<ExcludeStep> excludeSteps) {
@@ -39,6 +39,16 @@ public final class ExcludePath extends AstNode {
 
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-    return visitor.visitExcludePath(this, ctx);
-}
+        return visitor.visitExcludePath(this, ctx);
+    }
+
+    @NotNull
+    public ExprVarRef getRoot() {
+        return this.root;
+    }
+
+    @NotNull
+    public List<ExcludeStep> getExcludeSteps() {
+        return this.excludeSteps;
+    }
 }

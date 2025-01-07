@@ -1,6 +1,6 @@
 package org.partiql.ast;
 
 /**
- * TODO docs, equals, hashcode
+ * Abstract base class for the SELECT clause.
  */
 public abstract class Select extends AstNode {}

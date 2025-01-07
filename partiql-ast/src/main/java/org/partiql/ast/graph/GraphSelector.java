@@ -2,7 +2,6 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
@@ -11,11 +10,11 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Abstract base class for graph path selector. See <a href="https://arxiv.org/abs/2112.06217">Fig. 8</a>.
  */
 public abstract class GraphSelector extends AstNode {
     /**
-     * TODO docs, equals, hashcode
+     * ANY SHORTEST selector.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -35,7 +34,7 @@ public abstract class GraphSelector extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * ALL SHORTEST selector.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -55,7 +54,7 @@ public abstract class GraphSelector extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * ANY selector.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -75,12 +74,11 @@ public abstract class GraphSelector extends AstNode {
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * ANY k selector.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class AnyK extends GraphSelector {
-        @Getter
         private final long k;
 
         public AnyK(long k) {
@@ -97,15 +95,18 @@ public abstract class GraphSelector extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphSelectorAnyK(this, ctx);
         }
+
+        public long getK() {
+            return this.k;
+        }
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * SHORTEST k selector.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class ShortestK extends GraphSelector {
-        @Getter
         private final long k;
 
         public ShortestK(long k) {
@@ -122,15 +123,18 @@ public abstract class GraphSelector extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphSelectorShortestK(this, ctx);
         }
+
+        public long getK() {
+            return this.k;
+        }
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * SHORTEST k GROUP selector.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class ShortestKGroup extends GraphSelector {
-        @Getter
         private final long k;
 
         public ShortestKGroup(long k) {
@@ -146,6 +150,10 @@ public abstract class GraphSelector extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphSelectorShortestKGroup(this, ctx);
+        }
+
+        public long getK() {
+            return this.k;
         }
     }
 }

@@ -1,6 +1,6 @@
 package org.partiql.ast;
 
 /**
- * TODO docs, equals, hashcode
+ * Base class for clauses within a FROM source.
  */
 public abstract class FromTableRef extends AstNode {}

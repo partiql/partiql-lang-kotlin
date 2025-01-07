@@ -9,10 +9,22 @@ import org.partiql.ast.AstVisitor;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents the TRIM specification used by {@link ExprTrim}. E.g. {@code LEADING}.
+ */
 @EqualsAndHashCode(callSuper = false)
 public final class TrimSpec extends AstEnum {
+    /**
+     * TRIM specification applied to leading characters.
+     */
     public static final int LEADING = 0;
+    /**
+     * TRIM specification applied to trailing characters.
+     */
     public static final int TRAILING = 1;
+    /**
+     * TRIM specification applied to both leading and trailing characters.
+     */
     public static final int BOTH = 2;
 
     public static TrimSpec LEADING() {

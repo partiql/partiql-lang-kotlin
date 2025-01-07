@@ -2,7 +2,6 @@ package org.partiql.ast;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.expr.Expr;
@@ -11,17 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents PartiQL's SELECT VALUE clause.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class SelectValue extends Select {
     @NotNull
-    @Getter
     private final Expr constructor;
 
     @Nullable
-    @Getter
     private final SetQuantifier setq;
 
     public SelectValue(@NotNull Expr constructor, @Nullable SetQuantifier setq) {
@@ -40,5 +37,15 @@ public final class SelectValue extends Select {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitSelectValue(this, ctx);
+    }
+
+    @NotNull
+    public Expr getConstructor() {
+        return this.constructor;
+    }
+
+    @Nullable
+    public SetQuantifier getSetq() {
+        return this.setq;
     }
 }

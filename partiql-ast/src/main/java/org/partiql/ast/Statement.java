@@ -1,6 +1,6 @@
 package org.partiql.ast;
 
 /**
- * TODO docs, equals, hashcode
+ * Abstract base class for PartiQL statements.
  */
 public abstract class Statement extends AstNode {}

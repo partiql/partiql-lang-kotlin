@@ -2,7 +2,6 @@ package org.partiql.ast.ddl;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -14,30 +13,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents PartiQL's CREATE TABLE statement.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
 public final class CreateTable extends Statement {
 
     @NotNull
-    @Getter
     private final IdentifierChain name;
 
     @NotNull
-    @Getter
     private final List<ColumnDefinition> columns;
 
     @NotNull
-    @Getter
     private final List<TableConstraint> constraints;
 
     @Nullable
-    @Getter
     private final PartitionBy partitionBy;
 
     @NotNull
-    @Getter
     private final List<KeyValue> tableProperties;
 
     public CreateTable(
@@ -68,5 +62,30 @@ public final class CreateTable extends Statement {
     @Override
     public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
         return visitor.visitCreateTable(this, ctx);
+    }
+
+    @NotNull
+    public IdentifierChain getName() {
+        return this.name;
+    }
+
+    @NotNull
+    public List<ColumnDefinition> getColumns() {
+        return this.columns;
+    }
+
+    @NotNull
+    public List<TableConstraint> getConstraints() {
+        return this.constraints;
+    }
+
+    @Nullable
+    public PartitionBy getPartitionBy() {
+        return this.partitionBy;
+    }
+
+    @NotNull
+    public List<KeyValue> getTableProperties() {
+        return this.tableProperties;
     }
 }

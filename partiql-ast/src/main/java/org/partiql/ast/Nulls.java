@@ -7,11 +7,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Determines the order in which null and missing values are sorted.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class Nulls extends AstEnum {
+    /**
+     * Sort null and missing first.
+     */
     public static final int FIRST = 0;
+    /**
+     * Sort null and missing last.
+     */
     public static final int LAST = 1;
 
     public static Nulls FIRST() {

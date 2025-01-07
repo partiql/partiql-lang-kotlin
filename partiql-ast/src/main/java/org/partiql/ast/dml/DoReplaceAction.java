@@ -13,7 +13,7 @@ import java.util.List;
  * This represents the potential actions after the DO REPLACE clause. While there are more variants beyond EXCLUDED,
  * only EXCLUDED is currently implemented.
  * @see ConflictAction.DoReplace
- * @see OnConflict#action
+ * @see OnConflict#getAction()
  */
 public abstract class DoReplaceAction extends AstNode {
     // TODO: There are more variants than just EXCLUDED. See the Javadoc above.
@@ -25,9 +25,6 @@ public abstract class DoReplaceAction extends AstNode {
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class Excluded extends DoReplaceAction {
-        /**
-         * TODO
-         */
         public Excluded() {}
 
         @NotNull

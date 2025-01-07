@@ -2,7 +2,6 @@ package org.partiql.ast.dml;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -14,25 +13,24 @@ import java.util.List;
 
 /**
  * This is the mandatory action of the ON CONFLICT clause.
- * @see Insert#onConflict
- * @see OnConflict#action
+ *
+ * @see Insert#getOnConflict()
+ * @see OnConflict#getAction()
  */
 public abstract class ConflictAction extends AstNode {
 
     /**
      * This is the DO NOTHING variant of the conflict action.
+     *
      * @see ConflictAction
-     * @see OnConflict#action
-     * @see Insert#onConflict
+     * @see OnConflict#getAction()
+     * @see Insert#getOnConflict()
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoNothing extends ConflictAction {
-
-        /**
-         * TODO
-         */
-        public DoNothing() {}
+        public DoNothing() {
+        }
 
         @NotNull
         @Override
@@ -48,32 +46,20 @@ public abstract class ConflictAction extends AstNode {
 
     /**
      * This is the DO REPLACE variant of the conflict action.
+     *
      * @see ConflictAction
-     * @see OnConflict#action
-     * @see Insert#onConflict
+     * @see OnConflict#getAction()
+     * @see Insert#getOnConflict()
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoReplace extends ConflictAction {
-        /**
-         * TODO
-         */
         @NotNull
-        @Getter
         private final DoReplaceAction action;
 
-        /**
-         * TODO
-         */
         @Nullable
-        @Getter
         private final Expr condition;
 
-        /**
-         * TODO
-         * @param action TODO
-         * @param condition TODO
-         */
         public DoReplace(@NotNull DoReplaceAction action, @Nullable Expr condition) {
             this.action = action;
             this.condition = condition;
@@ -94,34 +80,38 @@ public abstract class ConflictAction extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitConflictActionDoReplace(this, ctx);
         }
+
+        @NotNull
+        public DoReplaceAction getAction() {
+            return this.action;
+        }
+
+        @Nullable
+        public Expr getCondition() {
+            return this.condition;
+        }
     }
 
     /**
      * This is the DO UPDATE variant of the conflict action.
+     *
      * @see ConflictAction
-     * @see OnConflict#action
-     * @see Insert#onConflict
+     * @see OnConflict#getAction()
+     * @see Insert#getOnConflict()
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static final class DoUpdate extends ConflictAction {
-        /**
-         * TODO
-         */
         @NotNull
-        @Getter
         private final DoUpdateAction action;
 
-        /**
-         * TODO
-         */
         @Nullable
-        @Getter
         private final Expr condition;
 
         /**
          * TODO
-         * @param action TODO
+         *
+         * @param action    TODO
          * @param condition TODO
          */
         public DoUpdate(@NotNull DoUpdateAction action, @Nullable Expr condition) {
@@ -143,6 +133,16 @@ public abstract class ConflictAction extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitConflictActionDoUpdate(this, ctx);
+        }
+
+        @NotNull
+        public DoUpdateAction getAction() {
+            return this.action;
+        }
+
+        @Nullable
+        public Expr getCondition() {
+            return this.condition;
         }
     }
 }

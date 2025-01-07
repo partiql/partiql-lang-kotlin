@@ -11,22 +11,46 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 /**
- * TODO docs
+ * A literal value, such as a number, string, or boolean.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class Literal extends AstEnum {
     // absent literals
+    /**
+     * Null literal.
+     */
     public static final int NULL = 0;
+    /**
+     * Missing literal.
+     */
     public static final int MISSING = 1;
     // boolean literal
+    /**
+     * Boolean literal such as {@code true} or {@code false}.
+     */
     public static final int BOOL = 2;
     // numeric literals
+    /**
+     * Approximate numeric literal such as {@code 1.0e1}.
+     */
     public static final int APPROX_NUM = 3;
+    /**
+     * Exact numeric literal such as {@code 1.2345}.
+     */
     public static final int EXACT_NUM = 4;
+    /**
+     * Integer numeric literal such as {@code 123}.
+     */
     public static final int INT_NUM = 5;
     // string literal
+    /**
+     * Single-quoted string literal such as {@code 'foo'}.
+     */
     public static final int STRING = 6;
     // typed string literal
+    /**
+     * Typed string literal such as {@code DATE '2025-01-01'}.
+     */
     public static final int TYPED_STRING = 7;
 
     // Literal fields
@@ -176,11 +200,11 @@ public final class Literal extends AstEnum {
         return new Literal(type, value);
     }
 
-    // Value extraction
     /**
-     * TODO docs
-     * Valid for just BOOL
+     * @return the boolean value of this literal.
+     * @throws UnsupportedOperationException if this literal does not have code {@link Literal#BOOL}.
      */
+    // Value extraction
     public boolean booleanValue() {
         if (code == BOOL) {
             requireNonNull(boolValue, "bool value");
@@ -189,9 +213,10 @@ public final class Literal extends AstEnum {
         throw new UnsupportedOperationException();
     }
 
+
     /**
-     * TODO docs
-     * Valid for just APPROX_NUM, EXACT_NUM, and INT_NUM.
+     * @return the number value of this literal.
+     * @throws UnsupportedOperationException if this literal does not have code {@link Literal#APPROX_NUM}, {@link Literal#EXACT_NUM}, or {@link Literal#INT_NUM}.
      */
     @NotNull
     public String numberValue() {
@@ -207,8 +232,8 @@ public final class Literal extends AstEnum {
     }
 
     /**
-     * TODO docs
-     * Valid for just EXACT_NUM and INT_NUM
+     * @return the {@link BigDecimal} value of this literal.
+     * @throws UnsupportedOperationException if this literal does not have code {@link Literal#EXACT_NUM} or {@link Literal#INT_NUM}.
      */
     @NotNull
     public BigDecimal bigDecimalValue() {
@@ -223,8 +248,8 @@ public final class Literal extends AstEnum {
     }
 
     /**
-     * TODO docs
-     * Valid for just STRING and TYPED_STRING
+     * @return the string value of this literal.
+     * @throws UnsupportedOperationException if this literal does not have code {@link Literal#STRING} or {@link Literal#TYPED_STRING}.
      */
     @NotNull
     public String stringValue() {
@@ -238,9 +263,10 @@ public final class Literal extends AstEnum {
         }
     }
 
+
     /**
-     * TODO docs
-     * Valid for just TYPED_STRING
+     * @return the associated data type for this literal.
+     * @throws UnsupportedOperationException if this literal does not have code {@link Literal#TYPED_STRING}.
      */
     @NotNull
     public DataType dataType() {

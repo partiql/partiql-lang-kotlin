@@ -1,7 +1,6 @@
 package org.partiql.ast.ddl;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -13,12 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Represents an attribute level constraint.
  */
 public abstract class AttributeConstraint extends AstNode {
 
     @Nullable
-    @Getter
     protected final IdentifierChain name;
 
     protected AttributeConstraint(@Nullable IdentifierChain name) {
@@ -33,14 +31,18 @@ public abstract class AttributeConstraint extends AstNode {
         return kids;
     }
 
+    @Nullable
+    public IdentifierChain getName() {
+        return this.name;
+    }
+
     // NULL & NOT NULL
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents the {@code NULL} and {@code NOT NULL} attribute level constraints.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Null extends AttributeConstraint {
-        @Getter
         private final boolean nullable;
 
         public Null(@Nullable IdentifierChain name, boolean nullable) {
@@ -52,16 +54,19 @@ public abstract class AttributeConstraint extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitNullable(this, ctx);
         }
+
+        public boolean isNullable() {
+            return this.nullable;
+        }
     }
 
     // Unique and primary
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents the {@code UNIQUE} and {@code PRIMARY KEY} attribute level constraints.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends AttributeConstraint {
-        @Getter
         private final boolean primaryKey;
 
         public Unique(@Nullable IdentifierChain name, boolean primaryKey) {
@@ -73,15 +78,18 @@ public abstract class AttributeConstraint extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitUnique(this, ctx);
         }
+
+        public boolean isPrimaryKey() {
+            return this.primaryKey;
+        }
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * Represents the {@code CHECK} attribute level constraint.
      */
     @EqualsAndHashCode(callSuper = false)
     public static class Check extends AttributeConstraint {
         @NotNull
-        @Getter
         private final Expr searchCondition;
 
         public Check(@Nullable IdentifierChain name, @NotNull Expr searchCondition) {
@@ -101,6 +109,11 @@ public abstract class AttributeConstraint extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitCheck(this, ctx);
+        }
+
+        @NotNull
+        public Expr getSearchCondition() {
+            return this.searchCondition;
         }
     }
 }

@@ -10,12 +10,21 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Graph path restrictors. See <a href="https://arxiv.org/abs/2112.06217">Fig. 7</a>.
  */
 @EqualsAndHashCode(callSuper = false)
 public final class GraphRestrictor extends AstEnum {
+    /**
+     * No repeated edges.
+     */
     public static final int TRAIL = 0;
+    /**
+     * No repeated nodes.
+     */
     public static final int ACYCLIC = 1;
+    /**
+     * No repeated nodes, except that the ﬁrst and last nodes may be the same.
+     */
     public static final int SIMPLE = 2;
 
     public static GraphRestrictor TRAIL() {

@@ -2,7 +2,6 @@ package org.partiql.ast.graph;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
@@ -13,25 +12,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO docs, equals, hashcode
+ * Abstract base class for graph pattern parts.
  */
 public abstract class GraphPart extends AstNode {
     /**
-     * TODO docs, equals, hashcode
+     * A single node in a graph pattern.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Node extends GraphPart {
         @Nullable
-        @Getter
         private final Expr prefilter;
 
         @Nullable
-        @Getter
         private final String variable;
 
         @Nullable
-        @Getter
         private final GraphLabel label;
 
         public Node(@Nullable Expr prefilter, @Nullable String variable, @Nullable GraphLabel label) {
@@ -57,42 +53,52 @@ public abstract class GraphPart extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphPartNode(this, ctx);
         }
+
+        @Nullable
+        public Expr getPrefilter() {
+            return this.prefilter;
+        }
+
+        @Nullable
+        public String getVariable() {
+            return this.variable;
+        }
+
+        @Nullable
+        public GraphLabel getLabel() {
+            return this.label;
+        }
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A single edge in a graph pattern.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Edge extends GraphPart {
         @NotNull
-        @Getter
         private final GraphDirection direction;
 
         @Nullable
-        @Getter
         private final GraphQuantifier quantifier;
 
         @Nullable
-        @Getter
         private final Expr prefilter;
 
         @Nullable
-        @Getter
         private final String variable;
 
         @Nullable
-        @Getter
         private final GraphLabel label;
 
         public Edge(@NotNull GraphDirection direction, @Nullable GraphQuantifier quantifier,
-        @Nullable Expr prefilter, @Nullable String variable, @Nullable GraphLabel label) {
-        this.direction = direction;
-        this.quantifier = quantifier;
-        this.prefilter = prefilter;
-        this.variable = variable;
-        this.label = label;
-    }
+                    @Nullable Expr prefilter, @Nullable String variable, @Nullable GraphLabel label) {
+            this.direction = direction;
+            this.quantifier = quantifier;
+            this.prefilter = prefilter;
+            this.variable = variable;
+            this.label = label;
+        }
 
         @Override
         @NotNull
@@ -114,16 +120,40 @@ public abstract class GraphPart extends AstNode {
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphPartEdge(this, ctx);
         }
+
+        @NotNull
+        public GraphDirection getDirection() {
+            return this.direction;
+        }
+
+        @Nullable
+        public GraphQuantifier getQuantifier() {
+            return this.quantifier;
+        }
+
+        @Nullable
+        public Expr getPrefilter() {
+            return this.prefilter;
+        }
+
+        @Nullable
+        public String getVariable() {
+            return this.variable;
+        }
+
+        @Nullable
+        public GraphLabel getLabel() {
+            return this.label;
+        }
     }
 
     /**
-     * TODO docs, equals, hashcode
+     * A sub-pattern.
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
     public static class Pattern extends GraphPart {
         @NotNull
-        @Getter
         private final GraphPattern pattern;
 
         public Pattern(@NotNull GraphPattern pattern) {
@@ -141,6 +171,11 @@ public abstract class GraphPart extends AstNode {
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
             return visitor.visitGraphPartPattern(this, ctx);
+        }
+
+        @NotNull
+        public GraphPattern getPattern() {
+            return this.pattern;
         }
     }
 }
