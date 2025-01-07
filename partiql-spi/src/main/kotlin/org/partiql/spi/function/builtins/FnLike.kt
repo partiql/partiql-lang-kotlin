@@ -3,15 +3,15 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.function.utils.PatternUtils.matchRegexPattern
 import org.partiql.spi.function.utils.PatternUtils.parsePattern
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import java.util.regex.Pattern
 
-internal val Fn_LIKE__STRING_STRING__BOOL = Function.static(
+internal val Fn_LIKE__STRING_STRING__BOOL = FunctionUtils.hidden(
 
     name = "like",
     returns = PType.bool(),
@@ -33,7 +33,7 @@ internal val Fn_LIKE__STRING_STRING__BOOL = Function.static(
     }
 }
 
-internal val Fn_LIKE__CLOB_CLOB__BOOL = Function.static(
+internal val Fn_LIKE__CLOB_CLOB__BOOL = FunctionUtils.hidden(
 
     name = "like",
     returns = PType.bool(),

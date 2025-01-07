@@ -5,6 +5,7 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -25,12 +26,13 @@ import org.partiql.types.PType
 internal object FnEq : Function {
 
     // Memoize shared variables
+    private const val NAME = FunctionUtils.SYSTEM_PREFIX_INTERNAL + "eq"
     private val comparator = Datum.comparator()
     private val boolType = PType.bool()
     private val nullValue = Datum.nullValue(boolType)
 
     override fun getName(): String {
-        return "eq"
+        return NAME
     }
 
     override fun getParameters(): Array<Parameter> {
@@ -39,7 +41,7 @@ internal object FnEq : Function {
 
     override fun getInstance(args: Array<PType>): Function.Instance {
         return object : Function.Instance(
-            "eq",
+            NAME,
             args,
             boolType,
             isNullCall = true,

@@ -90,6 +90,7 @@ import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.DateTimeUtils
+import org.partiql.planner.internal.utils.FunctionUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
@@ -286,8 +287,8 @@ internal object RexConverter {
             // Fn
             val name = when (symbol) {
                 // TODO move hard-coded operator resolution into SPI
-                "+" -> "pos"
-                "-" -> "neg"
+                "+" -> FunctionUtils.OP_POS
+                "-" -> FunctionUtils.OP_NEG
                 else -> error("unsupported unary op $symbol")
             }
             val id = Identifier.delimited(name)
@@ -333,24 +334,24 @@ internal object RexConverter {
             // Wrap if a NOT, if necessary
             return when (symbol) {
                 "<>", "!=" -> {
-                    val op = negate(call("eq", *args.toTypedArray()))
+                    val op = negate(call(FunctionUtils.OP_EQ, *args.toTypedArray()))
                     rex(type, op)
                 }
                 else -> {
                     val name = when (symbol) {
                         // TODO eventually move hard-coded operator resolution into SPI
-                        "<" -> "lt"
-                        ">" -> "gt"
-                        "<=" -> "lte"
-                        ">=" -> "gte"
-                        "=" -> "eq"
-                        "||" -> "concat"
-                        "+" -> "plus"
-                        "-" -> "minus"
-                        "*" -> "times"
-                        "/" -> "divide"
-                        "%" -> "modulo"
-                        "&" -> "bitwise_and"
+                        "<" -> FunctionUtils.OP_LT
+                        ">" -> FunctionUtils.OP_GT
+                        "<=" -> FunctionUtils.OP_LTE
+                        ">=" -> FunctionUtils.OP_GTE
+                        "=" -> FunctionUtils.OP_EQ
+                        "||" -> FunctionUtils.OP_CONCAT
+                        "+" -> FunctionUtils.OP_PLUS
+                        "-" -> FunctionUtils.OP_MINUS
+                        "*" -> FunctionUtils.OP_TIMES
+                        "/" -> FunctionUtils.OP_DIVIDE
+                        "%" -> FunctionUtils.OP_MODULO
+                        "&" -> FunctionUtils.OP_BITWISE_AND
                         else -> error("unsupported binary op $symbol")
                     }
                     val id = Identifier.delimited(name)
@@ -372,9 +373,9 @@ internal object RexConverter {
         override fun visitExprBoolTest(node: ExprBoolTest, ctx: Env): Rex {
             val value = visitExprCoerce(node.value, ctx)
             var call = when (node.truthValue.code()) {
-                TruthValue.TRUE -> call("is_true", value)
-                TruthValue.FALSE -> call("is_false", value)
-                TruthValue.UNKNOWN -> call("is_unknown", value)
+                TruthValue.TRUE -> call(FunctionUtils.OP_IS_TRUE, value)
+                TruthValue.FALSE -> call(FunctionUtils.OP_IS_FALSE, value)
+                TruthValue.UNKNOWN -> call(FunctionUtils.OP_IS_UNKNOWN, value)
                 else -> error("Unexpected TruthValue: ${node.truthValue}")
             }
             // See SQL99 6.30 pg 216 Rule 2 for equivalence
@@ -393,7 +394,7 @@ internal object RexConverter {
             val arg = visitExprCoerce(node.value, ctx)
             val args = listOf(arg)
             // Fn
-            val id = Identifier.delimited("not")
+            val id = Identifier.delimited(FunctionUtils.OP_NOT)
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
@@ -405,7 +406,7 @@ internal object RexConverter {
             val args = listOf(l, r)
 
             // Wrap if a NOT, if necessary
-            val id = Identifier.delimited("and")
+            val id = Identifier.delimited(FunctionUtils.OP_AND)
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
@@ -417,7 +418,7 @@ internal object RexConverter {
             val args = listOf(l, r)
 
             // Wrap if a NOT, if necessary
-            val id = Identifier.delimited("or")
+            val id = Identifier.delimited(FunctionUtils.OP_OR)
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
@@ -724,7 +725,7 @@ internal object RexConverter {
             }
 
             // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
-            val id = Identifier.delimited("eq")
+            val id = Identifier.delimited(FunctionUtils.OP_EQ)
             val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
                 val updatedCondition = when (rex) {
                     null -> condition
@@ -783,8 +784,8 @@ internal object RexConverter {
             val arg2 = node.escape?.let { visitExprCoerce(it, ctx) }
             // Call Variants
             var call = when (arg2) {
-                null -> call("like", arg0, arg1)
-                else -> call("like_escape", arg0, arg1, arg2)
+                null -> call(FunctionUtils.OP_LIKE, arg0, arg1)
+                else -> call(FunctionUtils.OP_LIKE_ESCAPE, arg0, arg1, arg2)
             }
             // NOT?
             if (node.isNot) {
@@ -803,7 +804,7 @@ internal object RexConverter {
             val arg1 = visitExprCoerce(node.from, ctx)
             val arg2 = visitExprCoerce(node.to, ctx)
             // Call
-            var call = call("between", arg0, arg1, arg2)
+            var call = call(FunctionUtils.OP_BETWEEN, arg0, arg1, arg2)
             // NOT?
             if (node.isNot) {
                 call = negate(call)
@@ -830,7 +831,7 @@ internal object RexConverter {
             val arg1 = node.rhs.accept(this, ctx) // !! don't insert scalar subquery coercions
 
             // Call
-            var call = call("in_collection", arg0, arg1)
+            var call = call(FunctionUtils.OP_IN_COLLECTION, arg0, arg1)
             // NOT?
             if (node.isNot) {
                 call = negate(call)
@@ -843,7 +844,7 @@ internal object RexConverter {
          */
         override fun visitExprNullPredicate(node: ExprNullPredicate, ctx: Env): Rex {
             val value = visitExprCoerce(node.value, ctx)
-            var call = call("is_null", value)
+            var call = call(FunctionUtils.OP_IS_NULL, value)
             if (node.isNot) {
                 call = negate(call)
             }
@@ -855,7 +856,7 @@ internal object RexConverter {
          */
         override fun visitExprMissingPredicate(node: ExprMissingPredicate, ctx: Env): Rex {
             val value = visitExprCoerce(node.value, ctx)
-            var call = call("is_missing", value)
+            var call = call(FunctionUtils.OP_IS_MISSING, value)
             if (node.isNot) {
                 call = negate(call)
             }
@@ -873,54 +874,54 @@ internal object RexConverter {
             var call = when (targetType.code()) {
                 // <character string types>
                 // TODO CHAR_VARYING, CHARACTER_LARGE_OBJECT, CHAR_LARGE_OBJECT
-                DataType.CHARACTER, DataType.CHAR -> call("is_char", targetType.length.toRex(), arg0)
-                DataType.CHARACTER_VARYING, DataType.VARCHAR -> call("is_varchar", targetType.length.toRex(), arg0)
-                DataType.CLOB -> call("is_clob", arg0)
-                DataType.STRING -> call("is_string", targetType.length.toRex(), arg0)
-                DataType.SYMBOL -> call("is_symbol", arg0)
+                DataType.CHARACTER, DataType.CHAR -> call(FunctionUtils.OP_IS_CHAR, targetType.length.toRex(), arg0)
+                DataType.CHARACTER_VARYING, DataType.VARCHAR -> call(FunctionUtils.OP_IS_VARCHAR, targetType.length.toRex(), arg0)
+                DataType.CLOB -> call(FunctionUtils.OP_IS_CLOB, arg0)
+                DataType.STRING -> call(FunctionUtils.OP_IS_STRING, targetType.length.toRex(), arg0)
+                DataType.SYMBOL -> call(FunctionUtils.OP_IS_SYMBOL, arg0)
                 // <binary large object string type>
                 // TODO BINARY_LARGE_OBJECT
-                DataType.BLOB -> call("is_blob", arg0)
+                DataType.BLOB -> call(FunctionUtils.OP_IS_BLOB, arg0)
                 // <bit string type>
-                DataType.BIT -> call("is_bit", arg0) // TODO define in parser
-                DataType.BIT_VARYING -> call("is_bitVarying", arg0) // TODO define in parser
+                DataType.BIT -> call(FunctionUtils.OP_IS_BIT, arg0) // TODO define in parser
+                DataType.BIT_VARYING -> call(FunctionUtils.OP_IS_BIT_VARYING, arg0) // TODO define in parser
                 // <numeric types> - <exact numeric types>
-                DataType.NUMERIC -> call("is_numeric", targetType.precision.toRex(), targetType.scale.toRex(), arg0)
+                DataType.NUMERIC -> call(FunctionUtils.OP_IS_NUMERIC, targetType.precision.toRex(), targetType.scale.toRex(), arg0)
                 DataType.DEC, DataType.DECIMAL -> call(
-                    "is_decimal",
+                    FunctionUtils.OP_IS_DECIMAL,
                     targetType.precision.toRex(),
                     targetType.scale.toRex(),
                     arg0
                 )
-                DataType.BIGINT, DataType.INT8, DataType.INTEGER8 -> call("is_int64", arg0)
-                DataType.INT4, DataType.INTEGER4, DataType.INTEGER -> call("is_int32", arg0)
-                DataType.INT -> call("is_int", arg0)
-                DataType.INT2, DataType.SMALLINT -> call("is_int16", arg0)
-                DataType.TINYINT -> call("is_int8", arg0) // TODO define in parser
+                DataType.BIGINT, DataType.INT8, DataType.INTEGER8 -> call(FunctionUtils.OP_IS_INT64, arg0)
+                DataType.INT4, DataType.INTEGER4, DataType.INTEGER -> call(FunctionUtils.OP_IS_INT32, arg0)
+                DataType.INT -> call(FunctionUtils.OP_IS_INT, arg0)
+                DataType.INT2, DataType.SMALLINT -> call(FunctionUtils.OP_IS_INT16, arg0)
+                DataType.TINYINT -> call(FunctionUtils.OP_IS_INT8, arg0) // TODO define in parser
                 // <numeric type> - <approximate numeric type>
-                DataType.FLOAT -> call("is_float32", arg0)
-                DataType.REAL -> call("is_real", arg0)
-                DataType.DOUBLE_PRECISION -> call("is_float64", arg0)
+                DataType.FLOAT -> call(FunctionUtils.OP_IS_FLOAT32, arg0)
+                DataType.REAL -> call(FunctionUtils.OP_IS_REAL, arg0)
+                DataType.DOUBLE_PRECISION -> call(FunctionUtils.OP_IS_FLOAT64, arg0)
                 // <boolean type>
-                DataType.BOOLEAN, DataType.BOOL -> call("is_bool", arg0)
+                DataType.BOOLEAN, DataType.BOOL -> call(FunctionUtils.OP_IS_BOOL, arg0)
                 // <datetime type>
-                DataType.DATE -> call("is_date", arg0)
+                DataType.DATE -> call(FunctionUtils.OP_IS_DATE, arg0)
                 // TODO: DO we want to seperate with time zone vs without time zone into two different type in the plan?
                 //  leave the parameterized type out for now until the above is answered
-                DataType.TIME -> call("is_time", arg0)
-                DataType.TIME_WITH_TIME_ZONE -> call("is_timeWithTz", arg0)
-                DataType.TIMESTAMP -> call("is_timestamp", arg0)
-                DataType.TIMESTAMP_WITH_TIME_ZONE -> call("is_timestampWithTz", arg0)
+                DataType.TIME -> call(FunctionUtils.OP_IS_TIME, arg0)
+                DataType.TIME_WITH_TIME_ZONE -> call(FunctionUtils.OP_IS_TIMEZ, arg0)
+                DataType.TIMESTAMP -> call(FunctionUtils.OP_IS_TIMESTAMP, arg0)
+                DataType.TIMESTAMP_WITH_TIME_ZONE -> call(FunctionUtils.OP_IS_TIMESTAMPZ, arg0)
                 // <interval type>
-                DataType.INTERVAL -> call("is_interval", arg0) // TODO define in parser
+                DataType.INTERVAL -> call(FunctionUtils.OP_IS_INTERVAL, arg0) // TODO define in parser
                 // <container type>
-                DataType.STRUCT, DataType.TUPLE -> call("is_struct", arg0)
+                DataType.STRUCT, DataType.TUPLE -> call(FunctionUtils.OP_IS_STRUCT, arg0)
                 // <collection type>
-                DataType.LIST -> call("is_list", arg0)
-                DataType.BAG -> call("is_bag", arg0)
-                DataType.SEXP -> call("is_sexp", arg0)
+                DataType.LIST -> call(FunctionUtils.OP_IS_LIST, arg0)
+                DataType.BAG -> call(FunctionUtils.OP_IS_BAG, arg0)
+                DataType.SEXP -> call(FunctionUtils.OP_IS_SEXP, arg0)
                 // <user defined type>
-                DataType.USER_DEFINED -> call("is_custom", arg0)
+                DataType.USER_DEFINED -> call(FunctionUtils.OP_IS_CUSTOM, arg0)
                 else -> error("Unexpected DataType type: $targetType")
             }
 
@@ -959,8 +960,8 @@ internal object RexConverter {
             val arg2 = node.length?.let { visitExprCoerce(it, ctx) }
             // Call Variants
             val call = when (arg2) {
-                null -> call("substring", arg0, arg1)
-                else -> call("substring", arg0, arg1, arg2)
+                null -> call(FunctionUtils.FN_SUBSTRING, arg0, arg1)
+                else -> call(FunctionUtils.FN_SUBSTRING, arg0, arg1, arg2)
             }
             return rex(type, call)
         }
@@ -974,7 +975,7 @@ internal object RexConverter {
             val arg0 = visitExprCoerce(node.lhs, ctx)
             val arg1 = visitExprCoerce(node.rhs, ctx)
             // Call
-            val call = call("position", arg0, arg1)
+            val call = call(FunctionUtils.OP_POSITION, arg0, arg1)
             return rex(type, call)
         }
 
@@ -989,17 +990,17 @@ internal object RexConverter {
             // Call Variants
             val call = when (node.trimSpec?.code()) {
                 TrimSpec.LEADING -> when (arg1) {
-                    null -> call("trim_leading", arg0)
-                    else -> call("trim_leading_chars", arg0, arg1)
+                    null -> call(FunctionUtils.OP_TRIM_LEADING, arg0)
+                    else -> call(FunctionUtils.OP_TRIM_LEADING_CHARS, arg0, arg1)
                 }
                 TrimSpec.TRAILING -> when (arg1) {
-                    null -> call("trim_trailing", arg0)
-                    else -> call("trim_trailing_chars", arg0, arg1)
+                    null -> call(FunctionUtils.OP_TRIM_TRAILING, arg0)
+                    else -> call(FunctionUtils.OP_TRIM_TRAILING_CHARS, arg0, arg1)
                 }
                 // TODO: We may want to add a trim_both for trim(BOTH FROM arg)
                 else -> when (arg1) {
-                    null -> call("trim", arg0)
-                    else -> call("trim_chars", arg0, arg1)
+                    null -> call(FunctionUtils.OP_TRIM, arg0)
+                    else -> call(FunctionUtils.OP_TRIM_CHARS, arg0, arg1)
                 }
             }
             return rex(type, call)
@@ -1027,29 +1028,29 @@ internal object RexConverter {
             val cv = visitExprCoerce(node.value, ctx)
             val sp = visitExprCoerce(node.from, ctx)
             val rs = visitExprCoerce(node.placing, ctx)
-            val sl = node.forLength?.let { visitExprCoerce(it, ctx) } ?: rex(ANY, call("char_length", rs))
+            val sl = node.forLength?.let { visitExprCoerce(it, ctx) } ?: rex(ANY, call(FunctionUtils.FN_CHAR_LENGTH, rs))
             val p1 = rex(
                 ANY,
                 call(
-                    "substring",
+                    FunctionUtils.FN_SUBSTRING,
                     cv,
                     rex(INT4, rexOpLit(Datum.integer(1))),
-                    rex(ANY, call("minus", sp, rex(INT4, rexOpLit(Datum.integer(1)))))
+                    rex(ANY, call(FunctionUtils.OP_MINUS, sp, rex(INT4, rexOpLit(Datum.integer(1)))))
                 )
             )
-            val p2 = rex(ANY, call("concat", p1, rs))
+            val p2 = rex(ANY, call(FunctionUtils.OP_CONCAT, p1, rs))
             return rex(
                 ANY,
                 call(
-                    "concat",
+                    FunctionUtils.OP_CONCAT,
                     p2,
-                    rex(ANY, call("substring", cv, rex(ANY, call("plus", sp, sl))))
+                    rex(ANY, call(FunctionUtils.FN_SUBSTRING, cv, rex(ANY, call(FunctionUtils.OP_PLUS, sp, sl))))
                 )
             )
         }
 
         override fun visitExprExtract(node: ExprExtract, ctx: Env): Rex {
-            val call = call("extract_${node.field.name().lowercase()}", visitExprCoerce(node.source, ctx))
+            val call = call(FunctionUtils.opExtract(node.field), visitExprCoerce(node.source, ctx))
             return rex(ANY, call)
         }
 
@@ -1191,7 +1192,7 @@ internal object RexConverter {
         override fun visitExprSessionAttribute(node: ExprSessionAttribute, ctx: Env): Rex {
             val type = ANY
             val fn = node.sessionAttribute.name().lowercase()
-            val call = call(fn)
+            val call = call(FunctionUtils.hidden(fn))
             return rex(type, call)
         }
 
@@ -1200,7 +1201,7 @@ internal object RexConverter {
         // Helpers
 
         private fun negate(call: Rex.Op): Rex.Op.Call {
-            val id = Identifier.delimited("not")
+            val id = Identifier.delimited(FunctionUtils.OP_NOT)
             val arg = rex(BOOL, call)
             return rexOpCallUnresolved(id, listOf(arg))
         }

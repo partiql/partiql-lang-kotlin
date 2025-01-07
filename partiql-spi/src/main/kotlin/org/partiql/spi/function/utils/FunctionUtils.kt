@@ -1,0 +1,62 @@
+package org.partiql.spi.function.utils
+
+import org.partiql.spi.function.Function
+import org.partiql.spi.function.Parameter
+import org.partiql.spi.value.Datum
+import org.partiql.types.PType
+
+/**
+ * Utility methods for [Function]s.
+ */
+internal object FunctionUtils {
+
+    /**
+     * The internal system prefix is '\uFDEF', one of unicode's 'internal-use' non-characters. This allows us to "hide"
+     * certain functions from being directly invocable via PartiQL text.
+     * See:
+     * - http://www.unicode.org/faq/private_use.html#nonchar1
+     * - http://www.unicode.org/versions/Unicode5.2.0/ch16.pdf#G19635
+     * - http://www.unicode.org/versions/corrigendum9.html
+     */
+    const val SYSTEM_PREFIX_INTERNAL: String = "\uFDEF"
+
+    /**
+     * Returns an implementation of a [Function] that has the [name] obfuscated via the [SYSTEM_PREFIX_INTERNAL].
+     */
+    fun hidden(
+        name: String,
+        parameters: Array<Parameter>,
+        returns: PType,
+        isNullCall: Boolean = true,
+        isMissingCall: Boolean = true,
+        invoke: (Array<Datum>) -> Datum,
+    ): Function {
+        val hiddenName = "$SYSTEM_PREFIX_INTERNAL$name"
+        return object : Function {
+
+            override fun getName(): String {
+                return hiddenName
+            }
+
+            override fun getParameters(): Array<Parameter> {
+                return parameters
+            }
+
+            override fun getReturnType(args: Array<PType>): PType {
+                return returns
+            }
+
+            override fun getInstance(args: Array<PType>): Function.Instance {
+                return object : Function.Instance(
+                    name,
+                    Array(parameters.size) { parameters[it].getType() },
+                    returns,
+                    isNullCall,
+                    isMissingCall,
+                ) {
+                    override fun invoke(args: Array<Datum>): Datum = invoke(args)
+                }
+            }
+        }
+    }
+}

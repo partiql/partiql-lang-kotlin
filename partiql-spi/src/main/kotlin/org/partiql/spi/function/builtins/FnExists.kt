@@ -33,6 +33,7 @@ internal val Fn_EXISTS__LIST__BOOL = Function.static(
     Datum.bool(exists)
 }
 
+// TODO: Should this exist?
 internal val Fn_EXISTS__STRUCT__BOOL = Function.static(
 
     name = "exists",

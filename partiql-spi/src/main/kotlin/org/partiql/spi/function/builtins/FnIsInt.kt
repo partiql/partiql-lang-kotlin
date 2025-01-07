@@ -3,8 +3,8 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
@@ -16,7 +16,7 @@ private val INT_TYPES = setOf(
     PType.NUMERIC
 )
 
-internal val Fn_IS_INT__ANY__BOOL = Function.static(
+internal val Fn_IS_INT__ANY__BOOL = FunctionUtils.hidden(
     name = "is_int",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic()))

@@ -3,12 +3,12 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_CONCAT__CHAR_CHAR__CHAR = Function.static(
+internal val Fn_CONCAT__CHAR_CHAR__CHAR = FunctionUtils.hidden(
     name = "concat",
     returns = PType.character(256), // TODO: Handle length
     parameters = arrayOf(
@@ -21,7 +21,7 @@ internal val Fn_CONCAT__CHAR_CHAR__CHAR = Function.static(
     Datum.character(arg0 + arg1, 256)
 }
 
-internal val Fn_CONCAT__VARCHAR_VARCHAR__VARCHAR = Function.static(
+internal val Fn_CONCAT__VARCHAR_VARCHAR__VARCHAR = FunctionUtils.hidden(
     name = "concat",
     returns = PType.varchar(256), // TODO: Handle length
     parameters = arrayOf(
@@ -34,7 +34,7 @@ internal val Fn_CONCAT__VARCHAR_VARCHAR__VARCHAR = Function.static(
     Datum.varchar(arg0 + arg1, 256)
 }
 
-internal val Fn_CONCAT__STRING_STRING__STRING = Function.static(
+internal val Fn_CONCAT__STRING_STRING__STRING = FunctionUtils.hidden(
 
     name = "concat",
     returns = PType.string(),
@@ -49,7 +49,7 @@ internal val Fn_CONCAT__STRING_STRING__STRING = Function.static(
     Datum.string(arg0 + arg1)
 }
 
-internal val Fn_CONCAT__CLOB_CLOB__CLOB = Function.static(
+internal val Fn_CONCAT__CLOB_CLOB__CLOB = FunctionUtils.hidden(
 
     name = "concat",
     returns = PType.clob(Int.MAX_VALUE),

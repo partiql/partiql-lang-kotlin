@@ -4,12 +4,12 @@
 package org.partiql.spi.function.builtins
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_IS_CHAR__ANY__BOOL = Function.static(
+internal val Fn_IS_CHAR__ANY__BOOL = FunctionUtils.hidden(
     name = "is_char",
     returns = PType.bool(),
     parameters = arrayOf(Parameter("value", PType.dynamic())),
@@ -22,7 +22,7 @@ private val TEXT_TYPES_WITH_LENGTH = setOf(
     PType.VARCHAR
 )
 
-internal val Fn_IS_CHAR__INT32_ANY__BOOL = Function.static(
+internal val Fn_IS_CHAR__INT32_ANY__BOOL = FunctionUtils.hidden(
     name = "is_char",
     returns = PType.bool(),
     parameters = arrayOf(

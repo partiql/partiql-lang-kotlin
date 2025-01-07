@@ -387,6 +387,16 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         companion object {
 
+            /**
+             * The internal system prefix is '\uFDEF', one of unicode's 'internal-use' non-characters. This allows us to "hide"
+             * certain functions from being directly invocable via PartiQL text.
+             * See:
+             * - http://www.unicode.org/faq/private_use.html#nonchar1
+             * - http://www.unicode.org/versions/Unicode5.2.0/ch16.pdf#G19635
+             * - http://www.unicode.org/versions/corrigendum9.html
+             */
+            private const val SYSTEM_PREFIX_INTERNAL: String = "\uFDEF"
+
             private val rules = GeneratedParser.ruleNames.asList()
 
             /**
@@ -1751,9 +1761,10 @@ internal class PartiQLParserDefault : PartiQLParser {
             val rhs = visitExpr(ctx.expr(1))
             val fieldLit = ctx.dt.text.lowercase()
             // TODO error on invalid datetime fields like TIMEZONE_HOUR and TIMEZONE_MINUTE
+            // TODO: This should (likely) be parsed into its own node. The planner should convert this into a call.
             when {
-                ctx.DATE_ADD() != null -> exprCall(identifierChain(identifier("date_add_$fieldLit", false), null), listOf(lhs, rhs), null)
-                ctx.DATE_DIFF() != null -> exprCall(identifierChain(identifier("date_diff_$fieldLit", false), null), listOf(lhs, rhs), null)
+                ctx.DATE_ADD() != null -> exprCall(identifierChain(identifier("${SYSTEM_PREFIX_INTERNAL}date_add_$fieldLit", false), null), listOf(lhs, rhs), null)
+                ctx.DATE_DIFF() != null -> exprCall(identifierChain(identifier("${SYSTEM_PREFIX_INTERNAL}date_diff_$fieldLit", false), null), listOf(lhs, rhs), null)
                 else -> throw error(ctx, "Expected DATE_ADD or DATE_DIFF")
             }
         }

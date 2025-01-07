@@ -3,12 +3,12 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 
-internal val Fn_IS_INT32__ANY__BOOL = Function.static(
+internal val Fn_IS_INT32__ANY__BOOL = FunctionUtils.hidden(
 
     name = "is_int32",
     returns = PType.bool(),
