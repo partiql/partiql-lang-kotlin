@@ -82,7 +82,16 @@ class IonStreamTest {
 
     @Test
     fun testDatetime() {
-        // TODO blocked on https://github.com/partiql/partiql-lang-kotlin/pull/1656
+        // date
+
+        // time
+
+        // timez
+
+        // timestamp
+
+        // timestampz
+        case("'timestamp'::2017-01-01T00:00:00Z", Datum.timestamp(2017, 1, 1, 0, 0, 0, 0, 0))
     }
 
     @Test

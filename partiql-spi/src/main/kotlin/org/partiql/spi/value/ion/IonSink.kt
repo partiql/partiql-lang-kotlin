@@ -2,16 +2,19 @@ package org.partiql.spi.value.ion
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonWriter
+import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonBinaryWriterBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.spi.stream.PSink
 import org.partiql.types.PType
-import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.Time
-import org.partiql.value.datetime.Timestamp
 import java.io.OutputStream
 import java.lang.Double.parseDouble
 import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.OffsetTime
 import java.util.BitSet
 
 /**
@@ -243,24 +246,44 @@ public class IonSink : PSink {
         this.writer.writeClob(value)
     }
 
-    override fun writeDate(value: Date) {
-        TODO("datetime blocked on https://github.com/partiql/partiql-lang-kotlin/pull/1656")
+    override fun writeDate(value: LocalDate) {
+        if (elisions[PType.DATE]) {
+            this.writer.setTypeAnnotations()
+        }
+        val iso8601 = value.toString()
+        this.writer.writeString(iso8601)
     }
 
-    override fun writeTime(value: Time) {
-        TODO("datetime blocked on https://github.com/partiql/partiql-lang-kotlin/pull/1656")
+    override fun writeTime(value: LocalTime) {
+        if (elisions[PType.TIME]) {
+            this.writer.setTypeAnnotations()
+        }
+        val iso8601 = value.toString()
+        this.writer.writeString(iso8601)
     }
 
-    override fun writeTimez(value: Time) {
-        TODO("datetime blocked on https://github.com/partiql/partiql-lang-kotlin/pull/1656")
+    override fun writeTimez(value: OffsetTime) {
+        if (elisions[PType.TIMEZ]) {
+            this.writer.setTypeAnnotations()
+        }
+        val iso8601 = value.toString()
+        this.writer.writeString(iso8601)
     }
 
-    override fun writeTimestamp(value: Timestamp) {
-        TODO("datetime blocked on https://github.com/partiql/partiql-lang-kotlin/pull/1656")
+    override fun writeTimestamp(value: LocalDateTime) {
+        if (elisions[PType.TIMESTAMP]) {
+            this.writer.setTypeAnnotations()
+        }
+        val iso8601 = value.toString()
+        this.writer.writeString(iso8601)
     }
 
-    override fun writeTimestampz(value: Timestamp) {
-        TODO("datetime blocked on https://github.com/partiql/partiql-lang-kotlin/pull/1656")
+    override fun writeTimestampz(value: OffsetDateTime) {
+        if (elisions[PType.TIMESTAMPZ]) {
+            this.writer.setTypeAnnotations()
+        }
+        val iso8601 = value.toString()
+        this.writer.writeString(iso8601)
     }
 
     override fun <T : Any> writeVariant(value: T) {

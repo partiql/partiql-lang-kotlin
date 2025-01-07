@@ -2,11 +2,13 @@ package org.partiql.spi.stream;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
-import org.partiql.value.datetime.Date;
-import org.partiql.value.datetime.Time;
-import org.partiql.value.datetime.Timestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 
 /**
  * This is a PartiQL value stream sink.
@@ -115,27 +117,27 @@ public interface PSink {
     /**
      * Write DATE value.
      */
-    void writeDate(@NotNull Date value);
+    void writeDate(@NotNull LocalDate value);
 
     /**
      * Write TIME value.
      */
-    void writeTime(@NotNull Time value);
+    void writeTime(@NotNull LocalTime value);
 
     /**
      * Write TIMEZ value.
      */
-    void writeTimez(@NotNull Time value);
+    void writeTimez(@NotNull OffsetTime value);
 
     /**
      * Write TIMESTAMP value.
      */
-    void writeTimestamp(@NotNull Timestamp value);
+    void writeTimestamp(@NotNull LocalDateTime value);
 
     /**
      * Write TIMESTAMPZ with given precision.
      */
-    void writeTimestampz(@NotNull Timestamp value);
+    void writeTimestampz(@NotNull OffsetDateTime value);
 
     /**
      * Write a VARIANT type.
