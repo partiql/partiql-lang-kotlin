@@ -220,12 +220,6 @@ internal object RexConverter {
             }
         }
 
-        private fun parseTime() {
-        }
-
-        private fun parseTimestamp() {
-        }
-
         override fun visitExprVariant(node: ExprVariant, ctx: Env): Rex {
             if (node.encoding != "ion") {
                 throw IllegalArgumentException("unsupported encoding ${node.encoding}")
