@@ -83,6 +83,7 @@ public interface Datum extends Iterable<Datum> {
      * <p>
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * </p>
+     *
      * @return the underlying value applicable to the types:
      * {@link PType#BLOB},
      * {@link PType#CLOB}
@@ -91,7 +92,7 @@ public interface Datum extends Iterable<Datum> {
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     *                                       Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      * @deprecated BINARY doesn't exist in SQL or Ion. This is subject to deletion. BLOB and CLOB are typically represented
      * in a fashion that can support much larger values -- this may be modified at any time.
      */
@@ -102,6 +103,7 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     *
      * @return the underlying value applicable to the types:
      * {@link PType#TINYINT}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
@@ -109,7 +111,7 @@ public interface Datum extends Iterable<Datum> {
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     *                                       Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      * @deprecated BYTE is not present in SQL or Ion. This is subject to deletion.
      */
     @Deprecated
@@ -355,6 +357,11 @@ public interface Datum extends Iterable<Datum> {
 
     /**
      * Returns a typed missing value
+<<<<<<< HEAD
+=======
+     * ! EXPERIMENTAL ! This is subject to breaking changes and/or removal without prior notice.
+     *
+>>>>>>> d94a4afd7 (Adds DatumWriter for most types)
      * @param type the type of the value
      * @return a typed missing value
      */
@@ -390,6 +397,9 @@ public interface Datum extends Iterable<Datum> {
         return new DatumLong(value);
     }
 
+    /**
+     * TODO implement or remove NUMERIC.
+     */
     @Deprecated
     @NotNull
     static Datum numeric(@NotNull BigInteger value) {
@@ -429,7 +439,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     *
      * @param value the string to place in the varchar
      * @return a varchar value with a default length of 255
      */
@@ -439,7 +448,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     *
      * @param value the string to place in the varchar
      * @return a varchar value
      * TODO: Error or coerce here? Right now coerce, though I think this should likely error.
@@ -461,7 +469,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     *
      * @param value the string to place in the char
      * @return a char value with a default length of 255
      */
@@ -471,7 +478,6 @@ public interface Datum extends Iterable<Datum> {
     }
 
     /**
-     *
      * @param value the string to place in the char
      * @return a char value
      */
@@ -552,6 +558,11 @@ public interface Datum extends Iterable<Datum> {
         return new DatumCollection(values, PType.array());
     }
 
+    @NotNull
+    static Datum array(@NotNull Iterable<Datum> values, @NotNull PType typeParam) {
+        return new DatumCollection(values, PType.array(typeParam));
+    }
+
     // STRUCTURAL
 
     @NotNull
@@ -581,6 +592,7 @@ public interface Datum extends Iterable<Datum> {
      * {@link java.util.TreeSet} in combination with this {@link Comparator} to implement the before-mentioned
      * operations.
      * </p>
+     *
      * @return the default comparator for {@link Datum}. The comparator orders null values first.
      * @see Datum
      * @see java.util.TreeSet
@@ -601,6 +613,7 @@ public interface Datum extends Iterable<Datum> {
      * {@link java.util.TreeSet} in combination with this {@link Comparator} to implement the before-mentioned
      * operations.
      * </p>
+     *
      * @param nullsFirst if true, nulls are ordered before non-null values, otherwise after.
      * @return the default comparator for {@link Datum}.
      * @see Datum
