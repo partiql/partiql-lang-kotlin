@@ -81,7 +81,7 @@ public final class Identifier extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitIdentifierPart(this, ctx);
+            return visitor.visitIdentifierSimple(this, ctx);
         }
 
         @NotNull

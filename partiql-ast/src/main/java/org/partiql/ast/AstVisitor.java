@@ -235,7 +235,7 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitIdentifierPart(Identifier.Simple node, C ctx) {
+    public R visitIdentifierSimple(Identifier.Simple node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

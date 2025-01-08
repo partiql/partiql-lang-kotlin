@@ -137,7 +137,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         else -> visitExpr(node, tail)
     }
 
-    override fun visitIdentifierPart(node: Simple, tail: SqlBlock): SqlBlock = tail concat node.sql()
+    override fun visitIdentifierSimple(node: Simple, tail: SqlBlock): SqlBlock = tail concat node.sql()
 
     override fun visitIdentifier(node: Identifier, tail: SqlBlock): SqlBlock {
         val path = when (node.hasQualifier()) {
@@ -174,7 +174,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExcludeStepStructField(node: ExcludeStep.StructField, tail: SqlBlock): SqlBlock {
         var t = tail concat "."
-        t = visitIdentifierPart(node.symbol, t)
+        t = visitIdentifierSimple(node.symbol, t)
         return t
     }
 

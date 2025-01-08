@@ -373,8 +373,8 @@ public abstract class org/partiql/ast/AstRewriter : org/partiql/ast/AstVisitor {
 	public fun visitGroupByKey (Lorg/partiql/ast/GroupBy$Key;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitIdentifierPart (Lorg/partiql/ast/Identifier$Simple;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitIdentifierPart (Lorg/partiql/ast/Identifier$Simple;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitIdentifierSimple (Lorg/partiql/ast/Identifier$Simple;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierSimple (Lorg/partiql/ast/Identifier$Simple;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitInsertSourceFromDefault (Lorg/partiql/ast/dml/InsertSource$FromDefault;Ljava/lang/Object;)Ljava/lang/Object;
@@ -528,7 +528,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitGroupBy (Lorg/partiql/ast/GroupBy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitGroupByKey (Lorg/partiql/ast/GroupBy$Key;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitIdentifierPart (Lorg/partiql/ast/Identifier$Simple;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierSimple (Lorg/partiql/ast/Identifier$Simple;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsertSource (Lorg/partiql/ast/dml/InsertSource;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsertSourceFromDefault (Lorg/partiql/ast/dml/InsertSource$FromDefault;Ljava/lang/Object;)Ljava/lang/Object;
@@ -3255,8 +3255,8 @@ public abstract class org/partiql/ast/sql/SqlDialect : org/partiql/ast/AstVisito
 	public fun visitGroupByKey (Lorg/partiql/ast/GroupBy$Key;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitIdentifier (Lorg/partiql/ast/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifier (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
-	public synthetic fun visitIdentifierPart (Lorg/partiql/ast/Identifier$Simple;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitIdentifierPart (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
+	public synthetic fun visitIdentifierSimple (Lorg/partiql/ast/Identifier$Simple;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierSimple (Lorg/partiql/ast/Identifier$Simple;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitInsert (Lorg/partiql/ast/dml/Insert;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitInsert (Lorg/partiql/ast/dml/Insert;Lorg/partiql/ast/sql/SqlBlock;)Lorg/partiql/ast/sql/SqlBlock;
 	public synthetic fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
