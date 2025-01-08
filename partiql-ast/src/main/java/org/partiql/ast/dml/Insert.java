@@ -24,7 +24,7 @@ public final class Insert extends Statement {
     private final Identifier tableName;
 
     @Nullable
-    private final Identifier.Part asAlias;
+    private final Identifier.Simple asAlias;
 
     @NotNull
     private final InsertSource source;
@@ -32,7 +32,7 @@ public final class Insert extends Statement {
     @Nullable
     private final OnConflict onConflict;
 
-    public Insert(@NotNull Identifier tableName, @Nullable Identifier.Part asAlias, @NotNull InsertSource source, @Nullable OnConflict onConflict) {
+    public Insert(@NotNull Identifier tableName, @Nullable Identifier.Simple asAlias, @NotNull InsertSource source, @Nullable OnConflict onConflict) {
         this.tableName = tableName;
         this.asAlias = asAlias;
         this.source = source;
@@ -65,7 +65,7 @@ public final class Insert extends Statement {
     }
 
     @Nullable
-    public Identifier.Part getAsAlias() {
+    public Identifier.Simple getAsAlias() {
         return this.asAlias;
     }
 

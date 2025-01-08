@@ -9,7 +9,7 @@ import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.from
 import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierPart
+import org.partiql.ast.Ast.identifierSimple
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.selectItemExpr
 import org.partiql.ast.Ast.selectList
@@ -128,9 +128,9 @@ class NormalizeSelectTest {
     private fun variable(name: String) = exprVarRef(
         identifier = identifier(
             qualifier = emptyList(),
-            identifierPart(
+            identifierSimple(
                 symbol = name,
-                isDelimited = false,
+                isRegular = false,
             ),
         ),
         isQualified = false,
@@ -185,9 +185,9 @@ class NormalizeSelectTest {
                             expr = exprVarRef(
                                 identifier = identifier(
                                     qualifier = emptyList(),
-                                    identifierPart(
+                                    identifierSimple(
                                         symbol = "T",
-                                        isDelimited = false
+                                        isRegular = false
                                     ),
                                 ),
                                 isQualified = false
@@ -210,12 +210,12 @@ class NormalizeSelectTest {
 
     private fun varItem(symbol: String, asAlias: String? = null) = selectItemExpr(
         expr = variable(symbol),
-        asAlias = asAlias?.let { identifierPart(asAlias, isDelimited = false) }
+        asAlias = asAlias?.let { identifierSimple(asAlias, isRegular = false) }
     )
 
     private fun litItem(value: Int, asAlias: String? = null) = selectItemExpr(
         expr = lit(value),
-        asAlias = asAlias?.let { identifierPart(asAlias, isDelimited = false) }
+        asAlias = asAlias?.let { identifierSimple(asAlias, isRegular = false) }
     )
 
     private fun lit(value: Int) = exprLit(intNum(value))

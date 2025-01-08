@@ -117,8 +117,8 @@ internal class ScopeTest {
     private fun String.path(): Identifier {
         val parts = trim().split(".").map {
             when (it.startsWith("\"")) {
-                true -> Identifier.Part.delimited(it.drop(1).dropLast(1))
-                else -> Identifier.Part.regular(it)
+                true -> Identifier.Simple.delimited(it.drop(1).dropLast(1))
+                else -> Identifier.Simple.regular(it)
             }
         }
         return Identifier.Companion.of(parts)

@@ -24,12 +24,12 @@ public final class Replace extends Statement {
     private final Identifier tableName;
 
     @Nullable
-    private final Identifier.Part asAlias;
+    private final Identifier.Simple asAlias;
 
     @NotNull
     private final InsertSource source;
 
-    public Replace(@NotNull Identifier tableName, @Nullable Identifier.Part asAlias, @NotNull InsertSource source) {
+    public Replace(@NotNull Identifier tableName, @Nullable Identifier.Simple asAlias, @NotNull InsertSource source) {
         this.tableName = tableName;
         this.asAlias = asAlias;
         this.source = source;
@@ -58,7 +58,7 @@ public final class Replace extends Statement {
     }
 
     @Nullable
-    public Identifier.Part getAsAlias() {
+    public Identifier.Simple getAsAlias() {
         return this.asAlias;
     }
 

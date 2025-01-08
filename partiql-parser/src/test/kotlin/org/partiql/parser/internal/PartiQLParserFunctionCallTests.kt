@@ -3,9 +3,10 @@ package org.partiql.parser.internal
 import org.junit.jupiter.api.Test
 import org.partiql.ast.Ast.exprCall
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierPart
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
+import org.partiql.ast.Identifier.Simple.delimited
+import org.partiql.ast.Identifier.Simple.regular
 import org.partiql.ast.expr.Expr
 import kotlin.test.assertEquals
 
@@ -20,7 +21,7 @@ class PartiQLParserFunctionCallTests {
         "foo()",
         queryBody {
             exprCall(
-                function = identifier(emptyList(), identifierPart("foo", false)),
+                function = identifier(emptyList(), regular("foo")),
                 args = emptyList(),
                 setq = null
             )
@@ -32,7 +33,7 @@ class PartiQLParserFunctionCallTests {
         "\"foo\"()",
         queryBody {
             exprCall(
-                function = identifier(emptyList(), identifierPart("foo", true)),
+                function = identifier(emptyList(), delimited("foo")),
                 args = emptyList(),
                 setq = null
             )
@@ -44,7 +45,7 @@ class PartiQLParserFunctionCallTests {
         "upper()",
         queryBody {
             exprCall(
-                function = identifier(emptyList(), identifierPart("upper", false)),
+                function = identifier(emptyList(), regular("upper")),
                 args = emptyList(),
                 setq = null
             )
@@ -56,7 +57,7 @@ class PartiQLParserFunctionCallTests {
         "\"upper\"()",
         queryBody {
             exprCall(
-                function = identifier(emptyList(), identifierPart("upper", true)),
+                function = identifier(emptyList(), delimited("upper")),
                 args = emptyList(),
                 setq = null
             )
@@ -70,10 +71,10 @@ class PartiQLParserFunctionCallTests {
             exprCall(
                 function = identifier(
                     qualifier = listOf(
-                        identifierPart("my_catalog", false),
-                        identifierPart("my_schema", false)
+                        regular("my_catalog"),
+                        regular("my_schema")
                     ),
-                    identifier = identifierPart("foo", false)
+                    identifier = regular("foo")
                 ),
                 args = emptyList(),
                 setq = null
@@ -88,10 +89,10 @@ class PartiQLParserFunctionCallTests {
             exprCall(
                 function = identifier(
                     qualifier = listOf(
-                        identifierPart("my_catalog", false),
-                        identifierPart("my_schema", false)
+                        regular("my_catalog"),
+                        regular("my_schema")
                     ),
-                    identifier = identifierPart("foo", true)
+                    identifier = delimited("foo")
                 ),
                 args = emptyList(),
                 setq = null
@@ -106,10 +107,10 @@ class PartiQLParserFunctionCallTests {
             exprCall(
                 function = identifier(
                     qualifier = listOf(
-                        identifierPart("my_catalog", false),
-                        identifierPart("my_schema", false)
+                        regular("my_catalog"),
+                        regular("my_schema")
                     ),
-                    identifier = identifierPart("upper", false)
+                    identifier = regular("upper")
                 ),
                 args = emptyList(),
                 setq = null
@@ -124,10 +125,10 @@ class PartiQLParserFunctionCallTests {
             exprCall(
                 function = identifier(
                     qualifier = listOf(
-                        identifierPart("my_catalog", false),
-                        identifierPart("my_schema", false)
+                        regular("my_catalog"),
+                        regular("my_schema")
                     ),
-                    identifier = identifierPart("upper", true)
+                    identifier = delimited("upper")
                 ),
                 args = emptyList(),
                 setq = null

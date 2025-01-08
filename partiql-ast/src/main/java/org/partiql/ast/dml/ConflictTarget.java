@@ -28,9 +28,9 @@ public abstract class ConflictTarget extends AstNode {
     public static final class Index extends ConflictTarget {
         // TODO: Should this be a list of identifiers? Or paths? Expressions?
         @NotNull
-        private final List<Identifier.Part> indexes;
+        private final List<Identifier.Simple> indexes;
 
-        public Index(@NotNull List<Identifier.Part> indexes) {
+        public Index(@NotNull List<Identifier.Simple> indexes) {
             this.indexes = indexes;
         }
 
@@ -46,7 +46,7 @@ public abstract class ConflictTarget extends AstNode {
         }
 
         @NotNull
-        public List<Identifier.Part> getIndexes() {
+        public List<Identifier.Simple> getIndexes() {
             return this.indexes;
         }
     }

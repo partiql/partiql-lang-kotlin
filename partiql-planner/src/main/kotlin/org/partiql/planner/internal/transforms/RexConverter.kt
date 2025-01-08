@@ -423,7 +423,7 @@ internal object RexConverter {
                 is Rex.Op.Var.Unresolved -> {
                     // convert consecutive symbol path steps to the root identifier
                     var i = 0
-                    val parts = mutableListOf<Identifier.Part>()
+                    val parts = mutableListOf<Identifier.Simple>()
                     parts.addAll(op.identifier.getParts())
                     for (step in node.steps) {
                         if (step !is PathStep.Field) {
@@ -466,14 +466,14 @@ internal object RexConverter {
                         op
                     }
                     is PathStep.Field -> {
-                        when (step.field.isDelimited) {
+                        when (step.field.isRegular) {
                             true -> {
                                 // case-sensitive path step becomes a key lookup
-                                rexOpPathKey(current, rexString(step.field.symbol))
+                                rexOpPathKey(current, rexString(step.field.text))
                             }
                             false -> {
                                 // case-insensitive path step becomes a symbol lookup
-                                rexOpPathSymbol(current, step.field.symbol)
+                                rexOpPathSymbol(current, step.field.text)
                             }
                         }
                     }
@@ -626,13 +626,13 @@ internal object RexConverter {
          */
         private fun isCollAgg(node: ExprCall): Boolean {
             val fn = node.function
-            val id = if (fn.qualifier.isEmpty()) {
+            val id = if (!fn.hasQualifier()) {
                 // is not a qualified identifier chain
-                node.function.base
+                node.function.identifier
             } else {
                 return false
             }
-            return COLL_AGG_NAMES.contains(id.symbol.lowercase())
+            return COLL_AGG_NAMES.contains(id.text.lowercase())
         }
 
         /**

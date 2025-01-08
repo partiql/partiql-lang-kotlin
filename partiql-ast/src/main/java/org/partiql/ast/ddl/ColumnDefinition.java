@@ -19,7 +19,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ColumnDefinition extends AstNode {
     @NotNull
-    private final Identifier.Part name;
+    private final Identifier.Simple name;
 
     @NotNull
     private final DataType dataType;
@@ -33,7 +33,7 @@ public final class ColumnDefinition extends AstNode {
     private final String comment;
 
     public ColumnDefinition(
-            @NotNull Identifier.Part name,
+            @NotNull Identifier.Simple name,
             @NotNull DataType dataType,
             boolean optional,
             @NotNull List<AttributeConstraint> constraints,
@@ -61,7 +61,7 @@ public final class ColumnDefinition extends AstNode {
     }
 
     @NotNull
-    public Identifier.Part getName() {
+    public Identifier.Simple getName() {
         return this.name;
     }
 

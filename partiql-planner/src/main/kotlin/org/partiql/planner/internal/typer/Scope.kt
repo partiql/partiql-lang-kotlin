@@ -67,7 +67,7 @@ internal data class Scope(
      * @param name
      * @return
      */
-    private fun matchRoot(name: Identifier.Part, depth: Int = 0): Rex? {
+    private fun matchRoot(name: Identifier.Simple, depth: Int = 0): Rex? {
         var r: Rex? = null
         for (i in schema.indices) {
             val local = schema[i]
@@ -92,7 +92,7 @@ internal data class Scope(
      * @param name
      * @return
      */
-    private fun matchStruct(name: Identifier.Part, depth: Int = 0): Rex? {
+    private fun matchStruct(name: Identifier.Simple, depth: Int = 0): Rex? {
         var c: Rex? = null
         var known = false
         for (i in schema.indices) {
@@ -129,7 +129,7 @@ internal data class Scope(
     }
 
     /**
-     * Searches for the [Identifier.Part] within the given [CompilerType].
+     * Searches for the [Identifier.Simple] within the given [CompilerType].
      *
      * Returns
      *  - true  iff known to contain key
@@ -139,7 +139,7 @@ internal data class Scope(
      * @param name
      * @return
      */
-    private fun CompilerType.containsKey(name: Identifier.Part): Boolean? {
+    private fun CompilerType.containsKey(name: Identifier.Simple): Boolean? {
         return when (this.code()) {
             PType.ROW -> this.fields.any { name.matches(it.name) }
             PType.STRUCT -> null
@@ -152,7 +152,7 @@ internal data class Scope(
     companion object {
 
         /**
-         * Converts a list of [Identifier.Part] to a path expression.
+         * Converts a list of [Identifier.Simple] to a path expression.
          *
          *  1) Case SENSITIVE identifiers become string literal key lookups.
          *  2) Case INSENSITIVE identifiers become symbol lookups.
@@ -161,7 +161,7 @@ internal data class Scope(
          * @return
          */
         @JvmStatic
-        internal fun Rex.toPath(parts: List<Identifier.Part>): Rex = parts.fold(this) { curr, part ->
+        internal fun Rex.toPath(parts: List<Identifier.Simple>): Rex = parts.fold(this) { curr, part ->
             val type = PType.dynamic().toCType()
             val text = part.getText()
             val op = when (part.isRegular()) {

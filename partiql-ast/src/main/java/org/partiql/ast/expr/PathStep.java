@@ -19,9 +19,9 @@ public abstract class PathStep extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Field extends PathStep {
         @NotNull
-        private final Identifier.Part field;
+        private final Identifier.Simple field;
 
-        public Field(@NotNull Identifier.Part field) {
+        public Field(@NotNull Identifier.Simple field) {
             this.field = field;
         }
 
@@ -39,7 +39,7 @@ public abstract class PathStep extends AstNode {
         }
 
         @NotNull
-        public Identifier.Part getField() {
+        public Identifier.Simple getField() {
             return this.field;
         }
     }

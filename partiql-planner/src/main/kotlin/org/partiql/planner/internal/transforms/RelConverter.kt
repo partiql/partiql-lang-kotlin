@@ -19,7 +19,7 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierPart
+import org.partiql.ast.Ast.identifierSimple
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
 import org.partiql.ast.AstVisitor
@@ -243,7 +243,7 @@ internal object RelConverter {
         }
 
         override fun visitSelectValue(node: SelectValue, input: Rel): Rel {
-            val name = node.constructor.toBinder(1).symbol
+            val name = node.constructor.toBinder(1).text
             val rex = RexConverter.apply(node.constructor, env)
             val schema = listOf(relBinding(name, rex.type))
             val props = input.type.props
@@ -270,7 +270,7 @@ internal object RelConverter {
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
                 else -> relBinding(
-                    name = a.symbol,
+                    name = a.text,
                     type = rex.type
                 )
             }
@@ -280,7 +280,7 @@ internal object RelConverter {
                         null -> convertScan(rex, binding)
                         else -> {
                             val index = relBinding(
-                                name = i.symbol,
+                                name = i.text,
                                 type = (INT)
                             )
                             convertScanIndexed(rex, binding, index)
@@ -291,7 +291,7 @@ internal object RelConverter {
                     val atAlias = when (val at = node.atAlias) {
                         null -> error("AST not normalized, missing AT alias on UNPIVOT $node")
                         else -> relBinding(
-                            name = at.symbol,
+                            name = at.text,
                             type = (STRING)
                         )
                     }
@@ -371,7 +371,7 @@ internal object RelConverter {
         private fun convertSelectItemExpr(item: SelectItem.Expr): Pair<Rel.Binding, Rex> {
             val name = when (val a = item.asAlias) {
                 null -> error("AST not normalized, missing AS alias on select item $item")
-                else -> a.symbol
+                else -> a.text
             }
             val rex = RexConverter.apply(item.expr, env)
             val binding = relBinding(name, rex.type)
@@ -449,7 +449,7 @@ internal object RelConverter {
             // Add GROUP_AS aggregation
             groupBy?.let { gb ->
                 gb.asAlias?.let { groupAs ->
-                    val binding = relBinding(groupAs.symbol, ANY)
+                    val binding = relBinding(groupAs.text, ANY)
                     schema.add(binding)
                     val fields = input.type.schema.mapIndexed { bindingIndex, currBinding ->
                         rexOpStructField(
@@ -468,7 +468,7 @@ internal object RelConverter {
                         error("not normalized, group key $it missing unique name")
                     }
                     val binding = relBinding(
-                        name = it.asAlias!!.symbol,
+                        name = it.asAlias!!.text,
                         type = (ANY)
                     )
                     schema.add(binding)
@@ -624,9 +624,9 @@ internal object RelConverter {
         private fun stepToExcludeType(step: ExcludeStep): Rel.Op.Exclude.Type {
             return when (step) {
                 is ExcludeStep.StructField -> {
-                    when (step.symbol.isDelimited) {
-                        false -> relOpExcludeTypeStructSymbol(step.symbol.symbol)
-                        true -> relOpExcludeTypeStructKey(step.symbol.symbol)
+                    when (step.symbol.isRegular) {
+                        true -> relOpExcludeTypeStructSymbol(step.symbol.text)
+                        false -> relOpExcludeTypeStructKey(step.symbol.text)
                     }
                 }
                 is ExcludeStep.CollIndex -> relOpExcludeTypeCollIndex(step.index)
@@ -689,7 +689,7 @@ internal object RelConverter {
         override fun visitSelectValue(node: SelectValue, ctx: Context): AstNode {
             val visited = super.visitSelectValue(node, ctx)
             val substitutions = ctx.keys.associate {
-                it.expr to exprVarRef(identifier(emptyList(), identifierPart(it.asAlias!!.symbol, isDelimited = true)), isQualified = false)
+                it.expr to exprVarRef(identifier(emptyList(), identifierSimple(it.asAlias!!.text, isRegular = true)), isQualified = false)
             }
             return SubstitutionVisitor.visit(visited, substitutions)
         }
@@ -704,9 +704,9 @@ internal object RelConverter {
                 true -> {
                     val id = identifier(
                         emptyList(),
-                        identifierPart(
+                        identifierSimple(
                             symbol = syntheticAgg(ctx.aggregations.size),
-                            isDelimited = false
+                            isRegular = false
                         ),
                     )
                     ctx.aggregations += node
@@ -719,7 +719,7 @@ internal object RelConverter {
             return aggregates.contains(this)
         }
 
-        private fun Identifier.isAggregateCall(): Boolean = base.symbol.lowercase().isAggregateCall()
+        private fun Identifier.isAggregateCall(): Boolean = identifier.text.lowercase().isAggregateCall()
 
         override fun defaultReturn(node: AstNode, ctx: Context) = node
     }

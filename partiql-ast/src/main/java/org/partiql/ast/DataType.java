@@ -31,7 +31,7 @@ public final class DataType extends AstEnum {
     @EqualsAndHashCode(callSuper = false)
     public static class StructField extends AstNode {
         @NotNull
-        private final Identifier.Part name;
+        private final Identifier.Simple name;
 
         @NotNull
         private final DataType type;
@@ -45,7 +45,7 @@ public final class DataType extends AstEnum {
         private final String comment;
 
         public StructField(
-                @NotNull Identifier.Part name,
+                @NotNull Identifier.Simple name,
                 @NotNull DataType type,
                 boolean optional,
                 @Nullable List<AttributeConstraint> constraints,
@@ -73,7 +73,7 @@ public final class DataType extends AstEnum {
         }
 
         @NotNull
-        public Identifier.Part getName() {
+        public Identifier.Simple getName() {
             return this.name;
         }
 

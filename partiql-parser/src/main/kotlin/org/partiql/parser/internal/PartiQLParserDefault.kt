@@ -116,7 +116,7 @@ import org.partiql.ast.Ast.graphSelectorShortestKGroup
 import org.partiql.ast.Ast.groupBy
 import org.partiql.ast.Ast.groupByKey
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierPart
+import org.partiql.ast.Ast.identifierSimple
 import org.partiql.ast.Ast.insert
 import org.partiql.ast.Ast.insertSourceDefault
 import org.partiql.ast.Ast.insertSourceExpr
@@ -153,7 +153,8 @@ import org.partiql.ast.FromType
 import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.Identifier
-import org.partiql.ast.Identifier.Part
+import org.partiql.ast.Identifier.Simple
+import org.partiql.ast.Identifier.regular
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Literal.approxNum
@@ -518,24 +519,22 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitByIdent(ctx: GeneratedParser.ByIdentContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
-        private fun visitSymbolPrimitive(ctx: GeneratedParser.SymbolPrimitiveContext): Part =
+        private fun visitSymbolPrimitive(ctx: GeneratedParser.SymbolPrimitiveContext): Simple =
             when (ctx) {
                 is GeneratedParser.IdentifierQuotedContext -> visitIdentifierQuoted(ctx)
                 is GeneratedParser.IdentifierUnquotedContext -> visitIdentifierUnquoted(ctx)
                 else -> throw error(ctx, "Invalid symbol reference.")
             }
 
-        override fun visitIdentifierQuoted(ctx: GeneratedParser.IdentifierQuotedContext): Part = translate(ctx) {
-            identifierPart(
-                ctx.IDENTIFIER_QUOTED().getStringValue(),
-                true
+        override fun visitIdentifierQuoted(ctx: GeneratedParser.IdentifierQuotedContext): Simple = translate(ctx) {
+            Simple.delimited(
+                ctx.IDENTIFIER_QUOTED().getStringValue()
             )
         }
 
-        override fun visitIdentifierUnquoted(ctx: GeneratedParser.IdentifierUnquotedContext): Part = translate(ctx) {
-            identifierPart(
-                ctx.text,
-                false
+        override fun visitIdentifierUnquoted(ctx: GeneratedParser.IdentifierUnquotedContext): Simple = translate(ctx) {
+            Simple.regular(
+                ctx.text
             )
         }
 
@@ -1035,7 +1034,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitExcludeExprCollectionAttr(ctx: GeneratedParser.ExcludeExprCollectionAttrContext) =
             translate(ctx) {
                 val attr = ctx.attr.getStringValue()
-                val identifier = identifierPart(attr, true)
+                val identifier = Simple.delimited(attr)
                 excludeStepStructField(identifier)
             }
 
@@ -1113,7 +1112,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                     else -> throw error(ctx.restrictor, "Unrecognized pattern restrictor")
                 }
             }
-            val variable = visitOrNull<Part>(ctx.variable)?.symbol
+            val variable = visitOrNull<Simple>(ctx.variable)?.text
             graphPattern(restrictor, null, variable, null, parts)
         }
 
@@ -1162,7 +1161,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLabelPrimaryName(ctx: GeneratedParser.LabelPrimaryNameContext) = translate(ctx) {
             val x = visitSymbolPrimitive(ctx.symbolPrimitive())
-            graphLabelName(x.symbol)
+            graphLabelName(x.text)
         }
 
         override fun visitLabelPrimaryWild(ctx: GeneratedParser.LabelPrimaryWildContext) = translate(ctx) {
@@ -1174,7 +1173,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitPattern(ctx: GeneratedParser.PatternContext) = translate(ctx) {
             val restrictor = visitRestrictor(ctx.restrictor)
-            val variable = visitOrNull<Part>(ctx.variable)?.symbol
+            val variable = visitOrNull<Simple>(ctx.variable)?.text
             val prefilter = ctx.where?.let { visitExpr(it.expr()) }
             val quantifier = ctx.quantifier?.let { visitPatternQuantifier(it) }
             val parts = visitOrEmpty<GraphPart>(ctx.graphPart())
@@ -1209,7 +1208,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitEdgeSpec(ctx: GeneratedParser.EdgeSpecContext) = translate(ctx) {
             val placeholderDirection = GraphDirection.RIGHT()
-            val variable = visitOrNull<Part>(ctx.symbolPrimitive())?.symbol
+            val variable = visitOrNull<Simple>(ctx.symbolPrimitive())?.text
             val prefilter = ctx.whereClause()?.let { visitExpr(it.expr()) }
             val label = visitOrNull<GraphLabel>(ctx.labelSpec())
             graphMatchEdge(placeholderDirection, null, prefilter, variable, label)
@@ -1279,7 +1278,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitNode(ctx: GeneratedParser.NodeContext) = translate(ctx) {
-            val variable = visitOrNull<Part>(ctx.symbolPrimitive())?.symbol
+            val variable = visitOrNull<Simple>(ctx.symbolPrimitive())?.text
             val prefilter = ctx.whereClause()?.let { visitExpr(it.expr()) }
             val label = visitOrNull<GraphLabel>(ctx.labelSpec())
             graphMatchNode(prefilter, variable, label)
@@ -1548,9 +1547,9 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitVariableIdentifier(ctx: GeneratedParser.VariableIdentifierContext) = translate(ctx) {
             val symbol = ctx.ident.getStringValue()
-            val isDelimited = when (ctx.ident.type) {
-                GeneratedParser.IDENTIFIER -> false
-                else -> true
+            val isRegular = when (ctx.ident.type) {
+                GeneratedParser.IDENTIFIER -> true
+                else -> false
             }
             val isQualified = when (ctx.qualifier) {
                 null -> false
@@ -1559,7 +1558,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprVarRef(
                 identifier(
                     qualifier = emptyList(),
-                    identifier = identifierPart(symbol, isDelimited),
+                    identifier = identifierSimple(symbol, isRegular),
                 ),
                 isQualified
             )
@@ -1567,7 +1566,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitVariableKeyword(ctx: GeneratedParser.VariableKeywordContext) = translate(ctx) {
             val symbol = ctx.key.text
-            val isDelimited = false
+            val isRegular = true
             val isQualified = when (ctx.qualifier) {
                 null -> false
                 else -> true
@@ -1575,7 +1574,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprVarRef(
                 identifier(
                     qualifier = emptyList(),
-                    identifier = identifierPart(symbol, isDelimited),
+                    identifier = identifierSimple(symbol, isRegular),
                 ),
                 isQualified
             )
@@ -1594,9 +1593,9 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitExprPrimaryPath(ctx: GeneratedParser.ExprPrimaryPathContext) = translate(ctx) {
-            val base = visitAs<Expr>(ctx.exprPrimary())
+            val identifier = visitAs<Expr>(ctx.exprPrimary())
             val steps = ctx.pathStep().map { visit(it) as PathStep }
-            exprPath(base, steps)
+            exprPath(identifier, steps)
         }
 
         override fun visitPathStepIndexExpr(ctx: GeneratedParser.PathStepIndexExprContext) = translate(ctx) {
@@ -1706,7 +1705,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                         GeneratedParser.MOD -> exprOperator("%", args[0], args[1])
                         GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH -> {
                             val path = ctx.qualifiedName().qualifier.map { visitSymbolPrimitive(it) }
-                            val name = identifierPart("char_length", false)
+                            val name = identifierSimple("char_length", true)
                             if (path.isEmpty()) {
                                 exprCall(identifier(emptyList(), name), args, null) // setq = null for scalar fn
                             } else {
@@ -1742,8 +1741,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             // TODO error on invalid datetime fields like TIMEZONE_HOUR and TIMEZONE_MINUTE
             // TODO: This should (maybe) be parsed into its own node. We could convert this into an operator. See https://github.com/partiql/partiql-lang-kotlin/issues/1690.
             when {
-                ctx.DATE_ADD() != null -> exprCall(identifier(emptyList(), identifierPart("${SYSTEM_PREFIX_INTERNAL}date_add_$fieldLit", false)), listOf(lhs, rhs), null)
-                ctx.DATE_DIFF() != null -> exprCall(identifier(emptyList(), identifierPart("${SYSTEM_PREFIX_INTERNAL}date_diff_$fieldLit", false)), listOf(lhs, rhs), null)
+                ctx.DATE_ADD() != null -> exprCall(identifier(emptyList(), identifierSimple("${SYSTEM_PREFIX_INTERNAL}date_add_$fieldLit", true)), listOf(lhs, rhs), null)
+                ctx.DATE_DIFF() != null -> exprCall(identifier(emptyList(), identifierSimple("${SYSTEM_PREFIX_INTERNAL}date_diff_$fieldLit", true)), listOf(lhs, rhs), null)
                 else -> throw error(ctx, "Expected DATE_ADD or DATE_DIFF")
             }
         }
@@ -1754,7 +1753,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitSubstring(ctx: GeneratedParser.SubstringContext) = translate(ctx) {
             if (ctx.FROM() == null) {
                 // normal form
-                val function = "SUBSTRING".toIdentifier()
+                val function = "SUBSTRING".toRegularIdentifier()
                 val args = visitOrEmpty<Expr>(ctx.expr())
                 exprCall(function, args, setq = null) // setq = null for scalar fn
             } else {
@@ -1772,7 +1771,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitPosition(ctx: GeneratedParser.PositionContext) = translate(ctx) {
             if (ctx.IN() == null) {
                 // normal form
-                val function = "POSITION".toIdentifier()
+                val function = "POSITION".toRegularIdentifier()
                 val args = visitOrEmpty<Expr>(ctx.expr())
                 exprCall(function, args, setq = null) // setq = null for scalar fn
             } else {
@@ -1790,7 +1789,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             // TODO: figure out why do we have a normalized form for overlay?
             if (ctx.PLACING() == null) {
                 // normal form
-                val function = "OVERLAY".toIdentifier()
+                val function = "OVERLAY".toRegularIdentifier()
                 val args = arrayOfNulls<Expr>(4).also {
                     visitOrEmpty<Expr>(ctx.expr()).forEachIndexed { index, expr ->
                         it[index] = expr
@@ -2137,7 +2136,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
-            DataType.USER_DEFINED(ctx.text.uppercase().toIdentifier())
+            DataType.USER_DEFINED(ctx.text.uppercase().toRegularIdentifier())
         }
 
         // TODO: Grammar rule support for Array and List
@@ -2227,7 +2226,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          *      SELECT foo.*.bar FROM foo
          * ```
          */
-        protected fun convertPathToProjectionItem(ctx: ParserRuleContext, path: ExprPath, alias: Part?) =
+        protected fun convertPathToProjectionItem(ctx: ParserRuleContext, path: ExprPath, alias: Simple?) =
             translate(ctx) {
                 val steps = mutableListOf<PathStep>()
                 var containsIndex = false
@@ -2274,10 +2273,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             else -> throw error(this, "Unsupported token for grabbing string value.")
         }
 
-        private fun String.toIdentifierPart(): Part = identifierPart(this, false)
-
-        private fun String.toIdentifier(): Identifier =
-            identifier(qualifier = emptyList(), identifier = toIdentifierPart())
+        private fun String.toRegularIdentifier(): Identifier =
+            regular(this)
 
         private fun String.toBigInteger() = BigInteger(this, 10)
 

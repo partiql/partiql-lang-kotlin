@@ -17,9 +17,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class PartitionBy extends AstNode {
     @NotNull
-    private final List<Identifier.Part> columns;
+    private final List<Identifier.Simple> columns;
 
-    public PartitionBy(@NotNull List<Identifier.Part> columns) {
+    public PartitionBy(@NotNull List<Identifier.Simple> columns) {
         this.columns = columns;
     }
 
@@ -35,7 +35,7 @@ public final class PartitionBy extends AstNode {
     }
 
     @NotNull
-    public List<Identifier.Part> getColumns() {
+    public List<Identifier.Simple> getColumns() {
         return this.columns;
     }
 }

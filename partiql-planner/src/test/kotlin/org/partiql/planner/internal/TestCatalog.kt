@@ -44,7 +44,7 @@ public class TestCatalog private constructor(
         /**
          * TODO ambiguous binding error?
          */
-        fun get(part: Identifier.Part): Tree? {
+        fun get(part: Identifier.Simple): Tree? {
             // regular, search insensitively
             if (part.isRegular()) {
                 for (child in children.values) {

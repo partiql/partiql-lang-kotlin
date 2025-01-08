@@ -294,7 +294,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun exprPathStepField(value: Identifier.Part): PathStep.Field {
+    public fun exprPathStepField(value: Identifier.Simple): PathStep.Field {
         return PathStep.Field(value)
     }
 
@@ -428,7 +428,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun excludeStepStructField(symbol: Identifier.Part): ExcludeStep.StructField {
+    public fun excludeStepStructField(symbol: Identifier.Simple): ExcludeStep.StructField {
         return ExcludeStep.StructField(symbol)
     }
 
@@ -459,7 +459,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun fromExpr(expr: Expr, fromType: FromType, asAlias: Identifier.Part? = null, atAlias: Identifier.Part? = null): FromExpr {
+    public fun fromExpr(expr: Expr, fromType: FromType, asAlias: Identifier.Simple? = null, atAlias: Identifier.Simple? = null): FromExpr {
         return FromExpr(expr, fromType, asAlias, atAlias)
     }
 
@@ -471,23 +471,23 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun groupBy(strategy: GroupByStrategy, keys: List<GroupBy.Key>, asAlias: Identifier.Part? = null): GroupBy {
+    public fun groupBy(strategy: GroupByStrategy, keys: List<GroupBy.Key>, asAlias: Identifier.Simple? = null): GroupBy {
         return GroupBy(strategy, keys, asAlias)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun groupByKey(expr: Expr, asAlias: Identifier.Part? = null): GroupBy.Key {
+    public fun groupByKey(expr: Expr, asAlias: Identifier.Simple? = null): GroupBy.Key {
         return GroupBy.Key(expr, asAlias)
     }
 
     @JvmStatic
-    public fun identifierPart(symbol: String, isDelimited: Boolean): Identifier.Part {
-        return Identifier.Part(symbol, isDelimited)
+    public fun identifierSimple(symbol: String, isRegular: Boolean): Identifier.Simple {
+        return Identifier.Simple(symbol, isRegular)
     }
 
     @JvmStatic
-    public fun identifier(qualifier: List<Identifier.Part>, identifier: Identifier.Part): Identifier {
+    public fun identifier(qualifier: List<Identifier.Simple>, identifier: Identifier.Simple): Identifier {
         return Identifier(qualifier, identifier)
     }
 
@@ -497,7 +497,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun letBinding(expr: Expr, asAlias: Identifier.Part): Let.Binding {
+    public fun letBinding(expr: Expr, asAlias: Identifier.Simple): Let.Binding {
         return Let.Binding(expr, asAlias)
     }
 
@@ -513,19 +513,19 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun insert(tableName: Identifier, asAlias: Identifier.Part? = null, source: InsertSource, onConflict: OnConflict? = null): Insert {
+    public fun insert(tableName: Identifier, asAlias: Identifier.Simple? = null, source: InsertSource, onConflict: OnConflict? = null): Insert {
         return Insert(tableName, asAlias, source, onConflict)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun upsert(tableName: Identifier, asAlias: Identifier.Part? = null, source: InsertSource): Upsert {
+    public fun upsert(tableName: Identifier, asAlias: Identifier.Simple? = null, source: InsertSource): Upsert {
         return Upsert(tableName, asAlias, source)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun replace(tableName: Identifier, asAlias: Identifier.Part? = null, source: InsertSource): Replace {
+    public fun replace(tableName: Identifier, asAlias: Identifier.Simple? = null, source: InsertSource): Replace {
         return Replace(tableName, asAlias, source)
     }
 
@@ -548,7 +548,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun insertSourceExpr(columns: List<Identifier.Part>? = null, expr: Expr): InsertSource.FromExpr {
+    public fun insertSourceExpr(columns: List<Identifier.Simple>? = null, expr: Expr): InsertSource.FromExpr {
         return InsertSource.FromExpr(columns, expr)
     }
 
@@ -564,7 +564,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun conflictTargetIndex(indexes: List<Identifier.Part>): ConflictTarget.Index {
+    public fun conflictTargetIndex(indexes: List<Identifier.Simple>): ConflictTarget.Index {
         return ConflictTarget.Index(indexes)
     }
 
@@ -601,7 +601,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun updateTarget(root: Identifier.Part, steps: List<UpdateTargetStep>): UpdateTarget {
+    public fun updateTarget(root: Identifier.Simple, steps: List<UpdateTargetStep>): UpdateTarget {
         return UpdateTarget(root, steps)
     }
 
@@ -616,7 +616,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun updateTargetStepField(key: Identifier.Part): UpdateTargetStep.Field {
+    public fun updateTargetStepField(key: Identifier.Simple): UpdateTargetStep.Field {
         return UpdateTargetStep.Field(key)
     }
 
@@ -658,7 +658,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun selectItemExpr(expr: Expr, asAlias: Identifier.Part? = null): SelectItem.Expr {
+    public fun selectItemExpr(expr: Expr, asAlias: Identifier.Simple? = null): SelectItem.Expr {
         return SelectItem.Expr(expr, asAlias)
     }
 
@@ -714,13 +714,13 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun columnDefinition(name: Identifier.Part, type: DataType, isOptional: Boolean, constraints: List<AttributeConstraint>, comment: String? = null): ColumnDefinition {
+    public fun columnDefinition(name: Identifier.Simple, type: DataType, isOptional: Boolean, constraints: List<AttributeConstraint>, comment: String? = null): ColumnDefinition {
         return ColumnDefinition(name, type, isOptional, constraints, comment)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun tableConstraintUnique(name: Identifier? = null, columns: List<Identifier.Part>, isPrimaryKey: Boolean): TableConstraint.Unique {
+    public fun tableConstraintUnique(name: Identifier? = null, columns: List<Identifier.Simple>, isPrimaryKey: Boolean): TableConstraint.Unique {
         return TableConstraint.Unique(name, columns, isPrimaryKey)
     }
 
@@ -748,7 +748,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun partitionBy(columns: List<Identifier.Part>): PartitionBy {
+    public fun partitionBy(columns: List<Identifier.Simple>): PartitionBy {
         return PartitionBy(columns)
     }
 }

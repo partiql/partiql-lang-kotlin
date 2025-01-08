@@ -32,11 +32,11 @@ public abstract class TableConstraint extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends TableConstraint {
         @NotNull
-        private final List<Identifier.Part> columns;
+        private final List<Identifier.Simple> columns;
 
         private final boolean primaryKey;
 
-        public Unique(@Nullable Identifier name, @NotNull List<Identifier.Part> column, boolean primaryKey) {
+        public Unique(@Nullable Identifier name, @NotNull List<Identifier.Simple> column, boolean primaryKey) {
             super(name);
             this.columns = column;
             this.primaryKey = primaryKey;
@@ -57,7 +57,7 @@ public abstract class TableConstraint extends AstNode {
         }
 
         @NotNull
-        public List<Identifier.Part> getColumns() {
+        public List<Identifier.Simple> getColumns() {
             return this.columns;
         }
 

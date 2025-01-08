@@ -52,18 +52,18 @@ internal object AstToPlan {
 
     // --- Helpers --------------------
 
-    fun convert(identifier: AstIdentifier): Identifier {
-        val qualifier = identifier.qualifier.map { part(it) }
-        val base = part(identifier.base)
-        return Identifier.of(qualifier + base)
+    fun convert(node: AstIdentifier): Identifier {
+        val qualifier = node.qualifier.map { part(it) }
+        val identifier = part(node.identifier)
+        return Identifier.of(qualifier + identifier)
     }
 
-    fun convert(identifier: AstIdentifier.Part): Identifier {
+    fun convert(identifier: org.partiql.ast.Identifier.Simple): Identifier {
         return Identifier.of(part(identifier))
     }
 
-    fun part(identifier: AstIdentifier.Part): Identifier.Part = when (identifier.isDelimited) {
-        true -> Identifier.Part.delimited(identifier.symbol)
-        false -> Identifier.Part.regular(identifier.symbol)
+    fun part(identifier: org.partiql.ast.Identifier.Simple): Identifier.Simple = when (identifier.isRegular) {
+        true -> Identifier.Simple.regular(identifier.text)
+        false -> Identifier.Simple.delimited(identifier.text)
     }
 }

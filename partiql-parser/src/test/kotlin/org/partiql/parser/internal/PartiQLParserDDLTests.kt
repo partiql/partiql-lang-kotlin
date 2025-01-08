@@ -14,12 +14,13 @@ import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierPart
 import org.partiql.ast.Ast.keyValue
 import org.partiql.ast.Ast.partitionBy
 import org.partiql.ast.Ast.tableConstraintUnique
 import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
+import org.partiql.ast.Identifier.Simple.delimited
+import org.partiql.ast.Identifier.Simple.regular
 import org.partiql.ast.Literal.intNum
 import java.util.stream.Stream
 import kotlin.test.assertEquals
@@ -47,7 +48,7 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("foo", false),
+                        regular("foo"),
                     ),
                     emptyList(),
                     emptyList(),
@@ -64,7 +65,7 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("foo", true),
+                        delimited("foo"),
                     ),
                     emptyList(),
                     emptyList(),
@@ -78,10 +79,10 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = listOf(
-                            identifierPart("myCatalog", false),
-                            identifierPart("mySchema", false)
+                            regular("myCatalog"),
+                            regular("mySchema")
                         ),
-                        identifier = identifierPart("foo", false)
+                        identifier = regular("foo")
                     ),
                     emptyList(),
                     emptyList(),
@@ -95,10 +96,10 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = listOf(
-                            identifierPart("myCatalog", false),
-                            identifierPart("mySchema", true)
+                            regular("myCatalog"),
+                            delimited("mySchema")
                         ),
-                        identifier = identifierPart("foo", false)
+                        identifier = regular("foo")
                     ),
                     emptyList(),
                     emptyList(),
@@ -122,11 +123,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             listOf(
@@ -151,11 +152,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             listOf(
@@ -180,11 +181,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             listOf(
@@ -209,11 +210,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             listOf(
@@ -224,7 +225,7 @@ class PartiQLParserDDLTests {
                                         exprVarRef(
                                             identifier(
                                                 qualifier = emptyList(),
-                                                identifierPart("a", false),
+                                                regular("a"),
                                             ),
                                             isQualified = false
                                         ),
@@ -254,15 +255,15 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(),
                     listOf(
                         tableConstraintUnique(
                             null,
                             listOf(
-                                identifierPart("a", false),
-                                identifierPart("b", false)
+                                regular("a"),
+                                regular("b")
                             ),
                             false,
                         )
@@ -282,15 +283,15 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(),
                     listOf(
                         tableConstraintUnique(
                             null,
                             listOf(
-                                identifierPart("a", false),
-                                identifierPart("b", false)
+                                regular("a"),
+                                regular("b")
                             ),
                             true,
                         )
@@ -310,11 +311,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", true),
+                            delimited("a"),
                             DataType.INT2(),
                             false,
                             listOf(),
@@ -340,22 +341,22 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifierPart("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         false,
                                         emptyList(),
                                         null
                                     ),
                                     DataType.StructField(
-                                        identifierPart("c", false),
+                                        regular("c"),
                                         DataType.INT2(),
                                         false,
                                         listOf(
@@ -389,19 +390,19 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifierPart("b", false),
+                                        regular("b"),
                                         DataType.STRUCT(
                                             listOf(
                                                 DataType.StructField(
-                                                    identifierPart("c", false),
+                                                    regular("c"),
                                                     DataType.INT2(),
                                                     false,
                                                     emptyList(),
@@ -414,7 +415,7 @@ class PartiQLParserDDLTests {
                                         null
                                     ),
                                     DataType.StructField(
-                                        identifierPart("d", false),
+                                        regular("d"),
                                         DataType.ARRAY(
                                             DataType.INT2()
                                         ),
@@ -445,11 +446,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.STRUCT(),
                             false,
                             emptyList(),
@@ -472,11 +473,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.ARRAY(DataType.INT2()),
                             false,
                             emptyList(),
@@ -498,16 +499,16 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.ARRAY(
                                 DataType.STRUCT(
                                     listOf(
                                         DataType.StructField(
-                                            identifierPart("b", false),
+                                            regular("b"),
                                             DataType.INT2(),
                                             false,
                                             emptyList(),
@@ -536,16 +537,16 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.ARRAY(
                                 DataType.STRUCT(
                                     listOf(
                                         DataType.StructField(
-                                            identifierPart("b", false),
+                                            regular("b"),
                                             DataType.INT2(),
                                             false,
                                             emptyList(),
@@ -575,11 +576,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.ARRAY(),
                             false,
                             emptyList(),
@@ -605,11 +606,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             true,
                             emptyList(),
@@ -632,15 +633,15 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifierPart("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         true,
                                         emptyList(),
@@ -669,15 +670,15 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifierPart("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         true,
                                         emptyList(),
@@ -707,11 +708,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             emptyList(),
@@ -734,15 +735,15 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifierPart("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         false,
                                         emptyList(),
@@ -771,15 +772,15 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(
                         columnDefinition(
-                            identifierPart("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifierPart("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         false,
                                         emptyList(),
@@ -808,13 +809,13 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(),
                     listOf(),
                     partitionBy(
                         listOf(
-                            identifierPart("a", false),
+                            regular("a"),
                         )
                     ),
                     emptyList()
@@ -830,14 +831,14 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(),
                     listOf(),
                     partitionBy(
                         listOf(
-                            identifierPart("a", false),
-                            identifierPart("b", false),
+                            regular("a"),
+                            regular("b"),
                         )
                     ),
                     emptyList()
@@ -854,7 +855,7 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(),
                     listOf(),
@@ -874,7 +875,7 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(),
                     listOf(),
@@ -894,7 +895,7 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(),
                     listOf(),
@@ -916,11 +917,11 @@ class PartiQLParserDDLTests {
                 createTable(
                     identifier(
                         qualifier = emptyList(),
-                        identifierPart("tbl", false),
+                        regular("tbl"),
                     ),
                     listOf(),
                     listOf(),
-                    partitionBy(listOf(identifierPart("a", false))),
+                    partitionBy(listOf(regular("a"))),
                     listOf(
                         keyValue("k1", "v1"),
                     )
