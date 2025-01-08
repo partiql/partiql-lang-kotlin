@@ -61,7 +61,6 @@ import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.fromJoin
 import org.partiql.ast.Ast.groupBy
 import org.partiql.ast.Ast.groupByKey
-import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.letBinding
 import org.partiql.ast.Ast.orderBy
 import org.partiql.ast.Ast.queryBodySFW
@@ -282,11 +281,9 @@ class SqlDialectTest {
             expect(
                 "FOO.BAR",
                 DataType.USER_DEFINED(
-                    identifier(
-                        qualifier = listOf(
-                            regular("FOO")
-                        ),
-                        identifier = regular("BAR"),
+                    Identifier.of(
+                        regular("FOO"),
+                        regular("BAR")
                     )
                 )
             ),
@@ -361,32 +358,26 @@ class SqlDialectTest {
             ),
             expect(
                 "x.y.z",
-                identifier(
-                    qualifier = listOf(
-                        regular("x"),
-                        regular("y")
-                    ),
-                    identifier = regular("z"),
+                Identifier.of(
+                    regular("x"),
+                    regular("y"),
+                    regular("z")
                 )
             ),
             expect(
                 "x.\"y\".z",
-                identifier(
-                    qualifier = listOf(
-                        regular("x"),
-                        delimited("y")
-                    ),
-                    identifier = regular("z")
+                Identifier.of(
+                    regular("x"),
+                    delimited("y"),
+                    regular("z")
                 )
             ),
             expect(
                 "\"x\".\"y\".\"z\"",
-                identifier(
-                    qualifier = listOf(
-                        delimited("x"),
-                        delimited("y")
-                    ),
-                    identifier = delimited("z"),
+                Identifier.of(
+                    delimited("x"),
+                    delimited("y"),
+                    delimited("z")
                 )
             ),
         )
@@ -503,32 +494,24 @@ class SqlDialectTest {
             expect(
                 "x",
                 exprVarRef(
-                    identifier(
-                        qualifier = emptyList(),
-                        identifier = regular("x"),
-                    ),
+                    Identifier.regular("x"),
                     isQualified = false
                 )
             ),
             expect(
                 "\"x\"",
                 exprVarRef(
-                    identifier(
-                        qualifier = emptyList(),
-                        identifier = delimited("x"),
-                    ),
+                    Identifier.delimited("x"),
                     isQualified = false
                 )
             ),
             expect(
                 "x.y.z",
                 exprVarRef(
-                    identifier(
-                        qualifier = listOf(
-                            regular("x"),
-                            regular("y")
-                        ),
-                        identifier = regular("z")
+                    Identifier.of(
+                        regular("x"),
+                        regular("y"),
+                        regular("z")
                     ),
                     isQualified = false
                 )
@@ -536,12 +519,10 @@ class SqlDialectTest {
             expect(
                 "x.\"y\".z",
                 exprVarRef(
-                    identifier(
-                        qualifier = listOf(
-                            regular("x"),
-                            delimited("y")
-                        ),
-                        identifier = regular("z")
+                    Identifier.of(
+                        regular("x"),
+                        delimited("y"),
+                        regular("z")
                     ),
                     isQualified = false
                 )
@@ -549,12 +530,10 @@ class SqlDialectTest {
             expect(
                 "\"x\".\"y\".\"z\"",
                 exprVarRef(
-                    identifier(
-                        qualifier = listOf(
-                            delimited("x"),
-                            delimited("y"),
-                        ),
-                        identifier = delimited("z")
+                    Identifier.of(
+                        delimited("x"),
+                        delimited("y"),
+                        delimited("z")
                     ),
                     isQualified = false
                 )
@@ -563,32 +542,24 @@ class SqlDialectTest {
             expect(
                 "@x",
                 exprVarRef(
-                    identifier(
-                        qualifier = emptyList(),
-                        identifier = regular("x"),
-                    ),
+                    Identifier.regular("x"),
                     isQualified = true
                 )
             ),
             expect(
                 "@\"x\"",
                 exprVarRef(
-                    identifier(
-                        qualifier = emptyList(),
-                        identifier = delimited("x"),
-                    ),
+                    Identifier.delimited("x"),
                     isQualified = true
                 )
             ),
             expect(
                 "@x.y.z",
                 exprVarRef(
-                    identifier(
-                        qualifier = listOf(
-                            regular("x"),
-                            regular("y")
-                        ),
-                        identifier = regular("z")
+                    Identifier.of(
+                        regular("x"),
+                        regular("y"),
+                        regular("z")
                     ),
                     isQualified = true
                 )
@@ -596,12 +567,10 @@ class SqlDialectTest {
             expect(
                 "@x.\"y\".z",
                 exprVarRef(
-                    identifier(
-                        qualifier = listOf(
-                            regular("x"),
-                            delimited("y")
-                        ),
-                        identifier = regular("z")
+                    Identifier.of(
+                        regular("x"),
+                        delimited("y"),
+                        regular("z")
                     ),
                     isQualified = true
                 )
@@ -609,12 +578,10 @@ class SqlDialectTest {
             expect(
                 "@\"x\".\"y\".\"z\"",
                 exprVarRef(
-                    identifier(
-                        qualifier = listOf(
-                            delimited("x"),
-                            delimited("y")
-                        ),
-                        identifier = delimited("z")
+                    Identifier.of(
+                        delimited("x"),
+                        delimited("y"),
+                        delimited("z")
                     ),
                     isQualified = true
                 )
@@ -713,9 +680,9 @@ class SqlDialectTest {
             expect(
                 "foo.bar(1)",
                 exprCall(
-                    function = identifier(
-                        qualifier = listOf(regular("foo")),
-                        identifier = regular("bar")
+                    function = Identifier.of(
+                        regular("foo"),
+                        regular("bar")
                     ),
                     args = listOf(exprLit(intNum(1))),
                     setq = null
@@ -724,9 +691,9 @@ class SqlDialectTest {
             expect(
                 "foo.bar(1, 2)",
                 exprCall(
-                    function = identifier(
-                        qualifier = listOf(regular("foo")),
-                        identifier = regular("bar")
+                    function = Identifier.of(
+                        regular("foo"),
+                        regular("bar")
                     ),
                     args = listOf(
                         exprLit(intNum(1)),

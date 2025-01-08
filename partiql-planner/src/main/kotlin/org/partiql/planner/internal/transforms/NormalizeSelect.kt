@@ -23,8 +23,6 @@ import org.partiql.ast.Ast.exprQuerySet
 import org.partiql.ast.Ast.exprStruct
 import org.partiql.ast.Ast.exprStructField
 import org.partiql.ast.Ast.exprVarRef
-import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierSimple
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.queryBodySetOp
 import org.partiql.ast.Ast.selectItemExpr
@@ -37,6 +35,7 @@ import org.partiql.ast.FromExpr
 import org.partiql.ast.FromJoin
 import org.partiql.ast.FromTableRef
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Identifier
 import org.partiql.ast.Literal.string
 import org.partiql.ast.QueryBody
 import org.partiql.ast.SelectItem
@@ -263,7 +262,7 @@ internal object NormalizeSelect {
             }
             return selectValue(
                 constructor = exprCall(
-                    function = identifier(emptyList(), identifierSimple("TUPLEUNION", isRegular = true)),
+                    function = Identifier.delimited("TUPLEUNION"),
                     args = tupleUnionArgs,
                     setq = null // setq = null for scalar fn
                 ),
@@ -305,7 +304,7 @@ internal object NormalizeSelect {
             return selectValue(
                 setq = node.setq,
                 constructor = exprCall(
-                    function = identifier(emptyList(), identifierSimple("TUPLEUNION", isRegular = true)),
+                    function = Identifier.regular("TUPLEUNION"),
                     args = tupleUnionArgs,
                     setq = null // setq = null for scalar fn
                 )
@@ -354,7 +353,7 @@ internal object NormalizeSelect {
         )
 
         private fun varLocal(name: String): ExprVarRef = exprVarRef(
-            identifier = identifier(emptyList(), identifierSimple(name, isRegular = true)),
+            identifier = Identifier.delimited(name),
             isQualified = true
         )
 
@@ -370,18 +369,18 @@ internal object NormalizeSelect {
 
         // t -> t.* AS _i
         private fun String.star(i: Int): SelectItem.Expr {
-            val expr = exprVarRef(identifier(emptyList(), id(this)), isQualified = false)
+            val expr = exprVarRef(Identifier.of(id(this)), isQualified = false)
             val alias = expr.toBinder(i)
             return selectItemExpr(expr, alias)
         }
 
         // t -> t AS t
         private fun String.simple(): SelectItem.Expr {
-            val expr = exprVarRef(identifier(emptyList(), id(this)), isQualified = false)
+            val expr = exprVarRef(Identifier.of(id(this)), isQualified = false)
             val alias = id(this)
             return selectItemExpr(expr, alias)
         }
 
-        private fun id(symbol: String) = identifierSimple(symbol, isRegular = false)
+        private fun id(symbol: String) = Identifier.Simple.regular(symbol)
     }
 }

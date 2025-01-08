@@ -1,6 +1,5 @@
 package org.partiql.planner.internal.helpers
 
-import org.partiql.ast.Ast.identifierSimple
 import org.partiql.ast.Identifier
 import org.partiql.ast.Identifier.Simple
 import org.partiql.ast.Literal
@@ -42,7 +41,7 @@ internal fun Expr.toBinder(index: Int): Simple = toBinder { index }
 
 private fun String.toBinder(): Simple =
     // Every binder preserves case
-    identifierSimple(this@toBinder, true)
+    Simple.delimited(this@toBinder)
 
 private fun Identifier.toBinder(): Simple = this.identifier.toBinder()
 

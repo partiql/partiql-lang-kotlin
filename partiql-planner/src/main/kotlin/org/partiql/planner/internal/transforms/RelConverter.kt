@@ -18,8 +18,6 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprVarRef
-import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierSimple
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
 import org.partiql.ast.AstVisitor
@@ -689,7 +687,7 @@ internal object RelConverter {
         override fun visitSelectValue(node: SelectValue, ctx: Context): AstNode {
             val visited = super.visitSelectValue(node, ctx)
             val substitutions = ctx.keys.associate {
-                it.expr to exprVarRef(identifier(emptyList(), identifierSimple(it.asAlias!!.text, isRegular = true)), isQualified = false)
+                it.expr to exprVarRef(Identifier.regular(it.asAlias!!.text), isQualified = false)
             }
             return SubstitutionVisitor.visit(visited, substitutions)
         }
@@ -702,13 +700,7 @@ internal object RelConverter {
             //  may require further modification of SPI interfaces to support
             when (node.function.isAggregateCall()) {
                 true -> {
-                    val id = identifier(
-                        emptyList(),
-                        identifierSimple(
-                            symbol = syntheticAgg(ctx.aggregations.size),
-                            isRegular = false
-                        ),
-                    )
+                    val id = Identifier.delimited(syntheticAgg(ctx.aggregations.size))
                     ctx.aggregations += node
                     exprVarRef(id, isQualified = false)
                 }

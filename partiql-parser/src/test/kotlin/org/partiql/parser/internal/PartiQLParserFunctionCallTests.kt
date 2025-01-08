@@ -2,9 +2,9 @@ package org.partiql.parser.internal
 
 import org.junit.jupiter.api.Test
 import org.partiql.ast.Ast.exprCall
-import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
+import org.partiql.ast.Identifier
 import org.partiql.ast.Identifier.Simple.delimited
 import org.partiql.ast.Identifier.Simple.regular
 import org.partiql.ast.expr.Expr
@@ -21,7 +21,7 @@ class PartiQLParserFunctionCallTests {
         "foo()",
         queryBody {
             exprCall(
-                function = identifier(emptyList(), regular("foo")),
+                function = Identifier.regular("foo"),
                 args = emptyList(),
                 setq = null
             )
@@ -33,7 +33,7 @@ class PartiQLParserFunctionCallTests {
         "\"foo\"()",
         queryBody {
             exprCall(
-                function = identifier(emptyList(), delimited("foo")),
+                function = Identifier.delimited("foo"),
                 args = emptyList(),
                 setq = null
             )
@@ -45,7 +45,7 @@ class PartiQLParserFunctionCallTests {
         "upper()",
         queryBody {
             exprCall(
-                function = identifier(emptyList(), regular("upper")),
+                function = Identifier.regular("upper"),
                 args = emptyList(),
                 setq = null
             )
@@ -57,7 +57,7 @@ class PartiQLParserFunctionCallTests {
         "\"upper\"()",
         queryBody {
             exprCall(
-                function = identifier(emptyList(), delimited("upper")),
+                function = Identifier.delimited("upper"),
                 args = emptyList(),
                 setq = null
             )
@@ -69,12 +69,10 @@ class PartiQLParserFunctionCallTests {
         "my_catalog.my_schema.foo()",
         queryBody {
             exprCall(
-                function = identifier(
-                    qualifier = listOf(
-                        regular("my_catalog"),
-                        regular("my_schema")
-                    ),
-                    identifier = regular("foo")
+                function = Identifier.of(
+                    regular("my_catalog"),
+                    regular("my_schema"),
+                    regular("foo")
                 ),
                 args = emptyList(),
                 setq = null
@@ -87,12 +85,10 @@ class PartiQLParserFunctionCallTests {
         "my_catalog.my_schema.\"foo\"()",
         queryBody {
             exprCall(
-                function = identifier(
-                    qualifier = listOf(
-                        regular("my_catalog"),
-                        regular("my_schema")
-                    ),
-                    identifier = delimited("foo")
+                function = Identifier.of(
+                    regular("my_catalog"),
+                    regular("my_schema"),
+                    delimited("foo")
                 ),
                 args = emptyList(),
                 setq = null
@@ -105,12 +101,10 @@ class PartiQLParserFunctionCallTests {
         "my_catalog.my_schema.upper()",
         queryBody {
             exprCall(
-                function = identifier(
-                    qualifier = listOf(
-                        regular("my_catalog"),
-                        regular("my_schema")
-                    ),
-                    identifier = regular("upper")
+                function = Identifier.of(
+                    regular("my_catalog"),
+                    regular("my_schema"),
+                    regular("upper")
                 ),
                 args = emptyList(),
                 setq = null
@@ -123,12 +117,10 @@ class PartiQLParserFunctionCallTests {
         "my_catalog.my_schema.\"upper\"()",
         queryBody {
             exprCall(
-                function = identifier(
-                    qualifier = listOf(
-                        regular("my_catalog"),
-                        regular("my_schema")
-                    ),
-                    identifier = delimited("upper")
+                function = Identifier.of(
+                    regular("my_catalog"),
+                    regular("my_schema"),
+                    delimited("upper")
                 ),
                 args = emptyList(),
                 setq = null

@@ -13,12 +13,12 @@ import org.partiql.ast.Ast.createTable
 import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.exprVarRef
-import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Ast.keyValue
 import org.partiql.ast.Ast.partitionBy
 import org.partiql.ast.Ast.tableConstraintUnique
 import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
+import org.partiql.ast.Identifier
 import org.partiql.ast.Identifier.Simple.delimited
 import org.partiql.ast.Identifier.Simple.regular
 import org.partiql.ast.Literal.intNum
@@ -46,10 +46,7 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with unqualified case insensitive name",
                 "CREATE TABLE foo",
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("foo"),
-                    ),
+                    Identifier.regular("foo"),
                     emptyList(),
                     emptyList(),
                     null,
@@ -63,10 +60,7 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with unqualified case sensitive name",
                 "CREATE TABLE \"foo\"",
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        delimited("foo"),
-                    ),
+                    Identifier.delimited("foo"),
                     emptyList(),
                     emptyList(),
                     null,
@@ -77,12 +71,10 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with qualified case insensitive name",
                 "CREATE TABLE myCatalog.mySchema.foo",
                 createTable(
-                    identifier(
-                        qualifier = listOf(
-                            regular("myCatalog"),
-                            regular("mySchema")
-                        ),
-                        identifier = regular("foo")
+                    Identifier.of(
+                        regular("myCatalog"),
+                        regular("mySchema"),
+                        regular("foo")
                     ),
                     emptyList(),
                     emptyList(),
@@ -94,12 +86,10 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with qualified name with mixed case sensitivity",
                 "CREATE TABLE myCatalog.\"mySchema\".foo",
                 createTable(
-                    identifier(
-                        qualifier = listOf(
-                            regular("myCatalog"),
-                            delimited("mySchema")
-                        ),
-                        identifier = regular("foo")
+                    Identifier.of(
+                        regular("myCatalog"),
+                        delimited("mySchema"),
+                        regular("foo")
                     ),
                     emptyList(),
                     emptyList(),
@@ -121,10 +111,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -150,10 +137,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -179,10 +163,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -208,10 +189,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -223,10 +201,7 @@ class PartiQLParserDDLTests {
                                     exprOperator(
                                         ">",
                                         exprVarRef(
-                                            identifier(
-                                                qualifier = emptyList(),
-                                                regular("a"),
-                                            ),
+                                            Identifier.regular("a"),
                                             isQualified = false
                                         ),
                                         exprLit(
@@ -253,10 +228,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(
                         tableConstraintUnique(
@@ -281,10 +253,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(
                         tableConstraintUnique(
@@ -309,10 +278,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             delimited("a"),
@@ -339,10 +305,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -388,10 +351,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -444,10 +404,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -471,10 +428,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -497,10 +451,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -535,10 +486,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -574,10 +522,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -604,10 +549,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -631,10 +573,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -668,10 +607,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -706,10 +642,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -733,10 +666,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -770,10 +700,7 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
                             regular("a"),
@@ -807,10 +734,7 @@ class PartiQLParserDDLTests {
                         PARTITION BY (a)
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     partitionBy(
@@ -829,10 +753,7 @@ class PartiQLParserDDLTests {
                         PARTITION BY (a, b)
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     partitionBy(
@@ -853,10 +774,7 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1')
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     null,
@@ -873,10 +791,7 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('K1k' = 'V1v')
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     null,
@@ -893,10 +808,7 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1', 'k2' = 'v2')
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     null,
@@ -915,10 +827,7 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1')
                 """.trimIndent(),
                 createTable(
-                    identifier(
-                        qualifier = emptyList(),
-                        regular("tbl"),
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     partitionBy(listOf(regular("a"))),

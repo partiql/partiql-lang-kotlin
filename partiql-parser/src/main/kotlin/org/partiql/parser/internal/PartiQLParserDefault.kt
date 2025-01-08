@@ -1015,7 +1015,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExcludeExpr(ctx: GeneratedParser.ExcludeExprContext) = translate(ctx) {
             val rootId = visitSymbolPrimitive(ctx.symbolPrimitive())
-            val root = exprVarRef(identifier(emptyList(), rootId), isQualified = false)
+            val root = exprVarRef(Identifier.of(rootId), isQualified = false)
             val steps = visitOrEmpty<ExcludeStep>(ctx.excludeExprSteps())
             excludePath(root, steps)
         }
@@ -1556,10 +1556,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 else -> true
             }
             exprVarRef(
-                identifier(
-                    qualifier = emptyList(),
-                    identifier = identifierSimple(symbol, isRegular),
-                ),
+                Identifier.of(identifierSimple(symbol, isRegular)),
                 isQualified
             )
         }
@@ -1572,10 +1569,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 else -> true
             }
             exprVarRef(
-                identifier(
-                    qualifier = emptyList(),
-                    identifier = identifierSimple(symbol, isRegular),
-                ),
+                Identifier.of(identifierSimple(symbol, isRegular)),
                 isQualified
             )
         }
@@ -1705,9 +1699,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                         GeneratedParser.MOD -> exprOperator("%", args[0], args[1])
                         GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH -> {
                             val path = ctx.qualifiedName().qualifier.map { visitSymbolPrimitive(it) }
-                            val name = identifierSimple("char_length", true)
+                            val name = Simple.regular("char_length")
                             if (path.isEmpty()) {
-                                exprCall(identifier(emptyList(), name), args, null) // setq = null for scalar fn
+                                exprCall(Identifier.of(name), args, null) // setq = null for scalar fn
                             } else {
                                 exprCall(identifier(qualifier = path, identifier = name), args, setq = null)
                             }
@@ -1741,8 +1735,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             // TODO error on invalid datetime fields like TIMEZONE_HOUR and TIMEZONE_MINUTE
             // TODO: This should (maybe) be parsed into its own node. We could convert this into an operator. See https://github.com/partiql/partiql-lang-kotlin/issues/1690.
             when {
-                ctx.DATE_ADD() != null -> exprCall(identifier(emptyList(), identifierSimple("${SYSTEM_PREFIX_INTERNAL}date_add_$fieldLit", true)), listOf(lhs, rhs), null)
-                ctx.DATE_DIFF() != null -> exprCall(identifier(emptyList(), identifierSimple("${SYSTEM_PREFIX_INTERNAL}date_diff_$fieldLit", true)), listOf(lhs, rhs), null)
+                ctx.DATE_ADD() != null -> exprCall(regular("${SYSTEM_PREFIX_INTERNAL}date_add_$fieldLit"), listOf(lhs, rhs), null)
+                ctx.DATE_DIFF() != null -> exprCall(regular("${SYSTEM_PREFIX_INTERNAL}date_diff_$fieldLit"), listOf(lhs, rhs), null)
                 else -> throw error(ctx, "Expected DATE_ADD or DATE_DIFF")
             }
         }
