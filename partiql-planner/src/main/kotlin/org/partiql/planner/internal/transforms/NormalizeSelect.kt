@@ -24,7 +24,7 @@ import org.partiql.ast.Ast.exprStruct
 import org.partiql.ast.Ast.exprStructField
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
+import org.partiql.ast.Ast.identifierPart
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.queryBodySetOp
 import org.partiql.ast.Ast.selectItemExpr
@@ -263,7 +263,7 @@ internal object NormalizeSelect {
             }
             return selectValue(
                 constructor = exprCall(
-                    function = identifierChain(identifier("TUPLEUNION", isDelimited = true), next = null),
+                    function = identifier(emptyList(), identifierPart("TUPLEUNION", isDelimited = true)),
                     args = tupleUnionArgs,
                     setq = null // setq = null for scalar fn
                 ),
@@ -305,7 +305,7 @@ internal object NormalizeSelect {
             return selectValue(
                 setq = node.setq,
                 constructor = exprCall(
-                    function = identifierChain(identifier("TUPLEUNION", isDelimited = true), next = null),
+                    function = identifier(emptyList(), identifierPart("TUPLEUNION", isDelimited = true)),
                     args = tupleUnionArgs,
                     setq = null // setq = null for scalar fn
                 )
@@ -354,7 +354,7 @@ internal object NormalizeSelect {
         )
 
         private fun varLocal(name: String): ExprVarRef = exprVarRef(
-            identifierChain = identifierChain(identifier(name, isDelimited = true), next = null),
+            identifier = identifier(emptyList(), identifierPart(name, isDelimited = true)),
             isQualified = true
         )
 
@@ -370,18 +370,18 @@ internal object NormalizeSelect {
 
         // t -> t.* AS _i
         private fun String.star(i: Int): SelectItem.Expr {
-            val expr = exprVarRef(identifierChain(id(this), next = null), isQualified = false)
+            val expr = exprVarRef(identifier(emptyList(), id(this)), isQualified = false)
             val alias = expr.toBinder(i)
             return selectItemExpr(expr, alias)
         }
 
         // t -> t AS t
         private fun String.simple(): SelectItem.Expr {
-            val expr = exprVarRef(identifierChain(id(this), next = null), isQualified = false)
+            val expr = exprVarRef(identifier(emptyList(), id(this)), isQualified = false)
             val alias = id(this)
             return selectItemExpr(expr, alias)
         }
 
-        private fun id(symbol: String) = identifier(symbol, isDelimited = false)
+        private fun id(symbol: String) = identifierPart(symbol, isDelimited = false)
     }
 }

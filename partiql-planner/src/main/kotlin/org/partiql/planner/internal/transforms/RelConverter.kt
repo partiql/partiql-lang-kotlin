@@ -19,7 +19,7 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
+import org.partiql.ast.Ast.identifierPart
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
 import org.partiql.ast.AstVisitor
@@ -31,7 +31,7 @@ import org.partiql.ast.FromJoin
 import org.partiql.ast.FromType
 import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
-import org.partiql.ast.IdentifierChain
+import org.partiql.ast.Identifier
 import org.partiql.ast.JoinType
 import org.partiql.ast.Literal.intNum
 import org.partiql.ast.Nulls
@@ -689,7 +689,7 @@ internal object RelConverter {
         override fun visitSelectValue(node: SelectValue, ctx: Context): AstNode {
             val visited = super.visitSelectValue(node, ctx)
             val substitutions = ctx.keys.associate {
-                it.expr to exprVarRef(identifierChain(identifier(it.asAlias!!.symbol, isDelimited = true), next = null), isQualified = false)
+                it.expr to exprVarRef(identifier(emptyList(), identifierPart(it.asAlias!!.symbol, isDelimited = true)), isQualified = false)
             }
             return SubstitutionVisitor.visit(visited, substitutions)
         }
@@ -702,12 +702,12 @@ internal object RelConverter {
             //  may require further modification of SPI interfaces to support
             when (node.function.isAggregateCall()) {
                 true -> {
-                    val id = identifierChain(
-                        identifier(
+                    val id = identifier(
+                        emptyList(),
+                        identifierPart(
                             symbol = syntheticAgg(ctx.aggregations.size),
                             isDelimited = false
                         ),
-                        next = null
                     )
                     ctx.aggregations += node
                     exprVarRef(id, isQualified = false)
@@ -719,20 +719,7 @@ internal object RelConverter {
             return aggregates.contains(this)
         }
 
-        private fun IdentifierChain.isAggregateCall(): Boolean {
-            return when (next) {
-                null -> root.symbol.lowercase().isAggregateCall()
-                else -> {
-                    var curId = next
-                    var last = curId
-                    while (curId != null) {
-                        last = curId
-                        curId = curId.next
-                    }
-                    last!!.root.symbol.lowercase().isAggregateCall()
-                }
-            }
-        }
+        private fun Identifier.isAggregateCall(): Boolean = base.symbol.lowercase().isAggregateCall()
 
         override fun defaultReturn(node: AstNode, ctx: Context) = node
     }

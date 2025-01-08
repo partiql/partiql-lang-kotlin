@@ -56,9 +56,9 @@ public abstract class SelectItem extends AstNode {
         private final org.partiql.ast.expr.Expr expr;
 
         @Nullable
-        private final Identifier asAlias;
+        private final Identifier.Part asAlias;
 
-        public Expr(@NotNull org.partiql.ast.expr.Expr expr, @Nullable Identifier asAlias) {
+        public Expr(@NotNull org.partiql.ast.expr.Expr expr, @Nullable Identifier.Part asAlias) {
             this.expr = expr;
             this.asAlias = asAlias;
         }
@@ -85,7 +85,7 @@ public abstract class SelectItem extends AstNode {
         }
 
         @Nullable
-        public Identifier getAsAlias() {
+        public Identifier.Part getAsAlias() {
             return this.asAlias;
         }
     }

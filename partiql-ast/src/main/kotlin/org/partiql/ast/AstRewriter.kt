@@ -2,7 +2,7 @@ package org.partiql.ast
 
 import org.partiql.ast.Ast.explain
 import org.partiql.ast.Ast.exprQuerySet
-import org.partiql.ast.Ast.identifier
+import org.partiql.ast.Ast.identifierPart
 import org.partiql.ast.Ast.query
 import org.partiql.ast.ddl.CreateTable
 import org.partiql.ast.dml.ConflictAction
@@ -123,7 +123,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitExprCall(node: ExprCall, ctx: C): AstNode {
-        val function = visitIdentifierChain(node.function, ctx) as IdentifierChain
+        val function = visitIdentifier(node.function, ctx) as Identifier
         val args = _visitList(node.args, ctx, ::visitExpr)
         val setq = node.setq
         return if (function !== node.function || args !== node.args || setq !== node.setq) {
@@ -424,10 +424,10 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitExprVarRef(node: ExprVarRef, ctx: C): AstNode {
-        val identifierChain = visitIdentifierChain(node.identifierChain, ctx) as IdentifierChain
+        val identifier = visitIdentifier(node.identifier, ctx) as Identifier
         val isQualified = node.isQualified
-        return if (identifierChain !== node.identifierChain || isQualified !== node.isQualified) {
-            ExprVarRef(identifierChain, isQualified)
+        return if (identifier !== node.identifier || isQualified !== node.isQualified) {
+            ExprVarRef(identifier, isQualified)
         } else {
             node
         }
@@ -463,7 +463,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitPathStepField(node: PathStep.Field, ctx: C): AstNode {
-        val field = visitIdentifier(node.field, ctx) as Identifier
+        val field = visitIdentifierPart(node.field, ctx) as Identifier.Part
         return if (field !== node.field) {
             PathStep.Field(field)
         } else {
@@ -569,7 +569,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitExcludeStepStructField(node: ExcludeStep.StructField, ctx: C): AstNode {
-        val symbol = visitIdentifier(node.symbol, ctx) as Identifier
+        val symbol = visitIdentifierPart(node.symbol, ctx) as Identifier.Part
         return if (symbol !== node.symbol) {
             ExcludeStep.StructField(symbol)
         } else {
@@ -606,8 +606,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     override fun visitFromExpr(node: FromExpr, ctx: C): AstNode {
         val expr = visitExpr(node.expr, ctx) as Expr
         val fromType = node.fromType
-        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier? }
-        val atAlias = node.atAlias?.let { visitIdentifier(it, ctx) as Identifier? }
+        val asAlias = node.asAlias?.let { visitIdentifierPart(it, ctx) as Identifier.Part? }
+        val atAlias = node.atAlias?.let { visitIdentifierPart(it, ctx) as Identifier.Part? }
         return if (expr !== node.expr || fromType !== node.fromType || asAlias !== node.asAlias ||
             atAlias !== node.atAlias
         ) {
@@ -634,7 +634,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     override fun visitGroupBy(node: GroupBy, ctx: C): AstNode {
         val strategy = node.strategy
         val keys = _visitList(node.keys, ctx, ::visitGroupByKey)
-        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier? }
+        val asAlias = node.asAlias?.let { visitIdentifierPart(it, ctx) as Identifier.Part? }
         return if (strategy !== node.strategy || keys !== node.keys || asAlias !== node.asAlias) {
             GroupBy(strategy, keys, asAlias)
         } else {
@@ -644,7 +644,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitGroupByKey(node: GroupBy.Key, ctx: C): AstNode {
         val expr = visitExpr(node.expr, ctx) as Expr
-        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier? }
+        val asAlias = node.asAlias?.let { visitIdentifierPart(it, ctx) as Identifier.Part? }
         return if (expr !== node.expr || asAlias !== node.asAlias) {
             GroupBy.Key(expr, asAlias)
         } else {
@@ -652,17 +652,17 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
-    override fun visitIdentifier(node: Identifier, ctx: C): AstNode {
+    override fun visitIdentifierPart(node: Identifier.Part, ctx: C): AstNode {
         val symbol = node.symbol
         val isDelimited = node.isDelimited
-        return identifier(symbol, isDelimited)
+        return identifierPart(symbol, isDelimited)
     }
 
-    override fun visitIdentifierChain(node: IdentifierChain, ctx: C): AstNode {
-        val root = visitIdentifier(node.root, ctx) as Identifier
-        val next = node.next?.let { visitIdentifierChain(it, ctx) as IdentifierChain? }
-        return if (root !== node.root || next !== node.next) {
-            IdentifierChain(root, next)
+    override fun visitIdentifier(node: Identifier, ctx: C): AstNode {
+        val qualifier = _visitList(node.qualifier, ctx, ::visitIdentifierPart)
+        val base = visitIdentifierPart(node.base, ctx) as Identifier.Part
+        return if (qualifier !== node.qualifier || base !== node.base) {
+            Identifier(qualifier, base)
         } else {
             node
         }
@@ -679,7 +679,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitLetBinding(node: Let.Binding, ctx: C): AstNode {
         val expr = visitExpr(node.expr, ctx) as Expr
-        val asAlias = visitIdentifier(node.asAlias, ctx) as Identifier
+        val asAlias = visitIdentifierPart(node.asAlias, ctx) as Identifier.Part
         return if (expr !== node.expr || asAlias !== node.asAlias) {
             Let.Binding(expr, asAlias)
         } else {
@@ -736,7 +736,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     public override fun visitSelectItemExpr(node: SelectItem.Expr, ctx: C): AstNode {
         val expr = visitExpr(node.expr, ctx) as Expr
-        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier? }
+        val asAlias = node.asAlias?.let { visitIdentifierPart(it, ctx) as Identifier.Part? }
         return if (expr !== node.expr || asAlias !== node.asAlias) {
             SelectItem.Expr(expr, asAlias)
         } else {
@@ -792,8 +792,8 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitInsert(node: Insert, ctx: C): AstNode {
         val source = visitInsertSource(node.source, ctx) as InsertSource
-        val target = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
-        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier }
+        val target = visitIdentifier(node.tableName, ctx) as Identifier
+        val asAlias = node.asAlias?.let { visitIdentifierPart(it, ctx) as Identifier.Part }
         val onConflict = node.onConflict?.let { visitOnConflict(it, ctx) as OnConflict }
         if (source !== node.source || target !== node.tableName || asAlias !== node.asAlias || onConflict !== node.onConflict) {
             return Insert(target, asAlias, source, onConflict)
@@ -803,7 +803,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
 
     override fun visitInsertSourceFromExpr(node: InsertSource.FromExpr, ctx: C): AstNode {
         val expr = visitExpr(node.expr, ctx) as Expr
-        val columns = node.columns?.let { _visitList(it, ctx, ::visitIdentifier) }
+        val columns = node.columns?.let { _visitList(it, ctx, ::visitIdentifierPart) }
         if (expr !== node.expr || columns != node.columns) {
             return InsertSource.FromExpr(columns, expr)
         }
@@ -846,7 +846,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitConflictTargetConstraint(node: ConflictTarget.Constraint, ctx: C): AstNode {
-        val constraint = visitIdentifierChain(node.name, ctx) as IdentifierChain
+        val constraint = visitIdentifier(node.name, ctx) as Identifier
         if (constraint !== node.name) {
             return ConflictTarget.Constraint(constraint)
         }
@@ -854,7 +854,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitConflictTargetIndex(node: ConflictTarget.Index, ctx: C): AstNode {
-        val indexes = _visitList(node.indexes, ctx, ::visitIdentifier)
+        val indexes = _visitList(node.indexes, ctx, ::visitIdentifierPart)
         if (indexes !== node.indexes) {
             return ConflictTarget.Index(indexes)
         }
@@ -870,7 +870,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitDelete(node: Delete, ctx: C): AstNode {
-        val tableName = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val tableName = visitIdentifier(node.tableName, ctx) as Identifier
         val condition = node.condition?.let { visitExpr(it, ctx) as Expr }
         if (tableName !== node.tableName || condition !== node.condition) {
             return Delete(tableName, condition)
@@ -879,9 +879,9 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitUpsert(node: Upsert, ctx: C): AstNode {
-        val tableName = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val tableName = visitIdentifier(node.tableName, ctx) as Identifier
         val source = visitInsertSource(node.source, ctx) as InsertSource
-        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier }
+        val asAlias = node.asAlias?.let { visitIdentifierPart(it, ctx) as Identifier.Part }
         if (tableName !== node.tableName || source !== node.source || asAlias !== node.asAlias) {
             return Upsert(tableName, asAlias, source)
         }
@@ -889,9 +889,9 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitReplace(node: Replace, ctx: C): AstNode {
-        val tableName = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val tableName = visitIdentifier(node.tableName, ctx) as Identifier
         val source = visitInsertSource(node.source, ctx) as InsertSource
-        val asAlias = node.asAlias?.let { visitIdentifier(it, ctx) as Identifier }
+        val asAlias = node.asAlias?.let { visitIdentifierPart(it, ctx) as Identifier.Part }
         if (tableName !== node.tableName || source !== node.source || asAlias !== node.asAlias) {
             return Replace(tableName, asAlias, source)
         }
@@ -908,7 +908,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitUpdate(node: Update, ctx: C): AstNode {
-        val tableName = visitIdentifierChain(node.tableName, ctx) as IdentifierChain
+        val tableName = visitIdentifier(node.tableName, ctx) as Identifier
         val setClauses = _visitList(node.setClauses, ctx, ::visitSetClause)
         val condition = node.condition?.let { visitExpr(it, ctx) as Expr }
         if (tableName !== node.tableName || setClauses !== node.setClauses || condition !== node.condition) {
@@ -918,7 +918,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitUpdateTarget(node: UpdateTarget, ctx: C): AstNode {
-        val root = visitIdentifier(node.root, ctx) as Identifier
+        val root = visitIdentifierPart(node.root, ctx) as Identifier.Part
         val steps = _visitList(node.steps, ctx, ::visitUpdateTargetStep)
         if (root !== node.root || steps !== node.steps) {
             return UpdateTarget(root, steps)
@@ -935,7 +935,7 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     }
 
     override fun visitUpdateTargetStepField(node: UpdateTargetStep.Field, ctx: C): AstNode {
-        val key = visitIdentifier(node.key, ctx) as Identifier
+        val key = visitIdentifierPart(node.key, ctx) as Identifier.Part
         if (key !== node.key) {
             return UpdateTargetStep.Field(key)
         }

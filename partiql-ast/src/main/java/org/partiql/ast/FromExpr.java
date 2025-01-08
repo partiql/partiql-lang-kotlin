@@ -22,13 +22,13 @@ public final class FromExpr extends FromTableRef {
     private final FromType fromType;
 
     @Nullable
-    private final Identifier asAlias;
+    private final Identifier.Part asAlias;
 
     @Nullable
-    private final Identifier atAlias;
+    private final Identifier.Part atAlias;
 
-    public FromExpr(@NotNull Expr expr, @NotNull FromType fromType, @Nullable Identifier asAlias,
-                    @Nullable Identifier atAlias) {
+    public FromExpr(@NotNull Expr expr, @NotNull FromType fromType, @Nullable Identifier.Part asAlias,
+                    @Nullable Identifier.Part atAlias) {
         this.expr = expr;
         this.fromType = fromType;
         this.asAlias = asAlias;
@@ -61,12 +61,12 @@ public final class FromExpr extends FromTableRef {
     }
 
     @Nullable
-    public Identifier getAsAlias() {
+    public Identifier.Part getAsAlias() {
         return this.asAlias;
     }
 
     @Nullable
-    public Identifier getAtAlias() {
+    public Identifier.Part getAtAlias() {
         return this.atAlias;
     }
 }

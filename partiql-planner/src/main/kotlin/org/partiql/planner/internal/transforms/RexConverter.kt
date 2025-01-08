@@ -270,7 +270,7 @@ internal object RexConverter {
 
         override fun visitExprVarRef(node: ExprVarRef, context: Env): Rex {
             val type = (ANY)
-            val identifier = AstToPlan.convert(node.identifierChain)
+            val identifier = AstToPlan.convert(node.identifier)
             val isQualified = when (node.isQualified) {
                 false -> Rex.Op.Var.Scope.DEFAULT
                 true -> Rex.Op.Var.Scope.LOCAL
@@ -626,9 +626,9 @@ internal object RexConverter {
          */
         private fun isCollAgg(node: ExprCall): Boolean {
             val fn = node.function
-            val id = if (fn.next == null) {
+            val id = if (fn.qualifier.isEmpty()) {
                 // is not a qualified identifier chain
-                node.function.root
+                node.function.base
             } else {
                 return false
             }

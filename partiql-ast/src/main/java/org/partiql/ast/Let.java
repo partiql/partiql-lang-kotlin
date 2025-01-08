@@ -47,9 +47,9 @@ public final class Let extends AstNode {
         private final Expr expr;
 
         @NotNull
-        private final Identifier asAlias;
+        private final Identifier.Part asAlias;
 
-        public Binding(@NotNull Expr expr, @NotNull Identifier asAlias) {
+        public Binding(@NotNull Expr expr, @NotNull Identifier.Part asAlias) {
             this.expr = expr;
             this.asAlias = asAlias;
         }
@@ -74,7 +74,7 @@ public final class Let extends AstNode {
         }
 
         @NotNull
-        public Identifier getAsAlias() {
+        public Identifier.Part getAsAlias() {
             return this.asAlias;
         }
     }

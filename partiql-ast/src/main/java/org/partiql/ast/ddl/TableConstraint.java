@@ -6,7 +6,6 @@ import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
-import org.partiql.ast.IdentifierChain;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,14 +15,14 @@ import java.util.List;
  */
 public abstract class TableConstraint extends AstNode {
     @Nullable
-    private final IdentifierChain name;
+    private final Identifier name;
 
-    protected TableConstraint(@Nullable IdentifierChain name) {
+    protected TableConstraint(@Nullable Identifier name) {
         this.name = name;
     }
 
     @Nullable
-    public IdentifierChain getName() {
+    public Identifier getName() {
         return this.name;
     }
 
@@ -33,11 +32,11 @@ public abstract class TableConstraint extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class Unique extends TableConstraint {
         @NotNull
-        private final List<Identifier> columns;
+        private final List<Identifier.Part> columns;
 
         private final boolean primaryKey;
 
-        public Unique(@Nullable IdentifierChain name, @NotNull List<Identifier> column, boolean primaryKey) {
+        public Unique(@Nullable Identifier name, @NotNull List<Identifier.Part> column, boolean primaryKey) {
             super(name);
             this.columns = column;
             this.primaryKey = primaryKey;
@@ -58,7 +57,7 @@ public abstract class TableConstraint extends AstNode {
         }
 
         @NotNull
-        public List<Identifier> getColumns() {
+        public List<Identifier.Part> getColumns() {
             return this.columns;
         }
 

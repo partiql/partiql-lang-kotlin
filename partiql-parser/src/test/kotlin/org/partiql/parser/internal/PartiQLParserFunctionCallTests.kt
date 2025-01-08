@@ -3,7 +3,7 @@ package org.partiql.parser.internal
 import org.junit.jupiter.api.Test
 import org.partiql.ast.Ast.exprCall
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
+import org.partiql.ast.Ast.identifierPart
 import org.partiql.ast.Ast.query
 import org.partiql.ast.AstNode
 import org.partiql.ast.expr.Expr
@@ -20,7 +20,7 @@ class PartiQLParserFunctionCallTests {
         "foo()",
         queryBody {
             exprCall(
-                function = identifierChain(identifier("foo", false), null),
+                function = identifier(emptyList(), identifierPart("foo", false)),
                 args = emptyList(),
                 setq = null
             )
@@ -32,7 +32,7 @@ class PartiQLParserFunctionCallTests {
         "\"foo\"()",
         queryBody {
             exprCall(
-                function = identifierChain(identifier("foo", true), null),
+                function = identifier(emptyList(), identifierPart("foo", true)),
                 args = emptyList(),
                 setq = null
             )
@@ -44,7 +44,7 @@ class PartiQLParserFunctionCallTests {
         "upper()",
         queryBody {
             exprCall(
-                function = identifierChain(identifier("upper", false), null),
+                function = identifier(emptyList(), identifierPart("upper", false)),
                 args = emptyList(),
                 setq = null
             )
@@ -56,7 +56,7 @@ class PartiQLParserFunctionCallTests {
         "\"upper\"()",
         queryBody {
             exprCall(
-                function = identifierChain(identifier("upper", true), null),
+                function = identifier(emptyList(), identifierPart("upper", true)),
                 args = emptyList(),
                 setq = null
             )
@@ -68,12 +68,12 @@ class PartiQLParserFunctionCallTests {
         "my_catalog.my_schema.foo()",
         queryBody {
             exprCall(
-                function = identifierChain(
-                    root = identifier("my_catalog", false),
-                    next = identifierChain(
-                        root = identifier("my_schema", false),
-                        next = identifierChain(identifier("foo", false), null),
-                    )
+                function = identifier(
+                    qualifier = listOf(
+                        identifierPart("my_catalog", false),
+                        identifierPart("my_schema", false)
+                    ),
+                    identifier = identifierPart("foo", false)
                 ),
                 args = emptyList(),
                 setq = null
@@ -86,12 +86,12 @@ class PartiQLParserFunctionCallTests {
         "my_catalog.my_schema.\"foo\"()",
         queryBody {
             exprCall(
-                function = identifierChain(
-                    root = identifier("my_catalog", false),
-                    next = identifierChain(
-                        identifier("my_schema", false),
-                        identifierChain(identifier("foo", true), null),
-                    )
+                function = identifier(
+                    qualifier = listOf(
+                        identifierPart("my_catalog", false),
+                        identifierPart("my_schema", false)
+                    ),
+                    identifier = identifierPart("foo", true)
                 ),
                 args = emptyList(),
                 setq = null
@@ -104,12 +104,12 @@ class PartiQLParserFunctionCallTests {
         "my_catalog.my_schema.upper()",
         queryBody {
             exprCall(
-                function = identifierChain(
-                    root = identifier("my_catalog", false),
-                    next = identifierChain(
-                        identifier("my_schema", false),
-                        identifierChain(identifier("upper", false), null),
-                    )
+                function = identifier(
+                    qualifier = listOf(
+                        identifierPart("my_catalog", false),
+                        identifierPart("my_schema", false)
+                    ),
+                    identifier = identifierPart("upper", false)
                 ),
                 args = emptyList(),
                 setq = null
@@ -122,12 +122,12 @@ class PartiQLParserFunctionCallTests {
         "my_catalog.my_schema.\"upper\"()",
         queryBody {
             exprCall(
-                function = identifierChain(
-                    root = identifier("my_catalog", false),
-                    next = identifierChain(
-                        identifier("my_schema", false),
-                        identifierChain(identifier("upper", true), null),
-                    )
+                function = identifier(
+                    qualifier = listOf(
+                        identifierPart("my_catalog", false),
+                        identifierPart("my_schema", false)
+                    ),
+                    identifier = identifierPart("upper", true)
                 ),
                 args = emptyList(),
                 setq = null

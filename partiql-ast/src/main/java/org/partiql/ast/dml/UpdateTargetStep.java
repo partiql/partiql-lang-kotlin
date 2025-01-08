@@ -74,9 +74,9 @@ public abstract class UpdateTargetStep extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static final class Field extends UpdateTargetStep {
         @NotNull
-        private final Identifier key;
+        private final Identifier.Part key;
 
-        public Field(@NotNull Identifier key) {
+        public Field(@NotNull Identifier.Part key) {
             this.key = key;
         }
 
@@ -94,7 +94,7 @@ public abstract class UpdateTargetStep extends AstNode {
         }
 
         @NotNull
-        public Identifier getKey() {
+        public Identifier.Part getKey() {
             return this.key;
         }
     }

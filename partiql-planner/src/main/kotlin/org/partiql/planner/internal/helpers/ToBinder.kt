@@ -1,8 +1,8 @@
 package org.partiql.planner.internal.helpers
 
-import org.partiql.ast.Ast.identifier
+import org.partiql.ast.Ast.identifierPart
 import org.partiql.ast.Identifier
-import org.partiql.ast.IdentifierChain
+import org.partiql.ast.Identifier.Part
 import org.partiql.ast.Literal
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCast
@@ -24,8 +24,8 @@ private val col = { index: () -> Int -> "_${index()}" }
  *
  *  See https://github.com/partiql/partiql-lang-kotlin/issues/1122
  */
-internal fun Expr.toBinder(index: () -> Int): Identifier = when (this) {
-    is ExprVarRef -> this.identifierChain.toBinder()
+internal fun Expr.toBinder(index: () -> Int): Part = when (this) {
+    is ExprVarRef -> this.identifier.toBinder()
     is ExprPath -> this.toBinder(index)
     is ExprCast -> this.value.toBinder(index)
     is ExprSessionAttribute -> this.sessionAttribute.name().uppercase().toBinder()
@@ -38,26 +38,17 @@ internal fun Expr.toBinder(index: () -> Int): Identifier = when (this) {
  * @param index
  * @return
  */
-internal fun Expr.toBinder(index: Int): Identifier = toBinder { index }
+internal fun Expr.toBinder(index: Int): Part = toBinder { index }
 
-private fun String.toBinder(): Identifier =
+private fun String.toBinder(): Part =
     // Every binder preserves case
-    identifier(this@toBinder, true)
+    identifierPart(this@toBinder, true)
 
-private fun IdentifierChain.toBinder(): Identifier {
-    if (next == null) return root.symbol.toBinder()
-    var cur = next
-    var prev = cur
-    while (cur != null) {
-        prev = cur
-        cur = cur.next
-    }
-    return prev!!.root.symbol.toBinder()
-}
+private fun Identifier.toBinder(): Part = this.base.toBinder()
 
-private fun Identifier.toBinder(): Identifier = symbol.toBinder()
+private fun Part.toBinder(): Part = symbol.toBinder()
 
-private fun ExprPath.toBinder(index: () -> Int): Identifier {
+private fun ExprPath.toBinder(index: () -> Int): Part {
     if (steps.isEmpty()) return root.toBinder(index)
     return when (val last = steps.last()) {
         is PathStep.Field -> last.field.toBinder()

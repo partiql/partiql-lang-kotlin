@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
-import org.partiql.ast.IdentifierChain;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +28,9 @@ public abstract class ConflictTarget extends AstNode {
     public static final class Index extends ConflictTarget {
         // TODO: Should this be a list of identifiers? Or paths? Expressions?
         @NotNull
-        private final List<Identifier> indexes;
+        private final List<Identifier.Part> indexes;
 
-        public Index(@NotNull List<Identifier> indexes) {
+        public Index(@NotNull List<Identifier.Part> indexes) {
             this.indexes = indexes;
         }
 
@@ -47,7 +46,7 @@ public abstract class ConflictTarget extends AstNode {
         }
 
         @NotNull
-        public List<Identifier> getIndexes() {
+        public List<Identifier.Part> getIndexes() {
             return this.indexes;
         }
     }
@@ -62,9 +61,9 @@ public abstract class ConflictTarget extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static final class Constraint extends ConflictTarget {
         @NotNull
-        private final IdentifierChain name;
+        private final Identifier name;
 
-        public Constraint(@NotNull IdentifierChain name) {
+        public Constraint(@NotNull Identifier name) {
             this.name = name;
         }
 
@@ -82,7 +81,7 @@ public abstract class ConflictTarget extends AstNode {
         }
 
         @NotNull
-        public IdentifierChain getName() {
+        public Identifier getName() {
             return this.name;
         }
     }

@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.IdentifierChain;
+import org.partiql.ast.Identifier;
 import org.partiql.ast.expr.Expr;
 
 import java.util.ArrayList;
@@ -17,9 +17,9 @@ import java.util.List;
 public abstract class AttributeConstraint extends AstNode {
 
     @Nullable
-    protected final IdentifierChain name;
+    protected final Identifier name;
 
-    protected AttributeConstraint(@Nullable IdentifierChain name) {
+    protected AttributeConstraint(@Nullable Identifier name) {
         this.name = name;
     }
 
@@ -32,7 +32,7 @@ public abstract class AttributeConstraint extends AstNode {
     }
 
     @Nullable
-    public IdentifierChain getName() {
+    public Identifier getName() {
         return this.name;
     }
 
@@ -45,7 +45,7 @@ public abstract class AttributeConstraint extends AstNode {
     public static class Null extends AttributeConstraint {
         private final boolean nullable;
 
-        public Null(@Nullable IdentifierChain name, boolean nullable) {
+        public Null(@Nullable Identifier name, boolean nullable) {
             super(name);
             this.nullable = nullable;
         }
@@ -69,7 +69,7 @@ public abstract class AttributeConstraint extends AstNode {
     public static class Unique extends AttributeConstraint {
         private final boolean primaryKey;
 
-        public Unique(@Nullable IdentifierChain name, boolean primaryKey) {
+        public Unique(@Nullable Identifier name, boolean primaryKey) {
             super(name);
             this.primaryKey = primaryKey;
         }
@@ -92,7 +92,7 @@ public abstract class AttributeConstraint extends AstNode {
         @NotNull
         private final Expr searchCondition;
 
-        public Check(@Nullable IdentifierChain name, @NotNull Expr searchCondition) {
+        public Check(@Nullable Identifier name, @NotNull Expr searchCondition) {
             super(name);
             this.searchCondition = searchCondition;
         }

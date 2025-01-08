@@ -235,11 +235,11 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitIdentifier(Identifier node, C ctx) {
+    public R visitIdentifierPart(Identifier.Part node, C ctx) {
         return defaultVisit(node, ctx);
     }
 
-    public R visitIdentifierChain(IdentifierChain node, C ctx) {
+    public R visitIdentifier(Identifier node, C ctx) {
         return defaultVisit(node, ctx);
     }
 

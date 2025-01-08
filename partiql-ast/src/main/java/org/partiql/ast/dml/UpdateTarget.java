@@ -20,12 +20,12 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class UpdateTarget extends AstNode {
     @NotNull
-    private final Identifier root;
+    private final Identifier.Part root;
 
     @NotNull
     private final List<UpdateTargetStep> steps;
 
-    public UpdateTarget(@NotNull Identifier root, @NotNull List<UpdateTargetStep> steps) {
+    public UpdateTarget(@NotNull Identifier.Part root, @NotNull List<UpdateTargetStep> steps) {
         this.root = root;
         this.steps = steps;
     }
@@ -45,7 +45,7 @@ public final class UpdateTarget extends AstNode {
     }
 
     @NotNull
-    public Identifier getRoot() {
+    public Identifier.Part getRoot() {
         return this.root;
     }
 

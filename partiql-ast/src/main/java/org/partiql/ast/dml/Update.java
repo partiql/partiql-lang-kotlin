@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.IdentifierChain;
+import org.partiql.ast.Identifier;
 import org.partiql.ast.Statement;
 import org.partiql.ast.expr.Expr;
 
@@ -22,7 +22,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class Update extends Statement {
     @NotNull
-    private final IdentifierChain tableName;
+    private final Identifier tableName;
 
     @NotNull
     private final List<SetClause> setClauses;
@@ -30,7 +30,7 @@ public final class Update extends Statement {
     @Nullable
     private final Expr condition;
 
-    public Update(@NotNull IdentifierChain tableName, @NotNull List<SetClause> setClauses, @Nullable Expr condition) {
+    public Update(@NotNull Identifier tableName, @NotNull List<SetClause> setClauses, @Nullable Expr condition) {
         this.tableName = tableName;
         this.setClauses = setClauses;
         this.condition = condition;
@@ -54,7 +54,7 @@ public final class Update extends Statement {
     }
 
     @NotNull
-    public IdentifierChain getTableName() {
+    public Identifier getTableName() {
         return this.tableName;
     }
 

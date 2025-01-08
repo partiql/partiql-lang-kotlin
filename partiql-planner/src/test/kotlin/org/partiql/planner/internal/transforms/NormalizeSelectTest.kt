@@ -9,7 +9,7 @@ import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.from
 import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
+import org.partiql.ast.Ast.identifierPart
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.selectItemExpr
 import org.partiql.ast.Ast.selectList
@@ -126,12 +126,12 @@ class NormalizeSelectTest {
     // ----- HELPERS -------------------------
 
     private fun variable(name: String) = exprVarRef(
-        identifierChain = identifierChain(
-            identifier(
+        identifier = identifier(
+            qualifier = emptyList(),
+            identifierPart(
                 symbol = name,
                 isDelimited = false,
             ),
-            next = null
         ),
         isQualified = false,
     )
@@ -183,12 +183,12 @@ class NormalizeSelectTest {
                     listOf(
                         fromExpr(
                             expr = exprVarRef(
-                                identifierChain = identifierChain(
-                                    identifier(
+                                identifier = identifier(
+                                    qualifier = emptyList(),
+                                    identifierPart(
                                         symbol = "T",
                                         isDelimited = false
                                     ),
-                                    next = null
                                 ),
                                 isQualified = false
                             ),
@@ -210,12 +210,12 @@ class NormalizeSelectTest {
 
     private fun varItem(symbol: String, asAlias: String? = null) = selectItemExpr(
         expr = variable(symbol),
-        asAlias = asAlias?.let { identifier(asAlias, isDelimited = false) }
+        asAlias = asAlias?.let { identifierPart(asAlias, isDelimited = false) }
     )
 
     private fun litItem(value: Int, asAlias: String? = null) = selectItemExpr(
         expr = lit(value),
-        asAlias = asAlias?.let { identifier(asAlias, isDelimited = false) }
+        asAlias = asAlias?.let { identifierPart(asAlias, isDelimited = false) }
     )
 
     private fun lit(value: Int) = exprLit(intNum(value))
