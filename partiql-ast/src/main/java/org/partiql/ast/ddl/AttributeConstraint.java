@@ -52,7 +52,7 @@ public abstract class AttributeConstraint extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitNullable(this, ctx);
+            return visitor.visitAttributeConstraintNull(this, ctx);
         }
 
         public boolean isNullable() {
@@ -76,7 +76,7 @@ public abstract class AttributeConstraint extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitUnique(this, ctx);
+            return visitor.visitAttributeConstraintUnique(this, ctx);
         }
 
         public boolean isPrimaryKey() {
@@ -108,7 +108,7 @@ public abstract class AttributeConstraint extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitCheck(this, ctx);
+            return visitor.visitAttributeConstraintCheck(this, ctx);
         }
 
         @NotNull

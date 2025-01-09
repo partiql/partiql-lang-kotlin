@@ -45,6 +45,10 @@ public final class Identifier extends AstNode {
         return this.qualifier;
     }
 
+    /**
+     * Returns the right-most simple identifier of the qualified identifier. For example, for an identifier
+     * {@code a.b.c} this method would return {@code c}.
+     */
     @NotNull
     public Simple getIdentifier() {
         return this.identifier;

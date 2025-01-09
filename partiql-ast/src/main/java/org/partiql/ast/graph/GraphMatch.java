@@ -12,6 +12,8 @@ import java.util.List;
 
 /**
  * Graph match. See Graph Match Nodes — <a href="https://partiql.org/gpml/graph_query.html">specification</a>.
+ * <p>
+ * Note: this is an experimental API and subject to change without prior notice.
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

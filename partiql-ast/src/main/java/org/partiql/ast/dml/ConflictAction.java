@@ -108,12 +108,6 @@ public abstract class ConflictAction extends AstNode {
         @Nullable
         private final Expr condition;
 
-        /**
-         * TODO
-         *
-         * @param action    TODO
-         * @param condition TODO
-         */
         public DoUpdate(@NotNull DoUpdateAction action, @Nullable Expr condition) {
             this.action = action;
             this.condition = condition;

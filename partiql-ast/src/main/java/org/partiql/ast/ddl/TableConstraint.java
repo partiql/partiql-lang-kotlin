@@ -53,7 +53,7 @@ public abstract class TableConstraint extends AstNode {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitUnique(this, ctx);
+            return visitor.visitTableConstraintUnique(this, ctx);
         }
 
         @NotNull

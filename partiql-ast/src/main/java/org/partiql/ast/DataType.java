@@ -69,7 +69,7 @@ public final class DataType extends AstEnum {
 
         @Override
         public <R, C> R accept(@NotNull AstVisitor<R, C> visitor, C ctx) {
-            return visitor.visitStructField(this, ctx);
+            return visitor.visitDataTypeStructField(this, ctx);
         }
 
         @NotNull

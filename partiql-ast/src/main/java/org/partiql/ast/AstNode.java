@@ -26,6 +26,7 @@ public abstract class AstNode {
     }
 
     /**
+     * Gets the {@link AstNode} children of this node.
      * @return child AST nodes of this node.
      */
     @NotNull
@@ -39,6 +40,9 @@ public abstract class AstNode {
     @Override
     public abstract int hashCode();
 
+    /**
+     * Returns true iff the given object is equal to this {@link AstNode}, ignoring the tag.
+     */
     @Override
     public abstract boolean equals(Object obj);
 }

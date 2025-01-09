@@ -98,6 +98,9 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     public companion object {
 
+        /**
+         * Standard [AstNode] conversion with default parameters.
+         */
         @JvmStatic
         public val STANDARD: SqlDialect = object : SqlDialect() {}
     }
