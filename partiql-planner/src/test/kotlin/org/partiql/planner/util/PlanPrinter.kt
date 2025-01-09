@@ -2,7 +2,7 @@ package org.partiql.planner.util
 
 import org.partiql.plan.Plan
 import org.partiql.plan.rel.RelType
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * Basic printer for debugging during early development lifecycle

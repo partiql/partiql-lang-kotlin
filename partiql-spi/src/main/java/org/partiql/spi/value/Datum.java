@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.spi.errors.DataException;
 import org.partiql.spi.internal.value.ion.IonVariant;
-import org.partiql.types.PType;
+import org.partiql.spi.types.PType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;

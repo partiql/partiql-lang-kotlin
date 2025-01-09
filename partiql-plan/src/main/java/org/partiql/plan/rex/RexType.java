@@ -1,7 +1,7 @@
 package org.partiql.plan.rex;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.types.PType;
+import org.partiql.spi.types.PType;
 
 /**
  * [RexType] is a simple wrapper over [PType], but does not necessarily only hold a PType.

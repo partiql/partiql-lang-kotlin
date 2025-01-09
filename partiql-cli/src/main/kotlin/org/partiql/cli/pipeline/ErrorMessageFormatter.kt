@@ -6,7 +6,7 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.function.Function
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import java.io.PrintWriter
 import java.io.Writer
 

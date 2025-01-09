@@ -7,7 +7,7 @@ import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.helpers.RecordValueIterator
 import org.partiql.spi.errors.TypeCheckException
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 internal class RelOpScan(
     private val expr: ExprValue

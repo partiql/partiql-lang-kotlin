@@ -1,8 +1,8 @@
 package org.partiql.eval.internal
 
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
-import org.partiql.types.PType
 
 object DatumMaterialize {
     @JvmStatic

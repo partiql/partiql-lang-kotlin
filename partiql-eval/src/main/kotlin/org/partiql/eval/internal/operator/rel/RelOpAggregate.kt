@@ -7,8 +7,8 @@ import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.spi.function.Aggregation
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import java.util.TreeMap
 import java.util.TreeSet
 

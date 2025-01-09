@@ -7,8 +7,8 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.function.utils.PatternUtils.matchRegexPattern
 import org.partiql.spi.function.utils.PatternUtils.parsePattern
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import java.util.regex.Pattern
 
 internal val Fn_LIKE__STRING_STRING__BOOL = FunctionUtils.hidden(

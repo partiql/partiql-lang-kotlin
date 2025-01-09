@@ -6,8 +6,8 @@ import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.spi.errors.CardinalityViolation
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * TODO REMOVE ME AFTER FIXING SUBQUERIES.

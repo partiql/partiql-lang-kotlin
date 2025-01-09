@@ -18,7 +18,6 @@ import org.jetbrains.dokka.gradle.DokkaTask
 plugins {
     id(Plugins.conventions)
     id(Plugins.publish)
-    id(Plugins.testFixtures)
 }
 
 dependencies {
@@ -58,12 +57,6 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
         skip()
     }
-}
-
-tasks.compileTestFixturesKotlin {
-    kotlinOptions.jvmTarget = Versions.jvmTarget
-    kotlinOptions.apiVersion = Versions.kotlinApi
-    kotlinOptions.languageVersion = Versions.kotlinLanguage
 }
 
 publish {

@@ -1,8 +1,8 @@
 package org.partiql.spi.catalog
 
 import org.partiql.spi.catalog.impl.StandardTable
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * In PartiQL, a [Table] can take on any type and is not necessarily a collection of rows.

@@ -7,7 +7,7 @@ import org.partiql.planner.internal.typer.accumulateSuccess
 import org.partiql.planner.util.allCollectionPType
 import org.partiql.planner.util.allSupportedPType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import java.util.stream.Stream
 
 class OpInTest : PartiQLTyperTestBase() {

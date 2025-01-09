@@ -1,4 +1,4 @@
-package org.partiql.types;
+package org.partiql.spi.types;
 
 class PTypeVariant extends PType {
 

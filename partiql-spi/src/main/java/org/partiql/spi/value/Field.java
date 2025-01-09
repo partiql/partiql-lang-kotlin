@@ -1,9 +1,10 @@
 package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.spi.types.PType;
 
 /**
- * Represents a field within a PartiQL {@link org.partiql.types.PType#STRUCT}.
+ * Represents a field within a PartiQL {@link PType#STRUCT}.
  */
 public interface Field {
 

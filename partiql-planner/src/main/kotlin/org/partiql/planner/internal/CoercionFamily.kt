@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * This represents SQL:1999 Section 4.1.2 "Type conversions and mixing of data types" and breaks down the different

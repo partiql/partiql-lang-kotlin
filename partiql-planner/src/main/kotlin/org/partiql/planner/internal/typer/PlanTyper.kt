@@ -55,9 +55,9 @@ import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.types.Field
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.Field
-import org.partiql.types.PType
 import kotlin.math.max
 
 /**

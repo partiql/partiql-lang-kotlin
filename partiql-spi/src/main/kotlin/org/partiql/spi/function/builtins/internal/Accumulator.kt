@@ -18,8 +18,8 @@ import com.amazon.ion.Decimal
 import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.internal.coerceNumbers
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext

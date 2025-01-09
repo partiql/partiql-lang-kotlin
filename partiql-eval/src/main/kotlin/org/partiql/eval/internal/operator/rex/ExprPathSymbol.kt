@@ -4,8 +4,8 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.spi.errors.TypeCheckException
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 internal class ExprPathSymbol(
     @JvmField val root: ExprValue,

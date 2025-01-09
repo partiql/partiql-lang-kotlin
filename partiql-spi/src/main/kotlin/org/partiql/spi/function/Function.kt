@@ -1,7 +1,7 @@
 package org.partiql.spi.function
 
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * Represents a scalar function (SQL row-value call expression).

@@ -5,8 +5,8 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.TypePrecedence.TYPE_PRECEDENCE
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.internal.SqlTypeFamily
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * This represents an operator backed by a function provider. Note that the name of the operator is hidden

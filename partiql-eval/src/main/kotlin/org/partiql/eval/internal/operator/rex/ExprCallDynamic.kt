@@ -9,8 +9,8 @@ import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYN
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Function
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * Implementation of Dynamic Dispatch.

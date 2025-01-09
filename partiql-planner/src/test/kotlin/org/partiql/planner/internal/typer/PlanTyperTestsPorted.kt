@@ -33,12 +33,12 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.types.Field
+import org.partiql.spi.types.PType
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
-import org.partiql.types.Field
 import org.partiql.types.ListType
 import org.partiql.types.NumberConstraint
-import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.INT4

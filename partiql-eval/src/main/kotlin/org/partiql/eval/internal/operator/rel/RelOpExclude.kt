@@ -6,7 +6,7 @@ import org.partiql.eval.Row
 import org.partiql.plan.Exclusion
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * Implementation of the EXCLUDE clause; there are good opportunities to tune/optimize this.

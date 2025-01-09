@@ -1,7 +1,7 @@
 package org.partiql.spi.internal
 
-import org.partiql.types.Field
-import org.partiql.types.PType
+import org.partiql.spi.types.Field
+import org.partiql.spi.types.PType
 
 /**
  * Important SQL Definitions:

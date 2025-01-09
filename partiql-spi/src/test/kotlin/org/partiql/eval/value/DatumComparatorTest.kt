@@ -2,7 +2,7 @@ package org.partiql.spi.value
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime

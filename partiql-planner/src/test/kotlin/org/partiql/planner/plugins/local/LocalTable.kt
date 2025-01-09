@@ -18,8 +18,8 @@ import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.fromStaticType
 import java.nio.file.Path

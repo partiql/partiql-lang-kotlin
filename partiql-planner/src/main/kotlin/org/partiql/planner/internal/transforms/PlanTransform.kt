@@ -18,8 +18,8 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.SetQuantifier
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.types.Field
-import org.partiql.types.PType
+import org.partiql.spi.types.Field
+import org.partiql.spi.types.PType
 import org.partiql.planner.internal.ir.PartiQLPlan as IPlan
 import org.partiql.planner.internal.ir.PlanNode as INode
 import org.partiql.planner.internal.ir.Rel as IRel

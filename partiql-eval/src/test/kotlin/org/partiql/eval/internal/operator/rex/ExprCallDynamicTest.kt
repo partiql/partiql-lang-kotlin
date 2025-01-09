@@ -9,13 +9,13 @@ import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Datum.array
 import org.partiql.spi.value.Datum.bag
 import org.partiql.spi.value.Datum.bool
 import org.partiql.spi.value.Datum.integer
 import org.partiql.spi.value.Datum.string
-import org.partiql.types.PType
 import org.partiql.value.PartiQLValueType
 
 class ExprCallDynamicTest {

@@ -2,8 +2,8 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 // SQL spec section 6.17 contains <bit length expression>
 internal val Fn_BIT_LENGTH__STRING__INT32 = Function.static(

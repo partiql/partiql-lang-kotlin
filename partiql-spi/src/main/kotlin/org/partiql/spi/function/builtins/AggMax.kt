@@ -6,7 +6,7 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorMax
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 internal val Agg_MAX__INT8__INT8 = Aggregation.static(
 

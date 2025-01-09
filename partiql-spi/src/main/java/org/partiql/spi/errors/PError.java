@@ -6,7 +6,7 @@ import org.partiql.spi.Enum;
 import org.partiql.spi.SourceLocation;
 import org.partiql.spi.catalog.Identifier;
 import org.partiql.spi.function.Function;
-import org.partiql.types.PType;
+import org.partiql.spi.types.PType;
 
 import java.util.HashMap;
 import java.util.List;

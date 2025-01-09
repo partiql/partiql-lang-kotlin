@@ -1,7 +1,7 @@
 package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.types.PType;
+import org.partiql.spi.types.PType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -13,31 +13,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static org.partiql.types.PType.ARRAY;
-import static org.partiql.types.PType.BAG;
-import static org.partiql.types.PType.BIGINT;
-import static org.partiql.types.PType.BLOB;
-import static org.partiql.types.PType.BOOL;
-import static org.partiql.types.PType.CHAR;
-import static org.partiql.types.PType.CLOB;
-import static org.partiql.types.PType.DATE;
-import static org.partiql.types.PType.DECIMAL;
-import static org.partiql.types.PType.DOUBLE;
-import static org.partiql.types.PType.DYNAMIC;
-import static org.partiql.types.PType.INTEGER;
-import static org.partiql.types.PType.NUMERIC;
-import static org.partiql.types.PType.REAL;
-import static org.partiql.types.PType.SMALLINT;
-import static org.partiql.types.PType.STRING;
-import static org.partiql.types.PType.STRUCT;
-import static org.partiql.types.PType.TIME;
-import static org.partiql.types.PType.TIMESTAMP;
-import static org.partiql.types.PType.TIMESTAMPZ;
-import static org.partiql.types.PType.TIMEZ;
-import static org.partiql.types.PType.TINYINT;
-import static org.partiql.types.PType.UNKNOWN;
-import static org.partiql.types.PType.VARCHAR;
-import static org.partiql.types.PType.ROW;
+import static org.partiql.spi.types.PType.ARRAY;
+import static org.partiql.spi.types.PType.BAG;
+import static org.partiql.spi.types.PType.BIGINT;
+import static org.partiql.spi.types.PType.BLOB;
+import static org.partiql.spi.types.PType.BOOL;
+import static org.partiql.spi.types.PType.CHAR;
+import static org.partiql.spi.types.PType.CLOB;
+import static org.partiql.spi.types.PType.DATE;
+import static org.partiql.spi.types.PType.DECIMAL;
+import static org.partiql.spi.types.PType.DOUBLE;
+import static org.partiql.spi.types.PType.DYNAMIC;
+import static org.partiql.spi.types.PType.INTEGER;
+import static org.partiql.spi.types.PType.NUMERIC;
+import static org.partiql.spi.types.PType.REAL;
+import static org.partiql.spi.types.PType.SMALLINT;
+import static org.partiql.spi.types.PType.STRING;
+import static org.partiql.spi.types.PType.STRUCT;
+import static org.partiql.spi.types.PType.TIME;
+import static org.partiql.spi.types.PType.TIMESTAMP;
+import static org.partiql.spi.types.PType.TIMESTAMPZ;
+import static org.partiql.spi.types.PType.TIMEZ;
+import static org.partiql.spi.types.PType.TINYINT;
+import static org.partiql.spi.types.PType.UNKNOWN;
+import static org.partiql.spi.types.PType.VARCHAR;
+import static org.partiql.spi.types.PType.ROW;
 
 /**
  * This class allows for the comparison between two {@link Datum}s. This is internally implemented by constructing

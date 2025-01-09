@@ -8,10 +8,10 @@ import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.ValueUtils
 import org.partiql.spi.value.io.PartiQLValueIonWriterBuilder
-import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals

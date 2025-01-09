@@ -1,6 +1,6 @@
 package org.partiql.spi.internal
 
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * A basic "set" representation for type categorization; perhaps we optimize later..

@@ -18,7 +18,7 @@ import org.partiql.plan.rex.RexVar
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 

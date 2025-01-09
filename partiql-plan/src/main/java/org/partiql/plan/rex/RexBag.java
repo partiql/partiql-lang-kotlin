@@ -4,12 +4,11 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operand;
 import org.partiql.plan.Operator;
 import org.partiql.plan.OperatorVisitor;
-import org.partiql.types.PType;
+import org.partiql.spi.types.PType;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Logical bag expression abstract base class.

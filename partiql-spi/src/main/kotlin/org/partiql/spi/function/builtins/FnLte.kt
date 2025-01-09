@@ -5,8 +5,8 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.internal.compareTo
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 internal object FnLte : DiadicComparisonOperator("lte") {
 

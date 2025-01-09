@@ -14,8 +14,8 @@
 
 package org.partiql.value.datetime
 
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import org.partiql.value.datetime.impl.LocalTimeLowPrecision
 import org.partiql.value.datetime.impl.LocalTimeLowPrecision.Companion.forNano
 import org.partiql.value.datetime.impl.LocalTimestampLowPrecision.Companion.forDateTime

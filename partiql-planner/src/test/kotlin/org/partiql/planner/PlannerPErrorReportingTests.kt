@@ -14,9 +14,9 @@ import org.partiql.spi.Context
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.types.Field
+import org.partiql.spi.types.PType
 import org.partiql.types.BagType
-import org.partiql.types.Field
-import org.partiql.types.PType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint

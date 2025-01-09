@@ -1,5 +1,7 @@
 package org.partiql.types
 
+import org.partiql.spi.types.Field
+import org.partiql.spi.types.PType
 import java.util.stream.Collectors
 
 /**

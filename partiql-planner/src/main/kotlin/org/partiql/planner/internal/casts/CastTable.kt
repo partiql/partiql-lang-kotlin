@@ -3,7 +3,7 @@ package org.partiql.planner.internal.casts
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Ref.Cast
 import org.partiql.planner.internal.typer.CompilerType
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).

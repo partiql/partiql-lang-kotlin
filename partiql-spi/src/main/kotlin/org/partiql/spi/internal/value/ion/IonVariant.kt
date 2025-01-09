@@ -20,7 +20,7 @@ import com.amazon.ionelement.api.ElementType.TIMESTAMP
 import com.amazon.ionelement.api.IntElementSize
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.BigInteger
