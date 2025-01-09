@@ -6,9 +6,9 @@ import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.spi.errors.TypeCheckException
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
-import org.partiql.spi.types.PType
 
 /**
  * The unpivot operator produces a bag of records from a struct.

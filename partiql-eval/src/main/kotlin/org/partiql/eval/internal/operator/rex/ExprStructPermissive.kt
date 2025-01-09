@@ -3,9 +3,9 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
-import org.partiql.spi.types.PType
 
 internal class ExprStructPermissive(private val fields: List<ExprStructField>) :
     ExprValue {
