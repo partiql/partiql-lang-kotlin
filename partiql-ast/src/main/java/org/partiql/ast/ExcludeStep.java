@@ -20,9 +20,9 @@ public abstract class ExcludeStep extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static class StructField extends ExcludeStep {
         @NotNull
-        private final Identifier symbol;
+        private final Identifier.Simple symbol;
 
-        public StructField(@NotNull Identifier symbol) {
+        public StructField(@NotNull Identifier.Simple symbol) {
             this.symbol = symbol;
         }
 
@@ -40,7 +40,7 @@ public abstract class ExcludeStep extends AstNode {
         }
 
         @NotNull
-        public Identifier getSymbol() {
+        public Identifier.Simple getSymbol() {
             return this.symbol;
         }
     }

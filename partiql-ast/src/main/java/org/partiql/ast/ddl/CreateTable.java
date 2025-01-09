@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.IdentifierChain;
+import org.partiql.ast.Identifier;
 import org.partiql.ast.Statement;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ import java.util.List;
 public final class CreateTable extends Statement {
 
     @NotNull
-    private final IdentifierChain name;
+    private final Identifier name;
 
     @NotNull
     private final List<ColumnDefinition> columns;
@@ -35,7 +35,7 @@ public final class CreateTable extends Statement {
     private final List<KeyValue> tableProperties;
 
     public CreateTable(
-            @NotNull IdentifierChain name,
+            @NotNull Identifier name,
             @NotNull List<ColumnDefinition> columns,
             @NotNull List<TableConstraint> constraints,
             @Nullable PartitionBy partitionBy,
@@ -65,7 +65,7 @@ public final class CreateTable extends Statement {
     }
 
     @NotNull
-    public IdentifierChain getName() {
+    public Identifier getName() {
         return this.name;
     }
 

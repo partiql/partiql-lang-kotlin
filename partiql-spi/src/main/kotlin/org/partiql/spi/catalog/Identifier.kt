@@ -10,19 +10,19 @@ import java.util.function.Consumer
  * @property identifier
  */
 public class Identifier private constructor(
-    private val qualifier: Array<Part>,
-    private val identifier: Part,
-) : Iterable<Identifier.Part> {
+    private val qualifier: Array<Simple>,
+    private val identifier: Simple,
+) : Iterable<Identifier.Simple> {
 
     /**
      * Returns the unqualified name part.
      */
-    public fun getIdentifier(): Part = identifier
+    public fun getIdentifier(): Simple = identifier
 
     /**
      * Returns the name's namespace.
      */
-    public fun getQualifier(): Array<Part> = qualifier
+    public fun getQualifier(): Array<Simple> = qualifier
 
     /**
      * Returns true if the namespace is non-empty.
@@ -32,28 +32,28 @@ public class Identifier private constructor(
     /**
      * Returns an ordered collection of the identifier parts.
      */
-    public fun getParts(): List<Part> {
+    public fun getParts(): List<Simple> {
         return listOf(*qualifier) + identifier
     }
 
     /**
      * Iterable forEach(action).
      */
-    override fun forEach(action: Consumer<in Part>?) {
+    override fun forEach(action: Consumer<in Simple>?) {
         getParts().forEach(action)
     }
 
     /**
      * Iterable iterator().
      */
-    override fun iterator(): Iterator<Part> {
+    override fun iterator(): Iterator<Simple> {
         return getParts().iterator()
     }
 
     /**
      * Iterable spliterator().
      */
-    override fun spliterator(): Spliterator<Part> {
+    override fun spliterator(): Spliterator<Simple> {
         return getParts().spliterator()
     }
 
@@ -67,7 +67,7 @@ public class Identifier private constructor(
     /**
      * Returns a new identifier with the given parts appended.
      */
-    public fun append(vararg parts: Part): Identifier {
+    public fun append(vararg parts: Simple): Identifier {
         return of(this.toList() + parts)
     }
 
@@ -126,7 +126,7 @@ public class Identifier private constructor(
      * @property text     The case-preserved identifier text.
      * @property regular  True if the identifier should be treated as an SQL regular identifier.
      */
-    public class Part private constructor(
+    public class Simple private constructor(
         private val text: String,
         private val regular: Boolean,
     ) {
@@ -158,7 +158,7 @@ public class Identifier private constructor(
             if (other == null || javaClass != other.javaClass) {
                 return false
             }
-            return this.text == (other as Part).text
+            return this.text == (other as Simple).text
         }
 
         /**
@@ -179,17 +179,17 @@ public class Identifier private constructor(
         public companion object {
 
             @JvmStatic
-            public fun regular(text: String): Part = Part(text, true)
+            public fun regular(text: String): Simple = Simple(text, true)
 
             @JvmStatic
-            public fun delimited(text: String): Part = Part(text, false)
+            public fun delimited(text: String): Simple = Simple(text, false)
         }
     }
 
     public companion object {
 
         @JvmStatic
-        public fun regular(text: String): Identifier = Identifier(emptyArray(), Part.regular(text))
+        public fun regular(text: String): Identifier = Identifier(emptyArray(), Simple.regular(text))
 
         @JvmStatic
         public fun regular(vararg parts: String): Identifier = regular(parts.toList())
@@ -199,13 +199,13 @@ public class Identifier private constructor(
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }
-            val qualifier = parts.take(parts.size - 1).map { Part.regular(it) }.toTypedArray()
-            val identifier = Part.regular(parts.last())
+            val qualifier = parts.take(parts.size - 1).map { Simple.regular(it) }.toTypedArray()
+            val identifier = Simple.regular(parts.last())
             return Identifier(qualifier, identifier)
         }
 
         @JvmStatic
-        public fun delimited(text: String): Identifier = Identifier(emptyArray(), Part.delimited(text))
+        public fun delimited(text: String): Identifier = Identifier(emptyArray(), Simple.delimited(text))
 
         @JvmStatic
         public fun delimited(vararg parts: String): Identifier = delimited(parts.toList())
@@ -215,16 +215,16 @@ public class Identifier private constructor(
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }
-            val qualifier = parts.take(parts.size - 1).map { Part.delimited(it) }.toTypedArray()
-            val identifier = Part.delimited(parts.last())
+            val qualifier = parts.take(parts.size - 1).map { Simple.delimited(it) }.toTypedArray()
+            val identifier = Simple.delimited(parts.last())
             return Identifier(qualifier, identifier)
         }
 
         @JvmStatic
-        public fun of(vararg parts: Part): Identifier = of(parts.toList())
+        public fun of(vararg parts: Simple): Identifier = of(parts.toList())
 
         @JvmStatic
-        public fun of(parts: List<Part>): Identifier {
+        public fun of(parts: List<Simple>): Identifier {
             if (parts.isEmpty()) {
                 error("Cannot create an identifier with no parts")
             }

@@ -229,7 +229,7 @@ internal class Env(private val session: Session) {
     /**
      * Returns a list of the unmatched parts of the identifier given the matched name.
      */
-    private fun calculateMatched(path: Identifier, name: Name): List<Identifier.Part> {
+    private fun calculateMatched(path: Identifier, name: Name): List<Identifier.Simple> {
         val lhs = name.toList()
         val rhs = path.toList()
         return rhs.takeLast(rhs.size - lhs.size)

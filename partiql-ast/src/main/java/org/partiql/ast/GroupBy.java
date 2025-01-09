@@ -22,9 +22,9 @@ public final class GroupBy extends AstNode {
     private final List<Key> keys;
 
     @Nullable
-    private final Identifier asAlias;
+    private final Identifier.Simple asAlias;
 
-    public GroupBy(@NotNull GroupByStrategy strategy, @NotNull List<Key> keys, @Nullable Identifier asAlias) {
+    public GroupBy(@NotNull GroupByStrategy strategy, @NotNull List<Key> keys, @Nullable Identifier.Simple asAlias) {
         this.strategy = strategy;
         this.keys = keys;
         this.asAlias = asAlias;
@@ -56,7 +56,7 @@ public final class GroupBy extends AstNode {
     }
 
     @Nullable
-    public Identifier getAsAlias() {
+    public Identifier.Simple getAsAlias() {
         return this.asAlias;
     }
 
@@ -70,9 +70,9 @@ public final class GroupBy extends AstNode {
         private final Expr expr;
 
         @Nullable
-        private final Identifier asAlias;
+        private final Identifier.Simple asAlias;
 
-        public Key(@NotNull Expr expr, @Nullable Identifier asAlias) {
+        public Key(@NotNull Expr expr, @Nullable Identifier.Simple asAlias) {
             this.expr = expr;
             this.asAlias = asAlias;
         }
@@ -99,7 +99,7 @@ public final class GroupBy extends AstNode {
         }
 
         @Nullable
-        public Identifier getAsAlias() {
+        public Identifier.Simple getAsAlias() {
             return this.asAlias;
         }
     }

@@ -3,7 +3,6 @@ package org.partiql.ast.expr;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 
@@ -19,12 +18,12 @@ public final class ExprPath extends Expr {
     @NotNull
     private final Expr root;
 
-    @Nullable
-    private final PathStep next;
+    @NotNull
+    private final List<PathStep> steps;
 
-    public ExprPath(@NotNull Expr root, @Nullable PathStep next) {
+    public ExprPath(@NotNull Expr root, @NotNull List<PathStep> steps) {
         this.root = root;
-        this.next = next;
+        this.steps = steps;
     }
 
     @Override
@@ -32,9 +31,7 @@ public final class ExprPath extends Expr {
     public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
         kids.add(root);
-        if (next != null) {
-            kids.add(next);
-        }
+        kids.addAll(steps);
         return kids;
     }
 
@@ -48,8 +45,8 @@ public final class ExprPath extends Expr {
         return this.root;
     }
 
-    @Nullable
-    public PathStep getNext() {
-        return this.next;
+    @NotNull
+    public List<PathStep> getSteps() {
+        return this.steps;
     }
 }

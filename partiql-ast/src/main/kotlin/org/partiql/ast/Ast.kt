@@ -98,7 +98,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun exprCall(function: IdentifierChain, args: List<Expr>, setq: SetQuantifier? = null): ExprCall {
+    public fun exprCall(function: Identifier, args: List<Expr>, setq: SetQuantifier? = null): ExprCall {
         return ExprCall(function, args, setq)
     }
 
@@ -202,9 +202,8 @@ public object Ast {
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPath(root: Expr, next: PathStep? = null): ExprPath {
-        return ExprPath(root, next)
+    public fun exprPath(root: Expr, steps: List<PathStep>): ExprPath {
+        return ExprPath(root, steps)
     }
 
     @JvmStatic
@@ -273,8 +272,8 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun exprVarRef(identifierChain: IdentifierChain, isQualified: Boolean): ExprVarRef {
-        return ExprVarRef(identifierChain, isQualified)
+    public fun exprVarRef(identifier: Identifier, isQualified: Boolean): ExprVarRef {
+        return ExprVarRef(identifier, isQualified)
     }
 
     @JvmStatic
@@ -295,27 +294,23 @@ public object Ast {
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPathStepField(value: Identifier, next: PathStep? = null): PathStep.Field {
-        return PathStep.Field(value, next)
+    public fun exprPathStepField(value: Identifier.Simple): PathStep.Field {
+        return PathStep.Field(value)
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPathStepElement(element: Expr, next: PathStep? = null): PathStep.Element {
-        return PathStep.Element(element, next)
+    public fun exprPathStepElement(element: Expr): PathStep.Element {
+        return PathStep.Element(element)
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPathStepAllElements(next: PathStep? = null): PathStep.AllElements {
-        return PathStep.AllElements(next)
+    public fun exprPathStepAllElements(): PathStep.AllElements {
+        return PathStep.AllElements()
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun exprPathStepAllFields(next: PathStep? = null): AllFields {
-        return AllFields(next)
+    public fun exprPathStepAllFields(): AllFields {
+        return AllFields()
     }
 
     // Graph
@@ -433,7 +428,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun excludeStepStructField(symbol: Identifier): ExcludeStep.StructField {
+    public fun excludeStepStructField(symbol: Identifier.Simple): ExcludeStep.StructField {
         return ExcludeStep.StructField(symbol)
     }
 
@@ -464,7 +459,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun fromExpr(expr: Expr, fromType: FromType, asAlias: Identifier? = null, atAlias: Identifier? = null): FromExpr {
+    public fun fromExpr(expr: Expr, fromType: FromType, asAlias: Identifier.Simple? = null, atAlias: Identifier.Simple? = null): FromExpr {
         return FromExpr(expr, fromType, asAlias, atAlias)
     }
 
@@ -476,25 +471,24 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun groupBy(strategy: GroupByStrategy, keys: List<GroupBy.Key>, asAlias: Identifier? = null): GroupBy {
+    public fun groupBy(strategy: GroupByStrategy, keys: List<GroupBy.Key>, asAlias: Identifier.Simple? = null): GroupBy {
         return GroupBy(strategy, keys, asAlias)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun groupByKey(expr: Expr, asAlias: Identifier? = null): GroupBy.Key {
+    public fun groupByKey(expr: Expr, asAlias: Identifier.Simple? = null): GroupBy.Key {
         return GroupBy.Key(expr, asAlias)
     }
 
     @JvmStatic
-    public fun identifier(symbol: String, isDelimited: Boolean): Identifier {
-        return Identifier(symbol, isDelimited)
+    public fun identifierSimple(symbol: String, isRegular: Boolean): Identifier.Simple {
+        return Identifier.Simple(symbol, isRegular)
     }
 
     @JvmStatic
-    @JvmOverloads
-    public fun identifierChain(root: Identifier, next: IdentifierChain? = null): IdentifierChain {
-        return IdentifierChain(root, next)
+    public fun identifier(qualifier: List<Identifier.Simple>, identifier: Identifier.Simple): Identifier {
+        return Identifier(qualifier, identifier)
     }
 
     @JvmStatic
@@ -503,7 +497,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun letBinding(expr: Expr, asAlias: Identifier): Let.Binding {
+    public fun letBinding(expr: Expr, asAlias: Identifier.Simple): Let.Binding {
         return Let.Binding(expr, asAlias)
     }
 
@@ -519,31 +513,31 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun insert(tableName: IdentifierChain, asAlias: Identifier? = null, source: InsertSource, onConflict: OnConflict? = null): Insert {
+    public fun insert(tableName: Identifier, asAlias: Identifier.Simple? = null, source: InsertSource, onConflict: OnConflict? = null): Insert {
         return Insert(tableName, asAlias, source, onConflict)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun upsert(tableName: IdentifierChain, asAlias: Identifier? = null, source: InsertSource): Upsert {
+    public fun upsert(tableName: Identifier, asAlias: Identifier.Simple? = null, source: InsertSource): Upsert {
         return Upsert(tableName, asAlias, source)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun replace(tableName: IdentifierChain, asAlias: Identifier? = null, source: InsertSource): Replace {
+    public fun replace(tableName: Identifier, asAlias: Identifier.Simple? = null, source: InsertSource): Replace {
         return Replace(tableName, asAlias, source)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun update(tableName: IdentifierChain, setClauses: List<SetClause>, condition: Expr? = null): Update {
+    public fun update(tableName: Identifier, setClauses: List<SetClause>, condition: Expr? = null): Update {
         return Update(tableName, setClauses, condition)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun delete(tableName: IdentifierChain, condition: Expr? = null): Delete {
+    public fun delete(tableName: Identifier, condition: Expr? = null): Delete {
         return Delete(tableName, condition)
     }
 
@@ -554,7 +548,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun insertSourceExpr(columns: List<Identifier>? = null, expr: Expr): InsertSource.FromExpr {
+    public fun insertSourceExpr(columns: List<Identifier.Simple>? = null, expr: Expr): InsertSource.FromExpr {
         return InsertSource.FromExpr(columns, expr)
     }
 
@@ -570,12 +564,12 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun conflictTargetIndex(indexes: List<Identifier>): ConflictTarget.Index {
+    public fun conflictTargetIndex(indexes: List<Identifier.Simple>): ConflictTarget.Index {
         return ConflictTarget.Index(indexes)
     }
 
     @JvmStatic
-    public fun conflictTargetConstraint(constraint: IdentifierChain): ConflictTarget.Constraint {
+    public fun conflictTargetConstraint(constraint: Identifier): ConflictTarget.Constraint {
         return ConflictTarget.Constraint(constraint)
     }
 
@@ -607,7 +601,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun updateTarget(root: Identifier, steps: List<UpdateTargetStep>): UpdateTarget {
+    public fun updateTarget(root: Identifier.Simple, steps: List<UpdateTargetStep>): UpdateTarget {
         return UpdateTarget(root, steps)
     }
 
@@ -622,7 +616,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun updateTargetStepField(key: Identifier): UpdateTargetStep.Field {
+    public fun updateTargetStepField(key: Identifier.Simple): UpdateTargetStep.Field {
         return UpdateTargetStep.Field(key)
     }
 
@@ -664,7 +658,7 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun selectItemExpr(expr: Expr, asAlias: Identifier? = null): SelectItem.Expr {
+    public fun selectItemExpr(expr: Expr, asAlias: Identifier.Simple? = null): SelectItem.Expr {
         return SelectItem.Expr(expr, asAlias)
     }
 
@@ -708,7 +702,7 @@ public object Ast {
     //
     @JvmStatic
     @JvmOverloads
-    public fun createTable(name: IdentifierChain, columns: List<ColumnDefinition>, constraints: List<TableConstraint>, partitionBy: PartitionBy? = null, tableProperties: List<KeyValue>): CreateTable {
+    public fun createTable(name: Identifier, columns: List<ColumnDefinition>, constraints: List<TableConstraint>, partitionBy: PartitionBy? = null, tableProperties: List<KeyValue>): CreateTable {
         return CreateTable(
             name,
             columns,
@@ -720,31 +714,31 @@ public object Ast {
 
     @JvmStatic
     @JvmOverloads
-    public fun columnDefinition(name: Identifier, type: DataType, isOptional: Boolean, constraints: List<AttributeConstraint>, comment: String? = null): ColumnDefinition {
+    public fun columnDefinition(name: Identifier.Simple, type: DataType, isOptional: Boolean, constraints: List<AttributeConstraint>, comment: String? = null): ColumnDefinition {
         return ColumnDefinition(name, type, isOptional, constraints, comment)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun tableConstraintUnique(name: IdentifierChain? = null, columns: List<Identifier>, isPrimaryKey: Boolean): TableConstraint.Unique {
+    public fun tableConstraintUnique(name: Identifier? = null, columns: List<Identifier.Simple>, isPrimaryKey: Boolean): TableConstraint.Unique {
         return TableConstraint.Unique(name, columns, isPrimaryKey)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun columnConstraintNullable(name: IdentifierChain? = null, isNullable: Boolean): AttributeConstraint.Null {
+    public fun columnConstraintNullable(name: Identifier? = null, isNullable: Boolean): AttributeConstraint.Null {
         return AttributeConstraint.Null(name, isNullable)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun columnConstraintUnique(name: IdentifierChain? = null, isPrimaryKey: Boolean): AttributeConstraint.Unique {
+    public fun columnConstraintUnique(name: Identifier? = null, isPrimaryKey: Boolean): AttributeConstraint.Unique {
         return AttributeConstraint.Unique(name, isPrimaryKey)
     }
 
     @JvmStatic
     @JvmOverloads
-    public fun columnConstraintCheck(name: IdentifierChain? = null, searchCondition: Expr): AttributeConstraint.Check {
+    public fun columnConstraintCheck(name: Identifier? = null, searchCondition: Expr): AttributeConstraint.Check {
         return AttributeConstraint.Check(name, searchCondition)
     }
 
@@ -754,7 +748,7 @@ public object Ast {
     }
 
     @JvmStatic
-    public fun partitionBy(columns: List<Identifier>): PartitionBy {
+    public fun partitionBy(columns: List<Identifier.Simple>): PartitionBy {
         return PartitionBy(columns)
     }
 }

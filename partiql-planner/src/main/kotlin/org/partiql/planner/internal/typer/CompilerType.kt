@@ -93,9 +93,9 @@ internal class CompilerType(
      *
      * @return null when the field definitely does not exist; dynamic when the type cannot be determined
      */
-    internal fun getSymbol(field: String): Pair<Identifier.Part, CompilerType>? {
+    internal fun getSymbol(field: String): Pair<Identifier.Simple, CompilerType>? {
         if (this.code() == PType.STRUCT) {
-            return Identifier.Part.regular(field) to CompilerType(PType.dynamic())
+            return Identifier.Simple.regular(field) to CompilerType(PType.dynamic())
         }
         val fields = this.fields.mapNotNull {
             when (it.name.equals(field, true)) {
@@ -106,8 +106,8 @@ internal class CompilerType(
         val type = anyOf(fields.map { it.second })
         val ids = fields.map { it.first }.toSet()
         return when (ids.size > 1) {
-            true -> Identifier.Part.regular(field) to type
-            false -> Identifier.Part.delimited(ids.first()) to type
+            true -> Identifier.Simple.regular(field) to type
+            false -> Identifier.Simple.delimited(ids.first()) to type
         }
     }
 

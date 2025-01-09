@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
 import org.partiql.ast.Identifier;
-import org.partiql.ast.IdentifierChain;
 import org.partiql.ast.Statement;
 
 import java.util.ArrayList;
@@ -22,15 +21,15 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class Replace extends Statement {
     @NotNull
-    private final IdentifierChain tableName;
+    private final Identifier tableName;
 
     @Nullable
-    private final Identifier asAlias;
+    private final Identifier.Simple asAlias;
 
     @NotNull
     private final InsertSource source;
 
-    public Replace(@NotNull IdentifierChain tableName, @Nullable Identifier asAlias, @NotNull InsertSource source) {
+    public Replace(@NotNull Identifier tableName, @Nullable Identifier.Simple asAlias, @NotNull InsertSource source) {
         this.tableName = tableName;
         this.asAlias = asAlias;
         this.source = source;
@@ -54,12 +53,12 @@ public final class Replace extends Statement {
     }
 
     @NotNull
-    public IdentifierChain getTableName() {
+    public Identifier getTableName() {
         return this.tableName;
     }
 
     @Nullable
-    public Identifier getAsAlias() {
+    public Identifier.Simple getAsAlias() {
         return this.asAlias;
     }
 

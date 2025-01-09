@@ -23,8 +23,6 @@ import org.partiql.ast.Ast.exprQuerySet
 import org.partiql.ast.Ast.exprStruct
 import org.partiql.ast.Ast.exprStructField
 import org.partiql.ast.Ast.exprVarRef
-import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.queryBodySetOp
 import org.partiql.ast.Ast.selectItemExpr
@@ -37,6 +35,7 @@ import org.partiql.ast.FromExpr
 import org.partiql.ast.FromJoin
 import org.partiql.ast.FromTableRef
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Identifier
 import org.partiql.ast.Literal.string
 import org.partiql.ast.QueryBody
 import org.partiql.ast.SelectItem
@@ -254,7 +253,7 @@ internal object NormalizeSelect {
                 val atAlias = binding.second
                 val atAliasItem = atAlias?.simple()?.let {
                     val alias = it.asAlias ?: error("The AT alias should be present. This wasn't normalized.")
-                    buildSimpleStruct(it.expr, alias.symbol)
+                    buildSimpleStruct(it.expr, alias.text)
                 }
                 listOfNotNull(
                     buildCaseWhenStruct(asAlias.star(i).expr, i),
@@ -263,7 +262,7 @@ internal object NormalizeSelect {
             }
             return selectValue(
                 constructor = exprCall(
-                    function = identifierChain(identifier("TUPLEUNION", isDelimited = true), next = null),
+                    function = Identifier.delimited("TUPLEUNION"),
                     args = tupleUnionArgs,
                     setq = null // setq = null for scalar fn
                 ),
@@ -278,10 +277,10 @@ internal object NormalizeSelect {
          * Note: We assume that [select] and [group] have already been visited.
          */
         private fun visitSelectAll(select: SelectStar, group: GroupBy): SelectValue {
-            val groupAs = group.asAlias?.let { structField(it.symbol, varLocal(it.symbol)) }
+            val groupAs = group.asAlias?.let { structField(it.text, varLocal(it.text)) }
             val fields = group.keys.map { key ->
                 val alias = key.asAlias ?: error("Expected a GROUP BY alias.")
-                structField(alias.symbol, varLocal(alias.symbol))
+                structField(alias.text, varLocal(alias.text))
             } + listOfNotNull(groupAs)
             val constructor = exprStruct(fields)
             return selectValue(
@@ -296,7 +295,7 @@ internal object NormalizeSelect {
                     is SelectItem.Star -> buildCaseWhenStruct(item.expr, index)
                     is SelectItem.Expr -> buildSimpleStruct(
                         item.expr,
-                        item.asAlias?.symbol
+                        item.asAlias?.text
                             ?: error("The alias should've been here. This AST is not normalized.")
                     )
                     else -> error("Unexpected SelectItem type: $item")
@@ -305,7 +304,7 @@ internal object NormalizeSelect {
             return selectValue(
                 setq = node.setq,
                 constructor = exprCall(
-                    function = identifierChain(identifier("TUPLEUNION", isDelimited = true), next = null),
+                    function = Identifier.regular("TUPLEUNION"),
                     args = tupleUnionArgs,
                     setq = null // setq = null for scalar fn
                 )
@@ -316,7 +315,7 @@ internal object NormalizeSelect {
             val structFields = node.items.map { item ->
                 val itemExpr = item as? SelectItem.Expr ?: error("Expected the projection to be an expression.")
                 exprStructField(
-                    name = exprLit(string(itemExpr.asAlias?.symbol!!)),
+                    name = exprLit(string(itemExpr.asAlias?.text!!)),
                     value = item.expr
                 )
             }
@@ -354,15 +353,15 @@ internal object NormalizeSelect {
         )
 
         private fun varLocal(name: String): ExprVarRef = exprVarRef(
-            identifierChain = identifierChain(identifier(name, isDelimited = true), next = null),
+            identifier = Identifier.delimited(name),
             isQualified = true
         )
 
         private fun FromTableRef.aliases(): List<Pair<String, String?>> = when (this) {
             is FromJoin -> lhs.aliases() + rhs.aliases()
             is FromExpr -> {
-                val asAlias = asAlias?.symbol ?: error("AST not normalized, missing asAlias on FROM source.")
-                val atAlias = atAlias?.symbol
+                val asAlias = asAlias?.text ?: error("AST not normalized, missing asAlias on FROM source.")
+                val atAlias = atAlias?.text
                 listOf(Pair(asAlias, atAlias))
             }
             else -> error("Unexpected FromTableRef type: $this")
@@ -370,18 +369,18 @@ internal object NormalizeSelect {
 
         // t -> t.* AS _i
         private fun String.star(i: Int): SelectItem.Expr {
-            val expr = exprVarRef(identifierChain(id(this), next = null), isQualified = false)
+            val expr = exprVarRef(Identifier.of(id(this)), isQualified = false)
             val alias = expr.toBinder(i)
             return selectItemExpr(expr, alias)
         }
 
         // t -> t AS t
         private fun String.simple(): SelectItem.Expr {
-            val expr = exprVarRef(identifierChain(id(this), next = null), isQualified = false)
+            val expr = exprVarRef(Identifier.of(id(this)), isQualified = false)
             val alias = id(this)
             return selectItemExpr(expr, alias)
         }
 
-        private fun id(symbol: String) = identifier(symbol, isDelimited = false)
+        private fun id(symbol: String) = Identifier.Simple.regular(symbol)
     }
 }

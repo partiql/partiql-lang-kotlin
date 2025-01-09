@@ -1,8 +1,7 @@
 package org.partiql.planner.internal.helpers
 
-import org.partiql.ast.Ast.identifier
 import org.partiql.ast.Identifier
-import org.partiql.ast.IdentifierChain
+import org.partiql.ast.Identifier.Simple
 import org.partiql.ast.Literal
 import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCast
@@ -24,8 +23,8 @@ private val col = { index: () -> Int -> "_${index()}" }
  *
  *  See https://github.com/partiql/partiql-lang-kotlin/issues/1122
  */
-internal fun Expr.toBinder(index: () -> Int): Identifier = when (this) {
-    is ExprVarRef -> this.identifierChain.toBinder()
+internal fun Expr.toBinder(index: () -> Int): Simple = when (this) {
+    is ExprVarRef -> this.identifier.toBinder()
     is ExprPath -> this.toBinder(index)
     is ExprCast -> this.value.toBinder(index)
     is ExprSessionAttribute -> this.sessionAttribute.name().uppercase().toBinder()
@@ -38,37 +37,22 @@ internal fun Expr.toBinder(index: () -> Int): Identifier = when (this) {
  * @param index
  * @return
  */
-internal fun Expr.toBinder(index: Int): Identifier = toBinder { index }
+internal fun Expr.toBinder(index: Int): Simple = toBinder { index }
 
-private fun String.toBinder(): Identifier =
+private fun String.toBinder(): Simple =
     // Every binder preserves case
-    identifier(this@toBinder, true)
+    Simple.delimited(this@toBinder)
 
-private fun IdentifierChain.toBinder(): Identifier {
-    if (next == null) return root.symbol.toBinder()
-    var cur = next
-    var prev = cur
-    while (cur != null) {
-        prev = cur
-        cur = cur.next
-    }
-    return prev!!.root.symbol.toBinder()
-}
+private fun Identifier.toBinder(): Simple = this.identifier.toBinder()
 
-private fun Identifier.toBinder(): Identifier = symbol.toBinder()
+private fun Simple.toBinder(): Simple = text.toBinder()
 
-private fun ExprPath.toBinder(index: () -> Int): Identifier {
-    if (next == null) return root.toBinder(index)
-    var cur = next
-    var prev = next
-    while (cur != null) {
-        prev = cur
-        cur = cur.next
-    }
-    return when (prev) {
-        is PathStep.Field -> prev.field.toBinder()
+private fun ExprPath.toBinder(index: () -> Int): Simple {
+    if (steps.isEmpty()) return root.toBinder(index)
+    return when (val last = steps.last()) {
+        is PathStep.Field -> last.field.toBinder()
         is PathStep.Element -> {
-            val k = prev.element
+            val k = last.element
             if (k is ExprLit && k.lit.code() == Literal.STRING) {
                 k.lit.stringValue().toBinder()
             } else {

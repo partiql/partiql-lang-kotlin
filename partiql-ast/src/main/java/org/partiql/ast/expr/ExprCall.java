@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.IdentifierChain;
+import org.partiql.ast.Identifier;
 import org.partiql.ast.SetQuantifier;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprCall extends Expr {
     @NotNull
-    private final IdentifierChain function;
+    private final Identifier function;
 
     @NotNull
     private final List<Expr> args;
@@ -27,7 +27,7 @@ public final class ExprCall extends Expr {
     @Nullable
     private final SetQuantifier setq;
 
-    public ExprCall(@NotNull IdentifierChain function, @NotNull List<Expr> args, @Nullable SetQuantifier setq) {
+    public ExprCall(@NotNull Identifier function, @NotNull List<Expr> args, @Nullable SetQuantifier setq) {
         this.function = function;
         this.args = args;
         this.setq = setq;
@@ -48,7 +48,7 @@ public final class ExprCall extends Expr {
     }
 
     @NotNull
-    public IdentifierChain getFunction() {
+    public Identifier getFunction() {
         return this.function;
     }
 

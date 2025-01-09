@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.IdentifierChain;
+import org.partiql.ast.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +17,12 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class ExprVarRef extends Expr {
     @NotNull
-    private final IdentifierChain identifierChain;
+    private final Identifier identifier;
 
     private final boolean qualified;
 
-    public ExprVarRef(@NotNull IdentifierChain identifierChain, boolean qualified) {
-        this.identifierChain = identifierChain;
+    public ExprVarRef(@NotNull Identifier identifier, boolean qualified) {
+        this.identifier = identifier;
         this.qualified = qualified;
     }
 
@@ -30,7 +30,7 @@ public final class ExprVarRef extends Expr {
     @NotNull
     public List<AstNode> getChildren() {
         List<AstNode> kids = new ArrayList<>();
-        kids.add(identifierChain);
+        kids.add(identifier);
         return kids;
     }
 
@@ -40,8 +40,8 @@ public final class ExprVarRef extends Expr {
     }
 
     @NotNull
-    public IdentifierChain getIdentifierChain() {
-        return this.identifierChain;
+    public Identifier getIdentifier() {
+        return this.identifier;
     }
 
     public boolean isQualified() {

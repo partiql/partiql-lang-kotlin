@@ -29,12 +29,12 @@ public abstract class InsertSource extends AstNode {
     @EqualsAndHashCode(callSuper = false)
     public static final class FromExpr extends InsertSource {
         @Nullable
-        private final List<Identifier> columns;
+        private final List<Identifier.Simple> columns;
 
         @NotNull
         private final Expr expr;
 
-        public FromExpr(@Nullable List<Identifier> columns, @NotNull Expr expr) {
+        public FromExpr(@Nullable List<Identifier.Simple> columns, @NotNull Expr expr) {
             this.columns = columns;
             this.expr = expr;
         }
@@ -56,7 +56,7 @@ public abstract class InsertSource extends AstNode {
         }
 
         @Nullable
-        public List<Identifier> getColumns() {
+        public List<Identifier.Simple> getColumns() {
             return this.columns;
         }
 

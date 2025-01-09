@@ -13,13 +13,14 @@ import org.partiql.ast.Ast.createTable
 import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprOperator
 import org.partiql.ast.Ast.exprVarRef
-import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.Ast.keyValue
 import org.partiql.ast.Ast.partitionBy
 import org.partiql.ast.Ast.tableConstraintUnique
 import org.partiql.ast.AstNode
 import org.partiql.ast.DataType
+import org.partiql.ast.Identifier
+import org.partiql.ast.Identifier.Simple.delimited
+import org.partiql.ast.Identifier.Simple.regular
 import org.partiql.ast.Literal.intNum
 import java.util.stream.Stream
 import kotlin.test.assertEquals
@@ -45,10 +46,7 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with unqualified case insensitive name",
                 "CREATE TABLE foo",
                 createTable(
-                    identifierChain(
-                        identifier("foo", false),
-                        null
-                    ),
+                    Identifier.regular("foo"),
                     emptyList(),
                     emptyList(),
                     null,
@@ -62,10 +60,7 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with unqualified case sensitive name",
                 "CREATE TABLE \"foo\"",
                 createTable(
-                    identifierChain(
-                        identifier("foo", true),
-                        null
-                    ),
+                    Identifier.delimited("foo"),
                     emptyList(),
                     emptyList(),
                     null,
@@ -76,15 +71,10 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with qualified case insensitive name",
                 "CREATE TABLE myCatalog.mySchema.foo",
                 createTable(
-                    identifierChain(
-                        identifier("myCatalog", false),
-                        identifierChain(
-                            identifier("mySchema", false),
-                            identifierChain(
-                                identifier("foo", false),
-                                null
-                            ),
-                        )
+                    Identifier.of(
+                        regular("myCatalog"),
+                        regular("mySchema"),
+                        regular("foo")
                     ),
                     emptyList(),
                     emptyList(),
@@ -96,15 +86,10 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with qualified name with mixed case sensitivity",
                 "CREATE TABLE myCatalog.\"mySchema\".foo",
                 createTable(
-                    identifierChain(
-                        identifier("myCatalog", false),
-                        identifierChain(
-                            identifier("mySchema", true),
-                            identifierChain(
-                                identifier("foo", false),
-                                null
-                            ),
-                        )
+                    Identifier.of(
+                        regular("myCatalog"),
+                        delimited("mySchema"),
+                        regular("foo")
                     ),
                     emptyList(),
                     emptyList(),
@@ -126,13 +111,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             listOf(
@@ -155,13 +137,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             listOf(
@@ -184,13 +163,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             listOf(
@@ -213,13 +189,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             listOf(
@@ -228,10 +201,7 @@ class PartiQLParserDDLTests {
                                     exprOperator(
                                         ">",
                                         exprVarRef(
-                                            identifierChain(
-                                                identifier("a", false),
-                                                null
-                                            ),
+                                            Identifier.regular("a"),
                                             isQualified = false
                                         ),
                                         exprLit(
@@ -258,17 +228,14 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(
                         tableConstraintUnique(
                             null,
                             listOf(
-                                identifier("a", false),
-                                identifier("b", false)
+                                regular("a"),
+                                regular("b")
                             ),
                             false,
                         )
@@ -286,17 +253,14 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(
                         tableConstraintUnique(
                             null,
                             listOf(
-                                identifier("a", false),
-                                identifier("b", false)
+                                regular("a"),
+                                regular("b")
                             ),
                             true,
                         )
@@ -314,13 +278,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", true),
+                            delimited("a"),
                             DataType.INT2(),
                             false,
                             listOf(),
@@ -344,24 +305,21 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifier("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         false,
                                         emptyList(),
                                         null
                                     ),
                                     DataType.StructField(
-                                        identifier("c", false),
+                                        regular("c"),
                                         DataType.INT2(),
                                         false,
                                         listOf(
@@ -393,21 +351,18 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifier("b", false),
+                                        regular("b"),
                                         DataType.STRUCT(
                                             listOf(
                                                 DataType.StructField(
-                                                    identifier("c", false),
+                                                    regular("c"),
                                                     DataType.INT2(),
                                                     false,
                                                     emptyList(),
@@ -420,7 +375,7 @@ class PartiQLParserDDLTests {
                                         null
                                     ),
                                     DataType.StructField(
-                                        identifier("d", false),
+                                        regular("d"),
                                         DataType.ARRAY(
                                             DataType.INT2()
                                         ),
@@ -449,13 +404,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.STRUCT(),
                             false,
                             emptyList(),
@@ -476,13 +428,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.ARRAY(DataType.INT2()),
                             false,
                             emptyList(),
@@ -502,18 +451,15 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.ARRAY(
                                 DataType.STRUCT(
                                     listOf(
                                         DataType.StructField(
-                                            identifier("b", false),
+                                            regular("b"),
                                             DataType.INT2(),
                                             false,
                                             emptyList(),
@@ -540,18 +486,15 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.ARRAY(
                                 DataType.STRUCT(
                                     listOf(
                                         DataType.StructField(
-                                            identifier("b", false),
+                                            regular("b"),
                                             DataType.INT2(),
                                             false,
                                             emptyList(),
@@ -579,13 +522,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.ARRAY(),
                             false,
                             emptyList(),
@@ -609,13 +549,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             true,
                             emptyList(),
@@ -636,17 +573,14 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifier("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         true,
                                         emptyList(),
@@ -673,17 +607,14 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifier("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         true,
                                         emptyList(),
@@ -711,13 +642,10 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.INT2(),
                             false,
                             emptyList(),
@@ -738,17 +666,14 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifier("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         false,
                                         emptyList(),
@@ -775,17 +700,14 @@ class PartiQLParserDDLTests {
                     )
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(
                         columnDefinition(
-                            identifier("a", false),
+                            regular("a"),
                             DataType.STRUCT(
                                 listOf(
                                     DataType.StructField(
-                                        identifier("b", false),
+                                        regular("b"),
                                         DataType.INT2(),
                                         false,
                                         emptyList(),
@@ -812,15 +734,12 @@ class PartiQLParserDDLTests {
                         PARTITION BY (a)
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     partitionBy(
                         listOf(
-                            identifier("a", false),
+                            regular("a"),
                         )
                     ),
                     emptyList()
@@ -834,16 +753,13 @@ class PartiQLParserDDLTests {
                         PARTITION BY (a, b)
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     partitionBy(
                         listOf(
-                            identifier("a", false),
-                            identifier("b", false),
+                            regular("a"),
+                            regular("b"),
                         )
                     ),
                     emptyList()
@@ -858,10 +774,7 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1')
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     null,
@@ -878,10 +791,7 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('K1k' = 'V1v')
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     null,
@@ -898,10 +808,7 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1', 'k2' = 'v2')
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
                     null,
@@ -920,13 +827,10 @@ class PartiQLParserDDLTests {
                     TBLPROPERTIES ('k1' = 'v1')
                 """.trimIndent(),
                 createTable(
-                    identifierChain(
-                        identifier("tbl", false),
-                        null
-                    ),
+                    Identifier.regular("tbl"),
                     listOf(),
                     listOf(),
-                    partitionBy(listOf(identifier("a", false))),
+                    partitionBy(listOf(regular("a"))),
                     listOf(
                         keyValue("k1", "v1"),
                     )

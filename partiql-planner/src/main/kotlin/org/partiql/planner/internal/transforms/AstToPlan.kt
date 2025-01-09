@@ -24,7 +24,6 @@ import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.spi.catalog.Identifier
 import org.partiql.ast.Identifier as AstIdentifier
-import org.partiql.ast.IdentifierChain as AstIdentifierChain
 import org.partiql.ast.Statement as AstStatement
 import org.partiql.planner.internal.ir.Statement as PlanStatement
 
@@ -53,23 +52,18 @@ internal object AstToPlan {
 
     // --- Helpers --------------------
 
-    fun convert(identifier: AstIdentifierChain): Identifier {
-        val parts = mutableListOf<Identifier.Part>()
-        parts.add(part(identifier.root))
-        var curStep = identifier.next
-        while (curStep != null) {
-            parts.add(part(curStep.root))
-            curStep = curStep.next
-        }
-        return Identifier.of(parts)
+    fun convert(node: AstIdentifier): Identifier {
+        val qualifier = node.qualifier.map { part(it) }
+        val identifier = part(node.identifier)
+        return Identifier.of(qualifier + identifier)
     }
 
-    fun convert(identifier: AstIdentifier): Identifier {
+    fun convert(identifier: org.partiql.ast.Identifier.Simple): Identifier {
         return Identifier.of(part(identifier))
     }
 
-    fun part(identifier: AstIdentifier): Identifier.Part = when (identifier.isDelimited) {
-        true -> Identifier.Part.delimited(identifier.symbol)
-        false -> Identifier.Part.regular(identifier.symbol)
+    fun part(identifier: org.partiql.ast.Identifier.Simple): Identifier.Simple = when (identifier.isRegular) {
+        true -> Identifier.Simple.regular(identifier.text)
+        false -> Identifier.Simple.delimited(identifier.text)
     }
 }

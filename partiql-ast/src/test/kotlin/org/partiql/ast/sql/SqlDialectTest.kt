@@ -61,8 +61,6 @@ import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.fromJoin
 import org.partiql.ast.Ast.groupBy
 import org.partiql.ast.Ast.groupByKey
-import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.Ast.letBinding
 import org.partiql.ast.Ast.orderBy
 import org.partiql.ast.Ast.queryBodySFW
@@ -84,7 +82,8 @@ import org.partiql.ast.FromType
 import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.Identifier
-import org.partiql.ast.IdentifierChain
+import org.partiql.ast.Identifier.Simple.delimited
+import org.partiql.ast.Identifier.Simple.regular
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Literal.approxNum
@@ -282,12 +281,9 @@ class SqlDialectTest {
             expect(
                 "FOO.BAR",
                 DataType.USER_DEFINED(
-                    identifierChain(
-                        root = identifier("FOO", isDelimited = false),
-                        next = identifierChain(
-                            root = identifier(symbol = "BAR", isDelimited = false),
-                            next = null
-                        )
+                    Identifier.of(
+                        regular("FOO"),
+                        regular("BAR")
                     )
                 )
             ),
@@ -352,51 +348,36 @@ class SqlDialectTest {
         @JvmStatic
         fun identifiers() = listOf(
             expect(
-                "x", id("x")
+                "x", regular("x")
             ),
             expect(
-                "X", id("X")
+                "X", regular("X")
             ),
             expect(
-                "\"x\"", id("x", isDelimited = true)
+                "\"x\"", delimited("x")
             ),
             expect(
                 "x.y.z",
-                identifierChain(
-                    root = id("x"),
-                    next = identifierChain(
-                        root = id("y"),
-                        next = identifierChain(
-                            root = id("z"),
-                            next = null
-                        )
-                    )
+                Identifier.of(
+                    regular("x"),
+                    regular("y"),
+                    regular("z")
                 )
             ),
             expect(
                 "x.\"y\".z",
-                identifierChain(
-                    root = id("x"),
-                    next = identifierChain(
-                        root = id("y", isDelimited = true),
-                        next = identifierChain(
-                            root = id("z"),
-                            next = null
-                        )
-                    )
+                Identifier.of(
+                    regular("x"),
+                    delimited("y"),
+                    regular("z")
                 )
             ),
             expect(
                 "\"x\".\"y\".\"z\"",
-                identifierChain(
-                    root = id("x", isDelimited = true),
-                    next = identifierChain(
-                        root = id("y", isDelimited = true),
-                        next = identifierChain(
-                            root = id("z", isDelimited = true),
-                            next = null
-                        )
-                    )
+                Identifier.of(
+                    delimited("x"),
+                    delimited("y"),
+                    delimited("z")
                 )
             ),
         )
@@ -439,7 +420,7 @@ class SqlDialectTest {
                 """'hello'""", exprLit(string("hello"))
             ),
             expect(
-                """hello""", id("hello")
+                """hello""", regular("hello")
             ),
             expect(
                 "DATE '0001-02-03'", exprLit(typedString(DataType.DATE(), "0001-02-03"))
@@ -513,35 +494,24 @@ class SqlDialectTest {
             expect(
                 "x",
                 exprVarRef(
-                    identifierChain(
-                        root = id("x"),
-                        next = null
-                    ),
+                    Identifier.regular("x"),
                     isQualified = false
                 )
             ),
             expect(
                 "\"x\"",
                 exprVarRef(
-                    identifierChain(
-                        root = id("x", isDelimited = true),
-                        next = null
-                    ),
+                    Identifier.delimited("x"),
                     isQualified = false
                 )
             ),
             expect(
                 "x.y.z",
                 exprVarRef(
-                    identifierChain(
-                        root = id("x"),
-                        next = identifierChain(
-                            root = id("y"),
-                            next = identifierChain(
-                                root = id("z"),
-                                next = null
-                            )
-                        )
+                    Identifier.of(
+                        regular("x"),
+                        regular("y"),
+                        regular("z")
                     ),
                     isQualified = false
                 )
@@ -549,15 +519,10 @@ class SqlDialectTest {
             expect(
                 "x.\"y\".z",
                 exprVarRef(
-                    identifierChain(
-                        root = id("x"),
-                        next = identifierChain(
-                            root = id("y", isDelimited = true),
-                            next = identifierChain(
-                                root = id("z"),
-                                next = null
-                            )
-                        )
+                    Identifier.of(
+                        regular("x"),
+                        delimited("y"),
+                        regular("z")
                     ),
                     isQualified = false
                 )
@@ -565,15 +530,10 @@ class SqlDialectTest {
             expect(
                 "\"x\".\"y\".\"z\"",
                 exprVarRef(
-                    identifierChain(
-                        root = id("x", isDelimited = true),
-                        next = identifierChain(
-                            root = id("y", isDelimited = true),
-                            next = identifierChain(
-                                root = id("z", isDelimited = true),
-                                next = null
-                            )
-                        )
+                    Identifier.of(
+                        delimited("x"),
+                        delimited("y"),
+                        delimited("z")
                     ),
                     isQualified = false
                 )
@@ -582,35 +542,24 @@ class SqlDialectTest {
             expect(
                 "@x",
                 exprVarRef(
-                    identifierChain(
-                        root = id("x"),
-                        next = null
-                    ),
+                    Identifier.regular("x"),
                     isQualified = true
                 )
             ),
             expect(
                 "@\"x\"",
                 exprVarRef(
-                    identifierChain(
-                        root = id("x", isDelimited = true),
-                        next = null
-                    ),
+                    Identifier.delimited("x"),
                     isQualified = true
                 )
             ),
             expect(
                 "@x.y.z",
                 exprVarRef(
-                    identifierChain(
-                        root = id("x"),
-                        next = identifierChain(
-                            root = id("y"),
-                            next = identifierChain(
-                                root = id("z"),
-                                next = null
-                            )
-                        )
+                    Identifier.of(
+                        regular("x"),
+                        regular("y"),
+                        regular("z")
                     ),
                     isQualified = true
                 )
@@ -618,12 +567,10 @@ class SqlDialectTest {
             expect(
                 "@x.\"y\".z",
                 exprVarRef(
-                    idChain(
-                        root = id("x"),
-                        next = idChain(
-                            root = id("y", isDelimited = true),
-                            next = idChain(root = id("z"))
-                        )
+                    Identifier.of(
+                        regular("x"),
+                        delimited("y"),
+                        regular("z")
                     ),
                     isQualified = true
                 )
@@ -631,12 +578,10 @@ class SqlDialectTest {
             expect(
                 "@\"x\".\"y\".\"z\"",
                 exprVarRef(
-                    idChain(
-                        root = id("x", isDelimited = true),
-                        next = idChain(
-                            root = id("y", isDelimited = true),
-                            next = idChain(root = id("z", isDelimited = true))
-                        )
+                    Identifier.of(
+                        delimited("x"),
+                        delimited("y"),
+                        delimited("z")
                     ),
                     isQualified = true
                 )
@@ -649,12 +594,14 @@ class SqlDialectTest {
                 "x.y.*",
                 exprPath(
                     root = exprVarRef(
-                        identifierChain = idChain(id("x")),
+                        identifier = Identifier.of(regular("x")),
                         isQualified = false
                     ),
-                    next = exprPathStepField(
-                        value = id("y"),
-                        next = exprPathStepAllFields(next = null)
+                    steps = listOf(
+                        exprPathStepField(
+                            value = regular("y")
+                        ),
+                        exprPathStepAllFields()
                     )
                 )
             ),
@@ -662,12 +609,14 @@ class SqlDialectTest {
                 "x.y[*]",
                 exprPath(
                     root = exprVarRef(
-                        identifierChain = idChain(id("x")),
+                        identifier = Identifier.of(regular("x")),
                         isQualified = false
                     ),
-                    next = exprPathStepField(
-                        value = id("y"),
-                        next = exprPathStepAllElements(next = null)
+                    steps = listOf(
+                        exprPathStepField(
+                            value = regular("y")
+                        ),
+                        exprPathStepAllElements()
                     )
                 )
             ),
@@ -675,19 +624,21 @@ class SqlDialectTest {
                 "x[1 + a]",
                 exprPath(
                     root = exprVarRef(
-                        identifierChain = idChain(id("x")),
+                        identifier = Identifier.of(regular("x")),
                         isQualified = false
                     ),
-                    next = exprPathStepElement(
-                        element = exprOperator(
-                            symbol = "+",
-                            lhs = exprLit(intNum(1)),
-                            rhs = exprVarRef(
-                                identifierChain = idChain(id("a")),
-                                isQualified = false
-                            )
+                    steps = listOf(
+                        exprPathStepElement(
+                            element = exprOperator(
+                                symbol = "+",
+                                lhs = exprLit(intNum(1)),
+                                rhs = exprVarRef(
+                                    identifier = Identifier.of(regular("a")),
+                                    isQualified = false
+                                )
+                            ),
                         ),
-                        next = null
+
                     )
                 )
             ),
@@ -695,10 +646,12 @@ class SqlDialectTest {
                 "x['y']",
                 exprPath(
                     root = exprVarRef(
-                        identifierChain = idChain(id("x")),
+                        identifier = Identifier.of(regular("x")),
                         isQualified = false
                     ),
-                    next = exprPathStepElement(exprLit(string("y")), next = null)
+                    steps = listOf(
+                        exprPathStepElement(exprLit(string("y")))
+                    )
                 )
             ),
         )
@@ -708,7 +661,7 @@ class SqlDialectTest {
             expect(
                 "foo(1)",
                 exprCall(
-                    function = idChain(id("foo")),
+                    function = Identifier.of(regular("foo")),
                     args = listOf(exprLit(intNum(1))),
                     setq = null
                 )
@@ -716,7 +669,7 @@ class SqlDialectTest {
             expect(
                 "foo(1, 2)",
                 exprCall(
-                    function = idChain(id("foo")),
+                    function = Identifier.of(regular("foo")),
                     args = listOf(
                         exprLit(intNum(1)),
                         exprLit(intNum(2)),
@@ -727,9 +680,9 @@ class SqlDialectTest {
             expect(
                 "foo.bar(1)",
                 exprCall(
-                    function = identifierChain(
-                        root = id("foo"),
-                        next = idChain(id("bar"))
+                    function = Identifier.of(
+                        regular("foo"),
+                        regular("bar")
                     ),
                     args = listOf(exprLit(intNum(1))),
                     setq = null
@@ -738,9 +691,9 @@ class SqlDialectTest {
             expect(
                 "foo.bar(1, 2)",
                 exprCall(
-                    function = identifierChain(
-                        root = id("foo"),
-                        next = idChain(id("bar"))
+                    function = Identifier.of(
+                        regular("foo"),
+                        regular("bar")
                     ),
                     args = listOf(
                         exprLit(intNum(1)),
@@ -756,34 +709,34 @@ class SqlDialectTest {
             expect(
                 "FOO(x)",
                 exprCall(
-                    function = idChain(id("FOO")),
-                    args = listOf(exprVarRef(idChain(id("x")), isQualified = false)),
+                    function = Identifier.of(regular("FOO")),
+                    args = listOf(exprVarRef(Identifier.of(regular("x")), isQualified = false)),
                     setq = null
                 )
             ),
             expect(
                 "FOO(ALL x)",
                 exprCall(
-                    function = idChain(id("FOO")),
-                    args = listOf(exprVarRef(idChain(id("x")), isQualified = false)),
+                    function = Identifier.of(regular("FOO")),
+                    args = listOf(exprVarRef(Identifier.of(regular("x")), isQualified = false)),
                     setq = SetQuantifier.ALL()
                 )
             ),
             expect(
                 "FOO(DISTINCT x)",
                 exprCall(
-                    function = idChain(id("FOO")),
-                    args = listOf(exprVarRef(idChain(id("x")), isQualified = false)),
+                    function = Identifier.of(regular("FOO")),
+                    args = listOf(exprVarRef(Identifier.of(regular("x")), isQualified = false)),
                     setq = SetQuantifier.DISTINCT(),
                 )
             ),
             expect(
                 "FOO(x, y)",
                 exprCall(
-                    function = idChain(id("FOO")),
+                    function = Identifier.of(regular("FOO")),
                     args = listOf(
-                        exprVarRef(idChain(id("x")), isQualified = false),
-                        exprVarRef(idChain(id("y")), isQualified = false)
+                        exprVarRef(Identifier.of(regular("x")), isQualified = false),
+                        exprVarRef(Identifier.of(regular("y")), isQualified = false)
                     ),
                     setq = null
                 )
@@ -791,10 +744,10 @@ class SqlDialectTest {
             expect(
                 "FOO(ALL x, y)",
                 exprCall(
-                    function = idChain(id("FOO")),
+                    function = Identifier.of(regular("FOO")),
                     args = listOf(
-                        exprVarRef(idChain(id("x")), isQualified = false),
-                        exprVarRef(idChain(id("y")), isQualified = false)
+                        exprVarRef(Identifier.of(regular("x")), isQualified = false),
+                        exprVarRef(Identifier.of(regular("y")), isQualified = false)
                     ),
                     setq = SetQuantifier.ALL()
                 )
@@ -802,10 +755,10 @@ class SqlDialectTest {
             expect(
                 "FOO(DISTINCT x, y)",
                 exprCall(
-                    function = idChain(id("FOO")),
+                    function = Identifier.of(regular("FOO")),
                     args = listOf(
-                        exprVarRef(idChain(id("x")), isQualified = false),
-                        exprVarRef(idChain(id("y")), isQualified = false)
+                        exprVarRef(Identifier.of(regular("x")), isQualified = false),
+                        exprVarRef(Identifier.of(regular("y")), isQualified = false)
                     ),
                     setq = SetQuantifier.DISTINCT(),
                 )
@@ -813,7 +766,7 @@ class SqlDialectTest {
             expect(
                 "COUNT(*)",
                 exprCall(
-                    function = idChain(id("COUNT")), // AST representation for COUNT w/ no args maps to COUNT(*)
+                    function = Identifier.of(regular("COUNT")), // AST representation for COUNT w/ no args maps to COUNT(*)
                     args = emptyList(),
                     setq = null
                 )
@@ -1218,7 +1171,7 @@ class SqlDialectTest {
             expect(
                 "DATE_ADD(MINUTE, x, y)",
                 exprCall(
-                    function = idChain(id("DATE_ADD")),
+                    function = Identifier.of(regular("DATE_ADD")),
                     args = listOf(
                         exprLit(string("MINUTE")),
                         v("x"),
@@ -1230,7 +1183,7 @@ class SqlDialectTest {
             expect(
                 "DATE_DIFF(MINUTE, x, y)",
                 exprCall(
-                    function = idChain(id("DATE_DIFF")),
+                    function = Identifier.of(regular("DATE_DIFF")),
                     args = listOf(
                         exprLit(string("MINUTE")),
                         v("x"),
@@ -1498,7 +1451,7 @@ class SqlDialectTest {
                 qSet(
                     body = sfw(
                         select = selectList(
-                            items = listOf(selectItemExpr(v("a"), id("x"))),
+                            items = listOf(selectItemExpr(v("a"), regular("x"))),
                             setq = null
                         ),
                         from = table("T"),
@@ -1511,8 +1464,8 @@ class SqlDialectTest {
                     body = sfw(
                         select = selectList(
                             items = listOf(
-                                selectItemExpr(v("a"), id("x")),
-                                selectItemExpr(v("b"), id("y"))
+                                selectItemExpr(v("a"), regular("x")),
+                                selectItemExpr(v("b"), regular("y"))
                             ),
                             setq = null
                         ),
@@ -1726,7 +1679,7 @@ class SqlDialectTest {
                                     )
                                 ),
                                 excludePath(
-                                    varRef = exprVarRef(idChain(id("s", isDelimited = true)), isQualified = false),
+                                    varRef = exprVarRef(Identifier.of(delimited("s")), isQualified = false),
                                     excludeSteps = listOf(
                                         excludeStepCollIndex(0),
                                         insensitiveExcludeStructField("d"),
@@ -1744,11 +1697,11 @@ class SqlDialectTest {
         )
 
         private fun insensitiveExcludeStructField(str: String) = excludeStepStructField(
-            symbol = id(str, isDelimited = false)
+            symbol = regular(str)
         )
 
         private fun sensitiveExcludeStructField(str: String) = excludeStepStructField(
-            symbol = id(str, isDelimited = true)
+            symbol = delimited(str)
         )
 
         @JvmStatic
@@ -1781,7 +1734,7 @@ class SqlDialectTest {
                                 fromExpr(
                                     expr = v("T"),
                                     fromType = FromType.SCAN(),
-                                    asAlias = id("x"),
+                                    asAlias = regular("x"),
                                     atAlias = null
                                 )
                             )
@@ -1799,8 +1752,8 @@ class SqlDialectTest {
                                 fromExpr(
                                     expr = v("T"),
                                     fromType = FromType.SCAN(),
-                                    asAlias = id("x"),
-                                    atAlias = id("y")
+                                    asAlias = regular("x"),
+                                    atAlias = regular("y")
                                 )
                             )
                         )
@@ -1835,7 +1788,7 @@ class SqlDialectTest {
                                 fromExpr(
                                     expr = v("T"),
                                     fromType = FromType.UNPIVOT(),
-                                    asAlias = id("x"),
+                                    asAlias = regular("x"),
                                     atAlias = null
                                 )
                             )
@@ -1853,8 +1806,8 @@ class SqlDialectTest {
                                 fromExpr(
                                     expr = v("T"),
                                     fromType = FromType.UNPIVOT(),
-                                    asAlias = id("x"),
-                                    atAlias = id("y")
+                                    asAlias = regular("x"),
+                                    atAlias = regular("y")
                                 )
                             )
                         )
@@ -1992,7 +1945,7 @@ class SqlDialectTest {
                         select = select("a"),
                         from = table("T"),
                         let = Ast.let(
-                            bindings = listOf(letBinding(v("x"), id("i")))
+                            bindings = listOf(letBinding(v("x"), regular("i")))
                         )
                     )
                 )
@@ -2005,8 +1958,8 @@ class SqlDialectTest {
                         from = table("T"),
                         let = Ast.let(
                             bindings = listOf(
-                                letBinding(v("x"), id("i")),
-                                letBinding(v("y"), id("j"))
+                                letBinding(v("x"), regular("i")),
+                                letBinding(v("y"), regular("j"))
                             )
                         )
                     )
@@ -2094,7 +2047,7 @@ class SqlDialectTest {
                         from = table("T"),
                         groupBy = groupBy(
                             strategy = GroupByStrategy.FULL(),
-                            keys = listOf(groupByKey(v("x"), id("i"))),
+                            keys = listOf(groupByKey(v("x"), regular("i"))),
                             asAlias = null
                         )
                     )
@@ -2126,8 +2079,8 @@ class SqlDialectTest {
                         groupBy = groupBy(
                             strategy = GroupByStrategy.FULL(),
                             keys = listOf(
-                                groupByKey(v("x"), id("i")),
-                                groupByKey(v("y"), id("j"))
+                                groupByKey(v("x"), regular("i")),
+                                groupByKey(v("y"), regular("j"))
                             ),
                             asAlias = null
                         )
@@ -2143,7 +2096,7 @@ class SqlDialectTest {
                         groupBy = groupBy(
                             strategy = GroupByStrategy.FULL(),
                             keys = listOf(groupByKey(v("x"), asAlias = null)),
-                            asAlias = id("g")
+                            asAlias = regular("g")
                         )
                     )
                 )
@@ -2156,8 +2109,8 @@ class SqlDialectTest {
                         from = table("T"),
                         groupBy = groupBy(
                             strategy = GroupByStrategy.FULL(),
-                            keys = listOf(groupByKey(v("x"), id("i"))),
-                            asAlias = id("g")
+                            keys = listOf(groupByKey(v("x"), regular("i"))),
+                            asAlias = regular("g")
                         )
                     )
                 )
@@ -2174,7 +2127,7 @@ class SqlDialectTest {
                                 groupByKey(v("x"), asAlias = null),
                                 groupByKey(v("y"), asAlias = null)
                             ),
-                            asAlias = id("g")
+                            asAlias = regular("g")
                         )
                     )
                 )
@@ -2188,10 +2141,10 @@ class SqlDialectTest {
                         groupBy = groupBy(
                             strategy = GroupByStrategy.FULL(),
                             keys = listOf(
-                                groupByKey(v("x"), id("i")),
-                                groupByKey(v("y"), id("j"))
+                                groupByKey(v("x"), regular("i")),
+                                groupByKey(v("y"), regular("j"))
                             ),
-                            asAlias = id("g")
+                            asAlias = regular("g")
                         )
                     )
                 )
@@ -2658,19 +2611,9 @@ class SqlDialectTest {
         // DSL shorthand
 
         private fun v(symbol: String) = exprVarRef(
-            identifierChain = idChain(id(symbol)),
+            identifier = Identifier.of(regular(symbol)),
             isQualified = false
         )
-
-        private fun id(
-            symbol: String,
-            isDelimited: Boolean = false,
-        ) = identifier(symbol, isDelimited)
-
-        private fun idChain(
-            root: Identifier,
-            next: IdentifierChain? = null
-        ) = identifierChain(root, next)
 
         private fun select(vararg s: String) = selectList(
             items = s.map {

@@ -18,8 +18,6 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.Ast.exprLit
 import org.partiql.ast.Ast.exprVarRef
-import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstRewriter
 import org.partiql.ast.AstVisitor
@@ -31,7 +29,7 @@ import org.partiql.ast.FromJoin
 import org.partiql.ast.FromType
 import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
-import org.partiql.ast.IdentifierChain
+import org.partiql.ast.Identifier
 import org.partiql.ast.JoinType
 import org.partiql.ast.Literal.intNum
 import org.partiql.ast.Nulls
@@ -243,7 +241,7 @@ internal object RelConverter {
         }
 
         override fun visitSelectValue(node: SelectValue, input: Rel): Rel {
-            val name = node.constructor.toBinder(1).symbol
+            val name = node.constructor.toBinder(1).text
             val rex = RexConverter.apply(node.constructor, env)
             val schema = listOf(relBinding(name, rex.type))
             val props = input.type.props
@@ -270,7 +268,7 @@ internal object RelConverter {
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
                 else -> relBinding(
-                    name = a.symbol,
+                    name = a.text,
                     type = rex.type
                 )
             }
@@ -280,7 +278,7 @@ internal object RelConverter {
                         null -> convertScan(rex, binding)
                         else -> {
                             val index = relBinding(
-                                name = i.symbol,
+                                name = i.text,
                                 type = (INT)
                             )
                             convertScanIndexed(rex, binding, index)
@@ -291,7 +289,7 @@ internal object RelConverter {
                     val atAlias = when (val at = node.atAlias) {
                         null -> error("AST not normalized, missing AT alias on UNPIVOT $node")
                         else -> relBinding(
-                            name = at.symbol,
+                            name = at.text,
                             type = (STRING)
                         )
                     }
@@ -371,7 +369,7 @@ internal object RelConverter {
         private fun convertSelectItemExpr(item: SelectItem.Expr): Pair<Rel.Binding, Rex> {
             val name = when (val a = item.asAlias) {
                 null -> error("AST not normalized, missing AS alias on select item $item")
-                else -> a.symbol
+                else -> a.text
             }
             val rex = RexConverter.apply(item.expr, env)
             val binding = relBinding(name, rex.type)
@@ -449,7 +447,7 @@ internal object RelConverter {
             // Add GROUP_AS aggregation
             groupBy?.let { gb ->
                 gb.asAlias?.let { groupAs ->
-                    val binding = relBinding(groupAs.symbol, ANY)
+                    val binding = relBinding(groupAs.text, ANY)
                     schema.add(binding)
                     val fields = input.type.schema.mapIndexed { bindingIndex, currBinding ->
                         rexOpStructField(
@@ -468,7 +466,7 @@ internal object RelConverter {
                         error("not normalized, group key $it missing unique name")
                     }
                     val binding = relBinding(
-                        name = it.asAlias!!.symbol,
+                        name = it.asAlias!!.text,
                         type = (ANY)
                     )
                     schema.add(binding)
@@ -624,9 +622,9 @@ internal object RelConverter {
         private fun stepToExcludeType(step: ExcludeStep): Rel.Op.Exclude.Type {
             return when (step) {
                 is ExcludeStep.StructField -> {
-                    when (step.symbol.isDelimited) {
-                        false -> relOpExcludeTypeStructSymbol(step.symbol.symbol)
-                        true -> relOpExcludeTypeStructKey(step.symbol.symbol)
+                    when (step.symbol.isRegular) {
+                        true -> relOpExcludeTypeStructSymbol(step.symbol.text)
+                        false -> relOpExcludeTypeStructKey(step.symbol.text)
                     }
                 }
                 is ExcludeStep.CollIndex -> relOpExcludeTypeCollIndex(step.index)
@@ -689,7 +687,7 @@ internal object RelConverter {
         override fun visitSelectValue(node: SelectValue, ctx: Context): AstNode {
             val visited = super.visitSelectValue(node, ctx)
             val substitutions = ctx.keys.associate {
-                it.expr to exprVarRef(identifierChain(identifier(it.asAlias!!.symbol, isDelimited = true), next = null), isQualified = false)
+                it.expr to exprVarRef(Identifier.regular(it.asAlias!!.text), isQualified = false)
             }
             return SubstitutionVisitor.visit(visited, substitutions)
         }
@@ -702,13 +700,7 @@ internal object RelConverter {
             //  may require further modification of SPI interfaces to support
             when (node.function.isAggregateCall()) {
                 true -> {
-                    val id = identifierChain(
-                        identifier(
-                            symbol = syntheticAgg(ctx.aggregations.size),
-                            isDelimited = false
-                        ),
-                        next = null
-                    )
+                    val id = Identifier.delimited(syntheticAgg(ctx.aggregations.size))
                     ctx.aggregations += node
                     exprVarRef(id, isQualified = false)
                 }
@@ -719,20 +711,7 @@ internal object RelConverter {
             return aggregates.contains(this)
         }
 
-        private fun IdentifierChain.isAggregateCall(): Boolean {
-            return when (next) {
-                null -> root.symbol.lowercase().isAggregateCall()
-                else -> {
-                    var curId = next
-                    var last = curId
-                    while (curId != null) {
-                        last = curId
-                        curId = curId.next
-                    }
-                    last!!.root.symbol.lowercase().isAggregateCall()
-                }
-            }
-        }
+        private fun Identifier.isAggregateCall(): Boolean = identifier.text.lowercase().isAggregateCall()
 
         override fun defaultReturn(node: AstNode, ctx: Context) = node
     }

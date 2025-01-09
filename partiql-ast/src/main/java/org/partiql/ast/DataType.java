@@ -31,7 +31,7 @@ public final class DataType extends AstEnum {
     @EqualsAndHashCode(callSuper = false)
     public static class StructField extends AstNode {
         @NotNull
-        private final Identifier name;
+        private final Identifier.Simple name;
 
         @NotNull
         private final DataType type;
@@ -45,7 +45,7 @@ public final class DataType extends AstEnum {
         private final String comment;
 
         public StructField(
-                @NotNull Identifier name,
+                @NotNull Identifier.Simple name,
                 @NotNull DataType type,
                 boolean optional,
                 @Nullable List<AttributeConstraint> constraints,
@@ -73,7 +73,7 @@ public final class DataType extends AstEnum {
         }
 
         @NotNull
-        public Identifier getName() {
+        public Identifier.Simple getName() {
             return this.name;
         }
 
@@ -435,7 +435,7 @@ public final class DataType extends AstEnum {
         return new DataType(USER_DEFINED);
     }
 
-    public static DataType USER_DEFINED(@NotNull IdentifierChain name) {
+    public static DataType USER_DEFINED(@NotNull Identifier name) {
         return new DataType(USER_DEFINED, name);
     }
 
@@ -454,7 +454,7 @@ public final class DataType extends AstEnum {
     private final Integer length;
     private final DataType elementType;
     private final List<StructField> fields;
-    private final IdentifierChain name;
+    private final Identifier name;
 
     // Private constructor for no parameter DataTypes
     private DataType(int code) {
@@ -500,7 +500,7 @@ public final class DataType extends AstEnum {
     }
 
     // Private constructor for user-defined type w/ an `IdentifierChain` `name`; other parameters set to null
-    private DataType(int code, IdentifierChain name) {
+    private DataType(int code, Identifier name) {
         this.code = code;
         this.name = name;
         this.precision = null;
@@ -700,7 +700,7 @@ public final class DataType extends AstEnum {
     /**
      * @return the name of this data type. If there is no name, null is returned.
      */
-    public IdentifierChain getName() {
+    public Identifier getName() {
         return name;
     }
 

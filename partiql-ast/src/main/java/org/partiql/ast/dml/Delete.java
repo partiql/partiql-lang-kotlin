@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.ast.AstNode;
 import org.partiql.ast.AstVisitor;
-import org.partiql.ast.IdentifierChain;
+import org.partiql.ast.Identifier;
 import org.partiql.ast.Statement;
 import org.partiql.ast.expr.Expr;
 
@@ -20,12 +20,12 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public final class Delete extends Statement {
     @NotNull
-    private final IdentifierChain tableName;
+    private final Identifier tableName;
 
     @Nullable
     private final Expr condition;
 
-    public Delete(@NotNull IdentifierChain tableName, @Nullable Expr condition) {
+    public Delete(@NotNull Identifier tableName, @Nullable Expr condition) {
         this.tableName = tableName;
         this.condition = condition;
     }
@@ -47,7 +47,7 @@ public final class Delete extends Statement {
     }
 
     @NotNull
-    public IdentifierChain getTableName() {
+    public Identifier getTableName() {
         return this.tableName;
     }
 

@@ -8,13 +8,12 @@ import org.partiql.ast.Ast.exprStructField
 import org.partiql.ast.Ast.exprVarRef
 import org.partiql.ast.Ast.from
 import org.partiql.ast.Ast.fromExpr
-import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.Ast.queryBodySFW
 import org.partiql.ast.Ast.selectItemExpr
 import org.partiql.ast.Ast.selectList
 import org.partiql.ast.Ast.selectValue
 import org.partiql.ast.FromType
+import org.partiql.ast.Identifier
 import org.partiql.ast.Literal.intNum
 import org.partiql.ast.Literal.string
 import org.partiql.ast.SelectItem
@@ -126,13 +125,7 @@ class NormalizeSelectTest {
     // ----- HELPERS -------------------------
 
     private fun variable(name: String) = exprVarRef(
-        identifierChain = identifierChain(
-            identifier(
-                symbol = name,
-                isDelimited = false,
-            ),
-            next = null
-        ),
+        identifier = Identifier.regular(name),
         isQualified = false,
     )
 
@@ -183,13 +176,7 @@ class NormalizeSelectTest {
                     listOf(
                         fromExpr(
                             expr = exprVarRef(
-                                identifierChain = identifierChain(
-                                    identifier(
-                                        symbol = "T",
-                                        isDelimited = false
-                                    ),
-                                    next = null
-                                ),
+                                identifier = Identifier.regular("T"),
                                 isQualified = false
                             ),
                             fromType = FromType.SCAN(),
@@ -210,12 +197,12 @@ class NormalizeSelectTest {
 
     private fun varItem(symbol: String, asAlias: String? = null) = selectItemExpr(
         expr = variable(symbol),
-        asAlias = asAlias?.let { identifier(asAlias, isDelimited = false) }
+        asAlias = asAlias?.let { Identifier.Simple.regular(asAlias) }
     )
 
     private fun litItem(value: Int, asAlias: String? = null) = selectItemExpr(
         expr = lit(value),
-        asAlias = asAlias?.let { identifier(asAlias, isDelimited = false) }
+        asAlias = asAlias?.let { Identifier.Simple.regular(asAlias) }
     )
 
     private fun lit(value: Int) = exprLit(intNum(value))

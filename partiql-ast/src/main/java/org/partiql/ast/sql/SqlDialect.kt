@@ -15,8 +15,6 @@
 package org.partiql.ast.sql
 
 import org.partiql.ast.Ast.exprVarRef
-import org.partiql.ast.Ast.identifier
-import org.partiql.ast.Ast.identifierChain
 import org.partiql.ast.AstNode
 import org.partiql.ast.AstVisitor
 import org.partiql.ast.DataType
@@ -30,7 +28,8 @@ import org.partiql.ast.FromType
 import org.partiql.ast.GroupBy
 import org.partiql.ast.GroupByStrategy
 import org.partiql.ast.Identifier
-import org.partiql.ast.IdentifierChain
+import org.partiql.ast.Identifier.Simple
+import org.partiql.ast.Identifier.regular
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
 import org.partiql.ast.Literal
@@ -138,13 +137,15 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         else -> visitExpr(node, tail)
     }
 
-    override fun visitIdentifier(node: Identifier, tail: SqlBlock): SqlBlock = tail concat node.sql()
+    override fun visitIdentifierSimple(node: Simple, tail: SqlBlock): SqlBlock = tail concat node.sql()
 
-    override fun visitIdentifierChain(node: IdentifierChain, tail: SqlBlock): SqlBlock {
-        var path = node.root.sql()
-        val next = node.next
-        if (next != null) {
-            path += ".${next.sql()}"
+    override fun visitIdentifier(node: Identifier, tail: SqlBlock): SqlBlock {
+        val path = when (node.hasQualifier()) {
+            true -> {
+                val qualifier = node.qualifier.fold("") { acc, part -> acc + "${part.sql()}." }
+                qualifier + node.identifier.sql()
+            }
+            false -> node.identifier.sql()
         }
         return tail concat path
     }
@@ -173,7 +174,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExcludeStepStructField(node: ExcludeStep.StructField, tail: SqlBlock): SqlBlock {
         var t = tail concat "."
-        t = visitIdentifier(node.symbol, t)
+        t = visitIdentifierSimple(node.symbol, t)
         return t
     }
 
@@ -224,7 +225,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
             // <collection type>
             DataType.LIST, DataType.BAG, DataType.SEXP -> tail concat node.name()
             // <user defined type>
-            DataType.USER_DEFINED -> visitIdentifierChain(node.name, tail)
+            DataType.USER_DEFINED -> visitIdentifier(node.name, tail)
             else -> defaultReturn(node, tail)
         }
     }
@@ -304,7 +305,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         if (node.isQualified()) {
             t = t concat "@"
         }
-        t = visitIdentifierChain(node.identifierChain, t)
+        t = visitIdentifier(node.identifier, t)
         return t
     }
 
@@ -313,11 +314,7 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExprPath(node: ExprPath, tail: SqlBlock): SqlBlock {
         var t = visitExprWrapped(node.root, tail)
-        var cur = node.next
-        while (cur != null) {
-            t = visitPathStep(cur, t)
-            cur = cur.next
-        }
+        t = t concat list(delimiter = null, start = null, end = null) { node.steps }
         return t
     }
 
@@ -342,26 +339,26 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         var t = tail
         val f = node.function
         // Special case -- COUNT() maps to COUNT(*)
-        if (f.next == null && f.root.symbol.uppercase() == "COUNT" && node.args.isEmpty()) {
+        if (!f.hasQualifier() && f.identifier.text.uppercase() == "COUNT" && node.args.isEmpty()) {
             return t concat "COUNT(*)"
         }
         // Special case -- DATE_ADD('<datetime_field>', <lhs>, <rhs>) -> DATE_ADD(<datetime_field>, <lhs>, <rhs>)
         // Special case -- DATE_DIFF('<datetime_field>', <lhs>, <rhs>) -> DATE_DIFF(<datetime_field>, <lhs>, <rhs>)
-        if (f.next == null &&
-            (f.root.symbol.uppercase() == "DATE_ADD" || f.root.symbol.uppercase() == "DATE_DIFF") &&
+        if (!f.hasQualifier() &&
+            (f.identifier.text.uppercase() == "DATE_ADD" || f.identifier.text.uppercase() == "DATE_DIFF") &&
             node.args.size == 3
         ) {
             val dtField = (node.args[0] as ExprLit).lit.stringValue()
             // Represent as an `ExprVarRef` to mimic a literal symbol.
             // TODO consider some other representation for unquoted strings
-            val newArgs = listOf(exprVarRef(identifierChain(identifier(dtField, isDelimited = false), next = null), isQualified = false)) + node.args.drop(1)
-            t = visitIdentifierChain(f, t)
+            val newArgs = listOf(exprVarRef(regular(dtField), isQualified = false)) + node.args.drop(1)
+            t = visitIdentifier(f, t)
             t = t concat list { newArgs }
             return t
         }
         val setq = node.setq
         val start = if (setq != null) "(${setq.name()} " else "("
-        t = visitIdentifierChain(f, t)
+        t = visitIdentifier(f, t)
         t = t concat list(start) { node.args }
         return t
     }
@@ -893,8 +890,8 @@ public abstract class SqlDialect : AstVisitor<SqlBlock, SqlBlock>() {
         )
     }
 
-    private fun Identifier.sql() = when (isDelimited) {
-        true -> "\"$symbol\""
-        false -> symbol // verbatim ..
+    private fun Simple.sql() = when (isRegular) {
+        true -> text // verbatim ..
+        false -> "\"$text\""
     }
 }
