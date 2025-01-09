@@ -14,6 +14,7 @@ import java.util.List;
  * Represents PartiQL's IS &lt;type&gt; predicate. E.g. {@code foo IS INTEGER}.
  * <p>
  * Note: this is an experimental API. Class's fields and behavior may change in a subsequent release.
+ * </p>
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

@@ -13,12 +13,14 @@ import java.util.List;
  * Abstract base class for graph path selector. See <a href="https://arxiv.org/abs/2112.06217">Fig. 8</a>.
  * <p>
  * Note: this is an experimental API and subject to change without prior notice.
+ * </p>
  */
 public abstract class GraphSelector extends AstNode {
     /**
      * ANY SHORTEST selector.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -41,6 +43,7 @@ public abstract class GraphSelector extends AstNode {
      * ALL SHORTEST selector.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -63,6 +66,7 @@ public abstract class GraphSelector extends AstNode {
      * ANY selector.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -85,6 +89,7 @@ public abstract class GraphSelector extends AstNode {
      * ANY k selector.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -115,6 +120,7 @@ public abstract class GraphSelector extends AstNode {
      * SHORTEST k selector.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -145,6 +151,7 @@ public abstract class GraphSelector extends AstNode {
      * SHORTEST k GROUP selector.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

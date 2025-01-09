@@ -13,6 +13,7 @@ import java.util.List;
  * Represents graph edge direction.
  * <p>
  * Note: this is an experimental API and subject to change without prior notice.
+ * </p>
  */
 @EqualsAndHashCode(callSuper = false)
 public final class GraphDirection extends AstEnum {

@@ -13,6 +13,7 @@ import java.util.List;
  * Graph path restrictors. See <a href="https://arxiv.org/abs/2112.06217">Fig. 7</a>.
  * <p>
  * Note: this is an experimental API and subject to change without prior notice.
+ * </p>
  */
 @EqualsAndHashCode(callSuper = false)
 public final class GraphRestrictor extends AstEnum {

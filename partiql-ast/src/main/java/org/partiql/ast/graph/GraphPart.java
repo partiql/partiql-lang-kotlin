@@ -15,12 +15,14 @@ import java.util.List;
  * Abstract base class for graph pattern parts.
  * <p>
  * Note: this is an experimental API and subject to change without prior notice.
+ * </p>
  */
 public abstract class GraphPart extends AstNode {
     /**
      * A single node in a graph pattern.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -78,6 +80,7 @@ public abstract class GraphPart extends AstNode {
      * A single edge in a graph pattern.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -157,6 +160,7 @@ public abstract class GraphPart extends AstNode {
      * A sub-pattern.
      * <p>
      * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

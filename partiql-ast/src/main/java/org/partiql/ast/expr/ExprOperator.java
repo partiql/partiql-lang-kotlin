@@ -14,6 +14,7 @@ import java.util.List;
  * Represents operators represented with special symbol(s) that take one or two expressions as operands.
  * <p>
  * E.g. arithmetic operators {@code 1 + 2}, comparison operators {@code 1 < 2}, etc.
+ * </p>
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
