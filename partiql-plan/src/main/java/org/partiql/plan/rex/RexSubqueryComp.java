@@ -89,6 +89,28 @@ public abstract class RexSubqueryComp extends RexBase {
         public static final int GE = 6;
 
         @NotNull
+        @Override
+        public String name() {
+            int code = code();
+            switch (code) {
+                case EQ:
+                    return "EQ";
+                case NE:
+                    return "NE";
+                case LT:
+                    return "LT";
+                case LE:
+                    return "LE";
+                case GT:
+                    return "GT";
+                case GE:
+                    return "GE";
+                default:
+                    return String.valueOf(code);
+            }
+        }
+
+        @NotNull
         public static Comparison EQ() {
             return new Comparison(EQ);
         }
@@ -126,6 +148,22 @@ public abstract class RexSubqueryComp extends RexBase {
 
         private Quantifier(int code) {
             super(code);
+        }
+
+        @NotNull
+        @Override
+        public String name() {
+            int code = code();
+            switch (code) {
+                case ANY:
+                    return "ANY";
+                case ALL:
+                    return "ALL";
+                case SOME:
+                    return "SOME";
+                default:
+                    return String.valueOf(code);
+            }
         }
 
         public static final int UNKNOWN = 0;

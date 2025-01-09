@@ -14,6 +14,22 @@ public class JoinType extends Enum {
     public static final int RIGHT = 3;
     public static final int FULL = 4;
 
+    @NotNull
+    @Override
+    public String name() {
+        switch (code()) {
+            case INNER:
+                return "INNER";
+            case LEFT:
+                return "LEFT";
+            case RIGHT:
+                return "RIGHT";
+            case FULL:
+                return "FULL";
+        }
+        return "UNKNOWN";
+    }
+
     private JoinType(int value) {
         super(value);
     }

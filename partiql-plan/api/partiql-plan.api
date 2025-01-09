@@ -17,6 +17,7 @@ public final class org/partiql/plan/Collation$Nulls : org/partiql/spi/Enum {
 	public static final field UNKNOWN I
 	public static fun FIRST ()Lorg/partiql/plan/Collation$Nulls;
 	public static fun LAST ()Lorg/partiql/plan/Collation$Nulls;
+	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -26,6 +27,7 @@ public final class org/partiql/plan/Collation$Order : org/partiql/spi/Enum {
 	public static final field UNKNOWN I
 	public static fun ASC ()Lorg/partiql/plan/Collation$Order;
 	public static fun DESC ()Lorg/partiql/plan/Collation$Order;
+	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -122,6 +124,7 @@ public class org/partiql/plan/JoinType : org/partiql/spi/Enum {
 	public static fun INNER ()Lorg/partiql/plan/JoinType;
 	public static fun LEFT ()Lorg/partiql/plan/JoinType;
 	public static fun RIGHT ()Lorg/partiql/plan/JoinType;
+	public fun name ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/plan/Operand : java/lang/Iterable {
@@ -392,6 +395,7 @@ public abstract interface class org/partiql/plan/Plan {
 public class org/partiql/plan/Version : org/partiql/spi/Enum {
 	public static final field UNKNOWN I
 	public static fun UNKNOWN ()Lorg/partiql/plan/Version;
+	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -853,6 +857,7 @@ public class org/partiql/plan/rex/RexSubqueryComp$Comparison : org/partiql/spi/E
 	public static fun LE ()Lorg/partiql/plan/rex/RexSubqueryComp$Comparison;
 	public static fun LT ()Lorg/partiql/plan/rex/RexSubqueryComp$Comparison;
 	public static fun NE ()Lorg/partiql/plan/rex/RexSubqueryComp$Comparison;
+	public fun name ()Ljava/lang/String;
 }
 
 public class org/partiql/plan/rex/RexSubqueryComp$Quantifier : org/partiql/spi/Enum {
@@ -863,6 +868,7 @@ public class org/partiql/plan/rex/RexSubqueryComp$Quantifier : org/partiql/spi/E
 	public static fun ALL ()Lorg/partiql/plan/rex/RexSubqueryComp$Quantifier;
 	public static fun ANY ()Lorg/partiql/plan/rex/RexSubqueryComp$Quantifier;
 	public static fun SOME ()Lorg/partiql/plan/rex/RexSubqueryComp$Quantifier;
+	public fun name ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/plan/rex/RexSubqueryIn : org/partiql/plan/rex/RexBase {
@@ -891,6 +897,7 @@ public class org/partiql/plan/rex/RexSubqueryTest$Test : org/partiql/spi/Enum {
 	public static final field UNKNOWN I
 	public static fun EXISTS ()Lorg/partiql/plan/rex/RexSubqueryTest$Test;
 	public static fun UNIQUE ()Lorg/partiql/plan/rex/RexSubqueryTest$Test;
+	public fun name ()Ljava/lang/String;
 }
 
 public abstract class org/partiql/plan/rex/RexTable : org/partiql/plan/rex/RexBase {

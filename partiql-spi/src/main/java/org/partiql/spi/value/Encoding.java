@@ -30,6 +30,12 @@ public class Encoding extends Enum {
         return new Encoding(ION);
     }
 
+    @NotNull
+    @Override
+    public String name() {
+        return toString();
+    }
+
     @Override
     public String toString() {
         int code = code();

@@ -1,5 +1,6 @@
 package org.partiql.plan;
 
+import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.Enum;
 
 /**
@@ -9,6 +10,18 @@ public class Version extends Enum {
 
     private Version(int code) {
         super(code);
+    }
+
+    @NotNull
+    @Override
+    public String name() {
+        int code = code();
+        switch (code) {
+            case UNKNOWN:
+                return "UNKNOWN";
+            default:
+                return String.valueOf(code);
+        }
     }
 
     public static final int UNKNOWN = 0;

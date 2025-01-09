@@ -23,7 +23,7 @@ import java.util.Collection;
  * Users should NOT author their own implementation. The current recommendation is to use the static methods
  * (exposed by this interface) to instantiate a type.
  */
-public abstract class PType extends Enum {
+public abstract class PType extends org.partiql.spi.Enum {
 
     /**
      * Creates an {@link java.lang.Enum} with the specified {@code code}.

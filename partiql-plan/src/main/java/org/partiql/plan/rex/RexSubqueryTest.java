@@ -71,6 +71,22 @@ public abstract class RexSubqueryTest extends RexBase {
         }
 
         @NotNull
+        @Override
+        public String name() {
+            int code = code();
+            switch (code) {
+                case UNKNOWN:
+                    return "UNKNOWN";
+                case EXISTS:
+                    return "EXISTS";
+                case UNIQUE:
+                    return "UNIQUE";
+                default:
+                    return String.valueOf(code);
+            }
+        }
+
+        @NotNull
         public static Test EXISTS() {
             return new Test(EXISTS);
         }

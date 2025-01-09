@@ -17,6 +17,7 @@ public abstract class org/partiql/spi/Enum {
 	public final fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public abstract fun name ()Ljava/lang/String;
 }
 
 public class org/partiql/spi/SourceLocation {
@@ -329,6 +330,7 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public fun getListOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
 	public fun getOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -352,6 +354,7 @@ public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/Enum {
 	public static fun SEMANTIC ()Lorg/partiql/spi/errors/PErrorKind;
 	public static fun SYNTAX ()Lorg/partiql/spi/errors/PErrorKind;
 	public static fun UNKNOWN ()Lorg/partiql/spi/errors/PErrorKind;
+	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -374,6 +377,7 @@ public final class org/partiql/spi/errors/Severity : org/partiql/spi/Enum {
 	public static final field WARNING I
 	public static fun ERROR ()Lorg/partiql/spi/errors/Severity;
 	public static fun WARNING ()Lorg/partiql/spi/errors/Severity;
+	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -464,21 +468,13 @@ public final class org/partiql/spi/function/Routine$DefaultImpls {
 	public static fun getParameters (Lorg/partiql/spi/function/Routine;)[Lorg/partiql/spi/function/Parameter;
 }
 
-public abstract class org/partiql/spi/types/Enum {
-	protected fun <init> (I)V
-	public final fun code ()I
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public abstract fun name ()Ljava/lang/String;
-}
-
 public abstract interface class org/partiql/spi/types/Field {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getType ()Lorg/partiql/spi/types/PType;
 	public static fun of (Ljava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/Field;
 }
 
-public abstract class org/partiql/spi/types/PType : org/partiql/spi/types/Enum {
+public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
 	public static final field ARRAY I
 	public static final field BAG I
 	public static final field BIGINT I
@@ -639,6 +635,7 @@ public class org/partiql/spi/value/Encoding : org/partiql/spi/Enum {
 	public static final field ION I
 	public static final field UNKNOWN I
 	public static fun ION ()Lorg/partiql/spi/value/Encoding;
+	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
 

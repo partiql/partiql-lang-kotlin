@@ -1,5 +1,7 @@
 package org.partiql.spi;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 
 /**
@@ -26,6 +28,12 @@ public abstract class Enum {
     public final int code() {
         return code;
     }
+
+    /**
+     * @return the name of the enum variant.
+     */
+    @NotNull
+    public abstract String name();
 
     @Override
     public boolean equals(Object o) {

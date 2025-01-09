@@ -14,6 +14,12 @@ public final class Severity extends Enum {
         super(code);
     }
 
+    @NotNull
+    @Override
+    public String name() {
+        return toString();
+    }
+
     /**
      * This variant is meant for forward-compatibility and should not be used to represent a {@link PErrorKind}.
      */

@@ -37,6 +37,12 @@ public interface Collation {
             super(code);
         }
 
+        @NotNull
+        @Override
+        public String name() {
+            return toString();
+        }
+
         public static final int UNKNOWN = 0;
         public static final int ASC = 1;
         public static final int DESC = 2;
@@ -86,6 +92,12 @@ public interface Collation {
         @NotNull
         public static Nulls LAST() {
             return new Nulls(LAST);
+        }
+
+        @NotNull
+        @Override
+        public String name() {
+            return toString();
         }
 
         @Override
