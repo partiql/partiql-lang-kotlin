@@ -183,9 +183,8 @@ internal fun <T> Number.coerce(type: Class<T>): T where T : Number {
  * compatible type.
  *
  * This is only supported on limited types needed by the expression system.
- * TODO: Make no longer public.
  */
-public fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
+internal fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
     fun typeFor(n: Number): Class<*> = if (n is Decimal) {
         BigDecimal::class.javaObjectType
     } else {

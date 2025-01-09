@@ -464,10 +464,6 @@ public final class org/partiql/spi/function/Routine$DefaultImpls {
 	public static fun getParameters (Lorg/partiql/spi/function/Routine;)[Lorg/partiql/spi/function/Parameter;
 }
 
-public final class org/partiql/spi/internal/NumberExtensionsKt {
-	public static final fun coerceNumbers (Ljava/lang/Number;Ljava/lang/Number;)Lkotlin/Pair;
-}
-
 public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable {
 	public static fun array (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
 	public static fun bag (Ljava/lang/Iterable;)Lorg/partiql/spi/value/Datum;
