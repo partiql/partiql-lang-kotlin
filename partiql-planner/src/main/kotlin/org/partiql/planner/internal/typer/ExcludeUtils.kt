@@ -113,7 +113,7 @@ internal object ExcludeUtils {
         return this.joinToString("") { it.toProblemString() }
     }
 
-    private fun Identifier.Part.toProblemString(): String {
+    private fun Identifier.Simple.toProblemString(): String {
         return when (this.isRegular()) {
             false -> "\"${getText()}\""
             true -> getText()
