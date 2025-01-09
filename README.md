@@ -105,8 +105,7 @@ $ tree -d -L 2 -I build -I src`
 ├── partiql-parser              PartiQL parser
 ├── partiql-plan                PartiQL plan data structures and utilities
 ├── partiql-planner             PartiQL planner
-├── partiql-spi                 Service provider interface
-├── partiql-types               PartiQL types
+├── partiql-spi                 Common interfaces: types, values, catalogs, functions, etc.
 ├── plugins                     PartiQL plugins used in testing 
 │   ├── partiql-local
 │   └── partiql-memory

@@ -18,8 +18,8 @@ codebase.
 
 See an example below:
 ```text
-⚬ partiql-types
-└── src/main/kotlin/org/partiql/types
+⚬ partiql-spi
+└── src/main/kotlin/org/partiql/spi/types
     ├── impl
     |  ├── StructElement.kt (internal)
     |  ├── StructType.kt (internal)

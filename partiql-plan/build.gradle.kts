@@ -24,7 +24,6 @@ plugins {
 
 dependencies {
     api(project(":partiql-spi"))
-    api(project(":partiql-types"))
 }
 
 tasks.shadowJar {

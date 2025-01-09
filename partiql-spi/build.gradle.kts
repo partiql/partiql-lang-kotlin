@@ -21,7 +21,6 @@ plugins {
 
 dependencies {
     api(Deps.ionElement)
-    api(project(":partiql-types"))
     implementation(Deps.kotlinxCollections)
     testImplementation(Deps.kasechange)
 }

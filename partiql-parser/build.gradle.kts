@@ -23,7 +23,6 @@ dependencies {
     antlr(Deps.antlr)
     api(project(":partiql-ast"))
     api(project(":partiql-spi"))
-    api(project(":partiql-types"))
     implementation(Deps.ionElement)
     shadow(Deps.antlrRuntime)
     compileOnly(Deps.lombok)
