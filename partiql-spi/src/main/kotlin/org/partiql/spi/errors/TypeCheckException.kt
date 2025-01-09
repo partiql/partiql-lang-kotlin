@@ -1,4 +1,4 @@
-package org.partiql.errors
+package org.partiql.spi.errors
 
 // TODO: Move these all to partiql-eval
 

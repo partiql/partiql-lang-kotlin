@@ -2,7 +2,7 @@ package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.spi.value.ion.IonDatumReader;
+import org.partiql.spi.internal.value.ion.IonDatumReader;
 
 import java.io.InputStream;
 import java.util.HashMap;

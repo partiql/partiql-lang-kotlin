@@ -3,8 +3,8 @@ package org.partiql.eval.internal.operator.rex
 import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.createIonElementLoader
-import org.partiql.errors.DataException
-import org.partiql.errors.TypeCheckException
+import org.partiql.spi.errors.DataException
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import org.partiql.types.PType.ARRAY

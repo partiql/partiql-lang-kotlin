@@ -15,7 +15,7 @@
 package org.partiql.value
 
 import com.amazon.ionelement.api.IonElement
-import org.partiql.errors.TypeCheckException
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.Timestamp

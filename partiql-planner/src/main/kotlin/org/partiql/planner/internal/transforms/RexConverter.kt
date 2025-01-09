@@ -59,7 +59,6 @@ import org.partiql.ast.expr.ExprVariant
 import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
-import org.partiql.errors.TypeCheckException
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -92,6 +91,7 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.DateTimeUtils
 import org.partiql.planner.internal.utils.FunctionUtils
 import org.partiql.spi.catalog.Identifier
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.value.Datum
 import org.partiql.types.PType
 import java.math.BigDecimal

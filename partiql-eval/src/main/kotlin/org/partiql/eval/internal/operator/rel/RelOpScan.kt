@@ -1,12 +1,12 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
 import org.partiql.eval.internal.helpers.RecordValueIterator
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.types.PType
 
 internal class RelOpScan(

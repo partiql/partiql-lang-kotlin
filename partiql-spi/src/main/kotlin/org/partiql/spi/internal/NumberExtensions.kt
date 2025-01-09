@@ -1,4 +1,4 @@
-package org.partiql.value.util
+package org.partiql.spi.internal
 
 /*
  * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.

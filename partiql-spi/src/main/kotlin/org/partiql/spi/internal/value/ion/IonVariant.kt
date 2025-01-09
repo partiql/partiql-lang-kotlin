@@ -1,4 +1,4 @@
-package org.partiql.spi.value.ion
+package org.partiql.spi.internal.value.ion
 
 import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonBinaryWriterBuilder

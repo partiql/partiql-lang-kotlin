@@ -1,21 +1,3 @@
-public final class org/partiql/errors/CardinalityViolation : java/lang/RuntimeException {
-	public fun <init> ()V
-	public fun fillInStackTrace ()Ljava/lang/Throwable;
-}
-
-public final class org/partiql/errors/DataException : java/lang/RuntimeException {
-	public fun <init> (Ljava/lang/String;)V
-	public fun fillInStackTrace ()Ljava/lang/Throwable;
-	public fun getMessage ()Ljava/lang/String;
-}
-
-public final class org/partiql/errors/TypeCheckException : java/lang/RuntimeException {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun fillInStackTrace ()Ljava/lang/Throwable;
-}
-
 public abstract interface class org/partiql/spi/Connector {
 	public abstract fun getCatalog (Ljava/lang/String;)Lorg/partiql/spi/catalog/Catalog;
 	public abstract fun getCatalog (Ljava/lang/String;Lorg/partiql/spi/Connector$Context;)Lorg/partiql/spi/catalog/Catalog;
@@ -309,6 +291,17 @@ public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
 }
 
+public final class org/partiql/spi/errors/CardinalityViolation : java/lang/RuntimeException {
+	public fun <init> ()V
+	public fun fillInStackTrace ()Ljava/lang/Throwable;
+}
+
+public final class org/partiql/spi/errors/DataException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+	public fun fillInStackTrace ()Ljava/lang/Throwable;
+	public fun getMessage ()Ljava/lang/String;
+}
+
 public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field ALWAYS_MISSING I
 	public static final field FEATURE_NOT_SUPPORTED I
@@ -382,6 +375,13 @@ public final class org/partiql/spi/errors/Severity : org/partiql/spi/Enum {
 	public static fun ERROR ()Lorg/partiql/spi/errors/Severity;
 	public static fun WARNING ()Lorg/partiql/spi/errors/Severity;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/errors/TypeCheckException : java/lang/RuntimeException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun fillInStackTrace ()Ljava/lang/Throwable;
 }
 
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {
@@ -462,6 +462,10 @@ public abstract interface class org/partiql/spi/function/Routine {
 
 public final class org/partiql/spi/function/Routine$DefaultImpls {
 	public static fun getParameters (Lorg/partiql/spi/function/Routine;)[Lorg/partiql/spi/function/Parameter;
+}
+
+public final class org/partiql/spi/internal/NumberExtensionsKt {
+	public static final fun coerceNumbers (Ljava/lang/Number;Ljava/lang/Number;)Lkotlin/Pair;
 }
 
 public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable {
@@ -555,9 +559,5 @@ public abstract interface class org/partiql/spi/value/Field {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getValue ()Lorg/partiql/spi/value/Datum;
 	public static fun of (Ljava/lang/String;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Field;
-}
-
-public final class org/partiql/value/util/NumberExtensionsKt {
-	public static final fun coerceNumbers (Ljava/lang/Number;Ljava/lang/Number;)Lkotlin/Pair;
 }
 

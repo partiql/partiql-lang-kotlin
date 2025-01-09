@@ -1,4 +1,4 @@
-package org.partiql.spi.value.ion
+package org.partiql.spi.internal.value.ion
 
 import com.amazon.ion.IonException
 import com.amazon.ion.IonType

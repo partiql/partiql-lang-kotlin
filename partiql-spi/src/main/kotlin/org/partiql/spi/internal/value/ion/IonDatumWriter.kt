@@ -1,4 +1,4 @@
-package org.partiql.spi.value.ion
+package org.partiql.spi.internal.value.ion
 
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumWriter

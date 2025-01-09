@@ -1,4 +1,4 @@
-package org.partiql.spi.value.ion
+package org.partiql.spi.internal.value.ion
 
 import com.amazon.ion.OffsetSpan
 import com.amazon.ion.Span
