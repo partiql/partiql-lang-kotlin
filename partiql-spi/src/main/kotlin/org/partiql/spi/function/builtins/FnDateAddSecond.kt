@@ -54,7 +54,7 @@ internal val Fn_DATE_ADD_SECOND__INT_TIME__TIME = FunctionUtils.hidden(
     ),
 
 ) { args ->
-    val interval = args[0].bigInteger
+    val interval = args[0].bigDecimal
     val datetime = args[1].localTime
     val datetimeValue = datetime
     val intervalValue = try {
@@ -109,7 +109,7 @@ internal val Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden
     ),
 
 ) { args ->
-    val interval = args[0].bigInteger
+    val interval = args[0].bigDecimal
     val datetime = args[1].localDateTime
     val datetimeValue = datetime
     val intervalValue = try {

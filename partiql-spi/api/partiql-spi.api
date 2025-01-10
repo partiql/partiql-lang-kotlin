@@ -569,7 +569,6 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun doublePrecision (D)Lorg/partiql/spi/value/Datum;
 	public fun get (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public fun getBigDecimal ()Ljava/math/BigDecimal;
-	public fun getBigInteger ()Ljava/math/BigInteger;
 	public fun getBoolean ()Z
 	public fun getByte ()B
 	public fun getBytes ()[B
@@ -597,7 +596,8 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public static fun missing (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/value/Datum;
 	public static fun nullValue ()Lorg/partiql/spi/value/Datum;
 	public static fun nullValue (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/value/Datum;
-	public static fun numeric (Ljava/math/BigInteger;)Lorg/partiql/spi/value/Datum;
+	public static fun numeric (Ljava/math/BigDecimal;)Lorg/partiql/spi/value/Datum;
+	public static fun numeric (Ljava/math/BigDecimal;II)Lorg/partiql/spi/value/Datum;
 	public fun pack (Ljava/nio/charset/Charset;)[B
 	public static fun real (F)Lorg/partiql/spi/value/Datum;
 	public static fun smallint (S)Lorg/partiql/spi/value/Datum;
@@ -640,5 +640,10 @@ public abstract interface class org/partiql/spi/value/Field {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getValue ()Lorg/partiql/spi/value/Datum;
 	public static fun of (Ljava/lang/String;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Field;
+}
+
+public final class org/partiql/spi/value/InvalidOperationException : java/lang/RuntimeException {
+	public fun <init> (Lorg/partiql/spi/types/PType;Ljava/lang/String;)V
+	public fun getMessage ()Ljava/lang/String;
 }
 

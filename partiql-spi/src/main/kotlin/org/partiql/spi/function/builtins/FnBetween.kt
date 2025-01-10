@@ -87,9 +87,9 @@ internal val Fn_BETWEEN__INT_INT_INT__BOOL = FunctionUtils.hidden(
     ),
 
 ) { args ->
-    val value = args[0].bigInteger
-    val lower = args[1].bigInteger
-    val upper = args[2].bigInteger
+    val value = args[0].bigDecimal
+    val lower = args[1].bigDecimal
+    val upper = args[2].bigDecimal
     Datum.bool(value in lower..upper)
 }
 

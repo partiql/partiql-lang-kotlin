@@ -23,7 +23,7 @@ internal val Fn_IS_INT64__ANY__BOOL = FunctionUtils.hidden(
         PType.BIGINT,
         -> Datum.bool(true)
         PType.NUMERIC -> {
-            val v = arg.bigInteger
+            val v = arg.bigDecimal
             try {
                 v.longValueExact()
                 Datum.bool(true)

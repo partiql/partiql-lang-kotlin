@@ -52,7 +52,7 @@ internal val Fn_ABS__NUMERIC__NUMERIC = Function.static(
     returns = DefaultNumeric.NUMERIC,
     parameters = arrayOf(Parameter("value", DefaultNumeric.NUMERIC)),
 ) { args ->
-    val value = args[0].bigInteger
+    val value = args[0].bigDecimal
     Datum.numeric(value.abs())
 }
 

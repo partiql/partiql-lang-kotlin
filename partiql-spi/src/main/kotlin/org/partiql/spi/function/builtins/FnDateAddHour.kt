@@ -58,7 +58,7 @@ internal val Fn_DATE_ADD_HOUR__INT_TIME__TIME = FunctionUtils.hidden(
     val datetime = args[1]
     val datetimeValue = datetime.localTime
     val intervalValue = try {
-        interval.bigInteger.toLong()
+        interval.bigDecimal.toLong()
     } catch (e: DataException) {
         throw TypeCheckException()
     }
@@ -113,7 +113,7 @@ internal val Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
     val datetime = args[1]
     val datetimeValue = datetime.localDateTime
     val intervalValue = try {
-        interval.bigInteger.toLong()
+        interval.bigDecimal.toLong()
     } catch (e: DataException) {
         throw TypeCheckException()
     }

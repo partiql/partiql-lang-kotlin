@@ -10,7 +10,8 @@ import java.util.Objects;
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PType.Kind#DECIMAL},
+ * {@link PType#DECIMAL},
+ * {@link PType#NUMERIC}
  */
 class DatumDecimal implements Datum {
 

@@ -23,7 +23,6 @@ import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
@@ -139,7 +138,6 @@ internal class IonVariant(private var value: AnyElement) : Datum {
         else -> super.getBoolean()
     }
 
-    @Deprecated("Deprecated in Java")
     override fun getBytes(): ByteArray = when (value.type) {
         CLOB -> value.clobValue.copyOfBytes()
         BLOB -> value.blobValue.copyOfBytes()
@@ -190,19 +188,15 @@ internal class IonVariant(private var value: AnyElement) : Datum {
         return value.timestampValue.toOffsetDateTime()
     }
 
-    override fun getBigInteger(): BigInteger = when (value.type) {
-        INT -> value.bigIntegerValue
-        else -> super.getBigInteger()
+    override fun getBigDecimal(): BigDecimal = when (value.type) {
+        INT -> value.bigIntegerValue.toBigDecimal()
+        DECIMAL -> value.decimalValue.bigDecimalValue()
+        else -> super.getBigDecimal()
     }
 
     override fun getDouble(): Double = when (value.type) {
         FLOAT -> value.doubleValue
         else -> super.getDouble()
-    }
-
-    override fun getBigDecimal(): BigDecimal = when (value.type) {
-        DECIMAL -> value.decimalValue.bigDecimalValue()
-        else -> super.getBigDecimal()
     }
 
     override fun iterator(): MutableIterator<Datum> = when (value.type) {

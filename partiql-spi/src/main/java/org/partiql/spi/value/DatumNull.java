@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -44,7 +43,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.BOOL) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getBoolean");
         }
     }
 
@@ -53,7 +52,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.SMALLINT) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getShort");
         }
     }
 
@@ -62,7 +61,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.INTEGER) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getInt");
         }
     }
 
@@ -71,27 +70,17 @@ class DatumNull implements Datum {
         if (_type.code() == PType.BIGINT) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @NotNull
-    @Override
-    public BigInteger getBigInteger() {
-        if (_type.code() == PType.NUMERIC) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getLong");
         }
     }
 
     @NotNull
     @Override
     public BigDecimal getBigDecimal() {
-        if (_type.code() == PType.DECIMAL) {
+        if (_type.code() == PType.DECIMAL || _type.code() == PType.NUMERIC) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getBigDecimal");
         }
     }
 
@@ -100,7 +89,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.TINYINT) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getByte");
         }
     }
 
@@ -110,7 +99,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.BLOB || _type.code() == PType.CLOB) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getBytes");
         }
     }
 
@@ -119,7 +108,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.DOUBLE) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getDouble");
         }
     }
 
@@ -128,7 +117,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.REAL) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getFloat");
         }
     }
 
@@ -138,7 +127,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.BAG || _type.code() == PType.ARRAY) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "iterator");
         }
     }
 
@@ -148,7 +137,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.STRUCT || _type.code() == PType.ROW) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getFields");
         }
     }
 
@@ -158,7 +147,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.STRING || _type.code() == PType.CHAR) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getString");
         }
     }
 
@@ -171,7 +160,7 @@ class DatumNull implements Datum {
             case PType.TIMESTAMPZ:
                 throw new NullPointerException();
             default:
-                throw new UnsupportedOperationException();
+                throw new InvalidOperationException(getType(), "getLocalDate");
         }
     }
 
@@ -185,7 +174,7 @@ class DatumNull implements Datum {
             case PType.TIMESTAMPZ:
                 throw new NullPointerException();
             default:
-                throw new UnsupportedOperationException();
+                throw new InvalidOperationException(getType(), "getLocalTime");
         }
     }
 
@@ -197,7 +186,7 @@ class DatumNull implements Datum {
             case PType.TIMESTAMPZ:
                 throw new NullPointerException();
             default:
-                throw new UnsupportedOperationException();
+                throw new InvalidOperationException(getType(), "getOffsetTime");
         }
     }
 
@@ -209,7 +198,7 @@ class DatumNull implements Datum {
             case PType.TIMESTAMPZ:
                 throw new NullPointerException();
             default:
-                throw new UnsupportedOperationException();
+                throw new InvalidOperationException(getType(), "getLocalDateTime");
         }
     }
 
@@ -219,7 +208,7 @@ class DatumNull implements Datum {
         if (_type.code() == PType.TIMESTAMPZ) {
             throw new NullPointerException();
         } else {
-            throw new UnsupportedOperationException();
+            throw new InvalidOperationException(getType(), "getOffsetDateTime");
         }
     }
 }

@@ -53,8 +53,8 @@ internal object FnGte : DiadicComparisonOperator("gte") {
     // TODO: Update
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
         return basic(PType.bool(), DefaultNumeric.NUMERIC) { args ->
-            val lhs = args[0].bigInteger
-            val rhs = args[1].bigInteger
+            val lhs = args[0].bigDecimal
+            val rhs = args[1].bigDecimal
             Datum.bool(lhs >= rhs)
         }
     }
