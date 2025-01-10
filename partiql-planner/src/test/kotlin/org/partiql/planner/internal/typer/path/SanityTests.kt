@@ -28,7 +28,7 @@ class SanityTests : PartiQLTyperTestBase() {
         // -- All paths return ANY because t1 and t2 are both ANY
         val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
             put(TestResult.Success(StaticType.ANY), setOf(argTypes))
-            put(TestResult.Failure, emptySet<List<StaticType>>())
+            put(TestResult.Failure, emptySet())
         }
         return super.testGen("path", tests, argsMap)
     }

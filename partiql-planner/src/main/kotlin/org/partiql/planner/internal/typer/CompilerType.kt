@@ -77,14 +77,14 @@ internal class CompilerType(
 
     internal fun isNumeric(): Boolean {
         return this.code() in setOf(
-            PType.INTEGER,
-            PType.NUMERIC,
-            PType.BIGINT,
-            PType.TINYINT,
-            PType.SMALLINT,
-            PType.REAL,
-            PType.DOUBLE,
-            PType.DECIMAL,
+            INTEGER,
+            NUMERIC,
+            BIGINT,
+            TINYINT,
+            SMALLINT,
+            REAL,
+            DOUBLE,
+            DECIMAL,
         )
     }
 
@@ -94,8 +94,8 @@ internal class CompilerType(
      * @return null when the field definitely does not exist; dynamic when the type cannot be determined
      */
     internal fun getSymbol(field: String): Pair<Identifier.Simple, CompilerType>? {
-        if (this.code() == PType.STRUCT) {
-            return Identifier.Simple.regular(field) to CompilerType(PType.dynamic())
+        if (this.code() == STRUCT) {
+            return Identifier.Simple.regular(field) to CompilerType(dynamic())
         }
         val fields = this.fields.mapNotNull {
             when (it.name.equals(field, true)) {
@@ -116,12 +116,12 @@ internal class CompilerType(
         @JvmStatic
         internal fun anyOf(types: Collection<CompilerType>): CompilerType {
             if (types.isEmpty()) {
-                return CompilerType(PType.dynamic())
+                return CompilerType(dynamic())
             }
             val unique = types.toSet()
             return when (unique.size) {
                 1 -> unique.first()
-                else -> CompilerType(PType.dynamic())
+                else -> CompilerType(dynamic())
             }
         }
     }

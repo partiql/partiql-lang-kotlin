@@ -8,7 +8,7 @@ import org.partiql.spi.catalog.Identifier
  * TypeEnv represents the variables type environment (holds references to both locals and globals).
  */
 internal class TypeEnv(
-    val globals: Env,
+    private val globals: Env,
     val locals: Scope
 ) {
 

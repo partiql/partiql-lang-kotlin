@@ -47,7 +47,7 @@ import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprStruct
 import org.partiql.ast.expr.ExprVarRef
-import org.partiql.planner.internal.helpers.toBinder
+import org.partiql.planner.internal.util.BinderUtils.toBinder
 
 /**
  * Converts SQL-style SELECT to PartiQL SELECT VALUE.
@@ -92,7 +92,7 @@ import org.partiql.planner.internal.helpers.toBinder
  * } FROM A AS x
  * ```
  *
- * NOTE: This does NOT transform subqueries. It operates directly on an [QueryExpr.SFW] -- and that is it. Therefore:
+ * NOTE: This does NOT transform subqueries. It operates directly on an [ExprQuerySet] -- and that is it. Therefore:
  * ```
  * SELECT
  *   (SELECT 1 FROM T AS "T")
@@ -181,7 +181,7 @@ internal object NormalizeSelect {
          */
         private val col = { index: Int -> "_${index + 1}" }
 
-        internal fun visitSFW(node: QueryBody.SFW, ctx: () -> Int): QueryBody.SFW {
+        fun visitSFW(node: QueryBody.SFW, ctx: () -> Int): QueryBody.SFW {
             val sfw = super.visitQueryBodySFW(node, ctx) as QueryBody.SFW
             return when (val select = sfw.select) {
                 is SelectStar -> {
@@ -242,7 +242,7 @@ internal object NormalizeSelect {
         // Helpers
 
         /**
-         * We need to call this from [visitExprSFW] and not override [visitSelectStar] because we need access to the
+         * We need to call this from [visitQueryBodySFW] and not override [visitSelectStar] because we need access to the
          * [From] aliases.
          *
          * Note: We assume that [select] and [from] have already been visited.
@@ -271,7 +271,7 @@ internal object NormalizeSelect {
         }
 
         /**
-         * We need to call this from [visitExprSFW] and not override [visitSelectStar] because we need access to the
+         * We need to call this from [visitQueryBodySFW] and not override [visitSelectStar] because we need access to the
          * [GroupBy] aliases.
          *
          * Note: We assume that [select] and [group] have already been visited.

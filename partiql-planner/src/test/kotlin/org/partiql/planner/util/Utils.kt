@@ -280,8 +280,7 @@ val castTablePType: ((PType, PType) -> CastType) = { from, to ->
 //            Ref.Cast.Safety.EXPLICIT -> CastType.EXPLICIT
 //        }
 //    }
-    val fromKind = from.code()
-    when (fromKind) {
+    when (val fromKind = from.code()) {
         PType.DYNAMIC -> CastType.UNSAFE
         PType.BLOB -> when (to.code()) {
             PType.BLOB -> CastType.COERCION
@@ -309,7 +308,7 @@ val castTablePType: ((PType, PType) -> CastType) = { from, to ->
             else -> CastType.UNSAFE
         }
         PType.DECIMAL -> {
-            when (val toKind = to.code()) {
+            when (to.code()) {
                 PType.DECIMAL -> {
                     val toPrecision = to.precision
                     val toScale = to.scale

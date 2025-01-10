@@ -7,8 +7,9 @@ import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlanner.Result
 import org.partiql.planner.PartiQLPlannerPass
-import org.partiql.planner.internal.normalize.normalize
 import org.partiql.planner.internal.transforms.AstToPlan
+import org.partiql.planner.internal.transforms.NormalizeFromSource
+import org.partiql.planner.internal.transforms.NormalizeGroupBy
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
 import org.partiql.spi.Context
@@ -58,6 +59,17 @@ internal class SqlPlanner(
         } catch (t: Throwable) {
             return catchAll(ctx, t)
         }
+    }
+
+    /**
+     * AST normalization
+     */
+    private fun Statement.normalize(): Statement {
+        // could be a fold, but this is nice for setting breakpoints
+        var ast = this
+        ast = NormalizeFromSource.apply(ast)
+        ast = NormalizeGroupBy.apply(ast)
+        return ast
     }
 
     /**

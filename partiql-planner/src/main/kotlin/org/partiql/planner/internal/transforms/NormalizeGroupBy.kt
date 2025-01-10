@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.planner.internal.normalize
+package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.Ast.groupBy
 import org.partiql.ast.Ast.groupByKey
@@ -21,7 +21,7 @@ import org.partiql.ast.AstRewriter
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Statement
 import org.partiql.ast.expr.Expr
-import org.partiql.planner.internal.helpers.toBinder
+import org.partiql.planner.internal.util.BinderUtils.toBinder
 
 /**
  * Adds a unique binder to each group key.

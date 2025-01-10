@@ -51,6 +51,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.util.TypeUtils.exclude
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
@@ -100,7 +101,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
         fun anyOfLiterals(types: Collection<CompilerType>): PType? {
             // Grab unique
             var unique: Collection<PType> = types.map { it.getDelegate() }.toSet()
-            if (unique.size == 0) {
+            if (unique.isEmpty()) {
                 return null
             } else if (unique.size == 1) {
                 return unique.first()
@@ -108,7 +109,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
             // Filter out UNKNOWN
             unique = unique.filter { it.code() != PType.UNKNOWN }
-            if (unique.size == 0) {
+            if (unique.isEmpty()) {
                 return PType.unknown()
             } else if (unique.size == 1) {
                 return unique.first()
@@ -137,11 +138,11 @@ internal class PlanTyper(private val env: Env, config: Context) {
         }
 
         private fun collapseRows(rows: Iterable<PType>): PType {
-            val firstFields = rows.first().fields!!
+            val firstFields = rows.first().fields
             val fieldNames = firstFields.map { it.name }
             val fieldTypes = firstFields.map { mutableListOf(it.type.toCType()) }
             rows.map { struct ->
-                val fields = struct.fields!!
+                val fields = struct.fields
                 if (fields.map { it.name } != fieldNames) {
                     return PType.struct()
                 }
@@ -231,7 +232,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
             // Check Root
             val vType = when (rex.type.code()) {
-                PType.ROW -> anyOf(rex.type.fields!!.map { it.type }) ?: PType.dynamic()
+                PType.ROW -> anyOf(rex.type.fields.map { it.type }) ?: PType.dynamic()
                 PType.STRUCT -> PType.dynamic()
                 else -> rex.type
             }
@@ -538,9 +539,9 @@ internal class PlanTyper(private val env: Env, config: Context) {
 
             // typing of aggregate calls is slightly more complicated because they are not expressions.
             val calls = node.calls.mapIndexed { i, call ->
-                when (val agg = call) {
+                when (call) {
                     is Rel.Op.Aggregate.Call.Resolved -> call to ctx!!.schema[i].type
-                    is Rel.Op.Aggregate.Call.Unresolved -> typer.resolveAgg(agg)
+                    is Rel.Op.Aggregate.Call.Unresolved -> typer.resolveAgg(call)
                 }
             }
             val groups = node.groups.map { typer.visitRex(it, null) }
@@ -665,7 +666,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             // Get Literal Key
             val keyOp = key.op
             val keyLiteral = when (keyOp is Rex.Op.Lit && keyOp.value.isTextValue() && !keyOp.value.isNull) {
-                true -> keyOp.value.string!!
+                true -> keyOp.value.string
                 false -> return rex(CompilerType(PType.dynamic()), rexOpPathKey(root, key))
             }
 
@@ -719,7 +720,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
             if (this.code() == PType.STRUCT) {
                 return CompilerType(PType.dynamic())
             }
-            val fields = this.fields!!.filter { it.name.equals(field, ignoreCase) }.map { it.type }.toSet()
+            val fields = this.fields.filter { it.name.equals(field, ignoreCase) }.map { it.type }.toSet()
             return when (fields.size) {
                 0 -> return null
                 1 -> fields.first()
@@ -943,7 +944,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
          * ```
          * When we type the above, if we know that `a` can be many different types (one of them being a struct),
          * then when we see the top-level `a IS STRUCT`, then we can assume that the `a` on the RHS is definitely a
-         * struct. We handle this by using [foldCaseBranch].
+         * struct.
          */
         override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: CompilerType?): Rex.Op.Case.Branch {
             val visitedCondition = visitRex(node.condition, node.condition.type)
@@ -984,7 +985,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
                     structIsClosed = false
                     continue
                 }
-                structTypeFields.add(CompilerType.Field(keyOp.value.string!!, field.v.type))
+                structTypeFields.add(CompilerType.Field(keyOp.value.string, field.v.type))
             }
             val type = when (structIsClosed) {
                 true -> CompilerType(PType.row(structTypeFields as Collection<Field>))
@@ -1046,12 +1047,12 @@ internal class PlanTyper(private val env: Env, config: Context) {
             if (cons.code() != PType.ROW) {
                 error("Subquery with non-SQL SELECT cannot be coerced to a scalar. Found constructor type: $cons")
             }
-            val n = cons.fields!!.size
+            val n = cons.fields.size
             if (n != 1) {
                 error("SELECT constructor with $n attributes cannot be coerced to a scalar. Found constructor type: $cons")
             }
             // If we made it this far, then we can coerce this subquery to a scalar
-            val type = cons.fields!!.first().type
+            val type = cons.fields.first().type
             return Rex(type, subquery)
         }
 
@@ -1184,7 +1185,7 @@ internal class PlanTyper(private val env: Env, config: Context) {
                     return@forEach
                 }
                 when (arg.code()) {
-                    PType.ROW -> fields.addAll(arg.fields!!)
+                    PType.ROW -> fields.addAll(arg.fields)
                     PType.STRUCT -> structIsOpen = true
                     PType.DYNAMIC, PType.VARIANT -> containsDynamic = true
                     PType.UNKNOWN -> structIsOpen = true

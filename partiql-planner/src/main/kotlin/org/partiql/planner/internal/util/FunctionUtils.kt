@@ -1,4 +1,4 @@
-package org.partiql.planner.internal.utils
+package org.partiql.planner.internal.util
 
 import org.partiql.ast.DatetimeField
 

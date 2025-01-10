@@ -89,7 +89,7 @@ import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.DateTimeUtils
-import org.partiql.planner.internal.utils.FunctionUtils
+import org.partiql.planner.internal.util.FunctionUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
@@ -109,7 +109,6 @@ internal object RexConverter {
 
     internal fun applyRel(expr: Expr, context: Env): Rex = expr.accept(ToRex, context)
 
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private object ToRex : AstVisitor<Rex, Env>() {
 
         private val COLL_AGG_NAMES = setOf(
@@ -246,7 +245,7 @@ internal object RexConverter {
          * @param ctx
          * @return
          */
-        internal fun visitExprCoerce(
+        fun visitExprCoerce(
             node: Expr,
             ctx: Env,
             coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR,
@@ -871,7 +870,7 @@ internal object RexConverter {
                 DataType.BOOLEAN, DataType.BOOL -> call(FunctionUtils.OP_IS_BOOL, arg0)
                 // <datetime type>
                 DataType.DATE -> call(FunctionUtils.OP_IS_DATE, arg0)
-                // TODO: DO we want to seperate with time zone vs without time zone into two different type in the plan?
+                // TODO: DO we want to separate with time zone vs without time zone into two different type in the plan?
                 //  leave the parameterized type out for now until the above is answered
                 DataType.TIME -> call(FunctionUtils.OP_IS_TIME, arg0)
                 DataType.TIME_WITH_TIME_ZONE -> call(FunctionUtils.OP_IS_TIMEZ, arg0)

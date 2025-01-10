@@ -6,7 +6,7 @@ internal enum class PlannerFlag {
      *
      * If this flag is included:
      *
-     *    The problematic operation will be tracked in problem callback as a error.
+     *    The problematic operation will be tracked in problem callback as an error.
      *
      *    The result plan will turn the problematic operation into an error node.
      *

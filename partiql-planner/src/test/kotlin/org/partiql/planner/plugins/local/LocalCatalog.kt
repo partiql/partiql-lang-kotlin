@@ -14,7 +14,7 @@ import kotlin.io.path.notExists
 /**
  * Implementation of [Catalog] where dirs are namespaces and files are table metadata.
  */
-public class LocalCatalog internal constructor(
+class LocalCatalog internal constructor(
     private val name: String,
     private val root: Path,
 ) : Catalog {
@@ -102,24 +102,24 @@ public class LocalCatalog internal constructor(
     //     return Namespace.of(path.relativize(root).map { it.toString() })
     // }
 
-    public companion object {
+    companion object {
 
         private const val EXT = ".ion"
 
         @JvmStatic
-        public fun builder(): Builder =
+        fun builder(): Builder =
             Builder()
     }
 
-    public class Builder internal constructor() {
+    class Builder internal constructor() {
 
         private var name: String? = null
         private var root: Path? = null
 
-        public fun name(name: String): Builder = apply { this.name = name }
+        fun name(name: String): Builder = apply { this.name = name }
 
-        public fun root(root: Path): Builder = apply { this.root = root }
+        fun root(root: Path): Builder = apply { this.root = root }
 
-        public fun build(): LocalCatalog = LocalCatalog(name!!, root!!)
+        fun build(): LocalCatalog = LocalCatalog(name!!, root!!)
     }
 }

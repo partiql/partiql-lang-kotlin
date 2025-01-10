@@ -89,7 +89,7 @@ internal class PlannerPErrorReportingTests {
     }
 
     companion object {
-        fun closedStruct(vararg field: StructType.Field): StructType =
+        private fun closedStruct(vararg field: StructType.Field): StructType =
             StructType(
                 field.toList(),
                 contentClosed = true,
@@ -190,7 +190,7 @@ internal class PlannerPErrorReportingTests {
                 true,
                 assertOnProblemCount(0, 1)
             ),
-            // Chained, demostrate missing trace.
+            // Chained, demonstrate missing trace.
             // TODO: We currently don't have a good way to retain missing value information. The following test
             //  could have 2 warnings. One for executing a path operation on a literal missing. And one for
             //  executing a path operation on an expression that is known to result in the missing value.

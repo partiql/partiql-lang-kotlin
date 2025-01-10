@@ -36,7 +36,6 @@ internal object AstToPlan {
     @JvmStatic
     fun apply(statement: AstStatement, env: Env): PlanStatement = statement.accept(ToPlanStatement, env)
 
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private object ToPlanStatement : AstVisitor<PlanStatement, Env>() {
 
         override fun defaultReturn(node: AstNode, env: Env) = throw IllegalArgumentException("Unsupported statement")

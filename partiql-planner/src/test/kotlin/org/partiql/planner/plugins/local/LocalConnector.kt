@@ -29,14 +29,14 @@ import java.nio.file.Path
  * // use catalog
  * ```
  */
-public class LocalConnector : Connector {
+class LocalConnector : Connector {
 
     /**
      * Context arguments for instantiating a [LocalConnector] catalog.
      *
      * @property root   The catalog root directory.
      */
-    public class Context(@JvmField public val root: Path) : Connector.Context
+    class Context(@JvmField val root: Path) : Connector.Context
 
     override fun getCatalog(name: String): Catalog {
         throw IllegalArgumentException("LocalConnector cannot instantiate a catalog with no context")

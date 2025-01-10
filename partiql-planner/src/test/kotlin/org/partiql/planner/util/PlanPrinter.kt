@@ -9,7 +9,7 @@ import org.partiql.spi.types.PType
  *
  * Useful for debugging while the Jackson Poem doesn't handle map serde.
  */
-public object PlanPrinter {
+object PlanPrinter {
 
     fun toString(plan: Plan): String = buildString { append(this, plan) }
 
@@ -29,7 +29,7 @@ public object PlanPrinter {
         sealed interface TypeInfo {
             class Rel(val type: RelType) : TypeInfo
             class Rex(val type: PType) : TypeInfo
-            object Nil : TypeInfo
+            data object Nil : TypeInfo
         }
 
         // leading characters of a tree print

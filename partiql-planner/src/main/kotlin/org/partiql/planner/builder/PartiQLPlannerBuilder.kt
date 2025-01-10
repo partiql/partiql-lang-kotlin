@@ -9,10 +9,12 @@ import org.partiql.planner.internal.SqlPlanner
  * PartiQLPlannerBuilder is used to programmatically construct a [PartiQLPlanner] implementation.
  *
  * Usage:
- *      PartiQLPlanner.builder()
- *                    .signal()
- *                    .addPass(myPass)
- *                    .build()
+ * ```
+ * PartiQLPlanner.builder()
+ *               .signal()
+ *               .addPass(myPass)
+ *               .build()
+ * ```
  */
 public class PartiQLPlannerBuilder {
 
@@ -49,7 +51,7 @@ public class PartiQLPlannerBuilder {
     }
 
     /**
-     * Java style method for setting the planner to signal mode
+     * Java style method for setting the planner to signal mode.
      */
     public fun signal(signal: Boolean = true): PartiQLPlannerBuilder {
         if (signal) {

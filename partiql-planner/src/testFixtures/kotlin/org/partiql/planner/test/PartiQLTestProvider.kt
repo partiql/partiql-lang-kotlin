@@ -31,7 +31,7 @@ class PartiQLTestProvider {
     /**
      * Load test groups from a directory.
      */
-    public fun load(root: Path? = null) {
+    fun load(root: Path? = null) {
         if (root != null) {
             val dir = root.toFile()
             dir.listFiles { f -> f.isDirectory }!!.map {
@@ -62,7 +62,7 @@ class PartiQLTestProvider {
      * @param key
      * @return
      */
-    public operator fun get(key: PartiQLTest.Key): PartiQLTest? = map[key]
+    operator fun get(key: PartiQLTest.Key): PartiQLTest? = map[key]
 
     /**
      * Lookup a test by key parts
@@ -71,7 +71,7 @@ class PartiQLTestProvider {
      * @param name
      * @return
      */
-    public fun get(group: String, name: String): PartiQLTest? = get(PartiQLTest.Key(group, name))
+    fun get(group: String, name: String): PartiQLTest? = get(PartiQLTest.Key(group, name))
 
     // load all tests in a directory
     private fun load(dir: File) = dir.listFiles()!!.flatMap { load(dir.name, it) }

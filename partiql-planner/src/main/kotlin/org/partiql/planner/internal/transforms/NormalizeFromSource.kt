@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.planner.internal.normalize
+package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.Ast.fromExpr
 import org.partiql.ast.Ast.fromJoin
@@ -26,7 +26,7 @@ import org.partiql.ast.FromType
 import org.partiql.ast.QueryBody
 import org.partiql.ast.Statement
 import org.partiql.ast.expr.Expr
-import org.partiql.planner.internal.helpers.toBinder
+import org.partiql.planner.internal.util.BinderUtils.toBinder
 
 /**
  * Assign aliases to any FROM source which does not have one.
