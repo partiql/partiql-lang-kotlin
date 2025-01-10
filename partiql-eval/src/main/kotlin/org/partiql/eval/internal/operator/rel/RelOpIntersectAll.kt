@@ -5,7 +5,6 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
-import org.partiql.spi.value.Datum
 import java.util.TreeMap
 
 internal class RelOpIntersectAll(
@@ -13,7 +12,7 @@ internal class RelOpIntersectAll(
     private val rhs: ExprRelation,
 ) : RelOpPeeking() {
 
-    private val seen = TreeMap<Array<Datum>, Int>(DatumArrayComparator)
+    private val seen = TreeMap<Row, Int>(DatumArrayComparator)
     private var init: Boolean = false
 
     override fun openPeeking(env: Environment) {
@@ -28,11 +27,11 @@ internal class RelOpIntersectAll(
             seed()
         }
         for (row in rhs) {
-            row.values.coerceMissing()
-            val remaining = seen[row.values] ?: 0
+            row.coerceMissing()
+            val remaining = seen[row] ?: 0
             if (remaining > 0) {
-                seen[row.values] = remaining - 1
-                return Row(row.values)
+                seen[row] = remaining - 1
+                return row
             }
         }
         return null
@@ -50,9 +49,9 @@ internal class RelOpIntersectAll(
     private fun seed() {
         init = true
         for (row in lhs) {
-            row.values.coerceMissing()
-            val alreadySeen = seen[row.values] ?: 0
-            seen[row.values] = alreadySeen + 1
+            row.coerceMissing()
+            val alreadySeen = seen[row] ?: 0
+            seen[row] = alreadySeen + 1
         }
     }
 }

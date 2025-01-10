@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operand;
 
 /**
- * Match represents a subtree match to be sent to the
+ * Match represents a subtree match to be sent to the {@link Strategy}.
  */
 public class Match {
 

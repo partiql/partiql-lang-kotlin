@@ -30,13 +30,15 @@ public class org/partiql/eval/Mode {
 }
 
 public class org/partiql/eval/Row {
-	public final field values [Lorg/partiql/spi/value/Datum;
 	public fun <init> ()V
 	public fun <init> ([Lorg/partiql/spi/value/Datum;)V
 	public fun concat (Lorg/partiql/eval/Row;)Lorg/partiql/eval/Row;
 	public fun equals (Ljava/lang/Object;)Z
+	public fun get (I)Lorg/partiql/spi/value/Datum;
+	public fun getSize ()I
 	public fun hashCode ()I
 	public static fun of ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/eval/Row;
+	public fun set (ILorg/partiql/spi/value/Datum;)V
 	public fun toString ()Ljava/lang/String;
 }
 
