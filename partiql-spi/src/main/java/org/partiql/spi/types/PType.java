@@ -1,6 +1,7 @@
 package org.partiql.spi.types;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.spi.UnsupportedCodeException;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -123,8 +124,9 @@ public abstract class PType extends org.partiql.spi.Enum {
     }
 
     @Override
-    public @NotNull String name() {
-        switch (code()) {
+    public @NotNull String name() throws UnsupportedCodeException {
+        int code = code();
+        switch (code) {
             case PType.DYNAMIC:
                 return "DYNAMIC";
             case PType.BOOL:
@@ -178,7 +180,7 @@ public abstract class PType extends org.partiql.spi.Enum {
             case PType.VARIANT:
                 return "VARIANT";
             default:
-                return "UNKNOWN";
+                throw new UnsupportedCodeException(code);
         }
     }
 

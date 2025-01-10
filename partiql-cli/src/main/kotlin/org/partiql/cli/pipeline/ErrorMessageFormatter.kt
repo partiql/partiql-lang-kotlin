@@ -29,13 +29,12 @@ object ErrorMessageFormatter {
             ErrorCodeString.VAR_REF_AMBIGUOUS -> varRefAmbiguous(error)
             ErrorCodeString.VAR_REF_NOT_FOUND -> varRefNotFound(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
-            ErrorCodeString.UNKNOWN, null -> "Unrecognized error code received: ${error.code()}"
+            null -> "Unrecognized error code received: ${error.code()}"
         }
         return buildString {
             val type = when (error.severity.code()) {
                 Severity.ERROR -> "e"
                 Severity.WARNING -> "w"
-                Severity.UNKNOWN -> "UNKNOWN"
                 else -> "UNKNOWN"
             }
             val classification = when (error.kind.code()) {
@@ -43,7 +42,6 @@ object ErrorMessageFormatter {
                 PErrorKind.SEMANTIC -> "semantic"
                 PErrorKind.COMPILATION -> "compile"
                 PErrorKind.EXECUTION -> "runtime"
-                PErrorKind.UNKNOWN -> "unknown"
                 else -> "unknown"
             }
             val loc = error.location

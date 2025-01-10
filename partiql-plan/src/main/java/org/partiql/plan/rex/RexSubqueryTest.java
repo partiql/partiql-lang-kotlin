@@ -5,6 +5,7 @@ import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rel.Rel;
 import org.partiql.spi.Enum;
+import org.partiql.spi.UnsupportedCodeException;
 import org.partiql.spi.types.PType;
 
 import java.util.List;
@@ -62,7 +63,6 @@ public abstract class RexSubqueryTest extends RexBase {
      */
     public static class Test extends Enum {
 
-        public static final int UNKNOWN = 0;
         public static final int EXISTS = 1;
         public static final int UNIQUE = 2;
 
@@ -72,17 +72,15 @@ public abstract class RexSubqueryTest extends RexBase {
 
         @NotNull
         @Override
-        public String name() {
+        public String name() throws UnsupportedCodeException {
             int code = code();
             switch (code) {
-                case UNKNOWN:
-                    return "UNKNOWN";
                 case EXISTS:
                     return "EXISTS";
                 case UNIQUE:
                     return "UNIQUE";
                 default:
-                    return String.valueOf(code);
+                    throw new UnsupportedCodeException(code);
             }
         }
 

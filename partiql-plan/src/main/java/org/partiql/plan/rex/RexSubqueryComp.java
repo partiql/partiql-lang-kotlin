@@ -5,6 +5,7 @@ import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rel.Rel;
 import org.partiql.spi.Enum;
+import org.partiql.spi.UnsupportedCodeException;
 import org.partiql.spi.types.PType;
 
 import java.util.List;
@@ -90,7 +91,7 @@ public abstract class RexSubqueryComp extends RexBase {
 
         @NotNull
         @Override
-        public String name() {
+        public String name() throws UnsupportedCodeException {
             int code = code();
             switch (code) {
                 case EQ:
@@ -106,7 +107,7 @@ public abstract class RexSubqueryComp extends RexBase {
                 case GE:
                     return "GE";
                 default:
-                    return String.valueOf(code);
+                    throw new UnsupportedCodeException(code);
             }
         }
 
@@ -152,7 +153,7 @@ public abstract class RexSubqueryComp extends RexBase {
 
         @NotNull
         @Override
-        public String name() {
+        public String name() throws UnsupportedCodeException {
             int code = code();
             switch (code) {
                 case ANY:
@@ -162,7 +163,7 @@ public abstract class RexSubqueryComp extends RexBase {
                 case SOME:
                     return "SOME";
                 default:
-                    return String.valueOf(code);
+                    throw new UnsupportedCodeException(code);
             }
         }
 

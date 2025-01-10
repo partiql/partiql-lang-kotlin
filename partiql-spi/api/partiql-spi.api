@@ -18,6 +18,7 @@ public abstract class org/partiql/spi/Enum {
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public abstract fun name ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/spi/SourceLocation {
@@ -48,6 +49,10 @@ public class org/partiql/spi/SourceLocations : java/util/Map {
 	public fun remove (Ljava/lang/Object;)Lorg/partiql/spi/SourceLocation;
 	public fun size ()I
 	public fun values ()Ljava/util/Collection;
+}
+
+public class org/partiql/spi/UnsupportedCodeException : java/lang/RuntimeException {
+	public fun <init> (I)V
 }
 
 public abstract interface class org/partiql/spi/catalog/Catalog {
@@ -315,7 +320,6 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field TYPE_UNEXPECTED I
 	public static final field UNDEFINED_CAST I
 	public static final field UNEXPECTED_TOKEN I
-	public static final field UNKNOWN I
 	public static final field UNRECOGNIZED_TOKEN I
 	public static final field VAR_REF_AMBIGUOUS I
 	public static final field VAR_REF_NOT_FOUND I
@@ -348,14 +352,11 @@ public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/Enum {
 	public static final field EXECUTION I
 	public static final field SEMANTIC I
 	public static final field SYNTAX I
-	public static final field UNKNOWN I
 	public static fun COMPILATION ()Lorg/partiql/spi/errors/PErrorKind;
 	public static fun EXECUTION ()Lorg/partiql/spi/errors/PErrorKind;
 	public static fun SEMANTIC ()Lorg/partiql/spi/errors/PErrorKind;
 	public static fun SYNTAX ()Lorg/partiql/spi/errors/PErrorKind;
-	public static fun UNKNOWN ()Lorg/partiql/spi/errors/PErrorKind;
 	public fun name ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/spi/errors/PErrorListener {
@@ -373,12 +374,10 @@ public class org/partiql/spi/errors/PErrorListenerException : java/lang/Exceptio
 
 public final class org/partiql/spi/errors/Severity : org/partiql/spi/Enum {
 	public static final field ERROR I
-	public static final field UNKNOWN I
 	public static final field WARNING I
 	public static fun ERROR ()Lorg/partiql/spi/errors/Severity;
 	public static fun WARNING ()Lorg/partiql/spi/errors/Severity;
 	public fun name ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/spi/errors/TypeCheckException : java/lang/RuntimeException {
@@ -633,10 +632,8 @@ public abstract interface class org/partiql/spi/value/DatumWriter : java/lang/Au
 
 public class org/partiql/spi/value/Encoding : org/partiql/spi/Enum {
 	public static final field ION I
-	public static final field UNKNOWN I
 	public static fun ION ()Lorg/partiql/spi/value/Encoding;
 	public fun name ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/spi/value/Field {

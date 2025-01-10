@@ -2,6 +2,7 @@ package org.partiql.plan;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.Enum;
+import org.partiql.spi.UnsupportedCodeException;
 
 /**
  * A plan version.
@@ -14,29 +15,26 @@ public class Version extends Enum {
 
     @NotNull
     @Override
-    public String name() {
+    public String name() throws UnsupportedCodeException {
         int code = code();
-        switch (code) {
-            case UNKNOWN:
-                return "UNKNOWN";
-            default:
-                return String.valueOf(code);
+        if (code == V1) {
+            return "V1";
         }
+        throw new UnsupportedCodeException(code);
     }
 
-    public static final int UNKNOWN = 0;
+    public static final int V1 = 1;
 
-    public static Version UNKNOWN() {
-        return new Version(UNKNOWN);
+    public static Version V1() {
+        return new Version(V1);
     }
 
     @Override
     public String toString() {
-       int code = code();
-       switch (code) {
-           case UNKNOWN:
-           default:
-               return "UNKNOWN(" + code + ")";
-       }
+        try {
+            return name();
+        } catch (UnsupportedCodeException e) {
+            return "UNRECOGNIZED_VERSION_CODE(" + code() + ")";
+        }
     }
 }

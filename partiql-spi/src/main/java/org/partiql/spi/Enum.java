@@ -31,9 +31,10 @@ public abstract class Enum {
 
     /**
      * @return the name of the enum variant.
+     * @throws UnsupportedCodeException if the code is not recognized by this enum.
      */
     @NotNull
-    public abstract String name();
+    public abstract String name() throws UnsupportedCodeException;
 
     @Override
     public boolean equals(Object o) {
@@ -46,5 +47,14 @@ public abstract class Enum {
     @Override
     public int hashCode() {
         return Objects.hashCode(code);
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return name();
+        } catch (UnsupportedCodeException e) {
+            return String.valueOf(code);
+        }
     }
 }

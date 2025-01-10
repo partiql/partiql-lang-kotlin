@@ -2,6 +2,7 @@ package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.Enum;
+import org.partiql.spi.UnsupportedCodeException;
 
 /**
  * An encoding for PartiQL values.
@@ -11,11 +12,6 @@ public class Encoding extends Enum {
     private Encoding(int code) {
         super(code);
     }
-
-    /**
-     * This variant is meant for forward-compatibility and should not be used to represent an {@link Encoding}.
-     */
-    public static final int UNKNOWN = 0;
 
     /**
      * Represents the canonical Ion encoding of PartiQL values.
@@ -32,20 +28,11 @@ public class Encoding extends Enum {
 
     @NotNull
     @Override
-    public String name() {
-        return toString();
-    }
-
-    @Override
-    public String toString() {
+    public String name() throws UnsupportedCodeException {
         int code = code();
-        switch (code) {
-            case ION:
-                return "ION";
-            case UNKNOWN:
-                return "UNKNOWN";
-            default:
-                return String.valueOf(code);
+        if (code == ION) {
+            return "ION";
         }
+        throw new UnsupportedCodeException(code);
     }
 }

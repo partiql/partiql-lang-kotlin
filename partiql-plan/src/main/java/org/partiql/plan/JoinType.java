@@ -2,6 +2,7 @@ package org.partiql.plan;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.Enum;
+import org.partiql.spi.UnsupportedCodeException;
 
 /**
  * PartiQL JOIN types.
@@ -16,8 +17,9 @@ public class JoinType extends Enum {
 
     @NotNull
     @Override
-    public String name() {
-        switch (code()) {
+    public String name() throws UnsupportedCodeException {
+        int code = code();
+        switch (code) {
             case INNER:
                 return "INNER";
             case LEFT:
@@ -26,8 +28,9 @@ public class JoinType extends Enum {
                 return "RIGHT";
             case FULL:
                 return "FULL";
+            default:
+                throw new UnsupportedCodeException(code);
         }
-        return "UNKNOWN";
     }
 
     private JoinType(int value) {

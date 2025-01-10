@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.spi.Enum;
 import org.partiql.spi.SourceLocation;
+import org.partiql.spi.UnsupportedCodeException;
 import org.partiql.spi.catalog.Identifier;
 import org.partiql.spi.function.Function;
 import org.partiql.spi.types.PType;
@@ -178,11 +179,9 @@ public final class PError extends Enum {
 
     @NotNull
     @Override
-    public String name() {
+    public String name() throws UnsupportedCodeException {
         int code = code();
         switch (code) {
-            case UNKNOWN:
-                return "UNKNOWN";
             case INTERNAL_ERROR:
                 return "INTERNAL_ERROR";
             case UNRECOGNIZED_TOKEN:
@@ -212,7 +211,7 @@ public final class PError extends Enum {
             case ALWAYS_MISSING:
                 return "ALWAYS_MISSING";
             default:
-                return String.valueOf(code);
+                throw new UnsupportedCodeException(code);
         }
     }
 
@@ -222,8 +221,14 @@ public final class PError extends Enum {
      */
     @Override
     public String toString() {
+        String name;
+        try {
+            name = name();
+        } catch (UnsupportedCodeException e) {
+            name = String.valueOf(code());
+        }
         return "PError{" +
-                "code=" + name() +
+                "code=" + name +
                 ", severity=" + severity +
                 ", kind=" + kind +
                 ", location=" + location +
@@ -274,13 +279,6 @@ public final class PError extends Enum {
     // PUBLIC STATIC FIELDS AND METHODS
     //
     //
-
-    /**
-     * This is a mechanism to allow for forward-compatibility of this API. If a later version of PartiQL sends a new
-     * error code to this particular version of the library, users of this library are enabled to leverage this variant
-     * of the error code.
-     */
-    public static final int UNKNOWN = 0;
 
     /**
      * An internal error occurred during the evaluation of this expression. This error code is non-recoverable and

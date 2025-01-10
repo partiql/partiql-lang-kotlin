@@ -18,7 +18,6 @@ public final class org/partiql/plan/Collation$Nulls : org/partiql/spi/Enum {
 	public static fun FIRST ()Lorg/partiql/plan/Collation$Nulls;
 	public static fun LAST ()Lorg/partiql/plan/Collation$Nulls;
 	public fun name ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/plan/Collation$Order : org/partiql/spi/Enum {
@@ -28,7 +27,6 @@ public final class org/partiql/plan/Collation$Order : org/partiql/spi/Enum {
 	public static fun ASC ()Lorg/partiql/plan/Collation$Order;
 	public static fun DESC ()Lorg/partiql/plan/Collation$Order;
 	public fun name ()Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class org/partiql/plan/Exclusion {
@@ -393,8 +391,8 @@ public abstract interface class org/partiql/plan/Plan {
 }
 
 public class org/partiql/plan/Version : org/partiql/spi/Enum {
-	public static final field UNKNOWN I
-	public static fun UNKNOWN ()Lorg/partiql/plan/Version;
+	public static final field V1 I
+	public static fun V1 ()Lorg/partiql/plan/Version;
 	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
@@ -894,7 +892,6 @@ public abstract class org/partiql/plan/rex/RexSubqueryTest : org/partiql/plan/re
 public class org/partiql/plan/rex/RexSubqueryTest$Test : org/partiql/spi/Enum {
 	public static final field EXISTS I
 	public static final field UNIQUE I
-	public static final field UNKNOWN I
 	public static fun EXISTS ()Lorg/partiql/plan/rex/RexSubqueryTest$Test;
 	public static fun UNIQUE ()Lorg/partiql/plan/rex/RexSubqueryTest$Test;
 	public fun name ()Ljava/lang/String;
