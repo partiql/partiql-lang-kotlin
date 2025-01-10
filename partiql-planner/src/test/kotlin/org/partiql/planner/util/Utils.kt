@@ -76,6 +76,7 @@ val allIntPType = setOf(PType.tinyint(), PType.smallint(), PType.integer(), PTyp
 
 val allNumberPType = allIntPType + setOf(
     PType.decimal(38, 19),
+    PType.numeric(38, 19),
     PType.real(),
     PType.doublePrecision(),
 )
