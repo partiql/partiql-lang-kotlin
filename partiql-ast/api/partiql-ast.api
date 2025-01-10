@@ -438,7 +438,9 @@ public abstract class org/partiql/ast/AstVisitor {
 	public abstract fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun defaultVisit (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visit (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitCheck (Lorg/partiql/ast/ddl/AttributeConstraint$Check;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAttributeConstraintCheck (Lorg/partiql/ast/ddl/AttributeConstraint$Check;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAttributeConstraintNull (Lorg/partiql/ast/ddl/AttributeConstraint$Null;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAttributeConstraintUnique (Lorg/partiql/ast/ddl/AttributeConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitColumnDefinition (Lorg/partiql/ast/ddl/ColumnDefinition;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitConflictAction (Lorg/partiql/ast/dml/ConflictAction;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitConflictActionDoNothing (Lorg/partiql/ast/dml/ConflictAction$DoNothing;Ljava/lang/Object;)Ljava/lang/Object;
@@ -449,6 +451,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitConflictTargetIndex (Lorg/partiql/ast/dml/ConflictTarget$Index;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCreateTable (Lorg/partiql/ast/ddl/CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDataType (Lorg/partiql/ast/DataType;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDataTypeStructField (Lorg/partiql/ast/DataType$StructField;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDelete (Lorg/partiql/ast/dml/Delete;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDoReplaceAction (Lorg/partiql/ast/dml/DoReplaceAction;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitDoReplaceActionExcluded (Lorg/partiql/ast/dml/DoReplaceAction$Excluded;Ljava/lang/Object;)Ljava/lang/Object;
@@ -537,7 +540,6 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitLet (Lorg/partiql/ast/Let;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLetBinding (Lorg/partiql/ast/Let$Binding;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitLiteral (Lorg/partiql/ast/Literal;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitNullable (Lorg/partiql/ast/ddl/AttributeConstraint$Null;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOnConflict (Lorg/partiql/ast/dml/OnConflict;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPartitionBy (Lorg/partiql/ast/ddl/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
@@ -563,9 +565,7 @@ public abstract class org/partiql/ast/AstVisitor {
 	public fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatement (Lorg/partiql/ast/Statement;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStructField (Lorg/partiql/ast/DataType$StructField;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitUnique (Lorg/partiql/ast/ddl/AttributeConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitUnique (Lorg/partiql/ast/ddl/TableConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableConstraintUnique (Lorg/partiql/ast/ddl/TableConstraint$Unique;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdate (Lorg/partiql/ast/dml/Update;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdateTarget (Lorg/partiql/ast/dml/UpdateTarget;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitUpdateTargetStep (Lorg/partiql/ast/dml/UpdateTargetStep;Ljava/lang/Object;)Ljava/lang/Object;

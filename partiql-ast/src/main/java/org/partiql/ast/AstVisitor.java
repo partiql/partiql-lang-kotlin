@@ -98,11 +98,11 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitUnique(TableConstraint.Unique node, C ctx) {
+    public R visitTableConstraintUnique(TableConstraint.Unique node, C ctx) {
         return defaultVisit(node, ctx);
     }
 
-    public R visitNullable(AttributeConstraint.Null node, C ctx) {
+    public R visitAttributeConstraintNull(AttributeConstraint.Null node, C ctx) {
         return defaultVisit(node, ctx);
     }
 
@@ -114,11 +114,11 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitUnique(AttributeConstraint.Unique node, C ctx) {
+    public R visitAttributeConstraintUnique(AttributeConstraint.Unique node, C ctx) {
         return defaultVisit(node, ctx);
     }
 
-    public R visitCheck(AttributeConstraint.Check node, C ctx) {
+    public R visitAttributeConstraintCheck(AttributeConstraint.Check node, C ctx) {
         return defaultVisit(node, ctx);
     }
 
@@ -200,7 +200,7 @@ public abstract class AstVisitor<R, C> {
     }
 
     public R visitConflictAction(ConflictAction node, C ctx) {
-        return node.accept(this, ctx);
+        return defaultVisit(node, ctx);
     }
 
     public R visitConflictActionDoNothing(ConflictAction.DoNothing node, C ctx) {
@@ -623,7 +623,7 @@ public abstract class AstVisitor<R, C> {
         return defaultVisit(node, ctx);
     }
 
-    public R visitStructField(DataType.StructField node, C ctx) {
+    public R visitDataTypeStructField(DataType.StructField node, C ctx) {
         return defaultVisit(node, ctx);
     }
 }

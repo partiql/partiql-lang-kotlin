@@ -11,10 +11,16 @@ import java.util.List;
 
 /**
  * A label spec in a node pattern like {@code MATCH (x : <lab>)} or in an edge pattern like {@code MATCH −[t : <lab>]−>}.
+ * <p>
+ * Note: this is an experimental API and subject to change without prior notice.
+ * </p>
  */
 public abstract class GraphLabel extends AstNode {
     /**
      * Name label as in {@code MATCH (x:Account)} or {@code MATCH -[x:Transfer]->}.
+     * <p>
+     * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -45,6 +51,9 @@ public abstract class GraphLabel extends AstNode {
 
     /**
      * Wildcard label as in {@code MATCH (x: %)}.
+     * <p>
+     * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -65,6 +74,9 @@ public abstract class GraphLabel extends AstNode {
 
     /**
      * Negation label as in {@code MATCH (x: !Account)}.
+     * <p>
+     * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -97,6 +109,9 @@ public abstract class GraphLabel extends AstNode {
 
     /**
      * Conjunction label as in {@code MATCH (x: City&Country)} - like Monaco.
+     * <p>
+     * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)
@@ -139,6 +154,9 @@ public abstract class GraphLabel extends AstNode {
 
     /**
      * Disjunction label as in {@code MATCH (x: City|Country)} - like Paris or Germany.
+     * <p>
+     * Note: this is an experimental API and subject to change without prior notice.
+     * </p>
      */
     @Builder(builderClassName = "Builder")
     @EqualsAndHashCode(callSuper = false)

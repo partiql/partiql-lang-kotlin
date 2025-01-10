@@ -61,7 +61,9 @@ import org.partiql.ast.graph.GraphPattern
 import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphSelector
 
-// TODO docs
+/**
+ * Abstract base class to rewrite a given AST.
+ */
 public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
     override fun defaultReturn(node: AstNode, context: C): AstNode = node
 
@@ -495,7 +497,6 @@ public abstract class AstRewriter<C> : AstVisitor<AstNode, C>() {
         }
     }
 
-    // TODO rename the visitor
     override fun visitGraphPattern(node: GraphPattern, ctx: C): AstNode {
         val restrictor = node.restrictor
         val prefilter = node.prefilter?.let { visitExpr(it, ctx) as Expr? }

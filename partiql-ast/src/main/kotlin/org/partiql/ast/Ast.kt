@@ -71,10 +71,11 @@ import org.partiql.ast.graph.GraphQuantifier
 import org.partiql.ast.graph.GraphRestrictor
 import org.partiql.ast.graph.GraphSelector
 
-// TODO docs for all factory methods
-//  Also consider defaults for nullable. Need to look more into backwards compatibility.
-//  Tracking issue for defaults -- https://github.com/partiql/partiql-lang-kotlin/issues/1640.
+/**
+ * Static factory methods for creating AST nodes.
+ */
 public object Ast {
+    // TODO: add docs for all factory methods
     // Expr
     @JvmStatic
     public fun exprAnd(lhs: Expr, rhs: Expr): ExprAnd {

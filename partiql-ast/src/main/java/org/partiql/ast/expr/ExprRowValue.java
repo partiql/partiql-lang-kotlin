@@ -29,19 +29,13 @@ public final class ExprRowValue extends Expr {
     /**
      * By default, {@link ExprRowValue#explicit} is false.
      *
-     * @param values TODO
+     * @param values list of values in the row value constructor.
      */
     public ExprRowValue(@NotNull List<Expr> values) {
         this.explicit = false;
         this.values = values;
     }
 
-    /**
-     * TODO
-     *
-     * @param explicit TODO
-     * @param values   TODO
-     */
     public ExprRowValue(boolean explicit, @NotNull List<Expr> values) {
         this.explicit = explicit;
         this.values = values;

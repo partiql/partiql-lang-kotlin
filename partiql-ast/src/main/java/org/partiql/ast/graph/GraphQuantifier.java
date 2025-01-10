@@ -12,6 +12,9 @@ import java.util.List;
 
 /**
  * Graph edge quantifier. E.g., the {@code {2,5}} in {@code MATCH (x)->{2,5}(y)}).
+ * <p>
+ * Note: this is an experimental API and subject to change without prior notice.
+ * </p>
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)

@@ -13,6 +13,9 @@ import java.util.List;
 
 /**
  * A graph pattern.
+ * <p>
+ * Note: this is an experimental API and subject to change without prior notice.
+ * </p>
  */
 @Builder(builderClassName = "Builder")
 @EqualsAndHashCode(callSuper = false)
