@@ -47,9 +47,19 @@ public interface PartiQLPlanner {
 
     public companion object {
 
+        /**
+         * Create a new [PartiQLPlannerBuilder] instance.
+         *
+         * @return
+         */
         @JvmStatic
         public fun builder(): PartiQLPlannerBuilder = PartiQLPlannerBuilder()
 
+        /**
+         * Create a new [PartiQLPlanner] instance with the default configuration.
+         *
+         * @return
+         */
         @JvmStatic
         public fun standard(): PartiQLPlanner = PartiQLPlannerBuilder().build()
     }
