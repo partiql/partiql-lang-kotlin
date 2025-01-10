@@ -9,5 +9,5 @@ interface PTestDef {
     /**
      * Runs the test case.
      */
-    fun assert(): Unit
+    fun assert()
 }

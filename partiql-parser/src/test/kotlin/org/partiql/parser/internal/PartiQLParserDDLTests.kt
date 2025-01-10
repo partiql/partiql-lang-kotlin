@@ -41,7 +41,7 @@ class PartiQLParserDDLTests {
     fun runTestCases(tc: SuccessTestCase) = assertExpression(tc.query, tc.node)
 
     class TestProvider : ArgumentsProvider {
-        val createTableTests_existing = listOf(
+        private val createTableTestsExisting = listOf(
             SuccessTestCase(
                 "CREATE TABLE with unqualified case insensitive name",
                 "CREATE TABLE foo",
@@ -99,7 +99,7 @@ class PartiQLParserDDLTests {
             ),
         )
 
-        val createTableTests_addition = listOf(
+        private val createTableTestsAddition = listOf(
             //
             // Column Constraints
             //
@@ -840,21 +840,21 @@ class PartiQLParserDDLTests {
 
 //        val dropTableTests = listOf(
 //            SuccessTestCase(
-//                "DROP TABLE with unqualified case insensitive name",
+//                "DROP TABLE with unqualified case-insensitive name",
 //                "DROP TABLE foo",
 //                statementDDLDropTable(
 //                    identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
 //                )
 //            ),
 //            SuccessTestCase(
-//                "DROP TABLE with unqualified case sensitive name",
+//                "DROP TABLE with unqualified case-sensitive name",
 //                "DROP TABLE \"foo\"",
 //                statementDDLDropTable(
 //                    identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
 //                )
 //            ),
 //            SuccessTestCase(
-//                "DROP TABLE with qualified case insensitive name",
+//                "DROP TABLE with qualified case-insensitive name",
 //                "DROP TABLE myCatalog.mySchema.foo",
 //                statementDDLDropTable(
 //                    identifierQualified(
@@ -881,7 +881,7 @@ class PartiQLParserDDLTests {
 //            ),
 //        )
 
-        val allTest = createTableTests_existing + createTableTests_addition
+        private val allTest = createTableTestsExisting + createTableTestsAddition
 
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> =
             allTest.map { Arguments.of(it) }.stream()

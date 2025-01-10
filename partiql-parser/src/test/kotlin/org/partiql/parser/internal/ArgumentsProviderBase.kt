@@ -24,7 +24,7 @@ import java.util.stream.Stream
  * utilized in this package.
  *
  * Since JUnit5 requires `@JvmStatic` on its `@MethodSource` argument factory methods, this requires all
- * of the argument lists to reside in the companion object of a test class.  This can be annoying since it
+ * the argument lists to reside in the companion object of a test class.  This can be annoying since it
  * forces the test to be separated from its tests cases.
  *
  * Classes that derive from this class can be defined near the `@ParameterizedTest` functions instead.

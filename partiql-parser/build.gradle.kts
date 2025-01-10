@@ -50,7 +50,7 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
 
 tasks.generateGrammarSource {
     val antlrPackage = "org.partiql.parser.internal.antlr"
-    val antlrSources = "$buildDir/generated-src/${antlrPackage.replace('.', '/')}"
+    val antlrSources = "${layout.buildDirectory.get()}/generated-src/${antlrPackage.replace('.', '/')}"
     maxHeapSize = "64m"
     arguments = listOf("-visitor", "-long-messages", "-package", antlrPackage)
     outputDirectory = File(antlrSources)

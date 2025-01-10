@@ -14,9 +14,6 @@
 
 package org.partiql.parser.internal
 
-import com.amazon.ionelement.api.IntElement
-import com.amazon.ionelement.api.IntElementSize
-import com.amazon.ionelement.api.IonElement
 import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
@@ -311,7 +308,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         ) {
             offendingSymbol as Token
             val token = offendingSymbol.text
-            val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
+            val location = SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
             val error = PErrors.unrecognizedToken(location, token)
             listener.report(error)
         }
@@ -322,7 +319,8 @@ internal class PartiQLParserDefault : PartiQLParser {
      */
     private class ParseErrorListener(private val listener: PErrorListener) : BaseErrorListener() {
 
-        private val rules = GeneratedParser.ruleNames.asList()
+        // TODO: Do we want to display the offending rule?
+        // private val rules = GeneratedParser.ruleNames.asList()
 
         @Throws(PartiQLParserException::class)
         override fun syntaxError(
@@ -334,10 +332,10 @@ internal class PartiQLParserDefault : PartiQLParser {
             e: RecognitionException?,
         ) {
             offendingSymbol as Token
-            val rule = e?.ctx?.toString(rules) ?: "UNKNOWN" // TODO: Do we want to display the offending rule?
+            // val rule = e?.ctx?.toString(rules) ?: "UNKNOWN"
             val token = offendingSymbol.text
             val tokenType = GeneratedParser.VOCABULARY.getSymbolicName(offendingSymbol.type)
-            val location = org.partiql.spi.SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
+            val location = SourceLocation(line.toLong(), charPositionInLine + 1L, token.length.toLong())
             val error = PErrors.unexpectedToken(location, tokenType, null)
             listener.report(error)
         }
@@ -574,20 +572,20 @@ internal class PartiQLParserDefault : PartiQLParser {
             val qualifiedName = visitQualifiedName(ctx.qualifiedName())
             val (columns, tblConstrs) = ctx.tableDef()?.let {
                 getColumnsAndTableConstraint(it)
-            } ?: (emptyList<ColumnDefinition>() to emptyList<TableConstraint>())
+            } ?: (emptyList<ColumnDefinition>() to emptyList())
             val partitionBy = ctx
                 .tableExtension()
                 .filterIsInstance<GeneratedParser.TblExtensionPartitionContext>()
-                .let {
-                    if (it.size > 1) throw error(ctx, "Expect one PARTITION BY clause.")
-                    it.firstOrNull()?.let { visitTblExtensionPartition(it) }
+                .let { pb ->
+                    if (pb.size > 1) throw error(ctx, "Expect one PARTITION BY clause.")
+                    pb.firstOrNull()?.let { visitTblExtensionPartition(it) }
                 }
             val tblProperties = ctx
                 .tableExtension()
                 .filterIsInstance<GeneratedParser.TblExtensionTblPropertiesContext>()
-                .let {
-                    if (it.size > 1) throw error(ctx, "Expect one TBLPROPERTIES clause.")
-                    val tblPropertiesCtx = it.firstOrNull()
+                .let { properties ->
+                    if (properties.size > 1) throw error(ctx, "Expect one TBLPROPERTIES clause.")
+                    val tblPropertiesCtx = properties.firstOrNull()
                     tblPropertiesCtx?.keyValuePair()?.map {
                         val key = it.key.getStringValue()
                         val value = it.value.getStringValue()
@@ -623,7 +621,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         // The following types are not supported in DDL yet,
-        //  either as a top level type or as a element/field type in complex type declaration
+        //  either as a top level type or as an element/field type in complex type declaration
         private fun isValidTypeDeclarationOrThrow(type: DataType, ctx: GeneratedParser.TypeContext) = when (type.code()) {
             DataType.BAG,
             DataType.USER_DEFINED -> throw error(ctx, "declaration attribute with $type is not supported")
@@ -644,8 +642,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitColumnConstraintDef(ctx: GeneratedParser.ColumnConstraintDefContext) = translate(ctx) {
             val constrName = ctx.constraintName()?.let { visitQualifiedName(it.qualifiedName()) }
-            val body = visitAs<AttributeConstraint>(ctx.columnConstraint())
-            when (body) {
+            when (val body = visitAs<AttributeConstraint>(ctx.columnConstraint())) {
                 is AttributeConstraint.Unique -> columnConstraintUnique(constrName, body.isPrimaryKey)
                 is AttributeConstraint.Null -> columnConstraintNullable(constrName, body.isNullable)
                 is AttributeConstraint.Check -> columnConstraintCheck(constrName, body.searchCondition)
@@ -676,8 +673,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTableConstrDefinition(ctx: GeneratedParser.TableConstrDefinitionContext) = translate(ctx) {
             val constraintName = ctx.constraintName()?.let { visitQualifiedName(it.qualifiedName()) }
-            val body = visitAs<TableConstraint>(ctx.tableConstraint())
-            when (body) {
+            when (val body = visitAs<TableConstraint>(ctx.tableConstraint())) {
                 is TableConstraint.Unique -> tableConstraintUnique(constraintName, body.columns, body.isPrimaryKey)
                 else -> throw error(ctx, "Unexpected Table Constraint Definition")
             }
@@ -733,7 +729,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitInsertFromSubquery(ctx: GeneratedParser.InsertFromSubqueryContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val columns = ctx.insertColumnList()?.let { it.symbolPrimitive().map { visitSymbolPrimitive(it) } }
+            val columns = ctx.insertColumnList()?.let { colList -> colList.symbolPrimitive().map { visitSymbolPrimitive(it) } }
             insertSourceExpr(columns, expr)
         }
 
@@ -1445,27 +1441,27 @@ internal class PartiQLParserDefault : PartiQLParser {
             return exprOperator(op, l, r)
         }
 
-        override fun visitMathOp00(ctx: GeneratedParser.MathOp00Context) = translate(ctx) {
+        override fun visitMathOp00(ctx: GeneratedParser.MathOp00Context): AstNode = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
             convertToOperator(ctx.lhs, ctx.rhs, ctx.op)
         }
 
-        override fun visitMathOp01(ctx: GeneratedParser.MathOp01Context) = translate(ctx) {
+        override fun visitMathOp01(ctx: GeneratedParser.MathOp01Context): AstNode = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
             convertToOperator(ctx.rhs, ctx.op)
         }
 
-        override fun visitMathOp02(ctx: GeneratedParser.MathOp02Context) = translate(ctx) {
+        override fun visitMathOp02(ctx: GeneratedParser.MathOp02Context): AstNode = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
             convertToOperator(ctx.lhs, ctx.rhs, ctx.op.text)
         }
 
-        override fun visitMathOp03(ctx: GeneratedParser.MathOp03Context) = translate(ctx) {
+        override fun visitMathOp03(ctx: GeneratedParser.MathOp03Context): AstNode = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
             convertToOperator(ctx.lhs, ctx.rhs, ctx.op.text)
         }
 
-        override fun visitValueExpr(ctx: GeneratedParser.ValueExprContext) = translate(ctx) {
+        override fun visitValueExpr(ctx: GeneratedParser.ValueExprContext): AstNode = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
             convertToOperator(ctx.rhs, ctx.sign.text)
         }
@@ -1654,9 +1650,9 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitNullIf(ctx: GeneratedParser.NullIfContext) = translate(ctx) {
-            val value = visitExpr(ctx.expr(0))
-            val nullifier = visitExpr(ctx.expr(1))
-            exprNullIf(value, nullifier)
+            val v1 = visitExpr(ctx.expr(0))
+            val v2 = visitExpr(ctx.expr(1))
+            exprNullIf(v1, v2)
         }
 
         override fun visitCoalesce(ctx: GeneratedParser.CoalesceContext) = translate(ctx) {
@@ -1783,7 +1779,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             // TODO: figure out why do we have a normalized form for overlay?
             if (ctx.PLACING() == null) {
                 // normal form
-                val function = "OVERLAY".toRegularIdentifier()
                 val args = arrayOfNulls<Expr>(4).also {
                     visitOrEmpty<Expr>(ctx.expr()).forEachIndexed { index, expr ->
                         it[index] = expr
@@ -1999,7 +1994,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
-        override fun visitTypeAtomic(ctx: GeneratedParser.TypeAtomicContext) = translate(ctx) {
+        override fun visitTypeAtomic(ctx: GeneratedParser.TypeAtomicContext): DataType = translate(ctx) {
             when (ctx.datatype.type) {
                 GeneratedParser.BOOL -> DataType.BOOLEAN()
                 GeneratedParser.BOOLEAN -> DataType.BOOL()
@@ -2031,7 +2026,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitTypeComplexAtomic(ctx: GeneratedParser.TypeComplexAtomicContext) = translate(ctx) {
+        override fun visitTypeComplexAtomic(ctx: GeneratedParser.TypeComplexAtomicContext): DataType = translate(ctx) {
             when (ctx.datatype.type) {
                 GeneratedParser.SEXP -> DataType.SEXP()
                 GeneratedParser.BAG -> DataType.BAG()
@@ -2050,7 +2045,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitTypeArgSingle(ctx: GeneratedParser.TypeArgSingleContext) = translate(ctx) {
+        override fun visitTypeArgSingle(ctx: GeneratedParser.TypeArgSingleContext): DataType = translate(ctx) {
             val n = ctx.arg0?.text?.toInt()
             when (ctx.datatype.type) {
                 GeneratedParser.FLOAT -> when (n) {
@@ -2071,7 +2066,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitTypeArgDouble(ctx: GeneratedParser.TypeArgDoubleContext) = translate(ctx) {
+        override fun visitTypeArgDouble(ctx: GeneratedParser.TypeArgDoubleContext): DataType = translate(ctx) {
             val arg0 = ctx.arg0?.text?.toInt()
             val arg1 = ctx.arg1?.text?.toInt()
             when (ctx.datatype.type) {
@@ -2097,7 +2092,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitTypeTimeZone(ctx: GeneratedParser.TypeTimeZoneContext) = translate(ctx) {
+        override fun visitTypeTimeZone(ctx: GeneratedParser.TypeTimeZoneContext): DataType = translate(ctx) {
             val precision = ctx.precision?.let {
                 val p = ctx.precision.text.toInt()
                 if (p < 0 || 9 < p) throw error(ctx.precision, "Unsupported time precision")
@@ -2129,13 +2124,13 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
+        override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext): DataType = translate(ctx) {
             DataType.USER_DEFINED(ctx.text.uppercase().toRegularIdentifier())
         }
 
         // TODO: Grammar rule support for Array and List
         //  AST only support for ARRAY as parameterized type for now
-        override fun visitTypeList(ctx: GeneratedParser.TypeListContext) = translate(ctx) {
+        override fun visitTypeList(ctx: GeneratedParser.TypeListContext): DataType = translate(ctx) {
             val type = visitAs<DataType>(ctx.type())
                 .also { isValidTypeDeclarationOrThrow(it, ctx.type()) }
             DataType.ARRAY(type)
@@ -2143,7 +2138,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         // TODO: Grammar rule support for Array and List
         //  AST only support Struct as parameterized type for now
-        override fun visitTypeStruct(ctx: GeneratedParser.TypeStructContext) = translate(ctx) {
+        override fun visitTypeStruct(ctx: GeneratedParser.TypeStructContext): DataType = translate(ctx) {
             val fields = ctx.structField().map { structFieldCtx ->
                 val name = visitSymbolPrimitive(structFieldCtx.columnName().symbolPrimitive())
                 val type = visitAs<DataType>(structFieldCtx.type())
@@ -2179,15 +2174,6 @@ internal class PartiQLParserDefault : PartiQLParser {
         private inline fun <reified T : AstNode> visitAs(ctx: ParserRuleContext): T = visit(ctx) as T
 
         /**
-         * Visiting a symbol to get a string, skip the wrapping, unwrapping, and location tracking.
-         */
-        private fun symbolToString(ctx: GeneratedParser.SymbolPrimitiveContext) = when (ctx) {
-            is GeneratedParser.IdentifierQuotedContext -> ctx.IDENTIFIER_QUOTED().getStringValue()
-            is GeneratedParser.IdentifierUnquotedContext -> ctx.text
-            else -> throw error(ctx, "Invalid symbol reference.")
-        }
-
-        /**
          * Convert [ALL|DISTINCT] to SetQuantifier Enum
          */
         private fun convertSetQuantifier(ctx: GeneratedParser.SetQuantifierStrategyContext?): SetQuantifier? = when {
@@ -2220,10 +2206,10 @@ internal class PartiQLParserDefault : PartiQLParser {
          *      SELECT foo.*.bar FROM foo
          * ```
          */
-        protected fun convertPathToProjectionItem(ctx: ParserRuleContext, path: ExprPath, alias: Simple?) =
+        private fun convertPathToProjectionItem(ctx: ParserRuleContext, path: ExprPath, alias: Simple?) =
             translate(ctx) {
                 val steps = mutableListOf<PathStep>()
-                var containsIndex = false
+                val containsIndex = false
                 path.steps.forEachIndexed { index, step ->
                     // Only last step can have a '.*'
                     if (step is PathStep.AllFields && index != path.steps.lastIndex) {
@@ -2271,14 +2257,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             regular(this)
 
         private fun String.toBigInteger() = BigInteger(this, 10)
-
-        private fun assertIntegerElement(token: Token?, value: IonElement?) {
-            if (value == null || token == null) return
-            if (value !is IntElement) throw error(token, "Expected an integer value.")
-            if (value.integerSize == IntElementSize.BIG_INTEGER || value.longValue > Int.MAX_VALUE || value.longValue < Int.MIN_VALUE) throw error(
-                token, "Type parameter exceeded maximum value"
-            )
-        }
 
         private enum class ExplainParameters {
             TYPE, FORMAT;

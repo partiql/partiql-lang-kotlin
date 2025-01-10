@@ -24,25 +24,30 @@ import org.partiql.spi.errors.PErrorListenerException;
 import java.util.List;
 
 /**
- * TODO docs
+ * Parses PartiQL text into abstract syntax trees (AST). This parser interface allows for parsing of multiple PartiQL
+ * statements.
+ *
+ * @see PartiQLParser.Result
+ * @see Statement
+ * @see SourceLocations
  */
 public interface PartiQLParser {
 
     /**
-     * Parses the [source] into an AST.
+     * Parses the source text into an AST.
      * @param source the user's input
      * @param ctx a configuration object for the parser
-     * @throws PErrorListenerException when the [org.partiql.spi.errors.PErrorListener] defined in the [ctx] throws an
-     * [PErrorListenerException], this method halts execution and propagates the exception.
+     * @throws PErrorListenerException when the {@link org.partiql.spi.errors.PErrorListener} defined in the context
+     * throws a {@link PErrorListenerException}, this method halts execution and propagates the exception.
      */
     @NotNull
     Result parse(@NotNull String source, @NotNull Context ctx) throws PErrorListenerException;
 
     /**
-     * Parses the [source] into an AST.
+     * Parses the source text into an AST with a default context.
      * @param source the user's input
-     * @throws PErrorListenerException when the [org.partiql.spi.errors.PErrorListener] defined in the context throws an
-     * [PErrorListenerException], this method halts execution and propagates the exception.
+     * @throws PErrorListenerException when the {@link org.partiql.spi.errors.PErrorListener} defined in the context
+     * throws a {@link PErrorListenerException}, this method halts execution and propagates the exception.
      */
     @NotNull
     default Result parse(@NotNull String source) throws PErrorListenerException {
@@ -50,26 +55,29 @@ public interface PartiQLParser {
     }
 
     /**
-     * TODO
+     * Parse result with the parsed AST {@link Statement}s and source locations {@link SourceLocations}.
+     *
+     * @see PartiQLParser#parse(String)
+     * @see PartiQLParser#parse(String, Context)
      */
     final class Result {
 
         /**
-         * TODO
+         * The parsed AST {@link Statement}s.
          */
         @NotNull
         public List<Statement> statements;
 
         /**
-         * TODO
+         * The source locations of the parsed AST {@link Statement}s.
          */
         @NotNull
         public SourceLocations locations;
 
         /**
-         * TODO
-         * @param statements TODO
-         * @param locations TODO
+         * Constructs a parse result of AST {@link Statement}s and {@link SourceLocations}.
+         * @param statements parsed AST {@link Statement}s
+         * @param locations {@link SourceLocations} for the parsed statements
          */
         public Result(@NotNull List<Statement> statements, @NotNull SourceLocations locations) {
             this.statements = statements;
@@ -78,27 +86,27 @@ public interface PartiQLParser {
     }
 
     /**
-     * TODO
-     * @return TODO
+     * Static method to get a new builder.
+     * @return a new builder instance
      */
     @NotNull
-    public static Builder builder() {
+    static Builder builder() {
         return new Builder();
     }
 
     /**
-     * TODO
-     * @return TODO
+     * Static method to get a new default parser.
+     * @return a new default parser instance
      */
     @NotNull
-    public static PartiQLParser standard() {
+    static PartiQLParser standard() {
         return new PartiQLParserDefault();
     }
 
     /**
-     * A builder class to instantiate a [PartiQLParser].
+     * A builder class to instantiate a {@link PartiQLParser}.
      */
-    public class Builder {
+    class Builder {
         @NotNull
         public PartiQLParser build() {
             return new PartiQLParserDefault();
