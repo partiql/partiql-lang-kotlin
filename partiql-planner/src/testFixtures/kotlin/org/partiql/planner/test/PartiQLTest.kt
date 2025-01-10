@@ -20,9 +20,9 @@ package org.partiql.planner.test
  * --#[example-test]
  * SELECT * FROM example;
  */
-public data class PartiQLTest(
-    public val key: Key,
-    public val statement: String,
+data class PartiQLTest(
+    val key: Key,
+    val statement: String,
 ) {
 
     /**
@@ -31,8 +31,8 @@ public data class PartiQLTest(
      * @property group
      * @property name
      */
-    public data class Key(
-        public val group: String,
-        public val name: String,
+    data class Key(
+        val group: String,
+        val name: String,
     )
 }

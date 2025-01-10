@@ -6,7 +6,7 @@ import org.partiql.spi.types.PType
  * This represents SQL:1999 Section 4.1.2 "Type conversions and mixing of data types" and breaks down the different
  * coercion groups.
  *
- * TODO: [UNKNOWN] should likely be removed in the future. However, it is needed due to literal nulls and missings.
+ * TODO: [UNKNOWN] should likely be removed in the future. However, it is needed due to literal null and missing.
  * TODO: [DYNAMIC] should likely be removed in the future. This is currently only kept to map function signatures.
  */
 internal enum class CoercionFamily {
@@ -25,10 +25,10 @@ internal enum class CoercionFamily {
     companion object {
 
         /**
-         * Gets the coercion family for the given [PType.Kind].
+         * Gets the coercion family for the given [PType.code].
          *
          * @see CoercionFamily
-         * @see PType.Kind
+         * @see PType.code
          * @see family
          */
         @JvmStatic

@@ -18,8 +18,8 @@ import org.partiql.spi.value.Datum
  * @property outer refers to the outer variable scopes that we have access to.
  */
 internal data class Scope(
-    public val schema: List<Rel.Binding>,
-    public val outer: List<Scope>
+    val schema: List<Rel.Binding>,
+    val outer: List<Scope>
 ) {
 
     internal fun getScope(depth: Int): Scope {

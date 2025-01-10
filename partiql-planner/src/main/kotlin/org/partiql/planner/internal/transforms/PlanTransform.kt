@@ -79,7 +79,7 @@ internal class PlanTransform(private val flags: Set<PlannerFlag>) {
             return operators.error(ctx)
         }
 
-        override fun visitRelOpErr(node: org.partiql.planner.internal.ir.Rel.Op.Err, ctx: PType): Any {
+        override fun visitRelOpErr(node: Rel.Op.Err, ctx: PType): Any {
             // Listener should have already received the error. This node is a dud. Registered error listeners should
             // have failed compilation already.
             return operators.scan(operators.error(ctx))

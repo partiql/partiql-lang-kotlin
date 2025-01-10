@@ -282,10 +282,9 @@ internal class Env(private val session: Session) {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            val m = p.getMatch(a)
-            when {
-                m == null -> return null
-                m == a -> continue
+            when (val m = p.getMatch(a)) {
+                null -> return null
+                a -> continue
                 else -> mapping[i] = coercion(a, m)
             }
         }

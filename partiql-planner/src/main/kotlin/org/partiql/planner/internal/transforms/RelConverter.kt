@@ -156,7 +156,7 @@ internal object RelConverter {
      */
     private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
 
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
+    @Suppress("LocalVariableName")
     internal class ToRel(private val env: Env) : AstVisitor<Rel, Rel>() {
 
         override fun defaultReturn(node: AstNode, input: Rel): Rel =
@@ -713,7 +713,7 @@ internal object RelConverter {
 
         private fun Identifier.isAggregateCall(): Boolean = identifier.text.lowercase().isAggregateCall()
 
-        override fun defaultReturn(node: AstNode, ctx: Context) = node
+        override fun defaultReturn(node: AstNode, context: Context) = node
     }
 
     private fun syntheticAgg(i: Int) = "\$agg_$i"

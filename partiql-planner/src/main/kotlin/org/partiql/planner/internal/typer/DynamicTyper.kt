@@ -64,7 +64,7 @@ internal class DynamicTyper {
 
     /**
      * This adds non-absent types (aka not NULL / MISSING literals) to the typing accumulator.
-     * @param type
+     * @param rex
      */
     private fun accumulateConcrete(rex: Rex) {
         types.add(rex.type)
@@ -123,8 +123,8 @@ internal class DynamicTyper {
             if (type.code() != PType.DECIMAL) {
                 return null
             }
-            val precision = Math.max(type.precision, acc.first)
-            val scale = Math.max(type.scale, acc.second)
+            val precision = type.precision.coerceAtLeast(acc.first)
+            val scale = type.scale.coerceAtLeast(acc.second)
             precision to scale
         }
         return PType.decimal(precision, scale).toCType()
@@ -144,10 +144,10 @@ internal class DynamicTyper {
                 }
                 PType.VARCHAR -> {
                     containsVarChar = true
-                    Math.max(acc, type.length)
+                    acc.coerceAtLeast(type.length)
                 }
                 PType.CHAR -> {
-                    Math.max(acc, type.length)
+                    acc.coerceAtLeast(type.length)
                 }
                 else -> error("Received type: $type")
             }
