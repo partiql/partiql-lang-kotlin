@@ -1,4 +1,3 @@
-@file:JvmName("Normalize")
 /*
  * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
@@ -13,17 +12,13 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.planner.internal.normalize
+package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.Statement
 
 /**
- * AST normalization
+ * Wraps a rewriter with a default entry point.
  */
-internal fun Statement.normalize(): Statement {
-    // could be a fold, but this is nice for setting breakpoints
-    var ast = this
-    ast = NormalizeFromSource.apply(ast)
-    ast = NormalizeGroupBy.apply(ast)
-    return ast
+internal interface AstPass {
+    fun apply(statement: Statement): Statement
 }

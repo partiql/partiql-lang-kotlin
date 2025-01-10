@@ -47,7 +47,7 @@ import org.partiql.ast.expr.ExprCase
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.ast.expr.ExprStruct
 import org.partiql.ast.expr.ExprVarRef
-import org.partiql.planner.internal.helpers.toBinder
+import org.partiql.planner.internal.util.BinderUtils.toBinder
 
 /**
  * Converts SQL-style SELECT to PartiQL SELECT VALUE.

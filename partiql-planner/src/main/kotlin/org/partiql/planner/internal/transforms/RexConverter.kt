@@ -89,7 +89,7 @@ import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.DateTimeUtils
-import org.partiql.planner.internal.utils.FunctionUtils
+import org.partiql.planner.internal.util.FunctionUtils
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType

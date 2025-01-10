@@ -47,7 +47,6 @@ import org.partiql.ast.expr.Expr
 import org.partiql.ast.expr.ExprCall
 import org.partiql.ast.expr.ExprQuerySet
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.helpers.toBinder
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rel
@@ -83,6 +82,7 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.planner.internal.util.BinderUtils.toBinder
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 

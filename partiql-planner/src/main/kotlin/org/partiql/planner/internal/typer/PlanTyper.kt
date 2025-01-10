@@ -51,6 +51,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.util.TypeUtils.exclude
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
