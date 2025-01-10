@@ -12,7 +12,7 @@ import org.partiql.spi.types.PType
  *
  * TODO COMBINE WITH MemoryCatalog as the standard catalog implementation.
  */
-public class TestCatalog private constructor(
+class TestCatalog private constructor(
     private val name: String,
     private val root: Tree,
 ) : Catalog {

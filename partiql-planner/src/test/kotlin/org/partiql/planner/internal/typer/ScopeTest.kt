@@ -62,7 +62,7 @@ internal class ScopeTest {
         }
 
         @JvmStatic
-        public fun cases() = listOf<Pair<String, Int?>>(
+        fun cases() = listOf(
             // root matching
             """ A.B """ to null,
             """ A."B" """ to null,
@@ -92,13 +92,11 @@ internal class ScopeTest {
         val path = case.first.path()
         val expected = case.second
         val rex = locals.resolve(path)
-        if (rex == null) {
-            if (expected == null) {
+            ?: if (expected == null) {
                 return // pass
             } else {
                 fail("could not resolve variable")
             }
-        }
         // For now, just traverse to the root
         var root = rex.op
         while (root !is Rex.Op.Var.Local) {

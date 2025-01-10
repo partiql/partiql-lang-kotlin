@@ -132,7 +132,7 @@ class PlanTyperTest {
     }
 
     private class PlanTyperWrapper(
-        internal val typer: PlanTyper,
+        val typer: PlanTyper,
     )
 
     /**

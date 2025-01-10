@@ -52,9 +52,9 @@ import org.partiql.plan.rex.RexVar
 object PlanEquivalenceOperatorVisitor : OperatorVisitor<Boolean, Any> {
 
     @JvmStatic
-    public fun equals(p1: Plan, p2: Plan): Boolean = visitPlan(p1, p2)
+    fun equals(p1: Plan, p2: Plan): Boolean = visitPlan(p1, p2)
 
-    public fun visitPlan(plan: Plan, other: Any): Boolean {
+    private fun visitPlan(plan: Plan, other: Any): Boolean {
         if (other !is Plan) {
             return false
         }
@@ -63,7 +63,7 @@ object PlanEquivalenceOperatorVisitor : OperatorVisitor<Boolean, Any> {
         return visitOperation(op1, op2)
     }
 
-    public fun visitOperation(action: Action, other: Any): Boolean {
+    private fun visitOperation(action: Action, other: Any): Boolean {
         if (other !is Action) {
             return false
         }

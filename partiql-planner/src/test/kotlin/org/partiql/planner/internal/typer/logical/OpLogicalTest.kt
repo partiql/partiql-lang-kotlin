@@ -29,9 +29,7 @@ class OpLogicalTest : PartiQLTyperTestBase() {
         val argsMap = buildMap {
             val successArgs = supportedType.map { t -> listOf(t) }.toSet()
             successArgs.forEach { args: List<StaticType> ->
-                (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                    put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                }
+                put(TestResult.Success(StaticType.BOOL), (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)) + setOf(args))
                 Unit
             }
 

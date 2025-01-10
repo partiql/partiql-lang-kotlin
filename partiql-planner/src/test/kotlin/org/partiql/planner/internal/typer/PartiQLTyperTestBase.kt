@@ -31,15 +31,13 @@ abstract class PartiQLTyperTestBase {
             override fun toString(): String = "Success_$expectedType"
         }
 
-        object Failure : TestResult() {
-            override fun toString(): String = "Failure"
-        }
+        data object Failure : TestResult()
     }
 
     companion object {
 
-        public val parser = PartiQLParser.standard()
-        public val planner = PartiQLPlanner.standard()
+        val parser = PartiQLParser.standard()
+        val planner = PartiQLPlanner.standard()
 
         internal val session: ((String, Catalog) -> Session) = { catalog, metadata ->
             Session.builder()
