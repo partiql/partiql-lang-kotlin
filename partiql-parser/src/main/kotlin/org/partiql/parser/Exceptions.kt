@@ -42,8 +42,8 @@ internal open class PartiQLSyntaxException(
  * @param location
  */
 internal class PartiQLLexerException(
-    public val token: String,
-    public val tokenType: String,
+    val token: String,
+    val tokenType: String,
     message: String = "",
     cause: Throwable? = null,
     location: SourceLocation? = null,
@@ -62,9 +62,9 @@ internal class PartiQLLexerException(
  * @param location
  */
 internal class PartiQLParserException(
-    public val rule: String,
-    public val token: String,
-    public val tokenType: String,
+    val rule: String,
+    val token: String,
+    val tokenType: String,
     message: String = "",
     cause: Throwable? = null,
     location: SourceLocation? = null,

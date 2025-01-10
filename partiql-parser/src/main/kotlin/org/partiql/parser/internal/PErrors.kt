@@ -37,7 +37,7 @@ internal object PErrors {
      * @param content see [PError.UNRECOGNIZED_TOKEN]
      * @return an error representing [PError.UNRECOGNIZED_TOKEN]
      */
-    public fun unrecognizedToken(
+    internal fun unrecognizedToken(
         location: SourceLocation?,
         content: String?
     ): PError {
