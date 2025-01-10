@@ -23,8 +23,8 @@ import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import kotlin.io.path.toPath
 
 class PlanTyperTest {

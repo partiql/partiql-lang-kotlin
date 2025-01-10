@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.errors.TypeCheckException
+import org.partiql.spi.errors.TypeCheckException
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import java.math.BigInteger
 
 /**

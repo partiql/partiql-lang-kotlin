@@ -2,6 +2,7 @@ package org.partiql.spi.errors;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.Enum;
+import org.partiql.spi.UnsupportedCodeException;
 
 /**
  * Identifies the "type" of a {@link PError}, which can help consumers distinguish where the {@link PError} is coming
@@ -14,17 +15,22 @@ public final class PErrorKind extends Enum {
         super(code);
     }
 
-    /**
-     * This variant is meant for forward-compatibility and should not be used to represent a {@link PErrorKind}.
-     */
-    public static final int UNKNOWN = 0;
-
-    /**
-     * @return a {@link PErrorKind} of type {@link PErrorKind#UNKNOWN}.
-     */
     @NotNull
-    public static PErrorKind UNKNOWN() {
-        return new PErrorKind(UNKNOWN);
+    @Override
+    public String name() throws UnsupportedCodeException {
+        int code = code();
+        switch (code) {
+            case SYNTAX:
+                return "SYNTAX";
+            case SEMANTIC:
+                return "SEMANTIC";
+            case COMPILATION:
+                return "COMPILATION";
+            case EXECUTION:
+                return "EXECUTION";
+            default:
+                throw new UnsupportedCodeException(code);
+        }
     }
 
     /**
@@ -77,28 +83,5 @@ public final class PErrorKind extends Enum {
     @NotNull
     public static PErrorKind EXECUTION() {
         return new PErrorKind(EXECUTION);
-    }
-
-    /**
-     * This is subject to change without prior notice.
-     * @return a string representation of {@link PErrorKind}, for debugging purposes only
-     */
-    @Override
-    public String toString() {
-        int code = code();
-        switch (code) {
-            case UNKNOWN:
-                return "UNKNOWN";
-            case SYNTAX:
-                return "SYNTAX";
-            case SEMANTIC:
-                return "SEMANTIC";
-            case COMPILATION:
-                return "COMPILATION";
-            case EXECUTION:
-                return "EXECUTION";
-            default:
-                return String.valueOf(code);
-        }
     }
 }

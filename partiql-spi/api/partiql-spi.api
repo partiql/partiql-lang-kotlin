@@ -1,21 +1,3 @@
-public final class org/partiql/errors/CardinalityViolation : java/lang/RuntimeException {
-	public fun <init> ()V
-	public fun fillInStackTrace ()Ljava/lang/Throwable;
-}
-
-public final class org/partiql/errors/DataException : java/lang/RuntimeException {
-	public fun <init> (Ljava/lang/String;)V
-	public fun fillInStackTrace ()Ljava/lang/Throwable;
-	public fun getMessage ()Ljava/lang/String;
-}
-
-public final class org/partiql/errors/TypeCheckException : java/lang/RuntimeException {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun fillInStackTrace ()Ljava/lang/Throwable;
-}
-
 public abstract interface class org/partiql/spi/Connector {
 	public abstract fun getCatalog (Ljava/lang/String;)Lorg/partiql/spi/catalog/Catalog;
 	public abstract fun getCatalog (Ljava/lang/String;Lorg/partiql/spi/Connector$Context;)Lorg/partiql/spi/catalog/Catalog;
@@ -35,6 +17,8 @@ public abstract class org/partiql/spi/Enum {
 	public final fun code ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public abstract fun name ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
 }
 
 public class org/partiql/spi/SourceLocation {
@@ -65,6 +49,10 @@ public class org/partiql/spi/SourceLocations : java/util/Map {
 	public fun remove (Ljava/lang/Object;)Lorg/partiql/spi/SourceLocation;
 	public fun size ()I
 	public fun values ()Ljava/util/Collection;
+}
+
+public class org/partiql/spi/UnsupportedCodeException : java/lang/RuntimeException {
+	public fun <init> (I)V
 }
 
 public abstract interface class org/partiql/spi/catalog/Catalog {
@@ -276,14 +264,14 @@ public abstract interface class org/partiql/spi/catalog/Table {
 	public static final field Companion Lorg/partiql/spi/catalog/Table$Companion;
 	public static fun builder ()Lorg/partiql/spi/catalog/Table$Builder;
 	public static fun empty (Ljava/lang/String;)Lorg/partiql/spi/catalog/Table;
-	public static fun empty (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public static fun empty (Ljava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/catalog/Table;
 	public static fun empty (Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
-	public static fun empty (Lorg/partiql/spi/catalog/Name;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public static fun empty (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/catalog/Table;
 	public abstract fun getDatum ()Lorg/partiql/spi/value/Datum;
 	public abstract fun getName ()Lorg/partiql/spi/catalog/Name;
-	public abstract fun getSchema ()Lorg/partiql/types/PType;
+	public abstract fun getSchema ()Lorg/partiql/spi/types/PType;
+	public static fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/types/PType;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
 	public static fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
-	public static fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/types/PType;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
 }
 
 public final class org/partiql/spi/catalog/Table$Builder {
@@ -291,22 +279,33 @@ public final class org/partiql/spi/catalog/Table$Builder {
 	public final fun build ()Lorg/partiql/spi/catalog/Table;
 	public final fun datum (Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table$Builder;
 	public final fun name (Ljava/lang/String;)Lorg/partiql/spi/catalog/Table$Builder;
-	public final fun schema (Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table$Builder;
+	public final fun schema (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/catalog/Table$Builder;
 }
 
 public final class org/partiql/spi/catalog/Table$Companion {
 	public final fun builder ()Lorg/partiql/spi/catalog/Table$Builder;
 	public final fun empty (Ljava/lang/String;)Lorg/partiql/spi/catalog/Table;
-	public final fun empty (Ljava/lang/String;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public final fun empty (Ljava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/catalog/Table;
 	public final fun empty (Lorg/partiql/spi/catalog/Name;)Lorg/partiql/spi/catalog/Table;
-	public final fun empty (Lorg/partiql/spi/catalog/Name;Lorg/partiql/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public final fun empty (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/catalog/Table;
+	public final fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/types/PType;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
 	public final fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
-	public final fun standard (Lorg/partiql/spi/catalog/Name;Lorg/partiql/types/PType;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/catalog/Table;
 }
 
 public final class org/partiql/spi/catalog/Table$DefaultImpls {
 	public static fun getDatum (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/spi/value/Datum;
-	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/types/PType;
+	public static fun getSchema (Lorg/partiql/spi/catalog/Table;)Lorg/partiql/spi/types/PType;
+}
+
+public final class org/partiql/spi/errors/CardinalityViolation : java/lang/RuntimeException {
+	public fun <init> ()V
+	public fun fillInStackTrace ()Ljava/lang/Throwable;
+}
+
+public final class org/partiql/spi/errors/DataException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+	public fun fillInStackTrace ()Ljava/lang/Throwable;
+	public fun getMessage ()Ljava/lang/String;
 }
 
 public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
@@ -321,7 +320,6 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field TYPE_UNEXPECTED I
 	public static final field UNDEFINED_CAST I
 	public static final field UNEXPECTED_TOKEN I
-	public static final field UNKNOWN I
 	public static final field UNRECOGNIZED_TOKEN I
 	public static final field VAR_REF_AMBIGUOUS I
 	public static final field VAR_REF_NOT_FOUND I
@@ -336,6 +334,7 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public fun getListOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/util/List;
 	public fun getOrNull (Ljava/lang/String;Ljava/lang/Class;)Ljava/lang/Object;
 	public fun hashCode ()I
+	public fun name ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -353,13 +352,11 @@ public final class org/partiql/spi/errors/PErrorKind : org/partiql/spi/Enum {
 	public static final field EXECUTION I
 	public static final field SEMANTIC I
 	public static final field SYNTAX I
-	public static final field UNKNOWN I
 	public static fun COMPILATION ()Lorg/partiql/spi/errors/PErrorKind;
 	public static fun EXECUTION ()Lorg/partiql/spi/errors/PErrorKind;
 	public static fun SEMANTIC ()Lorg/partiql/spi/errors/PErrorKind;
 	public static fun SYNTAX ()Lorg/partiql/spi/errors/PErrorKind;
-	public static fun UNKNOWN ()Lorg/partiql/spi/errors/PErrorKind;
-	public fun toString ()Ljava/lang/String;
+	public fun name ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/spi/errors/PErrorListener {
@@ -377,17 +374,23 @@ public class org/partiql/spi/errors/PErrorListenerException : java/lang/Exceptio
 
 public final class org/partiql/spi/errors/Severity : org/partiql/spi/Enum {
 	public static final field ERROR I
-	public static final field UNKNOWN I
 	public static final field WARNING I
 	public static fun ERROR ()Lorg/partiql/spi/errors/Severity;
 	public static fun WARNING ()Lorg/partiql/spi/errors/Severity;
-	public fun toString ()Ljava/lang/String;
+	public fun name ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/errors/TypeCheckException : java/lang/RuntimeException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun fillInStackTrace ()Ljava/lang/Throwable;
 }
 
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {
 	public static final field Companion Lorg/partiql/spi/function/Aggregation$Companion;
-	public abstract fun getAccumulator ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
-	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
+	public abstract fun getAccumulator ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
+	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
 }
 
 public abstract interface class org/partiql/spi/function/Aggregation$Accumulator {
@@ -396,30 +399,30 @@ public abstract interface class org/partiql/spi/function/Aggregation$Accumulator
 }
 
 public final class org/partiql/spi/function/Aggregation$Companion {
-	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
+	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
 }
 
 public final class org/partiql/spi/function/Aggregation$DefaultImpls {
-	public static fun getAccumulator (Lorg/partiql/spi/function/Aggregation;[Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
+	public static fun getAccumulator (Lorg/partiql/spi/function/Aggregation;[Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
 	public static fun getParameters (Lorg/partiql/spi/function/Aggregation;)[Lorg/partiql/spi/function/Parameter;
 }
 
 public abstract interface class org/partiql/spi/function/Function : org/partiql/spi/function/Routine {
 	public static final field Companion Lorg/partiql/spi/function/Function$Companion;
-	public abstract fun getInstance ([Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Function$Instance;
-	public static fun instance (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function$Instance;
-	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
+	public abstract fun getInstance ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Function$Instance;
+	public static fun instance (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function$Instance;
+	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
 }
 
 public final class org/partiql/spi/function/Function$Companion {
-	public final fun instance (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function$Instance;
-	public static synthetic fun instance$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function$Instance;
-	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
-	public static synthetic fun static$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function;
+	public final fun instance (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function$Instance;
+	public static synthetic fun instance$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function$Instance;
+	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
+	public static synthetic fun static$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function;
 }
 
 public final class org/partiql/spi/function/Function$DefaultImpls {
-	public static fun getInstance (Lorg/partiql/spi/function/Function;[Lorg/partiql/types/PType;)Lorg/partiql/spi/function/Function$Instance;
+	public static fun getInstance (Lorg/partiql/spi/function/Function;[Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Function$Instance;
 	public static fun getParameters (Lorg/partiql/spi/function/Function;)[Lorg/partiql/spi/function/Parameter;
 }
 
@@ -427,21 +430,21 @@ public abstract class org/partiql/spi/function/Function$Instance {
 	public final field isMissingCall Z
 	public final field isNullCall Z
 	public final field name Ljava/lang/String;
-	public final field parameters [Lorg/partiql/types/PType;
-	public final field returns Lorg/partiql/types/PType;
-	public fun <init> (Ljava/lang/String;[Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZZ)V
-	public synthetic fun <init> (Ljava/lang/String;[Lorg/partiql/types/PType;Lorg/partiql/types/PType;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final field parameters [Lorg/partiql/spi/types/PType;
+	public final field returns Lorg/partiql/spi/types/PType;
+	public fun <init> (Ljava/lang/String;[Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;ZZ)V
+	public synthetic fun <init> (Ljava/lang/String;[Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public abstract fun invoke ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
 }
 
 public final class org/partiql/spi/function/Parameter {
 	public static final field Companion Lorg/partiql/spi/function/Parameter$Companion;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/types/PType;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/types/PType;)V
 	public static final fun collection (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 	public static final fun dynamic (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public final fun getMatch (Lorg/partiql/types/PType;)Lorg/partiql/types/PType;
+	public final fun getMatch (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
 	public final fun getName ()Ljava/lang/String;
-	public final fun getType ()Lorg/partiql/types/PType;
+	public final fun getType ()Lorg/partiql/spi/types/PType;
 	public static final fun number (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 	public static final fun text (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
 	public fun toString ()Ljava/lang/String;
@@ -457,11 +460,94 @@ public final class org/partiql/spi/function/Parameter$Companion {
 public abstract interface class org/partiql/spi/function/Routine {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getParameters ()[Lorg/partiql/spi/function/Parameter;
-	public abstract fun getReturnType ([Lorg/partiql/types/PType;)Lorg/partiql/types/PType;
+	public abstract fun getReturnType ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
 }
 
 public final class org/partiql/spi/function/Routine$DefaultImpls {
 	public static fun getParameters (Lorg/partiql/spi/function/Routine;)[Lorg/partiql/spi/function/Parameter;
+}
+
+public abstract interface class org/partiql/spi/types/Field {
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getType ()Lorg/partiql/spi/types/PType;
+	public static fun of (Ljava/lang/String;Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/Field;
+}
+
+public abstract class org/partiql/spi/types/PType : org/partiql/spi/Enum {
+	public static final field ARRAY I
+	public static final field BAG I
+	public static final field BIGINT I
+	public static final field BLOB I
+	public static final field BOOL I
+	public static final field CHAR I
+	public static final field CLOB I
+	public static final field DATE I
+	public static final field DECIMAL I
+	public static final field DOUBLE I
+	public static final field DYNAMIC I
+	public static final field INTEGER I
+	public static final field NUMERIC I
+	public static final field REAL I
+	public static final field ROW I
+	public static final field SMALLINT I
+	public static final field STRING I
+	public static final field STRUCT I
+	public static final field TIME I
+	public static final field TIMESTAMP I
+	public static final field TIMESTAMPZ I
+	public static final field TIMEZ I
+	public static final field TINYINT I
+	public static final field UNKNOWN I
+	public static final field VARCHAR I
+	public static final field VARIANT I
+	protected fun <init> (I)V
+	public static fun array ()Lorg/partiql/spi/types/PType;
+	public static fun array (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
+	public static fun bag ()Lorg/partiql/spi/types/PType;
+	public static fun bag (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
+	public static fun bigint ()Lorg/partiql/spi/types/PType;
+	public static fun blob ()Lorg/partiql/spi/types/PType;
+	public static fun blob (I)Lorg/partiql/spi/types/PType;
+	public static fun bool ()Lorg/partiql/spi/types/PType;
+	public static fun character ()Lorg/partiql/spi/types/PType;
+	public static fun character (I)Lorg/partiql/spi/types/PType;
+	public static fun clob ()Lorg/partiql/spi/types/PType;
+	public static fun clob (I)Lorg/partiql/spi/types/PType;
+	public static fun codes ()[I
+	public static fun date ()Lorg/partiql/spi/types/PType;
+	public static fun decimal ()Lorg/partiql/spi/types/PType;
+	public static fun decimal (II)Lorg/partiql/spi/types/PType;
+	public static fun doublePrecision ()Lorg/partiql/spi/types/PType;
+	public static fun dynamic ()Lorg/partiql/spi/types/PType;
+	public fun getFields ()Ljava/util/Collection;
+	public fun getLength ()I
+	public fun getPrecision ()I
+	public fun getScale ()I
+	public fun getTypeParameter ()Lorg/partiql/spi/types/PType;
+	public static fun integer ()Lorg/partiql/spi/types/PType;
+	public fun name ()Ljava/lang/String;
+	public static fun numeric ()Lorg/partiql/spi/types/PType;
+	public static fun numeric (II)Lorg/partiql/spi/types/PType;
+	public static fun of (I)Lorg/partiql/spi/types/PType;
+	public static fun real ()Lorg/partiql/spi/types/PType;
+	public static fun row (Ljava/util/Collection;)Lorg/partiql/spi/types/PType;
+	public static fun row ([Lorg/partiql/spi/types/Field;)Lorg/partiql/spi/types/PType;
+	public static fun smallint ()Lorg/partiql/spi/types/PType;
+	public static fun string ()Lorg/partiql/spi/types/PType;
+	public static fun struct ()Lorg/partiql/spi/types/PType;
+	public static fun time ()Lorg/partiql/spi/types/PType;
+	public static fun time (I)Lorg/partiql/spi/types/PType;
+	public static fun timestamp ()Lorg/partiql/spi/types/PType;
+	public static fun timestamp (I)Lorg/partiql/spi/types/PType;
+	public static fun timestampz ()Lorg/partiql/spi/types/PType;
+	public static fun timestampz (I)Lorg/partiql/spi/types/PType;
+	public static fun timez ()Lorg/partiql/spi/types/PType;
+	public static fun timez (I)Lorg/partiql/spi/types/PType;
+	public static fun tinyint ()Lorg/partiql/spi/types/PType;
+	public static fun unknown ()Lorg/partiql/spi/types/PType;
+	public static fun varchar ()Lorg/partiql/spi/types/PType;
+	public static fun varchar (I)Lorg/partiql/spi/types/PType;
+	public static fun variant (Ljava/lang/String;)Lorg/partiql/spi/types/PType;
 }
 
 public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable {
@@ -500,7 +586,7 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun getOffsetTime ()Ljava/time/OffsetTime;
 	public fun getShort ()S
 	public fun getString ()Ljava/lang/String;
-	public abstract fun getType ()Lorg/partiql/types/PType;
+	public abstract fun getType ()Lorg/partiql/spi/types/PType;
 	public static fun integer (I)Lorg/partiql/spi/value/Datum;
 	public static fun ion (Ljava/lang/String;)Lorg/partiql/spi/value/Datum;
 	public fun isMissing ()Z
@@ -508,9 +594,9 @@ public abstract interface class org/partiql/spi/value/Datum : java/lang/Iterable
 	public fun iterator ()Ljava/util/Iterator;
 	public fun lower ()Lorg/partiql/spi/value/Datum;
 	public static fun missing ()Lorg/partiql/spi/value/Datum;
-	public static fun missing (Lorg/partiql/types/PType;)Lorg/partiql/spi/value/Datum;
+	public static fun missing (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/value/Datum;
 	public static fun nullValue ()Lorg/partiql/spi/value/Datum;
-	public static fun nullValue (Lorg/partiql/types/PType;)Lorg/partiql/spi/value/Datum;
+	public static fun nullValue (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/value/Datum;
 	public static fun numeric (Ljava/math/BigInteger;)Lorg/partiql/spi/value/Datum;
 	public fun pack (Ljava/nio/charset/Charset;)[B
 	public static fun real (F)Lorg/partiql/spi/value/Datum;
@@ -546,18 +632,13 @@ public abstract interface class org/partiql/spi/value/DatumWriter : java/lang/Au
 
 public class org/partiql/spi/value/Encoding : org/partiql/spi/Enum {
 	public static final field ION I
-	public static final field UNKNOWN I
 	public static fun ION ()Lorg/partiql/spi/value/Encoding;
-	public fun toString ()Ljava/lang/String;
+	public fun name ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/spi/value/Field {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun getValue ()Lorg/partiql/spi/value/Datum;
 	public static fun of (Ljava/lang/String;Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Field;
-}
-
-public final class org/partiql/value/util/NumberExtensionsKt {
-	public static final fun coerceNumbers (Ljava/lang/Number;Ljava/lang/Number;)Lkotlin/Pair;
 }
 

@@ -1,7 +1,7 @@
 package org.partiql.planner.internal.typer
 
 import org.partiql.spi.catalog.Identifier
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * This is largely just to show that the planner does not need to use [_delegate] ([PType]) directly. Using an
@@ -56,13 +56,13 @@ internal class CompilerType(
     internal class Field(
         private val _name: String,
         private val _type: CompilerType
-    ) : org.partiql.types.Field {
+    ) : org.partiql.spi.types.Field {
         override fun getName(): String = _name
         override fun getType(): CompilerType = _type
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (other !is org.partiql.types.Field) return false
+            if (other !is org.partiql.spi.types.Field) return false
             val nameMatches = _name == other.name
             val typeMatches = _type == other.type
             return nameMatches && typeMatches

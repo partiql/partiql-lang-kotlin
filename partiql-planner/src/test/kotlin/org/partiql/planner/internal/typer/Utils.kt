@@ -1,6 +1,6 @@
 package org.partiql.planner.internal.typer
 
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * In contrast to [set], this accumulates the passed-in [value] to the in-place value corresponding to [key].

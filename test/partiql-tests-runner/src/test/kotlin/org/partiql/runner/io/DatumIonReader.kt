@@ -5,9 +5,9 @@ import com.amazon.ion.IonType
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.IonElement
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
-import org.partiql.types.PType
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException

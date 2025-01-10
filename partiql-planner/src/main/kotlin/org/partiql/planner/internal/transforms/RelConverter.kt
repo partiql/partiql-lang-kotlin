@@ -83,8 +83,8 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.

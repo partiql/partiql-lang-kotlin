@@ -3,6 +3,7 @@ package org.partiql.plan;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.rex.Rex;
 import org.partiql.spi.Enum;
+import org.partiql.spi.UnsupportedCodeException;
 
 /**
  * Represents a collation, which is a resolved sort specification.
@@ -37,6 +38,20 @@ public interface Collation {
             super(code);
         }
 
+        @NotNull
+        @Override
+        public String name() throws UnsupportedCodeException {
+            int code = code();
+            switch (code) {
+                case ASC:
+                    return "ASC";
+                case DESC:
+                    return "DESC";
+                default:
+                    throw new UnsupportedCodeException(code);
+            }
+        }
+
         public static final int UNKNOWN = 0;
         public static final int ASC = 1;
         public static final int DESC = 2;
@@ -49,19 +64,6 @@ public interface Collation {
         @NotNull
         public static Order DESC() {
             return new Order(DESC);
-        }
-
-        @Override
-        public String toString() {
-            int code = code();
-            switch (code) {
-                case ASC:
-                    return "ASC";
-                case DESC:
-                    return "DESC";
-                default:
-                    return String.valueOf(code);
-            }
         }
     }
 
@@ -88,8 +90,9 @@ public interface Collation {
             return new Nulls(LAST);
         }
 
+        @NotNull
         @Override
-        public String toString() {
+        public String name() throws UnsupportedCodeException {
             int code = code();
             switch (code) {
                 case FIRST:
@@ -97,7 +100,7 @@ public interface Collation {
                 case LAST:
                     return "LAST";
                 default:
-                    return String.valueOf(code);
+                    throw new UnsupportedCodeException(code);
             }
         }
     }

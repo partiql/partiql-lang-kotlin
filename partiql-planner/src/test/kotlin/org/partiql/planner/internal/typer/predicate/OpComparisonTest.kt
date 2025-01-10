@@ -12,7 +12,7 @@ import org.partiql.planner.util.allSupportedPType
 import org.partiql.planner.util.allTimePType
 import org.partiql.planner.util.allTimeStampPType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import java.util.stream.Stream
 
 // TODO : Behavior when Missing is one operand needs to be finalized

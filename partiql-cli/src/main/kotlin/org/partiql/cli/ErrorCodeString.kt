@@ -9,7 +9,6 @@ import org.partiql.spi.errors.PError
  */
 enum class ErrorCodeString(val code: Int) {
     ALL(-1),
-    UNKNOWN(PError.UNKNOWN),
     INTERNAL_ERROR(PError.INTERNAL_ERROR),
     UNRECOGNIZED_TOKEN(PError.UNRECOGNIZED_TOKEN),
     UNEXPECTED_TOKEN(PError.UNEXPECTED_TOKEN),

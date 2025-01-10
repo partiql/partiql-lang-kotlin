@@ -2,7 +2,7 @@ package org.partiql.spi.value;
 
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.types.PType;
+import org.partiql.spi.types.PType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

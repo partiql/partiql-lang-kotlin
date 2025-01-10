@@ -5,7 +5,7 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.FunctionUtils
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 internal val Fn_IS_ANY__ANY__BOOL = FunctionUtils.hidden(
     name = "is_any",

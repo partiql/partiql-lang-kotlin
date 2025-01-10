@@ -3,12 +3,12 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.errors.TypeCheckException
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.StringUtils.codepointSubstring
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * Built in function to the substring of an existing string. This function

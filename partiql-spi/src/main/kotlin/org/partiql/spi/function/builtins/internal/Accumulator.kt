@@ -15,11 +15,11 @@
 package org.partiql.spi.function.builtins.internal
 
 import com.amazon.ion.Decimal
-import org.partiql.errors.TypeCheckException
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Aggregation
+import org.partiql.spi.internal.coerceNumbers
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
-import org.partiql.value.util.coerceNumbers
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext

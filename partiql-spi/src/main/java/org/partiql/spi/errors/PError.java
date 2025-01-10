@@ -4,9 +4,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.partiql.spi.Enum;
 import org.partiql.spi.SourceLocation;
+import org.partiql.spi.UnsupportedCodeException;
 import org.partiql.spi.catalog.Identifier;
 import org.partiql.spi.function.Function;
-import org.partiql.types.PType;
+import org.partiql.spi.types.PType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -176,14 +177,58 @@ public final class PError extends Enum {
         }
     }
 
+    @NotNull
+    @Override
+    public String name() throws UnsupportedCodeException {
+        int code = code();
+        switch (code) {
+            case INTERNAL_ERROR:
+                return "INTERNAL_ERROR";
+            case UNRECOGNIZED_TOKEN:
+                return "UNRECOGNIZED_TOKEN";
+            case UNEXPECTED_TOKEN:
+                return "UNEXPECTED_TOKEN";
+            case PATH_KEY_NEVER_SUCCEEDS:
+                return "PATH_KEY_NEVER_SUCCEEDS";
+            case PATH_SYMBOL_NEVER_SUCCEEDS:
+                return "PATH_SYMBOL_NEVER_SUCCEEDS";
+            case PATH_INDEX_NEVER_SUCCEEDS:
+                return "PATH_INDEX_NEVER_SUCCEEDS";
+            case FEATURE_NOT_SUPPORTED:
+                return "FEATURE_NOT_SUPPORTED";
+            case UNDEFINED_CAST:
+                return "UNDEFINED_CAST";
+            case FUNCTION_NOT_FOUND:
+                return "FUNCTION_NOT_FOUND";
+            case FUNCTION_TYPE_MISMATCH:
+                return "FUNCTION_TYPE_MISMATCH";
+            case VAR_REF_NOT_FOUND:
+                return "VAR_REF_NOT_FOUND";
+            case VAR_REF_AMBIGUOUS:
+                return "VAR_REF_AMBIGUOUS";
+            case TYPE_UNEXPECTED:
+                return "TYPE_UNEXPECTED";
+            case ALWAYS_MISSING:
+                return "ALWAYS_MISSING";
+            default:
+                throw new UnsupportedCodeException(code);
+        }
+    }
+
     /**
      * The value returned may change without prior notice. Consumers of this method should not depend on this.
      * @return a string representation of an error, for debugging purposes only.
      */
     @Override
     public String toString() {
+        String name;
+        try {
+            name = name();
+        } catch (UnsupportedCodeException e) {
+            name = String.valueOf(code());
+        }
         return "PError{" +
-                "code=" + code() +
+                "code=" + name +
                 ", severity=" + severity +
                 ", kind=" + kind +
                 ", location=" + location +
@@ -234,13 +279,6 @@ public final class PError extends Enum {
     // PUBLIC STATIC FIELDS AND METHODS
     //
     //
-
-    /**
-     * This is a mechanism to allow for forward-compatibility of this API. If a later version of PartiQL sends a new
-     * error code to this particular version of the library, users of this library are enabled to leverage this variant
-     * of the error code.
-     */
-    public static final int UNKNOWN = 0;
 
     /**
      * An internal error occurred during the evaluation of this expression. This error code is non-recoverable and

@@ -3,14 +3,14 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.errors.TypeCheckException
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.function.utils.PatternUtils
 import org.partiql.spi.function.utils.PatternUtils.checkPattern
 import org.partiql.spi.function.utils.PatternUtils.parsePattern
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 import java.util.regex.Pattern
 
 internal val Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL = FunctionUtils.hidden(

@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.helpers
 
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 internal object DatumUtils {
 

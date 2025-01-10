@@ -1,6 +1,6 @@
 package org.partiql.spi.function
 
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * A [Routine] is a PartiQL-routine callable from an expression context.

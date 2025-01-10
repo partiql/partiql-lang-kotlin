@@ -1,0 +1,15 @@
+package org.partiql.spi.internal.value.ion
+
+import org.partiql.spi.value.Datum
+import org.partiql.spi.value.DatumWriter
+
+internal class IonDatumWriter : DatumWriter {
+
+    override fun close() {
+        TODO("Not yet implemented")
+    }
+
+    override fun write(datum: Datum?): DatumWriter {
+        TODO("Not yet implemented")
+    }
+}

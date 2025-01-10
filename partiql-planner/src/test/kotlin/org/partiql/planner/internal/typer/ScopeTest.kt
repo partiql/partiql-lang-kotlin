@@ -11,7 +11,7 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Session
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail
 

@@ -22,7 +22,7 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.function.Function
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of

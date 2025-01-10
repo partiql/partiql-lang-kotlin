@@ -19,7 +19,6 @@ plugins {
 
 dependencies {
     api(Deps.ionElement)
-    api(project(":partiql-types"))
 }
 
 val generate = tasks.register<Exec>("generate") {

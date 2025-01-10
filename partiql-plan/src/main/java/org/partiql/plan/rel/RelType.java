@@ -1,7 +1,7 @@
 package org.partiql.plan.rel;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.types.Field;
+import org.partiql.spi.types.Field;
 
 /**
  * Analogous to a ROW type, consider cardinality estimates or other hint mechanisms.

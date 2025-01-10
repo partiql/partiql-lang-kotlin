@@ -16,7 +16,7 @@ package org.partiql.value.impl
 
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
-import org.partiql.errors.DataException
+import org.partiql.spi.errors.DataException
 import org.partiql.value.Annotations
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value

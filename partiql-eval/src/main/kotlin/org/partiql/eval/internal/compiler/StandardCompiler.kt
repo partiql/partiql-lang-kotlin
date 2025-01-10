@@ -110,8 +110,8 @@ import org.partiql.spi.Context
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListenerException
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * This class is responsible for producing an executable statement from logical operators.

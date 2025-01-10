@@ -2,8 +2,8 @@ package org.partiql.spi.catalog.impl
 
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * An internal, standard table implementation backed by simple fields.

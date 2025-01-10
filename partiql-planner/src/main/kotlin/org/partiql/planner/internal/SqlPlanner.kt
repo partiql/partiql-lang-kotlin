@@ -16,7 +16,7 @@ import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListenerException
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * Default PartiQL logical query planner.

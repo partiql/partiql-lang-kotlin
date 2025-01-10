@@ -1,6 +1,6 @@
 package org.partiql.spi.function.builtins
 
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 internal object TypePrecedence {
 

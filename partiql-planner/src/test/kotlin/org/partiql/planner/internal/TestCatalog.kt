@@ -5,7 +5,7 @@ import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * Basic catalog implementation used for testing; consider merging with MemoryConnector?

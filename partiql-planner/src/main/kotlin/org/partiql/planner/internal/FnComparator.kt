@@ -2,7 +2,7 @@ package org.partiql.planner.internal
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * Function precedence comparator; this is not formally specified.

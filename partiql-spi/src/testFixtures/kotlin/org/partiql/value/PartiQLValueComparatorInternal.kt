@@ -1,10 +1,10 @@
 package org.partiql.value
 
-import org.partiql.value.util.compareTo
-import org.partiql.value.util.isNaN
-import org.partiql.value.util.isNegInf
-import org.partiql.value.util.isPosInf
-import org.partiql.value.util.isZero
+import org.partiql.spi.internal.compareTo
+import org.partiql.spi.internal.isNaN
+import org.partiql.spi.internal.isNegInf
+import org.partiql.spi.internal.isPosInf
+import org.partiql.spi.internal.isZero
 
 internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) : Comparator<PartiQLValue> {
     companion object {

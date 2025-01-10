@@ -28,7 +28,6 @@ plugins {
 
 dependencies {
     api(project(":partiql-plan"))
-    api(project(":partiql-types"))
     implementation(project(":partiql-ast"))
     implementation(project(":partiql-spi"))
     implementation(Deps.dotlin)
@@ -37,9 +36,9 @@ dependencies {
     annotationProcessor(Deps.lombok)
     // Test
     testImplementation(project(":partiql-parser"))
-    testImplementation(testFixtures(project(":partiql-types"))) // TODO: Remove use of StaticType
     testImplementation(Deps.kotlinReflect)
     // Test Fixtures
+    testImplementation(testFixtures(project(":partiql-spi")))
     testFixturesImplementation(project(":partiql-spi"))
 }
 

@@ -13,7 +13,7 @@
  */
 package org.partiql.value
 
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * PartiQL Type Names

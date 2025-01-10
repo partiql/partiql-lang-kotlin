@@ -4,7 +4,7 @@ import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
 import org.partiql.planner.util.allSupportedPType
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import java.util.stream.Stream
 
 class OpIsMissingTest : PartiQLTyperTestBase() {

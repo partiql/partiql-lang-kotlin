@@ -2,8 +2,8 @@ package org.partiql.spi.function
 
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.internal.SqlTypes
-import org.partiql.types.PType
-import org.partiql.types.PType.DYNAMIC
+import org.partiql.spi.types.PType
+import org.partiql.spi.types.PType.DYNAMIC
 
 /**
  * [Parameter] is a formal argument's definition.

@@ -1,5 +1,7 @@
 package org.partiql.spi;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 
 /**
@@ -27,6 +29,13 @@ public abstract class Enum {
         return code;
     }
 
+    /**
+     * @return the name of the enum variant.
+     * @throws UnsupportedCodeException if the code is not recognized by this enum.
+     */
+    @NotNull
+    public abstract String name() throws UnsupportedCodeException;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -38,5 +47,14 @@ public abstract class Enum {
     @Override
     public int hashCode() {
         return Objects.hashCode(code);
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return name();
+        } catch (UnsupportedCodeException e) {
+            return String.valueOf(code);
+        }
     }
 }

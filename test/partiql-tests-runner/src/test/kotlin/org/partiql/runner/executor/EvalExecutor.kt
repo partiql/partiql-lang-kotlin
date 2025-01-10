@@ -25,9 +25,9 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorListener
 import org.partiql.spi.errors.Severity
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.ValueUtils
-import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.io.DatumIonReaderBuilder
 import org.partiql.value.toIon

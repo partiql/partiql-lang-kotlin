@@ -1,10 +1,10 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getText
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 

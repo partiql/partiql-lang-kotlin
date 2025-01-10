@@ -25,7 +25,6 @@ dependencies {
     api(project(":partiql-plan"))
     api(project(":partiql-planner"))
     api(project(":partiql-spi"))
-    api(project(":partiql-types"))
 }
 
 tasks.shadowJar {

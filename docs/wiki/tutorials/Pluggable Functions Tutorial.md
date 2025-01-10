@@ -9,7 +9,6 @@ To build your module, you can use build automation tools like Maven or Gradle. T
 ```Kotlin
 dependencies {
     implementation("org.partiql:partiql-spi:<latest_version>")
-    implementation("org.partiql:partiql-types:<latest_version>")
 }
 ```
 

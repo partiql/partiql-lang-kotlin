@@ -9,7 +9,7 @@ import org.partiql.planner.util.allNumberPType
 import org.partiql.planner.util.allSupportedPType
 import org.partiql.planner.util.cartesianProduct
 import org.partiql.planner.util.castTablePType
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 import java.util.stream.Stream
 
 class OpArithmeticTest : PartiQLTyperTestBase() {

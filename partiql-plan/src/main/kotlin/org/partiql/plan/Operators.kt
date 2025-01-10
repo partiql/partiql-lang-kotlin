@@ -44,8 +44,8 @@ import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.function.Function
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
  * The [Operators] interface is a factory to instantiate operator implementations.

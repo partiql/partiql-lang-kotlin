@@ -24,7 +24,6 @@ dependencies {
     implementation(project(":partiql-parser", configuration = "shadow"))
     implementation(project(":partiql-plan"))
     implementation(project(":partiql-planner"))
-    implementation(project(":partiql-types"))
     implementation(project(":partiql-spi"))
     implementation(testFixtures(project(":partiql-spi")))
     implementation(Deps.csv)

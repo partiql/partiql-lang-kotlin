@@ -16,7 +16,6 @@ class PErrorCodeTests {
     @Test
     fun testErrorCodesAreUnique() {
         val manualEntries = mapOf(
-            "UNKNOWN" to 0,
             "INTERNAL_ERROR" to 1,
             "UNRECOGNIZED_TOKEN" to 2,
             "UNEXPECTED_TOKEN" to 3,

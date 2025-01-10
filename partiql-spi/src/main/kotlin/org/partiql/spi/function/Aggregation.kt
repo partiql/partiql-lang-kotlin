@@ -1,10 +1,10 @@
 package org.partiql.spi.function
 
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
-import org.partiql.types.PType
 
 /**
- * Represents an SQL table-value expression call.
+ * Represents a SQL aggregation function, such as MAX, MIN, SUM, etc.
  */
 public interface Aggregation : Routine {
 

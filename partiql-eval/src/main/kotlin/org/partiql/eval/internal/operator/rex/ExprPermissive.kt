@@ -1,10 +1,10 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.errors.CardinalityViolation
-import org.partiql.errors.DataException
-import org.partiql.errors.TypeCheckException
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
+import org.partiql.spi.errors.CardinalityViolation
+import org.partiql.spi.errors.DataException
+import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.value.Datum
 
 internal class ExprPermissive(private var expr: ExprValue) :

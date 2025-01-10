@@ -1,5 +1,6 @@
 package org.partiql.planner.util
 
+import org.partiql.spi.types.PType
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -14,7 +15,6 @@ import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
-import org.partiql.types.PType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StringType

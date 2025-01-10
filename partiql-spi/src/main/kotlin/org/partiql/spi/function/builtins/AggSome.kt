@@ -6,7 +6,7 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.AccumulatorAnySome
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 internal val Agg_SOME__BOOL__BOOL = Aggregation.static(
 

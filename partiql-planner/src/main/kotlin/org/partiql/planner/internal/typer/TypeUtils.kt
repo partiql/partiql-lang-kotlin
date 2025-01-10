@@ -2,7 +2,7 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 /**
  * Applies the given exclusion path to produce the reduced [CompilerType]. [lastStepOptional] indicates if a previous

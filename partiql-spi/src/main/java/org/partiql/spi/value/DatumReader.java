@@ -2,7 +2,7 @@ package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.spi.value.ion.IonDatumReader;
+import org.partiql.spi.internal.value.ion.IonDatumReader;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -66,7 +66,6 @@ public interface DatumReader extends AutoCloseable {
             switch (encoding.code()) {
                 case Encoding.ION:
                     return new IonDatumReader(input, others);
-                case Encoding.UNKNOWN:
                 default:
                     throw new IllegalArgumentException("no reader for encoding: " + encoding);
             }

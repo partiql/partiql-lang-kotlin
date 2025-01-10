@@ -28,12 +28,10 @@ dependencies {
     api(project(":partiql-plan"))
     api(project(":partiql-planner"))
     api(project(":partiql-spi"))
-    api(project(":partiql-types"))
     compileOnly(Deps.lombok)
     annotationProcessor(Deps.lombok)
     // Test
     testImplementation(project(":partiql-parser"))
-    testImplementation(testFixtures(project(":partiql-types"))) // TODO: Remove use of StaticType
     testImplementation(testFixtures(project(":partiql-spi")))
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)

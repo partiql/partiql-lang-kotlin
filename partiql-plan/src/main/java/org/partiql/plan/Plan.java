@@ -12,7 +12,7 @@ public interface Plan {
      */
     @NotNull
     default public Version getVersion() {
-        return Version.UNKNOWN();
+        return Version.V1();
     }
 
     /**
