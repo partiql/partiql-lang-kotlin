@@ -81,6 +81,13 @@ internal object ValueUtility {
             PType.SMALLINT -> this.short.toInt().toBigInteger()
             PType.INTEGER -> this.int.toBigInteger()
             PType.BIGINT -> this.long.toBigInteger()
+            PType.NUMERIC, PType.DECIMAL -> {
+                val decimal = this.bigDecimal
+                if (decimal.scale() != 0) {
+                    throw TypeCheckException("Expected integer, but received decimal.")
+                }
+                return decimal.toBigInteger()
+            }
             else -> throw TypeCheckException("Type: ${this.type}")
         }
     }
