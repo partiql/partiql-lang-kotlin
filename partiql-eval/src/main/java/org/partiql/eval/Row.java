@@ -10,14 +10,32 @@ import java.util.Objects;
  */
 public class Row {
 
-    /**
-     * TODO internalize values.
-     */
-    public final Datum[] values;
+    private final Datum[] values;
 
     /**
-     * TODO keep ??
-     *
+     * @param index the requested index
+     * @return the value at the given index
+     */
+    public Datum get(int index) {
+        return values[index];
+    }
+
+    /**
+     * @param index the requested index
+     * @param value the value to insert
+     */
+    public void set(int index, Datum value) {
+        values[index] = value;
+    }
+
+    /**
+     * @return the number of values in the record
+     */
+    public int getSize() {
+        return values.length;
+    }
+
+    /**
      * @param values the values
      * @return the record
      */

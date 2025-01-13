@@ -32,9 +32,9 @@ internal class RelOpExceptDistinct(
             seed()
         }
         for (row in lhs) {
-            row.values.coerceMissing()
-            if (!seen.contains(row.values)) {
-                return Row(row.values)
+            row.coerceMissing()
+            if (!seen.contains(row)) {
+                return row
             }
         }
         return null
@@ -52,8 +52,8 @@ internal class RelOpExceptDistinct(
     private fun seed() {
         init = true
         for (row in rhs) {
-            row.values.coerceMissing()
-            seen.add(row.values)
+            row.coerceMissing()
+            seen.add(row)
         }
     }
 }
