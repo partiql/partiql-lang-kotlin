@@ -5,7 +5,7 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.types.PType
+import org.partiql.spi.types.PType
 
 internal object ExcludeUtils {
     /**
