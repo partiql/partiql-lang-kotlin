@@ -25,8 +25,7 @@ public abstract class RexError extends RexBase {
     @NotNull
     @Override
     protected RexType type() {
-        // TODO SHOULD BE UNKNOWN
-        return RexType.of(PType.dynamic());
+        return RexType.of(PType.unknown());
     }
 
     @NotNull
