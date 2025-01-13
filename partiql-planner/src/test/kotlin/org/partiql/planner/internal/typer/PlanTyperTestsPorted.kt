@@ -3741,8 +3741,9 @@ internal class PlanTyperTestsPorted {
         runTest(tc)
     }
 
+    // TODO: Un-disable
     @Test
-    @Disabled("In August 2024, the table lookup logic changed. This resolves using the current namespace, causing this to fail. This should be looked at. See https://github.com/partiql/partiql-lang-kotlin/commit/7aeb1bea0ee2599cc4a95c6d6fa067e4a7c0028c#diff-b5c8e5a6d813b88ee2a4d21451f116aa90d57bb04330ea7a36813474eafefb66")
+    @Disabled("See https://github.com/partiql/partiql-lang-kotlin/issues/1705.")
     fun excludeWithShadowedGlobalName() {
         val tc = SuccessTestCase(
             name = "EXCLUDE  with an open struct - no warning or error",
@@ -3753,8 +3754,9 @@ internal class PlanTyperTestsPorted {
         runTest(tc)
     }
 
+    // TODO: Un-disable
     @Test
-    @Disabled("In August 2024, the table lookup logic changed. This resolves using the current namespace, causing this to fail. This should be looked at. See https://github.com/partiql/partiql-lang-kotlin/commit/7aeb1bea0ee2599cc4a95c6d6fa067e4a7c0028c#diff-b5c8e5a6d813b88ee2a4d21451f116aa90d57bb04330ea7a36813474eafefb66.")
+    @Disabled("See https://github.com/partiql/partiql-lang-kotlin/issues/1705.")
     fun excludeWithShadowedGlobalName2() {
         val tc = SuccessTestCase(
             name = "EXCLUDE  with an open struct; nonexistent attribute in the open struct - no warning or error",
