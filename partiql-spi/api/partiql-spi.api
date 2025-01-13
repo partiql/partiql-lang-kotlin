@@ -314,6 +314,7 @@ public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field FUNCTION_NOT_FOUND I
 	public static final field FUNCTION_TYPE_MISMATCH I
 	public static final field INTERNAL_ERROR I
+	public static final field INVALID_EXCLUDE_PATH I
 	public static final field PATH_INDEX_NEVER_SUCCEEDS I
 	public static final field PATH_KEY_NEVER_SUCCEEDS I
 	public static final field PATH_SYMBOL_NEVER_SUCCEEDS I

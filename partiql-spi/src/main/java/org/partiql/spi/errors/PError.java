@@ -454,4 +454,17 @@ public final class PError extends Enum {
      * Example error message: <code>[location]: Expression always returns missing.</code>
      */
     public static final int ALWAYS_MISSING = 14;
+
+    /**
+     * This is a semantic warning, where an exclude path is statically known to
+     * not exist. For example: {@code SELECT * EXCLUDE some_struct."k" FROM << { 'a': 1 } >> AS some_struct }
+     * <br><br>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>PATH</b> ({@link String}): A string representing the invalid path.</li>
+     * </ul>
+     * <br>
+     * Example error message: <code>[location]: Expression always returns null.</code>
+     */
+    public static final int INVALID_EXCLUDE_PATH = 15;
 }
