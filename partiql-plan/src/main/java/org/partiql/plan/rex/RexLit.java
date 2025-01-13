@@ -13,6 +13,8 @@ import java.util.List;
 public abstract class RexLit extends RexBase {
 
     /**
+     * Creates a new literal value expression.
+     * @param value the literal value
      * @return new RexLit instance
      */
     @NotNull
@@ -20,6 +22,10 @@ public abstract class RexLit extends RexBase {
         return new Impl(value);
     }
 
+    /**
+     * Returns the literal value.
+     * @return the literal value
+     */
     @NotNull
     public abstract Datum getDatum();
 

@@ -12,29 +12,45 @@ import java.util.List;
  */
 public abstract class RexCase extends RexBase {
 
+    /**
+     * Creates a new case expression.
+     * @param match the match expression, or {@code null} if none (operand 0)
+     * @param branches the list of branches (not operands)
+     * @param def the default expression, or {@code null} if none (not an operand)
+     * @return the new case expression
+     */
     @NotNull
     public static RexCase create(@Nullable Rex match, @NotNull List<Branch> branches, @Nullable Rex def) {
         return new Impl(match, branches, def);
     }
 
+    /**
+     * Creates a new branch.
+     * @param condition the condition expression
+     * @param result the result expression
+     * @return the new branch
+     */
     @NotNull
     public static Branch branch(@NotNull Rex condition, @NotNull Rex result) {
         return new Branch(condition, result);
     }
 
     /**
+     * Gets the match expression, or {@code null} if none (operand 0).
      * @return the match expression, or {@code null} if none (operand 0)
      */
     @Nullable
     public abstract Rex getMatch();
 
     /**
+     * Gets the list of branches (not operands).
      * @return the list of branches (not operands).
      */
     @NotNull
     public abstract List<Branch> getBranches();
 
     /**
+     * Gets the default expression, or {@code null} if none (not an operand).
      * @return the default expression, or {@code null} if none (not an operand)
      */
     @Nullable

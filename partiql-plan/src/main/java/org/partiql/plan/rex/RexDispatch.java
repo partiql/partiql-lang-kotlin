@@ -14,6 +14,10 @@ import java.util.List;
 public abstract class RexDispatch extends RexBase {
 
     /**
+     * Creates a new RexDispatch instance.
+     * @param name dynamic function name
+     * @param functions functions to dispatch to
+     * @param args function arguments
      * @return new RexDispatch instance
      */
     @NotNull
@@ -23,16 +27,19 @@ public abstract class RexDispatch extends RexBase {
 
     /**
      * Dynamic function name.
+     * @return dynamic function name
      */
     public abstract String getName();
 
     /**
      * Returns the functions to dispatch to.
+     * @return functions to dispatch to
      */
     public abstract List<Function> getFunctions();
 
     /**
      * Returns the list of function arguments.
+     * @return function arguments
      */
     public abstract List<Rex> getArgs();
 

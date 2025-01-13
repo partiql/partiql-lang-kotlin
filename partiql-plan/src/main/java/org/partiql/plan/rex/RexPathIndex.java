@@ -12,6 +12,9 @@ import java.util.List;
 public abstract class RexPathIndex extends RexBase {
 
     /**
+     * Creates a new RexPathIndex instance.
+     * @param operand operand rex (operand 0)
+     * @param index index rex
      * @return new RexPathIndex instance
      */
     @NotNull
@@ -20,12 +23,14 @@ public abstract class RexPathIndex extends RexBase {
     }
 
     /**
+     * Gets the operand.
      * @return operand rex (operand 0)
      */
     @NotNull
     public abstract Rex getOperand();
 
     /**
+     * Gets the index.
      * @return index rex
      */
     public abstract Rex getIndex();

@@ -12,6 +12,8 @@ import java.util.List;
 public abstract class RexCoalesce extends RexBase {
 
     /**
+     * Create a new RexCoalesce instance.
+     * @param args list of operands
      * @return new RexCoalesce instance
      */
     @NotNull
@@ -20,6 +22,7 @@ public abstract class RexCoalesce extends RexBase {
     }
 
     /**
+     * Gets the list of arguments.
      * @return the list of arguments (also the operands).
      */
     @NotNull

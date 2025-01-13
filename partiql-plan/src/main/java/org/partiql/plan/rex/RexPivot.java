@@ -14,6 +14,10 @@ import java.util.List;
 public abstract class RexPivot extends RexBase {
 
     /**
+     * Creates a new RexPivot instance.
+     * @param input input rel (operand 0)
+     * @param key key rex (operand 1)
+     * @param value value rex (operand 2)
      * @return new RexPivot instance
      */
     @NotNull
@@ -22,18 +26,21 @@ public abstract class RexPivot extends RexBase {
     }
 
     /**
+     * Gets the input rel.
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Gets the key rex.
      * @return key rex (operand 1)
      */
     @NotNull
     public abstract Rex getKey();
 
     /**
+     * Gets the value rex.
      * @return value rex (operand 2)
      */
     @NotNull

@@ -12,6 +12,9 @@ import java.util.List;
 public abstract class RexPathKey extends RexBase {
 
     /**
+     * Creates a new instance of RexPathKey
+     * @param operand operand rex (operand 0)
+     * @param key key rex
      * @return new RexPathKey instance
      */
     @NotNull
@@ -20,12 +23,14 @@ public abstract class RexPathKey extends RexBase {
     }
 
     /**
+     * Gets the operand rex.
      * @return operand rex (operand 0)
      */
     @NotNull
     public abstract Rex getOperand();
 
     /**
+     * Gets the key rex.
      * @return key rex.
      */
     @NotNull

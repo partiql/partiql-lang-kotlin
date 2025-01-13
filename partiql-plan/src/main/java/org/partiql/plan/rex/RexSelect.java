@@ -14,6 +14,9 @@ import java.util.List;
 public abstract class RexSelect extends RexBase {
 
     /**
+     * Creates a new RexSelect instance.
+     * @param input input rel (operand 0)
+     * @param constructor constructor rex (operand 1)
      * @return new RexSelect instance
      */
     @NotNull
@@ -22,12 +25,14 @@ public abstract class RexSelect extends RexBase {
     }
 
     /**
+     * Gets the input rel.
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Gets the constructor rex.
      * @return constructor rex.
      */
     public abstract Rex getConstructor();

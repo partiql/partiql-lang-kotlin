@@ -13,6 +13,8 @@ import java.util.List;
 public abstract class RexArray extends RexBase {
 
     /**
+     * Creates a new RexArray instance.
+     * @param values the values of the array
      * @return new RexArray instance
      */
     @NotNull
@@ -21,6 +23,7 @@ public abstract class RexArray extends RexBase {
     }
 
     /**
+     * Gets the values of the array.
      * @return the values of the array, also the operands.
      */
     @NotNull

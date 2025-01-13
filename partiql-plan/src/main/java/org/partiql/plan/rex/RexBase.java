@@ -57,16 +57,12 @@ public abstract class RexBase implements Rex {
     }
 
     /**
-     * PROTECTED (could also be package private atm).
-     *
      * @return computed type.
      */
     @NotNull
     protected abstract RexType type();
 
     /**
-     * PROTECTED (could also be package private atm).
-     *
      * @return computed operands.
      */
     @NotNull

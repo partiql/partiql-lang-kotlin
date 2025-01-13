@@ -12,6 +12,9 @@ import java.util.List;
 public abstract class RexPathSymbol extends RexBase {
 
     /**
+     * Creates a new RexPathSymbol instance.
+     * @param operand operand rex (operand 0)
+     * @param symbol  symbol string
      * @return new RexPathSymbol instance
      */
     @NotNull
@@ -20,12 +23,14 @@ public abstract class RexPathSymbol extends RexBase {
     }
 
     /**
+     * Gets the operand rex.
      * @return operand rex (operand 0)
      */
     @NotNull
     public abstract Rex getOperand();
 
     /**
+     * Gets the symbol string.
      * @return symbol string
      */
     @NotNull

@@ -13,7 +13,10 @@ import java.util.List;
 public abstract class RexCast extends RexBase {
 
     /**
-     * @return new RexCast instance
+     * Creates a new cast instance.
+     * @param operand operand rex (operand 0)
+     * @param target target type
+     * @return new cast instance
      */
     @NotNull
     public static RexCast create(@NotNull Rex operand, @NotNull PType target) {
@@ -21,18 +24,21 @@ public abstract class RexCast extends RexBase {
     }
 
     /**
+     * Gets the operand rex.
      * @return operand rex (operand 0)
      */
     @NotNull
     public abstract Rex getOperand();
 
     /**
+     * Gets the target type.
      * @return target type
      */
     @NotNull
     public abstract PType getTarget();
 
     @NotNull
+    @Override
     protected final RexType type() {
         return RexType.of(getTarget());
     }

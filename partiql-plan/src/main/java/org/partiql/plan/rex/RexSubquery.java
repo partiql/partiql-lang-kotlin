@@ -13,6 +13,10 @@ import java.util.List;
 public abstract class RexSubquery extends RexBase {
 
     /**
+     * Creates a new RexSubquery instance.
+     * @param input input rel (operand 0)
+     * @param constructor constructor expression
+     * @param scalar true if the subquery is a scalar subquery
      * @return new RexSubquery instance
      */
     @NotNull
@@ -27,10 +31,18 @@ public abstract class RexSubquery extends RexBase {
     public abstract Rel getInput();
 
     // TODO REMOVE ME – TEMPORARY UNTIL PLANNER PROPERLY HANDLES SUBQUERIES
+    /**
+     * This is experimental and subject to change without prior notice!
+     * @return constructor expression
+     */
     @NotNull
     public abstract Rex getConstructor();
 
     // TODO REMOVE ME – TEMPORARY UNTIL PLANNER PROPERLY HANDLES SUBQUERIES
+    /**
+     * This is experimental and subject to change without prior notice!
+     * @return true if the subquery is a scalar subquery
+     */
     public abstract boolean isScalar();
 
     @NotNull

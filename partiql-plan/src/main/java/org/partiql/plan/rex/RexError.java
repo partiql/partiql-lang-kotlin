@@ -14,6 +14,7 @@ import java.util.List;
 public abstract class RexError extends RexBase {
 
     /**
+     * Creates a new instance of RexError.
      * @return new RexError instance
      */
     @NotNull
