@@ -13,7 +13,7 @@ public interface Operand extends Iterable<Operator> {
     /**
      * @return a single operand
      */
-    public static Operand single(Operator operator) {
+    static Operand single(Operator operator) {
         return new Single(operator);
     }
 
@@ -23,14 +23,14 @@ public interface Operand extends Iterable<Operator> {
      * See ImmutableCollections.java ListCopy.
      */
     @SuppressWarnings("unchecked")
-    public static Operand vararg(List<? extends Operator> operators) {
+    static Operand vararg(List<? extends Operator> operators) {
         return new Variadic((List<Operator>) operators);
     }
 
     /**
      * A single operator.
      */
-    public class Single implements Operand {
+    class Single implements Operand {
 
         @NotNull
         public final Operator operator;
@@ -50,7 +50,7 @@ public interface Operand extends Iterable<Operator> {
     /**
      * A variadic operator.
      */
-    public class Variadic implements Operand {
+    class Variadic implements Operand {
 
         @NotNull
         public final List<Operator> operators;

@@ -12,14 +12,14 @@ public interface Operator {
     /**
      * Tag getter.
      */
-    public int getTag();
+    int getTag();
 
     /**
      * Tag setter.
      *
      * @param tag new tag value.
      */
-    public void setTag(int tag);
+    void setTag(int tag);
 
     /**
      * Visitor accept.
@@ -30,16 +30,16 @@ public interface Operator {
      * @param <C>     Visitor context type (scoped args).
      * @return R
      */
-    public abstract <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx);
+    <R, C> R accept(OperatorVisitor<R, C> visitor, C ctx);
 
     /**
      * @return the i-th operand
      */
-    public abstract Operand getOperand(int index);
+    Operand getOperand(int index);
 
     /**
      * @return all input operands.
      */
     @NotNull
-    public abstract List<Operand> getOperands();
+    List<Operand> getOperands();
 }

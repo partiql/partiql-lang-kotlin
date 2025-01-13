@@ -27,7 +27,7 @@ public abstract class RelAggregate extends RelBase {
      * @return new  {@link Measure} instance
      */
     @NotNull
-    public static Measure measure(@NotNull Aggregation agg, @NotNull List<Rex> args, @NotNull  boolean distinct) {
+    public static Measure measure(@NotNull Aggregation agg, @NotNull List<Rex> args, boolean distinct) {
         return new Measure(agg, args, distinct);
     }
 

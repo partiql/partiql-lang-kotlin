@@ -11,7 +11,7 @@ public interface Plan {
      * @return version for serialization and debugging.
      */
     @NotNull
-    default public Version getVersion() {
+    default Version getVersion() {
         return Version.V1();
     }
 
@@ -19,5 +19,5 @@ public interface Plan {
      * @return statement action to execute.
      */
     @NotNull
-    public Action getAction();
+    Action getAction();
 }

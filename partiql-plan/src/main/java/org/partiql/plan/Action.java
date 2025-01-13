@@ -11,12 +11,12 @@ public interface Action {
     /**
      * PartiQL Query Statement — i.e. SELECT-FROM
      */
-    public interface Query extends Action {
+    interface Query extends Action {
 
         /**
          * Returns the root expression of the query.
          */
         @NotNull
-        public Rex getRex();
+        Rex getRex();
     }
 }

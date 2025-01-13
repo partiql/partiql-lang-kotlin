@@ -117,7 +117,6 @@ public class org/partiql/plan/JoinType : org/partiql/spi/Enum {
 	public static final field INNER I
 	public static final field LEFT I
 	public static final field RIGHT I
-	public static final field UNKNOWN I
 	public static fun FULL ()Lorg/partiql/plan/JoinType;
 	public static fun INNER ()Lorg/partiql/plan/JoinType;
 	public static fun LEFT ()Lorg/partiql/plan/JoinType;

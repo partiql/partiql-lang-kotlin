@@ -27,7 +27,7 @@ public abstract class RelProject extends RelBase {
     public abstract Rel getInput();
 
     /**
-     * @return projection (not a operand, it's a list not an operator).
+     * @return projection (not an operand, it's a list not an operator).
      */
     @NotNull
     public abstract List<Rex> getProjections();

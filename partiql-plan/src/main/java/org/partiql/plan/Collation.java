@@ -17,22 +17,22 @@ public interface Collation {
      *
      * @return the column to sort by
      */
-    public Rex getColumn();
+    Rex getColumn();
 
     /**
      * @return ASC, DESC, or OTHER
      */
-    public Order getOrder();
+    Order getOrder();
 
     /**
      * @return NULL ordering
      */
-    public Nulls getNulls();
+    Nulls getNulls();
 
     /**
      * Collation value ordering.
      */
-    public final class Order extends Enum {
+    final class Order extends Enum {
 
         private Order(int code) {
             super(code);
@@ -70,7 +70,7 @@ public interface Collation {
     /**
      * Collation null ordering.
      */
-    public final class Nulls extends Enum {
+    final class Nulls extends Enum {
 
         private Nulls(int code) {
             super(code);

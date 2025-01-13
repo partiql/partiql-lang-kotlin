@@ -12,10 +12,10 @@ public interface Rel extends Operator {
      * @return the type of the rows produced by this rel.
      */
     @NotNull
-    public RelType getType();
+    RelType getType();
 
     /**
      * @param type the new type of the rows produced by this Rex.
      */
-    public void setType(@NotNull RelType type);
+    void setType(@NotNull RelType type);
 }
