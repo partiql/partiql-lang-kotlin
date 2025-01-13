@@ -31,7 +31,7 @@ internal val Fn_IS_INT8__ANY__BOOL = FunctionUtils.hidden(
             Datum.bool(Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE)
         }
         PType.NUMERIC -> {
-            val v = arg.bigInteger
+            val v = arg.bigDecimal
             try {
                 v.byteValueExact()
                 Datum.bool(true)

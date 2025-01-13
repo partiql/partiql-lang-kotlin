@@ -31,7 +31,6 @@ import org.partiql.spi.types.PType.VARCHAR
 import org.partiql.spi.types.PType.VARIANT
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalTime
@@ -164,7 +163,7 @@ internal object CastTable {
         register(
             BOOL,
             NUMERIC
-        ) { x, _ -> Datum.numeric(if (x.boolean) BigInteger.ONE else BigInteger.ZERO) }
+        ) { x, t -> Datum.numeric(if (x.boolean) BigDecimal.ONE else BigDecimal.ZERO, t.precision, t.scale) }
         register(
             BOOL,
             DECIMAL
@@ -189,9 +188,11 @@ internal object CastTable {
         register(TINYINT, SMALLINT) { x, _ -> Datum.smallint(x.byte.toShort()) }
         register(TINYINT, INTEGER) { x, _ -> Datum.integer(x.byte.toInt()) }
         register(TINYINT, BIGINT) { x, _ -> Datum.bigint(x.byte.toLong()) }
-        register(TINYINT, NUMERIC) { x, _ ->
+        register(TINYINT, NUMERIC) { x, t ->
             Datum.numeric(
-                x.byte.toInt().toBigInteger()
+                x.byte.toInt().toBigDecimal(),
+                t.precision,
+                t.scale
             )
         }
         register(TINYINT, DECIMAL) { x, t ->
@@ -218,9 +219,11 @@ internal object CastTable {
         register(SMALLINT, SMALLINT) { x, _ -> x }
         register(SMALLINT, INTEGER) { x, _ -> Datum.integer(x.short.toInt()) }
         register(SMALLINT, BIGINT) { x, _ -> Datum.bigint(x.short.toLong()) }
-        register(SMALLINT, NUMERIC) { x, _ ->
+        register(SMALLINT, NUMERIC) { x, t ->
             Datum.numeric(
-                x.short.toInt().toBigInteger()
+                x.short.toInt().toBigDecimal(),
+                t.precision,
+                t.scale
             )
         }
         register(SMALLINT, DECIMAL) { x, t ->
@@ -247,7 +250,7 @@ internal object CastTable {
         register(INTEGER, SMALLINT) { x, _ -> datumSmallInt(x.int) }
         register(INTEGER, INTEGER) { x, _ -> x }
         register(INTEGER, BIGINT) { x, _ -> Datum.bigint(x.int.toLong()) }
-        register(INTEGER, NUMERIC) { x, _ -> Datum.numeric(x.int.toBigInteger()) }
+        register(INTEGER, NUMERIC) { x, t -> Datum.numeric(x.int.toBigDecimal(), t.precision, t.scale) }
         register(INTEGER, DECIMAL) { x, t ->
             Datum.decimal(
                 x.int.toBigDecimal(),
@@ -272,7 +275,7 @@ internal object CastTable {
         register(BIGINT, SMALLINT) { x, _ -> datumSmallInt(x.long) }
         register(BIGINT, INTEGER) { x, _ -> datumInt(x.long) }
         register(BIGINT, BIGINT) { x, _ -> x }
-        register(BIGINT, NUMERIC) { x, _ -> Datum.numeric(x.long.toBigInteger()) }
+        register(BIGINT, NUMERIC) { x, t -> Datum.numeric(x.long.toBigDecimal(), t.precision, t.scale) }
         register(BIGINT, DECIMAL) { x, t ->
             Datum.decimal(
                 x.long.toBigDecimal(),
@@ -292,28 +295,28 @@ internal object CastTable {
      * CAST(<int arbitrary> AS <target>)
      */
     private fun registerIntArbitrary() {
-        register(NUMERIC, BOOL) { x, _ -> Datum.bool(x.bigInteger != BigInteger.ZERO) }
-        register(NUMERIC, TINYINT) { x, _ -> datumTinyInt(x.bigInteger) }
-        register(NUMERIC, SMALLINT) { x, _ -> datumSmallInt(x.bigInteger) }
-        register(NUMERIC, INTEGER) { x, _ -> datumInt(x.bigInteger) }
-        register(NUMERIC, BIGINT) { x, _ -> datumBigInt(x.bigInteger) }
-        register(NUMERIC, NUMERIC) { x, _ -> x }
+        register(NUMERIC, BOOL) { x, _ -> Datum.bool(x.bigDecimal != BigDecimal.ZERO) }
+        register(NUMERIC, TINYINT) { x, _ -> datumTinyInt(x.bigDecimal) }
+        register(NUMERIC, SMALLINT) { x, _ -> datumSmallInt(x.bigDecimal) }
+        register(NUMERIC, INTEGER) { x, _ -> datumInt(x.bigDecimal) }
+        register(NUMERIC, BIGINT) { x, _ -> datumBigInt(x.bigDecimal) }
+        register(NUMERIC, NUMERIC) { x, t -> Datum.numeric(x.bigDecimal, t.precision, t.scale) }
         register(NUMERIC, DECIMAL) { x, t ->
             Datum.decimal(
-                x.bigInteger.toBigDecimal(),
+                x.bigDecimal,
                 t.precision,
                 t.scale
             )
         }
-        register(NUMERIC, REAL) { x, _ -> datumReal(x.bigInteger) }
+        register(NUMERIC, REAL) { x, _ -> datumReal(x.bigDecimal) }
         register(
             NUMERIC,
             DOUBLE
-        ) { x, _ -> datumDoublePrecision(x.bigInteger) }
-        register(NUMERIC, STRING) { x, _ -> Datum.string(x.bigInteger.toString()) }
-        register(NUMERIC, VARCHAR) { x, t -> Datum.varchar(x.bigInteger.toString(), t.length) }
-        register(NUMERIC, CHAR) { x, t -> Datum.character(x.bigInteger.toString(), t.length) }
-        register(NUMERIC, CLOB) { x, t -> Datum.clob(x.bigInteger.toString().toByteArray(), t.length) }
+        ) { x, _ -> datumDoublePrecision(x.bigDecimal) }
+        register(NUMERIC, STRING) { x, _ -> Datum.string(x.bigDecimal.toString()) }
+        register(NUMERIC, VARCHAR) { x, t -> Datum.varchar(x.bigDecimal.toString(), t.length) }
+        register(NUMERIC, CHAR) { x, t -> Datum.character(x.bigDecimal.toString(), t.length) }
+        register(NUMERIC, CLOB) { x, t -> Datum.clob(x.bigDecimal.toString().toByteArray(), t.length) }
     }
 
     /**
@@ -328,8 +331,8 @@ internal object CastTable {
         register(
             DECIMAL,
             NUMERIC
-        ) { x, _ -> datumIntArbitrary(x.bigDecimal) }
-        register(DECIMAL, DECIMAL) { x, _ -> x }
+        ) { x, t -> Datum.numeric(x.bigDecimal, t.precision, t.scale) }
+        register(DECIMAL, DECIMAL) { x, t -> Datum.decimal(x.bigDecimal, t.precision, t.scale) }
         register(DECIMAL, REAL) { x, _ -> datumReal(x.bigDecimal) }
         register(
             DECIMAL,
@@ -350,9 +353,11 @@ internal object CastTable {
         register(REAL, SMALLINT) { x, _ -> datumSmallInt(x.float) }
         register(REAL, INTEGER) { x, _ -> datumInt(x.float) }
         register(REAL, BIGINT) { x, _ -> datumBigInt(x.float) }
-        register(REAL, NUMERIC) { x, _ ->
+        register(REAL, NUMERIC) { x, t ->
             Datum.numeric(
-                x.float.toInt().toBigInteger()
+                x.float.toInt().toBigDecimal(),
+                t.precision,
+                t.scale
             )
         }
         register(REAL, DECIMAL) { x, t ->
@@ -383,8 +388,12 @@ internal object CastTable {
         }
         register(DOUBLE, INTEGER) { x, _ -> datumInt(x.double) }
         register(DOUBLE, BIGINT) { x, _ -> datumBigInt(x.double) }
-        register(DOUBLE, NUMERIC) { x, _ ->
-            datumIntArbitrary(x.double)
+        register(DOUBLE, NUMERIC) { x, t ->
+            Datum.numeric(
+                x.double.toBigDecimal(),
+                t.precision,
+                t.scale
+            )
         }
         register(DOUBLE, DECIMAL) { x, t ->
             Datum.decimal(
@@ -507,7 +516,7 @@ internal object CastTable {
             return Datum.nullValue()
         }
         return when (ion.type) {
-            ElementType.INT -> Datum.numeric(ion.bigIntegerValue)
+            ElementType.INT -> Datum.numeric(ion.bigIntegerValue.toBigDecimal())
             ElementType.FLOAT -> Datum.doublePrecision(ion.doubleValue)
             ElementType.DECIMAL -> Datum.decimal(ion.decimalValue)
             else -> throw TypeCheckException()
@@ -573,15 +582,6 @@ internal object CastTable {
         return Datum.integer(int)
     }
 
-    private fun datumInt(value: BigInteger): Datum {
-        val int = try {
-            value.intValueExact()
-        } catch (e: ArithmeticException) {
-            throw DataException("Overflow when casting $value to INT")
-        }
-        return Datum.integer(int)
-    }
-
     private fun datumInt(value: Float): Datum {
         if (value > Int.MAX_VALUE || value < Int.MIN_VALUE) {
             throw DataException("Overflow when casting $value to INT")
@@ -624,15 +624,6 @@ internal object CastTable {
         return Datum.tinyint(value.toByte())
     }
 
-    private fun datumTinyInt(value: BigInteger): Datum {
-        val byte = try {
-            value.byteValueExact()
-        } catch (e: ArithmeticException) {
-            throw DataException("Overflow when casting $value to TINYINT")
-        }
-        return Datum.tinyint(byte)
-    }
-
     private fun datumTinyInt(value: Float): Datum {
         if (value > Byte.MAX_VALUE || value < Byte.MIN_VALUE) {
             throw DataException("Overflow when casting $value to TINYINT")
@@ -661,47 +652,19 @@ internal object CastTable {
         }
         return Datum.smallint(short)
     }
-    private fun datumSmallInt(value: BigInteger): Datum {
-        val short = try {
-            value.shortValueExact()
-        } catch (e: ArithmeticException) {
-            throw DataException("Overflow when casting $value to SMALLINT")
-        }
-        return Datum.smallint(short)
-    }
+
     private fun datumSmallInt(value: Float): Datum {
         if (value > Short.MAX_VALUE || value < Short.MIN_VALUE) {
             throw DataException("Overflow when casting $value to SMALLINT")
         }
         return Datum.smallint(value.toInt().toShort())
     }
-    private fun datumSmallInt(value: Double): Datum {
-        if (value > Double.MAX_VALUE || value < Double.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to SMALLINT")
-        }
-        return Datum.smallint(value.toInt().toShort())
-    }
+
     private fun datumSmallInt(value: Int): Datum {
         if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
             throw DataException("Overflow when casting $value to SMALLINT")
         }
         return Datum.smallint(value.toShort())
-    }
-
-    private fun datumReal(value: Long): Datum {
-        return Datum.real(value.toFloat())
-    }
-
-    private fun datumIntArbitrary(value: BigDecimal): Datum {
-        return Datum.numeric(value.setScale(0, RoundingMode.HALF_EVEN).toBigInteger())
-    }
-
-    private fun datumIntArbitrary(value: Double): Datum {
-        return Datum.numeric(value.toBigDecimal().setScale(0, RoundingMode.DOWN).toBigInteger())
-    }
-
-    private fun datumBigInt(value: BigInteger): Datum {
-        return Datum.bigint(value.longValueExact())
     }
 
     private fun datumBigInt(value: BigDecimal): Datum {
@@ -726,10 +689,6 @@ internal object CastTable {
         return Datum.doublePrecision(value.toDouble())
     }
 
-    private fun datumDoublePrecision(value: BigInteger): Datum {
-        return Datum.doublePrecision(value.toDouble())
-    }
-
     private fun datumReal(value: Double): Datum {
         if (value > Float.MAX_VALUE || value < Float.MIN_VALUE) {
             throw DataException("Overflow when casting $value to REAL")
@@ -743,9 +702,5 @@ internal object CastTable {
             throw DataException("Overflow when casting $value to REAL")
         }
         return Datum.real(float)
-    }
-
-    private fun datumReal(value: BigInteger): Datum {
-        return Datum.real(value.toFloat())
     }
 }

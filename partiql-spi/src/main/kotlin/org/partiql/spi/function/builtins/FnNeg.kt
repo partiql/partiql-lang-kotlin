@@ -61,7 +61,7 @@ internal val Fn_NEG__INT__INT = FunctionUtils.hidden(
     parameters = arrayOf(Parameter("value", DefaultNumeric.NUMERIC)),
 
 ) { args ->
-    val value = args[0].bigInteger
+    val value = args[0].bigDecimal
     Datum.numeric(value.negate())
 }
 

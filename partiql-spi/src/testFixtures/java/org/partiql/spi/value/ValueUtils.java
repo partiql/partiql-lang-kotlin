@@ -4,6 +4,7 @@ import kotlin.NotImplementedError;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
+import org.partiql.value.IntValue;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
@@ -64,7 +65,7 @@ public class ValueUtils {
             case BIGINT:
                 return datum.isNull() ? PartiQL.int64Value(null) : PartiQL.int64Value(datum.getLong());
             case NUMERIC:
-                return datum.isNull() ? PartiQL.intValue(null) : PartiQL.intValue(datum.getBigInteger());
+                return datum.isNull() ? PartiQL.intValue(null) : PartiQL.intValue(datum.getBigDecimal().toBigInteger());
             case DECIMAL:
                 return datum.isNull() ? PartiQL.decimalValue(null) : PartiQL.decimalValue(datum.getBigDecimal());
             case REAL:
@@ -154,7 +155,7 @@ public class ValueUtils {
                 return new DatumBoolean(Objects.requireNonNull(BOOLValue.getValue()));
             case INT:
                 org.partiql.value.IntValue INTValue = (org.partiql.value.IntValue) value;
-                return new DatumBigInteger(Objects.requireNonNull(INTValue.getValue()));
+                return new DatumDecimal(new BigDecimal(Objects.requireNonNull(INTValue.getValue())), PType.numeric());
             case BAG:
                 @SuppressWarnings("unchecked") org.partiql.value.BagValue<PartiQLValue> BAGValue = (org.partiql.value.BagValue<PartiQLValue>) value;
                 return new DatumCollection(new PartiQLToPQLIterable(Objects.requireNonNull(BAGValue)), PType.bag());

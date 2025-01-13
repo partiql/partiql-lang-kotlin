@@ -114,7 +114,7 @@ internal fun Datum.numberValue(): Number = when (this.type.code()) {
     PType.SMALLINT -> this.short
     PType.INTEGER -> this.int
     PType.BIGINT -> this.long
-    PType.NUMERIC -> this.bigInteger
+    PType.NUMERIC -> this.bigDecimal
     PType.REAL -> this.float
     PType.DOUBLE -> this.double
     PType.DECIMAL -> this.bigDecimal
@@ -170,9 +170,9 @@ internal fun Number.toTargetType(type: PType): Datum = when (type.code()) {
     PType.INTEGER -> Datum.integer(this.toInt())
     PType.BIGINT -> Datum.bigint(this.toLong())
     PType.NUMERIC -> when (this) {
-        is BigInteger -> Datum.numeric(this)
-        is BigDecimal -> Datum.numeric(this.toBigInteger())
-        else -> Datum.numeric(BigInteger.valueOf(this.toLong()))
+        is BigInteger -> Datum.numeric(this.toBigDecimal())
+        is BigDecimal -> Datum.numeric(this)
+        else -> Datum.numeric(BigDecimal.valueOf(this.toLong()))
     }
     else -> TODO("Unsupported target type $type")
 }
@@ -182,7 +182,7 @@ internal fun Number.toDatum(): Datum = when (this) {
     is Long -> Datum.bigint(this)
     is Double -> Datum.doublePrecision(this)
     is BigDecimal -> Datum.decimal(this, this.precision(), this.scale())
-    is BigInteger -> Datum.numeric(this)
+    is BigInteger -> Datum.numeric(this.toBigDecimal())
     else -> TODO("Could not convert $this to PartiQL Value")
 }
 

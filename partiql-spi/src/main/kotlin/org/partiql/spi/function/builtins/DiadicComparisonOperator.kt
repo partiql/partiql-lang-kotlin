@@ -53,7 +53,7 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
             PType.REAL -> this.float
             PType.DOUBLE -> this.double
             PType.DECIMAL -> this.bigDecimal
-            PType.NUMERIC -> this.bigInteger
+            PType.NUMERIC -> this.bigDecimal
             else -> error("Unexpected type: ${this.type}")
         }
     }

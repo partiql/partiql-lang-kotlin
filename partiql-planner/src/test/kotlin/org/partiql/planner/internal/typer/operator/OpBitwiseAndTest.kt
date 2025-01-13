@@ -33,9 +33,9 @@ class OpBitwiseAndTest : PartiQLTyperTestBase() {
                 val arg0 = args.first()
                 val arg1 = args[1]
                 val output = when {
-                    arg0 !in allIntPType && arg1 !in allIntPType -> PType.numeric(38, 0)
-                    arg0 in allIntPType && arg1 !in allIntPType -> PType.numeric(38, 0)
-                    arg0 !in allIntPType && arg1 in allIntPType -> PType.numeric(38, 0)
+                    arg0 !in allIntPType && arg1 !in allIntPType -> PType.bigint()
+                    arg0 in allIntPType && arg1 !in allIntPType -> PType.bigint()
+                    arg0 !in allIntPType && arg1 in allIntPType -> PType.bigint()
                     arg0 == arg1 -> arg1
                     castTablePType(arg1, arg0) == CastType.COERCION -> arg0
                     castTablePType(arg0, arg1) == CastType.COERCION -> arg1

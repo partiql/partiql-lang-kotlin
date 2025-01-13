@@ -26,7 +26,7 @@ internal val Fn_IS_INT32__ANY__BOOL = FunctionUtils.hidden(
             Datum.bool(Integer.MIN_VALUE <= v.long && v.long <= Integer.MAX_VALUE)
         }
         PType.NUMERIC -> {
-            val v = arg.bigInteger
+            val v = arg.bigDecimal
             try {
                 v.intValueExact()
                 Datum.bool(true)

@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -269,8 +268,6 @@ abstract class DatumComparator implements Comparator<Datum> {
                     fillBigIntComparator(row);
                     break;
                 case NUMERIC:
-                    fillIntArbitraryComparator(row);
-                    break;
                 case DECIMAL:
                     fillDecimalComparator(row);
                     break;
@@ -318,78 +315,65 @@ abstract class DatumComparator implements Comparator<Datum> {
         return table;
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillTinyIntComparator(DatumComparison[] comps) {
         comps[TINYINT] = (self, tinyInt, comp) -> Byte.compare(self.getByte(), tinyInt.getByte());
         comps[SMALLINT] = (self, smallInt, comp) -> Short.compare(self.getByte(), smallInt.getShort());
         comps[INTEGER] = (self, intNum, comp) -> Integer.compare(self.getByte(), intNum.getInt());
         comps[BIGINT] = (self, bigInt, comp) -> Long.compare(self.getByte(), bigInt.getLong());
-        comps[NUMERIC] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getByte()).compareTo(intArbitrary.getBigInteger());
+        comps[NUMERIC] = (self, intArbitrary, comp) -> BigDecimal.valueOf(self.getByte()).compareTo(intArbitrary.getBigDecimal());
         comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getByte(), real.getFloat()));
         comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getByte(), doublePrecision.getDouble()));
         comps[DECIMAL] = (self, decimal, comp) -> BigDecimal.valueOf(self.getByte()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillSmallIntComparator(DatumComparison[] comps) {
         comps[TINYINT] = (self, tinyInt, comp) -> Short.compare(self.getShort(), tinyInt.getByte());
         comps[SMALLINT] = (self, smallInt, comp) -> Short.compare(self.getShort(), smallInt.getShort());
         comps[INTEGER] = (self, intNum, comp) -> Integer.compare(self.getShort(), intNum.getInt());
         comps[BIGINT] = (self, bigInt, comp) -> Long.compare(self.getShort(), bigInt.getLong());
-        comps[NUMERIC] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getShort()).compareTo(intArbitrary.getBigInteger());
+        comps[NUMERIC] = (self, intArbitrary, comp) -> BigDecimal.valueOf(self.getShort()).compareTo(intArbitrary.getBigDecimal());
         comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getShort(), real.getFloat()));
         comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getShort(), doublePrecision.getDouble()));
         comps[DECIMAL] = (self, decimal, comp) -> BigDecimal.valueOf(self.getShort()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillIntComparator(DatumComparison[] comps) {
         comps[TINYINT] = (self, tinyInt, comp) -> Integer.compare(self.getInt(), tinyInt.getByte());
         comps[SMALLINT] = (self, smallInt, comp) -> Integer.compare(self.getInt(), smallInt.getShort());
         comps[INTEGER] = (self, intNum, comp) -> Integer.compare(self.getInt(), intNum.getInt());
         comps[BIGINT] = (self, bigInt, comp) -> Long.compare(self.getInt(), bigInt.getLong());
-        comps[NUMERIC] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getInt()).compareTo(intArbitrary.getBigInteger());
+        comps[NUMERIC] = (self, intArbitrary, comp) -> BigDecimal.valueOf(self.getInt()).compareTo(intArbitrary.getBigDecimal());
         comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getInt(), real.getFloat()));
         comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getInt(), doublePrecision.getDouble()));
         comps[DECIMAL] = (self, decimal, comp) -> BigDecimal.valueOf(self.getInt()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillBigIntComparator(DatumComparison[] comps) {
         comps[TINYINT] = (self, tinyInt, comp) -> Long.compare(self.getLong(), tinyInt.getByte());
         comps[SMALLINT] = (self, smallInt, comp) -> Long.compare(self.getLong(), smallInt.getShort());
         comps[INTEGER] = (self, intNum, comp) -> Long.compare(self.getLong(), intNum.getInt());
         comps[BIGINT] = (self, bigInt, comp) -> Long.compare(self.getLong(), bigInt.getLong());
-        comps[NUMERIC] = (self, intArbitrary, comp) -> BigInteger.valueOf(self.getLong()).compareTo(intArbitrary.getBigInteger());
+        comps[NUMERIC] = (self, intArbitrary, comp) -> BigDecimal.valueOf(self.getLong()).compareTo(intArbitrary.getBigDecimal());
         comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> Float.compare(self.getLong(), real.getFloat()));
         comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> Double.compare(self.getLong(), doublePrecision.getDouble()));
         comps[DECIMAL] = (self, decimal, comp) -> BigDecimal.valueOf(self.getLong()).compareTo(decimal.getBigDecimal());
         return comps;
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
-    private static DatumComparison[] fillIntArbitraryComparator(DatumComparison[] comps) {
-        comps[TINYINT] = (self, tinyInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(tinyInt.getByte()));
-        comps[SMALLINT] = (self, smallInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(smallInt.getShort()));
-        comps[INTEGER] = (self, intNum, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(intNum.getInt()));
-        comps[BIGINT] = (self, bigInt, comp) -> self.getBigInteger().compareTo(BigInteger.valueOf(bigInt.getLong()));
-        comps[NUMERIC] = (self, intArbitrary, comp) -> self.getBigInteger().compareTo(intArbitrary.getBigInteger());
-        comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> new BigDecimal(self.getBigInteger()).compareTo(BigDecimal.valueOf(real.getFloat())));
-        comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> new BigDecimal(self.getBigInteger()).compareTo(BigDecimal.valueOf(doublePrecision.getDouble())));
-        comps[DECIMAL] = (self, decimal, comp) -> new BigDecimal(self.getBigInteger()).compareTo(decimal.getBigDecimal());
-        return comps;
-    }
-
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillRealComparator(DatumComparison[] comps) {
         comps[TINYINT] = (self, tinyInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), tinyInt.getByte()));
         comps[SMALLINT] = (self, smallInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), smallInt.getShort()));
         comps[INTEGER] = (self, intNum, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), intNum.getInt()));
         comps[BIGINT] = (self, bigInt, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), bigInt.getLong()));
-        comps[NUMERIC] = (self, intArbitrary, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), intArbitrary.getBigInteger().floatValue()));
+        comps[NUMERIC] = (self, intArbitrary, comp) -> compareDoubleLhs(self.getFloat(), () -> Float.compare(self.getFloat(), intArbitrary.getBigDecimal().floatValue()));
         comps[REAL] = (self, real, comp) -> compareDoubles(self.getFloat(), real.getFloat(), () -> Float.compare(self.getFloat(), real.getFloat()));
         comps[DOUBLE] = (self, doublePrecision, comp) -> {
             float selfFlt = self.getFloat();
@@ -494,13 +478,13 @@ abstract class DatumComparator implements Comparator<Datum> {
         return comparison.get();
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillDoubleComparator(DatumComparison[] comps) {
         comps[TINYINT] = (self, tinyInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), tinyInt.getByte()));
         comps[SMALLINT] = (self, smallInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), smallInt.getShort()));
         comps[INTEGER] = (self, intNum, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), intNum.getInt()));
         comps[BIGINT] = (self, bigInt, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), bigInt.getLong()));
-        comps[NUMERIC] = (self, intArbitrary, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), intArbitrary.getBigInteger().doubleValue()));
+        comps[NUMERIC] = (self, intArbitrary, comp) -> compareDoubleLhs(self.getDouble(), () -> Double.compare(self.getDouble(), intArbitrary.getBigDecimal().doubleValue()));
         comps[REAL] = (self, real, comp) -> {
             double selfDbl = self.getDouble();
             float otherFlt = real.getFloat();
@@ -511,13 +495,13 @@ abstract class DatumComparator implements Comparator<Datum> {
         return comps;
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillDecimalComparator(DatumComparison[] comps) {
         comps[TINYINT] = (self, tinyInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(tinyInt.getByte()));
         comps[SMALLINT] = (self, smallInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(smallInt.getShort()));
         comps[INTEGER] = (self, intNum, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(intNum.getInt()));
         comps[BIGINT] = (self, bigInt, comp) -> self.getBigDecimal().compareTo(BigDecimal.valueOf(bigInt.getLong()));
-        comps[NUMERIC] = (self, intArbitrary, comp) -> self.getBigDecimal().compareTo(new BigDecimal(intArbitrary.getBigInteger()));
+        comps[NUMERIC] = (self, numeric, comp) -> self.getBigDecimal().compareTo(numeric.getBigDecimal());
         comps[REAL] = (self, real, comp) ->  compareDoubleRhs(real.getFloat(), () -> self.getBigDecimal().compareTo(BigDecimal.valueOf(real.getFloat())));
         comps[DOUBLE] = (self, doublePrecision, comp) -> compareDoubleRhs(doublePrecision.getDouble(), () -> self.getBigDecimal().compareTo(BigDecimal.valueOf(doublePrecision.getDouble())));
         comps[DECIMAL] = (self, decimal, comp) -> self.getBigDecimal().compareTo(decimal.getBigDecimal());
@@ -635,7 +619,7 @@ abstract class DatumComparator implements Comparator<Datum> {
      * {@link Datum}'s {@link PType#code()}.
      * @return the modified array
      */
-    @SuppressWarnings({"UnusedReturnValue", "deprecation"})
+    @SuppressWarnings({"UnusedReturnValue"})
     private static DatumComparison[] fillLobComparator(DatumComparison[] comps) {
         comps[BLOB] = (self, blob, comp) -> compareArray(self.getBytes(), blob.getBytes());
         comps[CLOB] = (self, blob, comp) -> compareArray(self.getBytes(), blob.getBytes());

@@ -29,7 +29,7 @@ internal val Fn_IS_INT16__ANY__BOOL = FunctionUtils.hidden(
             Datum.bool(Short.MIN_VALUE <= v && v <= Short.MAX_VALUE)
         }
         PType.NUMERIC -> {
-            val v = arg.bigInteger
+            val v = arg.bigDecimal
             try {
                 v.shortValueExact()
                 Datum.bool(true)
