@@ -55,17 +55,18 @@ internal object ExcludeUtils {
         if (steps.isEmpty()) {
             return true
         }
-        val step = steps.first()
-        return fields.any { field ->
-            when (val type = step.type) {
-                is Rel.Op.Exclude.Type.StructSymbol -> {
-                    Identifier.regular(type.symbol).first().matches(field.name) && field.type.checkExclude(steps.drop(1))
+        return steps.all { step ->
+            fields.any { field ->
+                when (val type = step.type) {
+                    is Rel.Op.Exclude.Type.StructSymbol -> {
+                        Identifier.regular(type.symbol).first().matches(field.name) && field.type.checkExclude(step.substeps)
+                    }
+                    is Rel.Op.Exclude.Type.StructKey -> {
+                        type.key == field.name && field.type.checkExclude(step.substeps)
+                    }
+                    is Rel.Op.Exclude.Type.StructWildcard -> field.type.checkExclude(step.substeps)
+                    else -> false
                 }
-                is Rel.Op.Exclude.Type.StructKey -> {
-                    type.key == field.name && field.type.checkExclude(steps.drop(1))
-                }
-                is Rel.Op.Exclude.Type.StructWildcard -> field.type.checkExclude(steps.drop(1))
-                else -> false
             }
         }
     }
@@ -77,13 +78,14 @@ internal object ExcludeUtils {
         if (steps.isEmpty()) {
             return true
         }
-        val first = steps.first().type
-        return when (first) {
-            is Rel.Op.Exclude.Type.CollIndex, is Rel.Op.Exclude.Type.CollWildcard -> {
-                val e = this.typeParameter
-                e.checkExclude(steps.drop(1))
+        return steps.all { step ->
+            when (step.type) {
+                is Rel.Op.Exclude.Type.CollIndex, is Rel.Op.Exclude.Type.CollWildcard -> {
+                    val e = this.typeParameter
+                    e.checkExclude(step.substeps)
+                }
+                else -> false
             }
-            else -> false
         }
     }
 

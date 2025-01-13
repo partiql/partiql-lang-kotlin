@@ -1278,7 +1278,15 @@ internal class PlanTyper(private val env: Env, config: Context) {
             when (val root = item.root) {
                 is Rex.Op.Var.Unresolved -> {
                     when (root.identifier.hasQualifier()) {
-                        true -> it
+                        true -> {
+                            if (root.identifier.first().matches(it.name)) {
+                                // recompute the StaticType of this binding after apply the exclusions
+                                val type = it.type.exclude(item.steps, false)
+                                it.copy(type = type)
+                            } else {
+                                it
+                            }
+                        }
                         else -> {
                             if (root.identifier.matches(it.name)) {
                                 // recompute the PType of this binding after applying the exclusions

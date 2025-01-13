@@ -2,7 +2,6 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.types.PType
 
 /**
@@ -110,15 +109,4 @@ internal fun CompilerType.excludeCollection(step: Rel.Op.Exclude.Step, lastStepO
         PType.BAG -> PType.bag(e).toCType()
         else -> throw IllegalStateException()
     }
-}
-
-/**
- * Compare an identifier to a struct field; handling case-insensitive comparisons.
- *
- * @param other
- * @return
- */
-internal fun Identifier.Simple.isEquivalentTo(other: String): Boolean = when (this.isRegular()) {
-    false -> this.getText() == other
-    true -> this.getText().equals(other, ignoreCase = true)
 }
