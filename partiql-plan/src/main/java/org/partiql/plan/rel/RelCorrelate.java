@@ -16,6 +16,10 @@ import java.util.List;
 public abstract class RelCorrelate extends RelBase {
 
     /**
+     * Creates a new {@link RelCorrelate} instance.
+     * @param left left input
+     * @param right right input
+     * @param joinType join type
      * @return new {@link RelCorrelate} instance
      */
     @NotNull
@@ -24,17 +28,23 @@ public abstract class RelCorrelate extends RelBase {
     }
 
     /**
+     * Gets the left input (operand 0).
      * @return the left input (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
+     * Gets the right input (operand 1).
      * @return the right input (operand 1)
      */
     @NotNull
     public abstract Rel getRight();
 
+    /**
+     * Gets the join type.
+     * @return the join type
+     */
     @NotNull
     public abstract JoinType getJoinType();
 

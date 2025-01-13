@@ -13,6 +13,8 @@ import java.util.List;
 public abstract class RelScan extends RelBase {
 
     /**
+     * Creates a new {@link RelScan} instance.
+     * @param rex input rex (operand 0)
      * @return new {@link RelScan} instance
      */
     @NotNull
@@ -21,6 +23,7 @@ public abstract class RelScan extends RelBase {
     }
 
     /**
+     * Gets the input rex (operand 0).
      * @return input rex (operand 0)
      */
     @NotNull

@@ -23,7 +23,7 @@ public class Version extends Enum {
         throw new UnsupportedCodeException(code);
     }
 
-    public static final int V1 = 1;
+    public static final int V1 = 0;
 
     public static Version V1() {
         return new Version(V1);

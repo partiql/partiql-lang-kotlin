@@ -13,6 +13,10 @@ import java.util.List;
 public abstract class RelSort extends RelBase {
 
     /**
+     * Creates a new {@link RelSort} instance.
+     *
+     * @param input the input to sort
+     * @param collations the collations to sort by
      * @return new {@link RelSort} instance
      */
     @NotNull
@@ -20,6 +24,10 @@ public abstract class RelSort extends RelBase {
         return new Impl(input, collations);
     }
 
+    /**
+     * Gets the input to sort (operand 0).
+     * @return the input to sort (operand 0).
+     */
     @NotNull
     public abstract Rel getInput();
 

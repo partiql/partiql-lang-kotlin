@@ -29,6 +29,10 @@ public final class RelType {
         return new RelType(fields, ordered);
     }
 
+    /**
+     * The degree (number of fields) in this ROW type.
+     * @return the degree of this ROW type
+     */
     public int getDegree() {
         return fields.length;
     }

@@ -13,6 +13,9 @@ import java.util.List;
 public abstract class RelIterate extends RelBase {
 
     /**
+     * Creates a new {@link RelIterate} instance.
+     *
+     * @param rex input rex (operand 0)
      * @return new {@link RelIterate} instance
      */
     @NotNull
@@ -21,6 +24,7 @@ public abstract class RelIterate extends RelBase {
     }
 
     /**
+     * Gets the input rex.
      * @return input rex (operand 0)
      */
     @NotNull

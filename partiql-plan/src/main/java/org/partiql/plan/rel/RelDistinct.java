@@ -12,6 +12,9 @@ import java.util.List;
 public abstract class RelDistinct extends RelBase {
 
     /**
+     * Creates a new {@link RelDistinct} instance.
+     *
+     * @param input input rel (operand 0)
      * @return new {@link RelDistinct} instance
      */
     @NotNull
@@ -20,6 +23,7 @@ public abstract class RelDistinct extends RelBase {
     }
 
     /**
+     * Gets the input rel.
      * @return input rel (operand 0)
      */
     @NotNull

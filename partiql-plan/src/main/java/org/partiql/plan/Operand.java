@@ -11,6 +11,9 @@ import java.util.List;
 public interface Operand extends Iterable<Operator> {
 
     /**
+     * Creates a {@link Single} operand from an input {@link Operator}.
+     *
+     * @param operator the single operator
      * @return a single operand
      */
     static Operand single(Operator operator) {
@@ -18,6 +21,7 @@ public interface Operand extends Iterable<Operator> {
     }
 
     /**
+     * Creates a {@link Variadic} operand from an input list of operands.
      * @return a variadic operand
      *
      * See ImmutableCollections.java ListCopy.

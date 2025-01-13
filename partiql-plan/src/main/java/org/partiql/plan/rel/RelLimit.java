@@ -13,6 +13,10 @@ import java.util.List;
 public abstract class RelLimit extends RelBase {
 
     /**
+     * Create new {@link RelLimit} instance.
+     *
+     * @param input input rel (operand 0)
+     * @param limit limit rex (operand 1)
      * @return new {@link RelLimit} instance
      */
     @NotNull
@@ -21,12 +25,14 @@ public abstract class RelLimit extends RelBase {
     }
 
     /**
+     * Get input rel (operand 0).
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Get limit rex (operand 1).
      * @return limit rex (operand 1)
      */
     @NotNull

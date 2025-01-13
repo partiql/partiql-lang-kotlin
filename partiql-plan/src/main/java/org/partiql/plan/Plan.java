@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 public interface Plan {
 
     /**
+     * Returns the version of this plan.
      * @return version for serialization and debugging.
      */
     @NotNull
@@ -16,6 +17,7 @@ public interface Plan {
     }
 
     /**
+     * Returns the statement action to execute.
      * @return statement action to execute.
      */
     @NotNull

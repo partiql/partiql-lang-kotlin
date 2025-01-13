@@ -55,7 +55,7 @@ public class Exclusion(variable: RexVar, items: List<Item>) {
     }
 
     /**
-     * An [Item] is a node of the exclusion tree.
+     * An [Item] is a node of the exclusion prefix tree.
      */
     public interface Item {
 

@@ -16,6 +16,10 @@ import java.util.List;
 public abstract class RelAggregate extends RelBase {
 
     /**
+     * Creates a new {@link RelAggregate} instance.
+     * @param input the input
+     * @param measures the measures
+     * @param groups the groups
      * @return new {@link RelAggregate} instance
      */
     @NotNull
@@ -24,7 +28,11 @@ public abstract class RelAggregate extends RelBase {
     }
 
     /**
-     * @return new  {@link Measure} instance
+     * Creates a new {@link Measure} instance.
+     * @param agg the aggregation function
+     * @param args the arguments
+     * @param distinct the distinct flag
+     * @return new {@link Measure} instance
      */
     @NotNull
     public static Measure measure(@NotNull Aggregation agg, @NotNull List<Rex> args, boolean distinct) {
@@ -32,18 +40,21 @@ public abstract class RelAggregate extends RelBase {
     }
 
     /**
+     * Gets the input.
      * @return the input (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Gets the measures.
      * @return the measures (arg)
      */
     @NotNull
     public abstract List<Measure> getMeasures();
 
     /**
+     * Gets the groups.
      * @return the groups (arg)
      */
     @NotNull
@@ -81,8 +92,6 @@ public abstract class RelAggregate extends RelBase {
 
     /**
      * An aggregation function along with its arguments and any additional filters (e.g. DISTINCT).
-     * <br>
-     * TODO unnest ??
      */
     public static class Measure {
 

@@ -14,7 +14,6 @@ public abstract interface class org/partiql/plan/Collation {
 public final class org/partiql/plan/Collation$Nulls : org/partiql/spi/Enum {
 	public static final field FIRST I
 	public static final field LAST I
-	public static final field UNKNOWN I
 	public static fun FIRST ()Lorg/partiql/plan/Collation$Nulls;
 	public static fun LAST ()Lorg/partiql/plan/Collation$Nulls;
 	public fun name ()Ljava/lang/String;
@@ -23,7 +22,6 @@ public final class org/partiql/plan/Collation$Nulls : org/partiql/spi/Enum {
 public final class org/partiql/plan/Collation$Order : org/partiql/spi/Enum {
 	public static final field ASC I
 	public static final field DESC I
-	public static final field UNKNOWN I
 	public static fun ASC ()Lorg/partiql/plan/Collation$Order;
 	public static fun DESC ()Lorg/partiql/plan/Collation$Order;
 	public fun name ()Ljava/lang/String;
@@ -147,7 +145,7 @@ public abstract interface class org/partiql/plan/Operator {
 	public abstract fun setTag (I)V
 }
 
-public abstract class org/partiql/plan/OperatorTransform : org/partiql/plan/OperatorVisitor {
+public abstract class org/partiql/plan/OperatorRewriter : org/partiql/plan/OperatorVisitor {
 	public fun <init> ()V
 	public fun <init> (Lorg/partiql/plan/Operators;)V
 	public synthetic fun defaultReturn (Lorg/partiql/plan/Operator;Ljava/lang/Object;)Ljava/lang/Object;
@@ -160,7 +158,7 @@ public abstract class org/partiql/plan/OperatorTransform : org/partiql/plan/Oper
 	public fun visitAggregate (Lorg/partiql/plan/rel/RelAggregate;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public fun visitAggregateGroup (Lorg/partiql/plan/rex/Rex;Ljava/lang/Object;)Lorg/partiql/plan/rex/Rex;
 	public fun visitAggregateMeasure (Lorg/partiql/plan/rel/RelAggregate$Measure;Ljava/lang/Object;)Lorg/partiql/plan/rel/RelAggregate$Measure;
-	public final fun visitAll (Ljava/util/List;Ljava/lang/Object;Lorg/partiql/plan/OperatorTransform$Mapper;)Ljava/util/List;
+	public final fun visitAll (Ljava/util/List;Ljava/lang/Object;Lorg/partiql/plan/OperatorRewriter$Mapper;)Ljava/util/List;
 	public synthetic fun visitArray (Lorg/partiql/plan/rex/RexArray;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitArray (Lorg/partiql/plan/rex/RexArray;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 	public synthetic fun visitBag (Lorg/partiql/plan/rex/RexBag;Ljava/lang/Object;)Ljava/lang/Object;
@@ -246,7 +244,7 @@ public abstract class org/partiql/plan/OperatorTransform : org/partiql/plan/Oper
 	public fun visitVar (Lorg/partiql/plan/rex/RexVar;Ljava/lang/Object;)Lorg/partiql/plan/Operator;
 }
 
-public abstract interface class org/partiql/plan/OperatorTransform$Mapper {
+public abstract interface class org/partiql/plan/OperatorRewriter$Mapper {
 	public abstract fun apply (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
