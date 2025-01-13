@@ -65,7 +65,7 @@ internal class PlanTyperTestsPorted {
             val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val expected: CompilerType,
-            val warnings: PErrorListener? = null,
+            val warnings: ProblemHandler? = null,
         ) : TestCase() {
 
             constructor(
@@ -74,7 +74,7 @@ internal class PlanTyperTestsPorted {
                 catalog: String = "pql",
                 catalogPath: List<String> = emptyList(),
                 expected: PType,
-                warnings: PErrorListener? = null,
+                warnings: ProblemHandler? = null,
             ) : this(name, key, null, catalog, catalogPath, expected.toCType(), warnings)
 
             constructor(
@@ -83,7 +83,7 @@ internal class PlanTyperTestsPorted {
                 catalog: String = "pql",
                 catalogPath: List<String> = emptyList(),
                 expected: PType,
-                warnings: PErrorListener? = null,
+                warnings: ProblemHandler? = null,
             ) : this(name, null, query, catalog, catalogPath, expected.toCType(), warnings)
 
             // legacy shim!
@@ -94,7 +94,7 @@ internal class PlanTyperTestsPorted {
                 catalog: String = "pql",
                 catalogPath: List<String> = emptyList(),
                 expected: StaticType,
-                warnings: PErrorListener? = null,
+                warnings: ProblemHandler? = null,
             ) : this(name, key, query, catalog, catalogPath, fromStaticType(expected).toCType(), warnings)
 
             override fun toString(): String {
@@ -213,6 +213,19 @@ internal class PlanTyperTestsPorted {
                 appendLine("]")
             }
             assertTrue(message) { problems.problems.any { errorsEqual(it, problem) } }
+        }
+
+        private fun assertWarningExists(problem: PError) = ProblemHandler { problems, _ ->
+            val message = buildString {
+                appendLine("Expected problems to include: $problem")
+                appendLine("Received: [")
+                problems.problems.forEach {
+                    append("\t")
+                    appendLine(it)
+                }
+                appendLine("]")
+            }
+            assertTrue(message) { problems.warnings.any { errorsEqual(it, problem) } }
         }
 
         // TODO: We don't assert on the properties right now.
@@ -1844,9 +1857,8 @@ internal class PlanTyperTestsPorted {
                     )
                 )
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC)
             SuccessTestCase(
-                name = "EXCLUDE with non-existent attribute reference",
+                name = "EXCLUDE with non-existent attribute reference -- warning",
                 key = key("exclude-25"),
                 expected = BagType(
                     StructType(
@@ -1860,7 +1872,8 @@ internal class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertWarningExists(PErrors.invalidExcludePath("t.attr_does_not_exist"))
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
@@ -1959,9 +1972,8 @@ internal class PlanTyperTestsPorted {
                     )
                 )
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude collection wildcard",
+                name = "invalid exclude collection wildcard -- warning",
                 key = key("exclude-29"),
                 expected = BagType(
                     elementType = StructType(
@@ -1991,11 +2003,11 @@ internal class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertWarningExists(PErrors.invalidExcludePath("t.a[*]"))
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude collection index",
+                name = "invalid exclude collection index -- warning",
                 key = key("exclude-30"),
                 expected = BagType(
                     elementType = StructType(
@@ -2025,11 +2037,11 @@ internal class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertWarningExists(PErrors.invalidExcludePath("t.a[1]"))
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude tuple attr",
+                name = "invalid exclude tuple attr -- warning",
                 key = key("exclude-31"),
                 expected = BagType(
                     elementType = StructType(
@@ -2051,11 +2063,11 @@ internal class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertWarningExists(PErrors.invalidExcludePath("t.a.b"))
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude tuple wildcard",
+                name = "invalid exclude tuple wildcard - warning",
                 key = key("exclude-32"),
                 expected = BagType(
                     elementType = StructType(
@@ -2077,11 +2089,11 @@ internal class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertWarningExists(PErrors.invalidExcludePath("t.a.*"))
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "invalid exclude tuple attr step",
+                name = "invalid exclude tuple attr step - warning",
                 key = key("exclude-33"),
                 expected = BagType(
                     elementType = StructType(
@@ -2103,7 +2115,8 @@ internal class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
+                warnings = assertWarningExists(PErrors.invalidExcludePath("t.b"))
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             ErrorTestCase(
@@ -2184,6 +2197,74 @@ internal class PlanTyperTestsPorted {
 //                    )
 //                )
 //            ),
+            SuccessTestCase(
+                name = "EXCLUDE with case-sensitive tuple reference not matching - warning",
+                key = key("exclude-37"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "B" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.INT4,
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(
+                                            TupleConstraint.Open(false),
+                                            TupleConstraint.UniqueAttrs(true)
+                                        )
+                                    ),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                warnings = assertWarningExists(PErrors.invalidExcludePath("t.\"a\".\"b\".c"))
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE with case-sensitive tuple reference not matching earlier step - warning",
+                key = key("exclude-38"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "B" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.INT4,
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(
+                                            TupleConstraint.Open(false),
+                                            TupleConstraint.UniqueAttrs(true)
+                                        )
+                                    ),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                warnings = assertWarningExists(PErrors.invalidExcludePath("t.\"A\".\"b\".c"))
+            ),
         )
 
         @JvmStatic
@@ -3660,6 +3741,32 @@ internal class PlanTyperTestsPorted {
         runTest(tc)
     }
 
+    // TODO: Un-disable
+    @Test
+    @Disabled("See https://github.com/partiql/partiql-lang-kotlin/issues/1705.")
+    fun excludeWithShadowedGlobalName() {
+        val tc = SuccessTestCase(
+            name = "EXCLUDE  with an open struct - no warning or error",
+            catalog = CATALOG_B,
+            key = key("exclude-39"),
+            expected = PType.bag(PType.dynamic())
+        )
+        runTest(tc)
+    }
+
+    // TODO: Un-disable
+    @Test
+    @Disabled("See https://github.com/partiql/partiql-lang-kotlin/issues/1705.")
+    fun excludeWithShadowedGlobalName2() {
+        val tc = SuccessTestCase(
+            name = "EXCLUDE  with an open struct; nonexistent attribute in the open struct - no warning or error",
+            catalog = CATALOG_B,
+            key = key("exclude-40"),
+            expected = PType.bag(PType.dynamic())
+        )
+        runTest(tc)
+    }
+
     @Test
     fun developmentTest3() {
         val tc =
@@ -3842,7 +3949,7 @@ internal class PlanTyperTestsPorted {
         val plan = infer(input, session, collector)
         when (val statement = plan.action) {
             is Action.Query -> {
-                assert(collector.problems.isEmpty()) {
+                assert(collector.errors.isEmpty()) {
                     // Throw internal error for debugging
                     collector.problems.firstOrNull { it.code() == PError.INTERNAL_ERROR }?.let { pError ->
                         pError.getOrNull("CAUSE", Throwable::class.java)?.let { throw it }
@@ -3862,6 +3969,11 @@ internal class PlanTyperTestsPorted {
                         appendLine()
                         PlanPrinter.append(this, plan)
                     }
+                }
+                val warnings = collector.warnings
+                if (warnings.isNotEmpty()) {
+                    assert(tc.warnings != null) { "Expected no warnings but warnings were found: $warnings" }
+                    tc.warnings?.handle(collector, true)
                 }
             }
         }

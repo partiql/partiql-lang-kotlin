@@ -355,7 +355,7 @@ internal class PlannerPErrorReportingTests {
                     FROM struct_no_missing as t
                 """.trimIndent(),
                 false,
-                assertOnProblemCount(1, 0),
+                assertOnProblemCount(2, 0),
                 BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
             ),
             TestCase(
@@ -365,7 +365,7 @@ internal class PlannerPErrorReportingTests {
                     FROM struct_no_missing as t
                 """.trimIndent(),
                 true,
-                assertOnProblemCount(0, 1),
+                assertOnProblemCount(1, 1),
                 BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
             ),
 //            TestCase(

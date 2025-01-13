@@ -184,4 +184,20 @@ internal object PErrors {
             mapOf("ID" to id, "LOCALS" to locals)
         )
     }
+
+    /**
+     * @param path see [PError.INVALID_EXCLUDE_PATH]
+     * @return an error representing [PError.INVALID_EXCLUDE_PATH]
+     */
+    internal fun invalidExcludePath(
+        path: String
+    ): PError {
+        return PError(
+            PError.INVALID_EXCLUDE_PATH,
+            Severity.WARNING(),
+            PErrorKind.SEMANTIC(),
+            null,
+            mapOf("PATH" to path)
+        )
+    }
 }

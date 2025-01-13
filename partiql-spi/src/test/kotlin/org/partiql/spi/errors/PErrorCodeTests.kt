@@ -30,6 +30,7 @@ class PErrorCodeTests {
             "VAR_REF_AMBIGUOUS" to 12,
             "TYPE_UNEXPECTED" to 13,
             "ALWAYS_MISSING" to 14,
+            "INVALID_EXCLUDE_PATH" to 15,
         )
 
         // Preparation
