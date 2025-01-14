@@ -783,7 +783,8 @@ internal class PlanTyper(private val env: Env, config: Context) {
             val argIsAlwaysMissing = args.any { it.type.isMissingValue }
 
             if (argIsAlwaysMissing && instance.isMissingCall) {
-                return errorRexAndReport(_listener, PErrors.alwaysMissing(null))
+                _listener.report(PErrors.alwaysMissing(null))
+                return rex(CompilerType(returnType), Rex.Op.Call.Static(node.fn, args))
             }
 
             // Infer fn return type

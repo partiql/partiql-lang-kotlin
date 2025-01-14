@@ -926,7 +926,7 @@ internal class PlanTyperTestsPorted {
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
-                expected = ANY, // TODO SHOULD BE UNKNOWN
+                expected = PType.integer(),
                 problemHandler = assertProblemExists(PErrors.alwaysMissing(null))
             ),
             ErrorTestCase(
@@ -3570,7 +3570,7 @@ internal class PlanTyperTestsPorted {
                 query = """
                     +MISSING
                 """.trimIndent(),
-                expected = ANY,
+                expected = PType.doublePrecision(),
                 problemHandler = assertProblemExists(PErrors.alwaysMissing(null))
             ),
         )

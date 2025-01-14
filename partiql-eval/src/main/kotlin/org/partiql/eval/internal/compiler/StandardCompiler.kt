@@ -41,6 +41,7 @@ import org.partiql.eval.internal.operator.rex.ExprCaseBranch
 import org.partiql.eval.internal.operator.rex.ExprCaseSearched
 import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
+import org.partiql.eval.internal.operator.rex.ExprError
 import org.partiql.eval.internal.operator.rex.ExprLit
 import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
@@ -325,7 +326,11 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
         }
 
         override fun visitError(rex: RexError, ctx: Unit): ExprValue {
-            return ExprMissing(PType.unknown())
+            return when (mode.code()) {
+                Mode.PERMISSIVE -> ExprMissing(PType.unknown())
+                Mode.STRICT -> ExprError()
+                else -> throw IllegalStateException("Unsupported execution mode: $mode")
+            }
         }
 
         // OPERATORS
