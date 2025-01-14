@@ -15,14 +15,19 @@ import org.partiql.spi.value.Datum
  * This carries along with it a static table containing a mapping between the input types and the implementation.
  *
  * Implementations of this should invoke [fillTable] in the constructor of the function.
+ * @param hidesName dictates whether the [name] should be hidden; true by default.
  */
 internal abstract class DiadicOperator(
     name: String,
     private val lhs: Parameter,
-    private val rhs: Parameter
+    private val rhs: Parameter,
+    hidesName: Boolean = true
 ) : Function {
 
-    private val name = FunctionUtils.hide(name)
+    private val name = when (hidesName) {
+        true -> FunctionUtils.hide(name)
+        false -> name
+    }
 
     companion object {
         private val DEC_TINY_INT = PType.decimal(3, 0)
@@ -215,6 +220,14 @@ internal abstract class DiadicOperator(
         return null
     }
 
+    /**
+     * This is used when all operands are NULL/MISSING.
+     * @return an instance of a function
+     */
+    open fun getUnknownInstance(): Function.Instance? {
+        return null
+    }
+
     override fun getReturnType(args: Array<PType>): PType {
         return getInstance(args)?.returns ?: PType.dynamic() // TODO: Do we need this method?
     }
@@ -342,6 +355,10 @@ internal abstract class DiadicOperator(
         fillTable(PType.DECIMAL, PType.UNKNOWN) { lhs, rhs -> getDecimalInstance(lhs, lhs) }
     }
 
+    private fun fillUnknownTable() {
+        fillTable(PType.UNKNOWN, PType.UNKNOWN) { _, _ -> getUnknownInstance() }
+    }
+
     protected fun fillTable() {
         fillBooleanTable(::getBooleanInstance)
         fillNumberTable(PType.TINYINT, ::getTinyIntInstance)
@@ -360,6 +377,7 @@ internal abstract class DiadicOperator(
         fillCharacterStringTable(PType.CHAR, ::getCharInstance)
         fillCharacterStringTable(PType.VARCHAR, ::getVarcharInstance)
         fillCharacterStringTable(PType.CLOB, ::getClobInstance)
+        fillUnknownTable()
     }
 
     protected fun basic(returns: PType, lhs: PType, rhs: PType, invocation: (Array<Datum>) -> Datum): Function.Instance {

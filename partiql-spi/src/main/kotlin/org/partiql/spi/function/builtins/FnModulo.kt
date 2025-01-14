@@ -8,7 +8,7 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal object FnModulo : DiadicArithmeticOperator("modulo") {
+internal object FnModulo : DiadicArithmeticOperator("mod", false) {
 
     init {
         fillTable()
