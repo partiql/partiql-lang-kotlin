@@ -21,7 +21,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
             if (arg1 == 0.toByte()) {
                 throw DataException("Division by zero for TINYINT: $arg0 / $arg1")
             } else if (arg0 == Byte.MIN_VALUE && arg1.toInt() == -1) {
-                throw DataException("Overflow for TINYINT: $arg0 / $arg1")
+                throw DataException("Resulting value out of range for: $arg0 / $arg1")
             }
             Datum.tinyint((arg0 / arg1).toByte())
         }
@@ -34,7 +34,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
             if (arg1 == 0.toShort()) {
                 throw DataException("Division by zero for SMALLINT: $arg0 / $arg1")
             } else if (arg0 == Short.MIN_VALUE && arg1.toInt() == -1) {
-                throw DataException("Overflow for SMALLINT: $arg0 / $arg1")
+                throw DataException("Resulting value out of range for: $arg0 / $arg1")
             }
             Datum.smallint((arg0 / arg1).toShort())
         }
@@ -47,7 +47,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
             if (arg1 == 0) {
                 throw DataException("Division by zero for INT: $arg0 / $arg1")
             } else if (arg0 == Int.MIN_VALUE && arg1 == -1) {
-                throw DataException("Overflow for INT: $arg0 / $arg1")
+                throw DataException("Resulting value out of range for INT: $arg0 / $arg1")
             }
             Datum.integer(arg0 / arg1)
         }
@@ -60,7 +60,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
             if (arg1 == 0L) {
                 throw DataException("Division by zero for BIGINT: $arg0 / $arg1")
             } else if (arg0 == Long.MIN_VALUE && arg1 == -1L) {
-                throw DataException("Overflow for BIGINT: $arg0 / $arg1")
+                throw DataException("Resulting value out of range for BIGINT: $arg0 / $arg1")
             }
             Datum.bigint(arg0 / arg1)
         }

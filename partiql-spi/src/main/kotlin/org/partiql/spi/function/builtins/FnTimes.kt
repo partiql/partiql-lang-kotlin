@@ -22,7 +22,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
             val arg1 = args[1].byte
             val result = arg0 * arg1
             if (result.byteOverflows()) {
-                throw DataException("Numeric value out of range for TINYINT: $arg0 * $arg1")
+                throw DataException("Resulting value out of range for TINYINT: $arg0 * $arg1")
             } else {
                 Datum.tinyint(result.toByte())
             }
@@ -35,7 +35,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
             val arg1 = args[1].short
             val result = arg0 * arg1
             if (result.shortOverflows()) {
-                throw DataException("Numeric value out of range for SMALLINT: $arg0 * $arg1")
+                throw DataException("Resulting value out of range for SMALLINT: $arg0 * $arg1")
             } else {
                 Datum.smallint(result.toShort())
             }
@@ -50,7 +50,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
                 val result = Math.multiplyExact(arg0, arg1)
                 return@basic Datum.integer(result)
             } catch (e: ArithmeticException) {
-                throw DataException("Numeric value out of range for INT: $arg0 * $arg1")
+                throw DataException("Resulting value out of range for INT: $arg0 * $arg1")
             }
         }
     }
@@ -63,7 +63,7 @@ internal object FnTimes : DiadicArithmeticOperator("times") {
                 val result = Math.multiplyExact(arg0, arg1)
                 return@basic Datum.bigint(result)
             } catch (e: ArithmeticException) {
-                throw DataException("Numeric value out of range for BIGINT: $arg0 * $arg1")
+                throw DataException("Resulting value out of range for BIGINT: $arg0 * $arg1")
             }
         }
     }
