@@ -8,7 +8,7 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.value.Datum
 
-fun runEvaluatorTestCase(
+fun runEvaluatorTestCaseSuccess(
     query: String,
     expectedResult: String
 ) {
@@ -16,6 +16,25 @@ fun runEvaluatorTestCase(
     val result = execute(query)
     val comparison = Datum.comparator().compare(expected, result)
     assert(comparison == 0) { "Expected $expected, got $result" }
+}
+
+fun runEvaluatorTestCaseFailure(
+    query: String,
+) {
+    var thrown: Throwable? = null
+    val actual: Datum = try {
+        execute(query)
+    } catch (t: Throwable) {
+        thrown = t
+        Datum.nullValue()
+    }
+    if (thrown == null) {
+        val message = buildString {
+            appendLine("Expected error to be thrown but none was thrown.")
+            appendLine("Actual Result: $actual")
+        }
+        error(message)
+    }
 }
 
 private fun execute(query: String): Datum {

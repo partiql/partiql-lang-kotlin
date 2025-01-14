@@ -121,7 +121,7 @@ class DateTimeRandomizedTests {
     fun testRandomTimes(time: TimeForValidation) {
         val query = "TIME '$time'"
         val expected = "TIME '${time.expectedTimeString(withTimeZone = false)}'"
-        runEvaluatorTestCase(
+        runEvaluatorTestCaseSuccess(
             query = query,
             expectedResult = expected
         )
@@ -132,7 +132,7 @@ class DateTimeRandomizedTests {
     fun testRandomTimesWithPrecision(time: TimeForValidation) {
         val query = "TIME (${time.precision}) '$time'"
         val expected = "TIME '${time.expectedTimeString(withTimeZone = false)}'"
-        runEvaluatorTestCase(
+        runEvaluatorTestCaseSuccess(
             query = query,
             expectedResult = expected
         )
@@ -143,7 +143,7 @@ class DateTimeRandomizedTests {
     fun testRandomTimesWithTimezone(time: TimeForValidation) {
         val query = "TIME WITH TIME ZONE '$time'"
         val expected = "TIME WITH TIME ZONE '${time.expectedTimeString(withTimeZone = true)}'"
-        runEvaluatorTestCase(
+        runEvaluatorTestCaseSuccess(
             query = query,
             expectedResult = expected
         )
@@ -154,7 +154,7 @@ class DateTimeRandomizedTests {
     fun testRandomTimesWithPrecisionAndTimezone(time: TimeForValidation) {
         val query = "TIME (${time.precision}) WITH TIME ZONE '$time'"
         val expected = "TIME WITH TIME ZONE '${time.expectedTimeString(withTimeZone = true)}'"
-        runEvaluatorTestCase(
+        runEvaluatorTestCaseSuccess(
             query = query,
             expectedResult = expected
         )

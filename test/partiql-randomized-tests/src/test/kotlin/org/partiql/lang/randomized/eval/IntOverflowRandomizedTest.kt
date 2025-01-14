@@ -16,20 +16,31 @@
 package org.partiql.lang.randomized.eval
 
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.Random
 
 /**
- * This class tests evaluation-time behavior for integer and integer overflows that existed *prior* to the
- * introduction of StaticType. The behavior described in these tests is still how we should handle integer arithmetic
- * in the absence of type information.
+ * Randomized 4-byte integer arithmetic tests (+, -, *, /).
  *
- * TODO these tests are not correct and the implementation is not correct. The tests and implementation need to give
- *  an error when overflow does occur. See https://github.com/partiql/partiql-lang-kotlin/issues/1697.
+ * Operations that would result in overflow expect an error. Operations that do not result in overflow check that the
+ * operation output is correct.
  */
 class IntOverflowRandomizedTest {
+    sealed class Test {
+        class NoOverflow(val query: String, val expected: String) : Test() {
+            override fun toString(): String {
+                return "$query = $expected"
+            }
+        }
+
+        class Overflow(val query: String) : Test() {
+            override fun toString(): String {
+                return "Expect $query to overflow"
+            }
+        }
+    }
+
     companion object {
         private val RANDOM = Random()
 
@@ -44,10 +55,11 @@ class IntOverflowRandomizedTest {
         }
 
         @JvmStatic
-        fun parametersForValues(): List<Pair<String, String>> {
-            val transform: (Number) -> Pair<String, String> = { i -> "$i" to "$i" }
+        fun parametersForValues(): List<Test> {
+            // No overflow on constructed values
+            val transform: (Number) -> Test = { i -> Test.NoOverflow("$i", "$i") }
 
-            val parameters = mutableListOf<Pair<String, String>>()
+            val parameters = mutableListOf<Test>()
 
             (1..20).map { RANDOM.nextInt() }.mapTo(parameters, transform)
             (1..20).map { RANDOM.nextLong() }.mapTo(parameters, transform)
@@ -56,110 +68,133 @@ class IntOverflowRandomizedTest {
         }
 
         @JvmStatic
-        fun parametersForPlus(): List<Pair<String, String>> {
-            val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
-                { (left, right, result) -> "$left + $right" to "$result" }
+        fun parametersForPlus(): List<Test> {
+            val transform: (Pair<Int, Int>) -> Test = { (left, right) ->
+                try {
+                    val result = Math.addExact(left, right)
+                    Test.NoOverflow("CAST($left AS INT) + CAST($right AS INT)", "$result")
+                } catch (e: ArithmeticException) {
+                    Test.Overflow("$left + $right")
+                }
+            }
 
-            val parameters = mutableListOf<Pair<String, String>>()
-
-            (1..20).map {
-                // generating an integer to ensure addition won't overflow
-                val left = RANDOM.nextInt().toLong()
-                val right = RANDOM.nextInt().toLong()
-
-                Triple(left, right, left + right)
-            }.mapTo(parameters, transform)
-
-            return parameters
-        }
-
-        @JvmStatic
-        fun parametersForMinus(): List<Pair<String, String>> {
-            val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
-                { (left, right, result) -> "$left - $right" to "$result" }
-
-            val parameters = mutableListOf<Pair<String, String>>()
+            val parameters = mutableListOf<Test>()
 
             (1..20).map {
                 // generating an integer to ensure addition won't overflow
-                val left = RANDOM.nextInt().toLong()
-                val right = RANDOM.nextInt().toLong()
+                val left = RANDOM.nextInt()
+                val right = RANDOM.nextInt()
 
-                Triple(left, right, left - right)
+                Pair(left, right)
             }.mapTo(parameters, transform)
 
             return parameters
         }
 
         @JvmStatic
-        fun parametersForTimes(): List<Pair<String, String>> {
-            val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
-                { (left, right, result) -> "$left * $right" to "$result" }
+        fun parametersForMinus(): List<Test> {
+            val transform: (Pair<Int, Int>) -> Test = { (left, right) ->
+                try {
+                    val result = Math.subtractExact(left, right)
+                    Test.NoOverflow("CAST($left AS INT) - CAST($right AS INT)", "$result")
+                } catch (e: ArithmeticException) {
+                    Test.Overflow("$left - $right")
+                }
+            }
 
-            val parameters = mutableListOf<Pair<String, String>>()
+            val parameters = mutableListOf<Test>()
 
-            (1..40).map { i ->
-                var left = RANDOM.nextInt(1_000).toLong() // TODO bound should be removed to allow for overflow
-                if (i % 2 == 0) left = -left
+            (1..20).map {
+                // generating an integer to ensure addition won't overflow
+                val left = RANDOM.nextInt()
+                val right = RANDOM.nextInt()
 
-                val right = RANDOM.nextInt(1_000).toLong() // TODO bound should be removed to allow for overflow
-
-                Triple(left, right, left * right)
+                Pair(left, right)
             }.mapTo(parameters, transform)
 
             return parameters
         }
 
         @JvmStatic
-        fun parametersForDivision(): List<Pair<String, String>> {
-            val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
-                { (left, right, result) -> "$left / $right" to "$result" }
+        fun parametersForTimes(): List<Test> {
+            val transform: (Pair<Int, Int>) -> Test = { (left, right) ->
+                try {
+                    val result = Math.multiplyExact(left, right)
+                    Test.NoOverflow("CAST($left AS INT) * CAST($right AS INT)", "$result")
+                } catch (e: ArithmeticException) {
+                    Test.Overflow("$left * $right")
+                }
+            }
 
-            val parameters = mutableListOf<Pair<String, String>>()
+            val parameters = mutableListOf<Test>()
 
             (1..40).map { i ->
-                var left = RANDOM.nextInt(1_000).toLong() // TODO bound should be removed to allow for overflow
+                var left = RANDOM.nextInt()
                 if (i % 2 == 0) left = -left
 
-                // TODO bound should be removed to allow for overflow
-                val right = RANDOM.nextInt(1_000).toLong() + 1 // to avoid being 0
+                val right = RANDOM.nextInt()
 
-                Triple(left, right, left / right)
+                Pair(left, right)
             }.mapTo(parameters, transform)
 
-            parameters.add("${Long.MAX_VALUE} / -1" to "-${Long.MAX_VALUE}")
+            return parameters
+        }
 
+        @JvmStatic
+        fun parametersForDivision(): List<Test> {
+            val transform: (Pair<Int, Int>) -> Test = { (left, right) ->
+                if (left != Int.MIN_VALUE && right != -1) {
+                    val result = left / right
+                    Test.NoOverflow("CAST($left AS INT) / CAST($right AS INT)", "$result")
+                } else {
+                    Test.Overflow("$left / $right")
+                }
+            }
+
+            val parameters = mutableListOf<Test>()
+
+            (1..40).map { i ->
+                var left = RANDOM.nextInt()
+                if (i % 2 == 0) left = -left
+
+                val right = RANDOM.nextInt() + 1
+
+                Pair(left, right)
+            }.mapTo(parameters, transform)
+
+            // Guaranteed to overflow
+            // Casts are included due to literal minus being parsed as a unary operator + unsigned int.
+            // Without the explicit cast, Int.MIN_VALUE would get parsed as an 8-byte BIGINT.
+            // We may change the parsing behavior to automatically include signed numeric literals at some point.
+            parameters.add(Test.Overflow("CAST(${Int.MIN_VALUE} AS INT) / CAST(-1 AS INT)"))
             return parameters
         }
     }
 
     @ParameterizedTest
     @MethodSource("parametersForValues")
-    @Disabled("The new execution engine and tests do not return the correct result. It should overflow.")
-    fun values(pair: Pair<String, String>) = assertPair(pair)
+    fun values(t: Test) = assertTest(t)
 
     @ParameterizedTest
     @MethodSource("parametersForPlus")
-    @Disabled("The new execution engine and tests do not return the correct result. It should overflow.")
-    fun plus(pair: Pair<String, String>) = assertPair(pair)
+    fun plus(t: Test) = assertTest(t)
 
     @ParameterizedTest
     @MethodSource("parametersForMinus")
-    @Disabled("The new execution engine and tests do not return the correct result. It should overflow.")
-    fun minus(pair: Pair<String, String>) = assertPair(pair)
+    fun minus(t: Test) = assertTest(t)
 
     @ParameterizedTest
     @MethodSource("parametersForTimes")
-    @Disabled("The new execution engine and tests do not return the correct result. It should overflow.")
-    fun times(pair: Pair<String, String>) = assertPair(pair)
+    fun times(t: Test) = assertTest(t)
 
     @ParameterizedTest
     @MethodSource("parametersForDivision")
-    @Disabled("The new execution engine and tests do not return the correct result. It should overflow.")
-    fun division(pair: Pair<String, String>) = assertPair(pair)
+    fun division(t: Test) = assertTest(t)
 
-    private fun assertPair(pair: Pair<String, String>) {
-        val (query, expected) = pair
-        runEvaluatorTestCase(query, expectedResult = expected)
+    private fun assertTest(pair: Test) {
+        when (pair) {
+            is Test.NoOverflow -> runEvaluatorTestCaseSuccess(pair.query, expectedResult = pair.expected)
+            is Test.Overflow -> runEvaluatorTestCaseFailure(pair.query)
+        }
     }
 }
