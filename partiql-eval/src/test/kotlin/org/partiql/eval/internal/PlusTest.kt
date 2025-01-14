@@ -76,7 +76,7 @@ class PlusTest {
                 mode = Mode.STRICT(),
                 expected = Datum.decimal(BigDecimal.valueOf(457023), 14, 7),
                 globals = listOf(
-                    SuccessTestCase.Global(
+                    Global(
                         "dynamic_decimal",
                         "456789.0000000"
                     )
