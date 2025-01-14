@@ -29,7 +29,7 @@ import java.util.Random
  * TODO these tests are not correct and the implementation is not correct. The tests and implementation need to give
  *  an error when overflow does occur. See https://github.com/partiql/partiql-lang-kotlin/issues/1697.
  */
-class EvaluatingCompilerIntRandomizedTest {
+class IntOverflowRandomizedTest {
     companion object {
         private val RANDOM = Random()
 

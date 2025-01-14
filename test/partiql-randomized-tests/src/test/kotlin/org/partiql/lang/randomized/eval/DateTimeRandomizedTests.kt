@@ -28,7 +28,7 @@ internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
 internal const val NANOS_PER_SECOND = 1000000000
 internal const val MAX_PRECISION_FOR_TIME = 9
 
-class EvaluatingCompilerDateTimeRandomizedTests {
+class DateTimeRandomizedTests {
 
     class RandomTestsProvider {
         private val randomTestsSize = 50000
