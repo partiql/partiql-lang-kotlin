@@ -127,7 +127,7 @@ class PartiQLEvaluatorTest {
                     int64Value(2),
                 ),
                 globals = listOf(
-                    SuccessTestCase.Global(
+                    Global(
                         name = "t",
                         value = """
                             [
@@ -150,7 +150,7 @@ class PartiQLEvaluatorTest {
                     int64Value(2),
                 ),
                 globals = listOf(
-                    SuccessTestCase.Global(
+                    Global(
                         name = "t",
                         value = """
                             [
@@ -177,7 +177,7 @@ class PartiQLEvaluatorTest {
                     ),
                 ),
                 globals = listOf(
-                    SuccessTestCase.Global(
+                    Global(
                         name = "customers",
                         value = """
                             [{id:1, name: "Mary"},
@@ -186,7 +186,7 @@ class PartiQLEvaluatorTest {
                             ]
                         """
                     ),
-                    SuccessTestCase.Global(
+                    Global(
                         name = "orders",
                         value = """
                             [{custId:1, name: "foo"},

@@ -232,3 +232,7 @@ internal val Number.isPosInf
         is Double -> isInfinite() && this > 0
         else -> false
     }
+
+internal fun Int.byteOverflows() = this < Byte.MIN_VALUE || this > Byte.MAX_VALUE
+
+internal fun Int.shortOverflows() = this < Short.MIN_VALUE || this > Short.MAX_VALUE

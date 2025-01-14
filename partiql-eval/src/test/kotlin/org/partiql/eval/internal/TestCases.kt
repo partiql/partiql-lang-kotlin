@@ -18,6 +18,15 @@ import org.partiql.types.fromStaticType
 import org.partiql.value.PartiQLValue
 import kotlin.test.assertEquals
 
+/**
+ * @property value is a serialized Ion value.
+ */
+class Global(
+    val name: String,
+    val value: String,
+    val type: StaticType = StaticType.ANY,
+)
+
 public class SuccessTestCase(
     val input: String,
     val expected: Datum,
@@ -36,15 +45,6 @@ public class SuccessTestCase(
     private val compiler = PartiQLCompiler.standard()
     private val parser = PartiQLParser.standard()
     private val planner = PartiQLPlanner.standard()
-
-    /**
-     * @property value is a serialized Ion value.
-     */
-    class Global(
-        val name: String,
-        val value: String,
-        val type: StaticType = StaticType.ANY,
-    )
 
     override fun run() {
         val parseResult = parser.parse(input)
@@ -90,5 +90,53 @@ public class SuccessTestCase(
 
     override fun toString(): String {
         return input
+    }
+}
+
+public class FailureTestCase(
+    val input: String,
+    val mode: Mode = Mode.STRICT(), // default to run in STRICT mode
+    val globals: List<Global> = emptyList(),
+) : PTestCase {
+    private val compiler = PartiQLCompiler.standard()
+    private val parser = PartiQLParser.standard()
+    private val planner = PartiQLPlanner.standard()
+
+    override fun run() {
+        val parseResult = parser.parse(input)
+        assertEquals(1, parseResult.statements.size)
+        val statement = parseResult.statements[0]
+        val catalog = Catalog.builder()
+            .name("memory")
+            .apply {
+                globals.forEach {
+                    val table = Table.standard(
+                        name = Name.of(it.name),
+                        schema = fromStaticType(it.type),
+                        datum = DatumReader.ion(it.value.byteInputStream()).next()!!
+                    )
+                    define(table)
+                }
+            }
+            .build()
+        val session = Session.builder()
+            .catalog("memory")
+            .catalogs(catalog)
+            .build()
+        var thrown: Throwable? = null
+        val plan = planner.plan(statement, session).plan
+        val actual: Datum = try {
+            DatumMaterialize.materialize(compiler.prepare(plan, mode).execute())
+        } catch (t: Throwable) {
+            thrown = t
+            Datum.nullValue()
+        }
+        if (thrown == null) {
+            val message = buildString {
+                appendLine("Expected error to be thrown but none was thrown.")
+                appendLine("Actual Result: $actual")
+            }
+            error(message)
+        }
     }
 }
