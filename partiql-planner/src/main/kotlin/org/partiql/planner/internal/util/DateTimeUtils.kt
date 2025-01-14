@@ -33,7 +33,7 @@ internal object DateTimeUtils {
     internal fun parseTime(input: String): LocalTime {
         val matcher: Matcher = TIME_PATTERN.matcher(input)
         if (!matcher.matches()) throw DateTimeException(
-            "Expect TIME Format to be in HH-mm-ss.ddd+[+|-][hh:mm|z], received $input"
+            "Expect TIME Format to be in HH:mm:ss.ddd+[+|-][hh:mm|z], received $input"
         )
         try {
             val hour = matcher.group("hour").toInt()
@@ -43,7 +43,7 @@ internal object DateTimeUtils {
             val nanoOfSecond = fraction.movePointRight(9).toInt()
             val timeZoneString = matcher.group("timezone") ?: null
             if (timeZoneString != null) {
-                throw DateTimeException("Expect TIME Format to be in HH-mm-ss.ddd, received $input")
+                throw DateTimeException("Expect TIME Format to be in HH:mm:ss.ddd, received $input")
             }
             return LocalTime.of(hour, minute, second, nanoOfSecond)
         } catch (e: IllegalStateException) {
@@ -56,7 +56,7 @@ internal object DateTimeUtils {
     internal fun parseTimez(input: String): OffsetTime {
         val matcher: Matcher = TIME_PATTERN.matcher(input)
         if (!matcher.matches()) throw DateTimeException(
-            "Expect TIME Format to be in HH-mm-ss.ddd+[+|-][hh:mm|z], received $input"
+            "Expect TIME Format to be in HH:mm:ss.ddd+[+|-][hh:mm|z], received $input"
         )
         try {
             val hour = matcher.group("hour").toInt()
@@ -69,7 +69,7 @@ internal object DateTimeUtils {
             }
             // zone
             val timeZoneString = matcher.group("timezone") ?: null
-            if (timeZoneString == null) throw DateTimeException("Expect TIME Format to be in HH-mm-ss.ddd+[+|-][hh:mm|z], received $input")
+            if (timeZoneString == null) throw DateTimeException("Expect TIME Format to be in HH:mm:ss.ddd+[+|-][hh:mm|z], received $input")
             //
             val timeZone = getTimeZoneComponent(timeZoneString)
             return OffsetTime.of(hour, minute, second, nanoOfSecond, timeZone)
