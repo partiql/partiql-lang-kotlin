@@ -9,7 +9,10 @@ import org.partiql.plan.rex.Rex;
 import java.util.List;
 
 /**
- * Logical theta-join abstract base class.
+ * Logical join abstract base class. This node currently models both correlated and de-correlated joins. In the future,
+ * this node may be used for just modeling de-correlated joins (like Calcite's
+ * <a href="https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/core/Join.html">Join</a>) and
+ * {@link RelCorrelate} modeling just correlated joins.
  */
 public abstract class RelJoin extends RelBase {
 

@@ -8,10 +8,19 @@ import org.partiql.plan.OperatorVisitor;
 import java.util.List;
 
 /**
+ * <p>
+ * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+ * </p>
+ * <p>
  * Logical nested-loop joins (correlated subqueries, lateral joins, and cross joins) abstract base class.
  * <pre>
  *     l, r <=> l CROSS JOIN r <=> l JOIN r ON TRUE
  * </pre>
+ * </p>
+ *
+ * {@link RelCorrelate} is modeled off of Calcite's
+ * <a href="https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/core/Correlate.html">Correlate</a>.
+ * Calcite's modeling moves the join's ON-condition to the right {@link Rel}'s filter.
  */
 public abstract class RelCorrelate extends RelBase {
 

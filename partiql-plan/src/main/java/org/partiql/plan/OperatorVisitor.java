@@ -70,6 +70,11 @@ public interface OperatorVisitor<R, C> {
         return defaultVisit(rel, ctx);
     }
 
+    /**
+     * <p>
+     * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+     * </p>
+     */
     default R visitCorrelate(@NotNull RelCorrelate rel, C ctx) {
         return defaultVisit(rel, ctx);
     }

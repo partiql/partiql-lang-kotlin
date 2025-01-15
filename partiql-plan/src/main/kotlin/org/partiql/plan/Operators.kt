@@ -81,6 +81,8 @@ public interface Operators {
     ): RelAggregate = RelAggregate.create(input, measures, groups)
 
     /**
+     * **Note**: This is experimental and subject to change without prior notice!
+     *
      * Create a [RelCorrelate] instance for a lateral join or correlated subquery.
      *
      * @param lhs
