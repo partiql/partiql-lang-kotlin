@@ -848,7 +848,6 @@ public class org/partiql/plan/rex/RexSubqueryComp$Comparison : org/partiql/spi/E
 	public static final field LE I
 	public static final field LT I
 	public static final field NE I
-	public static final field UNKNOWN I
 	public static fun EQ ()Lorg/partiql/plan/rex/RexSubqueryComp$Comparison;
 	public static fun GE ()Lorg/partiql/plan/rex/RexSubqueryComp$Comparison;
 	public static fun GT ()Lorg/partiql/plan/rex/RexSubqueryComp$Comparison;
@@ -862,7 +861,6 @@ public class org/partiql/plan/rex/RexSubqueryComp$Quantifier : org/partiql/spi/E
 	public static final field ALL I
 	public static final field ANY I
 	public static final field SOME I
-	public static final field UNKNOWN I
 	public static fun ALL ()Lorg/partiql/plan/rex/RexSubqueryComp$Quantifier;
 	public static fun ANY ()Lorg/partiql/plan/rex/RexSubqueryComp$Quantifier;
 	public static fun SOME ()Lorg/partiql/plan/rex/RexSubqueryComp$Quantifier;

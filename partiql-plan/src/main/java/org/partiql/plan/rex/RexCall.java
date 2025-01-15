@@ -12,6 +12,12 @@ import java.util.List;
  */
 public abstract class RexCall extends RexBase {
 
+    /**
+     * Creates a new scalar function expression.
+     * @param function the function instance backing the call
+     * @param args the arguments to the function
+     * @return a new scalar function expression
+     */
     @NotNull
     public static RexCall create(@NotNull Function.Instance function, @NotNull List<Rex> args) {
         return new Impl(function, args);
@@ -19,12 +25,14 @@ public abstract class RexCall extends RexBase {
 
     /**
      * Returns the function to invoke.
+     * @return the function to invoke
      */
     @NotNull
     public abstract Function.Instance getFunction();
 
     /**
      * Returns the list of function arguments.
+     * @return the list of function arguments
      */
     @NotNull
     public abstract List<Rex> getArgs();

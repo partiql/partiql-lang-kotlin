@@ -13,6 +13,9 @@ import java.util.List;
 public abstract class RexVar extends RexBase {
 
     /**
+     * Creates a new variable reference expression.
+     * @param scope 0-indexed scope offset.
+     * @param offset 0-indexed tuple offset.
      * @return new variable reference expression.
      */
     @NotNull
@@ -21,11 +24,13 @@ public abstract class RexVar extends RexBase {
     }
 
     /**
+     * Returns the scope number of the variable reference.
      * @return 0-indexed scope offset.
      */
     public abstract int getScope();
 
     /**
+     * Returns the offset of the variable reference within the scope.
      * @return 0-index tuple offset.
      */
     public abstract int getOffset();

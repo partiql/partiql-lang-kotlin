@@ -14,6 +14,7 @@ import java.util.List;
 public abstract class RexError extends RexBase {
 
     /**
+     * Creates a new instance of RexError.
      * @return new RexError instance
      */
     @NotNull
@@ -24,8 +25,7 @@ public abstract class RexError extends RexBase {
     @NotNull
     @Override
     protected RexType type() {
-        // TODO SHOULD BE UNKNOWN
-        return RexType.of(PType.dynamic());
+        return RexType.of(PType.unknown());
     }
 
     @NotNull

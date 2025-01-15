@@ -8,11 +8,13 @@ import org.partiql.spi.types.PType;
 import java.util.List;
 
 /**
- * Logical spread expression abstract base class.
+ * Logical spread expression abstract base class. This is equivalent to {@code TUPLEUNION} in the PartiQL Specification.
  */
 public abstract class RexSpread extends RexBase {
 
     /**
+     * Creates a new RexSpread instance.
+     * @param args spread arguments (the operands)
      * @return new RexSpread instance
      */
     @NotNull
@@ -21,6 +23,7 @@ public abstract class RexSpread extends RexBase {
     }
 
     /**
+     * Gets the spread arguments.
      * @return list of spread arguments (the operands)
      */
     public abstract List<Rex> getArgs();

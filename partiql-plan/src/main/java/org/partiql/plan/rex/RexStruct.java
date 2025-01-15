@@ -13,6 +13,8 @@ import java.util.List;
 public abstract class RexStruct extends RexBase {
 
     /**
+     * Creates a new struct expression.
+     * @param fields list of struct fields
      * @return new RexStruct instance
      */
     @NotNull
@@ -21,7 +23,10 @@ public abstract class RexStruct extends RexBase {
     }
 
     /**
-     * @return a field constructor instance
+     * Creates a new struct field.
+     * @param key field key
+     * @param value field value
+     * @return a field instance
      */
     @NotNull
     public static Field field(Rex key, Rex value) {
@@ -29,6 +34,7 @@ public abstract class RexStruct extends RexBase {
     }
 
     /**
+     * Gets the struct fields.
      * @return list of struct fields (NOT operands)
      */
     @NotNull

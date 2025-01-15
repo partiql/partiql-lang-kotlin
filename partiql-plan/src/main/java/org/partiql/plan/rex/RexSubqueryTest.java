@@ -11,16 +11,19 @@ import org.partiql.spi.types.PType;
 import java.util.List;
 
 /**
- * Logical subquery test expression abstract base class.
- * <br>
- * <pre>
- *  - <exists predicate>    "Specify a test for a non-empty set."
- *  - <unique predicate>    "Specify a test for the absence of duplicate rows."
- * </pre>
+ * Logical subquery test expression abstract base class. This is used for the EXISTS and UNIQUE predicates.
+ * <ul>
+ * <li>EXISTS: "Specify a test for a non-empty set." ({@code <exists predicate>})</li>
+ * <li>UNIQUE: "Specify a test for the absence of duplicate rows." ({@code <unique predicate>})</li>
+ * </ul>
+ * @see Test
  */
 public abstract class RexSubqueryTest extends RexBase {
 
     /**
+     * Creates a new RexSubqueryTest instance.
+     * @param input input rel (operand 0)
+     * @param test subquery test
      * @return new RexSubqueryTest instance
      */
     @NotNull
@@ -29,12 +32,14 @@ public abstract class RexSubqueryTest extends RexBase {
     }
 
     /**
+     * Gets the input rel.
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Gets the subquery test.
      * @return subquery test
      */
     @NotNull

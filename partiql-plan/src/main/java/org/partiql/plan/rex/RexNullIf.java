@@ -12,6 +12,9 @@ import java.util.List;
 public abstract class RexNullIf extends RexBase {
 
     /**
+     * Creates a new RexNullIf instance.
+     * @param v1 left operand
+     * @param v2 right operand
      * @return new RexNullIf instance
      */
     @NotNull
@@ -20,24 +23,26 @@ public abstract class RexNullIf extends RexBase {
     }
 
     /**
+     * Gets the left operand.
      * @return v1 rex (operand 0)
      */
     @NotNull
     public abstract Rex getV1();
 
     /**
+     * Gets the right operand.
      * @return v2 rex (operand 1)
      */
     @NotNull
     public abstract Rex getV2();
 
     /**
+     * Gets the type of this expression.
      * @return minimal common supertype of (NULL, typeof(v1))
      */
     @NotNull
     @Override
     protected final RexType type() {
-
         return getV1().getType();
     }
 

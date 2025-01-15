@@ -16,6 +16,8 @@ import java.util.List;
 public abstract class RexBag extends RexBase {
 
     /**
+     * Creates a new bag expression.
+     * @param values bag values
      * @return new RexBag instance
      */
     @NotNull
@@ -24,6 +26,7 @@ public abstract class RexBag extends RexBase {
     }
 
     /**
+     * Gets the values of the bag.
      * @return the values of the bag, also the operands (unordered).
      */
     @NotNull

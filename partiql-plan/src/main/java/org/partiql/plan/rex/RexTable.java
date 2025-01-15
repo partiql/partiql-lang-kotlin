@@ -13,6 +13,8 @@ import java.util.List;
 public abstract class RexTable extends RexBase {
 
     /**
+     * Creates a new RexTable instance.
+     * @param table the table implementation
      * @return new RexTable instance
      */
     @NotNull
@@ -21,6 +23,7 @@ public abstract class RexTable extends RexBase {
     }
 
     /**
+     * Returns the table implementation.
      * @return the table implementation.
      */
     public abstract Table getTable();

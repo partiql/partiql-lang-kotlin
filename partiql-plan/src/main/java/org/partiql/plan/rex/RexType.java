@@ -4,10 +4,12 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.types.PType;
 
 /**
- * [RexType] is a simple wrapper over [PType], but does not necessarily only hold a PType.
  * <p>
+ * This is a simple wrapper over {@link PType}, but does not necessarily only hold a {@link PType}.
+ * </p>
  * <p>
- * Developer Note: In later releases, a [RexType] may hold metadata to aid custom planner implementations.
+ * Developer Note: In future releases, this may hold metadata to aid custom planner implementations.
+ * </p>
  */
 public final class RexType {
 
@@ -18,13 +20,19 @@ public final class RexType {
     }
 
     /**
-     * @return a RexType from a PType.
+     * Creates a RexType from a {@link PType}.
+     * @param type a {@link PType}.
+     * @return a RexType from a {@link PType}.
      */
     @NotNull
     public static RexType of(@NotNull PType type) {
         return new RexType(type);
     }
 
+    /**
+     * Gets the underlying {@link PType}.
+     * @return the underlying {@link PType}.
+     */
     @NotNull
     public PType getPType() {
         return type;

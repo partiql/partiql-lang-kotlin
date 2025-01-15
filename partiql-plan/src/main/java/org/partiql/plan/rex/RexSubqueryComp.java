@@ -11,13 +11,20 @@ import org.partiql.spi.types.PType;
 import java.util.List;
 
 /**
- * Logical subquery comparison expression abstract base class.
+ * Logical subquery comparison expression abstract base class. This is used for the comparison operators (e.g. {@code =},
+ * {@code <}, etc.).
  * <p>
- * See SQL-99 <comparison predicate> and <quantified comparison predicate>.
+ * See SQL-99 {@code <comparison predicate>} and {@code <quantified comparison predicate>}.
+ * </p>
  */
 public abstract class RexSubqueryComp extends RexBase {
 
     /**
+     * Create a new RexSubqueryComp instance.
+     * @param input input rel (operand 0)
+     * @param args collection comparison arguments (not operands)
+     * @param comparison subquery comparison operator
+     * @param quantifier subquery comparison quantifier
      * @return new RexSubqueryComp instance
      */
     @NotNull
@@ -31,24 +38,28 @@ public abstract class RexSubqueryComp extends RexBase {
     }
 
     /**
+     * Get the input rel (operand 0).
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Get the collection comparison arguments (not operands).
      * @return collection comparison arguments (not operands).
      */
     @NotNull
     public abstract List<Rex> getArgs();
 
     /**
+     * Get the subquery comparison operator.
      * @return subquery comparison operator
      */
     @NotNull
     public abstract Comparison getComparison();
 
     /**
+     * Get the subquery comparison quantifier.
      * @return subquery comparison quantifier
      */
     @NotNull
@@ -73,7 +84,7 @@ public abstract class RexSubqueryComp extends RexBase {
     }
 
     /**
-     * SQL <comp op> for use in the <quantified comparison predicate>.
+     * SQL {@code <comp op>} for use in the {@code <quantified comparison predicate>}.
      */
     public static class Comparison extends Enum {
 
@@ -81,7 +92,6 @@ public abstract class RexSubqueryComp extends RexBase {
             super(code);
         }
 
-        public static final int UNKNOWN = 0;
         public static final int EQ = 1;
         public static final int NE = 2;
         public static final int LT = 3;
@@ -143,7 +153,7 @@ public abstract class RexSubqueryComp extends RexBase {
     }
 
     /**
-     * SQL <quantifier> for use in the <quantified comparison predicate>.
+     * SQL {@code <quantifier>} for use in the {@code <quantified comparison predicate>}.
      */
     public static class Quantifier extends Enum {
 
@@ -167,7 +177,6 @@ public abstract class RexSubqueryComp extends RexBase {
             }
         }
 
-        public static final int UNKNOWN = 0;
         public static final int ANY = 1;
         public static final int ALL = 2;
         public static final int SOME = 3;

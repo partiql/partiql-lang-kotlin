@@ -9,11 +9,14 @@ import org.partiql.spi.types.PType;
 import java.util.List;
 
 /**
- * Logical subquery in expression abstract base class.
+ * Logical subquery in expression abstract base class. This is for the {@code IN} predicate.
  */
 public abstract class RexSubqueryIn extends RexBase {
 
     /**
+     * Creates a new RexSubqueryIn instance.
+     * @param input input rel (operand 0)
+     * @param args  collection comparison arguments (not operands).
      * @return new RexSubqueryIn instance
      */
     @NotNull
@@ -22,12 +25,14 @@ public abstract class RexSubqueryIn extends RexBase {
     }
 
     /**
+     * Get the input rel (operand 0).
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Gets the collection comparison arguments (not operands).
      * @return collection comparison arguments (not operands).
      */
     @NotNull
