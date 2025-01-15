@@ -27,9 +27,9 @@ internal class RelOpIntersectDistinct(
             seed()
         }
         for (row in rhs) {
-            row.coerceMissing()
-            if (seen.remove(row)) {
-                return row
+            row.values.coerceMissing()
+            if (seen.remove(row.values)) {
+                return Row(row.values)
             }
         }
         return null
@@ -47,8 +47,8 @@ internal class RelOpIntersectDistinct(
     private fun seed() {
         init = true
         for (row in lhs) {
-            row.coerceMissing()
-            seen.add(row)
+            row.values.coerceMissing()
+            seen.add(row.values)
         }
     }
 }

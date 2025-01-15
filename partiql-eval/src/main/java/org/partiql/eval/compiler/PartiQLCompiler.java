@@ -26,14 +26,6 @@ public interface PartiQLCompiler {
         return prepare(plan, mode, Context.standard());
     }
 
-    /**
-     * Prepares the given plan into an executable PartiQL statement.
-     *
-     * @param plan The plan to compile.
-     * @param mode The mode to execute in.
-     * @param ctx The shared context object.
-     * @return The prepared statement.
-     */
     @NotNull
     public Statement prepare(@NotNull Plan plan, @NotNull Mode mode, @NotNull Context ctx);
 

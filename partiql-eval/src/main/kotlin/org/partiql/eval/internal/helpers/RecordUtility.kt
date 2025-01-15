@@ -1,6 +1,5 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.eval.Row
 import org.partiql.spi.value.Datum
 
 internal object RecordUtility {
@@ -9,8 +8,8 @@ internal object RecordUtility {
      * (treats null and missing as the same value) and we need to deterministically return a value. Here we use coerce
      * to null to follow the PartiQL spec's grouping function.
      */
-    fun Row.coerceMissing() {
-        for (i in 0..getSize()) {
+    fun Array<Datum>.coerceMissing() {
+        for (i in indices) {
             if (this[i].isMissing) {
                 this[i] = Datum.nullValue()
             }

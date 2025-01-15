@@ -23,12 +23,12 @@ internal class RelOpUnionAll(
         return when (lhs.hasNext()) {
             true -> {
                 val record = lhs.next()
-                record.coerceMissing()
+                record.values.coerceMissing()
                 record
             }
             false -> {
                 val record = rhs.next()
-                record.coerceMissing()
+                record.values.coerceMissing()
                 record
             }
         }

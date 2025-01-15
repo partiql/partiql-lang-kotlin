@@ -5,6 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumArrayComparator
 import org.partiql.eval.internal.helpers.RecordUtility.coerceMissing
+import org.partiql.spi.value.Datum
 import java.util.TreeMap
 
 internal class RelOpExceptAll(
@@ -12,7 +13,7 @@ internal class RelOpExceptAll(
     private val rhs: ExprRelation,
 ) : RelOpPeeking() {
 
-    private val seen = TreeMap<Row, Int>(DatumArrayComparator)
+    private val seen = TreeMap<Array<Datum>, Int>(DatumArrayComparator)
     private var init: Boolean = false
 
     override fun openPeeking(env: Environment) {
@@ -27,13 +28,13 @@ internal class RelOpExceptAll(
             seed()
         }
         for (row in lhs) {
-            row.coerceMissing()
-            val remaining = seen[row] ?: 0
+            row.values.coerceMissing()
+            val remaining = seen[row.values] ?: 0
             if (remaining > 0) {
-                seen[row] = remaining - 1
+                seen[row.values] = remaining - 1
                 continue
             }
-            return row
+            return Row(row.values)
         }
         return null
     }
@@ -50,9 +51,9 @@ internal class RelOpExceptAll(
     private fun seed() {
         init = true
         for (row in rhs) {
-            row.coerceMissing()
-            val n = seen[row] ?: 0
-            seen[row] = n + 1
+            row.values.coerceMissing()
+            val n = seen[row.values] ?: 0
+            seen[row.values] = n + 1
         }
     }
 }

@@ -26,10 +26,10 @@ internal class RelOpUnionDistinct(
 
     override fun peek(): Row? {
         for (record in input) {
-            record.coerceMissing()
-            if (!seen.contains(record)) {
-                seen.add(record)
-                return record
+            record.values.coerceMissing()
+            if (!seen.contains(record.values)) {
+                seen.add(record.values)
+                return Row(record.values)
             }
         }
         return null

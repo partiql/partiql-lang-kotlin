@@ -59,7 +59,7 @@ public class Environment {
      */
     public Datum get(int depth, int offset) {
         try {
-            return stack[depth].get(offset);
+            return stack[depth].values[offset];
         } catch (IndexOutOfBoundsException ex) {
             throw new RuntimeException("Invalid variable reference [$depth:$offset]\n$this");
         }
