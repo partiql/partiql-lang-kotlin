@@ -240,6 +240,7 @@ class SqlDialectTest {
         fun types() = listOf(
             // SQL
             expect("BOOL", DataType.BOOL()),
+            expect("TINYINT", DataType.TINYINT()),
             expect("SMALLINT", DataType.SMALLINT()),
             expect("INT", DataType.INT()),
             expect("REAL", DataType.REAL()),

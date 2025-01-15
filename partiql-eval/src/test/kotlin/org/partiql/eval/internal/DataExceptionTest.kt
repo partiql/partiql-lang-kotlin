@@ -42,13 +42,12 @@ class DataExceptionTest {
         @JvmStatic
         fun plusOverflowTests() = listOf(
             // TINYINT
-            // TODO add parsing and planning support for TINYINT
-//            FailureTestCase(
-//                input = "CAST(${Byte.MAX_VALUE} AS TINYINT) + CAST(1 AS TINYINT);"
-//            ),
-//            FailureTestCase(
-//                input = "CAST(${Byte.MIN_VALUE} AS TINYINT) + CAST(-1 AS TINYINT);"
-//            ),
+            FailureTestCase(
+                input = "CAST(${Byte.MAX_VALUE} AS TINYINT) + CAST(1 AS TINYINT);"
+            ),
+            FailureTestCase(
+                input = "CAST(${Byte.MIN_VALUE} AS TINYINT) + CAST(-1 AS TINYINT);"
+            ),
             // SMALLINT
             FailureTestCase(
                 input = "CAST(${Short.MAX_VALUE} AS SMALLINT) + CAST(1 AS SMALLINT);"
@@ -75,13 +74,12 @@ class DataExceptionTest {
         @JvmStatic
         fun minusOverflowTests() = listOf(
             // TINYINT
-            // TODO add parsing and planning support for TINYINT
-//            FailureTestCase(
-//                input = "CAST(${Byte.MAX_VALUE} AS TINYINT) - CAST(-1 AS TINYINT);"
-//            ),
-//            FailureTestCase(
-//                input = "CAST(${Byte.MIN_VALUE} AS TINYINT) - CAST(1 AS TINYINT);"
-//            ),
+            FailureTestCase(
+                input = "CAST(${Byte.MAX_VALUE} AS TINYINT) - CAST(-1 AS TINYINT);"
+            ),
+            FailureTestCase(
+                input = "CAST(${Byte.MIN_VALUE} AS TINYINT) - CAST(1 AS TINYINT);"
+            ),
             // SMALLINT
             FailureTestCase(
                 input = "CAST(${Short.MAX_VALUE} AS SMALLINT) - CAST(-1 AS SMALLINT);"
@@ -108,13 +106,12 @@ class DataExceptionTest {
         @JvmStatic
         fun timesOverflowTests() = listOf(
             // TINYINT
-            // TODO add parsing and planning support for TINYINT
-//            FailureTestCase(
-//                input = "CAST(${Byte.MAX_VALUE} AS TINYINT) * CAST(2 AS TINYINT);"
-//            ),
-//            FailureTestCase(
-//                input = "CAST(${Byte.MIN_VALUE} AS TINYINT) * CAST(2 AS TINYINT);"
-//            ),
+            FailureTestCase(
+                input = "CAST(${Byte.MAX_VALUE} AS TINYINT) * CAST(2 AS TINYINT);"
+            ),
+            FailureTestCase(
+                input = "CAST(${Byte.MIN_VALUE} AS TINYINT) * CAST(2 AS TINYINT);"
+            ),
             // SMALLINT
             FailureTestCase(
                 input = "CAST(${Short.MAX_VALUE} AS SMALLINT) * CAST(2 AS SMALLINT);"
@@ -141,10 +138,9 @@ class DataExceptionTest {
         @JvmStatic
         fun divideTests() = listOf(
             // TINYINT
-            // TODO add parsing and planning support for TINYINT
-//            FailureTestCase(
-//                input = "CAST(${Byte.MIN_VALUE} AS TINYINT) / CAST(-1 AS TINYINT)"
-//            ),
+            FailureTestCase(
+                input = "CAST(${Byte.MIN_VALUE} AS TINYINT) / CAST(-1 AS TINYINT)"
+            ),
             // SMALLINT
             FailureTestCase(
                 input = "CAST(${Short.MIN_VALUE} AS SMALLINT) / CAST(-1 AS SMALLINT)"
@@ -162,10 +158,9 @@ class DataExceptionTest {
         @JvmStatic
         fun divideByZeroTests() = listOf(
             // TINYINT
-            // TODO add parsing and planning support for TINYINT
-//            FailureTestCase(
-//                input = "CAST(1 AS TINYINT) / CAST(0 AS TINYINT)"
-//            ),
+            FailureTestCase(
+                input = "CAST(1 AS TINYINT) / CAST(0 AS TINYINT)"
+            ),
             // SMALLINT
             FailureTestCase(
                 input = "CAST(1 AS SMALLINT) / CAST(0 AS SMALLINT)"
@@ -183,10 +178,9 @@ class DataExceptionTest {
         @JvmStatic
         fun absOverflowTests() = listOf(
             // TINYINT
-            // TODO add parsing and planning support for TINYINT
-//            FailureTestCase(
-//                input = "ABS(CAST(${Byte.MIN_VALUE} AS TINYINT))"
-//            ),
+            FailureTestCase(
+                input = "ABS(CAST(${Byte.MIN_VALUE} AS TINYINT))"
+            ),
             // SMALLINT
             FailureTestCase(
                 input = "ABS(CAST(${Short.MIN_VALUE} AS SMALLINT))"
