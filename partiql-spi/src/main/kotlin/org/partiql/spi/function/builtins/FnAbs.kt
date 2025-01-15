@@ -3,21 +3,36 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.errors.DataException
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import kotlin.math.absoluteValue
 
-// TODO: When negate a negative value, we need to consider overflow
+/*
+ABS overflow behavior is specified in SQL1999 section 6.17:
+    9) If <absolute value expression> is specified, then let N be the value of the immediately contained
+    <numeric value expression>.
+    Case:
+    a) If N is the null value, then the result is the null value.
+    b) If N >= 0, then the result is N.
+    c) Otherwise, the result is -1 * N. If -1 * N is not representable by the result data type, then
+    an exception condition is raised: data exception — numeric value out of range
+ */
+
 internal val Fn_ABS__INT8__INT8 = Function.static(
     name = "abs",
     parameters = arrayOf(Parameter("value", PType.tinyint())),
     returns = PType.tinyint(),
 ) { args ->
-    @Suppress("DEPRECATION")
     val value = args[0].byte
-    if (value < 0) Datum.tinyint(value.times(-1).toByte()) else Datum.tinyint(value)
+    if (value == Byte.MIN_VALUE) {
+        throw DataException("Resulting value out of range for TINYINT: ABS($value)")
+    } else {
+        val result = if (value < 0) (-value).toByte() else value
+        Datum.tinyint(result)
+    }
 }
 
 internal val Fn_ABS__INT16__INT16 = Function.static(
@@ -26,7 +41,12 @@ internal val Fn_ABS__INT16__INT16 = Function.static(
     parameters = arrayOf(Parameter("value", PType.smallint())),
 ) { args ->
     val value = args[0].short
-    if (value < 0) Datum.smallint(value.times(-1).toShort()) else Datum.smallint(value)
+    if (value == Short.MIN_VALUE) {
+        throw DataException("Resulting value out of range for SMALLINT: ABS($value)")
+    } else {
+        val result = if (value < 0) (-value).toShort() else value
+        Datum.smallint(result)
+    }
 }
 
 internal val Fn_ABS__INT32__INT32 = Function.static(
@@ -35,7 +55,11 @@ internal val Fn_ABS__INT32__INT32 = Function.static(
     parameters = arrayOf(Parameter("value", PType.integer())),
 ) { args ->
     val value = args[0].int
-    Datum.integer(value.absoluteValue)
+    if (value == Int.MIN_VALUE) {
+        throw DataException("Resulting value out of range for INT: ABS($value)")
+    } else {
+        Datum.integer(value.absoluteValue)
+    }
 }
 
 internal val Fn_ABS__INT64__INT64 = Function.static(
@@ -44,7 +68,11 @@ internal val Fn_ABS__INT64__INT64 = Function.static(
     parameters = arrayOf(Parameter("value", PType.bigint())),
 ) { args ->
     val value = args[0].long
-    Datum.bigint(value.absoluteValue)
+    if (value == Long.MIN_VALUE) {
+        throw DataException("Resulting value out of range for BIGINT: ABS($value)")
+    } else {
+        Datum.bigint(value.absoluteValue)
+    }
 }
 
 internal val Fn_ABS__NUMERIC__NUMERIC = Function.static(

@@ -1998,6 +1998,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             when (ctx.datatype.type) {
                 GeneratedParser.BOOL -> DataType.BOOLEAN()
                 GeneratedParser.BOOLEAN -> DataType.BOOL()
+                GeneratedParser.TINYINT -> DataType.TINYINT()
                 GeneratedParser.SMALLINT -> DataType.SMALLINT()
                 GeneratedParser.INT2 -> DataType.INT2()
                 GeneratedParser.INTEGER2 -> DataType.INTEGER2()

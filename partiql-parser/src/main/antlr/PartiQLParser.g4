@@ -941,7 +941,7 @@ literal
 
 type
     : datatype=(
-        BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
+        BOOL | BOOLEAN | TINYINT | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
         | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER
         | STRING | SYMBOL | BLOB | CLOB | DATE | ANY
       )                                                                                                                # TypeAtomic

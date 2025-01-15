@@ -861,7 +861,7 @@ internal object RexConverter {
                 DataType.INT4, DataType.INTEGER4, DataType.INTEGER -> call(FunctionUtils.OP_IS_INT32, arg0)
                 DataType.INT -> call(FunctionUtils.OP_IS_INT, arg0)
                 DataType.INT2, DataType.SMALLINT -> call(FunctionUtils.OP_IS_INT16, arg0)
-                DataType.TINYINT -> call(FunctionUtils.OP_IS_INT8, arg0) // TODO define in parser
+                DataType.TINYINT -> call(FunctionUtils.OP_IS_INT8, arg0)
                 // <numeric type> - <approximate numeric type>
                 DataType.FLOAT -> call(FunctionUtils.OP_IS_FLOAT32, arg0)
                 DataType.REAL -> call(FunctionUtils.OP_IS_REAL, arg0)
@@ -1088,7 +1088,7 @@ internal object RexConverter {
                 DataType.BIGINT, DataType.INT8, DataType.INTEGER8 -> PType.bigint()
                 DataType.INT4, DataType.INTEGER4, DataType.INTEGER, DataType.INT -> PType.integer()
                 DataType.INT2, DataType.SMALLINT -> PType.smallint()
-                DataType.TINYINT -> PType.tinyint() // TODO define in parser
+                DataType.TINYINT -> PType.tinyint()
                 // <numeric type> - <approximate numeric type>
                 DataType.FLOAT -> PType.real()
                 DataType.REAL -> PType.real()

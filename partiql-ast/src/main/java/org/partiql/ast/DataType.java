@@ -128,7 +128,7 @@ public final class DataType extends AstEnum {
     public static final int INT2 = 24;
     public static final int INTEGER2 = 25;
     public static final int SMALLINT = 26;
-    public static final int TINYINT = 27; // TODO not defined in parser yet
+    public static final int TINYINT = 27;
     // <numeric type> - <approximate numeric type>
     public static final int FLOAT = 28;
     public static final int REAL = 29;
