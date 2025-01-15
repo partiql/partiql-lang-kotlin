@@ -20,7 +20,7 @@ internal class RelOpAggregate(
 
     private lateinit var records: Iterator<Row>
 
-    private val aggregationMap = TreeMap<Row, List<AccumulatorWrapper>>(DatumArrayComparator)
+    private val aggregationMap = TreeMap<Array<Datum>, List<AccumulatorWrapper>>(DatumArrayComparator)
 
     /**
      * Wraps an [Aggregation.Accumulator] to help with filtering distinct values.
@@ -30,7 +30,7 @@ internal class RelOpAggregate(
     class AccumulatorWrapper(
         val delegate: Aggregation.Accumulator,
         val args: List<ExprValue>,
-        val seen: TreeSet<Row>?
+        val seen: TreeSet<Array<Datum>>?
     )
 
     override fun open(env: Environment) {
@@ -50,7 +50,7 @@ internal class RelOpAggregate(
             // TODO IT DOES NOT MATTER NOW, BUT SqlCompiler SHOULD HANDLE GET THE ARGUMENT TYPES FOR .getAccumulator
             val args: Array<PType> = emptyArray()
 
-            val accumulators = aggregationMap.getOrPut(Row(evaluatedGroupByKeys)) {
+            val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
                 aggregates.map {
                     AccumulatorWrapper(
                         delegate = it.agg.getAccumulator(args),
@@ -71,7 +71,7 @@ internal class RelOpAggregate(
                     argument
                 }
                 // Skip over aggregation if DISTINCT and SEEN
-                if (function.seen != null && (function.seen.add(Row(arguments)).not())) {
+                if (function.seen != null && (function.seen.add(arguments).not())) {
                     return@forEachIndexed
                 }
                 accumulators[index].delegate.next(arguments)
@@ -93,8 +93,8 @@ internal class RelOpAggregate(
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
-                val recordValues = Row(accumulators.map { acc -> acc.delegate.value() }.toTypedArray()).concat(keysEvaluated)
-                yield(recordValues)
+                val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated
+                yield(Row(recordValues.toTypedArray()))
             }
         }
     }

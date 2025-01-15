@@ -144,6 +144,7 @@ internal class PlannerPErrorReportingTests {
                 "1 + MISSING",
                 false,
                 assertOnProblemCount(1, 0),
+                expectedType = PType.integer().toCType()
             ),
             // This will be a non-resolved function error.
             // As plus does not contain a function that match argument type with
@@ -153,6 +154,7 @@ internal class PlannerPErrorReportingTests {
                 "1 + MISSING",
                 true,
                 assertOnProblemCount(0, 1),
+                expectedType = PType.integer().toCType()
             ),
             // Attempting to do path navigation(symbol) on missing(which is not tuple)
             //  returns missing in quite mode, and error out in signal mode

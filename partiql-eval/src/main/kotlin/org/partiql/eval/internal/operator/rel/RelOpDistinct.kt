@@ -16,7 +16,7 @@ internal class RelOpDistinct(private val input: ExprRelation) : RelOpPeeking() {
 
     override fun peek(): Row? {
         for (next in input) {
-            val transformed = next
+            val transformed = Array(next.values.size) { next.values[it] }
             if (seen.contains(transformed).not()) {
                 seen.add(transformed)
                 return next

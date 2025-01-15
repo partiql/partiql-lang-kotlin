@@ -17,6 +17,7 @@ internal object FunctionUtils {
     // The following are public functions, able to be directly invoked via PartiQL text.
     const val FN_SUBSTRING: String = "substring"
     const val FN_CHAR_LENGTH: String = "char_length"
+    const val FN_MODULO: String = "mod"
 
     // The following are hidden operators, unable to be invoked via PartiQL text.
     val OP_NOT: String = hide("not")
@@ -33,7 +34,6 @@ internal object FunctionUtils {
     val OP_MINUS: String = hide("minus")
     val OP_DIVIDE: String = hide("divide")
     val OP_TIMES: String = hide("times")
-    val OP_MODULO: String = hide("modulo")
     val OP_BITWISE_AND: String = hide("bitwise_and")
     val OP_CONCAT: String = hide("concat")
     val OP_NEG: String = hide("neg")
@@ -99,7 +99,7 @@ internal object FunctionUtils {
             "-" -> OP_MINUS
             "*" -> OP_TIMES
             "/" -> OP_DIVIDE
-            "%" -> OP_MODULO
+            "%" -> FN_MODULO
             "&" -> OP_BITWISE_AND
             else -> null
         }

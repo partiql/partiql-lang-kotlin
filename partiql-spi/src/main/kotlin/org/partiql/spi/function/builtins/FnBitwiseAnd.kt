@@ -16,8 +16,8 @@ internal object FnBitwiseAnd : DiadicArithmeticOperator("bitwise_and") {
 
     override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {
         return basic(PType.tinyint()) { args ->
-            @Suppress("DEPRECATION") val arg0 = args[0].byte
-            @Suppress("DEPRECATION") val arg1 = args[1].byte
+            val arg0 = args[0].byte
+            val arg1 = args[1].byte
             Datum.tinyint(arg0 and arg1)
         }
     }

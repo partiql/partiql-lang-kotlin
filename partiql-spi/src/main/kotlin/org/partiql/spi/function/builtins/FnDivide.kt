@@ -7,6 +7,7 @@ import org.partiql.spi.errors.DataException
 import org.partiql.spi.function.Function
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
+import java.math.RoundingMode
 
 internal object FnDivide : DiadicArithmeticOperator("divide") {
 
@@ -67,24 +68,37 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
     }
 
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
-        return basic(DefaultNumeric.NUMERIC) { args ->
+        val (p, s) = dividePrecisionScale(numericLhs, numericRhs)
+        return basic(PType.numeric(p, s), numericLhs, numericRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
-            Datum.numeric(arg0 / arg1)
+            val result = arg0.divide(arg1, s, RoundingMode.HALF_UP)
+            Datum.numeric(result, p, s)
         }
     }
 
-    // SQL:Server:
-    // p = p1 - s1 + s2 + max(6, s1 + p2 + 1)
-    // s = max(6, s1 + p2 + 1)
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
-        val p = decimalLhs.precision - decimalLhs.scale + decimalRhs.scale + Math.max(6, decimalLhs.scale + decimalRhs.precision + 1)
-        val s = Math.max(6, decimalLhs.scale + decimalRhs.precision + 1)
+        val (p, s) = dividePrecisionScale(decimalLhs, decimalRhs)
         return basic(PType.decimal(p, s), decimalLhs, decimalRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
-            Datum.decimal(arg0 / arg1, p, s)
+            val result = arg0.divide(arg1, s, RoundingMode.HALF_UP)
+            Datum.decimal(result, p, s)
         }
+    }
+
+    /**
+     * SQL Server: p = p1 - s1 + s2 + max(6, s1 + p2 + 1)
+     * SQL Server: s = max(6, s1 + p2 + 1)
+     */
+    private fun dividePrecisionScale(lhs: PType, rhs: PType): Pair<Int, Int> {
+        val (p1, s1) = lhs.precision to lhs.scale
+        val (p2, s2) = rhs.precision to rhs.scale
+        val p = p1 - s1 + s2 + Math.max(6, s1 + p2 + 1)
+        val s = Math.max(6, s1 + p2 + 1)
+        val returnedP = p.coerceAtMost(38)
+        val returnedS = s.coerceAtMost(p)
+        return returnedP to returnedS
     }
 
     override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {

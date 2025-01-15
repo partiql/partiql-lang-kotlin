@@ -8,7 +8,7 @@ import org.partiql.spi.function.Function
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal object FnModulo : DiadicArithmeticOperator("modulo") {
+internal object FnModulo : DiadicArithmeticOperator("mod", false) {
 
     init {
         fillTable()
@@ -63,10 +63,20 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
     }
 
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
-        return basic(DefaultNumeric.NUMERIC) { args ->
+        val (p, s) = decimalPrecisionScale(numericLhs, numericRhs)
+        return basic(PType.numeric(p, s), numericLhs, numericRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
-            Datum.numeric(arg0 % arg1)
+            Datum.numeric(arg0 % arg1, p, s)
+        }
+    }
+
+    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
+        val (p, s) = decimalPrecisionScale(decimalLhs, decimalRhs)
+        return basic(PType.decimal(p, s), decimalLhs, decimalRhs) { args ->
+            val arg0 = args[0].bigDecimal
+            val arg1 = args[1].bigDecimal
+            Datum.decimal(arg0 % arg1, p, s)
         }
     }
 
@@ -75,14 +85,14 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
      * p = min(p1 - s1, p2 - s2) + max(s1, s2)
      * s = max(s1, s2)
      */
-    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
-        val p = Math.min(decimalLhs.precision - decimalLhs.scale, decimalRhs.precision - decimalRhs.scale) + Math.max(decimalLhs.scale, decimalRhs.scale)
-        val s = Math.max(decimalLhs.scale, decimalRhs.scale)
-        return basic(PType.decimal(p, s), decimalLhs, decimalRhs) { args ->
-            val arg0 = args[0].bigDecimal
-            val arg1 = args[1].bigDecimal
-            Datum.decimal(arg0 % arg1, p, s)
-        }
+    private fun decimalPrecisionScale(lhs: PType, rhs: PType): Pair<Int, Int> {
+        val (p1, s1) = lhs.precision to lhs.scale
+        val (p2, s2) = rhs.precision to rhs.scale
+        val p = (p1 - s1).coerceAtMost(p2 - s2) + s1.coerceAtLeast(s2)
+        val s = s1.coerceAtLeast(s2)
+        val returnedP = p.coerceAtMost(38)
+        val returnedS = s.coerceAtMost(p)
+        return returnedP to returnedS
     }
 
     override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {

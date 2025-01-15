@@ -1,4 +1,4 @@
-// TODO: Alias tests. Needed for V1 release.
+// TODO: NOT NEEDED FOR V1 RELEASE. Alias tests. Fixing this would not result in an API change.
 PERMISSIVE:::testing alias support
 STRICT:::testing alias support
 PERMISSIVE:::testing nested alias support
@@ -6,19 +6,13 @@ STRICT:::testing nested alias support
 PERMISSIVE:::group and order by count
 STRICT:::group and order by count
 
-// TODO: Arithmetic tests. Needed for V1 release.
-PERMISSIVE:::division with mixed StaticType
-STRICT:::division with mixed StaticType
-PERMISSIVE:::repeatingDecimal
-STRICT:::repeatingDecimal
-PERMISSIVE:::repeatingDecimalHigherPrecision
-STRICT:::repeatingDecimalHigherPrecision
-PERMISSIVE:::divDecimalInt
-STRICT:::divDecimalInt
-PERMISSIVE:::subtractionOutOfAllowedPrecision
-STRICT:::subtractionOutOfAllowedPrecision
+// TODO: NOT NEEDED FOR V1 RELEASE. Arithmetic tests. All tests are wrong.
+PERMISSIVE:::repeatingDecimal // TODO: This is wrong. 4.0000 / 3.0 = 1.3333333
+STRICT:::repeatingDecimal // TODO: This is wrong. 4.0000 / 3.0 = 1.3333333
+PERMISSIVE:::subtractionOutOfAllowedPrecision // TODO: This is wrong. 1e100 - 1e-100 = 1e100
+STRICT:::subtractionOutOfAllowedPrecision // TODO: This is wrong. 1e100 - 1e-100 = 1e100
 
-// TODO: Datetime methods for EXTRACT for TIME WITH TIMEZONE and TIMESTAMP WITH TIMEZONE
+// TODO: NEEDED. Datetime methods for EXTRACT for TIME WITH TIMEZONE and TIMESTAMP WITH TIMEZONE
 PERMISSIVE:::EXTRACT(SECOND FROM TIME (2) '01:23:45.678')
 STRICT:::EXTRACT(SECOND FROM TIME (2) '01:23:45.678')
 PERMISSIVE:::EXTRACT(HOUR FROM TIME (2) WITH TIME ZONE '01:23:45.678-06:30')
@@ -34,7 +28,7 @@ STRICT:::EXTRACT(TIMEZONE_HOUR FROM `2000-01-02T03:04:05.67-08:09`)
 PERMISSIVE:::EXTRACT(TIMEZONE_MINUTE FROM `2000-01-02T03:04:05.67-08:09`)
 STRICT:::EXTRACT(TIMEZONE_MINUTE FROM `2000-01-02T03:04:05.67-08:09`)
 
-// TODO: Undefined variable tests. Needed for V1 release.
+// TODO: NOT NEEDED FOR V1 RELEASE. Undefined variable tests. The references are ambiguous, and tests likely need to be updated.
 PERMISSIVE:::GROUP BY binding referenced in FROM clause
 PERMISSIVE:::GROUP BY binding referenced in WHERE clause
 PERMISSIVE:::GROUP AS binding referenced in FROM clause
@@ -56,72 +50,23 @@ STRICT:::MYSQL_SELECT_20
 PERMISSIVE:::MYSQL_SELECT_21
 STRICT:::MYSQL_SELECT_21
 
-// TODO: Negative offset. Needed for V1 release.
+// TODO: NOT NEEDED FOR V1 RELEASE. Negative offset. No API change. No impact.
 PERMISSIVE:::offset -1
 STRICT:::offset -1
 STRICT:::offset 1-2
 
-// TODO: Mistyped Coll Aggs. Needed for V1 release.
-STRICT:::COLL_MAX non-collection
-STRICT:::COLL_AVG non-collection
-STRICT:::COLL_COUNT non-collection
-STRICT:::COLL_SUM non-collection
-STRICT:::COLL_MIN non-collection
-STRICT:::COLL_ANY non-collection
-STRICT:::COLL_SOME non-collection
-STRICT:::COLL_EVERY non-collection
-
-// TODO: Mistyped functions. Needed for V1 release.
-STRICT:::MOD(MISSING, 'some string')
-STRICT:::MOD('some string', MISSING)
-STRICT:::MOD(NULL, 'some string')
-STRICT:::MOD('some string', NULL)
-STRICT:::MOD(3, 'some string')
-STRICT:::MOD('some string', 3)
-STRICT:::CARDINALITY('foo') type mismatch
-STRICT:::OCTET_LENGTH invalid type
-STRICT:::CHARACTER_LENGTH invalid type
-STRICT:::ABS('foo')
-STRICT:::POSITION invalid type in string
-STRICT:::POSITION string in invalid type
-STRICT:::BIT_LENGTH invalid type
-
-// TODO: Invalid casts. Needed for V1 release.
-STRICT:::cast to int invalid target type{value:"[1, 2]",target:"LIST"}
-STRICT:::cast to int invalid target type{value:"[1]",target:"LIST"}
-STRICT:::cast to int invalid target type{value:"[]",target:"LIST"}
-STRICT:::cast to int invalid target type{value:"{'a': 1}",target:"STRUCT"}
-STRICT:::cast to int invalid target type{value:"{'a': '12'}",target:"STRUCT"}
-STRICT:::cast to int invalid target type{value:"{}",target:"STRUCT"}
-STRICT:::cast to int invalid target type{value:"<<1, 2>>",target:"BAG"}
-STRICT:::cast to int invalid target type{value:"<<1>>",target:"BAG"}
-STRICT:::cast to int invalid target type{value:"<<>>",target:"BAG"}
-
-// TODO: Special forms. Needed for V1 release.
+// TODO: NOT NEEDED FOR V1 RELEASE. Special forms. No API change.
 PERMISSIVE:::More than one character given for ESCAPE
-STRICT:::LIKE bad value type
-STRICT:::LIKE bad pattern type
-STRICT:::LIKE bad escape type
 
-// TODO: Bag ops. Needed for V1 release.
+// TODO: MAYBE NEEDED FOR V1 RELEASE. Bag ops.
 PERMISSIVE:::Example 6 - Value Coercion not union-compatible
 STRICT:::Example 6 - Value Coercion not union-compatible
 
-// TODO: Operators. Needed for V1 release.
-STRICT:::data type mismatch in comparison expression
-
-// TODO: Sexp tests. Needed for V1 release.
+// TODO: NOT NEEDED FOR V1 RELEASE. Sexp tests. This is hotly debated.
 PERMISSIVE:::projectOfSexp
 STRICT:::projectOfSexp
 
-// TODO: Miscellaneous. Needed for V1 release.
-STRICT:::invalid extract year from time
-STRICT:::invalid extract month from time
-STRICT:::invalid extract day from time
-STRICT:::invalid extract month from time with time zone
-STRICT:::invalid extract day from time with time zone
-
-// TODO: GPML. Not needed for V1 release.
+// TODO: NOT NEEDED FOR V1 RELEASE. GPML.
 PERMISSIVE:::Right with variables
 STRICT:::Right with variables
 PERMISSIVE:::Right with spots

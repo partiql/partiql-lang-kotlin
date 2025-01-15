@@ -31,8 +31,8 @@ internal class RelOpExclude(
         exclusions.forEach { exclusion ->
             // TODO memoize offsets and steps (i.e. don't call getVar(), getOffset(), and getItems() every time).
             val o = exclusion.getVar().getOffset()
-            val value = record[o]
-            record[o] = value.exclude(exclusion.getItems())
+            val value = record.values[o]
+            record.values[o] = value.exclude(exclusion.getItems())
         }
         return record
     }
