@@ -3,6 +3,7 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.errors.DataException
 import org.partiql.spi.function.Function
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -15,9 +16,13 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
 
     override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {
         return basic(PType.tinyint()) { args ->
-            @Suppress("DEPRECATION") val arg0 = args[0].byte
-            @Suppress("DEPRECATION") val arg1 = args[1].byte
-            Datum.tinyint((arg0 % arg1).toByte())
+            val arg0 = args[0].byte
+            val arg1 = args[1].byte
+            if (arg1 == 0.toByte()) {
+                throw DataException("Division by zero for TINYINT: $arg0 % $arg1")
+            } else {
+                Datum.tinyint((arg0 % arg1).toByte())
+            }
         }
     }
 
@@ -25,7 +30,11 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
         return basic(PType.smallint()) { args ->
             val arg0 = args[0].short
             val arg1 = args[1].short
-            Datum.smallint((arg0 % arg1).toShort())
+            if (arg1 == 0.toShort()) {
+                throw DataException("Division by zero for SMALLINT: $arg0 % $arg1")
+            } else {
+                Datum.smallint((arg0 % arg1).toShort())
+            }
         }
     }
 
@@ -33,7 +42,11 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
         return basic(PType.integer()) { args ->
             val arg0 = args[0].int
             val arg1 = args[1].int
-            Datum.integer(arg0 % arg1)
+            if (arg1 == 0) {
+                throw DataException("Division by zero for INT: $arg0 % $arg1")
+            } else {
+                Datum.integer(arg0 % arg1)
+            }
         }
     }
 
@@ -41,7 +54,11 @@ internal object FnModulo : DiadicArithmeticOperator("modulo") {
         return basic(PType.bigint()) { args ->
             val arg0 = args[0].long
             val arg1 = args[1].long
-            Datum.bigint(arg0 % arg1)
+            if (arg1 == 0L) {
+                throw DataException("Division by zero for BIGINT: $arg0 % $arg1")
+            } else {
+                Datum.bigint(arg0 % arg1)
+            }
         }
     }
 
