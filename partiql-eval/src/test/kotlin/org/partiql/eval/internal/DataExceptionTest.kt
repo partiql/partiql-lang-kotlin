@@ -34,6 +34,10 @@ class DataExceptionTest {
     @MethodSource("divideByZeroTests")
     fun divideByZero(tc: FailureTestCase) = tc.run()
 
+    @ParameterizedTest
+    @MethodSource("absOverflowTests")
+    fun absOverflow(tc: FailureTestCase) = tc.run()
+
     companion object {
         @JvmStatic
         fun plusOverflowTests() = listOf(
@@ -173,6 +177,27 @@ class DataExceptionTest {
             // BIGINT
             FailureTestCase(
                 input = "CAST(1 AS BIGINT) / CAST(0 AS BIGINT)"
+            )
+        )
+
+        @JvmStatic
+        fun absOverflowTests() = listOf(
+            // TINYINT
+            // TODO add parsing and planning support for TINYINT
+//            FailureTestCase(
+//                input = "ABS(CAST(${Byte.MIN_VALUE} AS TINYINT))"
+//            ),
+            // SMALLINT
+            FailureTestCase(
+                input = "ABS(CAST(${Short.MIN_VALUE} AS SMALLINT))"
+            ),
+            // INT
+            FailureTestCase(
+                input = "ABS(CAST(${Integer.MIN_VALUE} AS INT))"
+            ),
+            // BIGINT
+            FailureTestCase(
+                input = "ABS(CAST(${Long.MIN_VALUE} AS BIGINT))"
             )
         )
     }
