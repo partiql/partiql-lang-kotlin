@@ -8,7 +8,12 @@ import org.partiql.plan.rel.Rel;
 import java.util.List;
 
 /**
+ * <p>
+ * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+ * </p>
+ * <p>
  * Logical subquery expression abstract base class.
+ * </p>
  */
 public abstract class RexSubquery extends RexBase {
 
