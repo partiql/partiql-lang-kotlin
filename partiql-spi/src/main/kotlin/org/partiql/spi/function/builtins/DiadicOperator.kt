@@ -26,9 +26,13 @@ internal abstract class DiadicOperator(
 
     companion object {
         private val DEC_TINY_INT = PType.decimal(3, 0)
+        private val NUM_TINY_INT = PType.numeric(3, 0)
         private val DEC_SMALL_INT = PType.decimal(5, 0)
+        private val NUM_SMALL_INT = PType.numeric(5, 0)
         private val DEC_INT = PType.decimal(10, 0)
+        private val NUM_INT = PType.numeric(10, 0)
         private val DEC_BIG_INT = PType.decimal(19, 0)
+        private val NUM_BIG_INT = PType.numeric(19, 0)
     }
 
     override fun getName(): String {
@@ -42,6 +46,12 @@ internal abstract class DiadicOperator(
     override fun getInstance(args: Array<PType>): Function.Instance? {
         val lhs = args[0]
         val rhs = args[1]
+        val (newLhs, newRhs) = getOperands(lhs, rhs) ?: return null
+        val instance = instances[lhs.code()][rhs.code()]
+        return instance(newLhs, newRhs)
+    }
+
+    private fun getOperands(lhs: PType, rhs: PType): Pair<PType, PType>? {
         val lhsPrecedence = TYPE_PRECEDENCE[lhs.code()] ?: return null
         val rhsPrecedence = TYPE_PRECEDENCE[rhs.code()] ?: return null
         val (newLhs, newRhs) = when (lhsPrecedence.compareTo(rhsPrecedence)) {
@@ -49,8 +59,7 @@ internal abstract class DiadicOperator(
             0 -> (lhs to rhs)
             else -> (lhs to lhs)
         }
-        val instance = instances[lhs.code()][rhs.code()]
-        return instance(newLhs, newRhs)
+        return newLhs to newRhs
     }
 
     /**
@@ -171,7 +180,6 @@ internal abstract class DiadicOperator(
     }
 
     /**
-     * TODO: This will soon be removed.
      * @param numericLhs TODO
      * @param numericRhs TODO
      * @return TODO
@@ -284,6 +292,29 @@ internal abstract class DiadicOperator(
         fillTable(PType.UNKNOWN, PType.BLOB) { _, rhs -> instance(rhs, rhs) }
     }
 
+    private fun fillNumericTable() {
+        // Tiny Int
+        fillTable(PType.TINYINT, PType.NUMERIC) { lhs, rhs -> getNumericInstance(NUM_TINY_INT, rhs) }
+        fillTable(PType.NUMERIC, PType.TINYINT) { lhs, rhs -> getNumericInstance(lhs, NUM_TINY_INT) }
+
+        // Small Int
+        fillTable(PType.SMALLINT, PType.NUMERIC) { lhs, rhs -> getNumericInstance(NUM_SMALL_INT, rhs) }
+        fillTable(PType.NUMERIC, PType.SMALLINT) { lhs, rhs -> getNumericInstance(lhs, NUM_SMALL_INT) }
+
+        // Integer
+        fillTable(PType.INTEGER, PType.NUMERIC) { lhs, rhs -> getNumericInstance(NUM_INT, rhs) }
+        fillTable(PType.NUMERIC, PType.INTEGER) { lhs, rhs -> getNumericInstance(lhs, NUM_INT) }
+
+        // Big Int
+        fillTable(PType.BIGINT, PType.NUMERIC) { lhs, rhs -> getNumericInstance(NUM_BIG_INT, rhs) }
+        fillTable(PType.NUMERIC, PType.BIGINT) { lhs, rhs -> getNumericInstance(lhs, NUM_BIG_INT) }
+
+        // Numeric
+        fillTable(PType.NUMERIC, PType.NUMERIC) { lhs, rhs -> getNumericInstance(lhs, rhs) }
+        fillTable(PType.UNKNOWN, PType.NUMERIC) { lhs, rhs -> getNumericInstance(rhs, rhs) }
+        fillTable(PType.NUMERIC, PType.UNKNOWN) { lhs, rhs -> getNumericInstance(lhs, lhs) }
+    }
+
     private fun fillDecimalTable() {
         // Tiny Int
         fillTable(PType.TINYINT, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(DEC_TINY_INT, rhs) }
@@ -302,8 +333,8 @@ internal abstract class DiadicOperator(
         fillTable(PType.DECIMAL, PType.BIGINT) { lhs, rhs -> getDecimalInstance(lhs, DEC_BIG_INT) }
 
         // Numeric
-        fillTable(PType.NUMERIC, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(PType.decimal(38, 19), rhs) } // TODO: Convert numeric to decimal once numeric is not modeled as BigInteger
-        fillTable(PType.DECIMAL, PType.NUMERIC) { lhs, rhs -> getDecimalInstance(lhs, PType.decimal(38, 19)) } // TODO: Convert numeric to decimal once numeric is not modeled as BigInteger
+        fillTable(PType.NUMERIC, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(PType.decimal(lhs.precision, lhs.scale), rhs) }
+        fillTable(PType.DECIMAL, PType.NUMERIC) { lhs, rhs -> getDecimalInstance(lhs, PType.decimal(rhs.precision, rhs.scale)) }
 
         // Decimal
         fillTable(PType.DECIMAL, PType.DECIMAL) { lhs, rhs -> getDecimalInstance(lhs, rhs) }
@@ -318,7 +349,7 @@ internal abstract class DiadicOperator(
         fillNumberTable(PType.INTEGER, ::getIntegerInstance)
         fillNumberTable(PType.BIGINT, ::getBigIntInstance)
         fillDecimalTable()
-        fillNumberTable(PType.NUMERIC, ::getNumericInstance)
+        fillNumericTable()
         fillNumberTable(PType.REAL, ::getRealInstance)
         fillNumberTable(PType.DOUBLE, ::getDoubleInstance)
         fillTimeTable(::getTimeInstance)

@@ -19,9 +19,9 @@ internal val Fn_BETWEEN__INT8_INT8_INT8__BOOL = FunctionUtils.hidden(
     ),
 
 ) { args ->
-    @Suppress("DEPRECATION") val value = args[0].byte
-    @Suppress("DEPRECATION") val lower = args[1].byte
-    @Suppress("DEPRECATION") val upper = args[2].byte
+    val value = args[0].byte
+    val lower = args[1].byte
+    val upper = args[2].byte
     Datum.bool(value in lower..upper)
 }
 

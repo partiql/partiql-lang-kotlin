@@ -1,4 +1,4 @@
-// TODO: Alias tests. Needed for V1 release.
+// TODO: Alias tests. Not needed for V1 release. Fixing this would not result in an API change.
 PERMISSIVE:::testing alias support
 STRICT:::testing alias support
 PERMISSIVE:::testing nested alias support
@@ -6,17 +6,11 @@ STRICT:::testing nested alias support
 PERMISSIVE:::group and order by count
 STRICT:::group and order by count
 
-// TODO: Arithmetic tests. Needed for V1 release.
-PERMISSIVE:::division with mixed StaticType
-STRICT:::division with mixed StaticType
-PERMISSIVE:::repeatingDecimal
-STRICT:::repeatingDecimal
-PERMISSIVE:::repeatingDecimalHigherPrecision
-STRICT:::repeatingDecimalHigherPrecision
-PERMISSIVE:::divDecimalInt
-STRICT:::divDecimalInt
-PERMISSIVE:::subtractionOutOfAllowedPrecision
-STRICT:::subtractionOutOfAllowedPrecision
+// TODO: Arithmetic tests.
+PERMISSIVE:::repeatingDecimal // TODO: This is wrong. 4.0000 / 3.0 = 1.3333333
+STRICT:::repeatingDecimal // TODO: This is wrong. 4.0000 / 3.0 = 1.3333333
+PERMISSIVE:::subtractionOutOfAllowedPrecision // TODO: This is wrong. 1e100 - 1e-100 = 1e100
+STRICT:::subtractionOutOfAllowedPrecision // TODO: This is wrong. 1e100 - 1e-100 = 1e100
 
 // TODO: Datetime methods for EXTRACT for TIME WITH TIMEZONE and TIMESTAMP WITH TIMEZONE
 PERMISSIVE:::EXTRACT(SECOND FROM TIME (2) '01:23:45.678')

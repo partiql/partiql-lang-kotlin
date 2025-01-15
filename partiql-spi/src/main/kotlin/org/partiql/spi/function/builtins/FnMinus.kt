@@ -69,23 +69,24 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
     }
 
-    // TODO: Delete this
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
-        return basic(DefaultNumeric.NUMERIC) { args ->
+        val (p, s) = minusPrecisionScale(numericLhs, numericRhs)
+        return Function.instance(
+            name = getName(),
+            returns = PType.numeric(p, s),
+            parameters = arrayOf(
+                Parameter("lhs", numericLhs),
+                Parameter("rhs", numericRhs),
+            )
+        ) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
-            Datum.numeric(arg0 - arg1)
+            Datum.numeric(arg0 - arg1, p, s)
         }
     }
 
-    /**
-     * Precision and scale calculation:
-     * P = max(s1, s2) + max(p1 - s1, p2 - s2) + 1
-     * S = max(s1, s2)
-     */
     override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
-        val p = Math.min(38, Math.max(decimalLhs.scale, decimalRhs.scale) + Math.max(decimalLhs.precision - decimalLhs.scale, decimalRhs.precision - decimalRhs.scale) + 1)
-        val s = Math.min(38, Math.max(decimalLhs.scale, decimalRhs.scale))
+        val (p, s) = minusPrecisionScale(decimalLhs, decimalRhs)
         return Function.instance(
             name = getName(),
             returns = PType.decimal(p, s),
@@ -98,6 +99,20 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
             val arg1 = args[1].bigDecimal
             Datum.decimal(arg0 - arg1, p, s)
         }
+    }
+
+    /**
+     * P = max(s1, s2) + max(p1 - s1, p2 - s2) + 1
+     * S = max(s1, s2)
+     */
+    private fun minusPrecisionScale(lhs: PType, rhs: PType): Pair<Int, Int> {
+        val (p1, s1) = lhs.precision to lhs.scale
+        val (p2, s2) = rhs.precision to rhs.scale
+        val p = s1.coerceAtLeast(s2) + (p1 - s1).coerceAtLeast(p2 - s2) + 1
+        val s = s1.coerceAtLeast(s2)
+        val returnedP = p.coerceAtMost(38)
+        val returnedS = s.coerceAtMost(p)
+        return returnedP to returnedS
     }
 
     override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {

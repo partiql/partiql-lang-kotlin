@@ -50,7 +50,6 @@ internal object FnLte : DiadicComparisonOperator("lte") {
         }
     }
 
-    // TODO: Update
     override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
         return basic(PType.bool(), DefaultNumeric.NUMERIC) { args ->
             val lhs = args[0].bigDecimal
