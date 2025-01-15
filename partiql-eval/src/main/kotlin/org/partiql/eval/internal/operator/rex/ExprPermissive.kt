@@ -2,7 +2,6 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
-import org.partiql.spi.errors.CardinalityViolation
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.TypeCheckException
@@ -25,8 +24,6 @@ internal class ExprPermissive(private var expr: ExprValue) :
                 else -> throw e
             }
         } catch (e: TypeCheckException) {
-            Datum.missing()
-        } catch (e: CardinalityViolation) {
             Datum.missing()
         } catch (e: InvalidOperationException) {
             Datum.missing()

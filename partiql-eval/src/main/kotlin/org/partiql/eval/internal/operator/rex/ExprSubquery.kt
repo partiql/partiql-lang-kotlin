@@ -3,8 +3,8 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.errors.CardinalityViolation
 import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -47,7 +47,7 @@ internal class ExprSubquery(input: ExprRelation, constructor: ExprValue) :
      * constructed value.
      *
      * @return the constructed constructor. Returns null when no rows are returned from the input.
-     * @throws CardinalityViolation when more than one row is returned from the input.
+     * @throws org.partiql.spi.errors.PErrorException when more than one row is returned from the input.
      * @throws TypeCheckException when the constructor is not a struct.
      */
     private fun getFirst(env: Environment): Datum? {
@@ -60,7 +60,7 @@ internal class ExprSubquery(input: ExprRelation, constructor: ExprValue) :
         val tuple = _constructor.eval(env.push(firstRecord)).check(STRUCT)
         if (_input.hasNext()) {
             _input.close()
-            throw CardinalityViolation()
+            throw PErrors.cardinalityViolationException()
         }
         _input.close()
         return tuple

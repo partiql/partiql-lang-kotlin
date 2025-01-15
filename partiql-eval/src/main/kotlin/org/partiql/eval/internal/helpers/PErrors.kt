@@ -9,10 +9,18 @@ import org.partiql.spi.types.PType
 internal object PErrors {
 
     /**
-     * Throws a PErrorException with code: [PError.NUMERIC_VALUE_OUT_OF_RANGE].
+     * Returns a PErrorException with code: [PError.NUMERIC_VALUE_OUT_OF_RANGE].
      */
     fun numericOutOfRangeException(value: String, type: PType): PErrorException {
         val pError = numericOutOfRange(value, type)
+        return PErrorException(pError)
+    }
+
+    /**
+     * Returns a PErrorException with code: [PError.CARDINALITY_VIOLATION].
+     */
+    fun cardinalityViolationException(): PErrorException {
+        val pError = cardinalityViolation()
         return PErrorException(pError)
     }
 
@@ -26,6 +34,19 @@ internal object PErrors {
             PErrorKind.EXECUTION(),
             null,
             mapOf("VALUE" to value, "TYPE" to type)
+        )
+    }
+
+    /**
+     * Returns a PError with code: [PError.CARDINALITY_VIOLATION].
+     */
+    private fun cardinalityViolation(): PError {
+        return PError(
+            PError.CARDINALITY_VIOLATION,
+            Severity.ERROR(),
+            PErrorKind.EXECUTION(),
+            null,
+            emptyMap()
         )
     }
 }
