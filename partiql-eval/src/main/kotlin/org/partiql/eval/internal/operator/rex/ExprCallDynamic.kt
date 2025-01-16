@@ -51,7 +51,6 @@ internal class ExprCallDynamic(
         var candidate = candidates[actualTypes]
         if (candidate == null) {
             candidate = match(actualTypes) ?: throw PErrors.functionTypeMismatchException(name, actualTypes, functions.toList())
-            // throw TypeCheckException("Could not find function $name with types: $actualTypes.")
             candidates[actualTypes] = candidate
         }
         return candidate.eval(actualArgs)

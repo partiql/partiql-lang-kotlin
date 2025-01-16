@@ -3,6 +3,7 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getText
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 
@@ -11,8 +12,11 @@ internal class ExprStructStrict(private val fields: List<ExprStructField>) :
     override fun eval(env: Environment): Datum {
         val fields = fields.mapNotNull {
             val key = it.key.eval(env)
-            if (key.isNull || key.isMissing) {
-                throw NullPointerException("Struct key was null or missing.")
+            if (key.isNull) {
+                return Datum.nullValue(PType.struct())
+            }
+            if (key.isMissing) {
+                return Datum.missing(PType.struct())
             }
             val keyString = key.getText()
             val value = it.value.eval(env)

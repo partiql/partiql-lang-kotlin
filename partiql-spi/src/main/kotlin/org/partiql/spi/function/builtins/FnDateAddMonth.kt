@@ -42,23 +42,6 @@ internal val Fn_DATE_ADD_MONTH__INT64_DATE__DATE = FunctionUtils.hidden(
     Datum.date(datetimeValue.plusMonths(intervalValue))
 }
 
-internal val Fn_DATE_ADD_MONTH__INT_DATE__DATE = FunctionUtils.hidden(
-
-    name = "date_add_month",
-    returns = PType.date(),
-    parameters = arrayOf(
-        Parameter("interval", DefaultNumeric.NUMERIC),
-        Parameter("datetime", PType.date()),
-    ),
-
-) { args ->
-    val interval = args[0].bigDecimal
-    val datetime = args[1].localDate
-    val datetimeValue = datetime
-    val intervalValue = interval.toLong()
-    Datum.date(datetimeValue.plusMonths(intervalValue))
-}
-
 internal val Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
 
     name = "date_add_month",
@@ -90,22 +73,5 @@ internal val Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP = FunctionUtils.hidde
     val datetime = args[1].localDateTime
     val datetimeValue = datetime
     val intervalValue = interval
-    Datum.timestamp(datetimeValue.plusMonths(intervalValue), 6)
-}
-
-internal val Fn_DATE_ADD_MONTH__INT_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
-
-    name = "date_add_month",
-    returns = PType.timestamp(6),
-    parameters = arrayOf(
-        Parameter("interval", DefaultNumeric.NUMERIC),
-        Parameter("datetime", PType.timestamp(6)),
-    ),
-
-) { args ->
-    val interval = args[0].bigDecimal
-    val datetime = args[1].localDateTime
-    val datetimeValue = datetime
-    val intervalValue = interval.toLong()
     Datum.timestamp(datetimeValue.plusMonths(intervalValue), 6)
 }

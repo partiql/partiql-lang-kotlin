@@ -51,4 +51,10 @@ public class PErrorException extends PErrorListenerException {
     public int hashCode() {
         return Objects.hashCode(error);
     }
+
+    @Override
+    public synchronized Throwable fillInStackTrace() {
+        // This method is normally extremely expensive, especially in permissive mode.
+        return this;
+    }
 }

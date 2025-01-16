@@ -337,6 +337,7 @@ public class org/partiql/spi/errors/PErrorException : org/partiql/spi/errors/PEr
 	public fun <init> (Lorg/partiql/spi/errors/PError;)V
 	public fun <init> (Lorg/partiql/spi/errors/PError;Ljava/lang/Throwable;)V
 	public fun equals (Ljava/lang/Object;)Z
+	public fun fillInStackTrace ()Ljava/lang/Throwable;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

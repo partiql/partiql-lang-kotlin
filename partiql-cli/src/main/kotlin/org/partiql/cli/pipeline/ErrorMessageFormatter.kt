@@ -103,7 +103,7 @@ object ErrorMessageFormatter {
         val value = error.getOrNull("VALUE", String::class.java)
         val valueStr = prepare(value.toString(), " (", ")")
         val type = error.getOrNull("TYPE", PType::class.java)
-        val typeString = prepare(type.toString(), "for type ")
+        val typeString = prepare(type.toString(), " for type ")
         return "Numeric value$valueStr is out of range$typeString."
     }
 
@@ -114,7 +114,7 @@ object ErrorMessageFormatter {
         val value = error.getOrNull("VALUE", String::class.java)
         val valueStr = prepare(value.toString(), " (", ")")
         val type = error.getOrNull("TYPE", PType::class.java)
-        val typeString = prepare(type.toString(), "to type ")
+        val typeString = prepare(type.toString(), " to type ")
         return "Invalid character value$valueStr for cast$typeString."
     }
 

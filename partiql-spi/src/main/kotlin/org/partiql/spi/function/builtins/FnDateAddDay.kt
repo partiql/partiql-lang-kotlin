@@ -42,23 +42,6 @@ internal val Fn_DATE_ADD_DAY__INT64_DATE__DATE = FunctionUtils.hidden(
     Datum.date(datetimeValue.plusDays(intervalValue))
 }
 
-internal val Fn_DATE_ADD_DAY__INT_DATE__DATE = FunctionUtils.hidden(
-
-    name = "date_add_day",
-    returns = PType.date(),
-    parameters = arrayOf(
-        Parameter("interval", DefaultNumeric.NUMERIC),
-        Parameter("datetime", PType.date()),
-    ),
-
-) { args ->
-    val interval = args[0].bigDecimal
-    val datetime = args[1].localDate
-    val datetimeValue = datetime
-    val intervalValue = interval.toLong()
-    Datum.date(datetimeValue.plusDays(intervalValue))
-}
-
 internal val Fn_DATE_ADD_DAY__INT32_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
 
     name = "date_add_day",
@@ -90,22 +73,5 @@ internal val Fn_DATE_ADD_DAY__INT64_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
     val datetime = args[1].localDateTime
     val datetimeValue = datetime
     val intervalValue = interval
-    Datum.timestamp(datetimeValue.plusDays(intervalValue), 6)
-}
-
-internal val Fn_DATE_ADD_DAY__INT_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
-
-    name = "date_add_day",
-    returns = PType.timestamp(6),
-    parameters = arrayOf(
-        Parameter("interval", DefaultNumeric.NUMERIC),
-        Parameter("datetime", PType.timestamp(6)),
-    ),
-
-) { args ->
-    val interval = args[0].bigDecimal
-    val datetime = args[1].localDateTime
-    val datetimeValue = datetime
-    val intervalValue = interval.toLong()
     Datum.timestamp(datetimeValue.plusDays(intervalValue), 6)
 }

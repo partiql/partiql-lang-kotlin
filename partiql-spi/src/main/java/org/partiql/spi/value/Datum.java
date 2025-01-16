@@ -339,18 +339,20 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param type the type of the value
      * @return a typed null value
+     * @throws PErrorException if the type is not a runtime type.
      */
     @NotNull
-    static Datum nullValue(@NotNull PType type) {
+    static Datum nullValue(@NotNull PType type) throws PErrorException {
         return new DatumNull(type);
     }
 
     /**
      * @param type the type of the value
      * @return a typed missing value
+     * @throws PErrorException if the type is not a runtime type.
      */
     @NotNull
-    static Datum missing(@NotNull PType type) {
+    static Datum missing(@NotNull PType type) throws PErrorException {
         return new DatumMissing(type);
     }
 
@@ -422,9 +424,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#DECIMAL} with the default precision/scale
+     * @throws PErrorException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
      */
     @NotNull
-    static Datum decimal(@NotNull BigDecimal value) {
+    static Datum decimal(@NotNull BigDecimal value) throws PErrorException {
         return new DatumDecimal(value, PType.decimal(38, 0));
     }
 
@@ -433,7 +436,7 @@ public interface Datum extends Iterable<Datum> {
      * @param precision the precision to coerce the value to
      * @param scale the scale to coerce the value to
      * @return a value of type {@link PType#DECIMAL} with the requested precision/scale
-     * @throws PErrorException if the value could not fit into the requested precision/scale
+     * @throws PErrorException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
      */
     @NotNull
     static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws PErrorException {
@@ -448,9 +451,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#NUMERIC} with the default precision/scale
+     * @throws PErrorException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the default precision/scale
      */
     @NotNull
-    static Datum numeric(@NotNull BigDecimal value) {
+    static Datum numeric(@NotNull BigDecimal value) throws PErrorException {
         return new DatumDecimal(value, PType.numeric());
     }
 
@@ -459,7 +463,7 @@ public interface Datum extends Iterable<Datum> {
      * @param precision the precision to coerce the value to
      * @param scale the scale to coerce the value to
      * @return a value of type {@link PType#NUMERIC} with the requested precision/scale
-     * @throws PErrorException if the value could not fit into the requested precision/scale
+     * @throws PErrorException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
      */
     @NotNull
     static Datum numeric(@NotNull BigDecimal value, int precision, int scale) throws PErrorException {
@@ -485,10 +489,11 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#VARCHAR} with the default length
-     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed
+     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum varchar(@NotNull String value) throws PErrorException {
+        // TODO: Add an ErrorCode for when we can't fit the value into the requested length
         return varchar(value, 255);
     }
 
@@ -496,7 +501,7 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the varchar to coerce the value to
      * @return a value of type {@link PType#VARCHAR} with the requested length
-     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed
+     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum varchar(@NotNull String value, int length) throws PErrorException {
@@ -518,7 +523,7 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#CHAR} with the default length
-     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed
+     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum character(@NotNull String value) throws PErrorException {
@@ -529,7 +534,7 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the char to coerce the value to
      * @return a value of type {@link PType#CHAR} with the default length
-     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed
+     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum character(@NotNull String value, int length) throws PErrorException {
@@ -551,7 +556,7 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#CLOB} with the default length
-     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed
+     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum clob(@NotNull byte[] value) throws PErrorException {
@@ -563,7 +568,7 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the clob to coerce the value to
      * @return a value of type {@link PType#CLOB} with the default length
-     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed
+     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum clob(@NotNull byte[] value, int length) throws PErrorException {
@@ -576,7 +581,7 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#BLOB} with the default length
-     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed
+     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum blob(@NotNull byte[] value) throws PErrorException {
@@ -588,7 +593,7 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the clob to coerce the value to
      * @return a value of type {@link PType#BLOB} with the default length
-     * @throws PErrorException if the value could not fit into the requested length, or if the length is not valid
+     * @throws PErrorException if the value could not fit into the requested length, or if the length is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum blob(@NotNull byte[] value, int length) throws PErrorException {
@@ -612,7 +617,7 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIME}
-     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid
+     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum time(@NotNull LocalTime value, int precision) throws PErrorException {
@@ -624,7 +629,7 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMEZ}
-     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid
+     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum timez(@NotNull OffsetTime value, int precision) throws PErrorException {
@@ -636,7 +641,7 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMESTAMP}
-     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid
+     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum timestamp(@NotNull LocalDateTime value, int precision) throws PErrorException {
@@ -648,7 +653,7 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMESTAMPZ}
-     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid
+     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
     static Datum timestampz(@NotNull OffsetDateTime value, int precision) throws PErrorException {
@@ -698,7 +703,7 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing Ion
      * @return a value of type {@link PType#VARIANT}
-     * @throws PErrorException if the value could not be converted to a variant.
+     * @throws PErrorException if the value could not be converted to a variant. Possible codes: {@link org.partiql.spi.errors.PError#INTERNAL_ERROR}
      */
     @NotNull
     static Datum ion(@NotNull String value) throws PErrorException {
