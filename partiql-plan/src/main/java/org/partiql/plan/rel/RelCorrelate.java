@@ -20,7 +20,9 @@ import java.util.List;
  *
  * {@link RelCorrelate} is modeled off of Calcite's
  * <a href="https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/core/Correlate.html">Correlate</a>.
- * Calcite's modeling moves the join's ON-condition to the right {@link Rel}'s filter.
+ * Calcite's modeling moves the join's ON-condition to the right {@link Rel}'s filter. {@link RelCorrelate} is
+ * currently unused as all JOINs are modeled as {@link RelJoin}s and are assumed to be correlated. In the future,
+ * {@link RelCorrelate} may be used to model correlated joins with {@link RelJoin} used for de-correlated joins.
  */
 public abstract class RelCorrelate extends RelBase {
 
