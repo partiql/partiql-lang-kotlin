@@ -20,7 +20,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
             val arg0 = args[0].byte
             val arg1 = args[1].byte
             if (arg1 == 0.toByte()) {
-                throw DataException("Division by zero for TINYINT: $arg0 / $arg1")
+                throw PErrors.divisionByZeroException(arg0, PType.tinyint())
             } else if (arg0 == Byte.MIN_VALUE && arg1.toInt() == -1) {
                 throw PErrors.numericValueOutOfRangeException("$arg0 / $arg1", PType.tinyint())
             }
@@ -33,7 +33,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
             val arg0 = args[0].short
             val arg1 = args[1].short
             if (arg1 == 0.toShort()) {
-                throw DataException("Division by zero for SMALLINT: $arg0 / $arg1")
+                throw PErrors.divisionByZeroException(arg0, PType.smallint())
             } else if (arg0 == Short.MIN_VALUE && arg1.toInt() == -1) {
                 throw PErrors.numericValueOutOfRangeException("$arg0 / $arg1", PType.smallint())
             }
@@ -46,7 +46,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
             val arg0 = args[0].int
             val arg1 = args[1].int
             if (arg1 == 0) {
-                throw DataException("Division by zero for INT: $arg0 / $arg1")
+                throw PErrors.divisionByZeroException(arg0, PType.integer())
             } else if (arg0 == Int.MIN_VALUE && arg1 == -1) {
                 throw PErrors.numericValueOutOfRangeException("$arg0 / $arg1", PType.integer())
             }
@@ -59,7 +59,7 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
             val arg0 = args[0].long
             val arg1 = args[1].long
             if (arg1 == 0L) {
-                throw DataException("Division by zero for BIGINT: $arg0 / $arg1")
+                throw PErrors.divisionByZeroException(arg0, PType.bigint())
             } else if (arg0 == Long.MIN_VALUE && arg1 == -1L) {
                 throw PErrors.numericValueOutOfRangeException("$arg0 / $arg1", PType.bigint())
             }

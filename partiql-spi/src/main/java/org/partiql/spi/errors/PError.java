@@ -517,4 +517,21 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int INVALID_CHAR_VALUE_FOR_CAST = 18;
+
+    /**
+     * <p>
+     * This is a runtime/compilation/planning error, where a numeric value is divided by zero.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>DIVIDEND</b> ({@link String}): The value that is being divided by zero.</li>
+     * <li><b>DIVIDEND_TYPE</b> ({@link PType}): The type of the value that is being divided by zero.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Cannot divide [dividend] ([dividend_type]) by zero.</code>
+     * </p>
+     */
+    public static final int DIVISION_BY_ZERO = 19;
 }

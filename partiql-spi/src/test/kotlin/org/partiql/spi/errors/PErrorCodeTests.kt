@@ -33,7 +33,8 @@ class PErrorCodeTests {
             "INVALID_EXCLUDE_PATH" to 15,
             "CARDINALITY_VIOLATION" to 16,
             "NUMERIC_VALUE_OUT_OF_RANGE" to 17,
-            "INVALID_CHAR_VALUE_FOR_CAST" to 18
+            "INVALID_CHAR_VALUE_FOR_CAST" to 18,
+            "DIVISION_BY_ZERO" to 19,
         )
 
         // Preparation

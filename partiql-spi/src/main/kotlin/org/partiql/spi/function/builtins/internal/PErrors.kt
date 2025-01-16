@@ -11,6 +11,21 @@ internal object PErrors {
         return PErrorException(internalError(cause))
     }
 
+    fun divisionByZeroException(dividend: Any, dividendType: PType): PErrorException {
+        return PErrorException(
+            PError(
+                PError.DIVISION_BY_ZERO,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                mapOf(
+                    "DIVIDEND" to dividend.toString(),
+                    "DIVIDEND_TYPE" to dividendType
+                )
+            )
+        )
+    }
+
     fun numericValueOutOfRangeException(value: String, type: PType): PErrorException {
         return PErrorException(
             PError(
