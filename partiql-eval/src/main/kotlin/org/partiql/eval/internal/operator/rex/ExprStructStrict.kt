@@ -3,7 +3,6 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getText
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 
@@ -13,7 +12,7 @@ internal class ExprStructStrict(private val fields: List<ExprStructField>) :
         val fields = fields.mapNotNull {
             val key = it.key.eval(env)
             if (key.isNull || key.isMissing) {
-                throw TypeCheckException("Struct key was absent.")
+                throw NullPointerException("Struct key was null or missing.")
             }
             val keyString = key.getText()
             val value = it.value.eval(env)

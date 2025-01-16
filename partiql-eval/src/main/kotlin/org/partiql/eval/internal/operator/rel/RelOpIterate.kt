@@ -5,7 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
-import org.partiql.spi.errors.TypeCheckException
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -22,12 +22,12 @@ internal class RelOpIterate(
         iterator = when (r.type.code()) {
             PType.BAG -> {
                 close()
-                throw TypeCheckException()
+                throw PErrors.arrayExpectedException(r.type)
             }
             PType.ARRAY -> r.iterator()
             else -> {
                 close()
-                throw TypeCheckException()
+                throw PErrors.arrayExpectedException(r.type)
             }
         }
     }

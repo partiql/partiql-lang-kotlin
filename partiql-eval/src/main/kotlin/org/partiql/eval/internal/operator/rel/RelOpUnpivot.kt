@@ -5,7 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
-import org.partiql.spi.errors.TypeCheckException
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
@@ -60,8 +60,9 @@ internal sealed class RelOpUnpivot : ExprRelation {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Row())).lowerSafe()
-            if (v.type.code() != PType.STRUCT && v.type.code() != PType.ROW) {
-                throw TypeCheckException()
+            val type = v.type
+            if (type.code() != PType.STRUCT && type.code() != PType.ROW) {
+                throw PErrors.structureExpectedException(type)
             }
             return v
         }

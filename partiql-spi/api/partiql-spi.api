@@ -372,13 +372,6 @@ public final class org/partiql/spi/errors/Severity : org/partiql/spi/Enum {
 	public fun name ()Ljava/lang/String;
 }
 
-public final class org/partiql/spi/errors/TypeCheckException : java/lang/RuntimeException {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun fillInStackTrace ()Ljava/lang/Throwable;
-}
-
 public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {
 	public static final field Companion Lorg/partiql/spi/function/Aggregation$Companion;
 	public abstract fun getAccumulator ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;

@@ -4,10 +4,10 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Function
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -50,7 +50,8 @@ internal class ExprCallDynamic(
         val actualTypes = actualArgs.map { it.type }
         var candidate = candidates[actualTypes]
         if (candidate == null) {
-            candidate = match(actualTypes) ?: throw TypeCheckException("Could not find function $name with types: $actualTypes.")
+            candidate = match(actualTypes) ?: throw PErrors.functionTypeMismatchException(name, actualTypes, functions.toList())
+            // throw TypeCheckException("Could not find function $name with types: $actualTypes.")
             candidates[actualTypes] = candidate
         }
         return candidate.eval(actualArgs)

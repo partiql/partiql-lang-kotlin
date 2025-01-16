@@ -5,8 +5,8 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.Row
 import org.partiql.eval.internal.helpers.DatumUtils.lowerSafe
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.helpers.RecordValueIterator
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
 
 internal class RelOpScan(
@@ -21,7 +21,7 @@ internal class RelOpScan(
             PType.ARRAY, PType.BAG -> RecordValueIterator(r.iterator())
             else -> {
                 close()
-                throw TypeCheckException("Unexpected type for scan: ${r.type}")
+                throw PErrors.collectionExpectedException(r.type)
             }
         }
     }

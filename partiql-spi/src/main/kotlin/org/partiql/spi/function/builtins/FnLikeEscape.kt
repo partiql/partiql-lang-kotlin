@@ -3,8 +3,8 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.function.utils.PatternUtils
 import org.partiql.spi.function.utils.PatternUtils.checkPattern
@@ -31,7 +31,7 @@ internal val Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL = FunctionUtils.hidden(
         try {
             checkPattern(pattern, escape)
         } catch (e: IllegalStateException) {
-            throw TypeCheckException()
+            throw PErrors.internalErrorException(e)
         }
     val likeRegexPattern = when {
         patternString.isEmpty() -> Pattern.compile("")
@@ -61,7 +61,7 @@ internal val Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL = FunctionUtils.hidden(
         try {
             checkPattern(pattern, escape)
         } catch (e: IllegalStateException) {
-            throw TypeCheckException()
+            throw PErrors.internalErrorException(e)
         }
     val likeRegexPattern = when {
         patternString.isEmpty() -> Pattern.compile("")

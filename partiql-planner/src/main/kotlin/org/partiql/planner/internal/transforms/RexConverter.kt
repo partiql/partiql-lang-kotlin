@@ -60,6 +60,7 @@ import org.partiql.ast.expr.PathStep
 import org.partiql.ast.expr.TrimSpec
 import org.partiql.ast.expr.TruthValue
 import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.PErrors
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.builder.plan
@@ -91,7 +92,6 @@ import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.util.DateTimeUtils
 import org.partiql.planner.internal.util.FunctionUtils
 import org.partiql.spi.catalog.Identifier
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
@@ -1054,7 +1054,7 @@ internal object RexConverter {
                             assertParamCompToZero(PType.NUMERIC, "precision", p, false)
                             assertParamCompToZero(PType.NUMERIC, "scale", s, true)
                             if (s > p) {
-                                throw TypeCheckException("Numeric scale cannot be greater than precision.")
+                                throw PErrors.internalErrorException(IllegalArgumentException("Scale cannot be greater than precision."))
                             }
                             PType.decimal(type.precision!!, type.scale!!)
                         }
@@ -1074,7 +1074,7 @@ internal object RexConverter {
                             assertParamCompToZero(PType.DECIMAL, "precision", p, false)
                             assertParamCompToZero(PType.DECIMAL, "scale", s, true)
                             if (s > p) {
-                                throw TypeCheckException("Decimal scale cannot be greater than precision.")
+                                throw PErrors.internalErrorException(IllegalArgumentException("Decimal scale cannot be greater than precision."))
                             }
                             PType.decimal(p, s)
                         }
@@ -1149,7 +1149,7 @@ internal object RexConverter {
                 false -> (value > 0) to "greater than or equal to"
             }
             if (!result) {
-                throw TypeCheckException("$type $param must be an integer value $compString 0.")
+                throw PErrors.internalErrorException(IllegalArgumentException("$type $param must be an integer value $compString 0."))
             }
         }
 

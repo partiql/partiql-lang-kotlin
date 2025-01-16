@@ -3,6 +3,7 @@ package org.partiql.planner.internal
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.function.Function
@@ -200,4 +201,16 @@ internal object PErrors {
             mapOf("PATH" to path)
         )
     }
+
+    internal fun internalErrorException(cause: Throwable): PErrorException {
+        return PErrorException(internalError(cause))
+    }
+
+    private fun internalError(cause: Throwable): PError = PError(
+        PError.INTERNAL_ERROR,
+        Severity.ERROR(),
+        PErrorKind.SEMANTIC(),
+        null,
+        mapOf("CAUSE" to cause),
+    )
 }

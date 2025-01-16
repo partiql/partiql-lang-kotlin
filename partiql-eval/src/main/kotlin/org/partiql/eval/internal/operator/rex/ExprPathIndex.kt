@@ -2,8 +2,8 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.helpers.ValueUtility.getInt32Coerced
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -17,7 +17,7 @@ internal class ExprPathIndex(
         val iterator = when (input.type.code()) {
             PType.BAG,
             PType.ARRAY -> input.iterator()
-            else -> throw TypeCheckException("expected collection, found ${input.type.code()}")
+            else -> throw PErrors.pathIndexFailureException()
         }
 
         // Calculate index
@@ -35,6 +35,6 @@ internal class ExprPathIndex(
             }
             i++
         }
-        throw TypeCheckException()
+        throw PErrors.pathIndexFailureException()
     }
 }

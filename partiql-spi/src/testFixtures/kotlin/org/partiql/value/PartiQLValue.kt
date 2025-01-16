@@ -15,7 +15,10 @@
 package org.partiql.value
 
 import com.amazon.ionelement.api.IonElement
-import org.partiql.spi.errors.TypeCheckException
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorException
+import org.partiql.spi.errors.PErrorKind
+import org.partiql.spi.errors.Severity
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.Timestamp
@@ -572,7 +575,21 @@ public abstract class MissingValue : PartiQLValue {
 
 public fun PartiQLValue.toIon(): IonElement = accept(ToIon, Unit)
 
-@Throws(TypeCheckException::class)
+@Throws(PErrorException::class)
 public inline fun <reified T : PartiQLValue> PartiQLValue.check(): T {
-    if (this is T) return this else throw TypeCheckException("Expected ${T::class.java} but received $this.")
+    if (this is T) return this else {
+        throw unexpectedTypeException()
+    }
+}
+
+fun unexpectedTypeException(): PErrorException {
+    return PErrorException(
+        PError(
+            PError.TYPE_UNEXPECTED,
+            Severity.ERROR(),
+            PErrorKind.EXECUTION(),
+            null,
+            mapOf()
+        )
+    )
 }
