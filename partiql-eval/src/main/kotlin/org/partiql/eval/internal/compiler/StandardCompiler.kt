@@ -9,6 +9,7 @@ import org.partiql.eval.Statement
 import org.partiql.eval.compiler.Match
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.eval.compiler.Strategy
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
@@ -109,6 +110,7 @@ import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.Context
 import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.spi.types.PType
@@ -158,7 +160,15 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             private val root = compile(action.getRex(), Unit).catch()
 
             // execute with no parameters
-            override fun execute(): Datum = root.eval(Environment())
+            override fun execute(): Datum {
+                return try {
+                    root.eval(Environment())
+                } catch (e: PErrorException) {
+                    throw e
+                } catch (t: Throwable) {
+                    throw PErrors.internalErrorException(t)
+                }
+            }
         }
 
         /**

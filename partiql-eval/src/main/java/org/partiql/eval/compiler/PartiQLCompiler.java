@@ -19,6 +19,7 @@ public interface PartiQLCompiler {
      * Prepares the given plan into an executable PartiQL statement.
      *
      * @param plan The plan to compile.
+     * @param mode The mode to use when compiling the plan.
      * @return The prepared statement.
      */
     @NotNull
@@ -26,11 +27,20 @@ public interface PartiQLCompiler {
         return prepare(plan, mode, Context.standard());
     }
 
+    /**
+     * Prepares the given plan into an executable PartiQL statement.
+     *
+     * @param plan The plan to compile.
+     * @param mode The mode to use when compiling the plan.
+     * @param ctx The context to use when compiling the plan.
+     * @return The prepared statement.
+     */
     @NotNull
     public Statement prepare(@NotNull Plan plan, @NotNull Mode mode, @NotNull Context ctx);
 
     /**
-     * @return A new [PartiQLCompilerBuilder].
+     * Returns a new {@link Builder}.
+     * @return a new {@link Builder}.
      */
     @NotNull
     public static Builder builder() {
@@ -38,14 +48,14 @@ public interface PartiQLCompiler {
     }
 
     /**
-     * @return A new [PartiQLCompiler].
+     * @return a new {@link PartiQLCompiler}.
      */
     public static PartiQLCompiler standard() {
         return new StandardCompiler();
     }
 
     /**
-     * Builder class for the [PartiQLCompiler] interface.
+     * Builder class for the {@link PartiQLCompiler} interface.
      */
     public static class Builder {
 
