@@ -13,6 +13,10 @@ import java.util.List;
 public abstract class RelOffset extends RelBase {
 
     /**
+     * Creates a new {@link RelOffset} instance.
+     *
+     * @param input input rel (operand 0)
+     * @param offset offset rex (operand 1)
      * @return new {@link RelOffset} instance
      */
     @NotNull
@@ -21,12 +25,14 @@ public abstract class RelOffset extends RelBase {
     }
 
     /**
+     * Gets the input rel.
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Gets the offset rex.
      * @return offset rex (operand 1)
      */
     @NotNull

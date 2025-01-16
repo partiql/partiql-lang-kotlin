@@ -9,11 +9,10 @@ import org.partiql.spi.UnsupportedCodeException;
  */
 public class JoinType extends Enum {
 
-    public static final int UNKNOWN = 0;
-    public static final int INNER = 1;
-    public static final int LEFT = 2;
-    public static final int RIGHT = 3;
-    public static final int FULL = 4;
+    public static final int INNER = 0;
+    public static final int LEFT = 1;
+    public static final int RIGHT = 2;
+    public static final int FULL = 3;
 
     @NotNull
     @Override

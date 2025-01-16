@@ -13,6 +13,10 @@ import java.util.List;
 public abstract class RelFilter extends RelBase {
 
     /**
+     * Creates a new {@link RelFilter} instance.
+     *
+     * @param input input rel (operand 0)
+     * @param predicate predicate rex
      * @return new {@link RelFilter} instance
      */
     @NotNull
@@ -21,12 +25,14 @@ public abstract class RelFilter extends RelBase {
     }
 
     /**
+     * Gets the input rel (operand 0).
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Gets the predicate rex.
      * @return predicate rex.
      */
     @NotNull

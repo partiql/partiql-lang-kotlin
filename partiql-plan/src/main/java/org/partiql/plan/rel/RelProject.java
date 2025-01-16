@@ -13,6 +13,10 @@ import java.util.List;
 public abstract class RelProject extends RelBase {
 
     /**
+     * Creates a new {@link RelProject} instance.
+     *
+     * @param input      input rel
+     * @param projections projection list
      * @return new {@link RelProject} instance
      */
     @NotNull
@@ -21,13 +25,15 @@ public abstract class RelProject extends RelBase {
     }
 
     /**
+     * Gets the input rel.
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
-     * @return projection (not a operand, it's a list not an operator).
+     * Gets the projection list.
+     * @return projection (not an operand, it's a list not an operator).
      */
     @NotNull
     public abstract List<Rex> getProjections();

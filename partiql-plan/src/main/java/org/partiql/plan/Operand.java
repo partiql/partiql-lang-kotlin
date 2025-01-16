@@ -11,26 +11,30 @@ import java.util.List;
 public interface Operand extends Iterable<Operator> {
 
     /**
+     * Creates a {@link Single} operand from an input {@link Operator}.
+     *
+     * @param operator the single operator
      * @return a single operand
      */
-    public static Operand single(Operator operator) {
+    static Operand single(Operator operator) {
         return new Single(operator);
     }
 
     /**
+     * Creates a {@link Variadic} operand from an input list of operands.
      * @return a variadic operand
      *
      * See ImmutableCollections.java ListCopy.
      */
     @SuppressWarnings("unchecked")
-    public static Operand vararg(List<? extends Operator> operators) {
+    static Operand vararg(List<? extends Operator> operators) {
         return new Variadic((List<Operator>) operators);
     }
 
     /**
      * A single operator.
      */
-    public class Single implements Operand {
+    class Single implements Operand {
 
         @NotNull
         public final Operator operator;
@@ -50,7 +54,7 @@ public interface Operand extends Iterable<Operator> {
     /**
      * A variadic operator.
      */
-    public class Variadic implements Operand {
+    class Variadic implements Operand {
 
         @NotNull
         public final List<Operator> operators;

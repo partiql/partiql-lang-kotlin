@@ -11,28 +11,27 @@ import org.partiql.spi.UnsupportedCodeException;
 public interface Collation {
 
     /**
-     * API WARNING – THIS WILL BE REPLACED WITH AN `int` IN 1.0.
-     * <br>
-     * TODO <a href="https://github.com/partiql/partiql-lang-kotlin/issues/1664">replace with an `int` in 1.0</a>
-     *
-     * @return the column to sort by
+     * Returns the column {@link Rex} to sort by.
+     * @return the column to sort by.
      */
-    public Rex getColumn();
+    Rex getColumn();
 
     /**
+     * Returns the sort order.
      * @return ASC, DESC, or OTHER
      */
-    public Order getOrder();
+    Order getOrder();
 
     /**
+     * Returns the null ordering.
      * @return NULL ordering
      */
-    public Nulls getNulls();
+    Nulls getNulls();
 
     /**
      * Collation value ordering.
      */
-    public final class Order extends Enum {
+    final class Order extends Enum {
 
         private Order(int code) {
             super(code);
@@ -52,9 +51,8 @@ public interface Collation {
             }
         }
 
-        public static final int UNKNOWN = 0;
-        public static final int ASC = 1;
-        public static final int DESC = 2;
+        public static final int ASC = 0;
+        public static final int DESC = 1;
 
         @NotNull
         public static Order ASC() {
@@ -70,15 +68,14 @@ public interface Collation {
     /**
      * Collation null ordering.
      */
-    public final class Nulls extends Enum {
+    final class Nulls extends Enum {
 
         private Nulls(int code) {
             super(code);
         }
 
-        public static final int UNKNOWN = 0;
-        public static final int FIRST = 1;
-        public static final int LAST = 2;
+        public static final int FIRST = 0;
+        public static final int LAST = 1;
 
         @NotNull
         public static Nulls FIRST() {

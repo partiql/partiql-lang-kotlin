@@ -12,6 +12,11 @@ import java.util.List;
 public abstract class RelExcept extends RelBase {
 
     /**
+     * Creates a new {@link RelExcept} instance.
+     *
+     * @param left left input (operand 0)
+     * @param right right input (operand 1)
+     * @param all true if ALL else DISTINCT.
      * @return new {@link RelExcept} instance
      */
     @NotNull
@@ -20,18 +25,21 @@ public abstract class RelExcept extends RelBase {
     }
 
     /**
+     * Returns the left relation operator to a {@link RelExcept} relation operator (operator 0).
      * @return left input (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
+     * Returns the right relation operator to a {@link RelExcept} relation operator (operator 0).
      * @return right input (operand 1)
      */
     @NotNull
     public abstract Rel getRight();
 
     /**
+     * Whether this {@link RelExcept} set quantifier is ALL else DISTINCT.
      * @return true if ALL else DISTINCT.
      */
     public abstract boolean isAll();

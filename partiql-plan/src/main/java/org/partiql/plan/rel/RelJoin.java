@@ -9,11 +9,23 @@ import org.partiql.plan.rex.Rex;
 import java.util.List;
 
 /**
- * Logical theta-join abstract base class.
+ * <p>
+ * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+ * </p>
+ * Logical join abstract base class. This node currently models both correlated and de-correlated joins. In the future,
+ * this node may be used for just modeling de-correlated joins (like Calcite's
+ * <a href="https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/core/Join.html">Join</a>) and
+ * {@link RelCorrelate} modeling just correlated joins.
  */
 public abstract class RelJoin extends RelBase {
 
     /**
+     * Creates a new {@link RelJoin} instance.
+     *
+     * @param left left input (operand 0)
+     * @param right right input (operand 1)
+     * @param condition join condition
+     * @param joinType join type
      * @return new {@link RelJoin} instance
      */
     @NotNull
@@ -22,24 +34,28 @@ public abstract class RelJoin extends RelBase {
     }
 
     /**
+     * Gets the left input.
      * @return left input (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
+     * Gets the right input.
      * @return right input (operand 1)
      */
     @NotNull
     public abstract Rel getRight();
 
     /**
+     * Gets the join type.
      * @return JoinType
      */
     @NotNull
     public abstract JoinType getJoinType();
 
     /**
+     * Gets the join condition.
      * @return the join condition.
      */
     @NotNull

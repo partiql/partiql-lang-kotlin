@@ -8,14 +8,29 @@ import org.partiql.plan.OperatorVisitor;
 import java.util.List;
 
 /**
+ * <p>
+ * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+ * </p>
+ * <p>
  * Logical nested-loop joins (correlated subqueries, lateral joins, and cross joins) abstract base class.
  * <pre>
  *     l, r <=> l CROSS JOIN r <=> l JOIN r ON TRUE
  * </pre>
+ * </p>
+ *
+ * {@link RelCorrelate} is modeled off of Calcite's
+ * <a href="https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/core/Correlate.html">Correlate</a>.
+ * Calcite's modeling moves the join's ON-condition to the right {@link Rel}'s filter. {@link RelCorrelate} is
+ * currently unused as all JOINs are modeled as {@link RelJoin}s and are assumed to be correlated. In the future,
+ * {@link RelCorrelate} may be used to model correlated joins with {@link RelJoin} used for de-correlated joins.
  */
 public abstract class RelCorrelate extends RelBase {
 
     /**
+     * Creates a new {@link RelCorrelate} instance.
+     * @param left left input
+     * @param right right input
+     * @param joinType join type
      * @return new {@link RelCorrelate} instance
      */
     @NotNull
@@ -24,17 +39,23 @@ public abstract class RelCorrelate extends RelBase {
     }
 
     /**
+     * Gets the left input (operand 0).
      * @return the left input (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
+     * Gets the right input (operand 1).
      * @return the right input (operand 1)
      */
     @NotNull
     public abstract Rel getRight();
 
+    /**
+     * Gets the join type.
+     * @return the join type
+     */
     @NotNull
     public abstract JoinType getJoinType();
 

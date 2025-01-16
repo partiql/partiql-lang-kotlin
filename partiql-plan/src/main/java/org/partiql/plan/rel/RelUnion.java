@@ -20,17 +20,20 @@ public abstract class RelUnion extends RelBase {
     }
 
     /**
+     * Whether this {@link RelUnion} set quantifier is ALL else DISTINCT.
      * @return true if ALL else DISTINCT.
      */
     public abstract boolean isAll();
 
     /**
+     * Returns the left relation operator to a {@link RelUnion} relation operator (operator 0).
      * @return left rel (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
+     * Returns the right relation operator to a {@link RelUnion} relation operator (operator 1).
      * @return right rel (operand 1)
      */
     @NotNull

@@ -11,9 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Operator transform is an abstract base visitor which recursively rewrites an operator tree.
+ * Operator rewriter is an abstract base visitor which recursively rewrites an operator tree.
  */
-public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, C> {
+public abstract class OperatorRewriter<C> implements OperatorVisitor<Operator, C> {
 
     /**
      * Operator factory to use for rewrites.
@@ -21,16 +21,16 @@ public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, 
     private final Operators operators;
 
     /**
-     * Base operator transform with standard operators factory.
+     * Base operator rewrites with standard operators factory.
      */
-    public OperatorTransform() {
+    public OperatorRewriter() {
         this.operators = Operators.STANDARD;
     }
 
     /**
-     * Base operator transform with custom operators factory.
+     * Base operator rewrites with custom operators factory.
      */
-    public OperatorTransform(Operators operators) {
+    public OperatorRewriter(Operators operators) {
         this.operators = operators;
     }
 
@@ -682,12 +682,13 @@ public abstract class OperatorTransform<C> implements OperatorVisitor<Operator, 
      */
     @NotNull
     public <T extends Operator> T onError(@NotNull Operator o, @NotNull Class<T> clazz) {
-        throw new ClassCastException("OperatorTransform expected " + clazz.getName() + ", found: " + o.getClass().getName());
+        throw new ClassCastException("OperatorRewriter expected " + clazz.getName() + ", found: " + o.getClass().getName());
     }
 
     /**
-     * @param <T>
-     * @param <C>
+     * Mapper interface for use with visitAll.
+     * @param <T> type of operand
+     * @param <C> type of context
      */
     public interface Mapper<T, C> {
         T apply(T op, C ctx);

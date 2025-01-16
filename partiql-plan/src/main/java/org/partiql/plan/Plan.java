@@ -8,16 +8,18 @@ import org.jetbrains.annotations.NotNull;
 public interface Plan {
 
     /**
+     * Returns the version of this plan.
      * @return version for serialization and debugging.
      */
     @NotNull
-    default public Version getVersion() {
+    default Version getVersion() {
         return Version.V1();
     }
 
     /**
+     * Returns the statement action to execute.
      * @return statement action to execute.
      */
     @NotNull
-    public Action getAction();
+    Action getAction();
 }

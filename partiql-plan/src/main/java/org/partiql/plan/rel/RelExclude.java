@@ -13,6 +13,10 @@ import java.util.List;
 public abstract class RelExclude extends RelBase {
 
     /**
+     * Creates a new {@link RelExclude} instance.
+     *
+     * @param input input rel (operand 0)
+     * @param exclusions exclusions (not an operator operand)
      * @return new {@link RelExclude} instance
      */
     @NotNull
@@ -21,12 +25,14 @@ public abstract class RelExclude extends RelBase {
     }
 
     /**
+     * Gets the input rel (operand 0).
      * @return input rel (operand 0)
      */
     @NotNull
     public abstract Rel getInput();
 
     /**
+     * Gets the exclusions (not an operator operand).
      * @return exclusions (not an operator operand).
      */
     @NotNull

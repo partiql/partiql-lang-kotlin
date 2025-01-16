@@ -9,13 +9,15 @@ import org.partiql.plan.Operator;
 public interface Rel extends Operator {
 
     /**
-     * @return the type of the rows produced by this rel.
+     * Returns the type of the rows produced by this rel.
+     * @return type for rows produced by this rel.
      */
     @NotNull
-    public RelType getType();
+    RelType getType();
 
     /**
-     * @param type the new type of the rows produced by this Rex.
+     * Sets the type of the rows produced by this rel.
+     * @param type the new type of the rows produced by this Rel.
      */
-    public void setType(@NotNull RelType type);
+    void setType(@NotNull RelType type);
 }

@@ -96,7 +96,7 @@ tasks.compileTestFixturesKotlin {
 publish {
     artifactId = "partiql-planner"
     name = "PartiQL Planner"
-    description = "PartiQL's Experimental Planner."
+    description = "PartiQL's Planner."
 }
 
 // Generate internal IR

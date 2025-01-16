@@ -12,6 +12,10 @@ import java.util.List;
 public abstract class RelIntersect extends RelBase {
 
     /**
+     * Creates a new {@link RelIntersect} instance
+     * @param left left rel (operand 0)
+     * @param right right rel (operand 1)
+     * @param all true if ALL else DISTINCT
      * @return new {@link RelIntersect} instance
      */
     @NotNull
@@ -20,18 +24,21 @@ public abstract class RelIntersect extends RelBase {
     }
 
     /**
+     * Returns the left relation operator to a {@link RelIntersect} relation operator (operator 0).
      * @return left rel (operand 0)
      */
     @NotNull
     public abstract Rel getLeft();
 
     /**
+     * Returns the right relation operator to a {@link RelIntersect} relation operator (operator 0).
      * @return right rel (operand 1)
      */
     @NotNull
     public abstract Rel getRight();
 
     /**
+     * Whether this {@link RelIntersect} set quantifier is ALL else DISTINCT.
      * @return true if ALL else DISTINCT.
      */
     public abstract boolean isAll();
