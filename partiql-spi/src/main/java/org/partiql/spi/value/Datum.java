@@ -5,10 +5,7 @@ import com.amazon.ionelement.api.ElementLoader;
 import com.amazon.ionelement.api.IonElementLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.spi.errors.PError;
 import org.partiql.spi.errors.PErrorException;
-import org.partiql.spi.errors.PErrorKind;
-import org.partiql.spi.errors.Severity;
 import org.partiql.spi.internal.value.ion.IonVariant;
 import org.partiql.spi.types.PType;
 import java.math.BigDecimal;
@@ -18,7 +15,6 @@ import java.nio.charset.Charset;
 import java.time.*;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -444,7 +440,7 @@ public interface Datum extends Iterable<Datum> {
         BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
         PType type = PType.decimal(precision, scale);
         if (d.precision() > precision) {
-            throw numericValueOutOfRangeException(value.toString(), type);
+            throw PErrors.numericValueOutOfRangeException(value.toString(), type);
         }
         return new DatumDecimal(d, type);
     }
@@ -470,7 +466,7 @@ public interface Datum extends Iterable<Datum> {
         BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
         PType type = PType.numeric(precision, scale);
         if (d.precision() > precision) {
-            throw numericValueOutOfRangeException(value.toString(), type);
+            throw PErrors.numericValueOutOfRangeException(value.toString(), type);
         }
         return new DatumDecimal(d, type);
     }
@@ -507,7 +503,7 @@ public interface Datum extends Iterable<Datum> {
         // TODO: Error or coerce here? Right now coerce, though I think this should likely error.
         String newValue;
         if (length <= 0) {
-            throw wrappedException(new IllegalArgumentException("VARCHAR of length " + length + " not allowed."));
+            throw PErrors.wrappedException(new IllegalArgumentException("VARCHAR of length " + length + " not allowed."));
         }
         if (value.length() < length) {
             newValue = String.format("%-" + length + "." + length + "s", value);
@@ -540,7 +536,7 @@ public interface Datum extends Iterable<Datum> {
         // TODO: Error or coerce here? Right now coerce, though I think this should likely error.
         String newValue;
         if (length <= 0) {
-            throw wrappedException(new IllegalArgumentException("CHAR of length " + length + " not allowed."));
+            throw PErrors.wrappedException(new IllegalArgumentException("CHAR of length " + length + " not allowed."));
         }
         if (value.length() < length) {
             newValue = String.format("%-" + length + "." + length + "s", value);
@@ -711,7 +707,7 @@ public interface Datum extends Iterable<Datum> {
             AnyElement element = loader.loadSingleElement(value);
             return new IonVariant(element);
         } catch (Throwable t) {
-            throw wrappedException(t);
+            throw PErrors.wrappedException(t);
         }
     }
 
@@ -758,34 +754,5 @@ public interface Datum extends Iterable<Datum> {
         } else {
             return new DatumComparator.NullsLast();
         }
-    }
-
-    @NotNull
-    private static PErrorException numericValueOutOfRangeException(@NotNull String value, @NotNull PType type) {
-        PError pError = new PError(
-                PError.NUMERIC_VALUE_OUT_OF_RANGE,
-                Severity.ERROR(),
-                PErrorKind.EXECUTION(),
-                null,
-                new HashMap<>() {{
-                    put("VALUE", value);
-                    put("TYPE", type);
-                }}
-        );
-        return new PErrorException(pError);
-    }
-
-    @NotNull
-    private static PErrorException wrappedException(@NotNull Throwable t) {
-        PError pError = new PError(
-                PError.STRING_EXCEEDS_LENGTH,
-                Severity.ERROR(),
-                PErrorKind.EXECUTION(),
-                null,
-                new HashMap<>() {{
-                    put("CAUSE", t);
-                }}
-        );
-        return new PErrorException(pError);
     }
 }

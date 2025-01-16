@@ -8,7 +8,7 @@ package org.partiql.spi.errors;
  * @see PError
  * @see PErrorListener
  */
-public class PErrorListenerException extends Exception {
+public class PErrorListenerException extends RuntimeException {
     /**
      * Creates an exception with a null message and cause.
      */

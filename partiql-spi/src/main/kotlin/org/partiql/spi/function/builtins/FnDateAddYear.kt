@@ -3,8 +3,6 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.errors.DataException
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
@@ -57,11 +55,7 @@ internal val Fn_DATE_ADD_YEAR__INT_DATE__DATE = FunctionUtils.hidden(
     val interval = args[0].bigDecimal
     val datetime = args[1].localDate
     val datetimeValue = datetime
-    val intervalValue = try {
-        interval.toLong()
-    } catch (e: DataException) {
-        throw TypeCheckException()
-    }
+    val intervalValue = interval.toLong()
     Datum.date(datetimeValue.plusYears(intervalValue))
 }
 
@@ -112,10 +106,6 @@ internal val Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden(
     val interval = args[0].bigDecimal
     val datetime = args[1].localDateTime
     val datetimeValue = datetime
-    val intervalValue = try {
-        interval.toLong()
-    } catch (e: DataException) {
-        throw TypeCheckException()
-    }
+    val intervalValue = interval.toLong()
     Datum.timestamp(datetimeValue.plusYears(intervalValue), 6)
 }

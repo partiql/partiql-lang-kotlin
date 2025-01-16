@@ -302,13 +302,6 @@ public final class org/partiql/spi/errors/CardinalityViolation : java/lang/Runti
 	public fun fillInStackTrace ()Ljava/lang/Throwable;
 }
 
-public final class org/partiql/spi/errors/DataException : org/partiql/spi/errors/PErrorException {
-	public fun <init> (Ljava/lang/String;)V
-	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/types/PType;)V
-	public fun <init> (Lorg/partiql/spi/errors/PError;)V
-	public fun fillInStackTrace ()Ljava/lang/Throwable;
-}
-
 public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field ALWAYS_MISSING I
 	public static final field CARDINALITY_VIOLATION I
@@ -369,7 +362,7 @@ public abstract interface class org/partiql/spi/errors/PErrorListener {
 	public abstract fun report (Lorg/partiql/spi/errors/PError;)V
 }
 
-public class org/partiql/spi/errors/PErrorListenerException : java/lang/Exception {
+public class org/partiql/spi/errors/PErrorListenerException : java/lang/RuntimeException {
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V

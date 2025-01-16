@@ -3,8 +3,6 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.errors.DataException
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
@@ -57,11 +55,7 @@ internal val Fn_DATE_ADD_MINUTE__INT_TIME__TIME = FunctionUtils.hidden(
     val interval = args[0]
     val datetime = args[1]
     val datetimeValue = datetime.localTime
-    val intervalValue = try {
-        interval.bigDecimal.toLong()
-    } catch (e: DataException) {
-        throw TypeCheckException()
-    }
+    val intervalValue = interval.bigDecimal.toLong()
     Datum.time(datetimeValue.plusMinutes(intervalValue), 6)
 }
 
@@ -112,10 +106,6 @@ internal val Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP = FunctionUtils.hidden
     val interval = args[0]
     val datetime = args[1]
     val datetimeValue = datetime.localDateTime
-    val intervalValue = try {
-        interval.bigDecimal.toLong()
-    } catch (e: DataException) {
-        throw TypeCheckException()
-    }
+    val intervalValue = interval.bigDecimal.toLong()
     Datum.timestamp(datetimeValue.plusMinutes(intervalValue), 6)
 }
