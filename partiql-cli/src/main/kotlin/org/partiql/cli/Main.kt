@@ -16,12 +16,14 @@
 package org.partiql.cli
 
 import org.partiql.cli.io.Format
+import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
 import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
+import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.ValueUtils
@@ -204,9 +206,14 @@ internal class MainCommand : Runnable {
 
         // TODO add format support
         checkFormat(format)
-        val writer = PartiQLValueTextWriter(System.out)
-        val p = ValueUtils.newPartiQLValue(result)
-        writer.append(p) // TODO: Create a Datum writer
+        try {
+            val writer = PartiQLValueTextWriter(System.out)
+            val p = ValueUtils.newPartiQLValue(result)
+            writer.append(p) // TODO: Create a Datum writer
+        } catch (e: PErrorException) {
+            val msg = ErrorMessageFormatter.message(e.error)
+            error(msg)
+        }
         println()
     }
 

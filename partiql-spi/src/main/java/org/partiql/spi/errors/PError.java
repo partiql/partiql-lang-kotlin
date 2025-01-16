@@ -210,6 +210,16 @@ public final class PError extends Enum {
                 return "TYPE_UNEXPECTED";
             case ALWAYS_MISSING:
                 return "ALWAYS_MISSING";
+            case INVALID_EXCLUDE_PATH:
+                return "INVALID_EXCLUDE_PATH";
+            case CARDINALITY_VIOLATION:
+                return "CARDINALITY_VIOLATION";
+            case NUMERIC_VALUE_OUT_OF_RANGE:
+                return "NUMERIC_VALUE_OUT_OF_RANGE";
+            case INVALID_CHAR_VALUE_FOR_CAST:
+                return "INVALID_CHAR_VALUE_FOR_CAST";
+            case DIVISION_BY_ZERO:
+                return "DIVISION_BY_ZERO";
             default:
                 throw new UnsupportedCodeException(code);
         }

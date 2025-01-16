@@ -9,6 +9,7 @@ import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorListenerException
 import org.partiql.spi.value.Datum
 import java.io.PrintStream
@@ -53,7 +54,9 @@ internal class Pipeline private constructor(
         val statement = listen(ctx.errorListener as AppPErrorListener) {
             compiler.prepare(plan, mode, ctx)
         }
-        return statement.execute()
+        return listen(ctx.errorListener as AppPErrorListener) {
+            statement.execute()
+        }
     }
 
     private fun <T> listen(listener: AppPErrorListener, action: () -> T): T {
@@ -62,6 +65,9 @@ internal class Pipeline private constructor(
             action.invoke()
         } catch (e: PipelineException) {
             throw e
+        } catch (e: PErrorException) {
+            val message = ErrorMessageFormatter.message(e.error)
+            throw PipelineException(message)
         }
         if (listener.hasErrors()) {
             throw PipelineException("Failed with given input. Please see the above errors.")

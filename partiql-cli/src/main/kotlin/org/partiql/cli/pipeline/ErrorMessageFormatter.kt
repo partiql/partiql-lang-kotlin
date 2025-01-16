@@ -28,6 +28,12 @@ object ErrorMessageFormatter {
             ErrorCodeString.FEATURE_NOT_SUPPORTED -> featureNotSupported(error)
             ErrorCodeString.VAR_REF_AMBIGUOUS -> varRefAmbiguous(error)
             ErrorCodeString.VAR_REF_NOT_FOUND -> varRefNotFound(error)
+            ErrorCodeString.INVALID_EXCLUDE_PATH -> invalidExcludePath(error)
+            ErrorCodeString.CARDINALITY_VIOLATION -> cardinalityViolation()
+            ErrorCodeString.NUMERIC_VALUE_OUT_OF_RANGE -> numericValueOutOfRange(error)
+            ErrorCodeString.INVALID_CHAR_VALUE_FOR_CAST -> invalidCharValueForCast(error)
+            ErrorCodeString.DIVISION_BY_ZERO -> divisionByZero(error)
+            ErrorCodeString.TYPE_UNEXPECTED -> typeUnexpected(error)
             ErrorCodeString.ALL -> "INTERNAL ERROR: This should never have occurred."
             null -> "Unrecognized error code received: ${error.code()}"
         }
@@ -72,6 +78,69 @@ object ErrorMessageFormatter {
             false -> " Locals: $locals."
         }
         return "Variable reference$idStr could not be found in the database environment or in the set of available locals.$localsStr"
+    }
+
+    /**
+     * @see PError.INVALID_EXCLUDE_PATH
+     */
+    private fun invalidExcludePath(error: PError): String {
+        val path = error.getOrNull("PATH", String::class.java)
+        val pathStr = prepare(path, " (", ")")
+        return "Invalid exclude path$pathStr."
+    }
+
+    /**
+     * @see PError.CARDINALITY_VIOLATION
+     */
+    private fun cardinalityViolation(): String {
+        return "Cardinality violation."
+    }
+
+    /**
+     * @see PError.NUMERIC_VALUE_OUT_OF_RANGE
+     */
+    private fun numericValueOutOfRange(error: PError): String {
+        val value = error.getOrNull("VALUE", String::class.java)
+        val valueStr = prepare(value.toString(), " (", ")")
+        val type = error.getOrNull("TYPE", PType::class.java)
+        val typeString = prepare(type.toString(), "for type ")
+        return "Numeric value$valueStr is out of range$typeString."
+    }
+
+    /**
+     * @see PError.INVALID_CHAR_VALUE_FOR_CAST
+     */
+    private fun invalidCharValueForCast(error: PError): String {
+        val value = error.getOrNull("VALUE", String::class.java)
+        val valueStr = prepare(value.toString(), " (", ")")
+        val type = error.getOrNull("TYPE", PType::class.java)
+        val typeString = prepare(type.toString(), "to type ")
+        return "Invalid character value$valueStr for cast$typeString."
+    }
+
+    /**
+     * @see PError.DIVISION_BY_ZERO
+     */
+    private fun divisionByZero(error: PError): String {
+        val dividendType = error.getOrNull("DIVIDEND_TYPE", PType::class.java)
+        val dividendTypeStr = prepare(dividendType.toString(), " of ")
+        val dividend = error.getOrNull("DIVIDEND", String::class.java)
+        val dividendStr = prepare(dividend.toString(), " -- ", " / 0")
+        return "Division$dividendTypeStr by zero$dividendStr$dividendTypeStr."
+    }
+
+    /**
+     * @see PError.TYPE_UNEXPECTED
+     */
+    private fun typeUnexpected(error: PError): String {
+        val expectedTypes = error.getListOrNull("EXPECTED_TYPES", PType::class.java)
+        val actualType = error.getOrNull("ACTUAL_TYPE", PType::class.java)
+        val expectedTypesStr = when (expectedTypes.isNullOrEmpty()) {
+            true -> ""
+            false -> " Expected types: $expectedTypes."
+        }
+        val actualTypeStr = prepare(actualType.toString(), " Received: ", ".")
+        return "Type mismatch.$expectedTypesStr$actualTypeStr"
     }
 
     /**

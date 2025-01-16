@@ -34,7 +34,7 @@ public class PErrorException extends PErrorListenerException {
 
     @Override
     public String toString() {
-        return "ErrorException{" +
+        return "PErrorException{" +
                 "error=" + error +
                 '}';
     }
