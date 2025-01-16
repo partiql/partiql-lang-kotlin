@@ -3,7 +3,7 @@ package org.partiql.eval.internal.operator.rex
 import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.createIonElementLoader
-import org.partiql.spi.errors.DataException
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
 import org.partiql.spi.types.PType.ARRAY
@@ -568,7 +568,7 @@ internal object CastTable {
 
     private fun datumInt(value: Long): Datum {
         if (value < Int.MIN_VALUE || value > Int.MAX_VALUE) {
-            throw DataException("Overflow when casting $value to INT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.integer())
         }
         return Datum.integer(value.toInt())
     }
@@ -577,34 +577,34 @@ internal object CastTable {
         val int = try {
             value.setScale(0, RoundingMode.HALF_EVEN).intValueExact()
         } catch (e: ArithmeticException) {
-            throw DataException("Overflow when casting $value to INT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.integer())
         }
         return Datum.integer(int)
     }
 
     private fun datumInt(value: Float): Datum {
         if (value > Int.MAX_VALUE || value < Int.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to INT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.integer())
         }
         return Datum.integer(value.toInt())
     }
 
     private fun datumInt(value: Double): Datum {
         if (value > Int.MAX_VALUE || value < Int.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to INT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.integer())
         }
         return Datum.integer(value.toInt())
     }
 
     private fun datumTinyInt(value: Long): Datum {
         if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
-            throw DataException("Overflow when casting $value to TINYINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.tinyint())
         }
         return Datum.tinyint(value.toByte())
     }
     private fun datumTinyInt(value: Int): Datum {
         if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
-            throw DataException("Overflow when casting $value to TINYINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.tinyint())
         }
         return Datum.tinyint(value.toByte())
     }
@@ -613,34 +613,34 @@ internal object CastTable {
         val byte = try {
             value.setScale(0, RoundingMode.HALF_EVEN).byteValueExact()
         } catch (e: ArithmeticException) {
-            throw DataException("Overflow when casting $value to TINYINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.tinyint())
         }
         return Datum.tinyint(byte)
     }
     private fun datumTinyInt(value: Short): Datum {
         if (value < Byte.MIN_VALUE || value > Byte.MAX_VALUE) {
-            throw DataException("Overflow when casting $value to TINYINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.tinyint())
         }
         return Datum.tinyint(value.toByte())
     }
 
     private fun datumTinyInt(value: Float): Datum {
         if (value > Byte.MAX_VALUE || value < Byte.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to TINYINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.tinyint())
         }
         return Datum.tinyint(value.toInt().toByte())
     }
 
     private fun datumTinyInt(value: Double): Datum {
         if (value > Byte.MAX_VALUE || value < Byte.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to TINYINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.tinyint())
         }
         return Datum.tinyint(value.toInt().toByte())
     }
 
     private fun datumSmallInt(value: Long): Datum {
         if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
-            throw DataException("Overflow when casting $value to SMALLINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.smallint())
         }
         return Datum.smallint(value.toShort())
     }
@@ -648,21 +648,21 @@ internal object CastTable {
         val short = try {
             value.setScale(0, RoundingMode.HALF_EVEN).shortValueExact()
         } catch (e: ArithmeticException) {
-            throw DataException("Overflow when casting $value to SMALLINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.smallint())
         }
         return Datum.smallint(short)
     }
 
     private fun datumSmallInt(value: Float): Datum {
         if (value > Short.MAX_VALUE || value < Short.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to SMALLINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.smallint())
         }
         return Datum.smallint(value.toInt().toShort())
     }
 
     private fun datumSmallInt(value: Int): Datum {
         if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
-            throw DataException("Overflow when casting $value to SMALLINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.smallint())
         }
         return Datum.smallint(value.toShort())
     }
@@ -673,14 +673,14 @@ internal object CastTable {
 
     private fun datumBigInt(value: Double): Datum {
         if (value > Long.MAX_VALUE || value < Long.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to BIGINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.bigint())
         }
         return Datum.bigint(value.toLong())
     }
 
     private fun datumBigInt(value: Float): Datum {
         if (value > Long.MAX_VALUE || value < Long.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to BIGINT")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.bigint())
         }
         return Datum.bigint(value.toLong())
     }
@@ -691,7 +691,7 @@ internal object CastTable {
 
     private fun datumReal(value: Double): Datum {
         if (value > Float.MAX_VALUE || value < Float.MIN_VALUE) {
-            throw DataException("Overflow when casting $value to REAL")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.real())
         }
         return Datum.real(value.toFloat())
     }
@@ -699,7 +699,7 @@ internal object CastTable {
     private fun datumReal(value: BigDecimal): Datum {
         val float = value.toFloat()
         if (float == Float.NEGATIVE_INFINITY || float == Float.POSITIVE_INFINITY) {
-            throw DataException("Overflow when casting $value to REAL")
+            throw PErrors.numericOutOfRangeException(value.toString(), PType.real())
         }
         return Datum.real(float)
     }

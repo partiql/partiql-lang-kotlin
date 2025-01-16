@@ -5,7 +5,10 @@ import com.amazon.ionelement.api.ElementLoader;
 import com.amazon.ionelement.api.IonElementLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.spi.errors.DataException;
+import org.partiql.spi.errors.PError;
+import org.partiql.spi.errors.PErrorException;
+import org.partiql.spi.errors.PErrorKind;
+import org.partiql.spi.errors.Severity;
 import org.partiql.spi.internal.value.ion.IonVariant;
 import org.partiql.spi.types.PType;
 import java.math.BigDecimal;
@@ -15,6 +18,7 @@ import java.nio.charset.Charset;
 import java.time.*;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -433,15 +437,16 @@ public interface Datum extends Iterable<Datum> {
      * @param precision the precision to coerce the value to
      * @param scale the scale to coerce the value to
      * @return a value of type {@link PType#DECIMAL} with the requested precision/scale
-     * @throws DataException if the value could not fit into the requested precision/scale
+     * @throws PErrorException if the value could not fit into the requested precision/scale
      */
     @NotNull
-    static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws DataException {
+    static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws PErrorException {
         BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
+        PType type = PType.decimal(precision, scale);
         if (d.precision() > precision) {
-            throw new DataException("Value " + d + " could not fit into decimal with precision " + precision + " and scale " + scale + ".");
+            throw numericValueOutOfRangeException(value.toString(), type);
         }
-        return new DatumDecimal(d, PType.decimal(precision, scale));
+        return new DatumDecimal(d, type);
     }
 
     /**
@@ -458,15 +463,16 @@ public interface Datum extends Iterable<Datum> {
      * @param precision the precision to coerce the value to
      * @param scale the scale to coerce the value to
      * @return a value of type {@link PType#NUMERIC} with the requested precision/scale
-     * @throws DataException if the value could not fit into the requested precision/scale
+     * @throws PErrorException if the value could not fit into the requested precision/scale
      */
     @NotNull
-    static Datum numeric(@NotNull BigDecimal value, int precision, int scale) throws DataException {
+    static Datum numeric(@NotNull BigDecimal value, int precision, int scale) throws PErrorException {
         BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
+        PType type = PType.numeric(precision, scale);
         if (d.precision() > precision) {
-            throw new DataException("Value " + d + " could not fit into numeric with precision " + precision + " and scale " + scale + ".");
+            throw numericValueOutOfRangeException(value.toString(), type);
         }
-        return new DatumDecimal(d, PType.numeric(precision, scale));
+        return new DatumDecimal(d, type);
     }
 
     // CHARACTER STRINGS
@@ -483,10 +489,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#VARCHAR} with the default length
-     * @throws DataException if the value could not fit into the default length
+     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed
      */
     @NotNull
-    static Datum varchar(@NotNull String value) throws DataException {
+    static Datum varchar(@NotNull String value) throws PErrorException {
         return varchar(value, 255);
     }
 
@@ -494,14 +500,14 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the varchar to coerce the value to
      * @return a value of type {@link PType#VARCHAR} with the requested length
-     * @throws DataException if the value could not fit into the requested length
+     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed
      */
     @NotNull
-    static Datum varchar(@NotNull String value, int length) throws DataException {
+    static Datum varchar(@NotNull String value, int length) throws PErrorException {
         // TODO: Error or coerce here? Right now coerce, though I think this should likely error.
         String newValue;
         if (length <= 0) {
-            throw new DataException("VARCHAR of length " + length + " not allowed.");
+            throw wrappedException(new IllegalArgumentException("VARCHAR of length " + length + " not allowed."));
         }
         if (value.length() < length) {
             newValue = String.format("%-" + length + "." + length + "s", value);
@@ -516,10 +522,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#CHAR} with the default length
-     * @throws DataException if the value could not fit into the default length
+     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed
      */
     @NotNull
-    static Datum character(@NotNull String value) throws DataException {
+    static Datum character(@NotNull String value) throws PErrorException {
         return character(value, 255);
     }
 
@@ -527,14 +533,14 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the char to coerce the value to
      * @return a value of type {@link PType#CHAR} with the default length
-     * @throws DataException if the value could not fit into the requested length
+     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed
      */
     @NotNull
-    static Datum character(@NotNull String value, int length) throws DataException {
+    static Datum character(@NotNull String value, int length) throws PErrorException {
         // TODO: Error or coerce here? Right now coerce, though I think this should likely error.
         String newValue;
         if (length <= 0) {
-            throw new DataException("CHAR of length " + length + " not allowed.");
+            throw wrappedException(new IllegalArgumentException("CHAR of length " + length + " not allowed."));
         }
         if (value.length() < length) {
             newValue = String.format("%-" + length + "." + length + "s", value);
@@ -549,10 +555,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#CLOB} with the default length
-     * @throws DataException if the value could not fit into the default length
+     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed
      */
     @NotNull
-    static Datum clob(@NotNull byte[] value) throws DataException {
+    static Datum clob(@NotNull byte[] value) throws PErrorException {
         // TODO: Check size of value
         return clob(value, Integer.MAX_VALUE);
     }
@@ -561,10 +567,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the clob to coerce the value to
      * @return a value of type {@link PType#CLOB} with the default length
-     * @throws DataException if the value could not fit into the requested length
+     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed
      */
     @NotNull
-    static Datum clob(@NotNull byte[] value, int length) throws DataException {
+    static Datum clob(@NotNull byte[] value, int length) throws PErrorException {
         // TODO: Check size of value
         return new DatumBytes(value, PType.clob(length));
     }
@@ -574,10 +580,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#BLOB} with the default length
-     * @throws DataException if the value could not fit into the default length
+     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed
      */
     @NotNull
-    static Datum blob(@NotNull byte[] value) {
+    static Datum blob(@NotNull byte[] value) throws PErrorException {
         // TODO: Check size
         return new DatumBytes(value, PType.blob(Integer.MAX_VALUE));
     }
@@ -586,10 +592,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the clob to coerce the value to
      * @return a value of type {@link PType#BLOB} with the default length
-     * @throws DataException if the value could not fit into the requested length
+     * @throws PErrorException if the value could not fit into the requested length, or if the length is not valid
      */
     @NotNull
-    static Datum blob(@NotNull byte[] value, int length) throws DataException {
+    static Datum blob(@NotNull byte[] value, int length) throws PErrorException {
         // TODO: Check size
         return new DatumBytes(value, PType.blob(length));
     }
@@ -599,9 +605,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#DATE}
+     * @throws PErrorException if the value could not be converted to a date.
      */
     @NotNull
-    static Datum date(@NotNull LocalDate value) {
+    static Datum date(@NotNull LocalDate value) throws PErrorException {
         return new DatumDate(value);
     }
 
@@ -609,10 +616,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIME}
-     * @throws DataException if the value could not fit into the requested precision
+     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid
      */
     @NotNull
-    static Datum time(@NotNull LocalTime value, int precision) throws DataException {
+    static Datum time(@NotNull LocalTime value, int precision) throws PErrorException {
         // TODO: Check precision
         return new DatumTime(value, precision);
     }
@@ -621,10 +628,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMEZ}
-     * @throws DataException if the value could not fit into the requested precision
+     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid
      */
     @NotNull
-    static Datum timez(@NotNull OffsetTime value, int precision) throws DataException {
+    static Datum timez(@NotNull OffsetTime value, int precision) throws PErrorException {
         // TODO: Check precision
         return new DatumTimez(value, precision);
     }
@@ -633,10 +640,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMESTAMP}
-     * @throws DataException if the value could not fit into the requested precision
+     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid
      */
     @NotNull
-    static Datum timestamp(@NotNull LocalDateTime value, int precision) throws DataException {
+    static Datum timestamp(@NotNull LocalDateTime value, int precision) throws PErrorException {
         // TODO: Check precision
         return new DatumTimestamp(value, precision);
     }
@@ -645,10 +652,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMESTAMPZ}
-     * @throws DataException if the value could not fit into the requested precision
+     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid
      */
     @NotNull
-    static Datum timestampz(@NotNull OffsetDateTime value, int precision) throws DataException {
+    static Datum timestampz(@NotNull OffsetDateTime value, int precision) throws PErrorException {
         // TODO: Check precision
         return new DatumTimestampz(value, precision);
     }
@@ -695,12 +702,17 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing Ion
      * @return a value of type {@link PType#VARIANT}
+     * @throws PErrorException if the value could not be converted to a variant.
      */
     @NotNull
-    static Datum ion(@NotNull String value) {
-        IonElementLoader loader = ElementLoader.createIonElementLoader();
-        AnyElement element = loader.loadSingleElement(value);
-        return new IonVariant(element);
+    static Datum ion(@NotNull String value) throws PErrorException {
+        try {
+            IonElementLoader loader = ElementLoader.createIonElementLoader();
+            AnyElement element = loader.loadSingleElement(value);
+            return new IonVariant(element);
+        } catch (Throwable t) {
+            throw wrappedException(t);
+        }
     }
 
     /**
@@ -746,5 +758,34 @@ public interface Datum extends Iterable<Datum> {
         } else {
             return new DatumComparator.NullsLast();
         }
+    }
+
+    @NotNull
+    private static PErrorException numericValueOutOfRangeException(@NotNull String value, @NotNull PType type) {
+        PError pError = new PError(
+                PError.NUMERIC_VALUE_OUT_OF_RANGE,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                new HashMap<>() {{
+                    put("VALUE", value);
+                    put("TYPE", type);
+                }}
+        );
+        return new PErrorException(pError);
+    }
+
+    @NotNull
+    private static PErrorException wrappedException(@NotNull Throwable t) {
+        PError pError = new PError(
+                PError.STRING_EXCEEDS_LENGTH,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                new HashMap<>() {{
+                    put("CAUSE", t);
+                }}
+        );
+        return new PErrorException(pError);
     }
 }

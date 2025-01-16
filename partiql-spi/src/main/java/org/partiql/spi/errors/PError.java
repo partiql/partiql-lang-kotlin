@@ -499,4 +499,22 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int NUMERIC_VALUE_OUT_OF_RANGE = 17;
+
+    /**
+     * <p>
+     * This is a data exception, where the string value exceeds the maximum length. This is characterized in SQL:1999 by
+     * {@code data exception — string data, right truncation}.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>LENGTH</b> ({@link Long}): The length of the value that does not fit in the type.</li>
+     * <li><b>TYPE</b> ({@link PType}): The type that could not fit the value.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Character string with length [length] exceeds maximum length for [type].</code>
+     * </p>
+     */
+    public static final int STRING_EXCEEDS_LENGTH = 18;
 }
