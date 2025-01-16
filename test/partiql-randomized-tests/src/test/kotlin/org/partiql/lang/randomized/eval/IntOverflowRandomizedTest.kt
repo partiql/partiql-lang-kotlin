@@ -163,9 +163,6 @@ class IntOverflowRandomizedTest {
             }.mapTo(parameters, transform)
 
             // Guaranteed to overflow
-            // Casts are included due to literal minus being parsed as a unary operator + unsigned int.
-            // Without the explicit cast, Int.MIN_VALUE would get parsed as an 8-byte BIGINT.
-            // We may change the parsing behavior to automatically include signed numeric literals at some point.
             parameters.add(Test.Overflow("CAST(${Int.MIN_VALUE} AS INT) / CAST(-1 AS INT)"))
             return parameters
         }

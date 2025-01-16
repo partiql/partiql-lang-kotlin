@@ -154,6 +154,7 @@ import org.partiql.ast.Identifier.Simple
 import org.partiql.ast.Identifier.regular
 import org.partiql.ast.JoinType
 import org.partiql.ast.Let
+import org.partiql.ast.Literal
 import org.partiql.ast.Literal.approxNum
 import org.partiql.ast.Literal.bool
 import org.partiql.ast.Literal.exactNum
@@ -1461,9 +1462,28 @@ internal class PartiQLParserDefault : PartiQLParser {
             convertToOperator(ctx.lhs, ctx.rhs, ctx.op.text)
         }
 
+        // Combine unary minus with numeric literals
+        private fun negate(lit: Literal): Literal? =
+            when (lit.code()) {
+                Literal.INT_NUM -> intNum("-${lit.numberValue()}")
+                Literal.APPROX_NUM -> approxNum("-${lit.numberValue()}")
+                Literal.EXACT_NUM -> exactNum("-${lit.numberValue()}")
+                else -> null
+            }
+
         override fun visitValueExpr(ctx: GeneratedParser.ValueExprContext): AstNode = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
-            convertToOperator(ctx.rhs, ctx.sign.text)
+            val v = visit(ctx.rhs) as Expr
+            if (ctx.sign.text == "-" && v is ExprLit) {
+                val negatedLit = negate(v.lit)
+                if (negatedLit != null) {
+                    return exprLit(negatedLit)
+                } else {
+                    exprOperator(ctx.sign.text, null, v)
+                }
+            } else {
+                return exprOperator(ctx.sign.text, null, v)
+            }
         }
 
         /**

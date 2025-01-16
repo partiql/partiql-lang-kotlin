@@ -17,10 +17,10 @@ class PartiQLParserOperatorTests {
 
     @Test
     fun builtinUnaryOperator() = assertExpression(
-        "-2",
+        "+2",
         queryBody {
             exprOperator(
-                symbol = "-",
+                symbol = "+",
                 lhs = null,
                 rhs = exprLit(intNum(2))
             )

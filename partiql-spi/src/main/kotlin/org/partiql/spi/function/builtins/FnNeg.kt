@@ -3,12 +3,12 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.errors.DataException
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-// TODO: Handle Overflow
 internal val Fn_NEG__INT8__INT8 = FunctionUtils.hidden(
 
     name = "neg",
@@ -16,9 +16,12 @@ internal val Fn_NEG__INT8__INT8 = FunctionUtils.hidden(
     parameters = arrayOf(Parameter("value", PType.tinyint())),
 
 ) { args ->
-    @Suppress("DEPRECATION")
     val value = args[0].byte
-    Datum.tinyint(value.times(-1).toByte())
+    if (value == Byte.MIN_VALUE) {
+        throw DataException("Resulting value out of range for TINYINT: -($value)")
+    } else {
+        Datum.tinyint(value.times(-1).toByte())
+    }
 }
 
 internal val Fn_NEG__INT16__INT16 = FunctionUtils.hidden(
@@ -29,7 +32,11 @@ internal val Fn_NEG__INT16__INT16 = FunctionUtils.hidden(
 
 ) { args ->
     val value = args[0].short
-    Datum.smallint(value.times(-1).toShort())
+    if (value == Short.MIN_VALUE) {
+        throw DataException("Resulting value out of range for SMALLINT: -($value)")
+    } else {
+        Datum.smallint(value.times(-1).toShort())
+    }
 }
 
 internal val Fn_NEG__INT32__INT32 = FunctionUtils.hidden(
@@ -40,7 +47,11 @@ internal val Fn_NEG__INT32__INT32 = FunctionUtils.hidden(
 
 ) { args ->
     val value = args[0].int
-    Datum.integer(value.times(-1))
+    if (value == Int.MIN_VALUE) {
+        throw DataException("Resulting value out of range for INTEGER: -($value)")
+    } else {
+        Datum.integer(value.times(-1))
+    }
 }
 
 internal val Fn_NEG__INT64__INT64 = FunctionUtils.hidden(
@@ -51,7 +62,11 @@ internal val Fn_NEG__INT64__INT64 = FunctionUtils.hidden(
 
 ) { args ->
     val value = args[0].long
-    Datum.bigint(value.times(-1L))
+    if (value == Long.MIN_VALUE) {
+        throw DataException("Resulting value out of range for BIGINT: -($value)")
+    } else {
+        Datum.bigint(value * -1L)
+    }
 }
 
 internal val Fn_NEG__INT__INT = FunctionUtils.hidden(
