@@ -519,7 +519,7 @@ internal object CastTable {
             ElementType.INT -> Datum.numeric(ion.bigIntegerValue.toBigDecimal())
             ElementType.FLOAT -> Datum.doublePrecision(ion.doubleValue)
             ElementType.DECIMAL -> Datum.decimal(ion.decimalValue)
-            else -> throw PErrors.internalErrorException(IllegalArgumentException("Expected number."))
+            else -> throw PErrors.invalidStringCastException(str)
         }
     }
 

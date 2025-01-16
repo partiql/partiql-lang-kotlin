@@ -499,4 +499,22 @@ public final class PError extends Enum {
      * </p>
      */
     public static final int NUMERIC_VALUE_OUT_OF_RANGE = 17;
+
+    /**
+     * <p>
+     * This is equivalent to SQL:1999's {@code data exception — invalid character value for cast}, which is seen during
+     * the execution of a cast from a character string to another type.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>VALUE</b> ({@link String}): The value that is invalid.</li>
+     * <li><b>TYPE</b> ({@link PType}): The type that could not hold the value.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Invalid character value "[value]" for cast to [type].</code>
+     * </p>
+     */
+    public static final int INVALID_CHAR_VALUE_FOR_CAST = 18;
 }

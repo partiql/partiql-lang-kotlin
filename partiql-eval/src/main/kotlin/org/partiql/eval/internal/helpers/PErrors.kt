@@ -63,6 +63,19 @@ internal object PErrors {
         return PErrorException(pError)
     }
 
+    fun invalidStringCastException(value: String): PErrorException {
+        val pError = PError(
+            PError.INVALID_CHAR_VALUE_FOR_CAST,
+            Severity.ERROR(),
+            PErrorKind.EXECUTION(),
+            null,
+            mapOf(
+                "VALUE" to value,
+            )
+        )
+        return PErrorException(pError)
+    }
+
     fun internalErrorException(cause: Throwable): PErrorException {
         val pError = PError(
             PError.INTERNAL_ERROR,

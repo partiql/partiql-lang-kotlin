@@ -3,9 +3,9 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.errors.DataException
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import kotlin.math.absoluteValue
@@ -28,7 +28,7 @@ internal val Fn_ABS__INT8__INT8 = Function.static(
 ) { args ->
     val value = args[0].byte
     if (value == Byte.MIN_VALUE) {
-        throw DataException("Resulting value out of range for TINYINT: ABS($value)")
+        throw PErrors.numericValueOutOfRangeException("ABS($value)", PType.tinyint())
     } else {
         val result = if (value < 0) (-value).toByte() else value
         Datum.tinyint(result)
@@ -42,7 +42,7 @@ internal val Fn_ABS__INT16__INT16 = Function.static(
 ) { args ->
     val value = args[0].short
     if (value == Short.MIN_VALUE) {
-        throw DataException("Resulting value out of range for SMALLINT: ABS($value)")
+        throw PErrors.numericValueOutOfRangeException("ABS($value)", PType.smallint())
     } else {
         val result = if (value < 0) (-value).toShort() else value
         Datum.smallint(result)
@@ -56,7 +56,7 @@ internal val Fn_ABS__INT32__INT32 = Function.static(
 ) { args ->
     val value = args[0].int
     if (value == Int.MIN_VALUE) {
-        throw DataException("Resulting value out of range for INT: ABS($value)")
+        throw PErrors.numericValueOutOfRangeException("ABS($value)", PType.integer())
     } else {
         Datum.integer(value.absoluteValue)
     }
@@ -69,7 +69,7 @@ internal val Fn_ABS__INT64__INT64 = Function.static(
 ) { args ->
     val value = args[0].long
     if (value == Long.MIN_VALUE) {
-        throw DataException("Resulting value out of range for BIGINT: ABS($value)")
+        throw PErrors.numericValueOutOfRangeException("ABS($value)", PType.bigint())
     } else {
         Datum.bigint(value.absoluteValue)
     }

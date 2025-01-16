@@ -22,6 +22,9 @@ internal class ExprPermissive(private var expr: ExprValue) :
                 PError.NUMERIC_VALUE_OUT_OF_RANGE,
                 PError.PATH_INDEX_NEVER_SUCCEEDS,
                 PError.PATH_SYMBOL_NEVER_SUCCEEDS,
+                PError.TYPE_UNEXPECTED,
+                PError.UNDEFINED_CAST,
+                PError.INVALID_CHAR_VALUE_FOR_CAST,
                 PError.PATH_KEY_NEVER_SUCCEEDS -> Datum.missing()
                 else -> throw e
             }

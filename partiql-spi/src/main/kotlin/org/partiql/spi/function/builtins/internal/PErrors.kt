@@ -11,6 +11,21 @@ internal object PErrors {
         return PErrorException(internalError(cause))
     }
 
+    fun numericValueOutOfRangeException(value: String, type: PType): PErrorException {
+        return PErrorException(
+            PError(
+                PError.NUMERIC_VALUE_OUT_OF_RANGE,
+                Severity.ERROR(),
+                PErrorKind.EXECUTION(),
+                null,
+                mapOf(
+                    "VALUE" to value,
+                    "TYPE" to type
+                )
+            )
+        )
+    }
+
     fun unexpectedTypeException(actual: PType, expected: List<PType>): PErrorException {
         return PErrorException(unexpectedType(actual, expected))
     }
