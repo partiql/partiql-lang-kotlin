@@ -510,7 +510,7 @@ internal object CastTable {
         val ion = try {
             str.let { createIonElementLoader().loadSingleElement(it.normalizeForCastToInt()) }
         } catch (e: IonElementException) {
-            throw PErrors.internalErrorException(e)
+            throw PErrors.invalidStringCastException(str)
         }
         if (ion.isNull) {
             return Datum.nullValue()
