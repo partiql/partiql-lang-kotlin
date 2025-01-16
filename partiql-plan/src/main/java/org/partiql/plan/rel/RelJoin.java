@@ -9,6 +9,9 @@ import org.partiql.plan.rex.Rex;
 import java.util.List;
 
 /**
+ * <p>
+ * <b>NOTE:</b> This is experimental and subject to change without prior notice!
+ * </p>
  * Logical join abstract base class. This node currently models both correlated and de-correlated joins. In the future,
  * this node may be used for just modeling de-correlated joins (like Calcite's
  * <a href="https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/core/Join.html">Join</a>) and
