@@ -1463,11 +1463,24 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         // Combine unary minus with numeric literals
+        // TODO may be possible to model signed numerics within the ANTLR grammar itself
         private fun negate(lit: Literal): Literal? =
             when (lit.code()) {
-                Literal.INT_NUM -> intNum("-${lit.numberValue()}")
-                Literal.APPROX_NUM -> approxNum("-${lit.numberValue()}")
-                Literal.EXACT_NUM -> exactNum("-${lit.numberValue()}")
+                Literal.INT_NUM -> if (lit.numberValue().first() == '-') {
+                    null
+                } else {
+                    intNum("-${lit.numberValue()}")
+                }
+                Literal.APPROX_NUM -> if (lit.numberValue().first() == '-') {
+                    null
+                } else {
+                    approxNum("-${lit.numberValue()}")
+                }
+                Literal.EXACT_NUM -> if (lit.numberValue().first() == '-') {
+                    null
+                } else {
+                    exactNum("-${lit.numberValue()}")
+                }
                 else -> null
             }
 

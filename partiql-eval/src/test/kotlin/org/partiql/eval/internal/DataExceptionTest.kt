@@ -224,6 +224,15 @@ class DataExceptionTest {
             // BIGINT
             FailureTestCase(
                 input = "-CAST(${Long.MIN_VALUE} AS BIGINT)"
+            ),
+            // No explicit casts
+            // INT
+            FailureTestCase(
+                input = "- ${Integer.MIN_VALUE}" // space needed since `--` turns into a comment
+            ),
+            // BIGINT
+            FailureTestCase(
+                input = "- ${Long.MIN_VALUE}" // space needed since `--` turns into a comment
             )
         )
     }
