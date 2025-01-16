@@ -31,6 +31,8 @@ class PErrorCodeTests {
             "TYPE_UNEXPECTED" to 13,
             "ALWAYS_MISSING" to 14,
             "INVALID_EXCLUDE_PATH" to 15,
+            "CARDINALITY_VIOLATION" to 16,
+            "NUMERIC_VALUE_OUT_OF_RANGE" to 17
         )
 
         // Preparation

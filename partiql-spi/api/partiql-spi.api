@@ -302,19 +302,22 @@ public final class org/partiql/spi/errors/CardinalityViolation : java/lang/Runti
 	public fun fillInStackTrace ()Ljava/lang/Throwable;
 }
 
-public final class org/partiql/spi/errors/DataException : java/lang/RuntimeException {
+public final class org/partiql/spi/errors/DataException : org/partiql/spi/errors/PErrorException {
 	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/types/PType;)V
+	public fun <init> (Lorg/partiql/spi/errors/PError;)V
 	public fun fillInStackTrace ()Ljava/lang/Throwable;
-	public fun getMessage ()Ljava/lang/String;
 }
 
 public final class org/partiql/spi/errors/PError : org/partiql/spi/Enum {
 	public static final field ALWAYS_MISSING I
+	public static final field CARDINALITY_VIOLATION I
 	public static final field FEATURE_NOT_SUPPORTED I
 	public static final field FUNCTION_NOT_FOUND I
 	public static final field FUNCTION_TYPE_MISMATCH I
 	public static final field INTERNAL_ERROR I
 	public static final field INVALID_EXCLUDE_PATH I
+	public static final field NUMERIC_VALUE_OUT_OF_RANGE I
 	public static final field PATH_INDEX_NEVER_SUCCEEDS I
 	public static final field PATH_KEY_NEVER_SUCCEEDS I
 	public static final field PATH_SYMBOL_NEVER_SUCCEEDS I

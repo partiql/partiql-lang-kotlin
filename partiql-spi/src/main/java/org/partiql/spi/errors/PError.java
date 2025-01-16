@@ -467,4 +467,36 @@ public final class PError extends Enum {
      * Example error message: <code>[location]: Expression always returns null.</code>
      */
     public static final int INVALID_EXCLUDE_PATH = 15;
+
+    /**
+     * <p>
+     * This is a semantic/evaluation error, where a cardinality violation occurs.
+     * </p>
+     * <p>
+     * From SQL:1999:
+     * > If the cardinality of a {@code <row subquery>} is greater than 1 (one), then an exception condition is raised: cardinality violation.
+     * > If the cardinality of SS {@code <scalar subquery>} is greater than 1 (one), then an exception condition is raised: cardinality violation.
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Cardinality violation.</code>
+     * </p>
+     */
+    public static final int CARDINALITY_VIOLATION = 16;
+
+    /**
+     * <p>
+     * This is a data exception, where a numeric value is out of range.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>VALUE</b> ({@link String}): The value/operation (in string form) that is out of range.</li>
+     * <li><b>TYPE</b> ({@link PType}): The type that could not fit the value.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Numeric value out of range for [type]: [value].</code>
+     * </p>
+     */
+    public static final int NUMERIC_VALUE_OUT_OF_RANGE = 17;
 }
