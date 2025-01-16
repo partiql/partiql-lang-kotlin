@@ -3,9 +3,9 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.errors.DataException
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.internal.byteOverflows
 import org.partiql.spi.internal.shortOverflows
 import org.partiql.spi.types.PType
@@ -23,7 +23,7 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             val arg1 = args[1].byte
             val result = arg0 + arg1
             if (result.byteOverflows()) {
-                throw DataException("Resulting value out of range for TINYINT: $arg0 + $arg1")
+                throw PErrors.numericValueOutOfRangeException("$arg0 + $arg1", PType.tinyint())
             } else {
                 Datum.tinyint(result.toByte())
             }
@@ -36,7 +36,7 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
             val arg1 = args[1].short
             val result = arg0 + arg1
             if (result.shortOverflows()) {
-                throw DataException("Resulting value out of range for SMALLINT: $arg0 + $arg1")
+                throw PErrors.numericValueOutOfRangeException("$arg0 + $arg1", PType.smallint())
             } else {
                 Datum.smallint(result.toShort())
             }
@@ -51,7 +51,7 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
                 val result = Math.addExact(arg0, arg1)
                 Datum.integer(result)
             } catch (e: ArithmeticException) {
-                throw DataException("Resulting value out of range for INT: $arg0 + $arg1")
+                throw PErrors.numericValueOutOfRangeException("$arg0 + $arg1", PType.integer())
             }
         }
     }
@@ -64,7 +64,7 @@ internal object FnPlus : DiadicArithmeticOperator("plus") {
                 val result = Math.addExact(arg0, arg1)
                 Datum.bigint(result)
             } catch (e: ArithmeticException) {
-                throw DataException("Resulting value out of range for BIGINT: $arg0 + $arg1")
+                throw PErrors.numericValueOutOfRangeException("$arg0 + $arg1", PType.bigint())
             }
         }
     }

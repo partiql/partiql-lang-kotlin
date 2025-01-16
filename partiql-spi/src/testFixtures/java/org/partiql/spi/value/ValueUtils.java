@@ -3,6 +3,7 @@ package org.partiql.spi.value;
 import kotlin.NotImplementedError;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.partiql.spi.errors.PErrorException;
 import org.partiql.spi.types.PType;
 import org.partiql.value.IntValue;
 import org.partiql.value.PartiQL;
@@ -117,7 +118,7 @@ public class ValueUtils {
      * @return the equivalent {@link Datum}
      */
     @NotNull
-    public static Datum newDatum(PartiQLValue value) {
+    public static Datum newDatum(PartiQLValue value) throws PErrorException {
         PartiQLValueType type = value.getType();
         if (value.isNull()) {
             return new DatumNull(type.toPType());

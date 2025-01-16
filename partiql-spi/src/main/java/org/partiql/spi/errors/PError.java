@@ -210,6 +210,16 @@ public final class PError extends Enum {
                 return "TYPE_UNEXPECTED";
             case ALWAYS_MISSING:
                 return "ALWAYS_MISSING";
+            case INVALID_EXCLUDE_PATH:
+                return "INVALID_EXCLUDE_PATH";
+            case CARDINALITY_VIOLATION:
+                return "CARDINALITY_VIOLATION";
+            case NUMERIC_VALUE_OUT_OF_RANGE:
+                return "NUMERIC_VALUE_OUT_OF_RANGE";
+            case INVALID_CHAR_VALUE_FOR_CAST:
+                return "INVALID_CHAR_VALUE_FOR_CAST";
+            case DIVISION_BY_ZERO:
+                return "DIVISION_BY_ZERO";
             default:
                 throw new UnsupportedCodeException(code);
         }
@@ -467,4 +477,71 @@ public final class PError extends Enum {
      * Example error message: <code>[location]: Expression always returns null.</code>
      */
     public static final int INVALID_EXCLUDE_PATH = 15;
+
+    /**
+     * <p>
+     * This is a semantic/evaluation error, where a cardinality violation occurs.
+     * </p>
+     * <p>
+     * From SQL:1999:
+     * > If the cardinality of a {@code <row subquery>} is greater than 1 (one), then an exception condition is raised: cardinality violation.
+     * > If the cardinality of SS {@code <scalar subquery>} is greater than 1 (one), then an exception condition is raised: cardinality violation.
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Cardinality violation.</code>
+     * </p>
+     */
+    public static final int CARDINALITY_VIOLATION = 16;
+
+    /**
+     * <p>
+     * This is a data exception, where a numeric value is out of range.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>VALUE</b> ({@link String}): The value/operation (in string form) that is out of range.</li>
+     * <li><b>TYPE</b> ({@link PType}): The type that could not fit the value.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Numeric value out of range for [type]: [value].</code>
+     * </p>
+     */
+    public static final int NUMERIC_VALUE_OUT_OF_RANGE = 17;
+
+    /**
+     * <p>
+     * This is equivalent to SQL:1999's {@code data exception — invalid character value for cast}, which is seen during
+     * the execution of a cast from a character string to another type.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>VALUE</b> ({@link String}): The value that is invalid.</li>
+     * <li><b>TYPE</b> ({@link PType}): The type that could not hold the value.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Invalid character value "[value]" for cast to [type].</code>
+     * </p>
+     */
+    public static final int INVALID_CHAR_VALUE_FOR_CAST = 18;
+
+    /**
+     * <p>
+     * This is a runtime/compilation/planning error, where a numeric value is divided by zero.
+     * </p>
+     * <p>
+     * Potentially available properties:
+     * <ul>
+     * <li><b>DIVIDEND</b> ({@link String}): The value that is being divided by zero.</li>
+     * <li><b>DIVIDEND_TYPE</b> ({@link PType}): The type of the value that is being divided by zero.</li>
+     * </ul>
+     * </p>
+     * <p>
+     * Example error message: <code>[location]: Cannot divide [dividend] ([dividend_type]) by zero.</code>
+     * </p>
+     */
+    public static final int DIVISION_BY_ZERO = 19;
 }

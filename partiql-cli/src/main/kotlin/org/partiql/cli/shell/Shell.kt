@@ -29,8 +29,10 @@ import org.jline.utils.AttributedStyle
 import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
+import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.spi.catalog.Session
+import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.value.ValueUtils
 import org.partiql.spi.value.io.PartiQLValueTextWriter
 import java.io.Closeable
@@ -274,9 +276,14 @@ internal class Shell(
                         }
                         out.appendLine()
                         out.info("=== RESULT ===")
-                        val writer = PartiQLValueTextWriter(out)
-                        val p = ValueUtils.newPartiQLValue(result)
-                        writer.append(p) // TODO: Create a Datum writer
+                        try {
+                            val writer = PartiQLValueTextWriter(out)
+                            val p = ValueUtils.newPartiQLValue(result)
+                            writer.append(p) // TODO: Create a Datum writer
+                        } catch (e: PErrorException) {
+                            val message = ErrorMessageFormatter.message(e.error)
+                            out.error(message)
+                        }
                         out.appendLine()
                         out.appendLine()
                         out.success("OK!")

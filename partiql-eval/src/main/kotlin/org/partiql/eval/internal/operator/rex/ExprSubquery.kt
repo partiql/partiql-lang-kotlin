@@ -3,9 +3,8 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.errors.CardinalityViolation
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -33,11 +32,11 @@ internal class ExprSubquery(input: ExprRelation, constructor: ExprValue) :
         val tuple = getFirst(env) ?: return Datum.nullValue()
         val values = tuple.fields.asSequence().map { it.value }.iterator()
         if (values.hasNext().not()) {
-            throw TypeCheckException()
+            throw PErrors.cardinalityViolationException()
         }
         val singleValue = values.next()
         if (values.hasNext()) {
-            throw TypeCheckException()
+            throw PErrors.cardinalityViolationException()
         }
         return singleValue
     }
@@ -47,8 +46,7 @@ internal class ExprSubquery(input: ExprRelation, constructor: ExprValue) :
      * constructed value.
      *
      * @return the constructed constructor. Returns null when no rows are returned from the input.
-     * @throws CardinalityViolation when more than one row is returned from the input.
-     * @throws TypeCheckException when the constructor is not a struct.
+     * @throws org.partiql.spi.errors.PErrorException when more than one row is returned from the input, or when the constructor is not a struct.
      */
     private fun getFirst(env: Environment): Datum? {
         _input.open(env)
@@ -60,7 +58,7 @@ internal class ExprSubquery(input: ExprRelation, constructor: ExprValue) :
         val tuple = _constructor.eval(env.push(firstRecord)).check(STRUCT)
         if (_input.hasNext()) {
             _input.close()
-            throw CardinalityViolation()
+            throw PErrors.cardinalityViolationException()
         }
         _input.close()
         return tuple

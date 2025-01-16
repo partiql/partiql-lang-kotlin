@@ -4,8 +4,8 @@ import org.partiql.eval.Environment
 import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.IteratorSupplier
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.errors.CardinalityViolation
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -44,7 +44,7 @@ internal class ExprSubqueryRow(input: ExprRelation, constructor: ExprValue) :
         val tuple = _constructor.eval(env.push(firstRecord)).check(STRUCT)
         if (_input.hasNext()) {
             _input.close()
-            throw CardinalityViolation()
+            throw PErrors.cardinalityViolationException()
         }
         _input.close()
         return tuple

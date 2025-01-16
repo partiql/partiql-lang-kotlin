@@ -1,6 +1,5 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.BigInteger
@@ -28,7 +27,7 @@ internal object ValueUtility {
     /**
      * Asserts that [this] is of a specific type. Note that, if [this] value is null ([Datum.isNull]), then the null
      * value is coerced to the expected type.
-     * @throws TypeCheckException when the input value is a non-null value of the wrong type.
+     * @throws org.partiql.spi.errors.PErrorException when the input value is a non-null value of the wrong type.
      * @return a [Datum] corresponding to the expected type; this will either be the input value if the value is
      * already of the expected type, or it will be a null value of the expected type.
      */
@@ -40,7 +39,7 @@ internal object ValueUtility {
             return this.lower().check(type)
         }
         if (!this.isNull) {
-            throw TypeCheckException("Expected type $type but received ${this.type}.")
+            throw PErrors.unexpectedTypeException(type, listOf(this.type))
         }
         return Datum.nullValue(type)
     }
@@ -49,13 +48,15 @@ internal object ValueUtility {
      * Returns the underlying string value of a PartiQL text value
      *
      * @throws NullPointerException if the value is null
-     * @throws TypeCheckException if the value's type is not a text type (string, symbol, char)
+     * @throws org.partiql.spi.errors.PErrorException if the value's type is not a text type (string, symbol, char)
      */
     fun Datum.getText(): String {
         return when (this.type.code()) {
             PType.VARIANT -> this.lower().getText()
             PType.STRING, PType.CHAR -> this.string
-            else -> throw TypeCheckException("Expected text, but received ${this.type}.")
+            else -> {
+                throw PErrors.unexpectedTypeException(this.type, listOf(PType.string(), PType.character()))
+            }
         }
     }
 
@@ -72,7 +73,7 @@ internal object ValueUtility {
      *  the value to a [BigInteger] regardless of the number's type.
      *
      * @throws NullPointerException if the value is null
-     * @throws TypeCheckException if type is not an integer type
+     * @throws org.partiql.spi.errors.PErrorException if type is not an integer type
      */
     fun Datum.getBigIntCoerced(): BigInteger {
         return when (this.type.code()) {
@@ -84,11 +85,13 @@ internal object ValueUtility {
             PType.NUMERIC, PType.DECIMAL -> {
                 val decimal = this.bigDecimal
                 if (decimal.scale() != 0) {
-                    throw TypeCheckException("Expected integer, but received decimal.")
+                    throw PErrors.unexpectedTypeException(this.type, listOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint()))
                 }
                 return decimal.toBigInteger()
             }
-            else -> throw TypeCheckException("Type: ${this.type}")
+            else -> {
+                throw PErrors.unexpectedTypeException(this.type, listOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint()))
+            }
         }
     }
 
@@ -101,7 +104,7 @@ internal object ValueUtility {
      * present.
      *
      * @throws NullPointerException if the value is null
-     * @throws TypeCheckException if type is not an integer type
+     * @throws org.partiql.spi.errors.PErrorException if type is not an integer type
      */
     fun Datum.getInt32Coerced(): Int {
         return when (this.type.code()) {
@@ -110,7 +113,9 @@ internal object ValueUtility {
             PType.SMALLINT -> this.short.toInt()
             PType.INTEGER -> this.int
             PType.BIGINT -> this.long.toInt()
-            else -> throw TypeCheckException()
+            else -> {
+                throw PErrors.unexpectedTypeException(this.type, listOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint()))
+            }
         }
     }
 }

@@ -3,9 +3,9 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.function.utils.StringUtils.codepointSubstring
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -109,7 +109,9 @@ internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = Function.static(
     val value = args[0].string
     val start = args[1].int
     val end = args[2].int
-    if (end < 0) throw TypeCheckException()
+    if (end < 0) {
+        throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+    }
     val result = value.codepointSubstring(start, end)
     Datum.string(result)
 }
@@ -144,7 +146,9 @@ internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = Function.static(
     val string = args[0].bytes.toString(Charsets.UTF_8)
     val start = args[1].int
     val end = args[2].int
-    if (end < 0) throw TypeCheckException()
+    if (end < 0) {
+        throw PErrors.internalErrorException(IllegalArgumentException("End must be non-negative."))
+    }
     val result = string.codepointSubstring(start, end)
     Datum.clob(result.toByteArray())
 }

@@ -2,8 +2,8 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.Environment
 import org.partiql.eval.ExprValue
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -19,6 +19,6 @@ internal class ExprPathKey(
             return Datum.nullValue()
         }
         val keyString = keyEvaluated.string
-        return rootEvaluated.get(keyString) ?: throw TypeCheckException()
+        return rootEvaluated.get(keyString) ?: throw PErrors.pathKeyFailureException()
     }
 }

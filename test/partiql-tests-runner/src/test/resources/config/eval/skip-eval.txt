@@ -12,7 +12,8 @@ STRICT:::repeatingDecimal // TODO: This is wrong. 4.0000 / 3.0 = 1.3333333
 PERMISSIVE:::subtractionOutOfAllowedPrecision // TODO: This is wrong. 1e100 - 1e-100 = 1e100
 STRICT:::subtractionOutOfAllowedPrecision // TODO: This is wrong. 1e100 - 1e-100 = 1e100
 
-// TODO: NEEDED. Datetime methods for EXTRACT for TIME WITH TIMEZONE and TIMESTAMP WITH TIMEZONE
+// TODO: NOT NEEDED. Datetime methods for EXTRACT for TIME WITH TIMEZONE and TIMESTAMP WITH TIMEZONE
+// TODO: There is ambiguity whether we should support this syntax, as it is not specified by SQL:1999. See <time literal>.
 PERMISSIVE:::EXTRACT(SECOND FROM TIME (2) '01:23:45.678')
 STRICT:::EXTRACT(SECOND FROM TIME (2) '01:23:45.678')
 PERMISSIVE:::EXTRACT(HOUR FROM TIME (2) WITH TIME ZONE '01:23:45.678-06:30')

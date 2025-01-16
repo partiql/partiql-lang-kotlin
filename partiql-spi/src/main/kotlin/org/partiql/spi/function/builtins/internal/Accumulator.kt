@@ -15,7 +15,6 @@
 package org.partiql.spi.function.builtins.internal
 
 import com.amazon.ion.Decimal
-import org.partiql.spi.errors.TypeCheckException
 import org.partiql.spi.function.Aggregation
 import org.partiql.spi.internal.coerceNumbers
 import org.partiql.spi.types.PType
@@ -49,7 +48,7 @@ internal fun checkIsNumberType(funcName: String, value: Datum) {
         return checkIsNumberType(funcName, value.lower())
     }
     if (!value.type.isNumber()) {
-        throw TypeCheckException("Expected NUMBER but received ${value.type}.")
+        throw PErrors.unexpectedTypeException(value.type, listOf(PType.tinyint(), PType.smallint(), PType.integer(), PType.bigint(), PType.decimal(), PType.numeric(), PType.real(), PType.doublePrecision()))
     }
 }
 
@@ -104,7 +103,7 @@ internal fun checkIsBooleanType(funcName: String, value: Datum) {
         return checkIsBooleanType(funcName, value.lower())
     }
     if (value.type.code() != PType.BOOL) {
-        throw TypeCheckException("Expected ${PType.BOOL} but received ${value.type}.")
+        throw PErrors.unexpectedTypeException(value.type, listOf(PType.bool()))
     }
 }
 
