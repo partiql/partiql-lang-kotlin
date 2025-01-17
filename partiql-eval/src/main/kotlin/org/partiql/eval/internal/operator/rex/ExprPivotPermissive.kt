@@ -5,7 +5,7 @@ import org.partiql.eval.ExprRelation
 import org.partiql.eval.ExprValue
 import org.partiql.eval.internal.helpers.ValueUtility.getText
 import org.partiql.spi.errors.PError
-import org.partiql.spi.errors.PErrorException
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.Field
 
@@ -24,7 +24,7 @@ internal class ExprPivotPermissive(
             val keyString = try {
                 val k = key.eval(newEnv)
                 k.getText()
-            } catch (e: PErrorException) {
+            } catch (e: PRuntimeException) {
                 if (e.error.code() == PError.TYPE_UNEXPECTED) {
                     continue
                 }

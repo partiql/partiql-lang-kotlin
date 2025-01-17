@@ -110,9 +110,8 @@ import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.Context
 import org.partiql.spi.errors.PError
-import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorKind
-import org.partiql.spi.errors.PErrorListenerException
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -134,7 +133,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 else -> throw IllegalArgumentException("Only query statements are supported")
             }
             return statement
-        } catch (e: PErrorListenerException) {
+        } catch (e: PRuntimeException) {
             throw e
         } catch (t: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.COMPILATION(), null, t)
@@ -163,7 +162,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             override fun execute(): Datum {
                 return try {
                     root.eval(Environment())
-                } catch (e: PErrorException) {
+                } catch (e: PRuntimeException) {
                     throw e
                 } catch (t: Throwable) {
                     throw PErrors.internalErrorException(t)

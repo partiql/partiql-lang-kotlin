@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.helpers
 
 import org.partiql.spi.errors.PError
-import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorKind
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.function.Function
 import org.partiql.spi.types.PType
@@ -10,46 +10,46 @@ import org.partiql.spi.types.PType
 internal object PErrors {
 
     /**
-     * Returns a PErrorException with code: [PError.NUMERIC_VALUE_OUT_OF_RANGE].
+     * Returns a PRuntimeException with code: [PError.NUMERIC_VALUE_OUT_OF_RANGE].
      */
-    fun numericOutOfRangeException(value: String, type: PType): PErrorException {
+    fun numericOutOfRangeException(value: String, type: PType): PRuntimeException {
         val pError = numericOutOfRange(value, type)
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.FUNCTION_TYPE_MISMATCH].
+     * Returns a PRuntimeException with code: [PError.FUNCTION_TYPE_MISMATCH].
      */
-    fun functionTypeMismatchException(name: String, actualTypes: List<PType>, candidates: List<Function>): PErrorException {
+    fun functionTypeMismatchException(name: String, actualTypes: List<PType>, candidates: List<Function>): PRuntimeException {
         val pError = functionTypeMismatch(name, actualTypes, candidates)
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.PATH_INDEX_NEVER_SUCCEEDS].
+     * Returns a PRuntimeException with code: [PError.PATH_INDEX_NEVER_SUCCEEDS].
      */
-    fun pathIndexFailureException(): PErrorException {
+    fun pathIndexFailureException(): PRuntimeException {
         val pError = pathIndexFailure()
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.PATH_KEY_NEVER_SUCCEEDS].
+     * Returns a PRuntimeException with code: [PError.PATH_KEY_NEVER_SUCCEEDS].
      */
-    fun pathKeyFailureException(): PErrorException {
+    fun pathKeyFailureException(): PRuntimeException {
         val pError = pathKeyFailure()
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.PATH_SYMBOL_NEVER_SUCCEEDS].
+     * Returns a PRuntimeException with code: [PError.PATH_SYMBOL_NEVER_SUCCEEDS].
      */
-    fun pathSymbolFailureException(): PErrorException {
+    fun pathSymbolFailureException(): PRuntimeException {
         val pError = pathSymbolFailure()
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
-    fun castUndefinedException(input: PType, target: PType): PErrorException {
+    fun castUndefinedException(input: PType, target: PType): PRuntimeException {
         val pError = PError(
             PError.UNDEFINED_CAST,
             Severity.ERROR(),
@@ -60,10 +60,10 @@ internal object PErrors {
                 "TARGET_TYPE" to target
             )
         )
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
-    fun invalidStringCastException(value: String): PErrorException {
+    fun invalidStringCastException(value: String): PRuntimeException {
         val pError = PError(
             PError.INVALID_CHAR_VALUE_FOR_CAST,
             Severity.ERROR(),
@@ -73,10 +73,10 @@ internal object PErrors {
                 "VALUE" to value,
             )
         )
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
-    fun internalErrorException(cause: Throwable): PErrorException {
+    fun internalErrorException(cause: Throwable): PRuntimeException {
         val pError = PError(
             PError.INTERNAL_ERROR,
             Severity.ERROR(),
@@ -86,47 +86,47 @@ internal object PErrors {
                 "CAUSE" to cause
             )
         )
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.TYPE_UNEXPECTED].
+     * Returns a PRuntimeException with code: [PError.TYPE_UNEXPECTED].
      */
-    fun arrayExpectedException(actual: PType): PErrorException {
+    fun arrayExpectedException(actual: PType): PRuntimeException {
         val pError = typeUnexpected(actual, listOf(PType.array()))
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.TYPE_UNEXPECTED].
+     * Returns a PRuntimeException with code: [PError.TYPE_UNEXPECTED].
      */
-    fun collectionExpectedException(actual: PType): PErrorException {
+    fun collectionExpectedException(actual: PType): PRuntimeException {
         val pError = typeUnexpected(actual, listOf(PType.bag(), PType.array()))
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.TYPE_UNEXPECTED].
+     * Returns a PRuntimeException with code: [PError.TYPE_UNEXPECTED].
      */
-    fun structureExpectedException(actual: PType): PErrorException {
+    fun structureExpectedException(actual: PType): PRuntimeException {
         val pError = typeUnexpected(actual, listOf(PType.row(), PType.struct()))
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.TYPE_UNEXPECTED].
+     * Returns a PRuntimeException with code: [PError.TYPE_UNEXPECTED].
      */
-    fun unexpectedTypeException(actual: PType, expected: List<PType>): PErrorException {
+    fun unexpectedTypeException(actual: PType, expected: List<PType>): PRuntimeException {
         val pError = typeUnexpected(actual, expected)
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**
-     * Returns a PErrorException with code: [PError.CARDINALITY_VIOLATION].
+     * Returns a PRuntimeException with code: [PError.CARDINALITY_VIOLATION].
      */
-    fun cardinalityViolationException(): PErrorException {
+    fun cardinalityViolationException(): PRuntimeException {
         val pError = cardinalityViolation()
-        return PErrorException(pError)
+        return PRuntimeException(pError)
     }
 
     /**

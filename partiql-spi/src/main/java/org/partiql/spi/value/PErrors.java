@@ -2,7 +2,7 @@ package org.partiql.spi.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.spi.errors.PError;
-import org.partiql.spi.errors.PErrorException;
+import org.partiql.spi.errors.PRuntimeException;
 import org.partiql.spi.errors.PErrorKind;
 import org.partiql.spi.errors.Severity;
 import org.partiql.spi.types.PType;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 class PErrors {
 
     @NotNull
-    static PErrorException numericValueOutOfRangeException(@NotNull String value, @NotNull PType type) {
+    static PRuntimeException numericValueOutOfRangeException(@NotNull String value, @NotNull PType type) {
         PError pError = new PError(
                 PError.NUMERIC_VALUE_OUT_OF_RANGE,
                 Severity.ERROR(),
@@ -26,11 +26,11 @@ class PErrors {
                     put("TYPE", type);
                 }}
         );
-        return new PErrorException(pError);
+        return new PRuntimeException(pError);
     }
 
     @NotNull
-    static PErrorException wrappedException(@NotNull Throwable t) {
+    static PRuntimeException wrappedException(@NotNull Throwable t) {
         PError pError = new PError(
                 PError.INTERNAL_ERROR,
                 Severity.ERROR(),
@@ -40,6 +40,6 @@ class PErrors {
                     put("CAUSE", t);
                 }}
         );
-        return new PErrorException(pError);
+        return new PRuntimeException(pError);
     }
 }

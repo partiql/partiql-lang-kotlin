@@ -3,8 +3,8 @@ package org.partiql.planner.internal
 import org.partiql.spi.SourceLocation
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.errors.PError
-import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorKind
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.function.Function
 import org.partiql.spi.types.PType
@@ -202,8 +202,8 @@ internal object PErrors {
         )
     }
 
-    internal fun internalErrorException(cause: Throwable): PErrorException {
-        return PErrorException(internalError(cause))
+    internal fun internalErrorException(cause: Throwable): PRuntimeException {
+        return PRuntimeException(internalError(cause))
     }
 
     private fun internalError(cause: Throwable): PError = PError(

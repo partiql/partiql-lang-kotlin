@@ -46,7 +46,7 @@ internal class ExprSubquery(input: ExprRelation, constructor: ExprValue) :
      * constructed value.
      *
      * @return the constructed constructor. Returns null when no rows are returned from the input.
-     * @throws org.partiql.spi.errors.PErrorException when more than one row is returned from the input, or when the constructor is not a struct.
+     * @throws org.partiql.spi.errors.PRuntimeException when more than one row is returned from the input, or when the constructor is not a struct.
      */
     private fun getFirst(env: Environment): Datum? {
         _input.open(env)

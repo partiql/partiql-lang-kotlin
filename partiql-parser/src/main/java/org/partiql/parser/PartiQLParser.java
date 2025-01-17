@@ -19,7 +19,7 @@ import org.partiql.ast.Statement;
 import org.partiql.parser.internal.PartiQLParserDefault;
 import org.partiql.spi.Context;
 import org.partiql.spi.SourceLocations;
-import org.partiql.spi.errors.PErrorListenerException;
+import org.partiql.spi.errors.PRuntimeException;
 
 import java.util.List;
 
@@ -37,20 +37,20 @@ public interface PartiQLParser {
      * Parses the source text into an AST.
      * @param source the user's input
      * @param ctx a configuration object for the parser
-     * @throws PErrorListenerException when the {@link org.partiql.spi.errors.PErrorListener} defined in the context
-     * throws a {@link PErrorListenerException}, this method halts execution and propagates the exception.
+     * @throws PRuntimeException when the {@link org.partiql.spi.errors.PErrorListener} defined in the context
+     * throws a {@link PRuntimeException}, this method halts execution and propagates the exception.
      */
     @NotNull
-    Result parse(@NotNull String source, @NotNull Context ctx) throws PErrorListenerException;
+    Result parse(@NotNull String source, @NotNull Context ctx) throws PRuntimeException;
 
     /**
      * Parses the source text into an AST with a default context.
      * @param source the user's input
-     * @throws PErrorListenerException when the {@link org.partiql.spi.errors.PErrorListener} defined in the context
-     * throws a {@link PErrorListenerException}, this method halts execution and propagates the exception.
+     * @throws PRuntimeException when the {@link org.partiql.spi.errors.PErrorListener} defined in the context
+     * throws a {@link PRuntimeException}, this method halts execution and propagates the exception.
      */
     @NotNull
-    default Result parse(@NotNull String source) throws PErrorListenerException {
+    default Result parse(@NotNull String source) throws PRuntimeException {
         return parse(source, Context.standard());
     }
 

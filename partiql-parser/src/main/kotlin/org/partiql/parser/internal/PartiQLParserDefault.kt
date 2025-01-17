@@ -209,7 +209,7 @@ import org.partiql.spi.SourceLocations
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PErrorListener
-import org.partiql.spi.errors.PErrorListenerException
+import org.partiql.spi.errors.PRuntimeException
 import java.math.BigInteger
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
@@ -234,11 +234,11 @@ import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
  */
 internal class PartiQLParserDefault : PartiQLParser {
 
-    @Throws(PErrorListenerException::class)
+    @Throws(PRuntimeException::class)
     override fun parse(source: String, ctx: Context): PartiQLParser.Result {
         try {
             return parse(source, ctx.errorListener)
-        } catch (e: PErrorListenerException) {
+        } catch (e: PRuntimeException) {
             throw e
         } catch (throwable: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.SYNTAX(), null, throwable)

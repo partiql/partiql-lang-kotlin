@@ -32,7 +32,7 @@ import org.joda.time.Duration
 import org.partiql.cli.pipeline.ErrorMessageFormatter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.PErrorException
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.ValueUtils
 import org.partiql.spi.value.io.PartiQLValueTextWriter
 import java.io.Closeable
@@ -280,7 +280,7 @@ internal class Shell(
                             val writer = PartiQLValueTextWriter(out)
                             val p = ValueUtils.newPartiQLValue(result)
                             writer.append(p) // TODO: Create a Datum writer
-                        } catch (e: PErrorException) {
+                        } catch (e: PRuntimeException) {
                             val message = ErrorMessageFormatter.message(e.error)
                             out.error(message)
                         }

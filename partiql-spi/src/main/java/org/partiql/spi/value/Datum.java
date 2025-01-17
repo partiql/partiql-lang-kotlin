@@ -5,7 +5,7 @@ import com.amazon.ionelement.api.ElementLoader;
 import com.amazon.ionelement.api.IonElementLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.spi.errors.PErrorException;
+import org.partiql.spi.errors.PRuntimeException;
 import org.partiql.spi.internal.value.ion.IonVariant;
 import org.partiql.spi.types.PType;
 import java.math.BigDecimal;
@@ -339,20 +339,20 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param type the type of the value
      * @return a typed null value
-     * @throws PErrorException if the type is not a runtime type.
+     * @throws PRuntimeException if the type is not a runtime type.
      */
     @NotNull
-    static Datum nullValue(@NotNull PType type) throws PErrorException {
+    static Datum nullValue(@NotNull PType type) throws PRuntimeException {
         return new DatumNull(type);
     }
 
     /**
      * @param type the type of the value
      * @return a typed missing value
-     * @throws PErrorException if the type is not a runtime type.
+     * @throws PRuntimeException if the type is not a runtime type.
      */
     @NotNull
-    static Datum missing(@NotNull PType type) throws PErrorException {
+    static Datum missing(@NotNull PType type) throws PRuntimeException {
         return new DatumMissing(type);
     }
 
@@ -424,10 +424,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#DECIMAL} with the default precision/scale
-     * @throws PErrorException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
+     * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
      */
     @NotNull
-    static Datum decimal(@NotNull BigDecimal value) throws PErrorException {
+    static Datum decimal(@NotNull BigDecimal value) throws PRuntimeException {
         return new DatumDecimal(value, PType.decimal(38, 0));
     }
 
@@ -436,10 +436,10 @@ public interface Datum extends Iterable<Datum> {
      * @param precision the precision to coerce the value to
      * @param scale the scale to coerce the value to
      * @return a value of type {@link PType#DECIMAL} with the requested precision/scale
-     * @throws PErrorException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
+     * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
      */
     @NotNull
-    static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws PErrorException {
+    static Datum decimal(@NotNull BigDecimal value, int precision, int scale) throws PRuntimeException {
         BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
         PType type = PType.decimal(precision, scale);
         if (d.precision() > precision) {
@@ -451,10 +451,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#NUMERIC} with the default precision/scale
-     * @throws PErrorException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the default precision/scale
+     * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the default precision/scale
      */
     @NotNull
-    static Datum numeric(@NotNull BigDecimal value) throws PErrorException {
+    static Datum numeric(@NotNull BigDecimal value) throws PRuntimeException {
         return new DatumDecimal(value, PType.numeric());
     }
 
@@ -463,10 +463,10 @@ public interface Datum extends Iterable<Datum> {
      * @param precision the precision to coerce the value to
      * @param scale the scale to coerce the value to
      * @return a value of type {@link PType#NUMERIC} with the requested precision/scale
-     * @throws PErrorException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
+     * @throws PRuntimeException with {@link org.partiql.spi.errors.PError#NUMERIC_VALUE_OUT_OF_RANGE} if the value could not fit into the requested precision/scale
      */
     @NotNull
-    static Datum numeric(@NotNull BigDecimal value, int precision, int scale) throws PErrorException {
+    static Datum numeric(@NotNull BigDecimal value, int precision, int scale) throws PRuntimeException {
         BigDecimal d = value.round(new MathContext(precision)).setScale(scale, RoundingMode.HALF_UP);
         PType type = PType.numeric(precision, scale);
         if (d.precision() > precision) {
@@ -489,10 +489,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#VARCHAR} with the default length
-     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum varchar(@NotNull String value) throws PErrorException {
+    static Datum varchar(@NotNull String value) throws PRuntimeException {
         // TODO: Add an ErrorCode for when we can't fit the value into the requested length
         return varchar(value, 255);
     }
@@ -501,10 +501,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the varchar to coerce the value to
      * @return a value of type {@link PType#VARCHAR} with the requested length
-     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum varchar(@NotNull String value, int length) throws PErrorException {
+    static Datum varchar(@NotNull String value, int length) throws PRuntimeException {
         // TODO: Error or coerce here? Right now coerce, though I think this should likely error.
         String newValue;
         if (length <= 0) {
@@ -523,10 +523,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#CHAR} with the default length
-     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum character(@NotNull String value) throws PErrorException {
+    static Datum character(@NotNull String value) throws PRuntimeException {
         return character(value, 255);
     }
 
@@ -534,10 +534,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the char to coerce the value to
      * @return a value of type {@link PType#CHAR} with the default length
-     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum character(@NotNull String value, int length) throws PErrorException {
+    static Datum character(@NotNull String value, int length) throws PRuntimeException {
         // TODO: Error or coerce here? Right now coerce, though I think this should likely error.
         String newValue;
         if (length <= 0) {
@@ -556,10 +556,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#CLOB} with the default length
-     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum clob(@NotNull byte[] value) throws PErrorException {
+    static Datum clob(@NotNull byte[] value) throws PRuntimeException {
         // TODO: Check size of value
         return clob(value, Integer.MAX_VALUE);
     }
@@ -568,10 +568,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the clob to coerce the value to
      * @return a value of type {@link PType#CLOB} with the default length
-     * @throws PErrorException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the requested length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum clob(@NotNull byte[] value, int length) throws PErrorException {
+    static Datum clob(@NotNull byte[] value, int length) throws PRuntimeException {
         // TODO: Check size of value
         return new DatumBytes(value, PType.clob(length));
     }
@@ -581,10 +581,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#BLOB} with the default length
-     * @throws PErrorException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the default length, or if the requested length is not allowed ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum blob(@NotNull byte[] value) throws PErrorException {
+    static Datum blob(@NotNull byte[] value) throws PRuntimeException {
         // TODO: Check size
         return new DatumBytes(value, PType.blob(Integer.MAX_VALUE));
     }
@@ -593,10 +593,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param length the length of the clob to coerce the value to
      * @return a value of type {@link PType#BLOB} with the default length
-     * @throws PErrorException if the value could not fit into the requested length, or if the length is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the requested length, or if the length is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum blob(@NotNull byte[] value, int length) throws PErrorException {
+    static Datum blob(@NotNull byte[] value, int length) throws PRuntimeException {
         // TODO: Check size
         return new DatumBytes(value, PType.blob(length));
     }
@@ -606,10 +606,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing value
      * @return a value of type {@link PType#DATE}
-     * @throws PErrorException if the value could not be converted to a date.
+     * @throws PRuntimeException if the value could not be converted to a date.
      */
     @NotNull
-    static Datum date(@NotNull LocalDate value) throws PErrorException {
+    static Datum date(@NotNull LocalDate value) throws PRuntimeException {
         return new DatumDate(value);
     }
 
@@ -617,10 +617,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIME}
-     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum time(@NotNull LocalTime value, int precision) throws PErrorException {
+    static Datum time(@NotNull LocalTime value, int precision) throws PRuntimeException {
         // TODO: Check precision
         return new DatumTime(value, precision);
     }
@@ -629,10 +629,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMEZ}
-     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum timez(@NotNull OffsetTime value, int precision) throws PErrorException {
+    static Datum timez(@NotNull OffsetTime value, int precision) throws PRuntimeException {
         // TODO: Check precision
         return new DatumTimez(value, precision);
     }
@@ -641,10 +641,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMESTAMP}
-     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum timestamp(@NotNull LocalDateTime value, int precision) throws PErrorException {
+    static Datum timestamp(@NotNull LocalDateTime value, int precision) throws PRuntimeException {
         // TODO: Check precision
         return new DatumTimestamp(value, precision);
     }
@@ -653,10 +653,10 @@ public interface Datum extends Iterable<Datum> {
      * @param value the backing value
      * @param precision the precision to coerce the value to
      * @return a value of type {@link PType#TIMESTAMPZ}
-     * @throws PErrorException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
+     * @throws PRuntimeException if the value could not fit into the requested precision, or if the precision is not valid ({@link org.partiql.spi.errors.PError#INTERNAL_ERROR})
      */
     @NotNull
-    static Datum timestampz(@NotNull OffsetDateTime value, int precision) throws PErrorException {
+    static Datum timestampz(@NotNull OffsetDateTime value, int precision) throws PRuntimeException {
         // TODO: Check precision
         return new DatumTimestampz(value, precision);
     }
@@ -703,10 +703,10 @@ public interface Datum extends Iterable<Datum> {
     /**
      * @param value the backing Ion
      * @return a value of type {@link PType#VARIANT}
-     * @throws PErrorException if the value could not be converted to a variant. Possible codes: {@link org.partiql.spi.errors.PError#INTERNAL_ERROR}
+     * @throws PRuntimeException if the value could not be converted to a variant. Possible codes: {@link org.partiql.spi.errors.PError#INTERNAL_ERROR}
      */
     @NotNull
-    static Datum ion(@NotNull String value) throws PErrorException {
+    static Datum ion(@NotNull String value) throws PRuntimeException {
         try {
             IonElementLoader loader = ElementLoader.createIonElementLoader();
             AnyElement element = loader.loadSingleElement(value);

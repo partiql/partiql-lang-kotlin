@@ -5,7 +5,7 @@ import org.partiql.plan.Plan
 import org.partiql.planner.builder.PartiQLPlannerBuilder
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.PErrorListenerException
+import org.partiql.spi.errors.PRuntimeException
 import kotlin.jvm.Throws
 
 /**
@@ -21,7 +21,7 @@ public interface PartiQLPlanner {
      * @param ctx a configuration object
      * @return
      */
-    @Throws(PErrorListenerException::class)
+    @Throws(PRuntimeException::class)
     public fun plan(statement: Statement, session: Session, ctx: Context): Result
 
     /**
@@ -31,7 +31,7 @@ public interface PartiQLPlanner {
      * @param session
      * @return
      */
-    @Throws(PErrorListenerException::class)
+    @Throws(PRuntimeException::class)
     public fun plan(statement: Statement, session: Session): Result {
         return plan(statement, session, Context.standard())
     }

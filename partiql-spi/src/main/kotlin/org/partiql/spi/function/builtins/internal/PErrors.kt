@@ -1,18 +1,18 @@
 package org.partiql.spi.function.builtins.internal
 
 import org.partiql.spi.errors.PError
-import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorKind
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 
 internal object PErrors {
-    fun internalErrorException(cause: Throwable): PErrorException {
-        return PErrorException(internalError(cause))
+    fun internalErrorException(cause: Throwable): PRuntimeException {
+        return PRuntimeException(internalError(cause))
     }
 
-    fun divisionByZeroException(dividend: Any, dividendType: PType): PErrorException {
-        return PErrorException(
+    fun divisionByZeroException(dividend: Any, dividendType: PType): PRuntimeException {
+        return PRuntimeException(
             PError(
                 PError.DIVISION_BY_ZERO,
                 Severity.ERROR(),
@@ -26,8 +26,8 @@ internal object PErrors {
         )
     }
 
-    fun numericValueOutOfRangeException(value: String, type: PType): PErrorException {
-        return PErrorException(
+    fun numericValueOutOfRangeException(value: String, type: PType): PRuntimeException {
+        return PRuntimeException(
             PError(
                 PError.NUMERIC_VALUE_OUT_OF_RANGE,
                 Severity.ERROR(),
@@ -41,8 +41,8 @@ internal object PErrors {
         )
     }
 
-    fun unexpectedTypeException(actual: PType, expected: List<PType>): PErrorException {
-        return PErrorException(unexpectedType(actual, expected))
+    fun unexpectedTypeException(actual: PType, expected: List<PType>): PRuntimeException {
+        return PRuntimeException(unexpectedType(actual, expected))
     }
 
     private fun internalError(cause: Throwable): PError {
