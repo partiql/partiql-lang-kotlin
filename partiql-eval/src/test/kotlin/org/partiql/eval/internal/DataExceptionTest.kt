@@ -38,6 +38,10 @@ class DataExceptionTest {
     @MethodSource("absOverflowTests")
     fun absOverflow(tc: FailureTestCase) = tc.run()
 
+    @ParameterizedTest
+    @MethodSource("negOverflowTests")
+    fun negOverflow(tc: FailureTestCase) = tc.run()
+
     companion object {
         @JvmStatic
         fun plusOverflowTests() = listOf(
@@ -100,6 +104,14 @@ class DataExceptionTest {
             ),
             FailureTestCase(
                 input = "CAST(${Long.MIN_VALUE} AS BIGINT) - CAST(1 AS BIGINT);"
+            ),
+            // Make sure we parse Integer.MIN_VALUE as an INT rather than BIGINT
+            FailureTestCase(
+                input = "${Integer.MIN_VALUE} - 1"
+            ),
+            // Make sure we parse Long.MIN_VALUE as an BIGINT rather than DECIMAL/NUMERIC
+            FailureTestCase(
+                input = "${Long.MIN_VALUE} - 1"
             )
         )
 
@@ -192,6 +204,45 @@ class DataExceptionTest {
             // BIGINT
             FailureTestCase(
                 input = "ABS(CAST(${Long.MIN_VALUE} AS BIGINT))"
+            )
+        )
+
+        @JvmStatic
+        fun negOverflowTests() = listOf(
+            // TINYINT
+            FailureTestCase(
+                input = "-CAST(${Byte.MIN_VALUE} AS TINYINT)"
+            ),
+            // SMALLINT
+            FailureTestCase(
+                input = "-CAST(${Short.MIN_VALUE} AS SMALLINT)"
+            ),
+            // INT
+            FailureTestCase(
+                input = "-CAST(${Integer.MIN_VALUE} AS INT)"
+            ),
+            // BIGINT
+            FailureTestCase(
+                input = "-CAST(${Long.MIN_VALUE} AS BIGINT)"
+            ),
+            // No explicit casts
+            // Double `-`
+            // INT
+            FailureTestCase(
+                input = "- ${Integer.MIN_VALUE}" // space needed since `--` turns into a comment
+            ),
+            // BIGINT
+            FailureTestCase(
+                input = "- ${Long.MIN_VALUE}" // space needed since `--` turns into a comment
+            ),
+            // Triple `-`
+            // INT
+            FailureTestCase(
+                input = "- - ${Integer.MIN_VALUE}"
+            ),
+            // BIGINT
+            FailureTestCase(
+                input = "- - ${Long.MIN_VALUE}"
             )
         )
     }
