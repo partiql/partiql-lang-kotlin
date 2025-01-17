@@ -15,7 +15,8 @@ public class Identifier private constructor(
 ) : Iterable<Identifier.Simple> {
 
     /**
-     * Returns the unqualified name part.
+     * Returns the right-most simple identifier of the qualified identifier. For example, for an identifier
+     * a.b.c this method would return c.
      */
     public fun getIdentifier(): Simple = identifier
 

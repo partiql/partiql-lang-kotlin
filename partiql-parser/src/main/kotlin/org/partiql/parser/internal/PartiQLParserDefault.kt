@@ -2044,7 +2044,13 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.INT8 -> DataType.INT8()
                 GeneratedParser.INTEGER8 -> DataType.INTEGER8()
                 GeneratedParser.FLOAT -> DataType.FLOAT()
-                GeneratedParser.DOUBLE -> TODO() // not sure if DOUBLE is to be supported
+                GeneratedParser.DOUBLE -> {
+                    if (ctx.stop.type == GeneratedParser.PRECISION) {
+                        DataType.DOUBLE_PRECISION()
+                    } else {
+                        throw error(ctx, "Unknown atomic type.")
+                    }
+                } // not sure if DOUBLE is to be supported
                 GeneratedParser.REAL -> DataType.REAL()
                 GeneratedParser.TIMESTAMP -> DataType.TIMESTAMP()
                 GeneratedParser.CHAR -> DataType.CHAR()

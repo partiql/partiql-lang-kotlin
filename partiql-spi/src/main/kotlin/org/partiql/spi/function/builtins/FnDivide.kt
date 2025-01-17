@@ -5,6 +5,7 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.builtins.internal.PErrors
+import org.partiql.spi.internal.isZero
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import java.math.RoundingMode
@@ -72,6 +73,9 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
         return basic(PType.numeric(p, s), numericLhs, numericRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
+            if (arg1.isZero()) {
+                throw PErrors.divisionByZeroException(arg0, PType.numeric(p, s))
+            }
             val result = arg0.divide(arg1, s, RoundingMode.HALF_UP)
             Datum.numeric(result, p, s)
         }
@@ -82,6 +86,9 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
         return basic(PType.decimal(p, s), decimalLhs, decimalRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
+            if (arg1.isZero()) {
+                throw PErrors.divisionByZeroException(arg0, PType.decimal(p, s))
+            }
             val result = arg0.divide(arg1, s, RoundingMode.HALF_UP)
             Datum.decimal(result, p, s)
         }
@@ -105,6 +112,9 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
         return basic(PType.real()) { args ->
             val arg0 = args[0].float
             val arg1 = args[1].float
+            if (arg1.isZero()) {
+                throw PErrors.divisionByZeroException(arg0, PType.real())
+            }
             Datum.real(arg0 / arg1)
         }
     }
@@ -113,6 +123,9 @@ internal object FnDivide : DiadicArithmeticOperator("divide") {
         return basic(PType.doublePrecision()) { args ->
             val arg0 = args[0].double
             val arg1 = args[1].double
+            if (arg1.isZero()) {
+                throw PErrors.divisionByZeroException(arg0, PType.doublePrecision())
+            }
             Datum.doublePrecision(arg0 / arg1)
         }
     }
