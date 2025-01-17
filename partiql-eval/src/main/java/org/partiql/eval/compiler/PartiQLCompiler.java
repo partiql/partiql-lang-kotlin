@@ -6,6 +6,7 @@ import org.partiql.eval.Statement;
 import org.partiql.eval.internal.compiler.StandardCompiler;
 import org.partiql.plan.Plan;
 import org.partiql.spi.Context;
+import org.partiql.spi.errors.PRuntimeException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,9 +22,10 @@ public interface PartiQLCompiler {
      * @param plan The plan to compile.
      * @param mode The mode to use when compiling the plan.
      * @return The prepared statement.
+     * @throws PRuntimeException If an error occurs during compilation.
      */
     @NotNull
-    default Statement prepare(@NotNull Plan plan, @NotNull Mode mode) {
+    default Statement prepare(@NotNull Plan plan, @NotNull Mode mode) throws PRuntimeException {
         return prepare(plan, mode, Context.standard());
     }
 
@@ -33,10 +35,11 @@ public interface PartiQLCompiler {
      * @param plan The plan to compile.
      * @param mode The mode to use when compiling the plan.
      * @param ctx The context to use when compiling the plan.
+     * @throws PRuntimeException If an error occurs during compilation. The error might have been emitted by the {@code ctx}'s {@link Context#getErrorListener()}.
      * @return The prepared statement.
      */
     @NotNull
-    public Statement prepare(@NotNull Plan plan, @NotNull Mode mode, @NotNull Context ctx);
+    public Statement prepare(@NotNull Plan plan, @NotNull Mode mode, @NotNull Context ctx) throws PRuntimeException;
 
     /**
      * Returns a new {@link Builder}.
