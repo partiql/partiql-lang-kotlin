@@ -9,12 +9,6 @@ import org.junit.jupiter.params.provider.MethodSource
  * E2E evaluation tests that give a data exception.
  */
 class DataExceptionTest {
-
-    @ParameterizedTest
-    @MethodSource("sandboxT")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun sandbox(tc: FailureTestCase) = tc.run()
-
     @ParameterizedTest
     @MethodSource("plusOverflowTests")
     @Execution(ExecutionMode.CONCURRENT)
@@ -52,14 +46,6 @@ class DataExceptionTest {
     fun negOverflow(tc: FailureTestCase) = tc.run()
 
     companion object {
-        @JvmStatic
-        fun sandboxT() = listOf(
-            // TINYINT
-            FailureTestCase(
-                input = "SELECT x + 1 FROM << 1, 2e0, MISSING>> AS x;"
-            )
-        )
-
         @JvmStatic
         fun plusOverflowTests() = listOf(
             // TINYINT
