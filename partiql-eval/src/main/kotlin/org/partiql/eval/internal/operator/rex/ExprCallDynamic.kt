@@ -158,13 +158,12 @@ internal class ExprCallDynamic(
      * This implementation assumes that the [eval] input values contains the original arguments for the desired [function].
      * It performs the coercions (if necessary) before computing the result.
      *
-     * TODO what about MISSING calls?
-     *
      * @see ExprCallDynamic
      */
     private class Candidate(private var function: Function.Instance) {
 
         private var nil = { Datum.nullValue(function.returns) }
+        private var missing = { Datum.missing(function.returns) }
 
         /**
          * Function instance parameters (just types).
@@ -174,6 +173,9 @@ internal class ExprCallDynamic(
                 val arg = args[i]
                 if (function.isNullCall && arg.isNull) {
                     return nil.invoke()
+                }
+                if (function.isMissingCall && arg.isMissing) {
+                    return missing.invoke()
                 }
                 val argType = arg.type
                 val paramType = function.parameters[i]
