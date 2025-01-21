@@ -38,6 +38,12 @@ public class Pattern {
         this.predicate = predicate;
     }
 
+    /**
+     * Matches an operator against this pattern.
+     *
+     * @param operator Operator to match.
+     * @return true if the operator matches the pattern.
+     */
     public boolean matches(Operator operator) {
         if (!clazz.isInstance(operator)) {
             return false;

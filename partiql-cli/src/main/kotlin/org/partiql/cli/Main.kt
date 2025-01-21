@@ -23,7 +23,7 @@ import org.partiql.spi.catalog.Catalog
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
-import org.partiql.spi.errors.PErrorException
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.value.Datum
 import org.partiql.spi.value.DatumReader
 import org.partiql.spi.value.ValueUtils
@@ -210,7 +210,7 @@ internal class MainCommand : Runnable {
             val writer = PartiQLValueTextWriter(System.out)
             val p = ValueUtils.newPartiQLValue(result)
             writer.append(p) // TODO: Create a Datum writer
-        } catch (e: PErrorException) {
+        } catch (e: PRuntimeException) {
             val msg = ErrorMessageFormatter.message(e.error)
             error(msg)
         }

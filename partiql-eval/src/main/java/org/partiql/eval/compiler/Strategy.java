@@ -24,6 +24,7 @@ public abstract class Strategy {
     }
 
     /**
+     * Get the pattern associated with this strategy.
      * @return the pattern associated with this strategy
      */
     @NotNull
@@ -48,6 +49,8 @@ public abstract class Strategy {
     public interface Callback {
 
         /**
+         * Compiles the given logical operator into a physical operator.
+         * @param operator the logical operator to compile
          * @return a physical operator (expr) for the logical operator.
          */
         @NotNull

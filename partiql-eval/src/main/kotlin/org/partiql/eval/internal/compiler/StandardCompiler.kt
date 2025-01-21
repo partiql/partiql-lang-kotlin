@@ -9,6 +9,7 @@ import org.partiql.eval.Statement
 import org.partiql.eval.compiler.Match
 import org.partiql.eval.compiler.PartiQLCompiler
 import org.partiql.eval.compiler.Strategy
+import org.partiql.eval.internal.helpers.PErrors
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
@@ -110,7 +111,7 @@ import org.partiql.plan.rex.RexVar
 import org.partiql.spi.Context
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
-import org.partiql.spi.errors.PErrorListenerException
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -132,7 +133,7 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
                 else -> throw IllegalArgumentException("Only query statements are supported")
             }
             return statement
-        } catch (e: PErrorListenerException) {
+        } catch (e: PRuntimeException) {
             throw e
         } catch (t: Throwable) {
             val error = PError.INTERNAL_ERROR(PErrorKind.COMPILATION(), null, t)
@@ -158,7 +159,15 @@ internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
             private val root = compile(action.getRex(), Unit).catch()
 
             // execute with no parameters
-            override fun execute(): Datum = root.eval(Environment())
+            override fun execute(): Datum {
+                return try {
+                    root.eval(Environment())
+                } catch (e: PRuntimeException) {
+                    throw e
+                } catch (t: Throwable) {
+                    throw PErrors.internalErrorException(t)
+                }
+            }
         }
 
         /**

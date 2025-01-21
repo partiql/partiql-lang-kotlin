@@ -39,6 +39,8 @@ public class Environment {
 
     /**
      * Push a new row onto the stack.
+     * @param row the row to push
+     * @return the new environment
      */
     public Environment push(Row row) {
         int n = stack.length;
@@ -59,7 +61,7 @@ public class Environment {
      */
     public Datum get(int depth, int offset) {
         try {
-            return stack[depth].values[offset];
+            return stack[depth].getValues()[offset];
         } catch (IndexOutOfBoundsException ex) {
             throw new RuntimeException("Invalid variable reference [$depth:$offset]\n$this");
         }

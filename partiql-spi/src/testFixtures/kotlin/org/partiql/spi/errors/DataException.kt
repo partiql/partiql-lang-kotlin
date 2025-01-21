@@ -5,7 +5,7 @@ import org.partiql.spi.types.PType
 /**
  * A [DataException] represents an unrecoverable query runtime exception.
  */
-public class DataException(private val error: PError) : PErrorException(error) {
+public class DataException(private val error: PError) : PRuntimeException(error) {
 
     public constructor(value: String?, type: PType?) : this(pError(value, type)) {
         initCause(cause)

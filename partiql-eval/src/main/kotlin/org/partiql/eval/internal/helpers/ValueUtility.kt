@@ -27,7 +27,7 @@ internal object ValueUtility {
     /**
      * Asserts that [this] is of a specific type. Note that, if [this] value is null ([Datum.isNull]), then the null
      * value is coerced to the expected type.
-     * @throws org.partiql.spi.errors.PErrorException when the input value is a non-null value of the wrong type.
+     * @throws org.partiql.spi.errors.PRuntimeException when the input value is a non-null value of the wrong type.
      * @return a [Datum] corresponding to the expected type; this will either be the input value if the value is
      * already of the expected type, or it will be a null value of the expected type.
      */
@@ -48,7 +48,7 @@ internal object ValueUtility {
      * Returns the underlying string value of a PartiQL text value
      *
      * @throws NullPointerException if the value is null
-     * @throws org.partiql.spi.errors.PErrorException if the value's type is not a text type (string, symbol, char)
+     * @throws org.partiql.spi.errors.PRuntimeException if the value's type is not a text type (string, symbol, char)
      */
     fun Datum.getText(): String {
         return when (this.type.code()) {
@@ -73,7 +73,7 @@ internal object ValueUtility {
      *  the value to a [BigInteger] regardless of the number's type.
      *
      * @throws NullPointerException if the value is null
-     * @throws org.partiql.spi.errors.PErrorException if type is not an integer type
+     * @throws org.partiql.spi.errors.PRuntimeException if type is not an integer type
      */
     fun Datum.getBigIntCoerced(): BigInteger {
         return when (this.type.code()) {
@@ -104,7 +104,7 @@ internal object ValueUtility {
      * present.
      *
      * @throws NullPointerException if the value is null
-     * @throws org.partiql.spi.errors.PErrorException if type is not an integer type
+     * @throws org.partiql.spi.errors.PRuntimeException if type is not an integer type
      */
     fun Datum.getInt32Coerced(): Int {
         return when (this.type.code()) {

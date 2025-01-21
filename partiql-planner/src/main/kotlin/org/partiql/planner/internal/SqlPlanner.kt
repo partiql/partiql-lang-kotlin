@@ -16,7 +16,7 @@ import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
-import org.partiql.spi.errors.PErrorListenerException
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 
 /**
@@ -54,7 +54,7 @@ internal class SqlPlanner(
                 plan = pass.apply(plan, ctx)
             }
             return Result(plan)
-        } catch (e: PErrorListenerException) {
+        } catch (e: PRuntimeException) {
             throw e
         } catch (t: Throwable) {
             return catchAll(ctx, t)

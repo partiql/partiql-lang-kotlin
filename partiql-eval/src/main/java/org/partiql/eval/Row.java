@@ -10,14 +10,18 @@ import java.util.Objects;
  */
 public class Row {
 
-    /**
-     * TODO internalize values.
-     */
-    public final Datum[] values;
+    private final Datum[] values;
 
     /**
-     * TODO keep ??
-     *
+     * Get the values in this record.
+     * @return the values
+     */
+    public final Datum[] getValues() {
+        return values;
+    }
+
+    /**
+     * Create a record with the given values.
      * @param values the values
      * @return the record
      */

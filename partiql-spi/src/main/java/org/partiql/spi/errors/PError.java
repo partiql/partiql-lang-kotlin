@@ -34,7 +34,7 @@ import static java.util.stream.Collectors.toList;
  * @see PError#getOrNull(String, Class)
  * @see PError#getListOrNull(String, Class)
  * @see PErrorListener
- * @see PErrorListenerException
+ * @see PRuntimeException
  */
 public final class PError extends Enum {
     // NOTE: This is named PError to not be confused with java.lang.Error

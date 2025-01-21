@@ -9,8 +9,10 @@ import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Context
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.errors.PErrorException
-import org.partiql.spi.errors.PErrorListenerException
+import org.partiql.spi.errors.PError
+import org.partiql.spi.errors.PErrorKind
+import org.partiql.spi.errors.PRuntimeException
+import org.partiql.spi.errors.Severity
 import org.partiql.spi.value.Datum
 import java.io.PrintStream
 
@@ -24,7 +26,7 @@ internal class Pipeline private constructor(
 
     /**
      * TODO replace with the ResultSet equivalent?
-     * @throws PipelineException when there are accumulated errors, or if the components have thrown an [PErrorListenerException].
+     * @throws PipelineException when there are accumulated errors, or if the components have thrown an [PRuntimeException].
      */
     @Throws(PipelineException::class)
     fun execute(statement: String, session: Session): Datum {
@@ -65,7 +67,7 @@ internal class Pipeline private constructor(
             action.invoke()
         } catch (e: PipelineException) {
             throw e
-        } catch (e: PErrorException) {
+        } catch (e: PRuntimeException) {
             val message = ErrorMessageFormatter.message(e.error)
             throw PipelineException(message)
         }
@@ -98,7 +100,9 @@ internal class Pipeline private constructor(
     /**
      * Halts execution.
      */
-    class PipelineException(override val message: String?) : PErrorListenerException(message)
+    class PipelineException(override val message: String?) : PRuntimeException(
+        PError(PError.INTERNAL_ERROR, Severity.ERROR(), PErrorKind.EXECUTION(), null, null)
+    )
 
     /**
      * Configuration for passing through user-defined configurations to the underlying components.

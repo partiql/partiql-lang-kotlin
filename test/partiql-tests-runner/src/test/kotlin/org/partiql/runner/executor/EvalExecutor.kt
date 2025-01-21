@@ -22,8 +22,8 @@ import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.errors.PError
-import org.partiql.spi.errors.PErrorException
 import org.partiql.spi.errors.PErrorListener
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -58,7 +58,7 @@ class EvalExecutor(
             Mode.STRICT -> object : PErrorListener {
                 override fun report(error: PError) {
                     when (error.severity.code()) {
-                        Severity.ERROR -> throw PErrorException(error)
+                        Severity.ERROR -> throw PRuntimeException(error)
                         Severity.WARNING -> warning(error)
                         else -> error("Unhandled severity.")
                     }

@@ -21,20 +21,20 @@ public abstract interface class org/partiql/eval/ExprValue : org/partiql/eval/Ex
 	public abstract fun eval (Lorg/partiql/eval/Environment;)Lorg/partiql/spi/value/Datum;
 }
 
-public class org/partiql/eval/Mode {
+public class org/partiql/eval/Mode : org/partiql/spi/Enum {
 	public static final field PERMISSIVE I
 	public static final field STRICT I
 	public static fun PERMISSIVE ()Lorg/partiql/eval/Mode;
 	public static fun STRICT ()Lorg/partiql/eval/Mode;
-	public fun code ()I
+	public fun name ()Ljava/lang/String;
 }
 
 public class org/partiql/eval/Row {
-	public final field values [Lorg/partiql/spi/value/Datum;
 	public fun <init> ()V
 	public fun <init> ([Lorg/partiql/spi/value/Datum;)V
 	public fun concat (Lorg/partiql/eval/Row;)Lorg/partiql/eval/Row;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValues ()[Lorg/partiql/spi/value/Datum;
 	public fun hashCode ()I
 	public static fun of ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/eval/Row;
 	public fun toString ()Ljava/lang/String;

@@ -4,7 +4,7 @@ import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.createIonElementLoader
 import org.partiql.eval.internal.helpers.PErrors
-import org.partiql.spi.errors.PErrorException
+import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.types.PType
 import org.partiql.spi.types.PType.ARRAY
 import org.partiql.spi.types.PType.BAG
@@ -58,9 +58,9 @@ internal object CastTable {
 
     /**
      * Casts the [source] to the [target].
-     * @throws PErrorException if the cast is not supported or if the cast fails.
+     * @throws PRuntimeException if the cast is not supported or if the cast fails.
      */
-    @Throws(PErrorException::class)
+    @Throws(PRuntimeException::class)
     public fun cast(source: Datum, target: PType): Datum {
         if (source.isNull) {
             return Datum.nullValue(target)
@@ -74,7 +74,7 @@ internal object CastTable {
         val cast = _table[source.type.code()][target.code()] ?: throw PErrors.castUndefinedException(source.type, target)
         return try {
             cast.invoke(source, target)
-        } catch (e: PErrorException) {
+        } catch (e: PRuntimeException) {
             throw e
         } catch (t: Throwable) {
             throw PErrors.internalErrorException(t)
