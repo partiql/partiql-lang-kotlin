@@ -38,7 +38,7 @@ public final class DataType extends AstEnum {
 
         private final boolean optional;
 
-        @Nullable
+        @NotNull
         private final List<AttributeConstraint> constraints;
 
         @Nullable
@@ -48,7 +48,7 @@ public final class DataType extends AstEnum {
                 @NotNull Identifier.Simple name,
                 @NotNull DataType type,
                 boolean optional,
-                @Nullable List<AttributeConstraint> constraints,
+                @NotNull List<AttributeConstraint> constraints,
                 @Nullable String comment) {
             this.name = name;
             this.type = type;
@@ -86,7 +86,7 @@ public final class DataType extends AstEnum {
             return this.optional;
         }
 
-        @Nullable
+        @NotNull
         public List<AttributeConstraint> getConstraints() {
             return this.constraints;
         }

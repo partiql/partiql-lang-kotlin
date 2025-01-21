@@ -123,10 +123,10 @@ object ErrorMessageFormatter {
      */
     private fun divisionByZero(error: PError): String {
         val dividendType = error.getOrNull("DIVIDEND_TYPE", PType::class.java)
-        val dividendTypeStr = prepare(dividendType.toString(), " of ")
+        val dividendTypeStr = prepare(dividendType.toString(), " of type ")
         val dividend = error.getOrNull("DIVIDEND", String::class.java)
-        val dividendStr = prepare(dividend.toString(), " -- ", " / 0")
-        return "Division$dividendTypeStr by zero$dividendStr$dividendTypeStr."
+        val dividendStr = prepare(dividend.toString(), " ")
+        return "Cannot divide$dividendStr$dividendTypeStr by zero."
     }
 
     /**

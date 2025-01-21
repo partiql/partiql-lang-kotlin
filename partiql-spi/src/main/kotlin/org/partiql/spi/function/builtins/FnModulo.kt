@@ -5,6 +5,7 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.builtins.internal.PErrors
+import org.partiql.spi.internal.isZero
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -67,6 +68,9 @@ internal object FnModulo : DiadicArithmeticOperator("mod", false) {
         return basic(PType.numeric(p, s), numericLhs, numericRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
+            if (arg1.isZero()) {
+                throw PErrors.divisionByZeroException(arg0, PType.numeric(p, s))
+            }
             Datum.numeric(arg0 % arg1, p, s)
         }
     }
@@ -76,6 +80,9 @@ internal object FnModulo : DiadicArithmeticOperator("mod", false) {
         return basic(PType.decimal(p, s), decimalLhs, decimalRhs) { args ->
             val arg0 = args[0].bigDecimal
             val arg1 = args[1].bigDecimal
+            if (arg1.isZero()) {
+                throw PErrors.divisionByZeroException(arg0, PType.decimal(p, s))
+            }
             Datum.decimal(arg0 % arg1, p, s)
         }
     }
@@ -99,6 +106,9 @@ internal object FnModulo : DiadicArithmeticOperator("mod", false) {
         return basic(PType.real()) { args ->
             val arg0 = args[0].float
             val arg1 = args[1].float
+            if (arg1.isZero()) {
+                throw PErrors.divisionByZeroException(arg0, PType.real())
+            }
             Datum.real(arg0 % arg1)
         }
     }
@@ -107,6 +117,9 @@ internal object FnModulo : DiadicArithmeticOperator("mod", false) {
         return basic(PType.doublePrecision()) { args ->
             val arg0 = args[0].double
             val arg1 = args[1].double
+            if (arg1.isZero()) {
+                throw PErrors.divisionByZeroException(arg0, PType.doublePrecision())
+            }
             Datum.doublePrecision(arg0 % arg1)
         }
     }

@@ -9,7 +9,6 @@ import org.junit.jupiter.params.provider.MethodSource
  * E2E evaluation tests that give a data exception.
  */
 class DataExceptionTest {
-
     @ParameterizedTest
     @MethodSource("plusOverflowTests")
     @Execution(ExecutionMode.CONCURRENT)
@@ -33,6 +32,10 @@ class DataExceptionTest {
     @ParameterizedTest
     @MethodSource("divideByZeroTests")
     fun divideByZero(tc: FailureTestCase) = tc.run()
+
+    @ParameterizedTest
+    @MethodSource("modByZeroTests")
+    fun modByZero(tc: FailureTestCase) = tc.run()
 
     @ParameterizedTest
     @MethodSource("absOverflowTests")
@@ -184,6 +187,58 @@ class DataExceptionTest {
             // BIGINT
             FailureTestCase(
                 input = "CAST(1 AS BIGINT) / CAST(0 AS BIGINT)"
+            ),
+            // DECIMAL
+            FailureTestCase(
+                input = "CAST(1.0 AS DECIMAL) / CAST(0.0 AS DECIMAL)"
+            ),
+            // NUMERIC
+            FailureTestCase(
+                input = "CAST(1.0 AS NUMERIC) / CAST(0.0 AS NUMERIC)"
+            ),
+            // FLOAT
+            FailureTestCase(
+                input = "CAST(1.0e0 AS FLOAT) / CAST(0.0 AS FLOAT)"
+            ),
+            // REAL
+            FailureTestCase(
+                input = "CAST(1.0e0 AS DOUBLE PRECISION) / CAST(0.0 AS DOUBLE PRECISION)"
+            )
+        )
+
+        @JvmStatic
+        fun modByZeroTests() = listOf(
+            // TINYINT
+            FailureTestCase(
+                input = "CAST(1 AS TINYINT) % CAST(0 AS TINYINT)"
+            ),
+            // SMALLINT
+            FailureTestCase(
+                input = "CAST(1 AS SMALLINT) % CAST(0 AS SMALLINT)"
+            ),
+            // INT
+            FailureTestCase(
+                input = "CAST(1 AS INT) % CAST(0 AS INT)"
+            ),
+            // BIGINT
+            FailureTestCase(
+                input = "CAST(1 AS BIGINT) % CAST(0 AS BIGINT)"
+            ),
+            // DECIMAL
+            FailureTestCase(
+                input = "CAST(1.0 AS DECIMAL) % CAST(0.0 AS DECIMAL)"
+            ),
+            // NUMERIC
+            FailureTestCase(
+                input = "CAST(1.0 AS NUMERIC) % CAST(0.0 AS NUMERIC)"
+            ),
+            // FLOAT
+            FailureTestCase(
+                input = "CAST(1.0e0 AS FLOAT) % CAST(0.0 AS FLOAT)"
+            ),
+            // REAL
+            FailureTestCase(
+                input = "CAST(1.0e0 AS DOUBLE PRECISION) % CAST(0.0 AS DOUBLE PRECISION)"
             )
         )
 
