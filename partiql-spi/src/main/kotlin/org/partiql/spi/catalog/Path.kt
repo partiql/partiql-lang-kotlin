@@ -4,7 +4,8 @@ import java.util.Spliterator
 import java.util.function.Consumer
 
 /**
- * The routine resolution path, accessible via PATH.
+ * The routine resolution path, accessible via PATH. Each of these namespaces have the catalog name as the first
+ * element in the namespace.
  */
 public class Path private constructor(
     private val namespaces: List<Namespace>,

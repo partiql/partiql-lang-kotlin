@@ -30,7 +30,7 @@ public interface Session {
      *
      * Default implementation returns the current namespace.
      */
-    public fun getPath(): Path = Path.of(getNamespace())
+    public fun getPath(): Path = Path.of(Namespace.of(getCatalog()).append(*getNamespace().getLevels()))
 
     /**
      * Arbitrary session properties that may be used in planning or custom plan passes.
@@ -133,7 +133,7 @@ public interface Session {
             override fun getNamespace(): Namespace = namespace
 
             override fun getPath(): Path {
-                val currentNamespace = getNamespace()
+                val currentNamespace = Namespace.of(getCatalog(), *getNamespace().getLevels())
                 return Path.of(currentNamespace, systemCatalogNamespace)
             }
         }

@@ -46,6 +46,37 @@ internal class Env(private val session: Session) {
      */
     private val default: Catalog = catalogs.getCatalog(session.getCatalog()) ?: error("Default catalog does not exist")
 
+    private inline fun <T> findFirstInCatalog(fn: (Catalog) -> T?): T? {
+        val path = session.getPath()
+        for (namespace in path) {
+            val catalogName = namespace.firstOrNull() ?: continue
+            val catalog = catalogs.getCatalog(catalogName) ?: continue
+            val result = fn(catalog)
+            if (result != null) {
+                return result
+            }
+        }
+        return null
+    }
+
+    fun resolveFn(identifier: Identifier, args: List<Rex>): Rex? {
+        return findFirstInCatalog { catalog ->
+            resolveFn(identifier, args, catalog)
+        }
+    }
+
+    fun getCandidates(identifier: Identifier, args: List<Rex>): List<Function> {
+        return findFirstInCatalog { catalog ->
+            getCandidates(identifier, args, catalog)
+        } ?: emptyList()
+    }
+
+    fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+        return findFirstInCatalog { catalog ->
+            resolveAgg(path, setQuantifier, args, catalog)
+        }
+    }
+
     /**
      * Catalog lookup needs to search (3x) to table schema-qualified and catalog-qualified use-cases.
      *
@@ -96,28 +127,28 @@ internal class Env(private val session: Session) {
     /**
      * @return a list of candidate functions that match the [identifier] and number of [args].
      */
-    fun getCandidates(identifier: Identifier, args: List<Rex>): List<Function> {
+    private fun getCandidates(identifier: Identifier, args: List<Rex>, catalog: Catalog): List<Function>? {
         // Reject qualified routine names.
         if (identifier.hasQualifier()) {
             error("Qualified functions are not supported.")
         }
 
         // 1. Search in the current catalog and namespace.
-        val catalog = default
         val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
         val variants = catalog.getFunctions(session, name).toList()
         val candidates = variants.filter { it.getParameters().size == args.size }
+        if (candidates.isEmpty()) {
+            return null
+        }
         return candidates
     }
 
     /**
-     * TODO leverage session PATH.
-     *
      * @param identifier
      * @param args
      * @return
      */
-    fun resolveFn(identifier: Identifier, args: List<Rex>): Rex? {
+    private fun resolveFn(identifier: Identifier, args: List<Rex>, catalog: Catalog): Rex? {
 
         // Reject qualified routine names.
         if (identifier.hasQualifier()) {
@@ -125,15 +156,13 @@ internal class Env(private val session: Session) {
         }
 
         // 1. Search in the current catalog and namespace.
-        val catalog = default
         val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
         val variants = catalog.getFunctions(session, name).toList()
         if (variants.isEmpty()) {
             return null
         }
 
-        // 2. Search along the PATH.
-        // TODO
+        // 2. Resolve
         val match = FnResolver.resolve(variants, args.map { it.type })
         // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {
@@ -169,19 +198,15 @@ internal class Env(private val session: Session) {
         }
     }
 
-    fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+    private fun resolveAgg(path: String, setQuantifier: SetQuantifier, args: List<Rex>, catalog: Catalog): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
 
         // 1. Search in the current catalog and namespace.
-        val catalog = default
         val name = path.lowercase()
         val candidates = catalog.getAggregations(session, name).toList()
         if (candidates.isEmpty()) {
             return null
         }
-
-        // 2. Search along the PATH.
-        // TODO
 
         // Invoke existing function resolution logic
         val parameters = args.map { it.type }

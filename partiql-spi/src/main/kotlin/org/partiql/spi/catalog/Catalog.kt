@@ -2,7 +2,6 @@ package org.partiql.spi.catalog
 
 import org.partiql.spi.catalog.impl.StandardCatalog
 import org.partiql.spi.function.Aggregation
-import org.partiql.spi.function.Builtins
 import org.partiql.spi.function.Function
 
 /**
@@ -46,12 +45,12 @@ public interface Catalog {
     /**
      * Returns a collection of scalar functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getFunctions(session: Session, name: String): Collection<Function> = Builtins.getFunctions(name)
+    public fun getFunctions(session: Session, name: String): Collection<Function> = emptyList()
 
     /**
      * Returns a collection of aggregation functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getAggregations(session: Session, name: String): Collection<Aggregation> = Builtins.getAggregations(name)
+    public fun getAggregations(session: Session, name: String): Collection<Aggregation> = emptyList()
 
     public companion object {
 
