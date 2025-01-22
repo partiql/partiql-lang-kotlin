@@ -49,14 +49,13 @@ abstract class PartiQLTyperTestBase {
 
     val inputs = PartiQLTestProvider().apply { load() }
 
-    private val testingPipeline: ((String, String, Catalog, PErrorListener) -> PartiQLPlanner.Result) =
-        { query, catalog, metadata, collector ->
-            val parseResult = parser.parse(query)
-            assertEquals(1, parseResult.statements.size)
-            val ast = parseResult.statements[0]
-            val config = Context.of(collector)
-            planner.plan(ast, session(catalog, metadata), config)
-        }
+    private fun testingPipeline(query: String, catalog: String, metadata: Catalog, collector: PErrorListener): PartiQLPlanner.Result {
+        val parseResult = parser.parse(query)
+        assertEquals(1, parseResult.statements.size)
+        val ast = parseResult.statements[0]
+        val config = Context.of(collector)
+        return planner.plan(ast, session(catalog, metadata), config)
+    }
 
     /**
      * Build a ConnectorMetadata instance from the list of types.
