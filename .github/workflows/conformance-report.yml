@@ -37,7 +37,6 @@ jobs:
       - name: Upload `conformance-test-report` folder
         uses: actions/upload-artifact@v4
         with:
-          name: conformance-report
           path: ${{ env.PATH_TO_TEST_RUNNER }}/${{ env.CONFORMANCE_REPORT_RELATIVE_PATH }}
       # Cache the conformance report for `conformance-report-comparison` job (pull_request event only)
       - name: Cache conformance report and build
