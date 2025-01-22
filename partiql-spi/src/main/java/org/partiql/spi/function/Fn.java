@@ -10,7 +10,20 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
+ * <p>
  * Represents a scalar function and its implementation.
+ * </p>
+ * <p>
+ * This differs from {@link FnProvider} because {@link Fn} represents an implementation of a single scalar function with
+ * a particular {@link RoutineSignature}, whereas {@link FnProvider} delegates to 1 or more (if overloaded) {@link Fn}s
+ * of a particular arity.
+ * </p>
+ * <p>
+ * As an example, {@link Fn} may hold the implementation for {@code ABS(int) -> int}; however {@link FnProvider}
+ * may reference all overloads of {@code ABS(x)} (1 parameter), including the implementations ({@link Fn}s) of
+ * {@code ABS(int) -> int} (from before) as well as {@code ABS(float) -> float}, {@code ABS(double) -> double}, and any
+ * others.
+ * </p>
  * @see FnProvider.Builder
  * @see FnProvider
  * @see Builder
@@ -36,10 +49,10 @@ public abstract class Fn {
      * A builder for creating {@link Fn}s.
      * @see FnProvider.Builder
      */
-    public static class Builder {
+    public static final class Builder {
 
         private final List<Parameter> parameters = new ArrayList<>();
-        private String name;
+        private final String name;
         private PType returns = PType.dynamic();
         private Function<Datum[], Datum> invocation;
         private boolean isNullCall = true;
@@ -110,8 +123,7 @@ public abstract class Fn {
         @SuppressWarnings("UnusedReturnValue")
         public Builder addParameter(@NotNull PType type) {
             Parameter param = new Parameter("arg" + parameters.size(), type);
-            this.parameters.add(param);
-            return this;
+            return this.addParameter(param);
         }
 
         /**

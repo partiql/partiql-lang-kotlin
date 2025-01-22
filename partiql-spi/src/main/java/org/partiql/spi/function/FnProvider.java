@@ -41,7 +41,7 @@ public abstract class FnProvider {
      * does not handle overloads.
      * @see FnProvider
      */
-    public static class Builder {
+    public static final class Builder {
 
         @NotNull
         private final String name;
@@ -171,10 +171,8 @@ public abstract class FnProvider {
          */
         @NotNull
         public FnProvider build() {
-            List<RoutineProviderParameter> providerParameters = parameters.stream().map(
-                    p -> new RoutineProviderParameter(p.getName(), p.getType())
-            ).collect(Collectors.toList());
-            RoutineProviderSignature pSignature = new RoutineProviderSignature(name, providerParameters);
+            List<PType> paramTypes = parameters.stream().map(Parameter::getType).collect(Collectors.toList());
+            RoutineProviderSignature pSignature = new RoutineProviderSignature(name, paramTypes);
             Fn instance = new Fn.Builder(name)
                     .returns(returns)
                     .addParameters(parameters)

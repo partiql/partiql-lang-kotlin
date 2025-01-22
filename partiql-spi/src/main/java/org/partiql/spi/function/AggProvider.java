@@ -42,7 +42,7 @@ public abstract class AggProvider {
      * does not handle overloads.
      * @see AggProvider
      */
-    public static class Builder {
+    public static final class Builder {
         @NotNull
         private final String name;
 
@@ -118,10 +118,8 @@ public abstract class AggProvider {
          */
         @NotNull
         public AggProvider build() {
-            List<RoutineProviderParameter> providerParameters = parameters.stream().map(
-                    p -> new RoutineProviderParameter(p.getName(), p.getType())
-            ).collect(Collectors.toList());
-            RoutineProviderSignature signature = new RoutineProviderSignature(name, providerParameters);
+            List<PType> parameterTypes = parameters.stream().map(Parameter::getType).collect(Collectors.toList());
+            RoutineProviderSignature signature = new RoutineProviderSignature(name, parameterTypes);
             RoutineSignature routineSignature = new RoutineSignature(name, parameters, returns);
             Agg instance = new AggImpl(body, routineSignature);
             return new AggProviderImpl(signature, instance);

@@ -1,6 +1,7 @@
 package org.partiql.spi.function;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.spi.types.PType;
 
 import java.util.List;
 
@@ -11,25 +12,24 @@ import java.util.List;
  * to a given call site, and if so, which routine provider to use.
  * </p>
  * <p>
- * While this is currently the same as a {@link RoutineSignature}, additional methods <i>may</i> be added to this class
- * for future use, such as for retrieving all representative signatures of an implementation (for debugging purposes
- * or for error-messaging).
+ * This differs from {@link RoutineSignature}, as it does not have {@link RoutineSignature#isNullCall()} and
+ * {@link RoutineSignature#isMissingCall()}, among others.
  * </p>
  */
 public final class RoutineProviderSignature {
     @NotNull
     private final String name;
     @NotNull
-    private final List<RoutineProviderParameter> params;
+    private final List<PType> paramTypes;
 
     /**
      * Creates a new {@link RoutineProviderSignature} with the given name and parameters.
      * @param name the name of the function
-     * @param params the parameters of the function
+     * @param parameterTypes the types of the parameters of the function
      */
-    public RoutineProviderSignature(@NotNull String name, @NotNull List<RoutineProviderParameter> params) {
+    public RoutineProviderSignature(@NotNull String name, @NotNull List<PType> parameterTypes) {
         this.name = name;
-        this.params = params;
+        this.paramTypes = parameterTypes;
     }
 
     /**
@@ -46,14 +46,15 @@ public final class RoutineProviderSignature {
      * @return the number of parameters that the function takes
      */
     public int getArity() {
-        return params.size();
+        return paramTypes.size();
     }
 
     /**
-     * Returns the parameters of the function.
-     * @return the parameters of the function
+     * Returns the preferred types of the parameters of the function. This is used for the sorting of {@link FnProvider}
+     * and {@link AggProvider}.
+     * @return the preferred types of the parameters of the function
      */
-    public List<RoutineProviderParameter> getParameters() {
-        return params;
+    public List<PType> getParameterTypes() {
+        return paramTypes;
     }
 }

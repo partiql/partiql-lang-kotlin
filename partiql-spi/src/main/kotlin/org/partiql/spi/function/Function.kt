@@ -54,7 +54,7 @@ internal object Function {
         invoke: (Array<Datum>) -> Datum,
     ): FnProvider = FnProvider.Builder(name)
         .returns(returns)
-        .addParameters(parameters.map { Parameter(it.getName(), it.getType()) })
+        .addParameters(parameters.toList())
         .isNullCall(isNullCall)
         .isMissingCall(isMissingCall)
         .body(invoke)

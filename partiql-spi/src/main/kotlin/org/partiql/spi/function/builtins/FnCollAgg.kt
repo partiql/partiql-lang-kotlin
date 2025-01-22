@@ -6,7 +6,6 @@ package org.partiql.spi.function.builtins
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnProvider
 import org.partiql.spi.function.Parameter
-import org.partiql.spi.function.RoutineProviderParameter
 import org.partiql.spi.function.RoutineProviderSignature
 import org.partiql.spi.function.builtins.internal.Accumulator
 import org.partiql.spi.function.builtins.internal.AccumulatorAnySome
@@ -33,7 +32,7 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
     override fun getSignature(): RoutineProviderSignature {
         return RoutineProviderSignature(
             name,
-            parameters.map { RoutineProviderParameter(it.name, it.type) },
+            parameters.map { it.type }
         )
     }
 

@@ -4,7 +4,6 @@ import org.partiql.spi.function.Fn
 import org.partiql.spi.function.FnProvider
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
-import org.partiql.spi.function.RoutineProviderParameter
 import org.partiql.spi.function.RoutineProviderSignature
 import org.partiql.spi.function.builtins.TypePrecedence.TYPE_PRECEDENCE
 import org.partiql.spi.function.utils.FunctionUtils
@@ -45,11 +44,7 @@ internal abstract class DiadicOperator(
     }
 
     override fun getSignature(): RoutineProviderSignature {
-        val params = listOf(
-            RoutineProviderParameter("lhs", lhs),
-            RoutineProviderParameter("rhs", rhs)
-        )
-        return RoutineProviderSignature(name, params)
+        return RoutineProviderSignature(name, listOf(lhs, rhs))
     }
 
     override fun getInstance(args: Array<PType>): Fn? {

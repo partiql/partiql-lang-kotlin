@@ -1,7 +1,6 @@
 package org.partiql.planner.internal
 
 import org.partiql.spi.function.FnProvider
-import org.partiql.spi.function.RoutineProviderParameter
 import org.partiql.spi.types.PType
 
 /**
@@ -13,8 +12,8 @@ import org.partiql.spi.types.PType
 internal object FnComparator : Comparator<FnProvider> {
 
     override fun compare(fn1: FnProvider, fn2: FnProvider): Int {
-        val params1 = fn1.signature.parameters
-        val params2 = fn2.signature.parameters
+        val params1 = fn1.signature.parameterTypes
+        val params2 = fn2.signature.parameterTypes
         // Compare number of arguments
         if (fn1.signature.arity != fn2.signature.arity) {
             return fn1.signature.arity - fn2.signature.arity
@@ -23,15 +22,12 @@ internal object FnComparator : Comparator<FnProvider> {
         for (i in params1.indices) {
             val p1 = params1[i]
             val p2 = params2[i]
-            val comparison = p1.compareTo(p2)
+            val comparison = comparePrecedence(p1, p2)
             if (comparison != 0) return comparison
         }
         // unreachable?
         return 0
     }
-
-    private fun RoutineProviderParameter.compareTo(other: RoutineProviderParameter): Int =
-        comparePrecedence(this.type, other.type)
 
     private fun comparePrecedence(t1: PType, t2: PType): Int {
         if (t1 == t2) return 0
