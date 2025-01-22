@@ -8,7 +8,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_LOWER__STRING__STRING = Function.static(
+internal val Fn_LOWER__STRING__STRING = Function.overload(
 
     name = "lower",
     returns = PType.string(),
@@ -20,7 +20,7 @@ internal val Fn_LOWER__STRING__STRING = Function.static(
     Datum.string(result)
 }
 
-internal val Fn_LOWER__CLOB__CLOB = Function.static(
+internal val Fn_LOWER__CLOB__CLOB = Function.overload(
 
     name = "lower",
     returns = PType.clob(Int.MAX_VALUE),

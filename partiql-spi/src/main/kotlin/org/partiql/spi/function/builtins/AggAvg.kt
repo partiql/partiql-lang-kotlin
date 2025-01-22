@@ -11,21 +11,21 @@ import org.partiql.spi.types.PType
 // TODO: This needs to be formalized. See https://github.com/partiql/partiql-lang-kotlin/issues/1659
 private val AVG_DECIMAL = PType.decimal(38, 19)
 
-internal val Agg_AVG__INT8__INT8 = Aggregation.static(
+internal val Agg_AVG__INT8__INT8 = Aggregation.overload(
     name = "avg",
     returns = AVG_DECIMAL,
     parameters = arrayOf(Parameter("value", PType.tinyint())),
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__INT16__INT16 = Aggregation.static(
+internal val Agg_AVG__INT16__INT16 = Aggregation.overload(
     name = "avg",
     returns = AVG_DECIMAL,
     parameters = arrayOf(Parameter("value", PType.smallint())),
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__INT32__INT32 = Aggregation.static(
+internal val Agg_AVG__INT32__INT32 = Aggregation.overload(
 
     name = "avg",
     returns = AVG_DECIMAL,
@@ -35,7 +35,7 @@ internal val Agg_AVG__INT32__INT32 = Aggregation.static(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__INT64__INT64 = Aggregation.static(
+internal val Agg_AVG__INT64__INT64 = Aggregation.overload(
 
     name = "avg",
     returns = AVG_DECIMAL,
@@ -45,7 +45,7 @@ internal val Agg_AVG__INT64__INT64 = Aggregation.static(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__NUMERIC__NUMERIC = Aggregation.static(
+internal val Agg_AVG__NUMERIC__NUMERIC = Aggregation.overload(
 
     name = "avg",
     returns = AVG_DECIMAL,
@@ -55,7 +55,7 @@ internal val Agg_AVG__NUMERIC__NUMERIC = Aggregation.static(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
+internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.overload(
 
     name = "avg",
     returns = AVG_DECIMAL,
@@ -65,7 +65,7 @@ internal val Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Aggregation.static(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__FLOAT32__FLOAT32 = Aggregation.static(
+internal val Agg_AVG__FLOAT32__FLOAT32 = Aggregation.overload(
 
     name = "avg",
     returns = PType.real(),
@@ -75,7 +75,7 @@ internal val Agg_AVG__FLOAT32__FLOAT32 = Aggregation.static(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__FLOAT64__FLOAT64 = Aggregation.static(
+internal val Agg_AVG__FLOAT64__FLOAT64 = Aggregation.overload(
 
     name = "avg",
     returns = PType.doublePrecision(),
@@ -85,7 +85,7 @@ internal val Agg_AVG__FLOAT64__FLOAT64 = Aggregation.static(
     accumulator = ::AccumulatorAvg,
 )
 
-internal val Agg_AVG__ANY__ANY = Aggregation.static(
+internal val Agg_AVG__ANY__ANY = Aggregation.overload(
 
     name = "avg",
     returns = PType.dynamic(),

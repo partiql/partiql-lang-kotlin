@@ -15,7 +15,7 @@ internal object Aggregation {
      * @return
      */
     @JvmStatic
-    fun static(
+    fun overload(
         name: String,
         parameters: Array<Parameter>,
         returns: PType,

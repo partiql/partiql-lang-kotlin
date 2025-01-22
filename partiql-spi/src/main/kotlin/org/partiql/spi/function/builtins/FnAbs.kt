@@ -21,7 +21,7 @@ ABS overflow behavior is specified in SQL1999 section 6.17:
     an exception condition is raised: data exception — numeric value out of range
  */
 
-internal val Fn_ABS__INT8__INT8 = Function.static(
+internal val Fn_ABS__INT8__INT8 = Function.overload(
     name = "abs",
     parameters = arrayOf(Parameter("value", PType.tinyint())),
     returns = PType.tinyint(),
@@ -35,7 +35,7 @@ internal val Fn_ABS__INT8__INT8 = Function.static(
     }
 }
 
-internal val Fn_ABS__INT16__INT16 = Function.static(
+internal val Fn_ABS__INT16__INT16 = Function.overload(
     name = "abs",
     returns = PType.smallint(),
     parameters = arrayOf(Parameter("value", PType.smallint())),
@@ -49,7 +49,7 @@ internal val Fn_ABS__INT16__INT16 = Function.static(
     }
 }
 
-internal val Fn_ABS__INT32__INT32 = Function.static(
+internal val Fn_ABS__INT32__INT32 = Function.overload(
     name = "abs",
     returns = PType.integer(),
     parameters = arrayOf(Parameter("value", PType.integer())),
@@ -62,7 +62,7 @@ internal val Fn_ABS__INT32__INT32 = Function.static(
     }
 }
 
-internal val Fn_ABS__INT64__INT64 = Function.static(
+internal val Fn_ABS__INT64__INT64 = Function.overload(
     name = "abs",
     returns = PType.bigint(),
     parameters = arrayOf(Parameter("value", PType.bigint())),
@@ -75,7 +75,7 @@ internal val Fn_ABS__INT64__INT64 = Function.static(
     }
 }
 
-internal val Fn_ABS__NUMERIC__NUMERIC = Function.static(
+internal val Fn_ABS__NUMERIC__NUMERIC = Function.overload(
     name = "abs",
     returns = DefaultNumeric.NUMERIC,
     parameters = arrayOf(Parameter("value", DefaultNumeric.NUMERIC)),
@@ -84,7 +84,7 @@ internal val Fn_ABS__NUMERIC__NUMERIC = Function.static(
     Datum.numeric(value.abs())
 }
 
-internal val Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
+internal val Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.overload(
     name = "abs",
     returns = PType.decimal(39, 19), // TODO: Rewrite using new function modeling.
     parameters = arrayOf(Parameter("value", PType.decimal(38, 19))),
@@ -93,7 +93,7 @@ internal val Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY = Function.static(
     Datum.decimal(value.abs())
 }
 
-internal val Fn_ABS__FLOAT32__FLOAT32 = Function.static(
+internal val Fn_ABS__FLOAT32__FLOAT32 = Function.overload(
     name = "abs",
     returns = PType.real(),
     parameters = arrayOf(Parameter("value", PType.real())),
@@ -102,7 +102,7 @@ internal val Fn_ABS__FLOAT32__FLOAT32 = Function.static(
     Datum.real(value.absoluteValue)
 }
 
-internal val Fn_ABS__FLOAT64__FLOAT64 = Function.static(
+internal val Fn_ABS__FLOAT64__FLOAT64 = Function.overload(
     name = "abs",
     returns = PType.doublePrecision(),
     parameters = arrayOf(Parameter("value", PType.doublePrecision())),

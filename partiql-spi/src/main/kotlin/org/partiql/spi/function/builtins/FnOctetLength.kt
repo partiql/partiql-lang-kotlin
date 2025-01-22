@@ -5,7 +5,7 @@ import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
-internal val Fn_OCTET_LENGTH__STRING__INT32 = Function.static(
+internal val Fn_OCTET_LENGTH__STRING__INT32 = Function.overload(
 
     name = "octet_length",
     returns = PType.integer(),
@@ -19,7 +19,7 @@ internal val Fn_OCTET_LENGTH__STRING__INT32 = Function.static(
     Datum.integer(length)
 }
 
-internal val Fn_OCTET_LENGTH__CLOB__INT32 = Function.static(
+internal val Fn_OCTET_LENGTH__CLOB__INT32 = Function.overload(
 
     name = "octet_length",
     returns = PType.integer(),

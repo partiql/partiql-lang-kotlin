@@ -45,7 +45,7 @@ internal object Function {
      * @return
      */
     @JvmStatic
-    fun static(
+    fun overload(
         name: String,
         parameters: Array<Parameter>,
         returns: PType,
