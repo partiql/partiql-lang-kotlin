@@ -44,11 +44,11 @@ internal class ExprCallDynamic(
     /**
      * A memoization cache for the [match] function.
      */
-    private val candidates: MutableMap<List<PType>, Candidate> = mutableMapOf()
+    private val candidates: MutableMap<Array<PType>, Candidate> = mutableMapOf()
 
     override fun eval(env: Environment): Datum {
-        val actualArgs = args.map { it.eval(env).lowerSafe() }.toTypedArray()
-        val actualTypes = actualArgs.map { it.type }
+        val actualArgs = Array(args.size) { args[it].eval(env).lowerSafe() }
+        val actualTypes = Array(actualArgs.size) { actualArgs[it].type }
         var candidate = candidates[actualTypes]
         if (candidate == null) {
             candidate = match(actualTypes) ?: throw PErrors.functionTypeMismatchException(name, actualTypes, functions.toList())
@@ -64,13 +64,13 @@ internal class ExprCallDynamic(
      *
      * @return the index of the candidate to invoke; null if method cannot resolve.
      */
-    private fun match(args: List<PType>): Candidate? {
+    private fun match(args: Array<PType>): Candidate? {
         var exactMatches: Int = -1
         var currentMatch: Int? = null
         val argFamilies = args.map { family(it.code()) }
         functions.indices.forEach { candidateIndex ->
             var currentExactMatches = 0
-            val params = functions[candidateIndex].getInstance(args.toTypedArray())?.signature?.parameters ?: return@forEach
+            val params = functions[candidateIndex].getInstance(args)?.signature?.parameters ?: return@forEach
             for (paramIndex in paramIndices) {
                 val argType = args[paramIndex]
                 val paramType = params[paramIndex]
@@ -85,7 +85,7 @@ internal class ExprCallDynamic(
             }
         }
         return if (currentMatch == null) null else {
-            val instance = functions[currentMatch!!].getInstance(args.toTypedArray()) ?: return null
+            val instance = functions[currentMatch!!].getInstance(args) ?: return null
             Candidate(instance)
         }
     }

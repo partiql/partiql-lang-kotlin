@@ -20,8 +20,8 @@ internal object PErrors {
     /**
      * Returns a PRuntimeException with code: [PError.FUNCTION_TYPE_MISMATCH].
      */
-    fun functionTypeMismatchException(name: String, actualTypes: List<PType>, candidates: List<FnOverload>): PRuntimeException {
-        val pError = functionTypeMismatch(name, actualTypes, candidates)
+    fun functionTypeMismatchException(name: String, actualTypes: Array<PType>, candidates: List<FnOverload>): PRuntimeException {
+        val pError = functionTypeMismatch(name, actualTypes.toList(), candidates)
         return PRuntimeException(pError)
     }
 

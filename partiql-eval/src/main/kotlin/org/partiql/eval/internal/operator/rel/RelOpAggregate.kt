@@ -78,19 +78,20 @@ internal class RelOpAggregate(
 
         // No Aggregations Created
         if (groups.isEmpty() && aggregationMap.isEmpty()) {
-            val record = mutableListOf<Datum>()
-            aggregates.forEach { function ->
+            val record = Array<Datum?>(aggregates.size) {
+                val function = aggregates[it]
                 val accumulator = function.agg.accumulator
-                record.add(accumulator.value())
+                accumulator.value()
             }
-            records = iterator { yield(Row(record.toTypedArray())) }
+            records = iterator { yield(Row(record)) }
             return
         }
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
-                val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated
-                yield(Row(recordValues.toTypedArray()))
+                val accumulatorValues = Array(accumulators.size) { i -> accumulators[i].delegate.value() }
+                val recordValues = accumulatorValues + keysEvaluated
+                yield(Row(recordValues))
             }
         }
     }
