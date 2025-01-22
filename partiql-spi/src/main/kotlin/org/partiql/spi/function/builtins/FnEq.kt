@@ -3,7 +3,7 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -23,7 +23,7 @@ import org.partiql.spi.value.Datum
  *  follows the existing conformance tests and SQL:1999.
  */
 private val name = FunctionUtils.hide("eq")
-internal val FnEq = FnProvider.Builder(name)
+internal val FnEq = FnOverload.Builder(name)
     .addParameters(PType.dynamic(), PType.dynamic())
     .returns(PType.bool())
     .isNullCall(true)

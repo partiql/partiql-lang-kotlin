@@ -52,7 +52,7 @@ internal object Function {
         isNullCall: Boolean = true,
         isMissingCall: Boolean = true,
         invoke: (Array<Datum>) -> Datum,
-    ): FnProvider = FnProvider.Builder(name)
+    ): FnOverload = FnOverload.Builder(name)
         .returns(returns)
         .addParameters(parameters.toList())
         .isNullCall(isNullCall)

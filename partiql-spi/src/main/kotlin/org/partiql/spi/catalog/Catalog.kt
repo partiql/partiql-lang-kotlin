@@ -1,8 +1,8 @@
 package org.partiql.spi.catalog
 
 import org.partiql.spi.catalog.impl.StandardCatalog
-import org.partiql.spi.function.AggProvider
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.AggOverload
+import org.partiql.spi.function.FnOverload
 
 /**
  * Catalog interface for access to tables and routines.
@@ -45,12 +45,12 @@ public interface Catalog {
     /**
      * Returns a collection of scalar functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getFunctions(session: Session, name: String): Collection<FnProvider> = emptyList()
+    public fun getFunctions(session: Session, name: String): Collection<FnOverload> = emptyList()
 
     /**
      * Returns a collection of aggregation functions in this catalog with the given name, or an empty list if none.
      */
-    public fun getAggregations(session: Session, name: String): Collection<AggProvider> = emptyList()
+    public fun getAggregations(session: Session, name: String): Collection<AggOverload> = emptyList()
 
     public companion object {
 

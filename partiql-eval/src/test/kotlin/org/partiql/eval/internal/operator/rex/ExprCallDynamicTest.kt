@@ -7,7 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -58,8 +58,8 @@ class ExprCallDynamicTest {
                 PartiQLValueType.LIST to PartiQLValueType.ANY, // Index 11
                 PartiQLValueType.ANY to PartiQLValueType.ANY, // Index 12
             )
-            internal val functions: Array<FnProvider> = params.mapIndexed { index, it ->
-                FnProvider.Builder("example")
+            internal val functions: Array<FnOverload> = params.mapIndexed { index, it ->
+                FnOverload.Builder("example")
                     .returns(PType.integer())
                     .addParameters(
                         Parameter("lhs", it.first.toPType()),

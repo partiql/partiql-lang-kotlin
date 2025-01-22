@@ -2,9 +2,9 @@ package org.partiql.spi.catalog;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.partiql.spi.function.AggProvider;
+import org.partiql.spi.function.AggOverload;
 import org.partiql.spi.function.Builtins;
-import org.partiql.spi.function.FnProvider;
+import org.partiql.spi.function.FnOverload;
 
 import java.util.Collection;
 
@@ -48,13 +48,13 @@ final class System implements Catalog {
 
     @NotNull
     @Override
-    public Collection<FnProvider> getFunctions(@NotNull Session session, @NotNull String name) {
+    public Collection<FnOverload> getFunctions(@NotNull Session session, @NotNull String name) {
         return Builtins.INSTANCE.getFunctions(name);
     }
 
     @NotNull
     @Override
-    public Collection<AggProvider> getAggregations(@NotNull Session session, @NotNull String name) {
+    public Collection<AggOverload> getAggregations(@NotNull Session session, @NotNull String name) {
         return Builtins.INSTANCE.getAggregations(name);
     }
 }

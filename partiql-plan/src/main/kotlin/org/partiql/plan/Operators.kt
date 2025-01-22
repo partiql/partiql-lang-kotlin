@@ -44,7 +44,7 @@ import org.partiql.plan.rex.RexTable
 import org.partiql.plan.rex.RexVar
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.function.Fn
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -298,7 +298,7 @@ public interface Operators {
      * @param args
      * @return
      */
-    public fun dispatch(name: String, functions: List<FnProvider>, args: List<Rex>): RexDispatch =
+    public fun dispatch(name: String, functions: List<FnOverload>, args: List<Rex>): RexDispatch =
         RexDispatch.create(name, functions, args)
 
     /**

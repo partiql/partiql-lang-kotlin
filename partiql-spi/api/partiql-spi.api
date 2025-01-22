@@ -378,19 +378,19 @@ public abstract class org/partiql/spi/function/Agg {
 	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineSignature;
 }
 
-public abstract class org/partiql/spi/function/AggProvider {
+public abstract class org/partiql/spi/function/AggOverload {
 	public fun <init> ()V
 	public abstract fun getInstance ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Agg;
-	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineProviderSignature;
+	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineOverloadSignature;
 }
 
-public final class org/partiql/spi/function/AggProvider$Builder {
+public final class org/partiql/spi/function/AggOverload$Builder {
 	public fun <init> (Ljava/lang/String;)V
-	public fun addParameter (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggProvider$Builder;
-	public fun addParameters ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggProvider$Builder;
-	public fun body (Ljava/util/concurrent/Callable;)Lorg/partiql/spi/function/AggProvider$Builder;
-	public fun build ()Lorg/partiql/spi/function/AggProvider;
-	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggProvider$Builder;
+	public fun addParameter (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggOverload$Builder;
+	public fun addParameters ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggOverload$Builder;
+	public fun body (Ljava/util/concurrent/Callable;)Lorg/partiql/spi/function/AggOverload$Builder;
+	public fun build ()Lorg/partiql/spi/function/AggOverload;
+	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggOverload$Builder;
 }
 
 public abstract class org/partiql/spi/function/Fn {
@@ -413,24 +413,24 @@ public final class org/partiql/spi/function/Fn$Builder {
 	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Fn$Builder;
 }
 
-public abstract class org/partiql/spi/function/FnProvider {
+public abstract class org/partiql/spi/function/FnOverload {
 	public fun <init> ()V
 	public abstract fun getInstance ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Fn;
-	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineProviderSignature;
+	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineOverloadSignature;
 }
 
-public final class org/partiql/spi/function/FnProvider$Builder {
+public final class org/partiql/spi/function/FnOverload$Builder {
 	public fun <init> (Ljava/lang/String;)V
-	public fun addParameter (Lorg/partiql/spi/function/Parameter;)Lorg/partiql/spi/function/FnProvider$Builder;
-	public fun addParameter (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnProvider$Builder;
-	public fun addParameters (Ljava/util/List;)Lorg/partiql/spi/function/FnProvider$Builder;
-	public fun addParameters ([Lorg/partiql/spi/function/Parameter;)Lorg/partiql/spi/function/FnProvider$Builder;
-	public fun addParameters ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnProvider$Builder;
-	public fun body (Ljava/util/function/Function;)Lorg/partiql/spi/function/FnProvider$Builder;
-	public fun build ()Lorg/partiql/spi/function/FnProvider;
-	public fun isMissingCall (Z)Lorg/partiql/spi/function/FnProvider$Builder;
-	public fun isNullCall (Z)Lorg/partiql/spi/function/FnProvider$Builder;
-	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun addParameter (Lorg/partiql/spi/function/Parameter;)Lorg/partiql/spi/function/FnOverload$Builder;
+	public fun addParameter (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnOverload$Builder;
+	public fun addParameters (Ljava/util/List;)Lorg/partiql/spi/function/FnOverload$Builder;
+	public fun addParameters ([Lorg/partiql/spi/function/Parameter;)Lorg/partiql/spi/function/FnOverload$Builder;
+	public fun addParameters ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnOverload$Builder;
+	public fun body (Ljava/util/function/Function;)Lorg/partiql/spi/function/FnOverload$Builder;
+	public fun build ()Lorg/partiql/spi/function/FnOverload;
+	public fun isMissingCall (Z)Lorg/partiql/spi/function/FnOverload$Builder;
+	public fun isNullCall (Z)Lorg/partiql/spi/function/FnOverload$Builder;
+	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnOverload$Builder;
 }
 
 public final class org/partiql/spi/function/Parameter {
@@ -439,7 +439,7 @@ public final class org/partiql/spi/function/Parameter {
 	public fun getType ()Lorg/partiql/spi/types/PType;
 }
 
-public final class org/partiql/spi/function/RoutineProviderSignature {
+public final class org/partiql/spi/function/RoutineOverloadSignature {
 	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
 	public fun getArity ()I
 	public fun getName ()Ljava/lang/String;

@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents an aggregate function (e.g. SUM, AVG, etc.) and its implementation.
- * @see AggProvider
+ * @see AggOverload
  */
 public abstract class Agg {
 

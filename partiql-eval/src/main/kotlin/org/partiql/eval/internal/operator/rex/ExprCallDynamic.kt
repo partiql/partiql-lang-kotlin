@@ -9,7 +9,7 @@ import org.partiql.eval.internal.operator.rex.ExprCallDynamic.Candidate
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.DYNAMIC
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic.CoercionFamily.UNKNOWN
 import org.partiql.spi.function.Fn
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
@@ -32,7 +32,7 @@ import org.partiql.spi.value.Datum
  */
 internal class ExprCallDynamic(
     private val name: String,
-    private val functions: Array<FnProvider>,
+    private val functions: Array<FnOverload>,
     private val args: Array<ExprValue>
 ) : ExprValue {
 

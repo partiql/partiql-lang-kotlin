@@ -3,7 +3,7 @@ package org.partiql.planner.internal
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 
 /**
@@ -31,7 +31,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    fun resolve(variants: List<FnProvider>, args: List<CompilerType>): FnMatch? {
+    fun resolve(variants: List<FnOverload>, args: List<CompilerType>): FnMatch? {
         val candidates = variants
             .filter { it.signature.arity == args.size }
             .ifEmpty { return null }
@@ -55,7 +55,7 @@ internal object FnResolver {
         return resolveBestMatch(candidates, args)
     }
 
-    private fun resolveBestMatch(candidates: List<FnProvider>, args: List<CompilerType>): FnMatch.Static? {
+    private fun resolveBestMatch(candidates: List<FnOverload>, args: List<CompilerType>): FnMatch.Static? {
         // 3. Discard functions that cannot be matched (via implicit coercion or exact matches)
         val invocableMatches = match(candidates, args).ifEmpty { return null }
         if (invocableMatches.size == 1) {
@@ -90,7 +90,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<FnProvider>, args: List<CompilerType>): List<MatchResult> {
+    private fun match(candidates: List<FnOverload>, args: List<CompilerType>): List<MatchResult> {
         val matches = mutableSetOf<MatchResult>()
         for (candidate in candidates) {
             val m = candidate.match(args) ?: continue
@@ -120,7 +120,7 @@ internal object FnResolver {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun FnProvider.matchesExactly(args: List<CompilerType>): Boolean {
+    private fun FnOverload.matchesExactly(args: List<CompilerType>): Boolean {
         val instance = getInstance(args.toTypedArray()) ?: return false
         val parameters = instance.signature.parameters
         for (i in args.indices) {
@@ -138,7 +138,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun FnProvider.match(args: List<CompilerType>): MatchResult? {
+    private fun FnOverload.match(args: List<CompilerType>): MatchResult? {
         val instance = this.getInstance(args.toTypedArray()) ?: return null
         val parameters = instance.signature.parameters
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
@@ -170,7 +170,7 @@ internal object FnResolver {
     }
 
     private class MatchResult(
-        val match: FnProvider,
+        val match: FnOverload,
         val mapping: Array<Ref.Cast?>,
         val numberOfExactInputTypes: Int,
     )

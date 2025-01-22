@@ -2,7 +2,7 @@ package org.partiql.planner.internal
 
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.spi.function.Fn
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 
 /**
  * Result of matching an unresolved function.
@@ -52,5 +52,5 @@ internal sealed class FnMatch {
      *
      * @property candidates     Ordered list of potentially applicable functions to dispatch dynamically.
      */
-    class Dynamic(val candidates: List<FnProvider>) : FnMatch()
+    class Dynamic(val candidates: List<FnOverload>) : FnMatch()
 }

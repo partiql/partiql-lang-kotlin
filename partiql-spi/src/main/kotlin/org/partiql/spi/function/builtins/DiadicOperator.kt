@@ -1,10 +1,10 @@
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
-import org.partiql.spi.function.RoutineProviderSignature
+import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.TypePrecedence.TYPE_PRECEDENCE
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.internal.SqlTypeFamily
@@ -12,7 +12,7 @@ import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
 /**
- * This represents an operator backed by a function provider. Note that the name of the operator is hidden
+ * This represents an operator backed by a function overload. Note that the name of the operator is hidden
  * using [FunctionUtils.hide].
  *
  * This carries along with it a static table containing a mapping between the input types and the implementation.
@@ -25,7 +25,7 @@ internal abstract class DiadicOperator(
     private val lhs: PType,
     private val rhs: PType,
     hidesName: Boolean = true
-) : FnProvider() {
+) : FnOverload() {
 
     private val name = when (hidesName) {
         true -> FunctionUtils.hide(name)
@@ -43,8 +43,8 @@ internal abstract class DiadicOperator(
         private val NUM_BIG_INT = PType.numeric(19, 0)
     }
 
-    override fun getSignature(): RoutineProviderSignature {
-        return RoutineProviderSignature(name, listOf(lhs, rhs))
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature(name, listOf(lhs, rhs))
     }
 
     override fun getInstance(args: Array<PType>): Fn? {

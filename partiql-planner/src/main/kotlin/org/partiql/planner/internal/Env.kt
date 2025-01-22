@@ -21,8 +21,8 @@ import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
 import org.partiql.spi.function.Agg
-import org.partiql.spi.function.AggProvider
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.AggOverload
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 
 /**
@@ -66,7 +66,7 @@ internal class Env(private val session: Session) {
         }
     }
 
-    fun getCandidates(identifier: Identifier, args: List<Rex>): List<FnProvider> {
+    fun getCandidates(identifier: Identifier, args: List<Rex>): List<FnOverload> {
         return findFirstInCatalog { catalog ->
             getCandidates(identifier, args, catalog)
         } ?: emptyList()
@@ -128,7 +128,7 @@ internal class Env(private val session: Session) {
     /**
      * @return a list of candidate functions that match the [identifier] and number of [args].
      */
-    fun getCandidates(identifier: Identifier, args: List<Rex>, catalog: Catalog): List<FnProvider>? {
+    fun getCandidates(identifier: Identifier, args: List<Rex>, catalog: Catalog): List<FnOverload>? {
         // Reject qualified routine names.
         if (identifier.hasQualifier()) {
             error("Qualified functions are not supported.")
@@ -261,7 +261,7 @@ internal class Env(private val session: Session) {
         return rhs.takeLast(rhs.size - lhs.size)
     }
 
-    private fun match(candidates: List<AggProvider>, args: List<PType>): Pair<Agg, Array<Ref.Cast?>>? {
+    private fun match(candidates: List<AggOverload>, args: List<PType>): Pair<Agg, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
             val instance = candidate.getInstance(args.toTypedArray()) ?: continue

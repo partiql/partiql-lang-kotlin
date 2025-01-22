@@ -4,9 +4,9 @@
 package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Parameter
-import org.partiql.spi.function.RoutineProviderSignature
+import org.partiql.spi.function.RoutineOverloadSignature
 import org.partiql.spi.function.builtins.internal.Accumulator
 import org.partiql.spi.function.builtins.internal.AccumulatorAnySome
 import org.partiql.spi.function.builtins.internal.AccumulatorAvg
@@ -23,14 +23,14 @@ internal abstract class Fn_COLL_AGG__BAG__ANY(
     name: String,
     private var isDistinct: Boolean,
     private var accumulator: () -> Accumulator,
-) : FnProvider() {
+) : FnOverload() {
 
     private val name: String = FunctionUtils.hide(name)
     private var parameters = arrayOf(Parameter("value", PType.bag()))
     private var returns = PType.dynamic()
 
-    override fun getSignature(): RoutineProviderSignature {
-        return RoutineProviderSignature(
+    override fun getSignature(): RoutineOverloadSignature {
+        return RoutineOverloadSignature(
             name,
             parameters.map { it.type }
         )

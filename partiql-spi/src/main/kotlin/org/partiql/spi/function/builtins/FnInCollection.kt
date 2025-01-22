@@ -3,13 +3,13 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 
 private val NAME = FunctionUtils.hide("in_collection")
-internal val FnInCollection = FnProvider.Builder(NAME)
+internal val FnInCollection = FnOverload.Builder(NAME)
     .addParameters(PType.dynamic(), PType.bag())
     .returns(PType.bool())
     .body { args ->

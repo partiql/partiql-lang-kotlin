@@ -19,14 +19,14 @@ import java.util.stream.Collectors;
  * @see Builder
  * @see Fn
  */
-public abstract class FnProvider {
+public abstract class FnOverload {
 
     /**
-     * Returns the signature of the function provider.
-     * @return the signature of the function provider.
+     * Returns the signature of the function overload.
+     * @return the signature of the function overload.
      */
     @NotNull
-    public abstract RoutineProviderSignature getSignature();
+    public abstract RoutineOverloadSignature getSignature();
 
     /**
      * Returns an instance of the function for the given argument types.
@@ -37,9 +37,9 @@ public abstract class FnProvider {
     public abstract Fn getInstance(PType[] args);
 
     /**
-     * A simple builder for {@link FnProvider} that provides a single implementation of a scalar function. This
+     * A simple builder for {@link FnOverload} that provides a single implementation of a scalar function. This
      * does not handle overloads.
-     * @see FnProvider
+     * @see FnOverload
      */
     public static final class Builder {
 
@@ -52,7 +52,7 @@ public abstract class FnProvider {
         private boolean isMissingCall = true;
 
         /**
-         * Creates a new {@link Builder} for a {@link FnProvider} with the given name.
+         * Creates a new {@link Builder} for a {@link FnOverload} with the given name.
          * @param name the name of the function.
          */
         public Builder(@NotNull String name) {
@@ -166,13 +166,13 @@ public abstract class FnProvider {
         }
 
         /**
-         * Builds the {@link FnProvider}.
-         * @return the {@link FnProvider} instance.
+         * Builds the {@link FnOverload}.
+         * @return the {@link FnOverload} instance.
          */
         @NotNull
-        public FnProvider build() {
+        public FnOverload build() {
             List<PType> paramTypes = parameters.stream().map(Parameter::getType).collect(Collectors.toList());
-            RoutineProviderSignature pSignature = new RoutineProviderSignature(name, paramTypes);
+            RoutineOverloadSignature pSignature = new RoutineOverloadSignature(name, paramTypes);
             Fn instance = new Fn.Builder(name)
                     .returns(returns)
                     .addParameters(parameters)
@@ -180,26 +180,26 @@ public abstract class FnProvider {
                     .isNullCall(isNullCall)
                     .isMissingCall(isMissingCall)
                     .build();
-            return new FnProviderImpl(pSignature, instance);
+            return new FnOverloadImpl(pSignature, instance);
         }
     }
 
-    private static class FnProviderImpl extends FnProvider {
+    private static class FnOverloadImpl extends FnOverload {
 
         @NotNull
-        private final RoutineProviderSignature signature;
+        private final RoutineOverloadSignature signature;
 
         @NotNull
         private final Fn instance;
 
-        public FnProviderImpl(@NotNull RoutineProviderSignature signature, @NotNull Fn instance) {
+        public FnOverloadImpl(@NotNull RoutineOverloadSignature signature, @NotNull Fn instance) {
             this.signature = signature;
             this.instance = instance;
         }
 
         @NotNull
         @Override
-        public RoutineProviderSignature getSignature() {
+        public RoutineOverloadSignature getSignature() {
             return signature;
         }
 

@@ -67,7 +67,7 @@ import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Table
 import org.partiql.spi.function.Fn
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.value.Datum
 import kotlin.random.Random
 
@@ -123,7 +123,7 @@ internal sealed class Ref : PlanNode() {
     internal data class Fn(
         @JvmField internal val catalog: String,
         @JvmField internal val name: Name,
-        @JvmField internal val signature: FnProvider,
+        @JvmField internal val signature: FnOverload,
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 

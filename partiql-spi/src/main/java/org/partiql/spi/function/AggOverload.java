@@ -11,22 +11,22 @@ import java.util.stream.Collectors;
 
 /**
  * <p>
- * This provides implementations of a specific aggregation function (e.g. SUM, MIN, MAX, etc.) for a given
- * {@link RoutineProviderSignature}. This API can be leveraged to represent multiple implementations of the same
- * function, e.g. {@code SUM(int)}, {@code SUM(smallint)}, {@code SUM(decimal(p, s))}, etc.
+ * This provides potentially overloaded implementations of a particular aggregation function (e.g. SUM, MIN, MAX, etc.) for a given
+ * {@link RoutineOverloadSignature}. This API can be leveraged to represent multiple implementations of the same
+ * function of the same arity, e.g. {@code SUM(int)}, {@code SUM(smallint)}, {@code SUM(decimal(p, s))}, etc.
  * </p>
  * @see Builder
  * @see Agg
- * @see RoutineProviderSignature
+ * @see RoutineOverloadSignature
  */
-public abstract class AggProvider {
+public abstract class AggOverload {
 
     /**
-     * Returns the signature of this {@link AggProvider}.
-     * @return the signature of this {@link AggProvider}.
+     * Returns the signature of this {@link AggOverload}.
+     * @return the signature of this {@link AggOverload}.
      */
     @NotNull
-    public abstract RoutineProviderSignature getSignature();
+    public abstract RoutineOverloadSignature getSignature();
 
     /**
      * Retrieves an instance of {@link Agg} for the given arguments. The {@link Agg}'s parameters' types may not match
@@ -38,9 +38,9 @@ public abstract class AggProvider {
     public abstract Agg getInstance(PType[] args);
 
     /**
-     * A simple builder for {@link AggProvider} that provides a single implementation of an aggregation function. This
+     * A simple builder for {@link AggOverload} that provides a single implementation of an aggregation function. This
      * does not handle overloads.
-     * @see AggProvider
+     * @see AggOverload
      */
     public static final class Builder {
         @NotNull
@@ -56,7 +56,7 @@ public abstract class AggProvider {
         private Callable<Accumulator> body = () -> null;
 
         /**
-         * Creates a new {@link Builder} for an {@link AggProvider}.
+         * Creates a new {@link Builder} for an {@link AggOverload}.
          * @param name the name of the function.
          */
         public Builder(@NotNull String name) {
@@ -64,7 +64,7 @@ public abstract class AggProvider {
         }
 
         /**
-         * Adds a {@link Parameter} to the {@link AggProvider} with the given {@link PType}. The name of the {@link
+         * Adds a {@link Parameter} to the {@link AggOverload} with the given {@link PType}. The name of the {@link
          * Parameter} is automatically generated.
          * @param type The type of the parameter.
          * @return the {@link Builder} instance.
@@ -77,7 +77,7 @@ public abstract class AggProvider {
         }
 
         /**
-         * Adds multiple {@link Parameter}s to the {@link AggProvider} with the given {@link PType}s. The names of the {@link
+         * Adds multiple {@link Parameter}s to the {@link AggOverload} with the given {@link PType}s. The names of the {@link
          * Parameter}s are automatically generated.
          * @param types The types of the parameters.
          * @return the {@link Builder} instance.
@@ -91,8 +91,8 @@ public abstract class AggProvider {
         }
 
         /**
-         * Sets the return type of the {@link AggProvider#getInstance(PType[])}.
-         * @param type the return type of the {@link AggProvider#getInstance(PType[])}.
+         * Sets the return type of the {@link AggOverload#getInstance(PType[])}.
+         * @param type the return type of the {@link AggOverload#getInstance(PType[])}.
          * @return the {@link Builder} instance.
          */
         @NotNull
@@ -102,8 +102,8 @@ public abstract class AggProvider {
         }
 
         /**
-         * Sets the {@link Accumulator} provider for the {@link AggProvider}.
-         * @param body the {@link Accumulator} provider for the {@link AggProvider}.
+         * Sets the {@link Accumulator} provider for the {@link AggOverload}.
+         * @param body the {@link Accumulator} provider for the {@link AggOverload}.
          * @return the {@link Builder} instance.
          */
         @NotNull
@@ -113,34 +113,34 @@ public abstract class AggProvider {
         }
 
         /**
-         * Builds the {@link AggProvider}.
-         * @return the {@link AggProvider} instance.
+         * Builds the {@link AggOverload}.
+         * @return the {@link AggOverload} instance.
          */
         @NotNull
-        public AggProvider build() {
+        public AggOverload build() {
             List<PType> parameterTypes = parameters.stream().map(Parameter::getType).collect(Collectors.toList());
-            RoutineProviderSignature signature = new RoutineProviderSignature(name, parameterTypes);
+            RoutineOverloadSignature signature = new RoutineOverloadSignature(name, parameterTypes);
             RoutineSignature routineSignature = new RoutineSignature(name, parameters, returns);
             Agg instance = new AggImpl(body, routineSignature);
-            return new AggProviderImpl(signature, instance);
+            return new AggOverloadImpl(signature, instance);
         }
     }
 
-    private static class AggProviderImpl extends AggProvider {
+    private static class AggOverloadImpl extends AggOverload {
         @NotNull
-        private final RoutineProviderSignature signature;
+        private final RoutineOverloadSignature signature;
 
         @NotNull
         private final Agg instance;
 
-        public AggProviderImpl(@NotNull RoutineProviderSignature signature, @NotNull Agg instance) {
+        public AggOverloadImpl(@NotNull RoutineOverloadSignature signature, @NotNull Agg instance) {
             this.signature = signature;
             this.instance = instance;
         }
 
         @NotNull
         @Override
-        public RoutineProviderSignature getSignature() {
+        public RoutineOverloadSignature getSignature() {
             return signature;
         }
 

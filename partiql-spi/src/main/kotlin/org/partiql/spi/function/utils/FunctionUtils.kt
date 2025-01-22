@@ -1,6 +1,6 @@
 package org.partiql.spi.function.utils
 
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.types.PType
@@ -42,9 +42,9 @@ internal object FunctionUtils {
         isNullCall: Boolean = true,
         isMissingCall: Boolean = true,
         invoke: (Array<Datum>) -> Datum,
-    ): FnProvider {
+    ): FnOverload {
         val hiddenName = hide(name)
-        return FnProvider.Builder(hiddenName)
+        return FnOverload.Builder(hiddenName)
             .addParameters(*parameters.map { it.getType() }.toTypedArray())
             .returns(returns)
             .isNullCall(isNullCall)

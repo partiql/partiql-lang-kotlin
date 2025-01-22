@@ -3,7 +3,7 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.builtins.internal.PErrors
 import org.partiql.spi.function.utils.StringUtils.codepointSubstring
 import org.partiql.spi.types.PType
@@ -78,7 +78,7 @@ import org.partiql.spi.value.Datum
  *              L1 = E1 - S1
  *              java's substring(C, S1, E1)
  */
-internal val Fn_SUBSTRING__STRING_INT32__STRING = FnProvider.Builder("substring")
+internal val Fn_SUBSTRING__STRING_INT32__STRING = FnOverload.Builder("substring")
     .returns(PType.string())
     .addParameters(PType.string(), PType.integer())
     .body { args ->
@@ -89,7 +89,7 @@ internal val Fn_SUBSTRING__STRING_INT32__STRING = FnProvider.Builder("substring"
     }
     .build()
 
-internal val Fn_SUBSTRING__CLOB_INT64__CLOB = FnProvider.Builder("substring")
+internal val Fn_SUBSTRING__CLOB_INT64__CLOB = FnOverload.Builder("substring")
     .returns(PType.clob())
     .addParameters(PType.clob(), PType.integer())
     .body { args ->
@@ -100,7 +100,7 @@ internal val Fn_SUBSTRING__CLOB_INT64__CLOB = FnProvider.Builder("substring")
     }
     .build()
 
-internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = FnProvider.Builder("substring")
+internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = FnOverload.Builder("substring")
     .returns(PType.string())
     .addParameters(PType.string(), PType.integer(), PType.integer())
     .body { args ->
@@ -115,7 +115,7 @@ internal val Fn_SUBSTRING__STRING_INT32_INT32__STRING = FnProvider.Builder("subs
     }
     .build()
 
-internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = FnProvider.Builder("substring")
+internal val Fn_SUBSTRING__CLOB_INT64_INT64__CLOB = FnOverload.Builder("substring")
     .returns(PType.clob())
     .addParameters(PType.clob(), PType.integer(), PType.integer())
     .body { args ->

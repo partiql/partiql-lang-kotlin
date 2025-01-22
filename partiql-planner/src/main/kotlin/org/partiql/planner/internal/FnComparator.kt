@@ -1,6 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.spi.function.FnProvider
+import org.partiql.spi.function.FnOverload
 import org.partiql.spi.types.PType
 
 /**
@@ -9,9 +9,9 @@ import org.partiql.spi.types.PType
  *  1. Fewest args first
  *  2. Parameters are compared left-to-right
  */
-internal object FnComparator : Comparator<FnProvider> {
+internal object FnComparator : Comparator<FnOverload> {
 
-    override fun compare(fn1: FnProvider, fn2: FnProvider): Int {
+    override fun compare(fn1: FnOverload, fn2: FnOverload): Int {
         val params1 = fn1.signature.parameterTypes
         val params2 = fn2.signature.parameterTypes
         // Compare number of arguments

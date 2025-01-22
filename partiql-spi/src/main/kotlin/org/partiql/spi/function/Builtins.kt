@@ -14,11 +14,11 @@ import org.partiql.spi.function.builtins.*
  */
 internal object Builtins {
 
-    fun getFunctions(name: String): Collection<FnProvider> = functions[name] ?: emptyList()
+    fun getFunctions(name: String): Collection<FnOverload> = functions[name] ?: emptyList()
 
-    fun getAggregations(name: String): Collection<AggProvider> = aggregations[name] ?: emptyList()
+    fun getAggregations(name: String): Collection<AggOverload> = aggregations[name] ?: emptyList()
 
-    private val functions = listOf<FnProvider>(
+    private val functions = listOf<FnOverload>(
         Fn_ABS__INT8__INT8,
         Fn_ABS__INT16__INT16,
         Fn_ABS__INT32__INT32,
@@ -248,7 +248,7 @@ internal object Builtins {
     ).groupBy { it.signature.name }
 
     @JvmStatic
-    private val aggregations: Map<String, List<AggProvider>> = listOf<AggProvider>(
+    private val aggregations: Map<String, List<AggOverload>> = listOf<AggOverload>(
         Agg_ANY__BOOL__BOOL,
         Agg_AVG__INT8__INT8,
         Agg_AVG__INT16__INT16,

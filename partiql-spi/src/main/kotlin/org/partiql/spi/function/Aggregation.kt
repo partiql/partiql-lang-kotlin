@@ -20,8 +20,8 @@ internal object Aggregation {
         parameters: Array<Parameter>,
         returns: PType,
         accumulator: () -> Accumulator,
-    ): AggProvider {
-        return AggProvider.Builder(name)
+    ): AggOverload {
+        return AggOverload.Builder(name)
             .returns(returns)
             .addParameters(*parameters.map { it.getType() }.toTypedArray())
             .body(accumulator)

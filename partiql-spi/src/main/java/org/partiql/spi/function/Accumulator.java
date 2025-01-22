@@ -5,7 +5,7 @@ import org.partiql.spi.value.Datum;
 
 /**
  * Represents the accumulator for an aggregation function.
- * @see AggProvider
+ * @see AggOverload
  * @see Agg
  */
 public interface Accumulator {

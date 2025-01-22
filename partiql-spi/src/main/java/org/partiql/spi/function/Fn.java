@@ -14,18 +14,18 @@ import java.util.function.Function;
  * Represents a scalar function and its implementation.
  * </p>
  * <p>
- * This differs from {@link FnProvider} because {@link Fn} represents an implementation of a single scalar function with
- * a particular {@link RoutineSignature}, whereas {@link FnProvider} delegates to 1 or more (if overloaded) {@link Fn}s
+ * This differs from {@link FnOverload} because {@link Fn} represents an implementation of a single scalar function with
+ * a particular {@link RoutineSignature}, whereas {@link FnOverload} delegates to 1 or more (if overloaded) {@link Fn}s
  * of a particular arity.
  * </p>
  * <p>
- * As an example, {@link Fn} may hold the implementation for {@code ABS(int) -> int}; however {@link FnProvider}
+ * As an example, {@link Fn} may hold the implementation for {@code ABS(int) -> int}; however {@link FnOverload}
  * may reference all overloads of {@code ABS(x)} (1 parameter), including the implementations ({@link Fn}s) of
  * {@code ABS(int) -> int} (from before) as well as {@code ABS(float) -> float}, {@code ABS(double) -> double}, and any
  * others.
  * </p>
- * @see FnProvider.Builder
- * @see FnProvider
+ * @see FnOverload.Builder
+ * @see FnOverload
  * @see Builder
  */
 public abstract class Fn {
@@ -47,7 +47,7 @@ public abstract class Fn {
 
     /**
      * A builder for creating {@link Fn}s.
-     * @see FnProvider.Builder
+     * @see FnOverload.Builder
      */
     public static final class Builder {
 

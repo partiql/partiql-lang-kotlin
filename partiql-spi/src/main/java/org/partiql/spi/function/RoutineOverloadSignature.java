@@ -7,27 +7,27 @@ import java.util.List;
 
 /**
  * <p>
- * This represents the signature of a routine provider. This is distinct from {@link RoutineSignature}, as it is specific
- * to the provider, and not the instance. The provider signature is used to determine if a routine provider is applicable
- * to a given call site, and if so, which routine provider to use.
+ * This represents the signature of a routine overload. This is distinct from {@link RoutineSignature}, as it is specific
+ * to the overload, and not the instance. The overload signature is used to determine if a routine overload is applicable
+ * to a given call site, and if so, which routine overload to use.
  * </p>
  * <p>
  * This differs from {@link RoutineSignature}, as it does not have {@link RoutineSignature#isNullCall()} and
  * {@link RoutineSignature#isMissingCall()}, among others.
  * </p>
  */
-public final class RoutineProviderSignature {
+public final class RoutineOverloadSignature {
     @NotNull
     private final String name;
     @NotNull
     private final List<PType> paramTypes;
 
     /**
-     * Creates a new {@link RoutineProviderSignature} with the given name and parameters.
+     * Creates a new {@link RoutineOverloadSignature} with the given name and parameters.
      * @param name the name of the function
      * @param parameterTypes the types of the parameters of the function
      */
-    public RoutineProviderSignature(@NotNull String name, @NotNull List<PType> parameterTypes) {
+    public RoutineOverloadSignature(@NotNull String name, @NotNull List<PType> parameterTypes) {
         this.name = name;
         this.paramTypes = parameterTypes;
     }
@@ -50,8 +50,8 @@ public final class RoutineProviderSignature {
     }
 
     /**
-     * Returns the preferred types of the parameters of the function. This is used for the sorting of {@link FnProvider}
-     * and {@link AggProvider}.
+     * Returns the preferred types of the parameters of the function. This is used for the sorting of {@link FnOverload}
+     * and {@link AggOverload}.
      * @return the preferred types of the parameters of the function
      */
     public List<PType> getParameterTypes() {
