@@ -1,7 +1,11 @@
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnProvider
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineProviderParameter
+import org.partiql.spi.function.RoutineProviderSignature
 import org.partiql.spi.function.builtins.TypePrecedence.TYPE_PRECEDENCE
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.internal.SqlTypeFamily
@@ -19,10 +23,10 @@ import org.partiql.spi.value.Datum
  */
 internal abstract class DiadicOperator(
     name: String,
-    private val lhs: Parameter,
-    private val rhs: Parameter,
+    private val lhs: PType,
+    private val rhs: PType,
     hidesName: Boolean = true
-) : Function {
+) : FnProvider() {
 
     private val name = when (hidesName) {
         true -> FunctionUtils.hide(name)
@@ -40,15 +44,15 @@ internal abstract class DiadicOperator(
         private val NUM_BIG_INT = PType.numeric(19, 0)
     }
 
-    override fun getName(): String {
-        return name
+    override fun getSignature(): RoutineProviderSignature {
+        val params = listOf(
+            RoutineProviderParameter("lhs", lhs),
+            RoutineProviderParameter("rhs", rhs)
+        )
+        return RoutineProviderSignature(name, params)
     }
 
-    override fun getParameters(): Array<Parameter> {
-        return arrayOf(lhs, rhs)
-    }
-
-    override fun getInstance(args: Array<PType>): Function.Instance? {
+    override fun getInstance(args: Array<PType>): Fn? {
         val lhs = args[0]
         val rhs = args[1]
         val (newLhs, newRhs) = getOperands(lhs, rhs) ?: return null
@@ -72,7 +76,7 @@ internal abstract class DiadicOperator(
      * @param booleanRhs TODO
      * @return TODO
      */
-    open fun getBooleanInstance(booleanLhs: PType, booleanRhs: PType): Function.Instance? {
+    open fun getBooleanInstance(booleanLhs: PType, booleanRhs: PType): Fn? {
         return null
     }
 
@@ -81,7 +85,7 @@ internal abstract class DiadicOperator(
      * @param stringRhs TODO
      * @return TODO
      */
-    open fun getStringInstance(stringLhs: PType, stringRhs: PType): Function.Instance? {
+    open fun getStringInstance(stringLhs: PType, stringRhs: PType): Fn? {
         return null
     }
 
@@ -90,7 +94,7 @@ internal abstract class DiadicOperator(
      * @param charRhs TODO
      * @return TODO
      */
-    open fun getCharInstance(charLhs: PType, charRhs: PType): Function.Instance? {
+    open fun getCharInstance(charLhs: PType, charRhs: PType): Fn? {
         return null
     }
 
@@ -99,7 +103,7 @@ internal abstract class DiadicOperator(
      * @param varcharRhs TODO
      * @return TODO
      */
-    open fun getVarcharInstance(varcharLhs: PType, varcharRhs: PType): Function.Instance? {
+    open fun getVarcharInstance(varcharLhs: PType, varcharRhs: PType): Fn? {
         return null
     }
 
@@ -108,7 +112,7 @@ internal abstract class DiadicOperator(
      * @param blobRhs TODO
      * @return TODO
      */
-    open fun getBlobInstance(blobLhs: PType, blobRhs: PType): Function.Instance? {
+    open fun getBlobInstance(blobLhs: PType, blobRhs: PType): Fn? {
         return null
     }
 
@@ -117,7 +121,7 @@ internal abstract class DiadicOperator(
      * @param clobRhs TODO
      * @return TODO
      */
-    open fun getClobInstance(clobLhs: PType, clobRhs: PType): Function.Instance? {
+    open fun getClobInstance(clobLhs: PType, clobRhs: PType): Fn? {
         return null
     }
 
@@ -126,7 +130,7 @@ internal abstract class DiadicOperator(
      * @param dateRhs TODO
      * @return TODO
      */
-    open fun getDateInstance(dateLhs: PType, dateRhs: PType): Function.Instance? {
+    open fun getDateInstance(dateLhs: PType, dateRhs: PType): Fn? {
         return null
     }
 
@@ -135,7 +139,7 @@ internal abstract class DiadicOperator(
      * @param timeRhs TODO
      * @return TODO
      */
-    open fun getTimeInstance(timeLhs: PType, timeRhs: PType): Function.Instance? {
+    open fun getTimeInstance(timeLhs: PType, timeRhs: PType): Fn? {
         return null
     }
 
@@ -144,7 +148,7 @@ internal abstract class DiadicOperator(
      * @param timestampRhs TODO
      * @return TODO
      */
-    open fun getTimestampInstance(timestampLhs: PType, timestampRhs: PType): Function.Instance? {
+    open fun getTimestampInstance(timestampLhs: PType, timestampRhs: PType): Fn? {
         return null
     }
 
@@ -153,7 +157,7 @@ internal abstract class DiadicOperator(
      * @param integerRhs TODO
      * @return TODO
      */
-    open fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Function.Instance? {
+    open fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Fn? {
         return null
     }
 
@@ -162,7 +166,7 @@ internal abstract class DiadicOperator(
      * @param tinyIntRhs TODO
      * @return TODO
      */
-    open fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance? {
+    open fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Fn? {
         return null
     }
 
@@ -171,7 +175,7 @@ internal abstract class DiadicOperator(
      * @param smallIntRhs TODO
      * @return TODO
      */
-    open fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Function.Instance? {
+    open fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Fn? {
         return null
     }
 
@@ -180,7 +184,7 @@ internal abstract class DiadicOperator(
      * @param bigIntRhs TODO
      * @return TODO
      */
-    open fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Function.Instance? {
+    open fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Fn? {
         return null
     }
 
@@ -189,7 +193,7 @@ internal abstract class DiadicOperator(
      * @param numericRhs TODO
      * @return TODO
      */
-    open fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance? {
+    open fun getNumericInstance(numericLhs: PType, numericRhs: PType): Fn? {
         return null
     }
 
@@ -198,7 +202,7 @@ internal abstract class DiadicOperator(
      * @param decimalRhs TODO
      * @return TODO
      */
-    open fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance? {
+    open fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Fn? {
         return null
     }
 
@@ -207,7 +211,7 @@ internal abstract class DiadicOperator(
      * @param realRhs TODO
      * @return TODO
      */
-    open fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance? {
+    open fun getRealInstance(realLhs: PType, realRhs: PType): Fn? {
         return null
     }
 
@@ -216,7 +220,7 @@ internal abstract class DiadicOperator(
      * @param doubleRhs TODO
      * @return TODO
      */
-    open fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Function.Instance? {
+    open fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Fn? {
         return null
     }
 
@@ -224,37 +228,33 @@ internal abstract class DiadicOperator(
      * This is used when all operands are NULL/MISSING.
      * @return an instance of a function
      */
-    open fun getUnknownInstance(): Function.Instance? {
+    open fun getUnknownInstance(): Fn? {
         return null
-    }
-
-    override fun getReturnType(args: Array<PType>): PType {
-        return getInstance(args)?.returns ?: PType.dynamic() // TODO: Do we need this method?
     }
 
     /**
      * This is a lookup table for finding the appropriate instance for the given types. The table is
      * initialized on construction using the get*Instance methods.
      */
-    protected val instances: Array<Array<(PType, PType) -> Function.Instance?>> = Array(PType.codes().size) {
+    protected val instances: Array<Array<(PType, PType) -> Fn?>> = Array(PType.codes().size) {
         Array(PType.codes().size) {
             { _, _ -> null }
         }
     }
 
-    protected fun fillTable(lhs: Int, rhs: Int, instance: (PType, PType) -> Function.Instance?) {
+    protected fun fillTable(lhs: Int, rhs: Int, instance: (PType, PType) -> Fn?) {
         instances[lhs][rhs] = instance
     }
 
-    protected fun fillNumberTable(highPrecedence: Int, instance: (PType, PType) -> Function.Instance?) {
+    protected fun fillNumberTable(highPrecedence: Int, instance: (PType, PType) -> Fn?) {
         return fillPrioritizedTable(highPrecedence, SqlTypeFamily.NUMBER, instance)
     }
 
-    private fun fillCharacterStringTable(highPrecedence: Int, instance: (PType, PType) -> Function.Instance?) {
+    private fun fillCharacterStringTable(highPrecedence: Int, instance: (PType, PType) -> Fn?) {
         return fillPrioritizedTable(highPrecedence, SqlTypeFamily.TEXT, instance)
     }
 
-    protected fun fillPrioritizedTable(highPrecedence: Int, family: SqlTypeFamily, instance: (PType, PType) -> Function.Instance?) {
+    protected fun fillPrioritizedTable(highPrecedence: Int, family: SqlTypeFamily, instance: (PType, PType) -> Fn?) {
         val members = family.members + setOf(PType.UNKNOWN)
         members.filter {
             (TYPE_PRECEDENCE[highPrecedence]!! > TYPE_PRECEDENCE[it]!!)
@@ -265,13 +265,13 @@ internal abstract class DiadicOperator(
         fillTable(highPrecedence, highPrecedence) { lhs, rhs -> instance(lhs, rhs) }
     }
 
-    private fun fillBooleanTable(instance: (PType, PType) -> Function.Instance?) {
+    private fun fillBooleanTable(instance: (PType, PType) -> Fn?) {
         fillTable(PType.BOOL, PType.BOOL) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.BOOL, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
         fillTable(PType.UNKNOWN, PType.BOOL) { _, rhs -> instance(rhs, rhs) }
     }
 
-    private fun fillTimestampTable(instance: (PType, PType) -> Function.Instance?) {
+    private fun fillTimestampTable(instance: (PType, PType) -> Fn?) {
         fillTable(PType.TIMESTAMPZ, PType.TIMESTAMPZ) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIMESTAMP, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIMESTAMPZ, PType.TIMESTAMP) { lhs, rhs -> instance(lhs, rhs) }
@@ -282,7 +282,7 @@ internal abstract class DiadicOperator(
         fillTable(PType.UNKNOWN, PType.TIMESTAMPZ) { _, rhs -> instance(rhs, rhs) }
     }
 
-    private fun fillTimeTable(instance: (PType, PType) -> Function.Instance?) {
+    private fun fillTimeTable(instance: (PType, PType) -> Fn?) {
         fillTable(PType.TIMEZ, PType.TIMEZ) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIME, PType.TIME) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.TIMEZ, PType.TIME) { lhs, rhs -> instance(lhs, rhs) }
@@ -293,13 +293,13 @@ internal abstract class DiadicOperator(
         fillTable(PType.UNKNOWN, PType.TIMEZ) { _, rhs -> instance(rhs, rhs) }
     }
 
-    private fun fillDateTable(instance: (PType, PType) -> Function.Instance?) {
+    private fun fillDateTable(instance: (PType, PType) -> Fn?) {
         fillTable(PType.DATE, PType.DATE) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.DATE, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
         fillTable(PType.UNKNOWN, PType.DATE) { _, rhs -> instance(rhs, rhs) }
     }
 
-    private fun fillBlobTable(instance: (PType, PType) -> Function.Instance?) {
+    private fun fillBlobTable(instance: (PType, PType) -> Fn?) {
         fillTable(PType.BLOB, PType.BLOB) { lhs, rhs -> instance(lhs, rhs) }
         fillTable(PType.BLOB, PType.UNKNOWN) { lhs, _ -> instance(lhs, lhs) }
         fillTable(PType.UNKNOWN, PType.BLOB) { _, rhs -> instance(rhs, rhs) }
@@ -380,9 +380,9 @@ internal abstract class DiadicOperator(
         fillUnknownTable()
     }
 
-    protected fun basic(returns: PType, lhs: PType, rhs: PType, invocation: (Array<Datum>) -> Datum): Function.Instance {
+    protected fun basic(returns: PType, lhs: PType, rhs: PType, invocation: (Array<Datum>) -> Datum): Fn {
         return Function.instance(
-            name = getName(),
+            name = name,
             returns = returns,
             parameters = arrayOf(
                 Parameter("lhs", lhs),
@@ -392,11 +392,11 @@ internal abstract class DiadicOperator(
         )
     }
 
-    protected fun basic(returns: PType, args: PType, invocation: (Array<Datum>) -> Datum): Function.Instance {
+    protected fun basic(returns: PType, args: PType, invocation: (Array<Datum>) -> Datum): Fn {
         return basic(returns, args, args, invocation)
     }
 
-    protected fun basic(arg: PType, invocation: (Array<Datum>) -> Datum): Function.Instance {
+    protected fun basic(arg: PType, invocation: (Array<Datum>) -> Datum): Fn {
         return basic(arg, arg, arg, invocation)
     }
 }

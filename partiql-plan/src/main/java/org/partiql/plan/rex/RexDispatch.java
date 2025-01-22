@@ -3,7 +3,7 @@ package org.partiql.plan.rex;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
-import org.partiql.spi.function.Function;
+import org.partiql.spi.function.FnProvider;
 import org.partiql.spi.types.PType;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public abstract class RexDispatch extends RexBase {
      * @return new RexDispatch instance
      */
     @NotNull
-    public static RexDispatch create(String name, List<Function> functions, List<Rex> args) {
+    public static RexDispatch create(String name, List<FnProvider> functions, List<Rex> args) {
         return new Impl(name, functions, args);
     }
 
@@ -35,7 +35,7 @@ public abstract class RexDispatch extends RexBase {
      * Returns the functions to dispatch to.
      * @return functions to dispatch to
      */
-    public abstract List<Function> getFunctions();
+    public abstract List<FnProvider> getFunctions();
 
     /**
      * Returns the list of function arguments.
@@ -64,10 +64,10 @@ public abstract class RexDispatch extends RexBase {
     private static class Impl extends RexDispatch {
 
         private final String name;
-        private final List<Function> functions;
+        private final List<FnProvider> functions;
         private final List<Rex> args;
 
-        private Impl(String name, List<Function> functions, List<Rex> args) {
+        private Impl(String name, List<FnProvider> functions, List<Rex> args) {
             this.name = name;
             this.functions = functions;
             this.args = args;
@@ -79,7 +79,7 @@ public abstract class RexDispatch extends RexBase {
         }
 
         @Override
-        public List<Function> getFunctions() {
+        public List<FnProvider> getFunctions() {
             return functions;
         }
 

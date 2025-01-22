@@ -3,7 +3,7 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.Fn
 import org.partiql.spi.internal.compareTo
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -18,7 +18,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         return lhs > rhs
     }
 
-    override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {
+    override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Fn {
         return basic(PType.bool(), PType.tinyint()) { args ->
             val lhs = args[0].byte
             val rhs = args[1].byte
@@ -26,7 +26,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Function.Instance {
+    override fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Fn {
         return basic(PType.bool(), PType.smallint()) { args ->
             val lhs = args[0].short
             val rhs = args[1].short
@@ -34,7 +34,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Function.Instance {
+    override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Fn {
         return basic(PType.bool(), PType.integer()) { args ->
             val lhs = args[0].int
             val rhs = args[1].int
@@ -42,7 +42,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Function.Instance {
+    override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Fn {
         return basic(PType.bool(), PType.bigint()) { args ->
             val lhs = args[0].long
             val rhs = args[1].long
@@ -50,7 +50,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
+    override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Fn {
         return basic(PType.bool(), DefaultNumeric.NUMERIC) { args ->
             val lhs = args[0].bigDecimal
             val rhs = args[1].bigDecimal
@@ -58,7 +58,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {
+    override fun getRealInstance(realLhs: PType, realRhs: PType): Fn {
         return basic(PType.bool(), PType.real()) { args ->
             val lhs = args[0].float
             val rhs = args[1].float
@@ -66,7 +66,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Function.Instance {
+    override fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Fn {
         return basic(PType.bool(), PType.doublePrecision()) { args ->
             val lhs = args[0].double
             val rhs = args[1].double
@@ -74,7 +74,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getStringInstance(stringLhs: PType, stringRhs: PType): Function.Instance {
+    override fun getStringInstance(stringLhs: PType, stringRhs: PType): Fn {
         return basic(PType.bool(), PType.string()) { args ->
             val lhs = args[0].string
             val rhs = args[1].string
@@ -82,7 +82,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getTimestampInstance(timestampLhs: PType, timestampRhs: PType): Function.Instance {
+    override fun getTimestampInstance(timestampLhs: PType, timestampRhs: PType): Fn {
         return basic(PType.bool(), timestampLhs, timestampRhs) { args ->
             val lhs = args[0].localDateTime
             val rhs = args[1].localDateTime
@@ -90,7 +90,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getDateInstance(dateLhs: PType, dateRhs: PType): Function.Instance {
+    override fun getDateInstance(dateLhs: PType, dateRhs: PType): Fn {
         return basic(PType.bool(), PType.date()) { args ->
             val lhs = args[0].localDate
             val rhs = args[1].localDate
@@ -98,7 +98,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getTimeInstance(timeLhs: PType, timeRhs: PType): Function.Instance {
+    override fun getTimeInstance(timeLhs: PType, timeRhs: PType): Fn {
         return basic(PType.bool(), timeLhs, timeRhs) { args ->
             val lhs = args[0].localTime
             val rhs = args[1].localTime
@@ -106,7 +106,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getBooleanInstance(booleanLhs: PType, booleanRhs: PType): Function.Instance {
+    override fun getBooleanInstance(booleanLhs: PType, booleanRhs: PType): Fn {
         return basic(PType.bool()) { args ->
             val lhs = args[0].boolean
             val rhs = args[1].boolean
@@ -114,7 +114,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getCharInstance(charLhs: PType, charRhs: PType): Function.Instance {
+    override fun getCharInstance(charLhs: PType, charRhs: PType): Fn {
         return basic(PType.bool(), charLhs, charRhs) { args ->
             val lhs = args[0].string
             val rhs = args[1].string
@@ -122,7 +122,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getVarcharInstance(varcharLhs: PType, varcharRhs: PType): Function.Instance {
+    override fun getVarcharInstance(varcharLhs: PType, varcharRhs: PType): Fn {
         return basic(PType.bool(), varcharLhs, varcharRhs) { args ->
             val lhs = args[0].string
             val rhs = args[1].string
@@ -130,7 +130,7 @@ internal object FnGt : DiadicComparisonOperator("gt") {
         }
     }
 
-    override fun getClobInstance(clobLhs: PType, clobRhs: PType): Function.Instance {
+    override fun getClobInstance(clobLhs: PType, clobRhs: PType): Fn {
         return basic(PType.bool(), clobLhs, clobRhs) { args ->
             val lhs = args[0].bytes.toString()
             val rhs = args[1].bytes.toString()

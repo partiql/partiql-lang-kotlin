@@ -14,11 +14,11 @@ import org.partiql.spi.function.builtins.*
  */
 internal object Builtins {
 
-    fun getFunctions(name: String): Collection<Function> = functions[name] ?: emptyList()
+    fun getFunctions(name: String): Collection<FnProvider> = functions[name] ?: emptyList()
 
-    fun getAggregations(name: String): Collection<Aggregation> = aggregations[name] ?: emptyList()
+    fun getAggregations(name: String): Collection<AggProvider> = aggregations[name] ?: emptyList()
 
-    private val functions = listOf(
+    private val functions = listOf<FnProvider>(
         Fn_ABS__INT8__INT8,
         Fn_ABS__INT16__INT16,
         Fn_ABS__INT32__INT32,
@@ -205,12 +205,10 @@ internal object Builtins {
         Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
         Fn_POSITION__STRING_STRING__INT64,
         Fn_POSITION__CLOB_CLOB__INT64,
-
-        Fn_SUBSTRING__STRING_INT32__STRING,
-        Fn_SUBSTRING__STRING_INT32_INT32__STRING,
-        Fn_SUBSTRING__CLOB_INT64__CLOB,
-        Fn_SUBSTRING__CLOB_INT64_INT64__CLOB,
-
+        Fn_SUBSTRING_2STR,
+        Fn_SUBSTRING_2CLOB,
+        Fn_SUBSTRING_3STR,
+        Fn_SUBSTRING_3CLOB,
         FnTimes,
         Fn_TRIM__STRING__STRING,
         Fn_TRIM__CLOB__CLOB,
@@ -245,10 +243,10 @@ internal object Builtins {
         Fn_SIZE__LIST__INT32,
 
         Fn_SIZE__STRUCT__INT32
-    ).groupBy { it.getName() }
+    ).groupBy { it.signature.name }
 
     @JvmStatic
-    private val aggregations: Map<String, List<Aggregation>> = listOf(
+    private val aggregations: Map<String, List<AggProvider>> = listOf<AggProvider>(
         Agg_ANY__BOOL__BOOL,
         Agg_AVG__INT8__INT8,
         Agg_AVG__INT16__INT16,
@@ -292,5 +290,5 @@ internal object Builtins {
         Agg_SUM__FLOAT64__FLOAT64,
         Agg_SUM__ANY__ANY,
         Agg_GROUP_AS__ANY__ANY
-    ).groupBy { it.getName() }
+    ).groupBy { it.signature.name }
 }

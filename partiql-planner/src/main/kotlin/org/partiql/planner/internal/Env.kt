@@ -20,8 +20,9 @@ import org.partiql.spi.catalog.Catalogs
 import org.partiql.spi.catalog.Identifier
 import org.partiql.spi.catalog.Name
 import org.partiql.spi.catalog.Session
-import org.partiql.spi.function.Aggregation
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.Agg
+import org.partiql.spi.function.AggProvider
+import org.partiql.spi.function.FnProvider
 import org.partiql.spi.types.PType
 
 /**
@@ -65,7 +66,7 @@ internal class Env(private val session: Session) {
         }
     }
 
-    fun getCandidates(identifier: Identifier, args: List<Rex>): List<Function> {
+    fun getCandidates(identifier: Identifier, args: List<Rex>): List<FnProvider> {
         return findFirstInCatalog { catalog ->
             getCandidates(identifier, args, catalog)
         } ?: emptyList()
@@ -127,7 +128,7 @@ internal class Env(private val session: Session) {
     /**
      * @return a list of candidate functions that match the [identifier] and number of [args].
      */
-    private fun getCandidates(identifier: Identifier, args: List<Rex>, catalog: Catalog): List<Function>? {
+    fun getCandidates(identifier: Identifier, args: List<Rex>, catalog: Catalog): List<FnProvider>? {
         // Reject qualified routine names.
         if (identifier.hasQualifier()) {
             error("Qualified functions are not supported.")
@@ -136,7 +137,7 @@ internal class Env(private val session: Session) {
         // 1. Search in the current catalog and namespace.
         val name = identifier.getIdentifier().getText().lowercase() // CASE-NORMALIZED LOWER
         val variants = catalog.getFunctions(session, name).toList()
-        val candidates = variants.filter { it.getParameters().size == args.size }
+        val candidates = variants.filter { it.signature.arity == args.size }
         if (candidates.isEmpty()) {
             return null
         }
@@ -209,8 +210,8 @@ internal class Env(private val session: Session) {
         }
 
         // Invoke existing function resolution logic
-        val parameters = args.map { it.type }
-        val match = match(candidates, parameters) ?: return null
+        val argTypes = args.map { it.type }
+        val match = match(candidates, argTypes) ?: return null
         val agg = match.first
         val mapping = match.second
         // Create an internal typed reference
@@ -260,17 +261,19 @@ internal class Env(private val session: Session) {
         return rhs.takeLast(rhs.size - lhs.size)
     }
 
-    private fun match(candidates: List<Aggregation>, args: List<PType>): Pair<Aggregation, Array<Ref.Cast?>>? {
+    private fun match(candidates: List<AggProvider>, args: List<PType>): Pair<Agg, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
-            if (candidate.matches(args)) {
-                return candidate to arrayOfNulls(args.size)
+            val instance = candidate.getInstance(args.toTypedArray()) ?: continue
+            if (instance.matches(args)) {
+                return instance to arrayOfNulls(args.size)
             }
         }
         // 2. Look for best match.
-        var match: Pair<Aggregation, Array<Ref.Cast?>>? = null
+        var match: Pair<Agg, Array<Ref.Cast?>>? = null
         for (candidate in candidates) {
-            val m = candidate.match(args) ?: continue
+            val instance = candidate.getInstance(args.toTypedArray()) ?: continue
+            val m = instance.match(args) ?: continue
             // TODO AggMatch comparison
             // if (match != null && m.exact < match.exact) {
             //     // already had a better match.
@@ -285,12 +288,13 @@ internal class Env(private val session: Session) {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun Aggregation.matches(args: List<PType>): Boolean {
-        val parameters = getParameters()
+    private fun Agg.matches(args: List<PType>): Boolean {
+        val instance = this
+        val parameters = instance.signature.parameters
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.getMatch(a) != a) return false
+            if (p.type.code() != a.code()) return false
         }
         return true
     }
@@ -301,22 +305,25 @@ internal class Env(private val session: Session) {
      * @param args
      * @return
      */
-    private fun Aggregation.match(args: List<PType>): Pair<Aggregation, Array<Ref.Cast?>>? {
-        val parameters = getParameters()
+    private fun Agg.match(args: List<PType>): Pair<Agg, Array<Ref.Cast?>>? {
+        val instance = this
+        val parameters = instance.signature.parameters
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            when (val m = p.getMatch(a)) {
-                null -> return null
-                a -> continue
-                else -> mapping[i] = coercion(a, m)
+            when (p.type.code() == a.code()) {
+                false -> mapping[i] = coercion(a, p.type) ?: return null
+                true -> continue
             }
         }
-        return this to mapping
+        return instance to mapping
     }
 
-    private fun coercion(arg: PType, target: PType): Ref.Cast {
-        return Ref.Cast(arg.toCType(), target.toCType(), Ref.Cast.Safety.COERCION, true)
+    private fun coercion(arg: PType, target: PType): Ref.Cast? {
+        return when (CoercionFamily.canCoerce(arg, target)) {
+            true -> Ref.Cast(arg.toCType(), target.toCType(), Ref.Cast.Safety.COERCION, true)
+            false -> return null
+        }
     }
 }

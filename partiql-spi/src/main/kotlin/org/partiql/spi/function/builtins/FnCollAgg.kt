@@ -3,8 +3,11 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.Fn
+import org.partiql.spi.function.FnProvider
 import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.RoutineProviderParameter
+import org.partiql.spi.function.RoutineProviderSignature
 import org.partiql.spi.function.builtins.internal.Accumulator
 import org.partiql.spi.function.builtins.internal.AccumulatorAnySome
 import org.partiql.spi.function.builtins.internal.AccumulatorAvg
@@ -16,38 +19,40 @@ import org.partiql.spi.function.builtins.internal.AccumulatorMin
 import org.partiql.spi.function.builtins.internal.AccumulatorSum
 import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
-import org.partiql.spi.value.Datum
 
 internal abstract class Fn_COLL_AGG__BAG__ANY(
     name: String,
     private var isDistinct: Boolean,
     private var accumulator: () -> Accumulator,
-) : Function {
+) : FnProvider() {
 
     private val name: String = FunctionUtils.hide(name)
     private var parameters = arrayOf(Parameter("value", PType.bag()))
     private var returns = PType.dynamic()
 
-    override fun getName(): String = name
-    override fun getParameters(): Array<Parameter> = parameters
-    override fun getReturnType(args: Array<PType>): PType = returns
-    override fun getInstance(args: Array<PType>): Function.Instance = instance
+    override fun getSignature(): RoutineProviderSignature {
+        return RoutineProviderSignature(
+            name,
+            parameters.map { RoutineProviderParameter(it.name, it.type) },
+        )
+    }
 
-    private val instance = object : Function.Instance(
-        this.name,
-        parameters = arrayOf(PType.bag()),
-        returns = PType.dynamic(),
-    ) {
-        override fun invoke(args: Array<Datum>): Datum {
+    override fun getInstance(args: Array<PType>): Fn = instance
+
+    private val instance = Fn.Builder(name)
+        .returns(PType.dynamic())
+        .addParameters(*parameters)
+        .returns(returns)
+        .body { args ->
             val bag = args[0]
             val accumulator = when (isDistinct) {
                 true -> AccumulatorDistinct(accumulator())
                 false -> accumulator()
             }
             bag.forEach { element -> accumulator.next(arrayOf(element)) }
-            return accumulator.value()
+            accumulator.value()
         }
-    }
+        .build()
 
     object SUM_ALL : Fn_COLL_AGG__BAG__ANY("coll_sum_all", false, ::AccumulatorSum)
 

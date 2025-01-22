@@ -1,7 +1,6 @@
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.Fn
 import org.partiql.spi.internal.SqlTypeFamily
 import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
@@ -11,19 +10,15 @@ import org.partiql.spi.value.Datum
  */
 internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
     name,
-    Parameter.dynamic("lhs"),
-    Parameter.dynamic("rhs")
+    PType.dynamic(),
+    PType.dynamic()
 ) {
 
-    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance? {
+    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Fn? {
         return null
     }
 
-    override fun getReturnType(args: Array<PType>): PType {
-        return getInstance(args)!!.returns
-    }
-
-    override fun getInstance(args: Array<PType>): Function.Instance? {
+    override fun getInstance(args: Array<PType>): Fn? {
         val lhs = args[0]
         val rhs = args[1]
         val hasDecimal = lhs.code() == PType.DECIMAL || rhs.code() == PType.DECIMAL
@@ -34,7 +29,7 @@ internal abstract class DiadicComparisonOperator(name: String) : DiadicOperator(
         return super.getInstance(args)
     }
 
-    private fun getNumberInstance(lhs: PType, rhs: PType): Function.Instance {
+    private fun getNumberInstance(lhs: PType, rhs: PType): Fn {
         return basic(PType.bool(), lhs, rhs) { args ->
             val l = args[0].getNumber()
             val r = args[1].getNumber()

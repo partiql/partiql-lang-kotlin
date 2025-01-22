@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.plan.Operand;
 import org.partiql.plan.OperatorVisitor;
 import org.partiql.plan.rex.Rex;
-import org.partiql.spi.function.Aggregation;
+import org.partiql.spi.function.Agg;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ public abstract class RelAggregate extends RelBase {
      * @return new {@link Measure} instance
      */
     @NotNull
-    public static Measure measure(@NotNull Aggregation agg, @NotNull List<Rex> args, boolean distinct) {
+    public static Measure measure(@NotNull Agg agg, @NotNull List<Rex> args, boolean distinct) {
         return new Measure(agg, args, distinct);
     }
 
@@ -95,18 +95,18 @@ public abstract class RelAggregate extends RelBase {
      */
     public static class Measure {
 
-        private final Aggregation agg;
+        private final Agg agg;
         private final List<Rex> args;
         private final boolean distinct;
 
-        private Measure(Aggregation agg, List<Rex> args, boolean distinct) {
+        private Measure(Agg agg, List<Rex> args, boolean distinct) {
             this.agg = agg;
             this.args = args;
             this.distinct = distinct;
         }
 
         @NotNull
-        public Aggregation getAgg() {
+        public Agg getAgg() {
             return agg;
         }
 

@@ -4,7 +4,7 @@ import org.partiql.spi.errors.PError
 import org.partiql.spi.errors.PErrorKind
 import org.partiql.spi.errors.PRuntimeException
 import org.partiql.spi.errors.Severity
-import org.partiql.spi.function.Function
+import org.partiql.spi.function.FnProvider
 import org.partiql.spi.types.PType
 
 internal object PErrors {
@@ -20,7 +20,7 @@ internal object PErrors {
     /**
      * Returns a PRuntimeException with code: [PError.FUNCTION_TYPE_MISMATCH].
      */
-    fun functionTypeMismatchException(name: String, actualTypes: List<PType>, candidates: List<Function>): PRuntimeException {
+    fun functionTypeMismatchException(name: String, actualTypes: List<PType>, candidates: List<FnProvider>): PRuntimeException {
         val pError = functionTypeMismatch(name, actualTypes, candidates)
         return PRuntimeException(pError)
     }
@@ -158,7 +158,7 @@ internal object PErrors {
     /**
      * Returns a PError with code: [PError.FUNCTION_TYPE_MISMATCH].
      */
-    private fun functionTypeMismatch(name: String, actualTypes: List<PType>, candidates: List<Function>): PError {
+    private fun functionTypeMismatch(name: String, actualTypes: List<PType>, candidates: List<FnProvider>): PError {
         return PError(
             PError.FUNCTION_TYPE_MISMATCH,
             Severity.ERROR(),

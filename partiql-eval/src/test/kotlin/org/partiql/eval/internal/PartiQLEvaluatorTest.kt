@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.Mode
 import org.partiql.eval.compiler.PartiQLCompiler
+import org.partiql.spi.types.PType
 import org.partiql.spi.value.Datum
 import org.partiql.value.PartiQLValue
 import org.partiql.value.bagValue
@@ -1412,14 +1413,10 @@ class PartiQLEvaluatorTest {
     fun developmentTest() {
         val tc =
             SuccessTestCase(
-                input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
-                expected = bagValue(
-                    int32Value(0),
-                    int32Value(100),
-                    decimalValue(BigDecimal.valueOf(2000, 1)),
-                    decimalValue(BigDecimal.valueOf(3000, 1)),
-                ),
-                mode = Mode.STRICT()
+                input = """
+                    non_existing_column = 1
+                """.trimIndent(),
+                expected = Datum.nullValue(PType.bool())
             )
         tc.run()
     }

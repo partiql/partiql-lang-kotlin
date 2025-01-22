@@ -3,6 +3,7 @@
 
 package org.partiql.spi.function.builtins
 
+import org.partiql.spi.function.Fn
 import org.partiql.spi.function.Function
 import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.builtins.internal.PErrors
@@ -17,7 +18,7 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         fillTable()
     }
 
-    override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Function.Instance {
+    override fun getTinyIntInstance(tinyIntLhs: PType, tinyIntRhs: PType): Fn {
         return basic(PType.tinyint()) { args ->
             val arg0 = args[0].byte
             val arg1 = args[1].byte
@@ -30,7 +31,7 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
     }
 
-    override fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Function.Instance {
+    override fun getSmallIntInstance(smallIntLhs: PType, smallIntRhs: PType): Fn {
         return basic(PType.smallint()) { args ->
             val arg0 = args[0].short
             val arg1 = args[1].short
@@ -43,7 +44,7 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
     }
 
-    override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Function.Instance {
+    override fun getIntegerInstance(integerLhs: PType, integerRhs: PType): Fn {
         return basic(PType.integer()) { args ->
             val arg0 = args[0].int
             val arg1 = args[1].int
@@ -56,7 +57,7 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
     }
 
-    override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Function.Instance {
+    override fun getBigIntInstance(bigIntLhs: PType, bigIntRhs: PType): Fn {
         return basic(PType.bigint()) { args ->
             val arg0 = args[0].long
             val arg1 = args[1].long
@@ -69,10 +70,10 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
     }
 
-    override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Function.Instance {
+    override fun getNumericInstance(numericLhs: PType, numericRhs: PType): Fn {
         val (p, s) = minusPrecisionScale(numericLhs, numericRhs)
         return Function.instance(
-            name = getName(),
+            name = signature.name,
             returns = PType.numeric(p, s),
             parameters = arrayOf(
                 Parameter("lhs", numericLhs),
@@ -85,10 +86,10 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
     }
 
-    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Function.Instance {
+    override fun getDecimalInstance(decimalLhs: PType, decimalRhs: PType): Fn {
         val (p, s) = minusPrecisionScale(decimalLhs, decimalRhs)
         return Function.instance(
-            name = getName(),
+            name = signature.name,
             returns = PType.decimal(p, s),
             parameters = arrayOf(
                 Parameter("lhs", decimalLhs),
@@ -115,7 +116,7 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         return returnedP to returnedS
     }
 
-    override fun getRealInstance(realLhs: PType, realRhs: PType): Function.Instance {
+    override fun getRealInstance(realLhs: PType, realRhs: PType): Fn {
         return basic(PType.real()) { args ->
             val arg0 = args[0].float
             val arg1 = args[1].float
@@ -123,7 +124,7 @@ internal object FnMinus : DiadicArithmeticOperator("minus") {
         }
     }
 
-    override fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Function.Instance {
+    override fun getDoubleInstance(doubleLhs: PType, doubleRhs: PType): Fn {
         return basic(PType.doublePrecision()) { args ->
             val arg0 = args[0].double
             val arg1 = args[1].double

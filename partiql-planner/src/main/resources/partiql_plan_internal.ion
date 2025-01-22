@@ -5,9 +5,9 @@ imports::{
     partiql_value::'org.partiql.spi.value.Datum',
     partiql_value_type::'org.partiql.planner.internal.typer.CompilerType',
     static_type::'org.partiql.planner.internal.typer.CompilerType',
-    fn_signature::'org.partiql.spi.function.Function',
-    fn_instance::'org.partiql.spi.function.Function.Instance',
-    agg_signature::'org.partiql.spi.function.Aggregation',
+    fn_signature::'org.partiql.spi.function.FnProvider',
+    fn_instance::'org.partiql.spi.function.Fn',
+    agg_signature::'org.partiql.spi.function.Agg',
     table::'org.partiql.spi.catalog.Table',
   ],
 }

@@ -367,84 +367,100 @@ public final class org/partiql/spi/errors/Severity : org/partiql/spi/Enum {
 	public fun name ()Ljava/lang/String;
 }
 
-public abstract interface class org/partiql/spi/function/Aggregation : org/partiql/spi/function/Routine {
-	public static final field Companion Lorg/partiql/spi/function/Aggregation$Companion;
-	public abstract fun getAccumulator ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
-	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
-}
-
-public abstract interface class org/partiql/spi/function/Aggregation$Accumulator {
+public abstract interface class org/partiql/spi/function/Accumulator {
 	public abstract fun next ([Lorg/partiql/spi/value/Datum;)V
 	public abstract fun value ()Lorg/partiql/spi/value/Datum;
 }
 
-public final class org/partiql/spi/function/Aggregation$Companion {
-	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;Lkotlin/jvm/functions/Function0;)Lorg/partiql/spi/function/Aggregation;
+public abstract class org/partiql/spi/function/Agg {
+	public fun <init> ()V
+	public abstract fun getAccumulator ()Lorg/partiql/spi/function/Accumulator;
+	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineSignature;
 }
 
-public final class org/partiql/spi/function/Aggregation$DefaultImpls {
-	public static fun getAccumulator (Lorg/partiql/spi/function/Aggregation;[Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Aggregation$Accumulator;
-	public static fun getParameters (Lorg/partiql/spi/function/Aggregation;)[Lorg/partiql/spi/function/Parameter;
+public abstract class org/partiql/spi/function/AggProvider {
+	public fun <init> ()V
+	public abstract fun getInstance ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Agg;
+	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineProviderSignature;
 }
 
-public abstract interface class org/partiql/spi/function/Function : org/partiql/spi/function/Routine {
-	public static final field Companion Lorg/partiql/spi/function/Function$Companion;
-	public abstract fun getInstance ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Function$Instance;
-	public static fun instance (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function$Instance;
-	public static fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
+public class org/partiql/spi/function/AggProvider$Builder {
+	public fun <init> (Ljava/lang/String;)V
+	public fun addParameter (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggProvider$Builder;
+	public fun addParameters ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggProvider$Builder;
+	public fun body (Ljava/util/concurrent/Callable;)Lorg/partiql/spi/function/AggProvider$Builder;
+	public fun build ()Lorg/partiql/spi/function/AggProvider;
+	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/AggProvider$Builder;
 }
 
-public final class org/partiql/spi/function/Function$Companion {
-	public final fun instance (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function$Instance;
-	public static synthetic fun instance$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function$Instance;
-	public final fun static (Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;)Lorg/partiql/spi/function/Function;
-	public static synthetic fun static$default (Lorg/partiql/spi/function/Function$Companion;Ljava/lang/String;[Lorg/partiql/spi/function/Parameter;Lorg/partiql/spi/types/PType;ZZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/spi/function/Function;
-}
-
-public final class org/partiql/spi/function/Function$DefaultImpls {
-	public static fun getInstance (Lorg/partiql/spi/function/Function;[Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Function$Instance;
-	public static fun getParameters (Lorg/partiql/spi/function/Function;)[Lorg/partiql/spi/function/Parameter;
-}
-
-public abstract class org/partiql/spi/function/Function$Instance {
-	public final field isMissingCall Z
-	public final field isNullCall Z
-	public final field name Ljava/lang/String;
-	public final field parameters [Lorg/partiql/spi/types/PType;
-	public final field returns Lorg/partiql/spi/types/PType;
-	public fun <init> (Ljava/lang/String;[Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;ZZ)V
-	public synthetic fun <init> (Ljava/lang/String;[Lorg/partiql/spi/types/PType;Lorg/partiql/spi/types/PType;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+public abstract class org/partiql/spi/function/Fn {
+	public fun <init> ()V
+	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineSignature;
 	public abstract fun invoke ([Lorg/partiql/spi/value/Datum;)Lorg/partiql/spi/value/Datum;
 }
 
+public class org/partiql/spi/function/Fn$Builder {
+	public fun <init> (Ljava/lang/String;)V
+	public fun addParameter (Lorg/partiql/spi/function/Parameter;)Lorg/partiql/spi/function/Fn$Builder;
+	public fun addParameter (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Fn$Builder;
+	public fun addParameters (Ljava/util/List;)Lorg/partiql/spi/function/Fn$Builder;
+	public fun addParameters ([Lorg/partiql/spi/function/Parameter;)Lorg/partiql/spi/function/Fn$Builder;
+	public fun addParameters ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Fn$Builder;
+	public fun body (Ljava/util/function/Function;)Lorg/partiql/spi/function/Fn$Builder;
+	public fun build ()Lorg/partiql/spi/function/Fn;
+	public fun isMissingCall (Z)Lorg/partiql/spi/function/Fn$Builder;
+	public fun isNullCall (Z)Lorg/partiql/spi/function/Fn$Builder;
+	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Fn$Builder;
+}
+
+public abstract class org/partiql/spi/function/FnProvider {
+	public fun <init> ()V
+	public abstract fun getInstance ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/Fn;
+	public abstract fun getSignature ()Lorg/partiql/spi/function/RoutineProviderSignature;
+}
+
+public class org/partiql/spi/function/FnProvider$Builder {
+	public fun <init> (Ljava/lang/String;)V
+	public fun addParameter (Lorg/partiql/spi/function/Parameter;)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun addParameter (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun addParameters (Ljava/util/List;)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun addParameters ([Lorg/partiql/spi/function/Parameter;)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun addParameters ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun body (Ljava/util/function/Function;)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun build ()Lorg/partiql/spi/function/FnProvider;
+	public fun isMissingCall (Z)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun isNullCall (Z)Lorg/partiql/spi/function/FnProvider$Builder;
+	public fun returns (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/function/FnProvider$Builder;
+}
+
 public final class org/partiql/spi/function/Parameter {
-	public static final field Companion Lorg/partiql/spi/function/Parameter$Companion;
 	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/types/PType;)V
-	public static final fun collection (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public static final fun dynamic (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public final fun getMatch (Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
-	public final fun getName ()Ljava/lang/String;
-	public final fun getType ()Lorg/partiql/spi/types/PType;
-	public static final fun number (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public static final fun text (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public fun toString ()Ljava/lang/String;
+	public fun getName ()Ljava/lang/String;
+	public fun getType ()Lorg/partiql/spi/types/PType;
 }
 
-public final class org/partiql/spi/function/Parameter$Companion {
-	public final fun collection (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public final fun dynamic (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public final fun number (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
-	public final fun text (Ljava/lang/String;)Lorg/partiql/spi/function/Parameter;
+public final class org/partiql/spi/function/RoutineProviderParameter {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/types/PType;)V
+	public fun getName ()Ljava/lang/String;
+	public fun getType ()Lorg/partiql/spi/types/PType;
 }
 
-public abstract interface class org/partiql/spi/function/Routine {
-	public abstract fun getName ()Ljava/lang/String;
-	public abstract fun getParameters ()[Lorg/partiql/spi/function/Parameter;
-	public abstract fun getReturnType ([Lorg/partiql/spi/types/PType;)Lorg/partiql/spi/types/PType;
+public final class org/partiql/spi/function/RoutineProviderSignature {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public fun getArity ()I
+	public fun getName ()Ljava/lang/String;
+	public fun getParameters ()Ljava/util/List;
 }
 
-public final class org/partiql/spi/function/Routine$DefaultImpls {
-	public static fun getParameters (Lorg/partiql/spi/function/Routine;)[Lorg/partiql/spi/function/Parameter;
+public final class org/partiql/spi/function/RoutineSignature {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/spi/types/PType;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/spi/types/PType;ZZ)V
+	public fun getArity ()I
+	public fun getName ()Ljava/lang/String;
+	public fun getParameters ()Ljava/util/List;
+	public fun getReturns ()Lorg/partiql/spi/types/PType;
+	public fun isMissingCall ()Z
+	public fun isNullCall ()Z
 }
 
 public abstract interface class org/partiql/spi/types/Field {

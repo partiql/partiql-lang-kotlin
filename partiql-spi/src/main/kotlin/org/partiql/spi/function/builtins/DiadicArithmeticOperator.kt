@@ -1,7 +1,6 @@
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.Function
-import org.partiql.spi.function.Parameter
+import org.partiql.spi.function.Fn
 import org.partiql.spi.types.PType
 
 /**
@@ -10,11 +9,11 @@ import org.partiql.spi.types.PType
  */
 internal abstract class DiadicArithmeticOperator(name: String, hidesName: Boolean = true) : DiadicOperator(
     name,
-    Parameter.number("lhs"),
-    Parameter.number("rhs"),
+    PType.doublePrecision(),
+    PType.doublePrecision(),
     hidesName = hidesName
 ) {
-    override fun getUnknownInstance(): Function.Instance? {
+    override fun getUnknownInstance(): Fn? {
         return getDoubleInstance(PType.doublePrecision(), PType.doublePrecision())
     }
 }
