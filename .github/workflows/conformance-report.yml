@@ -98,7 +98,7 @@ jobs:
         run: |
           mkdir -p $GITHUB_WORKSPACE/artifact
           cp -r $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH $GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_RELATIVE_PATH
-      - name: "Artifact CROSS-ENGINE Report (creates comparison_report.md)"
+      - name: "Artifact CROSS-ENGINE Report (creates comparison_report.md) test"
         continue-on-error: true
         run: |
           T="CROSS-ENGINE-REPORT"
