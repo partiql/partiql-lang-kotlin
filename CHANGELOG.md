@@ -23,6 +23,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
+## [1.0.0](https://github.com/partiql/partiql-lang-kotlin/releases/tag/v1.0.0) - 2025-01-23
+
+This is our biggest release yet, and we are incredibly excited to announce 1.0.
+
+Please refer to the [1.0 documentation](https://partiql.org/plk/1.0/) for more information.
+
+Thank you to all who have contributed!
+- @alancai98
+- @am357
+- @johnedquinn
+- @rchowell
+- @yliuuuu
+
+**Full Changelog**: [v0.14.9...v1.0.0](https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.9...v1.0.0)
+
 ## [1.0.0-rc.3] - 2024-12-10
 
 Thank you to all who have contributed!
