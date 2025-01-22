@@ -4,18 +4,23 @@
 [![CI Build](https://github.com/partiql/partiql-lang-kotlin/actions/workflows/build.yml/badge.svg)](https://github.com/partiql/partiql-lang-kotlin/actions?query=workflow%3A%22Build+and+Report+Generation%22)
 [![codecov](https://codecov.io/gh/partiql/partiql-lang-kotlin/branch/main/graph/badge.svg)](https://codecov.io/gh/partiql/partiql-lang-kotlin)
 
+[partiql-specification]: https://partiql.org/assets/PartiQL-Specification.pdf
+[partiql-website]: https://www.partiql.org
+[partiql-website-plk]: https://www.partiql.org/plk/latest/
+[partiql-tests]: https://github.com/partiql/partiql-tests
+[maven-partiql-namespace]: https://central.sonatype.com/namespace/org.partiql
+[git-submodule]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
+
 # PartiQL Lang Kotlin
 
-This is a Kotlin implementation of the [PartiQL specification](https://partiql.org/assets/PartiQL-Specification.pdf).
+This is a Kotlin/JVM implementation of the [PartiQL specification][partiql-specification].
 PartiQL is based on SQL:1999 and has added support for working with schemaless hierarchical data.
-PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens and
-compose seamlessly with each other and SQL.
-
-This repository contains an embeddable reference interpreter, test framework, and tests for PartiQL in Kotlin.
+PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens, and
+compose seamlessly with SQL.
 
 ## About
 
-Check out the [PartiQL website](https://www.partiql.org) for documentation, usage guides, and more!
+Check out the [PartiQL website][partiql-website] for documentation, usage guides, and more!
 
 ## Status
 
@@ -24,42 +29,16 @@ systems and AWS products for multiple years. The behavior of the language itself
 
 ## Using In Your Project
 
-This project is published to [Maven Central](https://central.sonatype.com/artifact/org.partiql/partiql-lang).
-
-| Group ID      | Artifact ID    | Recommended Version |
-|---------------|----------------|---------------------|
-| `org.partiql` | `partiql-lang` | `1.0.0`             |
-
-For Maven builds, add the following to your `pom.xml`:
-
-```xml
-<dependency>
-  <groupId>org.partiql</groupId>
-  <artifactId>partiql-lang</artifactId>
-  <version>${version}</version>
-</dependency>
-```
-
-For Gradle 5+, add the following to your `build.gradle`:
-
-```groovy
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation "org.partiql:partiql-lang:${version}"
-}
-```
-
-Be sure to replace `${version}` with the desired version.
+All subprojects are published to [Maven Central][maven-partiql-namespace]. To integrate this
+library into your project, please follow the guidelines on the
+[partiql-lang-kotlin documentation site][partiql-website-plk] under the [PartiQL website][partiql-website].
 
 ## Building
 
 **Pre-requisite**: Building this project requires Java 11+.
 
-This project uses a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to pull in 
-[partiql-tests](https://github.com/partiql/partiql-tests). The easiest way to pull everything in is to clone the 
+This project uses a [git submodule][git-submodule] to pull in 
+[partiql-tests][partiql-tests]. The easiest way to pull everything in is to clone the 
 repository recursively:
 
 ```bash
