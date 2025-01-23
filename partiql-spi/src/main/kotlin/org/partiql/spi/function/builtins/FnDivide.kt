@@ -5,8 +5,8 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.Fn
 import org.partiql.spi.function.builtins.internal.PErrors
-import org.partiql.spi.internal.isZero
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.NumberExtensions.isZero
 import org.partiql.spi.value.Datum
 import java.math.RoundingMode
 

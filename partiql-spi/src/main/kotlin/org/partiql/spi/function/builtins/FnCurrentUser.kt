@@ -3,8 +3,8 @@
 
 package org.partiql.spi.function.builtins
 
-import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.FunctionUtils
 
 internal val Fn_CURRENT_USER____STRING = FunctionUtils.hidden(
 

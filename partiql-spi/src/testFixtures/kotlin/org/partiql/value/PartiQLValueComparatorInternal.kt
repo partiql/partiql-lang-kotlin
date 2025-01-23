@@ -1,10 +1,10 @@
 package org.partiql.value
 
-import org.partiql.spi.internal.compareTo
-import org.partiql.spi.internal.isNaN
-import org.partiql.spi.internal.isNegInf
-import org.partiql.spi.internal.isPosInf
-import org.partiql.spi.internal.isZero
+import org.partiql.spi.utils.NumberExtensions.compareTo
+import org.partiql.spi.utils.NumberExtensions.isNaN
+import org.partiql.spi.utils.NumberExtensions.isNegInf
+import org.partiql.spi.utils.NumberExtensions.isPosInf
+import org.partiql.spi.utils.NumberExtensions.isZero
 
 internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) : Comparator<PartiQLValue> {
     companion object {

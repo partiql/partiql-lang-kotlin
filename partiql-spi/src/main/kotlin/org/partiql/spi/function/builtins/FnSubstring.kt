@@ -5,8 +5,8 @@ package org.partiql.spi.function.builtins
 
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.builtins.internal.PErrors
-import org.partiql.spi.function.utils.StringUtils.codepointSubstring
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.StringUtils.codepointSubstring
 import org.partiql.spi.value.Datum
 
 /**

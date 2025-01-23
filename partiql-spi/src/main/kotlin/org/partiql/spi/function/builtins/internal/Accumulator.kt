@@ -16,8 +16,8 @@ package org.partiql.spi.function.builtins.internal
 
 import com.amazon.ion.Decimal
 import org.partiql.spi.function.Accumulator
-import org.partiql.spi.internal.coerceNumbers
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.NumberExtensions.coerceNumbers
 import org.partiql.spi.value.Datum
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -35,6 +35,7 @@ internal abstract class Accumulator : Accumulator {
     abstract fun nextValue(value: Datum)
 }
 
+// TODO consolidate following top-level internal APIs under `NumberUtils` or similar util file
 internal fun comparisonAccumulator(comparator: Comparator<Datum>): (Datum?, Datum) -> Datum =
     { left, right ->
         when {

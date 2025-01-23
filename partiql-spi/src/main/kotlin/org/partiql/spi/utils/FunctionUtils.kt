@@ -1,4 +1,4 @@
-package org.partiql.spi.function.utils
+package org.partiql.spi.utils
 
 import org.partiql.spi.function.FnOverload
 import org.partiql.spi.function.Function

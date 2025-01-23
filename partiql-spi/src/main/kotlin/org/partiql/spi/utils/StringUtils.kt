@@ -1,4 +1,4 @@
-package org.partiql.spi.function.utils
+package org.partiql.spi.utils
 
 internal object StringUtils {
 

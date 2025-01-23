@@ -16,8 +16,8 @@ import org.partiql.spi.function.builtins.internal.AccumulatorEvery
 import org.partiql.spi.function.builtins.internal.AccumulatorMax
 import org.partiql.spi.function.builtins.internal.AccumulatorMin
 import org.partiql.spi.function.builtins.internal.AccumulatorSum
-import org.partiql.spi.function.utils.FunctionUtils
 import org.partiql.spi.types.PType
+import org.partiql.spi.utils.FunctionUtils
 
 internal abstract class Fn_COLL_AGG__BAG__ANY(
     name: String,
